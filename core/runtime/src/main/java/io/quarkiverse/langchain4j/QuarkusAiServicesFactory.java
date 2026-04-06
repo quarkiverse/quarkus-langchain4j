@@ -15,7 +15,7 @@ import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryCommitStrategy;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
@@ -80,9 +80,9 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
-        public AiServices<T> chatMemoryCommitStrategy(
-                ChatMemoryCommitStrategy chatMemoryCommitStrategy) {
-            quarkusAiServiceContext().chatMemoryCommitStrategy = chatMemoryCommitStrategy;
+        public AiServices<T> chatMemoryFlushStrategy(
+                ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
+            quarkusAiServiceContext().chatMemoryFlushStrategy = chatMemoryFlushStrategy;
             return this;
         }
 

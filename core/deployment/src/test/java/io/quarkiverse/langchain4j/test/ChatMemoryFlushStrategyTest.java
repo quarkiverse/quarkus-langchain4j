@@ -33,21 +33,21 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryCommitStrategy;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Verifies that a custom {@code ChatMemoryCommitStrategy} configured via
- * {@code chatMemoryCommitStrategySupplier} on {@code @RegisterAiService} is used.
+ * Verifies that a custom {@code ChatMemoryFlushStrategy} configured via
+ * {@code chatMemoryFlushStrategySupplier} on {@code @RegisterAiService} is used.
  *
  * <pre>
  * This test uses a ChatModel that triggers a tool call that always throws,
- * which causes the tool loop to fail. With the default strategy, commit()
- * is not called on failure. With ALWAYS_COMMIT, commit() IS called even
- * on failure, so messages are persisted to the ChatMemoryStore.
+ * which causes the tool loop to fail. With the default DEFERRED strategy,
+ * commit() is not called on failure. With IMMEDIATE, the messages are
+ * persisted to the ChatMemoryStore as they are added.
  * </pre>
  */
-public class ChatMemoryCommitStrategyTest {
+public class ChatMemoryFlushStrategyTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -55,7 +55,7 @@ public class ChatMemoryCommitStrategyTest {
                     .addClasses(MyAiService.class, FailingTool.class,
                             TrackingChatMemoryStore.class,
                             TrackingChatMemoryStoreSupplier.class,
-                            AlwaysCommitStrategySupplier.class,
+                            ImmediateFlushStrategySupplier.class,
                             FakeChatModelSupplier.class, FakeChatModel.class));
 
     @Inject
@@ -68,16 +68,16 @@ public class ChatMemoryCommitStrategyTest {
 
     @Test
     @ActivateRequestContext
-    void alwaysCommitStrategyShouldCommitOnFailure() {
+    void immediateFlushStrategyShouldPersistOnFailure() {
         String memoryId = "fail-test";
 
         assertThatThrownBy(() -> aiService.chat(memoryId, "call the tool"))
                 .isInstanceOf(RuntimeException.class);
 
-        // With ALWAYS_COMMIT strategy, even on failure, the memory should be committed
+        // With IMMEDIATE flush strategy, even on failure, the memory should be persisted
         assertThat(TrackingChatMemoryStore.INSTANCE.updateCount(memoryId))
                 .as("ChatMemoryStore.updateMessages should have been called "
-                        + "even on failure when using ALWAYS_COMMIT strategy")
+                        + "even on failure when using IMMEDIATE flush strategy")
                 .isGreaterThanOrEqualTo(1);
 
         // The store should have at least the user message
@@ -85,7 +85,7 @@ public class ChatMemoryCommitStrategyTest {
         assertThat(stored).isNotEmpty();
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = FakeChatModelSupplier.class, chatMemoryProviderSupplier = TrackingChatMemoryStoreSupplier.class, chatMemoryCommitStrategySupplier = AlwaysCommitStrategySupplier.class, tools = FailingTool.class)
+    @RegisterAiService(chatLanguageModelSupplier = FakeChatModelSupplier.class, chatMemoryProviderSupplier = TrackingChatMemoryStoreSupplier.class, chatMemoryFlushStrategySupplier = ImmediateFlushStrategySupplier.class, tools = FailingTool.class)
     public interface MyAiService {
         String chat(@MemoryId String memoryId, @UserMessage String message);
     }
@@ -98,10 +98,10 @@ public class ChatMemoryCommitStrategyTest {
         }
     }
 
-    public static class AlwaysCommitStrategySupplier implements Supplier<ChatMemoryCommitStrategy> {
+    public static class ImmediateFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
         @Override
-        public ChatMemoryCommitStrategy get() {
-            return () -> true;
+        public ChatMemoryFlushStrategy get() {
+            return ChatMemoryFlushStrategy.IMMEDIATE;
         }
     }
 
