@@ -26,6 +26,17 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     name: "Build against latest Quarkus snapshot"
