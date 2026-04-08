@@ -107,7 +107,6 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -121,6 +120,10 @@ public class OpenAiRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
+
                     return builder.build();
                 }
             };
@@ -165,7 +168,6 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -180,6 +182,10 @@ public class OpenAiRecorder {
                         SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
+
                     return builder.build();
                 }
             };
@@ -220,11 +226,12 @@ public class OpenAiRecorder {
             }
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             return new Supplier<>() {
                 @Override
                 public EmbeddingModel get() {
+                    ProxyConfigurationRegistry proxyRegistry = Arc.container().select(ProxyConfigurationRegistry.class).get();
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
                     return builder.build();
                 }
             };
@@ -263,11 +270,12 @@ public class OpenAiRecorder {
                     .modelName(moderationModelConfig.modelName());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             return new Supplier<>() {
                 @Override
                 public ModerationModel get() {
+                    ProxyConfigurationRegistry proxyRegistry = Arc.container().select(ProxyConfigurationRegistry.class).get();
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
                     return builder.build();
                 }
             };
@@ -350,12 +358,12 @@ public class OpenAiRecorder {
     }
 
     @SuppressWarnings({ "deprecation", "removal" })
-    private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
+    private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
+            ProxyConfigurationRegistry proxyRegistry) {
         if (openAiConfig.proxyHost().isPresent()) {
             return Optional.of(new Proxy(Type.valueOf(openAiConfig.proxyType()),
                     new InetSocketAddress(openAiConfig.proxyHost().get(), openAiConfig.proxyPort())));
         }
-        ProxyConfigurationRegistry proxyRegistry = Arc.container().select(ProxyConfigurationRegistry.class).get();
         return proxyRegistry.get(openAiConfig.proxyConfigurationName())
                 .map(proxyConfiguration -> new Proxy(
                         Type.valueOf(proxyConfiguration.type().name()),
