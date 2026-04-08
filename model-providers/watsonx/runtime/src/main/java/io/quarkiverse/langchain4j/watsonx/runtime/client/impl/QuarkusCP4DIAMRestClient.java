@@ -41,9 +41,9 @@ public final class QuarkusCP4DIAMRestClient extends CP4DRestClient {
     }
 
     @Override
-    public CompletableFuture<TokenResponse> asyncToken(TokenRequest request) {
-        return client.asyncIamIdentityToken("password", request.username(), request.password(), "openid")
-                .chain(tokenResponse -> client.asyncIamValidationRequest(request.username(), tokenResponse.accessToken())
+    public CompletableFuture<TokenResponse> tokenAsync(TokenRequest request) {
+        return client.iamIdentityTokenAsync("password", request.username(), request.password(), "openid")
+                .chain(tokenResponse -> client.iamValidationRequestAsync(request.username(), tokenResponse.accessToken())
                         .map(json -> new TokenResponse(
                                 json.containsKey("accessToken") ? json.getString("accessToken") : json.getString("token"),
                                 tokenResponse.refreshToken(),
