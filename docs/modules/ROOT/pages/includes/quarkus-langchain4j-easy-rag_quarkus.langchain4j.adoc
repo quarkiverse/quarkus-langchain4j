@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path[`quarkus.langchain4j.easy-rag.path`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path[`+++quarkus.langchain4j.easy-rag.path+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.path+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-type]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-type[`quarkus.langchain4j.easy-rag.path-type`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-type]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-type[`+++quarkus.langchain4j.easy-rag.path-type+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.path-type+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 a|tooltip:filesystem[The `path()` represents a filesystem reference], tooltip:classpath[The `path()` represents a classpath reference]
 |tooltip:filesystem[The {@link #path()} represents a filesystem reference]
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher[`quarkus.langchain4j.easy-rag.path-matcher`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher[`+++quarkus.langchain4j.easy-rag.path-matcher+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.path-matcher+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++glob:**+++`
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-recursive]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-recursive[`quarkus.langchain4j.easy-rag.recursive`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-recursive]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-recursive[`+++quarkus.langchain4j.easy-rag.recursive+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.recursive+++[]
 endif::add-copy-button-to-config-props[]
@@ -91,7 +91,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-segment-size]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-segment-size[`quarkus.langchain4j.easy-rag.max-segment-size`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-segment-size]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-segment-size[`+++quarkus.langchain4j.easy-rag.max-segment-size+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.max-segment-size+++[]
 endif::add-copy-button-to-config-props[]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++300+++`
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-overlap-size]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-overlap-size[`quarkus.langchain4j.easy-rag.max-overlap-size`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-overlap-size]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-overlap-size[`+++quarkus.langchain4j.easy-rag.max-overlap-size+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.max-overlap-size+++[]
 endif::add-copy-button-to-config-props[]
@@ -133,7 +133,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++30+++`
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-results]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-results[`quarkus.langchain4j.easy-rag.max-results`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-results]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-results[`+++quarkus.langchain4j.easy-rag.max-results+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.max-results+++[]
 endif::add-copy-button-to-config-props[]
@@ -154,7 +154,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++5+++`
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-min-score]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-min-score[`quarkus.langchain4j.easy-rag.min-score`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-min-score]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-min-score[`+++quarkus.langchain4j.easy-rag.min-score+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.min-score+++[]
 endif::add-copy-button-to-config-props[]
@@ -175,7 +175,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy[`quarkus.langchain4j.easy-rag.ingestion-strategy`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy[`+++quarkus.langchain4j.easy-rag.ingestion-strategy+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.ingestion-strategy+++[]
 endif::add-copy-button-to-config-props[]
@@ -196,7 +196,7 @@ endif::add-copy-button-to-env-var[]
 a|`on`, `off`, `manual`
 |`+++on+++`
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled[`quarkus.langchain4j.easy-rag.reuse-embeddings.enabled`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled[`+++quarkus.langchain4j.easy-rag.reuse-embeddings.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.reuse-embeddings.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -217,7 +217,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-file]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-file[`quarkus.langchain4j.easy-rag.reuse-embeddings.file`]##
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-file]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-file[`+++quarkus.langchain4j.easy-rag.reuse-embeddings.file+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.reuse-embeddings.file+++[]
 endif::add-copy-button-to-config-props[]

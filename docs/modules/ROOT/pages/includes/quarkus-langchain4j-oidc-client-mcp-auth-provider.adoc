@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-oidc-client-mcp-auth-provider_quarkus-langchain4j-oidc-client-mcp-auth-provider-enabled]] [.property-path]##link:#quarkus-langchain4j-oidc-client-mcp-auth-provider_quarkus-langchain4j-oidc-client-mcp-auth-provider-enabled[`quarkus.langchain4j.oidc-client-mcp-auth-provider.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-oidc-client-mcp-auth-provider_quarkus-langchain4j-oidc-client-mcp-auth-provider-enabled]] [.property-path]##link:#quarkus-langchain4j-oidc-client-mcp-auth-provider_quarkus-langchain4j-oidc-client-mcp-auth-provider-enabled[`+++quarkus.langchain4j.oidc-client-mcp-auth-provider.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.oidc-client-mcp-auth-provider.enabled+++[]
 endif::add-copy-button-to-config-props[]
