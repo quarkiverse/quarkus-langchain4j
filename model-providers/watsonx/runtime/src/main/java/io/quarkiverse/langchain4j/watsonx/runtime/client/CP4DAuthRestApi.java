@@ -36,7 +36,7 @@ public interface CP4DAuthRestApi {
     @Path("/icp4d-api/v1/authorize")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<JsonObject> asyncLegacyToken(TokenRequest request);
+    Uni<JsonObject> legacyTokenAsync(TokenRequest request);
 
     @POST
     @Path("/icp4d-api/v1/authorize")
@@ -52,7 +52,7 @@ public interface CP4DAuthRestApi {
     @Path("/icp4d-api/v1/authorize")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<TokenResponse> asyncIamIdentityToken(
+    Uni<TokenResponse> iamIdentityTokenAsync(
             @FormParam("grant_type") String grantType,
             @FormParam("username") String username,
             @FormParam("password") String password,
@@ -67,7 +67,7 @@ public interface CP4DAuthRestApi {
     @Path("/v1/preauth/validateAuth")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<JsonObject> asyncIamValidationRequest(@HeaderParam("username") String username,
+    Uni<JsonObject> iamValidationRequestAsync(@HeaderParam("username") String username,
             @HeaderParam("iam-token") String accessToken);
 
     @ClientObjectMapper
