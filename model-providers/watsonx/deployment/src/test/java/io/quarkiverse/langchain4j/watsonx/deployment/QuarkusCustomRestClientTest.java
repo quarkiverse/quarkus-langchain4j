@@ -7,6 +7,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.ibm.watsonx.ai.batch.BatchService;
 import com.ibm.watsonx.ai.chat.ChatService;
 import com.ibm.watsonx.ai.core.auth.Authenticator;
 import com.ibm.watsonx.ai.core.auth.cp4d.AuthMode;
@@ -15,6 +16,7 @@ import com.ibm.watsonx.ai.core.auth.ibmcloud.IBMCloudAuthenticator;
 import com.ibm.watsonx.ai.deployment.DeploymentService;
 import com.ibm.watsonx.ai.detection.DetectionService;
 import com.ibm.watsonx.ai.embedding.EmbeddingService;
+import com.ibm.watsonx.ai.file.FileService;
 import com.ibm.watsonx.ai.foundationmodel.FoundationModelService;
 import com.ibm.watsonx.ai.rerank.RerankService;
 import com.ibm.watsonx.ai.textgeneration.TextGenerationService;
@@ -24,12 +26,14 @@ import com.ibm.watsonx.ai.timeseries.TimeSeriesService;
 import com.ibm.watsonx.ai.tokenization.TokenizationService;
 import com.ibm.watsonx.ai.tool.ToolService;
 
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusBatchRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCP4DIAMRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCP4DLegacyRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusChatRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusDeploymentRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusDetectionRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusEmbeddingRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusFileRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusFoundationModelRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusIBMCloudRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusRerankRestClient;
@@ -286,5 +290,45 @@ public class QuarkusCustomRestClientTest {
         clientField.setAccessible(true);
         var client = clientField.get(toolService);
         assertThat(client).isInstanceOf(QuarkusToolRestClient.class);
+    }
+
+    @Test
+    public void file_client() throws Exception {
+
+        FileService fileService = FileService.builder()
+                .apiKey("test")
+                .baseUrl("http://localhost")
+                .projectId("project-id")
+                .build();
+
+        Class<FileService> clazz = FileService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(fileService);
+        assertThat(client).isInstanceOf(QuarkusFileRestClient.class);
+    }
+
+    @Test
+    public void batch_client() throws Exception {
+
+        FileService fileService = FileService.builder()
+                .apiKey("test")
+                .baseUrl("http://localhost")
+                .projectId("project-id")
+                .build();
+
+        BatchService batchService = BatchService.builder()
+                .baseUrl("http://localhost")
+                .apiKey("test")
+                .projectId("project-id")
+                .endpoint("/v1/chat/completions")
+                .fileService(fileService)
+                .build();
+
+        Class<BatchService> clazz = BatchService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(batchService);
+        assertThat(client).isInstanceOf(QuarkusBatchRestClient.class);
     }
 }

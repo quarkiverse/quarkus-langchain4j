@@ -49,7 +49,7 @@ public final class WatsonxRestClientUtils {
                 joiner.add("%s: %s".formatted(errorDetail.code(), errorDetail.message()));
         }
 
-        return new WatsonxException(joiner.toString(), response.getStatus(), error);
+        return HttpUtils.mapWatsonxException(new WatsonxException(joiner.toString(), response.getStatus(), error));
     }
 
     public static boolean shouldRetry(Throwable e) {
