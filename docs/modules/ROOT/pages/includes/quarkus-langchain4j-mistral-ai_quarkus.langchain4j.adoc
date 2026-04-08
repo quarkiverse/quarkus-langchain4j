@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-enabled[`quarkus.langchain4j.mistralai.chat-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-enabled[`+++quarkus.langchain4j.mistralai.chat-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-enabled[`quarkus.langchain4j.mistralai.embedding-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-enabled[`+++quarkus.langchain4j.mistralai.embedding-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled[`quarkus.langchain4j.mistralai.moderation-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled[`+++quarkus.langchain4j.mistralai.moderation-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url[`quarkus.langchain4j.mistralai.base-url`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url[`+++quarkus.langchain4j.mistralai.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -91,7 +91,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++https://api.mistral.ai/v1/+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-api-key[`quarkus.langchain4j.mistralai.api-key`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-api-key[`+++quarkus.langchain4j.mistralai.api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++dummy+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-timeout[`quarkus.langchain4j.mistralai.timeout`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-timeout[`+++quarkus.langchain4j.mistralai.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -133,7 +133,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mistral-ai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name[`quarkus.langchain4j.mistralai.chat-model.model-name`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name[`+++quarkus.langchain4j.mistralai.chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -154,7 +154,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++mistral-tiny+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-temperature[`quarkus.langchain4j.mistralai.chat-model.temperature`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-temperature[`+++quarkus.langchain4j.mistralai.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.temperature+++[]
 endif::add-copy-button-to-config-props[]
@@ -177,7 +177,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0.7+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-max-tokens[`quarkus.langchain4j.mistralai.chat-model.max-tokens`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-max-tokens[`+++quarkus.langchain4j.mistralai.chat-model.max-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.max-tokens+++[]
 endif::add-copy-button-to-config-props[]
@@ -200,7 +200,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-top-p[`quarkus.langchain4j.mistralai.chat-model.top-p`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-top-p[`+++quarkus.langchain4j.mistralai.chat-model.top-p+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.top-p+++[]
 endif::add-copy-button-to-config-props[]
@@ -223,7 +223,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++1.0+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-safe-prompt[`quarkus.langchain4j.mistralai.chat-model.safe-prompt`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-safe-prompt[`+++quarkus.langchain4j.mistralai.chat-model.safe-prompt+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.safe-prompt+++[]
 endif::add-copy-button-to-config-props[]
@@ -244,7 +244,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-random-seed[`quarkus.langchain4j.mistralai.chat-model.random-seed`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-random-seed[`+++quarkus.langchain4j.mistralai.chat-model.random-seed+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.random-seed+++[]
 endif::add-copy-button-to-config-props[]
@@ -265,7 +265,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-requests[`quarkus.langchain4j.mistralai.chat-model.log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-requests[`+++quarkus.langchain4j.mistralai.chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -286,7 +286,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-responses[`quarkus.langchain4j.mistralai.chat-model.log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-responses[`+++quarkus.langchain4j.mistralai.chat-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -307,7 +307,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-model-name[`quarkus.langchain4j.mistralai.embedding-model.model-name`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-model-name[`+++quarkus.langchain4j.mistralai.embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -328,7 +328,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++mistral-embed+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-requests[`quarkus.langchain4j.mistralai.embedding-model.log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-requests[`+++quarkus.langchain4j.mistralai.embedding-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -349,7 +349,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-responses[`quarkus.langchain4j.mistralai.embedding-model.log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-responses[`+++quarkus.langchain4j.mistralai.embedding-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -370,7 +370,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name[`quarkus.langchain4j.mistralai.moderation-model.model-name`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name[`+++quarkus.langchain4j.mistralai.moderation-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -391,7 +391,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++mistral-moderation-latest+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests[`quarkus.langchain4j.mistralai.moderation-model.log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests[`+++quarkus.langchain4j.mistralai.moderation-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -412,7 +412,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses[`quarkus.langchain4j.mistralai.moderation-model.log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses[`+++quarkus.langchain4j.mistralai.moderation-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -433,7 +433,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests[`quarkus.langchain4j.mistralai.log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests[`+++quarkus.langchain4j.mistralai.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -454,7 +454,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-responses[`quarkus.langchain4j.mistralai.log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-responses[`+++quarkus.langchain4j.mistralai.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -475,7 +475,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests-curl[`quarkus.langchain4j.mistralai.log-requests-curl`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests-curl[`+++quarkus.langchain4j.mistralai.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -496,7 +496,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-enable-integration[`quarkus.langchain4j.mistralai.enable-integration`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-enable-integration[`+++quarkus.langchain4j.mistralai.enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.enable-integration+++[]
 endif::add-copy-button-to-config-props[]
@@ -521,7 +521,7 @@ h|[[quarkus-langchain4j-mistral-ai_section_quarkus-langchain4j-mistralai]] [.sec
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url[`quarkus.langchain4j.mistralai."model-name".base-url`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url[`+++quarkus.langchain4j.mistralai."model-name".base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -542,7 +542,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++https://api.mistral.ai/v1/+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-api-key[`quarkus.langchain4j.mistralai."model-name".api-key`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-api-key[`+++quarkus.langchain4j.mistralai."model-name".api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -563,7 +563,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++dummy+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-timeout[`quarkus.langchain4j.mistralai."model-name".timeout`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-timeout[`+++quarkus.langchain4j.mistralai."model-name".timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -584,7 +584,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mistral-ai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name[`quarkus.langchain4j.mistralai."model-name".chat-model.model-name`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name[`+++quarkus.langchain4j.mistralai."model-name".chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -605,7 +605,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++mistral-tiny+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-temperature[`quarkus.langchain4j.mistralai."model-name".chat-model.temperature`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-temperature[`+++quarkus.langchain4j.mistralai."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.temperature+++[]
 endif::add-copy-button-to-config-props[]
@@ -628,7 +628,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0.7+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-max-tokens[`quarkus.langchain4j.mistralai."model-name".chat-model.max-tokens`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-max-tokens[`+++quarkus.langchain4j.mistralai."model-name".chat-model.max-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.max-tokens+++[]
 endif::add-copy-button-to-config-props[]
@@ -651,7 +651,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-top-p[`quarkus.langchain4j.mistralai."model-name".chat-model.top-p`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-top-p[`+++quarkus.langchain4j.mistralai."model-name".chat-model.top-p+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.top-p+++[]
 endif::add-copy-button-to-config-props[]
@@ -674,7 +674,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++1.0+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-safe-prompt[`quarkus.langchain4j.mistralai."model-name".chat-model.safe-prompt`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-safe-prompt[`+++quarkus.langchain4j.mistralai."model-name".chat-model.safe-prompt+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.safe-prompt+++[]
 endif::add-copy-button-to-config-props[]
@@ -695,7 +695,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-random-seed[`quarkus.langchain4j.mistralai."model-name".chat-model.random-seed`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-random-seed[`+++quarkus.langchain4j.mistralai."model-name".chat-model.random-seed+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.random-seed+++[]
 endif::add-copy-button-to-config-props[]
@@ -716,7 +716,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-requests[`quarkus.langchain4j.mistralai."model-name".chat-model.log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-requests[`+++quarkus.langchain4j.mistralai."model-name".chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -737,7 +737,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-responses[`quarkus.langchain4j.mistralai."model-name".chat-model.log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-responses[`+++quarkus.langchain4j.mistralai."model-name".chat-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -758,7 +758,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-model-name[`quarkus.langchain4j.mistralai."model-name".embedding-model.model-name`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-model-name[`+++quarkus.langchain4j.mistralai."model-name".embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".embedding-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -779,7 +779,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++mistral-embed+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-requests[`quarkus.langchain4j.mistralai."model-name".embedding-model.log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-requests[`+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -800,7 +800,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-responses[`quarkus.langchain4j.mistralai."model-name".embedding-model.log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-responses[`+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -821,7 +821,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name[`quarkus.langchain4j.mistralai."model-name".moderation-model.model-name`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name[`+++quarkus.langchain4j.mistralai."model-name".moderation-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".moderation-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -842,7 +842,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++mistral-moderation-latest+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests[`quarkus.langchain4j.mistralai."model-name".moderation-model.log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests[`+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -863,7 +863,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses[`quarkus.langchain4j.mistralai."model-name".moderation-model.log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses[`+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -884,7 +884,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests[`quarkus.langchain4j.mistralai."model-name".log-requests`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests[`+++quarkus.langchain4j.mistralai."model-name".log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -905,7 +905,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-responses[`quarkus.langchain4j.mistralai."model-name".log-responses`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-responses[`+++quarkus.langchain4j.mistralai."model-name".log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -926,7 +926,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests-curl[`quarkus.langchain4j.mistralai."model-name".log-requests-curl`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests-curl[`+++quarkus.langchain4j.mistralai."model-name".log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -947,7 +947,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-enable-integration[`quarkus.langchain4j.mistralai."model-name".enable-integration`]##
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-enable-integration[`+++quarkus.langchain4j.mistralai."model-name".enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".enable-integration+++[]
 endif::add-copy-button-to-config-props[]

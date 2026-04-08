@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-enabled[`quarkus.langchain4j.mcp.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-enabled[`+++quarkus.langchain4j.mcp.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider[`quarkus.langchain4j.mcp.generate-tool-provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider[`+++quarkus.langchain4j.mcp.generate-tool-provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.generate-tool-provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-config-file]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-config-file[`quarkus.langchain4j.mcp.config-file`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-config-file]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-config-file[`+++quarkus.langchain4j.mcp.config-file+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.config-file+++[]
 endif::add-copy-button-to-config-props[]
@@ -72,7 +72,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-health-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-health-enabled[`quarkus.langchain4j.mcp.health.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-health-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-health-enabled[`+++quarkus.langchain4j.mcp.health.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.health.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -93,7 +93,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-expose-resources-as-tools]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-expose-resources-as-tools[`quarkus.langchain4j.mcp.expose-resources-as-tools`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-expose-resources-as-tools]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-expose-resources-as-tools[`+++quarkus.langchain4j.mcp.expose-resources-as-tools+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.expose-resources-as-tools+++[]
 endif::add-copy-button-to-config-props[]
@@ -118,7 +118,7 @@ h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.sec
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-enabled[`quarkus.langchain4j.mcp."client-name".enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-enabled[`+++quarkus.langchain4j.mcp."client-name".enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -139,7 +139,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type[`quarkus.langchain4j.mcp."client-name".transport-type`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type[`+++quarkus.langchain4j.mcp."client-name".transport-type+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".transport-type+++[]
 endif::add-copy-button-to-config-props[]
@@ -160,7 +160,7 @@ endif::add-copy-button-to-env-var[]
 a|`stdio`, `http`, `streamable-http`, `websocket`
 |`+++stdio+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-metrics-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-metrics-enabled[`quarkus.langchain4j.mcp."client-name".metrics.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-metrics-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-metrics-enabled[`+++quarkus.langchain4j.mcp."client-name".metrics.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".metrics.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -181,7 +181,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url[`quarkus.langchain4j.mcp."client-name".url`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url[`+++quarkus.langchain4j.mcp."client-name".url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".url+++[]
 endif::add-copy-button-to-config-props[]
@@ -202,7 +202,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command[`quarkus.langchain4j.mcp."client-name".command`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command[`+++quarkus.langchain4j.mcp."client-name".command+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".command+++[]
 endif::add-copy-button-to-config-props[]
@@ -223,7 +223,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var[`quarkus.langchain4j.mcp."client-name".environment."env-var"`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var[`+++quarkus.langchain4j.mcp."client-name".environment."env-var"+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".environment."env-var"+++[]
 endif::add-copy-button-to-config-props[]
@@ -244,7 +244,7 @@ endif::add-copy-button-to-env-var[]
 |Map<String,String>
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests[`quarkus.langchain4j.mcp."client-name".log-requests`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests[`+++quarkus.langchain4j.mcp."client-name".log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -265,7 +265,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses[`quarkus.langchain4j.mcp."client-name".log-responses`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses[`+++quarkus.langchain4j.mcp."client-name".log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -286,7 +286,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check[`quarkus.langchain4j.mcp."client-name".microprofile-health-check`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check[`+++quarkus.langchain4j.mcp."client-name".microprofile-health-check+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".microprofile-health-check+++[]
 endif::add-copy-button-to-config-props[]
@@ -311,7 +311,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check-path]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check-path[`quarkus.langchain4j.mcp."client-name".microprofile-health-check-path`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check-path]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check-path[`+++quarkus.langchain4j.mcp."client-name".microprofile-health-check-path+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".microprofile-health-check-path+++[]
 endif::add-copy-button-to-config-props[]
@@ -334,7 +334,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++/q/health+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout[`quarkus.langchain4j.mcp."client-name".tool-execution-timeout`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout[`+++quarkus.langchain4j.mcp."client-name".tool-execution-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".tool-execution-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -355,7 +355,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++60s+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout[`quarkus.langchain4j.mcp."client-name".resources-timeout`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout[`+++quarkus.langchain4j.mcp."client-name".resources-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".resources-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -376,7 +376,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++60s+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout[`quarkus.langchain4j.mcp."client-name".ping-timeout`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout[`+++quarkus.langchain4j.mcp."client-name".ping-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".ping-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -397,7 +397,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10S+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots[`quarkus.langchain4j.mcp."client-name".roots`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots[`+++quarkus.langchain4j.mcp."client-name".roots+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".roots+++[]
 endif::add-copy-button-to-config-props[]
@@ -418,7 +418,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tls-configuration-name[`quarkus.langchain4j.mcp."client-name".tls-configuration-name`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tls-configuration-name[`+++quarkus.langchain4j.mcp."client-name".tls-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".tls-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -439,7 +439,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-header-header-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-header-header-name[`quarkus.langchain4j.mcp."client-name".header."header-name"`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-header-header-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-header-header-name[`+++quarkus.langchain4j.mcp."client-name".header."header-name"+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".header."header-name"+++[]
 endif::add-copy-button-to-config-props[]
@@ -460,7 +460,7 @@ endif::add-copy-button-to-env-var[]
 |Map<String,String>
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-tool-list]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-tool-list[`quarkus.langchain4j.mcp."client-name".cache-tool-list`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-tool-list]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-tool-list[`+++quarkus.langchain4j.mcp."client-name".cache-tool-list+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".cache-tool-list+++[]
 endif::add-copy-button-to-config-props[]
@@ -481,7 +481,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check[`quarkus.langchain4j.mcp."client-name".auto-health-check`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check[`+++quarkus.langchain4j.mcp."client-name".auto-health-check+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".auto-health-check+++[]
 endif::add-copy-button-to-config-props[]
@@ -502,7 +502,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check-interval]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check-interval[`quarkus.langchain4j.mcp."client-name".auto-health-check-interval`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check-interval]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check-interval[`+++quarkus.langchain4j.mcp."client-name".auto-health-check-interval+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".auto-health-check-interval+++[]
 endif::add-copy-button-to-config-props[]
@@ -528,7 +528,7 @@ h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp-registry-client]] [.
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-base-url[`quarkus.langchain4j.mcp.registry-client."registry-client-name".base-url`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-base-url[`+++quarkus.langchain4j.mcp.registry-client."registry-client-name".base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -549,7 +549,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++https://registry.modelcontextprotocol.io+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-requests[`quarkus.langchain4j.mcp.registry-client."registry-client-name".log-requests`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-requests[`+++quarkus.langchain4j.mcp.registry-client."registry-client-name".log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -570,7 +570,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-responses[`quarkus.langchain4j.mcp.registry-client."registry-client-name".log-responses`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-responses[`+++quarkus.langchain4j.mcp.registry-client."registry-client-name".log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -591,7 +591,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-tls-configuration-name[`quarkus.langchain4j.mcp.registry-client."registry-client-name".tls-configuration-name`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-tls-configuration-name[`+++quarkus.langchain4j.mcp.registry-client."registry-client-name".tls-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".tls-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -612,7 +612,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-read-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-read-timeout[`quarkus.langchain4j.mcp.registry-client."registry-client-name".read-timeout`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-read-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-read-timeout[`+++quarkus.langchain4j.mcp.registry-client."registry-client-name".read-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".read-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -633,7 +633,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout[`quarkus.langchain4j.mcp.registry-client."registry-client-name".connect-timeout`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout[`+++quarkus.langchain4j.mcp.registry-client."registry-client-name".connect-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".connect-timeout+++[]
 endif::add-copy-button-to-config-props[]

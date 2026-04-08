@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories]] [.property-path]##link:#quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories[`quarkus.langchain4j.skills.directories`]##
+a| [[quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories]] [.property-path]##link:#quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories[`+++quarkus.langchain4j.skills.directories+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.skills.directories+++[]
 endif::add-copy-button-to-config-props[]

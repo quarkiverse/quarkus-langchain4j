@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name[`quarkus.langchain4j.infinispan.client-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name[`+++quarkus.langchain4j.infinispan.client-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.infinispan.client-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-dimension]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-dimension[`quarkus.langchain4j.infinispan.dimension`]##
+a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-dimension]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-dimension[`+++quarkus.langchain4j.infinispan.dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.infinispan.dimension+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |long
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name[`quarkus.langchain4j.infinispan.cache-name`]##
+a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name[`+++quarkus.langchain4j.infinispan.cache-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.infinispan.cache-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++embeddings-cache+++`
 
-a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance[`quarkus.langchain4j.infinispan.distance`]##
+a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance[`+++quarkus.langchain4j.infinispan.distance+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.infinispan.distance+++[]
 endif::add-copy-button-to-config-props[]

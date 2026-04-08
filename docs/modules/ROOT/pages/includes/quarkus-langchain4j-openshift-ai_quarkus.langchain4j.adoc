@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-enabled[`quarkus.langchain4j.openshift-ai.chat-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-enabled[`+++quarkus.langchain4j.openshift-ai.chat-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.chat-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-base-url]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-base-url[`quarkus.langchain4j.openshift-ai.base-url`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-base-url]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-base-url[`+++quarkus.langchain4j.openshift-ai.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
 |`+++https://dummy.ai/api+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-timeout]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-timeout[`quarkus.langchain4j.openshift-ai.timeout`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-timeout]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-timeout[`+++quarkus.langchain4j.openshift-ai.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-openshift-ai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-requests[`quarkus.langchain4j.openshift-ai.log-requests`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-requests[`+++quarkus.langchain4j.openshift-ai.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -91,7 +91,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-responses[`quarkus.langchain4j.openshift-ai.log-responses`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-responses[`+++quarkus.langchain4j.openshift-ai.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-enable-integration[`quarkus.langchain4j.openshift-ai.enable-integration`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-enable-integration[`+++quarkus.langchain4j.openshift-ai.enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.enable-integration+++[]
 endif::add-copy-button-to-config-props[]
@@ -133,7 +133,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-model-id[`quarkus.langchain4j.openshift-ai.chat-model.model-id`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-model-id[`+++quarkus.langchain4j.openshift-ai.chat-model.model-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.chat-model.model-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -154,7 +154,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++dummy+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-requests[`quarkus.langchain4j.openshift-ai.chat-model.log-requests`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-requests[`+++quarkus.langchain4j.openshift-ai.chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.chat-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -175,7 +175,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-responses[`quarkus.langchain4j.openshift-ai.chat-model.log-responses`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-responses[`+++quarkus.langchain4j.openshift-ai.chat-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai.chat-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -200,7 +200,7 @@ h|[[quarkus-langchain4j-openshift-ai_section_quarkus-langchain4j-openshift-ai]] 
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-base-url[`quarkus.langchain4j.openshift-ai."model-name".base-url`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-base-url[`+++quarkus.langchain4j.openshift-ai."model-name".base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -221,7 +221,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
 |`+++https://dummy.ai/api+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-timeout[`quarkus.langchain4j.openshift-ai."model-name".timeout`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-timeout[`+++quarkus.langchain4j.openshift-ai."model-name".timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -242,7 +242,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-openshift-ai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-requests[`quarkus.langchain4j.openshift-ai."model-name".log-requests`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-requests[`+++quarkus.langchain4j.openshift-ai."model-name".log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -263,7 +263,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-responses[`quarkus.langchain4j.openshift-ai."model-name".log-responses`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-responses[`+++quarkus.langchain4j.openshift-ai."model-name".log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -284,7 +284,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-enable-integration[`quarkus.langchain4j.openshift-ai."model-name".enable-integration`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-enable-integration[`+++quarkus.langchain4j.openshift-ai."model-name".enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".enable-integration+++[]
 endif::add-copy-button-to-config-props[]
@@ -305,7 +305,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-model-id[`quarkus.langchain4j.openshift-ai."model-name".chat-model.model-id`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-model-id[`+++quarkus.langchain4j.openshift-ai."model-name".chat-model.model-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".chat-model.model-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -326,7 +326,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++dummy+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-requests[`quarkus.langchain4j.openshift-ai."model-name".chat-model.log-requests`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-requests[`+++quarkus.langchain4j.openshift-ai."model-name".chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".chat-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -347,7 +347,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-responses[`quarkus.langchain4j.openshift-ai."model-name".chat-model.log-responses`]##
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-responses[`+++quarkus.langchain4j.openshift-ai."model-name".chat-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openshift-ai."model-name".chat-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]

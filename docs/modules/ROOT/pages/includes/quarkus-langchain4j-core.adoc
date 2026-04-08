@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-type]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-type[`quarkus.langchain4j.chat-memory.type`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-type]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-type[`+++quarkus.langchain4j.chat-memory.type+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.chat-memory.type+++[]
 endif::add-copy-button-to-config-props[]
@@ -34,7 +34,7 @@ endif::add-copy-button-to-env-var[]
 a|`message-window`, `token-window`
 |`+++message-window+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled[`quarkus.langchain4j.devservices.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled[`+++quarkus.langchain4j.devservices.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.devservices.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -57,7 +57,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-port]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-port[`quarkus.langchain4j.devservices.port`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-port]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-port[`+++quarkus.langchain4j.devservices.port+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.devservices.port+++[]
 endif::add-copy-button-to-config-props[]
@@ -78,7 +78,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++11434+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-preload]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-preload[`quarkus.langchain4j.devservices.preload`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-preload]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-preload[`+++quarkus.langchain4j.devservices.preload+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.devservices.preload+++[]
 endif::add-copy-button-to-config-props[]
@@ -99,7 +99,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-response-schema]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-response-schema[`quarkus.langchain4j.response-schema`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-response-schema]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-response-schema[`+++quarkus.langchain4j.response-schema+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.response-schema+++[]
 endif::add-copy-button-to-config-props[]
@@ -120,7 +120,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages[`quarkus.langchain4j.chat-memory.memory-window.max-messages`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages[`+++quarkus.langchain4j.chat-memory.memory-window.max-messages+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.chat-memory.memory-window.max-messages+++[]
 endif::add-copy-button-to-config-props[]
@@ -141,7 +141,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++10+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-token-window-max-tokens]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-token-window-max-tokens[`quarkus.langchain4j.chat-memory.token-window.max-tokens`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-token-window-max-tokens]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-token-window-max-tokens[`+++quarkus.langchain4j.chat-memory.token-window.max-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.chat-memory.token-window.max-tokens+++[]
 endif::add-copy-button-to-config-props[]
@@ -162,7 +162,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++1000+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests[`quarkus.langchain4j.log-requests`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests[`+++quarkus.langchain4j.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -183,7 +183,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-responses]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-responses[`quarkus.langchain4j.log-responses`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-responses]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-responses[`+++quarkus.langchain4j.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -204,7 +204,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests-curl[`quarkus.langchain4j.log-requests-curl`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests-curl[`+++quarkus.langchain4j.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -225,7 +225,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-timeout]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-timeout[`quarkus.langchain4j.timeout`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-timeout]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-timeout[`+++quarkus.langchain4j.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -246,7 +246,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-core_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-temperature]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-temperature[`quarkus.langchain4j.temperature`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-temperature]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-temperature[`+++quarkus.langchain4j.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.temperature+++[]
 endif::add-copy-button-to-config-props[]
@@ -267,7 +267,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-guardrails-max-retries]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-guardrails-max-retries[`quarkus.langchain4j.guardrails.max-retries`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-guardrails-max-retries]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-guardrails-max-retries[`+++quarkus.langchain4j.guardrails.max-retries+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.guardrails.max-retries+++[]
 endif::add-copy-button-to-config-props[]
@@ -288,7 +288,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++3+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt[`quarkus.langchain4j.tracing.include-prompt`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt[`+++quarkus.langchain4j.tracing.include-prompt+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.tracing.include-prompt+++[]
 endif::add-copy-button-to-config-props[]
@@ -309,7 +309,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion[`quarkus.langchain4j.tracing.include-completion`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion[`+++quarkus.langchain4j.tracing.include-completion+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.tracing.include-completion+++[]
 endif::add-copy-button-to-config-props[]
@@ -330,7 +330,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments[`quarkus.langchain4j.tracing.include-tool-arguments`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments[`+++quarkus.langchain4j.tracing.include-tool-arguments+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.tracing.include-tool-arguments+++[]
 endif::add-copy-button-to-config-props[]
@@ -351,7 +351,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result[`quarkus.langchain4j.tracing.include-tool-result`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result[`+++quarkus.langchain4j.tracing.include-tool-result+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.tracing.include-tool-result+++[]
 endif::add-copy-button-to-config-props[]
@@ -376,7 +376,7 @@ h|[[quarkus-langchain4j-core_section_quarkus-langchain4j]] [.section-name.sectio
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-model-provider[`quarkus.langchain4j.chat-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-model-provider[`+++quarkus.langchain4j.chat-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.chat-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -397,7 +397,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-scoring-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-scoring-model-provider[`quarkus.langchain4j.scoring-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-scoring-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-scoring-model-provider[`+++quarkus.langchain4j.scoring-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.scoring-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -418,7 +418,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider[`quarkus.langchain4j.embedding-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider[`+++quarkus.langchain4j.embedding-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.embedding-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -439,7 +439,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-moderation-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-moderation-model-provider[`quarkus.langchain4j.moderation-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-moderation-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-moderation-model-provider[`+++quarkus.langchain4j.moderation-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.moderation-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -460,7 +460,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-image-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-image-model-provider[`quarkus.langchain4j.image-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-image-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-image-model-provider[`+++quarkus.langchain4j.image-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.image-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -481,7 +481,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider[`quarkus.langchain4j."model-name".chat-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider[`+++quarkus.langchain4j."model-name".chat-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j."model-name".chat-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -502,7 +502,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-scoring-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-scoring-model-provider[`quarkus.langchain4j."model-name".scoring-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-scoring-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-scoring-model-provider[`+++quarkus.langchain4j."model-name".scoring-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j."model-name".scoring-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -523,7 +523,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-embedding-model-provider[`quarkus.langchain4j."model-name".embedding-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-embedding-model-provider[`+++quarkus.langchain4j."model-name".embedding-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j."model-name".embedding-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -544,7 +544,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-moderation-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-moderation-model-provider[`quarkus.langchain4j."model-name".moderation-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-moderation-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-moderation-model-provider[`+++quarkus.langchain4j."model-name".moderation-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j."model-name".moderation-model.provider+++[]
 endif::add-copy-button-to-config-props[]
@@ -565,7 +565,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-image-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-image-model-provider[`quarkus.langchain4j."model-name".image-model.provider`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-image-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-image-model-provider[`+++quarkus.langchain4j."model-name".image-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j."model-name".image-model.provider+++[]
 endif::add-copy-button-to-config-props[]
