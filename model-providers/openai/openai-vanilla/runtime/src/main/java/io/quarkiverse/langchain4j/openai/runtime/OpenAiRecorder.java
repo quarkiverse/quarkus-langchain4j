@@ -45,7 +45,9 @@ import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -105,10 +107,7 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
+            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -166,10 +165,7 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
+            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -224,10 +220,7 @@ public class OpenAiRecorder {
             }
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
+            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             return new Supplier<>() {
                 @Override
@@ -270,10 +263,7 @@ public class OpenAiRecorder {
                     .modelName(moderationModelConfig.modelName());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
+            resolveProxy(openAiConfig).ifPresent(builder::proxy);
 
             return new Supplier<>() {
                 @Override
@@ -357,6 +347,19 @@ public class OpenAiRecorder {
             };
         }
 
+    }
+
+    @SuppressWarnings({ "deprecation", "removal" })
+    private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
+        if (openAiConfig.proxyHost().isPresent()) {
+            return Optional.of(new Proxy(Type.valueOf(openAiConfig.proxyType()),
+                    new InetSocketAddress(openAiConfig.proxyHost().get(), openAiConfig.proxyPort())));
+        }
+        ProxyConfigurationRegistry proxyRegistry = Arc.container().select(ProxyConfigurationRegistry.class).get();
+        return proxyRegistry.get(openAiConfig.proxyConfigurationName())
+                .map(proxyConfiguration -> new Proxy(
+                        Type.valueOf(proxyConfiguration.type().name()),
+                        new InetSocketAddress(proxyConfiguration.host(), proxyConfiguration.port())));
     }
 
     private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,
