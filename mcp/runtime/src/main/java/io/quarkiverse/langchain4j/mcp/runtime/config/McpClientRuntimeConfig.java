@@ -122,6 +122,22 @@ public interface McpClientRuntimeConfig {
     Optional<Boolean> cacheToolList();
 
     /**
+     * Whether to cache the resource and resource template lists obtained from the MCP server.
+     * When set to true (the default), the lists are cached until the server notifies of changes
+     * or the cache is manually evicted. When false, the client always fetches fresh lists from the server.
+     * This is useful when using MCP servers that don't support resource list change notifications.
+     */
+    Optional<Boolean> cacheResourceList();
+
+    /**
+     * Whether to cache the prompt list obtained from the MCP server.
+     * When set to true (the default), the prompt list is cached until the server notifies of changes
+     * or the cache is manually evicted. When false, the client always fetches a fresh prompt list from the server.
+     * This is useful when using MCP servers that don't support prompt list change notifications.
+     */
+    Optional<Boolean> cachePromptList();
+
+    /**
      * Whether the MCP client should perform health checks regularly and try to reconnect immediately if a connection issue is
      * detected.
      * The default is true.

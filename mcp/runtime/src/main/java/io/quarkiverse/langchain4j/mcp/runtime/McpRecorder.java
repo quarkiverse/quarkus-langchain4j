@@ -165,6 +165,8 @@ public class McpRecorder {
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
                         .roots(initialRoots)
                         .cacheToolList(runtimeConfig.cacheToolList().orElse(true))
+                        .cacheResourceList(runtimeConfig.cacheResourceList().orElse(true))
+                        .cachePromptList(runtimeConfig.cachePromptList().orElse(true))
                         .autoHealthCheck(runtimeConfig.autoHealthCheck())
                         .autoHealthCheckInterval(runtimeConfig.autoHealthCheckInterval())
                         .build();
