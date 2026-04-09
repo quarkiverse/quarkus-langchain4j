@@ -5,6 +5,7 @@ import java.util.List;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.tool.ToolExecution;
 
@@ -26,6 +27,7 @@ import dev.langchain4j.service.tool.ToolExecution;
  * @see ContentFetchedEvent
  * @see AccumulatedResponseEvent
  * @see PartialThinkingEvent
+ * @see PartialToolCallEvent
  * @see IntermediateResponseEvent
  */
 public class ChatEvent {
@@ -62,6 +64,10 @@ public class ChatEvent {
          * Indicates that a partial thinking/reasoning chunk has been received (experimental).
          */
         PartialThinking,
+        /**
+         * Indicates that a partial tool call chunk has been received (experimental).
+         */
+        PartialToolCall,
         /**
          * Indicates that an intermediate response has been received during multi-turn interactions.
          */
@@ -303,6 +309,40 @@ public class ChatEvent {
          */
         public String getText() {
             return text;
+        }
+    }
+
+    /**
+     * Event emitted when a partial tool call chunk is received during streaming.
+     * This event is typically used when the AI service streams its tool call arguments
+     * incrementally rather than returning the complete tool call at once. This is an
+     * experimental feature and may not be supported by all models.
+     *
+     * <p>
+     * Partial tool call events allow observing tool call construction in real-time,
+     * which can be useful for progress indicators or live debugging of tool interactions.
+     * </p>
+     */
+    public static class PartialToolCallEvent extends ChatEvent {
+        private final PartialToolCall partialToolCall;
+
+        /**
+         * Constructs a new PartialToolCallEvent with the given partial tool call.
+         *
+         * @param partialToolCall a partial tool call containing the index, ID, name, and partial arguments
+         */
+        public PartialToolCallEvent(PartialToolCall partialToolCall) {
+            super(ChatEventType.PartialToolCall);
+            this.partialToolCall = partialToolCall;
+        }
+
+        /**
+         * Returns the partial tool call.
+         *
+         * @return the partial tool call data
+         */
+        public PartialToolCall getPartialToolCall() {
+            return partialToolCall;
         }
     }
 
