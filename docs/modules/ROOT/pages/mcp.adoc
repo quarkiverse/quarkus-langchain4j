@@ -602,6 +602,69 @@ The `McpLogMessage` includes:
 - `level()`: Log level as `McpLogLevel` enum (DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY)
 - `logger()`: Logger name from the MCP server
 
+=== Observing MCP Resource Updates
+
+MCP servers can notify clients when a subscribed resource has been updated (via the `notifications/resources/updated` notification defined in the https://modelcontextprotocol.io/specification/2025-11-25/server/resources#subscriptions[MCP specification]).
+
+To react to resource updates in Quarkus, define a CDI observer method for the `McpResourceUpdatedEvent` type.
+When such an observer exists in your application, the extension automatically attaches a `McpResourceUpdatedHandler` to all managed (declarative) MCP clients.
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import io.quarkiverse.langchain4j.mcp.runtime.McpResourceUpdatedEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
+@ApplicationScoped
+public class ResourceUpdateObserver {
+
+    public void onResourceUpdated(@Observes @McpClientName("myserver") McpResourceUpdatedEvent event) {
+        System.out.println("Resource updated: " + event.uri() + " (client: " + event.mcpClientKey() + ")");
+        // React to the update: refresh a cache, notify users, re-read the resource, etc.
+    }
+}
+----
+
+The `McpResourceUpdatedEvent` includes:
+
+- `uri()`: The URI of the updated resource
+- `mcpClientKey()`: The name of the MCP client that received the notification
+
+To receive notifications, you must first subscribe to a specific resource using the `McpClient` API:
+
+[source,java]
+----
+@Inject
+@McpClientName("myserver")
+McpClient mcpClient;
+
+// Subscribe to updates for a specific resource
+mcpClient.subscribeToResource("file:///path/to/resource");
+
+// Later, unsubscribe when no longer interested
+mcpClient.unsubscribeFromResource("file:///path/to/resource");
+----
+
+[NOTE]
+====
+The `McpResourceUpdatedHandler` is only attached to managed MCP clients when your application contains at least one CDI observer method for `McpResourceUpdatedEvent`.
+If no observers are present, no handler is registered.
+
+If you create a `DefaultMcpClient` programmatically (instead of using declarative configuration), you need to register the handler
+(or plug in any other, possibly not CDI-based handler) yourself:
+
+[source,java]
+----
+DefaultMcpClient client = new DefaultMcpClient.Builder()
+        .transport(transport)
+        .onResourceUpdated(new McpResourceUpdatedHandler())
+        // ... other configuration
+        .build();
+----
+====
+
+
 === Health Checks
 
 Quarkus automatically registers a readiness health check for all configured MCP clients when the `quarkus-smallrye-health` extension is present:

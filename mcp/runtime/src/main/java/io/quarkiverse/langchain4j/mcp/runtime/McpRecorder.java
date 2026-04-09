@@ -68,7 +68,8 @@ public class McpRecorder {
             McpTransportType mcpTransportType,
             ShutdownContext shutdown,
             Supplier<Vertx> vertx,
-            boolean addMetrics) {
+            boolean addMetrics,
+            boolean hasResourceUpdatedObserver) {
         return new Function<>() {
             @Override
             public McpClient apply(SyntheticCreationalContext<McpClient> context) {
@@ -154,6 +155,9 @@ public class McpRecorder {
                 DefaultMcpClient.Builder builder = new DefaultMcpClient.Builder();
                 if (addMetrics) {
                     addMetrics(builder, key);
+                }
+                if (hasResourceUpdatedObserver) {
+                    builder.onResourceUpdated(new McpResourceUpdatedHandler());
                 }
                 DefaultMcpClient client = builder
                         .key(key)
