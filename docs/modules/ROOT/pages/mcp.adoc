@@ -201,6 +201,19 @@ quarkus.langchain4j.mcp.remote-server.transport-type=streamable-http
 quarkus.langchain4j.mcp.remote-server.url=https://mcp-server.example.com/mcp
 ----
 
+The Streamable HTTP transport can optionally open a subsidiary GET-based SSE stream
+for receiving server-initiated notifications and requests (such as tool list change
+notifications). This is disabled by default. To enable it:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.remote-server.subsidiary-channel=true
+----
+
+NOTE: If the server does not support the subsidiary channel, the transport logs a warning
+and continues without it. If the stream disconnects after being successfully established,
+the transport automatically attempts to reconnect.
+
 **HTTP/SSE (Legacy):**
 [source,properties]
 ----

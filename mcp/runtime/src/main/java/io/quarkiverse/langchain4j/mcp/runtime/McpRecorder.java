@@ -129,6 +129,7 @@ public class McpRecorder {
                             streamableBuilder.headers(runtimeConfig.header());
                         }
                         mcpHeadersSupplier.ifPresent(streamableBuilder::headers);
+                        streamableBuilder.subsidiaryChannel(runtimeConfig.subsidiaryChannel());
                         yield streamableBuilder.build();
                     }
                     case WEBSOCKET -> {

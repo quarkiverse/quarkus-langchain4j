@@ -136,4 +136,15 @@ public interface McpClientRuntimeConfig {
     @WithDefault("60s")
     Duration autoHealthCheckInterval();
 
+    /**
+     * Whether to open a subsidiary SSE channel for the streamable HTTP transport.
+     * When enabled, the transport will open a long-lived HTTP GET-based SSE stream after
+     * initialization, allowing the server to send notifications and requests to the client
+     * without the client first sending data via HTTP POST. This is useful for receiving
+     * server-initiated messages such as tool list change notifications.
+     * Only applies to MCP clients using the streamable HTTP transport.
+     */
+    @WithDefault("false")
+    boolean subsidiaryChannel();
+
 }
