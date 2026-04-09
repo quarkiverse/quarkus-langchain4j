@@ -481,6 +481,48 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-resource-list]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-resource-list[`+++quarkus.langchain4j.mcp."client-name".cache-resource-list+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".cache-resource-list+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to cache the resource and resource template lists obtained from the MCP server. When set to true (the default), the lists are cached until the server notifies of changes or the cache is manually evicted. When false, the client always fetches fresh lists from the server. This is useful when using MCP servers that don't support resource list change notifications.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__CACHE_RESOURCE_LIST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__CACHE_RESOURCE_LIST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-prompt-list]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-cache-prompt-list[`+++quarkus.langchain4j.mcp."client-name".cache-prompt-list+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".cache-prompt-list+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to cache the prompt list obtained from the MCP server. When set to true (the default), the prompt list is cached until the server notifies of changes or the cache is manually evicted. When false, the client always fetches a fresh prompt list from the server. This is useful when using MCP servers that don't support prompt list change notifications.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__CACHE_PROMPT_LIST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__CACHE_PROMPT_LIST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check[`+++quarkus.langchain4j.mcp."client-name".auto-health-check+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".auto-health-check+++[]
