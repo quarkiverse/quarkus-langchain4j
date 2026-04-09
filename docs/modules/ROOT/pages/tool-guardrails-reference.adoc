@@ -1,0 +1,231 @@
+= Tool Guardrails Reference
+
+include::./includes/attributes.adoc[]
+:diataxis-type: reference
+
+This page documents the tool guardrail API: interfaces, request/result objects, CDI integration, and observability.
+For an introduction to tool guardrails, see xref:tool-guardrails-concept.adoc[Understand tool guardrails].
+For task-oriented usage, see xref:tool-guardrails-howto.adoc[Validate tool invocations].
+
+== ToolInputGuardrail Interface
+
+[source,java]
+----
+public interface ToolInputGuardrail {
+    /**
+     * Validates tool input parameters before execution.
+     */
+    ToolInputGuardrailResult validate(ToolInputGuardrailRequest request);
+}
+----
+
+=== ToolInputGuardrailRequest
+
+[source,java]
+----
+// Access available context
+String toolName = request.toolName();
+String arguments = request.arguments();  // JSON string
+JsonObject args = request.argumentsAsJson();  // Parsed JSON for easy access
+Object memoryId = request.memoryId();
+ToolMetadata metadata = request.toolMetadata();
+ToolInvocationContext context = request.invocationContext();
+----
+
+=== ToolInputGuardrailResult
+
+[source,java]
+----
+// Validation passed
+return ToolInputGuardrailResult.success();
+
+// Validation passed with modified request
+return ToolInputGuardrailResult.successWith(modifiedRequest);
+
+// Validation failed - error returned to LLM
+return ToolInputGuardrailResult.failure("Error message for LLM");
+
+// Fatal failure - stops execution immediately
+return ToolInputGuardrailResult.fatal("Critical error", exception);
+
+// Fatal failure - uses exception message
+return ToolInputGuardrailResult.fatal(exception);
+----
+
+== ToolOutputGuardrail Interface
+
+[source,java]
+----
+public interface ToolOutputGuardrail {
+    /**
+     * Validates tool output after execution.
+     */
+    ToolOutputGuardrailResult validate(ToolOutputGuardrailRequest request);
+}
+----
+
+=== ToolOutputGuardrailRequest
+
+[source,java]
+----
+// Access tool result and context
+String resultText = request.resultText();
+JsonObject result = request.resultAsJson();  // Parsed result for JSON tools
+boolean isError = request.isError();
+String toolName = request.toolName();
+JsonObject args = request.argumentsAsJson();  // Original input arguments
+ToolExecutionRequest originalRequest = request.executionRequest();
+ToolExecutionResult executionResult = request.executionResult();
+----
+
+=== ToolOutputGuardrailResult
+
+[source,java]
+----
+// Output valid
+return ToolOutputGuardrailResult.success();
+
+// Output valid with transformation
+return ToolOutputGuardrailResult.successWith(modifiedResult);
+
+// Output invalid - error returned to LLM
+return ToolOutputGuardrailResult.failure("Error message");
+
+// Fatal failure - stops execution immediately
+return ToolOutputGuardrailResult.fatal("Critical error", exception);
+
+// Fatal failure - uses exception message
+return ToolOutputGuardrailResult.fatal(exception);
+----
+
+== Context and Metadata
+
+Guardrails have access to tool metadata and invocation context:
+
+[source,java]
+----
+@Override
+public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+    // Tool information
+    ToolMetadata metadata = request.toolMetadata();
+    String toolName = metadata.toolName();
+    String description = metadata.description();
+
+    // Invocation context
+    ToolInvocationContext context = request.invocationContext();
+    Object memoryId = context.memoryId();
+    Map<String, Object> params = context.parameters();
+
+    // Use context for validation...
+    return ToolInputGuardrailResult.success();
+}
+----
+
+== CDI Integration
+
+Guardrails are CDI beans and support all standard features:
+
+[source,java]
+----
+@RequestScoped  // Can use different scopes
+public class StatefulGuardrail implements ToolInputGuardrail {
+
+    @Inject
+    SecurityIdentity identity;  // Dependency injection
+
+    @Inject
+    AuditLogger auditLogger;    // Custom beans
+
+    @ConfigProperty(name = "app.max-retries", defaultValue = "3")
+    int maxRetries;  // Configuration injection
+
+    private int callCount = 0;  // Instance state
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        callCount++;
+        auditLogger.log(identity.getPrincipal().getName(),
+                       "Tool invocation #" + callCount);
+
+        // Validation logic
+        return ToolInputGuardrailResult.success();
+    }
+}
+----
+
+== Observability and Metrics
+
+Tool guardrail execution can be monitored using Micrometer metrics when the `quarkus-micrometer` extension is present.
+
+=== Metrics
+
+Two metrics are automatically recorded for each guardrail execution:
+
+**Counter Metric: `tool-guardrail.invoked`**
+
+Counts the number of times a tool guardrail is invoked, with tags:
+
+* `aiservice` - Fully qualified AI service interface name
+* `operation` - AI service method name
+* `tool.name` - Name of the tool being validated
+* `guardrail` - Guardrail class name
+* `guardrail.type` - `input` or `output`
+* `outcome` - `success`, `failure`, or `fatal`
+
+**Timer Metric: `tool-guardrail.timed`**
+
+Records execution time of guardrails with the same tags as the counter, plus percentiles (75th, 95th, 99th).
+
+=== Events
+
+For custom observability, observe CDI events fired during guardrail execution:
+
+[source,java]
+----
+@ApplicationScoped
+public class GuardrailMonitor {
+
+    public void onInputGuardrailExecuted(
+            @Observes ToolInputGuardrailExecutedEvent event) {
+
+        String toolName = event.toolName();
+        Class<?> guardrailClass = event.toolClass();
+        ToolGuardrailOutcome outcome = event.outcome(); // SUCCESS, FAILURE, FATAL
+        long durationNanos = event.duration();
+
+        // Custom monitoring logic
+        if (outcome == ToolGuardrailOutcome.FATAL) {
+            logger.error("Fatal guardrail failure for tool: {}", toolName);
+        }
+    }
+
+    public void onOutputGuardrailExecuted(
+            @Observes ToolOutputGuardrailExecutedEvent event) {
+        // Similar monitoring for output guardrails
+    }
+}
+----
+
+Event objects provide access to:
+
+* `toolName()` - The tool being validated
+* `toolClass()` - The guardrail class
+* `outcome()` - SUCCESS, FAILURE, or FATAL
+* `duration()` - Execution time in nanoseconds
+* `toolInvocationContext()` - Full invocation context including memory ID and parameters
+
+[TIP]
+====
+Use these metrics to:
+
+* Monitor guardrail success rates and identify problematic tools.
+* Track performance and identify slow guardrails.
+* Set up alerts for fatal failures indicating system issues.
+* Analyze which guardrails are most frequently triggered.
+====
+
+== Related Resources
+
+* xref:function-calling.adoc[Function Calling] -- How to declare and use tools in AI services
+* xref:guardrails.adoc[LLM Guardrails] -- Guardrails for prompts and responses
+* xref:ai-services.adoc[AI Services] -- Complete AI service configuration
