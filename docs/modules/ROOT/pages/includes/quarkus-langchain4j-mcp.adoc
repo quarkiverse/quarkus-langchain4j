@@ -523,6 +523,27 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++60S+++`
 
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-subsidiary-channel]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-subsidiary-channel[`+++quarkus.langchain4j.mcp."client-name".subsidiary-channel+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".subsidiary-channel+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to open a subsidiary SSE channel for the streamable HTTP transport. When enabled, the transport will open a long-lived HTTP GET-based SSE stream after initialization, allowing the server to send notifications and requests to the client without the client first sending data via HTTP POST. This is useful for receiving server-initiated messages such as tool list change notifications. Only applies to MCP clients using the streamable HTTP transport.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__SUBSIDIARY_CHANNEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__SUBSIDIARY_CHANNEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp-registry-client]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp-registry-client[Configured MCP registry clients]##
 h|Type
