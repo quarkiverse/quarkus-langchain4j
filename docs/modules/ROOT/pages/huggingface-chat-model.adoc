@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://huggingface.co/[Hugging Face] is a leading platform in the field of natural language processing (NLP) that provides a wide collection of pre-trained language models. It facilitates easy access to cutting-edge models for various NLP tasks through hosted APIs or local inference.
 

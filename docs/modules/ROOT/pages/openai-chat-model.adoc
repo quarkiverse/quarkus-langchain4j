@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 OpenAI is a leading AI research organization known for its groundbreaking Large Language Models (LLMs) like GPT-4.
 

@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: tutorial
 
 Text completions are powerful, but many modern AI use cases also demand image generation.
 With Quarkus LangChain4j’s Image model support, you can declare a service method that returns a `dev.langchain4j.data.image.Image` instance, letting your microservice request, receive, and expose AI‐generated visuals seamlessly.

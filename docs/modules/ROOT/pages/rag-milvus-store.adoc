@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Milvus is a scalable and high-performance vector database optimized for AI and semantic search use cases.
 This guide explains how to use Milvus as an embedding store in Quarkus LangChain4j for RAG applications.

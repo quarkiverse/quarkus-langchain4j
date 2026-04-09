@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 OpenAI provides various image models capable of generating or editing images based on textual prompts.
 These models are ideal for use cases involving content creation, design assistance, or visual storytelling.
