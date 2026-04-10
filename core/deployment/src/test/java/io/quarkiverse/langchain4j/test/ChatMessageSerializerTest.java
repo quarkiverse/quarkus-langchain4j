@@ -116,8 +116,8 @@ class ChatMessageSerializerTest {
                 +
                 "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"text\":\"Hello from AI\",\"attributes\":{},\"type\":\"AI\"},"
                 +
-                "{\"text\":\"4\",\"id\":\"12345\",\"toolName\":\"calculator\",\"type\":\"TOOL_EXECUTION_RESULT\",\"attributes\":{}}"
-                +
+                "{\"id\":\"12345\",\"toolName\":\"calculator\",\"type\":\"TOOL_EXECUTION_RESULT\"," +
+                "\"contents\":[{\"text\":\"4\",\"type\":\"TEXT\"}],\"attributes\":{}}" +
                 "]");
 
         List<ChatMessage> deserializedMessages = messagesFromJson(json);
