@@ -460,6 +460,7 @@ public class AiServiceMethodImplementationSupport {
                 ToolExecution toolExecution = ToolExecution.builder()
                         .request(toolExecutionRequest)
                         .result(toolExecutionResult)
+                        .invocationContext(invocationContext)
                         .build();
                 toolExecutions.add(toolExecution);
                 toolResults.add(toolExecutionResultMessage);

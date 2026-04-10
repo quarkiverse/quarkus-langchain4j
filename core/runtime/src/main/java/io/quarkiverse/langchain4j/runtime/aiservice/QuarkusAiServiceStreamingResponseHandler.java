@@ -459,6 +459,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         if (beforeToolExecutionHandler != null) {
                             BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
                                     .request(toolExecutionRequest)
+                                    .invocationContext(invocationContext)
                                     .build();
                             beforeToolExecutionHandler.accept(beforeToolExecution);
                         }
@@ -484,6 +485,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         ToolExecution toolExecution = ToolExecution.builder()
                                 .request(toolExecutionRequest)
                                 .result(toolExecutionResult)
+                                .invocationContext(invocationContext)
                                 .build();
                         if (toolExecuteHandler != null) {
                             toolExecuteHandler.accept(toolExecution);
