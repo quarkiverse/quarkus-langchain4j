@@ -324,8 +324,8 @@ public class AiServicesRecorder {
                         quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
                     }
 
-                    if (info.maxSequentialToolInvocations() != null && info.maxSequentialToolInvocations() > 0) {
-                        quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
+                    if (info.maxToolCallsPerResponse() != null && info.maxToolCallsPerResponse() != 0) {
+                        quarkusAiServices.maxToolCallsPerResponse(info.maxToolCallsPerResponse());
                     }
 
                     quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());

@@ -74,6 +74,11 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
+        public AiServices<T> maxToolCallsPerResponse(Integer maxToolCallsPerResponse) {
+            quarkusAiServiceContext().maxToolCallsPerResponse = maxToolCallsPerResponse;
+            return this;
+        }
+
         public AiServices<T> allowContinuousForcedToolCalling(boolean allowContinuousForcedToolCalling) {
             quarkusAiServiceContext().allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
             return this;

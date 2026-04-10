@@ -22,6 +22,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public ChatMemorySeeder chatMemorySeeder;
     public ImageModel imageModel;
     public Integer maxSequentialToolExecutions;
+    public Integer maxToolCallsPerResponse;
     public boolean allowContinuousForcedToolCalling;
 
     // needed by Arc

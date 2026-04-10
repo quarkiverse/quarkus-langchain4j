@@ -93,6 +93,16 @@ public @interface RegisterAiService {
     int maxSequentialToolInvocations() default 0;
 
     /**
+     * Defines the maximum number of tool calls allowed per single LLM response.
+     * If this number is exceeded, a {@code ToolCallsLimitExceededException} will be thrown.
+     * If not specified (left to zero) for a specific AI service,
+     * the AI service will use the value of the common {@code quarkus.langchain4j.ai-service.max-tool-calls-per-response}
+     * property.
+     * If that property is unset too, the default is {@code 0} (unlimited).
+     */
+    int maxToolCallsPerResponse() default 0;
+
+    /**
      * Tool classes to use. All tools are expected to be CDI beans.
      */
     Class<?>[] tools() default {};
