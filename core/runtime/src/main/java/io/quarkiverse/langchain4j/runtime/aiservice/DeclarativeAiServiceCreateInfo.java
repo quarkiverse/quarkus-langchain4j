@@ -31,6 +31,7 @@ public record DeclarativeAiServiceCreateInfo(
         InputGuardrailsLiteral inputGuardrails,
         OutputGuardrailsLiteral outputGuardrails,
         Integer maxSequentialToolInvocations,
+        Integer maxToolCallsPerResponse,
         boolean allowContinuousForcedToolCalling,
         boolean shouldThrowExceptionOnEventError) {
 }
