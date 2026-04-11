@@ -8,13 +8,12 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.spi.DeploymentException;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassType;
-import org.jboss.jandex.ParameterizedType;
-import org.jboss.jandex.Type;
+import org.jboss.jandex.*;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
@@ -41,6 +40,32 @@ public class AzureOpenAiProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    public void registerDefaultModelAuthProvider(
+            AzureOpenAiRecorder recorder,
+            BuildProducer<SyntheticBeanBuildItem> producer,
+            LangChain4jAzureOpenAiBuildConfig config) {
+        if (!config.azureDefaultCredentialsEnabled())
+            return;
+
+        try {
+            Class.forName("com.azure.identity.DefaultAzureCredentialBuilder");
+        } catch (ClassNotFoundException e) {
+            throw new DeploymentException(
+                    "azure-default-credentials-enabled=true requires com.azure:azure-identity on the classpath. Add it to your project dependencies.");
+        }
+
+        producer.produce(
+                SyntheticBeanBuildItem
+                        .configure(ModelAuthProvider.class)
+                        .scope(ApplicationScoped.class)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .createWith(recorder.modelAuthProvider())
+                        .done());
     }
 
     @BuildStep
