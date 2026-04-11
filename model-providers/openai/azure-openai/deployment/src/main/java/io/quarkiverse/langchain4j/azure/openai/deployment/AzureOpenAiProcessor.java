@@ -8,9 +8,8 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.spi.DeploymentException;
 
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.jandex.*;
 
 import io.quarkiverse.langchain4j.ModelName;
@@ -30,7 +29,6 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
-import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 
@@ -49,57 +47,23 @@ public class AzureOpenAiProcessor {
     public void registerDefaultModelAuthProvider(
             AzureOpenAiRecorder recorder,
             BuildProducer<SyntheticBeanBuildItem> producer,
-            CombinedIndexBuildItem combinedIndex) {
+            LangChain4jAzureOpenAiBuildConfig config) {
+        if (!config.azureDefaultCredentialsEnabled()) return;
 
-        DotName providerInterface = DotName.createSimple(ModelAuthProvider.class.getName());
-
-        boolean hasCustomProvider = !combinedIndex.getIndex()
-                .getAllKnownImplementors(providerInterface)
-                .isEmpty();
-        boolean hasCredentials = hasCredentialsInConfig();
-
-        if (!hasCustomProvider && !hasCredentials) {
-            producer.produce(
-                    SyntheticBeanBuildItem
-                            .configure(ModelAuthProvider.class)
-                            .scope(ApplicationScoped.class)
-                            .setRuntimeInit()
-                            .defaultBean()
-                            .createWith(recorder.modelAuthProvider())
-                            .done());
-        }
-    }
-
-    private boolean hasCredentialsInConfig() {
-        Config config = ConfigProvider.getConfig();
-
-        if (isPresent(config, "quarkus.langchain4j.azure-openai.api-key")
-                || isPresent(config, "quarkus.langchain4j.azure-openai.ad-token")) {
-            return true;
+        try {
+            Class.forName("com.azure.identity.DefaultAzureCredentialBuilder");
+        } catch (ClassNotFoundException e) {
+            throw new DeploymentException("azure-default-credentials-enabled=true requires com.azure:azure-identity on the classpath. Add it to your project dependencies.");
         }
 
-        for (String model : List.of("chat-model", "embedding-model", "image-model")) {
-            String prefix = "quarkus.langchain4j.azure-openai." + model;
-            if (isPresent(config, prefix + ".api-key")
-                    || isPresent(config, prefix + ".ad-token")) {
-                return true;
-            }
-        }
-
-        for (String propertyName : config.getPropertyNames()) {
-            if (propertyName.startsWith("quarkus.langchain4j.azure-openai.")
-                    && (propertyName.endsWith(".api-key") || propertyName.endsWith(".ad-token"))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean isPresent(Config config, String key) {
-        return config.getOptionalValue(key, String.class)
-                .filter(v -> !v.isBlank())
-                .isPresent();
+        producer.produce(
+                SyntheticBeanBuildItem
+                        .configure(ModelAuthProvider.class)
+                        .scope(ApplicationScoped.class)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .createWith(recorder.modelAuthProvider())
+                        .done());
     }
 
     @BuildStep
