@@ -48,12 +48,14 @@ public class AzureOpenAiProcessor {
             AzureOpenAiRecorder recorder,
             BuildProducer<SyntheticBeanBuildItem> producer,
             LangChain4jAzureOpenAiBuildConfig config) {
-        if (!config.azureDefaultCredentialsEnabled()) return;
+        if (!config.azureDefaultCredentialsEnabled())
+            return;
 
         try {
             Class.forName("com.azure.identity.DefaultAzureCredentialBuilder");
         } catch (ClassNotFoundException e) {
-            throw new DeploymentException("azure-default-credentials-enabled=true requires com.azure:azure-identity on the classpath. Add it to your project dependencies.");
+            throw new DeploymentException(
+                    "azure-default-credentials-enabled=true requires com.azure:azure-identity on the classpath. Add it to your project dependencies.");
         }
 
         producer.produce(
