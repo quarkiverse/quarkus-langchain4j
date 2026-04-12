@@ -76,6 +76,20 @@
                     <artifactId>quarkus-langchain4j-mcp</artifactId>
                     <version>${project.version}</version>
                 </dependency>
+                <!-- Make sure the deployment artifact is built before executing this module -->
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-mcp-deployment</artifactId>
+                    <version>999-SNAPSHOT</version>
+                    <type>pom</type>
+                    <scope>test</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>*</groupId>
+                            <artifactId>*</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
             </dependencies>
         </profile>
         <profile>

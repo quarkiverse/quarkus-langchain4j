@@ -40,7 +40,7 @@ public interface TokenizationRestApi {
     @Path("/text/tokenization")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<TokenizationResponse> asyncTokenize(
+    Uni<TokenizationResponse> tokenizeAsync(
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
             @QueryParam("version") String version,

@@ -5,13 +5,13 @@ import static dev.langchain4j.internal.ValidationUtils.ensureTrue;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.infinispan.client.hotrod.RemoteCache;
@@ -26,13 +26,21 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.filter.Filter;
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanSchema;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainInfinispanItem;
+import io.quarkiverse.langchain4j.infinispan.runtime.LangchainMetadata;
 
+/**
+ * Stores and retrieves embeddings using Infinispan Server as the backend.
+ * Supports vector similarity search with optional metadata filtering,
+ * and removal of embeddings by ID or by metadata filter.
+ */
 public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
 
     private final RemoteCache<String, LangchainInfinispanItem> remoteCache;
     private final InfinispanSchema schema;
+    private final String langchainItemType;
     private static final String DEFAULT_CACHE_CONFIG = "<distributed-cache name=\"CACHE_NAME\">\n"
             + "<indexing storage=\"local-heap\">\n"
             + "<indexed-entities>\n"
@@ -46,11 +54,20 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     public InfinispanEmbeddingStore(RemoteCacheManager cacheManager, InfinispanSchema schema) {
-        String langchainCache = DEFAULT_CACHE_CONFIG.replace("CACHE_NAME", schema.getCacheName())
-                .replace("LANGCHAINITEM", SchemaAndMarshallerProducer.LANGCHAIN_ITEM + schema.getDimension());
-        this.remoteCache = cacheManager.administration()
-                .getOrCreateCache(schema.getCacheName(), new StringConfiguration(langchainCache));
         this.schema = schema;
+        this.langchainItemType = SchemaAndMarshallerProducer.LANGCHAIN_ITEM + schema.getDimension();
+        if (schema.isCreateCache()) {
+            String cacheConfig = schema.getCacheConfig();
+            if (cacheConfig == null) {
+                cacheConfig = DEFAULT_CACHE_CONFIG
+                        .replace("CACHE_NAME", schema.getCacheName())
+                        .replace("LANGCHAINITEM", langchainItemType);
+            }
+            this.remoteCache = cacheManager.administration()
+                    .getOrCreateCache(schema.getCacheName(), new StringConfiguration(cacheConfig));
+        } else {
+            this.remoteCache = cacheManager.getCache(schema.getCacheName());
+        }
     }
 
     @Override
@@ -113,15 +130,12 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
             Embedding embedding = embeddings.get(i);
             TextSegment textSegment = embedded == null ? null : embedded.get(i);
             if (textSegment != null) {
-                Map<String, Object> map = textSegment.metadata().toMap();
-                final List<String> metadataKeys = new ArrayList<>(map.size());
-                final List<String> metadataValues = new ArrayList<>(map.size());
-                map.entrySet().forEach(e -> {
-                    metadataKeys.add(e.getKey());
-                    metadataValues.add(e.getValue() != null ? e.getValue().toString() : null);
-                });
+                Set<LangchainMetadata> metadata = textSegment.metadata().toMap().entrySet().stream()
+                        .map(e -> new LangchainMetadata(e.getKey(), e.getValue()))
+                        .collect(Collectors.toSet());
                 elements.put(id,
-                        new LangchainInfinispanItem(id, embedding.vector(), textSegment.text(), metadataKeys, metadataValues));
+                        new LangchainInfinispanItem(id, embedding.vector(), textSegment.text(), metadata,
+                                textSegment.metadata().toMap()));
             } else {
                 elements.put(id, new LangchainInfinispanItem(id, embedding.vector(), null, null, null));
             }
@@ -132,10 +146,24 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
 
     @Override
     public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
-        Query<Object[]> query = remoteCache.query("select i, score(i) from " + "LangchainItem"
-                + schema.getDimension().toString()
-                + " i where i.floatVector <-> " + Arrays.toString(request.queryEmbedding().vector()) + "~"
-                + schema.getDistance());
+        InfinispanMetadataFilterMapper.FilterResult filteringQuery = new InfinispanMetadataFilterMapper()
+                .map(request.filter());
+        String joinPart = "";
+        String filteringPart = "";
+
+        if (filteringQuery != null) {
+            joinPart = filteringQuery.join;
+            filteringPart = " filtering(" + filteringQuery.query + ")";
+        }
+
+        String vectorQuery = "select i, score(i) from " + langchainItemType
+                + " i "
+                + joinPart
+                + " where i.floatVector <-> " + Arrays.toString(request.queryEmbedding().vector()) + "~"
+                + schema.getDistance()
+                + filteringPart;
+
+        Query<Object[]> query = remoteCache.query(vectorQuery);
         List<Object[]> hits = query.maxResults(request.maxResults()).list();
 
         return new EmbeddingSearchResult<>(hits.stream().map(obj -> {
@@ -144,24 +172,41 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
             if (score.doubleValue() < request.minScore()) {
                 return null;
             }
-            TextSegment embedded = null;
+            TextSegment textSegment = null;
             if (item.getText() != null) {
                 Map<String, Object> map = new HashMap<>();
-                List<String> metadataKeys = item.getMetadataKeys();
-                List<String> metadataValues = item.getMetadataValues();
-                for (int i = 0; i < metadataKeys.size(); i++) {
-                    map.put(metadataKeys.get(i), metadataValues.get(i));
+                if (item.getMetadata() != null) {
+                    for (LangchainMetadata metadata : item.getMetadata()) {
+                        map.put(metadata.getName(), metadata.getValue());
+                    }
                 }
-                embedded = new TextSegment(item.getText(), new Metadata(map));
+                textSegment = new TextSegment(item.getText(), new Metadata(map));
             }
             Embedding embedding = new Embedding(item.getFloatVector());
-            return new EmbeddingMatch<>(score.doubleValue(), item.getId(), embedding, embedded);
+            return new EmbeddingMatch<>(score.doubleValue(), item.getId(), embedding, textSegment);
         }).filter(Objects::nonNull).collect(Collectors.toList()));
     }
 
     @Override
     public void removeAll(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException("ids cannot be null or empty");
+        }
         ids.forEach(id -> remoteCache.remove(id));
+    }
+
+    @Override
+    public void removeAll(Filter filter) {
+        if (filter == null) {
+            throw new IllegalArgumentException("filter cannot be null");
+        }
+
+        InfinispanMetadataFilterMapper.FilterResult filterResult = new InfinispanMetadataFilterMapper().map(filter);
+
+        String deleteQuery = "DELETE FROM " + langchainItemType
+                + " i " + filterResult.join + " where " + filterResult.query;
+        Query<LangchainInfinispanItem> query = remoteCache.query(deleteQuery);
+        query.execute();
     }
 
     @Override

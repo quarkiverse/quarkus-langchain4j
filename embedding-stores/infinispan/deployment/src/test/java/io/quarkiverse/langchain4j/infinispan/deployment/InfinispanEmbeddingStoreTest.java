@@ -16,6 +16,9 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import io.quarkiverse.langchain4j.infinispan.InfinispanEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
+// Cannot extend EmbeddingStoreWithFilteringIT because it contains tests parametrized through
+// @MethodSource, which is not supported by the quarkus-junit5-internal testing framework.
+// See InfinispanMetadataFilteringTest for manual filtering tests.
 public class InfinispanEmbeddingStoreTest extends EmbeddingStoreIT {
 
     @RegisterExtension

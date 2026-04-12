@@ -68,7 +68,8 @@ public class McpRecorder {
             McpTransportType mcpTransportType,
             ShutdownContext shutdown,
             Supplier<Vertx> vertx,
-            boolean addMetrics) {
+            boolean addMetrics,
+            boolean hasResourceUpdatedObserver) {
         return new Function<>() {
             @Override
             public McpClient apply(SyntheticCreationalContext<McpClient> context) {
@@ -129,6 +130,7 @@ public class McpRecorder {
                             streamableBuilder.headers(runtimeConfig.header());
                         }
                         mcpHeadersSupplier.ifPresent(streamableBuilder::headers);
+                        streamableBuilder.subsidiaryChannel(runtimeConfig.subsidiaryChannel());
                         yield streamableBuilder.build();
                     }
                     case WEBSOCKET -> {
@@ -154,6 +156,9 @@ public class McpRecorder {
                 if (addMetrics) {
                     addMetrics(builder, key);
                 }
+                if (hasResourceUpdatedObserver) {
+                    builder.onResourceUpdated(new McpResourceUpdatedHandler());
+                }
                 DefaultMcpClient client = builder
                         .key(key)
                         .transport(transport)
@@ -164,6 +169,8 @@ public class McpRecorder {
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
                         .roots(initialRoots)
                         .cacheToolList(runtimeConfig.cacheToolList().orElse(true))
+                        .cacheResourceList(runtimeConfig.cacheResourceList().orElse(true))
+                        .cachePromptList(runtimeConfig.cachePromptList().orElse(true))
                         .autoHealthCheck(runtimeConfig.autoHealthCheck())
                         .autoHealthCheckInterval(runtimeConfig.autoHealthCheckInterval())
                         .build();

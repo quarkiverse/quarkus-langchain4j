@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-enabled]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-enabled[`quarkus.langchain4j.cohere.scoring-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-enabled]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-enabled[`+++quarkus.langchain4j.cohere.scoring-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.scoring-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url[`quarkus.langchain4j.cohere.base-url`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url[`+++quarkus.langchain4j.cohere.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++https://api.cohere.com/+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key[`quarkus.langchain4j.cohere.api-key`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key[`+++quarkus.langchain4j.cohere.api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++dummy+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-timeout[`quarkus.langchain4j.cohere.timeout`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-timeout[`+++quarkus.langchain4j.cohere.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -91,7 +91,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++30s+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name[`quarkus.langchain4j.cohere.scoring-model.model-name`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name[`+++quarkus.langchain4j.cohere.scoring-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.scoring-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++rerank-multilingual-v2.0+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout[`quarkus.langchain4j.cohere.scoring-model.timeout`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout[`+++quarkus.langchain4j.cohere.scoring-model.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.scoring-model.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -133,7 +133,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++30S+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests[`quarkus.langchain4j.cohere.scoring-model.log-requests`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests[`+++quarkus.langchain4j.cohere.scoring-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.scoring-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -154,7 +154,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-responses[`quarkus.langchain4j.cohere.scoring-model.log-responses`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-responses[`+++quarkus.langchain4j.cohere.scoring-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.scoring-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -175,7 +175,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries[`quarkus.langchain4j.cohere.scoring-model.max-retries`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries[`+++quarkus.langchain4j.cohere.scoring-model.max-retries+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere.scoring-model.max-retries+++[]
 endif::add-copy-button-to-config-props[]
@@ -200,7 +200,7 @@ h|[[quarkus-langchain4j-cohere_section_quarkus-langchain4j-cohere]] [.section-na
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-base-url[`quarkus.langchain4j.cohere."model-name".base-url`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-base-url[`+++quarkus.langchain4j.cohere."model-name".base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -221,7 +221,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++https://api.cohere.com/+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key[`quarkus.langchain4j.cohere."model-name".api-key`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key[`+++quarkus.langchain4j.cohere."model-name".api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -242,7 +242,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++dummy+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-timeout[`quarkus.langchain4j.cohere."model-name".timeout`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-timeout[`+++quarkus.langchain4j.cohere."model-name".timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -263,7 +263,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++30s+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name[`quarkus.langchain4j.cohere."model-name".scoring-model.model-name`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name[`+++quarkus.langchain4j.cohere."model-name".scoring-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".scoring-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -284,7 +284,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++rerank-multilingual-v2.0+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-timeout[`quarkus.langchain4j.cohere."model-name".scoring-model.timeout`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-timeout[`+++quarkus.langchain4j.cohere."model-name".scoring-model.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".scoring-model.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -305,7 +305,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++30S+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests[`quarkus.langchain4j.cohere."model-name".scoring-model.log-requests`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests[`+++quarkus.langchain4j.cohere."model-name".scoring-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".scoring-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -326,7 +326,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-responses[`quarkus.langchain4j.cohere."model-name".scoring-model.log-responses`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-responses[`+++quarkus.langchain4j.cohere."model-name".scoring-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".scoring-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -347,7 +347,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-max-retries[`quarkus.langchain4j.cohere."model-name".scoring-model.max-retries`]##
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-max-retries[`+++quarkus.langchain4j.cohere."model-name".scoring-model.max-retries+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.cohere."model-name".scoring-model.max-retries+++[]
 endif::add-copy-button-to-config-props[]

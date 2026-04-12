@@ -179,14 +179,9 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({ "text", "id", "toolName", "type" })
-    private static class ToolExecutionResultMessageMixin {
-        @JsonCreator
-        public ToolExecutionResultMessageMixin(
-                @JsonProperty("id") String id,
-                @JsonProperty("toolName") String toolName,
-                @JsonProperty("text") String text) {
-        }
+    @JsonDeserialize(builder = ToolExecutionResultMessage.Builder.class)
+    @JsonPropertyOrder({ "id", "toolName", "type", "contents", "attributes" })
+    private abstract static class ToolExecutionResultMessageMixin {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories]] [.property-path]##link:#quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories[`quarkus.langchain4j.skills.directories`]##
+a| [[quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories]] [.property-path]##link:#quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories[`+++quarkus.langchain4j.skills.directories+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.skills.directories+++[]
 endif::add-copy-button-to-config-props[]
@@ -15,7 +15,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-List of directories from which skills should be loaded. Each entry is either an absolute or relative path in the filesystem. A relative path is resolved against the current working directory at runtime.
+List of directories from which skills should be loaded. Each entry is either an absolute or relative path in the filesystem, or, if it's prepended with "classpath:", is considered a classpath resource. A relative path is resolved against the current working directory at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
