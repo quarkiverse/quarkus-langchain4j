@@ -20,6 +20,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
+import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
@@ -39,6 +40,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRegistryClientName;
+import io.quarkiverse.langchain4j.mcp.runtime.McpResourceUpdatedEvent;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
@@ -71,6 +73,8 @@ public class McpProcessor {
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
     private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
     private static final DotName TRACER = DotName.createSimple(Tracer.class);
+    private static final DotName MCP_RESOURCE_UPDATED_EVENT = DotName.createSimple(McpResourceUpdatedEvent.class);
+    private static final DotName OBSERVES = DotName.createSimple("jakarta.enterprise.event.Observes");
     private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -142,6 +146,7 @@ public class McpProcessor {
             Optional<MetricsCapabilityBuildItem> metricsCapability,
             CoreVertxBuildItem vertxBuildItem,
             BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
+            CombinedIndexBuildItem combinedIndex,
             McpRecorder recorder) {
         if (!mcpBuildTimeConfiguration.enabled()) {
             return;
@@ -172,6 +177,8 @@ public class McpProcessor {
                     }
                 }));
         if (!clients.isEmpty()) {
+            boolean hasResourceUpdatedObserver = hasObserverForType(combinedIndex.getIndex(),
+                    MCP_RESOURCE_UPDATED_EVENT);
             // generate MCP clients
             List<AnnotationInstance> qualifiers = new ArrayList<>();
             clients.forEach((client, transportType) -> {
@@ -191,7 +198,8 @@ public class McpProcessor {
                         .createWith(
                                 recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
                                         micrometerPresent && configuredClients.containsKey(client)
-                                                && configuredClients.get(client).metricsEnabled()))
+                                                && configuredClients.get(client).metricsEnabled(),
+                                        hasResourceUpdatedObserver))
                         .done());
             });
             // generate a tool provider if configured to do so
@@ -274,6 +282,23 @@ public class McpProcessor {
 
     private static boolean isConfigurableClient(String clientName) {
         return !RESERVED_MCP_SECTION_NAMES.contains(clientName);
+    }
+
+    /**
+     * Returns true if the combined index contains at least one CDI observer method
+     * whose observed event type matches the given DotName.
+     */
+    private static boolean hasObserverForType(IndexView index, DotName eventType) {
+        for (AnnotationInstance annotation : index.getAnnotations(OBSERVES)) {
+            if (annotation.target().kind() == org.jboss.jandex.AnnotationTarget.Kind.METHOD_PARAMETER) {
+                MethodParameterInfo param = annotation.target().asMethodParameter();
+                Type paramType = param.method().parameterType(param.position());
+                if (paramType.name().equals(eventType)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

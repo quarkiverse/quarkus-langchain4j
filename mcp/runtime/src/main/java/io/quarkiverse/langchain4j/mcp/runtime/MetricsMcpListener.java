@@ -10,6 +10,7 @@ import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.McpClientListener;
 import dev.langchain4j.mcp.client.McpGetPromptResult;
 import dev.langchain4j.mcp.client.McpReadResourceResult;
+import dev.langchain4j.mcp.protocol.McpCallToolParams;
 import dev.langchain4j.mcp.protocol.McpCallToolRequest;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.micrometer.core.instrument.Metrics;
@@ -93,7 +94,7 @@ public class MetricsMcpListener implements McpClientListener {
             long durationMs = System.currentTimeMillis() - operationStartTime;
             switch (type) {
                 case TOOL_GET:
-                    String toolName = ((McpCallToolRequest) context.message()).getParams().get("name").toString();
+                    String toolName = ((McpCallToolParams) (((McpCallToolRequest) context.message()).getParams())).getName();
                     meterRegistry.timer("mcp.client.tool.call.duration", "mcp_client", mcpClientKey, "outcome", outcome,
                             "tool_name", toolName).record(durationMs, java.util.concurrent.TimeUnit.MILLISECONDS);
                     break;

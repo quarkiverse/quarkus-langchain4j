@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.service.tool.ToolProviderResult;
+import dev.langchain4j.skills.ClassPathSkillLoader;
 import dev.langchain4j.skills.FileSystemSkill;
 import dev.langchain4j.skills.FileSystemSkillLoader;
 import dev.langchain4j.skills.Skills;
@@ -40,18 +41,28 @@ public class SkillsRecorder {
                 List<String> directories = config.directories().get();
                 List<FileSystemSkill> allSkills = new ArrayList<>();
                 for (String directory : directories) {
-                    // TODO: when a ClassPathSkillLoader is implemented, update this to be able to load skills from the classpath as well
-                    Path dirPath = resolveDirectory(directory);
-                    if (dirPath != null && Files.isDirectory(dirPath)) {
-                        List<FileSystemSkill> loaded = FileSystemSkillLoader.loadSkills(dirPath);
+                    if (directory.startsWith("classpath:")) {
+                        String dir = directory.substring("classpath:".length());
+                        List<FileSystemSkill> loaded = ClassPathSkillLoader.loadSkills(dir);
                         if (!loaded.isEmpty()) {
-                            log.infof("Loaded %d skill(s) from directory: %s", loaded.size(), dirPath.toAbsolutePath());
+                            log.infof("Loaded %d skill(s) from directory: %s", loaded.size(), directory);
                             allSkills.addAll(loaded);
                         } else {
-                            log.warnf("No skills found in directory: %s", dirPath.toAbsolutePath());
+                            log.warnf("No skills found in directory: %s", directory);
                         }
                     } else {
-                        log.warnf("Skills directory does not exist or is not a directory: %s", directory);
+                        Path dirPath = resolveDirectory(directory);
+                        if (dirPath != null && Files.isDirectory(dirPath)) {
+                            List<FileSystemSkill> loaded = FileSystemSkillLoader.loadSkills(dirPath);
+                            if (!loaded.isEmpty()) {
+                                log.infof("Loaded %d skill(s) from directory: %s", loaded.size(), dirPath.toAbsolutePath());
+                                allSkills.addAll(loaded);
+                            } else {
+                                log.warnf("No skills found in directory: %s", dirPath.toAbsolutePath());
+                            }
+                        } else {
+                            log.warnf("Skills directory does not exist or is not a directory: %s", directory);
+                        }
                     }
                 }
                 if (allSkills.isEmpty()) {

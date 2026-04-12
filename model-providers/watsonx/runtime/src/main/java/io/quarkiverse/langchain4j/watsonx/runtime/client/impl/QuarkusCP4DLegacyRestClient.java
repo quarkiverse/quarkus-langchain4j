@@ -36,8 +36,8 @@ public final class QuarkusCP4DLegacyRestClient extends CP4DRestClient {
     }
 
     @Override
-    public CompletableFuture<TokenResponse> asyncToken(TokenRequest request) {
-        return client.asyncLegacyToken(request)
+    public CompletableFuture<TokenResponse> tokenAsync(TokenRequest request) {
+        return client.legacyTokenAsync(request)
                 .map(json -> new TokenResponse(json.getString("token"), null, null, null, null, null))
                 .subscribeAsCompletionStage();
     }

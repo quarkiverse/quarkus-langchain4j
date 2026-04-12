@@ -26,10 +26,11 @@ but you may use the `dev.langchain4j:langchain4j-experimental-skills-shell` modu
 The extension is configured via the `quarkus.langchain4j.skills.directories` property,
 which accepts a list of directories from which to load skills.
 Each directory is in the list is a relative or absolute filesystem path.
+If referencing a classpath resource, prefix the path with `classpath:`.
 
 [source,properties]
 ----
-quarkus.langchain4j.skills.directories=skills
+quarkus.langchain4j.skills.directories=skills,classpath:other-skills
 ----
 
 Each listed directory is expected to contain subdirectories, where each subdirectory represents a single skill and must contain a `SKILL.md` file with YAML front matter defining the skill's `name` and `description`.

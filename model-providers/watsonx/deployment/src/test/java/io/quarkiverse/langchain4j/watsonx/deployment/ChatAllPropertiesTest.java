@@ -86,6 +86,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     static final String EXPECTED_BODY = """
             {
                 "model_id": "my_super_model",
+                "model": "my_super_model",
                 "project_id": "my-project-id",
                 "space_id": "my-space-id",
                 "messages": [
