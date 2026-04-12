@@ -532,6 +532,17 @@ public class AiServicesProcessor {
                 }
             }
 
+            DotName chatMemoryFlushStrategySupplierClassDotName = null;
+            AnnotationValue chatMemoryFlushStrategySupplierValue = instance.value("chatMemoryFlushStrategySupplier");
+            if (chatMemoryFlushStrategySupplierValue != null) {
+                DotName supplierDotName = chatMemoryFlushStrategySupplierValue.asClass().name();
+                if (!LangChain4jDotNames.DEFAULT_CHAT_MEMORY_FLUSH_STRATEGY_SUPPLIER.equals(supplierDotName)) {
+                    chatMemoryFlushStrategySupplierClassDotName = supplierDotName;
+                    validateSupplierAndRegister(chatMemoryFlushStrategySupplierClassDotName, index,
+                            reflectiveClassProducer, unremovableBeanProducer);
+                }
+            }
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -560,7 +571,8 @@ public class AiServicesProcessor {
                             allowContinuousForcedToolCalling,
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
                             impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
-                            shouldThrowExceptionOnEventError));
+                            shouldThrowExceptionOnEventError,
+                            chatMemoryFlushStrategySupplierClassDotName));
 
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
@@ -980,6 +992,10 @@ public class AiServicesProcessor {
                     ? bi.getSystemMessageProviderClassDotName().toString()
                     : null);
 
+            String chatMemoryFlushStrategySupplierClassName = (bi.getChatMemoryFlushStrategySupplierClassDotName() != null
+                    ? bi.getChatMemoryFlushStrategySupplierClassDotName().toString()
+                    : null);
+
             // determine whether the method returns Multi<String>
             boolean injectStreamingChatModelBean = false;
             // currently in one class either streaming or blocking model are supported, but not both
@@ -1041,6 +1057,7 @@ public class AiServicesProcessor {
                                     toolToQualifierMap,
                                     toolProviderSupplierClassName,
                                     chatMemoryProviderSupplierClassName,
+                                    chatMemoryFlushStrategySupplierClassName,
                                     retrievalAugmentorSupplierClassName,
                                     moderationModelSupplierClassName,
                                     imageModelSupplierClassName,

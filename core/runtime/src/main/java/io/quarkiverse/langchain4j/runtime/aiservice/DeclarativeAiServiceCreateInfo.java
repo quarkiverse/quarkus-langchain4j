@@ -14,6 +14,7 @@ public record DeclarativeAiServiceCreateInfo(
         Map<String, AnnotationLiteral<?>> toolsClassInfo,
         String toolProviderSupplier,
         String chatMemoryProviderSupplierClassName,
+        String chatMemoryFlushStrategySupplierClassName,
         String retrievalAugmentorSupplierClassName,
         String moderationModelSupplierClassName,
         String imageModelSupplierClassName,

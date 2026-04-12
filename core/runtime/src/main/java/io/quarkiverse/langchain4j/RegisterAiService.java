@@ -27,6 +27,7 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 
 /**
@@ -122,6 +123,26 @@ public @interface RegisterAiService {
      * <p>
      */
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanChatMemoryProviderSupplier.class;
+
+    /**
+     * Configures the flush strategy for the committable chat memory.
+     * <p>
+     * By default, Quarkus Langchain4j defers committing messages to the {@link ChatMemory}
+     * until the AI service method completes successfully. This enables seamless
+     * {@code @Retry} support - if a failure occurs, the uncommitted messages are discarded.
+     * This is the default strategy for most use cases as it leads to more predictable behavior
+     * in case of errors and allows the retry mechanism to work as expected.
+     * <p>
+     * A custom {@link ChatMemoryFlushStrategy} can be provided to control this behavior,
+     * for example to use {@link ChatMemoryFlushStrategy#IMMEDIATE} so that messages are
+     * persisted as they are added.
+     * <p>
+     * The supplier may or may not be a CDI bean. If it is not a CDI bean,
+     * Quarkus will create an instance by calling its no-arg constructor.
+     *
+     * @see ChatMemoryFlushStrategy
+     */
+    Class<? extends Supplier<ChatMemoryFlushStrategy>> chatMemoryFlushStrategySupplier() default DefaultChatMemoryFlushStrategySupplier.class;
 
     /**
      * Configures the way to obtain the {@link RetrievalAugmentor} to use
@@ -357,6 +378,18 @@ public @interface RegisterAiService {
 
         @Override
         public java.util.Optional<String> getSystemMessage(Object memoryId) {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that uses the default flush strategy which only commits on success.
+     * This is the default behavior that enables seamless {@code @Retry} support.
+     */
+    final class DefaultChatMemoryFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
+
+        @Override
+        public ChatMemoryFlushStrategy get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }

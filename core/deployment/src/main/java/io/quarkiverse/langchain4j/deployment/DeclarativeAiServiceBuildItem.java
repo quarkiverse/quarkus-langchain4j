@@ -40,6 +40,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
     private final boolean shouldThrowExceptionOnEventError;
+    private final DotName chatMemoryFlushStrategySupplierClassDotName;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -66,7 +67,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName toolExecutionErrorHandlerDotName,
             Integer maxSequentialToolInvocations,
             boolean allowContinuousForcedToolCalling,
-            boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError) {
+            boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
+            DotName chatMemoryFlushStrategySupplierClassDotName) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -93,6 +95,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
+        this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -218,5 +221,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public boolean isAllowContinuousForcedToolCalling() {
         return allowContinuousForcedToolCalling;
+    }
+
+    public DotName getChatMemoryFlushStrategySupplierClassDotName() {
+        return chatMemoryFlushStrategySupplierClassDotName;
     }
 }
