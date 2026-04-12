@@ -48,6 +48,27 @@ class ImmediateFlushChatMemoryTest {
         assertEquals(messages, store.messages());
     }
 
+    @Test
+    void shouldCollapseCorruptedMemoryWithMultipleSystemMessages() {
+        TrackingChatMemoryStore store = new TrackingChatMemoryStore();
+        store.updateMessages("test-memory", List.of(
+                SystemMessage.from("system-1"),
+                UserMessage.from("hello"),
+                SystemMessage.from("system-2"),
+                UserMessage.from("again")));
+
+        ImmediateFlushChatMemory memory = new ImmediateFlushChatMemory(createDelegate(store));
+
+        memory.add(SystemMessage.from("system-3"));
+
+        List<ChatMessage> messages = memory.messages();
+        assertEquals(3, messages.size());
+        assertEquals("system-3", assertInstanceOf(SystemMessage.class, messages.get(0)).text());
+        assertEquals("hello", assertInstanceOf(UserMessage.class, messages.get(1)).singleText());
+        assertEquals("again", assertInstanceOf(UserMessage.class, messages.get(2)).singleText());
+        assertEquals(messages, store.messages());
+    }
+
     private static MessageWindowChatMemory createDelegate(TrackingChatMemoryStore store) {
         return MessageWindowChatMemory.builder()
                 .id("test-memory")
