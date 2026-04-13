@@ -59,6 +59,7 @@ import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.internal.Utils;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
+import dev.langchain4j.invocation.LangChain4jManaged;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -172,6 +173,7 @@ public class AiServiceMethodImplementationSupport {
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
                 .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory()))
                 .invocationParameters(findInvocationParams(methodArgs))
+                .managedParameters(LangChain4jManaged.current())
                 .timestampNow()
                 .build();
 
