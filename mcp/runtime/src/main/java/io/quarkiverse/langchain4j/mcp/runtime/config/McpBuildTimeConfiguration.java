@@ -65,4 +65,12 @@ public interface McpBuildTimeConfiguration {
     @WithName("health.enabled")
     @WithDefault("true")
     boolean mpHealthEnabled();
+
+    /**
+     * Whether tracing is enabled for MCP clients.
+     * Requires the OpenTelemetry extension to be present.
+     */
+    @WithName("tracing.enabled")
+    @WithDefault("true")
+    boolean tracingEnabled();
 }
