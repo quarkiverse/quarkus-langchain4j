@@ -36,7 +36,6 @@ To create your first guardrail in 3 steps:
 1. **Create a CDI bean** implementing `ToolInputGuardrail` or `ToolOutputGuardrail`
 2. **Implement the `validate()` method** with your validation logic
 3. **Apply the annotation** to your tool method
-
 [source,java]
 ----
 // Step 1 & 2: Create guardrail bean
@@ -69,6 +68,7 @@ public class BankingTools {
     }
 }
 ----
++
 <1> Make it a CDI bean with a scope annotation
 <2> Implement the appropriate guardrail interface
 <3> Override the validate method
