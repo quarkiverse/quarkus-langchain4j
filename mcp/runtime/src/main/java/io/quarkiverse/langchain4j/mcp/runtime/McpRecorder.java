@@ -13,13 +13,11 @@ import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
-import jakarta.enterprise.inject.Instance;
-import jakarta.enterprise.util.TypeLiteral;
-
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpClientListener;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
+import dev.langchain4j.mcp.client.McpMetaSupplier;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
@@ -27,7 +25,6 @@ import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.mcp.registryclient.DefaultMcpRegistryClient;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
-import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.*;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
@@ -46,9 +43,6 @@ import io.vertx.core.http.HttpClientOptions;
 
 @Recorder
 public class McpRecorder {
-
-    private static final TypeLiteral<Instance<Tracer>> TRACER_TYPE_LITERAL = new TypeLiteral<>() {
-    };
 
     public static Map<String, LocalLaunchParams> claudeConfigContents = Collections.emptyMap();
 
@@ -69,7 +63,8 @@ public class McpRecorder {
             ShutdownContext shutdown,
             Supplier<Vertx> vertx,
             boolean addMetrics,
-            boolean hasResourceUpdatedObserver) {
+            boolean hasResourceUpdatedObserver,
+            RuntimeValue<Boolean> openTelemetryEnabled) {
         return new Function<>() {
             @Override
             public McpClient apply(SyntheticCreationalContext<McpClient> context) {
@@ -153,12 +148,13 @@ public class McpRecorder {
                     }
                 };
                 DefaultMcpClient.Builder builder = new DefaultMcpClient.Builder();
-                if (addMetrics) {
-                    addMetrics(builder, key);
-                }
                 if (hasResourceUpdatedObserver) {
                     builder.onResourceUpdated(new McpResourceUpdatedHandler());
                 }
+                addObservability(builder, key, addMetrics,
+                        openTelemetryEnabled != null &&
+                                openTelemetryEnabled.getValue() &&
+                                mcpRuntimeConfiguration.getValue().tracingEnabled());
                 DefaultMcpClient client = builder
                         .key(key)
                         .transport(transport)
@@ -180,13 +176,64 @@ public class McpRecorder {
         };
     }
 
-    private void addMetrics(DefaultMcpClient.Builder builder, String key) {
+    private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing) {
+        List<McpClientListener> listeners = new ArrayList<>();
+        if (addMetrics) {
+            listeners.add(createMetricsListener(key));
+        }
+        if (addTracing) {
+            listeners.add(createTracingListener());
+            builder.metaSupplier(createTracingMetaSupplier());
+        }
+        // FIXME: this CompositeMcpClientListener thing is a temporary solution until we have a langchain4j version
+        // that supports multiple listeners directly (https://github.com/langchain4j/langchain4j/issues/4904).
+        // After that, just call builder.addListener multiple times
+        if (listeners.size() == 1) {
+            builder.listener(listeners.get(0));
+        } else if (listeners.size() > 1) {
+            builder.listener(new CompositeMcpClientListener(listeners));
+        }
+    }
+
+    private McpClientListener createMetricsListener(String key) {
         try {
             // avoid direct dependency on the MetricsMcpListener class, it would break native
             // compilation if the optional Micrometer dependency isn't present
-            builder.listener((McpClientListener) Thread.currentThread()
+            return (McpClientListener) Thread.currentThread()
                     .getContextClassLoader().loadClass("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener")
-                    .getConstructor(String.class).newInstance(key));
+                    .getConstructor(String.class).newInstance(key);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private McpClientListener createTracingListener() {
+        try {
+            // avoid direct dependency on the TracingMcpClientListener class, it would break native
+            // compilation if the optional OpenTelemetry dependency isn't present
+            Object tracer = Arc.container().select(
+                    Thread.currentThread().getContextClassLoader()
+                            .loadClass("io.opentelemetry.api.trace.Tracer"))
+                    .get();
+            return (McpClientListener) Thread.currentThread()
+                    .getContextClassLoader()
+                    .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener")
+                    .getConstructor(Thread.currentThread().getContextClassLoader()
+                            .loadClass("io.opentelemetry.api.trace.Tracer"))
+                    .newInstance(tracer);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private McpMetaSupplier createTracingMetaSupplier() {
+        try {
+            // avoid direct dependency on the TracingMcpMetaSupplier class, it would break native
+            // compilation if the optional OpenTelemetry dependency isn't present
+            return (McpMetaSupplier) Thread.currentThread()
+                    .getContextClassLoader()
+                    .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpMetaSupplier")
+                    .getConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -203,8 +250,7 @@ public class McpRecorder {
                     clients.add(context.getInjectedReference(McpClient.class, qualifier));
                 }
                 boolean exposeResourcesAsTools = mcpRuntimeConfiguration.getValue().exposeResourcesAsTools().orElse(false);
-                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL),
-                        exposeResourcesAsTools);
+                return new QuarkusMcpToolProvider(clients, exposeResourcesAsTools);
             }
         };
     }

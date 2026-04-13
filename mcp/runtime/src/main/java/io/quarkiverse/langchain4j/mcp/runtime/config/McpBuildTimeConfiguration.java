@@ -65,4 +65,5 @@ public interface McpBuildTimeConfiguration {
     @WithName("health.enabled")
     @WithDefault("true")
     boolean mpHealthEnabled();
+
 }
