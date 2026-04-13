@@ -51,7 +51,8 @@ class ImmediateFlushChatMemory implements CommittableChatMemory {
     }
 
     private static Optional<SystemMessage> findSystemMessage(List<ChatMessage> messages) {
-        return messages.stream().filter(message -> message instanceof SystemMessage).map(message -> (SystemMessage) message).findAny();
+        return messages.stream().filter(message -> message instanceof SystemMessage).map(message -> (SystemMessage) message)
+                .findAny();
     }
 
     @Override
