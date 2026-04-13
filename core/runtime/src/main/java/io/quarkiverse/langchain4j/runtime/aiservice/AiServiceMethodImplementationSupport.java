@@ -213,7 +213,8 @@ public class AiServiceMethodImplementationSupport {
         Object memoryId = invocationContext.chatMemoryId();
 
         var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getOrCreateChatMemory(memoryId) : null;
-        CommittableChatMemory committableChatMemory = determineCommittableChatMemory(chatMemory, context.chatMemoryFlushStrategy);
+        CommittableChatMemory committableChatMemory = determineCommittableChatMemory(chatMemory,
+                context.chatMemoryFlushStrategy);
 
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs, context, memoryId,
                 committableChatMemory);
@@ -1220,7 +1221,8 @@ public class AiServiceMethodImplementationSupport {
         return immediateReturnToolNames.contains(toolName);
     }
 
-    private static CommittableChatMemory determineCommittableChatMemory(ChatMemory chatMemory, ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
+    private static CommittableChatMemory determineCommittableChatMemory(ChatMemory chatMemory,
+            ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
         CommittableChatMemory committableChatMemory;
         if (chatMemory == null) {
             committableChatMemory = new NoopChatMemory();
