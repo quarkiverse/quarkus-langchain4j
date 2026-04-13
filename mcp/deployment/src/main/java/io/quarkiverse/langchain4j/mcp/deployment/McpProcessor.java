@@ -21,7 +21,6 @@ import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodParameterInfo;
-import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
@@ -32,8 +31,6 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
-import io.opentelemetry.api.trace.Tracer;
-import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
@@ -72,7 +69,6 @@ public class McpProcessor {
     private static final DotName MCP_REGISTRY_CLIENT = DotName.createSimple(McpRegistryClient.class);
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
     private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
-    private static final DotName TRACER = DotName.createSimple(Tracer.class);
     private static final DotName MCP_RESOURCE_UPDATED_EVENT = DotName.createSimple(McpResourceUpdatedEvent.class);
     private static final DotName OBSERVES = DotName.createSimple("jakarta.enterprise.event.Observes");
     private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client");
@@ -158,6 +154,16 @@ public class McpProcessor {
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener"));
         }
+        boolean openTelemetryPresent = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
+        if (!openTelemetryPresent) {
+            // to avoid breaking native compilation if OpenTelemetry isn't present
+            runtimeInitializedClasses.produce(
+                    new RuntimeInitializedClassBuildItem(
+                            "io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener"));
+            runtimeInitializedClasses.produce(
+                    new RuntimeInitializedClassBuildItem(
+                            "io.quarkiverse.langchain4j.mcp.runtime.TracingMcpMetaSupplier"));
+        }
         Map<String, McpClientBuildTimeConfig> rawConfiguredClients = mcpBuildTimeConfiguration.clients();
         final Map<String, McpClientBuildTimeConfig> configuredClients = rawConfiguredClients == null ? Collections.emptyMap()
                 : rawConfiguredClients;
@@ -199,7 +205,8 @@ public class McpProcessor {
                                 recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
                                         micrometerPresent && configuredClients.containsKey(client)
                                                 && configuredClients.get(client).metricsEnabled(),
-                                        hasResourceUpdatedObserver))
+                                        hasResourceUpdatedObserver,
+                                        openTelemetryPresent))
                         .done());
             });
             // generate a tool provider if configured to do so
@@ -210,8 +217,6 @@ public class McpProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(TRACER) }, null))
                         .createWith(recorder.toolProviderFunction(clients.keySet()));
                 for (AnnotationInstance qualifier : qualifiers) {
                     configurator.addInjectionPoint(ClassType.create(MCP_CLIENT), qualifier);
