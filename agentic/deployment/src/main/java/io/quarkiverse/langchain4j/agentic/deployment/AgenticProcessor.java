@@ -35,6 +35,7 @@ import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.agent.ChatMessagesAccess;
+import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.service.IllegalConfigurationException;
@@ -655,9 +656,7 @@ public class AgenticProcessor {
                     }
                     DotName expectedParameterTypeName = outputKeyBuildItem.getKeyToTypeMap().get(parameterName);
                     if (expectedParameterTypeName == null) {
-                        boolean doesNotNeedResolution = outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)
-                                || outputKeyBuildItem.getSupervisedKeys().contains(parameterName);
-                        if (!doesNotNeedResolution) {
+                        if (needsResolution(outputKeyBuildItem, parameterName)) {
                             throw new IllegalConfigurationException(
                                     "No agent provides an output key named '%s'. This means that parameter no.%d of method '%s' of class '%s' cannot be resolved"
                                             .formatted(
@@ -665,6 +664,10 @@ public class AgenticProcessor {
                                                     method.declaringClass().name()));
                         }
                     } else if (!expectedParameterTypeName.equals(parameterType.name())) {
+                        if (isParallelMapperOutput(method.declaringClass(), parameterName)) {
+                            // allow ParallelMapperAgent to transform the type of its output
+                            continue;
+                        }
                         throw new IllegalConfigurationException(
                                 "Parameter no.%d of method '%s' of class '%s' was expected to be of type '%s'".formatted(i,
                                         method.name(), method.declaringClass().name(), expectedParameterTypeName));
@@ -672,6 +675,20 @@ public class AgenticProcessor {
                 }
             });
         });
+    }
+
+    private static boolean needsResolution(OutputKeyBuildItem outputKeyBuildItem, String parameterName) {
+        return !outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)
+                && !outputKeyBuildItem.getSupervisedKeys().contains(parameterName);
+    }
+
+    private static boolean isParallelMapperOutput(ClassInfo agentClass, String parameterName) {
+        return agentClass.methods().stream().filter(m -> m.annotation(ParallelMapperAgent.class) != null)
+                .findFirst()
+                .flatMap(m -> Optional.ofNullable(m.annotation(ParallelMapperAgent.class).value("outputKey")))
+                .map(AnnotationValue::asString)
+                .map(outputKey -> outputKey.equals(parameterName))
+                .orElse(false);
     }
 
     private String determineParameterName(MethodParameterInfo parameter) {
