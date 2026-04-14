@@ -139,7 +139,7 @@ public class TracingMcpClientListener implements McpClientListener {
             log.warn("Unknown call context: " + context.message().getId());
             return;
         }
-        try(Scope scope = sas.scope()) {
+        try (Scope scope = sas.scope()) {
             if (error != null) {
                 sas.span.setAttribute(ERROR_TYPE, errorType != null ? errorType : error.getClass().getName());
                 sas.span.setStatus(StatusCode.ERROR, error.getMessage());
