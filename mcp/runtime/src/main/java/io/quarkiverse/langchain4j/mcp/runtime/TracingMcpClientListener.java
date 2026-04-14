@@ -71,31 +71,12 @@ public class TracingMcpClientListener implements McpClientListener {
 
     @Override
     public void afterExecuteTool(McpCallContext context, ToolExecutionResult result, Map<String, Object> rawResult) {
-        SpanAndScope sas = activeSpans.remove(context);
-        if (sas == null) {
-            log.warn("Unknown call context: " + context.message().getId());
-            return;
-        }
-        if (result != null && result.isError()) {
-            sas.span.setAttribute(ERROR_TYPE, "tool_error");
-            sas.span.setStatus(StatusCode.ERROR);
-        }
-        sas.scope.close();
-        sas.span.end();
+        endSpan(context, null, result != null && result.isError() ? "tool_error" : null);
     }
 
     @Override
     public void onExecuteToolError(McpCallContext context, Throwable error) {
-        SpanAndScope sas = activeSpans.remove(context);
-        if (sas == null) {
-            log.warn("Unknown call context: " + context.message().getId());
-            return;
-        }
-        sas.span.setAttribute(ERROR_TYPE, error.getClass().getName());
-        sas.span.setStatus(StatusCode.ERROR, error.getMessage());
-        sas.span.recordException(error);
-        sas.scope.close();
-        sas.span.end();
+        endSpan(context, error);
     }
 
     @Override
@@ -149,17 +130,26 @@ public class TracingMcpClientListener implements McpClientListener {
     }
 
     private void endSpan(McpCallContext context, Throwable error) {
+        endSpan(context, error, null);
+    }
+
+    private void endSpan(McpCallContext context, Throwable error, String errorType) {
         SpanAndScope sas = activeSpans.remove(context);
         if (sas == null) {
             log.warn("Unknown call context: " + context.message().getId());
             return;
         }
-        if (error != null) {
-            sas.span.setAttribute(ERROR_TYPE, error.getClass().getName());
-            sas.span.setStatus(StatusCode.ERROR, error.getMessage());
-            sas.span.recordException(error);
+        try(Scope scope = sas.scope()) {
+            if (error != null) {
+                sas.span.setAttribute(ERROR_TYPE, errorType != null ? errorType : error.getClass().getName());
+                sas.span.setStatus(StatusCode.ERROR, error.getMessage());
+                sas.span.recordException(error);
+            } else if (errorType != null) {
+                sas.span.setAttribute(ERROR_TYPE, errorType);
+                sas.span.setStatus(StatusCode.ERROR);
+            }
+        } finally {
+            sas.span.end();
         }
-        sas.scope.close();
-        sas.span.end();
     }
 }
