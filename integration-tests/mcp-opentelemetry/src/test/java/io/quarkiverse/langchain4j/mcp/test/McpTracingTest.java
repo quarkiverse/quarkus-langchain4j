@@ -51,7 +51,7 @@ public class McpTracingTest {
                     "jbang,--quiet,--fresh,run,src/test/resources/tracing_mcp_server.java")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.log-requests", "true")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.log-responses", "true")
-            .overrideConfigKey("quarkus.langchain4j.mcp.client1.tool-execution-timeout", "10s")
+            .overrideConfigKey("quarkus.langchain4j.mcp.client1.tool-execution-timeout", "3s")
             .overrideConfigKey("quarkus.otel.bsp.schedule.delay", "PT0.001S")
             .overrideConfigKey("quarkus.otel.bsp.max.queue.size", "1")
             .overrideConfigKey("quarkus.otel.bsp.max.export.batch.size", "1")
@@ -115,6 +115,28 @@ public class McpTracingTest {
         assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("tools/call");
         assertThat(span.getAttributes().get(GEN_AI_TOOL_NAME)).isEqualTo("errorResponse");
         assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("tool_error");
+        assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+    }
+
+    @Test
+    public void toolCallTimeout() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .name("slowOperation")
+                .arguments("{}")
+                .build();
+        try {
+            mcpClient.executeTool(request);
+        } catch (Exception ignored) {
+            // timeout may or may not throw depending on the client implementation
+        }
+
+        // The span appearing in finished items proves span.end() was called (no leak)
+        SpanData span = awaitSpan("tools/call slowOperation");
+
+        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("tools/call");
+        assertThat(span.getAttributes().get(GEN_AI_TOOL_NAME)).isEqualTo("slowOperation");
+        assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("java.util.concurrent.TimeoutException");
         assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
     }
 

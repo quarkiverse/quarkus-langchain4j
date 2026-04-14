@@ -3,6 +3,7 @@
 //DEPS io.quarkiverse.mcp:quarkus-mcp-server-stdio:1.7.2
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.quarkiverse.mcp.server.Meta;
 import io.quarkiverse.mcp.server.Prompt;
@@ -25,6 +26,12 @@ public class tracing_mcp_server {
     @Tool(description = "Returns an error response")
     public ToolResponse errorResponse() {
         return new ToolResponse(true, List.of(new TextContent("Something went wrong")));
+    }
+
+    @Tool(description = "Takes a long time to complete")
+    public String slowOperation() throws InterruptedException {
+        TimeUnit.MINUTES.sleep(1);
+        return "done";
     }
 
     @Resource(uri = "file:///greeting", description = "A greeting", mimeType = "text/plain")
