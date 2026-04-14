@@ -42,6 +42,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
+import io.quarkus.arc.deployment.OpenTelemetrySdkBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -143,7 +144,8 @@ public class McpProcessor {
             CoreVertxBuildItem vertxBuildItem,
             BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
             CombinedIndexBuildItem combinedIndex,
-            McpRecorder recorder) {
+            McpRecorder recorder,
+            Optional<OpenTelemetrySdkBuildItem> openTelemetrySdkBuildItem) {
         if (!mcpBuildTimeConfiguration.enabled()) {
             return;
         }
@@ -154,9 +156,8 @@ public class McpProcessor {
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener"));
         }
-        boolean openTelemetryPresent = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
-        boolean tracingEnabled = mcpBuildTimeConfiguration.tracingEnabled() && openTelemetryPresent;
-        if (!tracingEnabled) {
+        boolean openTelemetryPresent = openTelemetrySdkBuildItem.isPresent();
+        if (!openTelemetryPresent) {
             // to avoid breaking native compilation if OpenTelemetry isn't present
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem(
@@ -207,7 +208,9 @@ public class McpProcessor {
                                         micrometerPresent && configuredClients.containsKey(client)
                                                 && configuredClients.get(client).metricsEnabled(),
                                         hasResourceUpdatedObserver,
-                                        tracingEnabled))
+                                        openTelemetrySdkBuildItem.isPresent()
+                                                ? openTelemetrySdkBuildItem.get().isRuntimeEnabled()
+                                                : null))
                         .done());
             });
             // generate a tool provider if configured to do so

@@ -37,4 +37,12 @@ public interface McpRuntimeConfiguration {
      */
     @WithDefault("false")
     Optional<Boolean> exposeResourcesAsTools();
+
+    /**
+     * Whether tracing is enabled for MCP clients.
+     * Requires the OpenTelemetry extension to be present.
+     */
+    @WithName("tracing.enabled")
+    @WithDefault("true")
+    boolean tracingEnabled();
 }

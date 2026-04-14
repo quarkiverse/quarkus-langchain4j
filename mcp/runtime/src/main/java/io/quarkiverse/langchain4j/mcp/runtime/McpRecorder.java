@@ -64,7 +64,7 @@ public class McpRecorder {
             Supplier<Vertx> vertx,
             boolean addMetrics,
             boolean hasResourceUpdatedObserver,
-            boolean addTracing) {
+            RuntimeValue<Boolean> openTelemetryEnabled) {
         return new Function<>() {
             @Override
             public McpClient apply(SyntheticCreationalContext<McpClient> context) {
@@ -151,7 +151,10 @@ public class McpRecorder {
                 if (hasResourceUpdatedObserver) {
                     builder.onResourceUpdated(new McpResourceUpdatedHandler());
                 }
-                addObservability(builder, key, addMetrics, addTracing);
+                addObservability(builder, key, addMetrics,
+                        openTelemetryEnabled != null &&
+                                openTelemetryEnabled.getValue() &&
+                                mcpRuntimeConfiguration.getValue().tracingEnabled());
                 DefaultMcpClient client = builder
                         .key(key)
                         .transport(transport)
