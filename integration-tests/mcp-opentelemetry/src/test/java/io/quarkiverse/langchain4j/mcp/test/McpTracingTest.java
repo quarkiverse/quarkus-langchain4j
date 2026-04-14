@@ -3,9 +3,11 @@ package io.quarkiverse.langchain4j.mcp.test;
 import static io.quarkiverse.langchain4j.mcp.test.McpServerHelper.copyMcpServerScriptToSrcTestResourcesIfItsNotThereAlready;
 import static io.quarkiverse.langchain4j.mcp.test.McpServerHelper.skipTestsIfJbangNotAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -22,6 +24,7 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.McpClient;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
@@ -30,6 +33,14 @@ import io.quarkus.test.QuarkusUnitTest;
 public class McpTracingTest {
 
     static final Duration TIMEOUT = Duration.ofSeconds(30);
+
+    private static final AttributeKey<String> MCP_METHOD_NAME = AttributeKey.stringKey("mcp.method.name");
+    private static final AttributeKey<String> JSONRPC_REQUEST_ID = AttributeKey.stringKey("jsonrpc.request.id");
+    private static final AttributeKey<String> GEN_AI_OPERATION_NAME = AttributeKey.stringKey("gen_ai.operation.name");
+    private static final AttributeKey<String> GEN_AI_TOOL_NAME = AttributeKey.stringKey("gen_ai.tool.name");
+    private static final AttributeKey<String> GEN_AI_PROMPT_NAME = AttributeKey.stringKey("gen_ai.prompt.name");
+    private static final AttributeKey<String> MCP_RESOURCE_URI = AttributeKey.stringKey("mcp.resource.uri");
+    private static final AttributeKey<String> ERROR_TYPE = AttributeKey.stringKey("error.type");
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -64,40 +75,116 @@ public class McpTracingTest {
         spanExporter.reset();
     }
 
+    // ===== Tool call tests =====
+
     @Test
-    public void executeToolCreatesSpanWithProperAttributes() {
+    public void successfulToolCall() {
         ToolExecutionRequest request = ToolExecutionRequest.builder()
                 .name("echoMeta")
                 .arguments("{\"key\": \"traceparent\"}")
                 .build();
         String result = mcpClient.executeTool(request).resultText();
 
-        // Verify that TracingMcpClientListener created a span with the correct name and attributes
-        await().atMost(TIMEOUT).untilAsserted(() -> assertThat(spanExporter.getFinishedSpanItems())
-                .anyMatch(s -> s.getName().equals("tools/call echoMeta")));
+        SpanData span = awaitSpan("tools/call echoMeta");
 
-        SpanData toolSpan = spanExporter.getFinishedSpanItems().stream()
-                .filter(s -> s.getName().equals("tools/call echoMeta"))
-                .findFirst()
-                .orElseThrow();
-
-        // Verify span kind
-        assertThat(toolSpan.getKind()).isEqualTo(SpanKind.CLIENT);
-
-        // Verify MCP semantic convention attributes
-        assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("mcp.method.name")))
-                .isEqualTo("tools/call");
-        assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("jsonrpc.request.id")))
-                .isNotNull();
-        assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("gen_ai.operation.name")))
-                .isEqualTo("execute_tool");
-        assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("gen_ai.tool.name")))
-                .isEqualTo("echoMeta");
+        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("tools/call");
+        assertThat(span.getAttributes().get(JSONRPC_REQUEST_ID)).isNotNull();
+        assertThat(span.getAttributes().get(GEN_AI_OPERATION_NAME)).isEqualTo("execute_tool");
+        assertThat(span.getAttributes().get(GEN_AI_TOOL_NAME)).isEqualTo("echoMeta");
+        assertThat(span.getAttributes().get(ERROR_TYPE)).isNull();
+        assertThat(span.getStatus().getStatusCode()).isNotEqualTo(StatusCode.ERROR);
 
         // Verify trace context was propagated to the MCP server
         assertThat(result).isNotEqualTo("null");
         assertThat(result).startsWith("00-");
-        assertThat(result).contains(toolSpan.getTraceId());
+        assertThat(result).contains(span.getTraceId());
+    }
+
+    @Test
+    public void toolCallWithErrorResponse() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .name("errorResponse")
+                .arguments("{}")
+                .build();
+        assertThatThrownBy(() -> mcpClient.executeTool(request));
+
+        SpanData span = awaitSpan("tools/call errorResponse");
+
+        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("tools/call");
+        assertThat(span.getAttributes().get(GEN_AI_TOOL_NAME)).isEqualTo("errorResponse");
+        assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("tool_error");
+        assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+    }
+
+    // ===== Resource read tests =====
+
+    @Test
+    public void successfulResourceRead() {
+        mcpClient.readResource("file:///greeting");
+
+        SpanData span = awaitSpan("resources/read");
+
+        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("resources/read");
+        assertThat(span.getAttributes().get(JSONRPC_REQUEST_ID)).isNotNull();
+        assertThat(span.getAttributes().get(MCP_RESOURCE_URI)).isEqualTo("file:///greeting");
+        assertThat(span.getAttributes().get(ERROR_TYPE)).isNull();
+        assertThat(span.getStatus().getStatusCode()).isNotEqualTo(StatusCode.ERROR);
+    }
+
+    @Test
+    public void readNonExistentResource() {
+        assertThatThrownBy(() -> mcpClient.readResource("file:///does-not-exist"));
+
+        SpanData span = awaitSpan("resources/read");
+
+        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("resources/read");
+        assertThat(span.getAttributes().get(MCP_RESOURCE_URI)).isEqualTo("file:///does-not-exist");
+        assertThat(span.getAttributes().get(ERROR_TYPE)).isNotNull();
+        assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+    }
+
+    // ===== Prompt get tests =====
+
+    @Test
+    public void successfulPromptGet() {
+        mcpClient.getPrompt("greeting_prompt", Collections.emptyMap());
+
+        SpanData span = awaitSpan("prompts/get greeting_prompt");
+
+        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("prompts/get");
+        assertThat(span.getAttributes().get(JSONRPC_REQUEST_ID)).isNotNull();
+        assertThat(span.getAttributes().get(GEN_AI_PROMPT_NAME)).isEqualTo("greeting_prompt");
+        assertThat(span.getAttributes().get(ERROR_TYPE)).isNull();
+        assertThat(span.getStatus().getStatusCode()).isNotEqualTo(StatusCode.ERROR);
+    }
+
+    @Test
+    public void getNonExistentPrompt() {
+        assertThatThrownBy(() -> mcpClient.getPrompt("nonExistentPrompt", Collections.emptyMap()));
+
+        SpanData span = awaitSpan("prompts/get nonExistentPrompt");
+
+        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("prompts/get");
+        assertThat(span.getAttributes().get(GEN_AI_PROMPT_NAME)).isEqualTo("nonExistentPrompt");
+        assertThat(span.getAttributes().get(ERROR_TYPE)).isNotNull();
+        assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+    }
+
+    // ===== Helpers =====
+
+    private SpanData awaitSpan(String spanName) {
+        await().atMost(TIMEOUT).untilAsserted(() -> assertThat(spanExporter.getFinishedSpanItems())
+                .anyMatch(s -> s.getName().equals(spanName)));
+        return spanExporter.getFinishedSpanItems().stream()
+                .filter(s -> s.getName().equals(spanName))
+                .findFirst()
+                .orElseThrow();
     }
 
     @ApplicationScoped
