@@ -19,18 +19,27 @@ import dev.langchain4j.mcp.protocol.McpReadResourceRequest;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 
 /**
  * An MCP client listener that creates OpenTelemetry spans for MCP client operations.
+ * <p>
+ * Follows the OpenTelemetry MCP client semantic conventions.
+ *
+ * @see <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/#client">MCP Client Semantic Conventions</a>
  */
 public class TracingMcpClientListener implements McpClientListener {
 
-    // GenAI semantic convention attribute keys
+    // MCP semantic convention attribute keys
+    private static final AttributeKey<String> MCP_METHOD_NAME = AttributeKey.stringKey("mcp.method.name");
+    private static final AttributeKey<String> JSONRPC_REQUEST_ID = AttributeKey.stringKey("jsonrpc.request.id");
     private static final AttributeKey<String> GEN_AI_OPERATION_NAME = AttributeKey.stringKey("gen_ai.operation.name");
     private static final AttributeKey<String> GEN_AI_TOOL_NAME = AttributeKey.stringKey("gen_ai.tool.name");
+    private static final AttributeKey<String> GEN_AI_PROMPT_NAME = AttributeKey.stringKey("gen_ai.prompt.name");
+    private static final AttributeKey<String> MCP_RESOURCE_URI = AttributeKey.stringKey("mcp.resource.uri");
     private static final AttributeKey<String> ERROR_TYPE = AttributeKey.stringKey("error.type");
 
     private final Tracer tracer;
@@ -46,9 +55,13 @@ public class TracingMcpClientListener implements McpClientListener {
 
     @Override
     public void beforeExecuteTool(McpCallContext context) {
-        McpCallToolParams params = (McpCallToolParams) ((McpCallToolRequest) context.message()).getParams();
+        McpCallToolRequest request = (McpCallToolRequest) context.message();
+        McpCallToolParams params = (McpCallToolParams) request.getParams();
         String toolName = params.getName();
-        Span span = tracer.spanBuilder("execute_tool " + toolName)
+        Span span = tracer.spanBuilder("tools/call " + toolName)
+                .setSpanKind(SpanKind.CLIENT)
+                .setAttribute(MCP_METHOD_NAME, "tools/call")
+                .setAttribute(JSONRPC_REQUEST_ID, String.valueOf(request.getId()))
                 .setAttribute(GEN_AI_OPERATION_NAME, "execute_tool")
                 .setAttribute(GEN_AI_TOOL_NAME, toolName)
                 .startSpan();
@@ -87,10 +100,14 @@ public class TracingMcpClientListener implements McpClientListener {
 
     @Override
     public void beforeResourceGet(McpCallContext context) {
-        McpReadResourceParams params = (McpReadResourceParams) ((McpReadResourceRequest) context.message()).getParams();
+        McpReadResourceRequest request = (McpReadResourceRequest) context.message();
+        McpReadResourceParams params = (McpReadResourceParams) request.getParams();
         String uri = params.getUri();
-        Span span = tracer.spanBuilder("langchain4j.mcp-resources.read")
-                .setAttribute("mcp.resource.uri", uri)
+        Span span = tracer.spanBuilder("resources/read")
+                .setSpanKind(SpanKind.CLIENT)
+                .setAttribute(MCP_METHOD_NAME, "resources/read")
+                .setAttribute(JSONRPC_REQUEST_ID, String.valueOf(request.getId()))
+                .setAttribute(MCP_RESOURCE_URI, uri)
                 .startSpan();
         Scope scope = span.makeCurrent();
         activeSpans.put(context, new SpanAndScope(span, scope));
@@ -108,9 +125,14 @@ public class TracingMcpClientListener implements McpClientListener {
 
     @Override
     public void beforePromptGet(McpCallContext context) {
-        McpGetPromptParams params = (McpGetPromptParams) ((McpGetPromptRequest) context.message()).getParams();
+        McpGetPromptRequest request = (McpGetPromptRequest) context.message();
+        McpGetPromptParams params = (McpGetPromptParams) request.getParams();
         String promptName = params.getName();
-        Span span = tracer.spanBuilder("langchain4j.mcp-prompts." + promptName)
+        Span span = tracer.spanBuilder("prompts/get " + promptName)
+                .setSpanKind(SpanKind.CLIENT)
+                .setAttribute(MCP_METHOD_NAME, "prompts/get")
+                .setAttribute(JSONRPC_REQUEST_ID, String.valueOf(request.getId()))
+                .setAttribute(GEN_AI_PROMPT_NAME, promptName)
                 .startSpan();
         Scope scope = span.makeCurrent();
         activeSpans.put(context, new SpanAndScope(span, scope));
@@ -133,6 +155,8 @@ public class TracingMcpClientListener implements McpClientListener {
             return;
         }
         if (error != null) {
+            sas.span.setAttribute(ERROR_TYPE, error.getClass().getName());
+            sas.span.setStatus(StatusCode.ERROR, error.getMessage());
             sas.span.recordException(error);
         }
         sas.scope.close();

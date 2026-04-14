@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.McpClient;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
@@ -73,13 +74,21 @@ public class McpTracingTest {
 
         // Verify that TracingMcpClientListener created a span with the correct name and attributes
         await().atMost(TIMEOUT).untilAsserted(() -> assertThat(spanExporter.getFinishedSpanItems())
-                .anyMatch(s -> s.getName().equals("execute_tool echoMeta")));
+                .anyMatch(s -> s.getName().equals("tools/call echoMeta")));
 
         SpanData toolSpan = spanExporter.getFinishedSpanItems().stream()
-                .filter(s -> s.getName().equals("execute_tool echoMeta"))
+                .filter(s -> s.getName().equals("tools/call echoMeta"))
                 .findFirst()
                 .orElseThrow();
 
+        // Verify span kind
+        assertThat(toolSpan.getKind()).isEqualTo(SpanKind.CLIENT);
+
+        // Verify MCP semantic convention attributes
+        assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("mcp.method.name")))
+                .isEqualTo("tools/call");
+        assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("jsonrpc.request.id")))
+                .isNotNull();
         assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("gen_ai.operation.name")))
                 .isEqualTo("execute_tool");
         assertThat(toolSpan.getAttributes().get(AttributeKey.stringKey("gen_ai.tool.name")))
