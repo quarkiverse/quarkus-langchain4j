@@ -6,8 +6,8 @@
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-langchain4j-integration-test-mcp</artifactId>
-    <name>Quarkus LangChain4j - Integration Tests - MCP</name>
+    <artifactId>quarkus-langchain4j-integration-test-mcp-opentelemetry</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - MCP OpenTelemetry</name>
 
     <dependencies>
         <dependency>
@@ -20,16 +20,16 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+            <artifactId>quarkus-opentelemetry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-testing</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit-internal</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -43,19 +43,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-devtools-testing</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-openai</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.certs</groupId>
-            <artifactId>smallrye-certificate-generator-junit5</artifactId>
-            <version>${smallrye-certificate-generator.version}</version>
+            <artifactId>quarkus-langchain4j-integration-test-mcp</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -104,7 +95,7 @@
                 <!-- Make sure the deployment artifact is built before executing this module -->
                 <dependency>
                     <groupId>io.quarkiverse.langchain4j</groupId>
-                    <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
+                    <artifactId>quarkus-langchain4j-mcp-deployment</artifactId>
                     <version>999-SNAPSHOT</version>
                     <type>pom</type>
                     <scope>test</scope>
