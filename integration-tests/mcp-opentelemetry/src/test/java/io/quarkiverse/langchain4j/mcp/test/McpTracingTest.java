@@ -5,6 +5,8 @@ import static io.quarkiverse.langchain4j.mcp.test.McpServerHelper.skipTestsIfJba
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import java.time.Duration;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
@@ -25,6 +27,8 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class McpTracingTest {
+
+    static final Duration TIMEOUT = Duration.ofSeconds(30);
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -68,7 +72,7 @@ public class McpTracingTest {
         String result = mcpClient.executeTool(request).resultText();
 
         // Verify that TracingMcpClientListener created a span with the correct name and attributes
-        await().untilAsserted(() -> assertThat(spanExporter.getFinishedSpanItems())
+        await().atMost(TIMEOUT).untilAsserted(() -> assertThat(spanExporter.getFinishedSpanItems())
                 .anyMatch(s -> s.getName().equals("execute_tool echoMeta")));
 
         SpanData toolSpan = spanExporter.getFinishedSpanItems().stream()
