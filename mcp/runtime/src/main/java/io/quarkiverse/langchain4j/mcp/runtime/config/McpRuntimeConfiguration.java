@@ -39,10 +39,11 @@ public interface McpRuntimeConfiguration {
     Optional<Boolean> exposeResourcesAsTools();
 
     /**
-     * Whether tracing is enabled for MCP clients.
-     * Requires the OpenTelemetry extension to be present.
+     * Apicurio Registry configuration for dynamic MCP server discovery.
+     * When configured, provides tools that allow the LLM to search for
+     * and connect to MCP servers registered in an Apicurio Registry instance.
      */
-    @WithName("tracing.enabled")
-    @WithDefault("true")
-    boolean tracingEnabled();
+    @ConfigDocSection
+    @WithName("apicurio-registry")
+    Optional<ApicurioRegistryConfig> apicurioRegistry();
 }
