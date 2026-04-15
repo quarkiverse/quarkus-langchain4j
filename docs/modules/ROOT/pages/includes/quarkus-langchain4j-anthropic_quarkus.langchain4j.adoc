@@ -454,6 +454,29 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-response-format[`+++quarkus.langchain4j.anthropic.chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-type[`+++quarkus.langchain4j.anthropic.chat-model.thinking.type+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.type+++[]
@@ -1076,6 +1099,29 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-response-format[`+++quarkus.langchain4j.anthropic."model-name".chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-type[`+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.type+++`]##
 ifdef::add-copy-button-to-config-props[]
