@@ -75,6 +75,9 @@ public class McpProcessor {
     private static final DotName TRACER = DotName.createSimple(Tracer.class);
     private static final DotName MCP_RESOURCE_UPDATED_EVENT = DotName.createSimple(McpResourceUpdatedEvent.class);
     private static final DotName OBSERVES = DotName.createSimple("jakarta.enterprise.event.Observes");
+    private static final DotName APICURIO_REGISTRY_MCP_TOOLS = DotName
+            .createSimple("io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpTools");
+    private static final String APICURIO_REGISTRY_CLIENT_CLASS = "io.apicurio.registry.rest.client.RegistryClient";
     private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -158,6 +161,7 @@ public class McpProcessor {
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener"));
         }
+        boolean apicurioSdkPresent = isApicurioSdkPresent();
         Map<String, McpClientBuildTimeConfig> rawConfiguredClients = mcpBuildTimeConfiguration.clients();
         final Map<String, McpClientBuildTimeConfig> configuredClients = rawConfiguredClients == null ? Collections.emptyMap()
                 : rawConfiguredClients;
@@ -176,6 +180,7 @@ public class McpProcessor {
                         clients.put(name, McpTransportType.STDIO);
                     }
                 }));
+
         if (!clients.isEmpty()) {
             boolean hasResourceUpdatedObserver = hasObserverForType(combinedIndex.getIndex(),
                     MCP_RESOURCE_UPDATED_EVENT);
@@ -223,6 +228,33 @@ public class McpProcessor {
                 healthBuildItems.produce(new HealthBuildItem(McpClientHealthCheck.class.getName(),
                         true));
             }
+        } else if (apicurioSdkPresent && mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
+            // When no static MCP clients are configured but the Apicurio SDK is present,
+            // still create an empty ToolProvider so that dynamically discovered MCP clients
+            // can be added to it at runtime.
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
+                    .configure(LangChain4jDotNames.TOOL_PROVIDER)
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ClassType.create(TRACER) }, null))
+                    .createWith(recorder.toolProviderFunction(Collections.emptySet()));
+            beanProducer.produce(configurator.done());
+        }
+
+        // Register ApicurioRegistryMcpTools as a synthetic bean when the SDK is on the classpath
+        if (apicurioSdkPresent) {
+            log.info("Apicurio Registry SDK detected, registering ApicurioRegistryMcpTools bean");
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(APICURIO_REGISTRY_MCP_TOOLS)
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .supplier(recorder.apicurioRegistryMcpToolsSupplier(vertxBuildItem.getVertx()))
+                    .done());
         }
     }
 
@@ -272,12 +304,27 @@ public class McpProcessor {
             }
         }
         reflectiveClass.produce(ReflectiveClassBuildItem.builder(McpRoot.class).methods(true).build());
+        // Register Apicurio Registry MCP classes for reflection (JSON deserialization) if SDK is present
+        if (isApicurioSdkPresent()) {
+            reflectiveClass.produce(ReflectiveClassBuildItem.builder(
+                    "io.quarkiverse.langchain4j.mcp.runtime.apicurio.McpServerDefinition")
+                    .fields(true).methods(true).build());
+        }
     }
 
     @BuildStep
     public void addMcpAuthProvider(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpClientAuthProvider.class));
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpHeadersSupplier.class));
+    }
+
+    private static boolean isApicurioSdkPresent() {
+        try {
+            Thread.currentThread().getContextClassLoader().loadClass(APICURIO_REGISTRY_CLIENT_CLASS);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     private static boolean isConfigurableClient(String clientName) {

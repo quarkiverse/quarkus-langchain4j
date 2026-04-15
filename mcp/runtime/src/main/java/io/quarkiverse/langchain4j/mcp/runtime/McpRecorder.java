@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import javax.net.ssl.SSLContext;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpClientListener;
@@ -242,6 +244,39 @@ public class McpRecorder {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Creates a supplier for the {@code ApicurioRegistryMcpTools} bean.
+     * Uses reflection to avoid direct class-loading of Apicurio Registry SDK classes,
+     * which would break native compilation when the SDK is not on the classpath.
+     */
+    @SuppressWarnings("unchecked")
+    public Supplier<Object> apicurioRegistryMcpToolsSupplier(Supplier<Vertx> vertx) {
+        return () -> {
+            ApicurioRegistryConfig config = mcpRuntimeConfiguration.getValue().apicurioRegistry()
+                    .orElseThrow(() -> new ConfigurationException(
+                            "Apicurio Registry configuration (quarkus.langchain4j.mcp.apicurio-registry) is required"));
+
+            ToolProvider toolProvider = Arc.container().select(ToolProvider.class).get();
+            if (!(toolProvider instanceof McpToolProvider)) {
+                throw new ConfigurationException(
+                        "The ToolProvider bean must be an McpToolProvider for Apicurio Registry integration");
+            }
+
+            try {
+                Class<?> factoryClass = Thread.currentThread().getContextClassLoader()
+                        .loadClass(
+                                "io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpToolsFactory");
+                Method createMethod = factoryClass.getMethod("create",
+                        String.class, String.class, McpToolProvider.class, Vertx.class);
+                return createMethod.invoke(null,
+                        config.url(), config.authToken().orElse(null),
+                        (McpToolProvider) toolProvider, vertx.get());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create ApicurioRegistryMcpTools", e);
+            }
+        };
     }
 
     public Supplier<McpRegistryClient> mcpRegistryClientSupplier(String key) {
