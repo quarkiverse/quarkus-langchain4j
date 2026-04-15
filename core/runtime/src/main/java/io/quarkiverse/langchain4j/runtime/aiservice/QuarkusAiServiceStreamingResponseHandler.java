@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -54,6 +55,7 @@ import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
+import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.vertx.core.Context;
 
 /**
@@ -446,7 +448,22 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         return;
                     }
                     addToMemory(aiMessage);
-                    for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                    List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
+                    int maxToolCallsPerResponse;
+                    if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
+                        maxToolCallsPerResponse = context.maxToolCallsPerResponse;
+                    } else {
+                        maxToolCallsPerResponse = ConfigProvider.getConfig()
+                                .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
+                                .orElse(0);
+                    }
+                    int toolCallsCount = 0;
+                    for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+                        if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                            throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
+                                    toolExecutionRequests.size());
+                        }
+                        toolCallsCount++;
                         if (isCancelled()) {
                             // Fill cancelled tools with error results to keep memory consistent:
                             // every tool request must have a matching tool result

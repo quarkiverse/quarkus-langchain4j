@@ -111,6 +111,7 @@ import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
+import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
@@ -131,6 +132,7 @@ public class AiServiceMethodImplementationSupport {
 
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
     private static final int DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
+    private static final int DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE = 0;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this
@@ -439,7 +441,22 @@ public class AiServiceMethodImplementationSupport {
             boolean immediateToolReturn = true;
             List<ToolExecution> toolExecutions = new ArrayList<>();
             List<ToolExecutionResultMessage> toolResults = new ArrayList<>();
-            for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+            List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
+            int maxToolCallsPerResponse;
+            if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
+                maxToolCallsPerResponse = context.maxToolCallsPerResponse;
+            } else {
+                maxToolCallsPerResponse = getMaxToolCallsPerResponse();
+            }
+            if (maxToolCallsPerResponse > 0) {
+                log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
+            }
+            int toolCallsCount = 0;
+            for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+                if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                    throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
+                }
+                toolCallsCount++;
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
 
@@ -1202,8 +1219,13 @@ public class AiServiceMethodImplementationSupport {
     private static int getMaxSequentialToolExecutions() {
         return ConfigProvider.getConfig()
                 .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-executions", Integer.class)
-                .orElse(
-                        DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS);
+                .orElse(DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS);
+    }
+
+    private static int getMaxToolCallsPerResponse() {
+        return ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
+                .orElse(DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE);
     }
 
     private static Executor createExecutor() {
