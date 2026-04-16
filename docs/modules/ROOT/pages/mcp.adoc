@@ -371,6 +371,117 @@ The registry client supports:
 - Verify registry availability
 - View server descriptions, repositories, packages, and transport information
 
+== Apicurio Registry MCP Server Discovery
+
+https://www.apicur.io/registry/[Apicurio Registry] can be used as a centralized catalog of MCP server definitions, enabling dynamic discovery
+and connection of MCP servers at runtime. Instead of manually configuring each MCP server in `application.properties`, your AI
+service can search a registry for available servers and connect to them on demand.
+
+The registry stores MCP server definitions (name, description, URL, transport type) as versioned `MCP_TOOL` artifacts. The
+Quarkus integration provides `@Tool`-annotated methods that allow the LLM itself to search the registry and connect to discovered
+servers -- no redeployment or config changes needed when new MCP servers become available.
+
+IMPORTANT: This feature is experimental and may change in future releases.
+
+=== Dependencies
+
+Add the Apicurio Registry Java SDK as a dependency alongside the MCP extension:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mcp</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.apicurio</groupId>
+    <artifactId>apicurio-registry-java-sdk</artifactId>
+    <version>3.2.0</version>
+</dependency>
+----
+
+=== Configuration
+
+Point the integration at your Apicurio Registry instance:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.apicurio-registry.url=http://localhost:8080/apis/registry/v3
+----
+
+If your registry requires authentication, you can provide a bearer token:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.apicurio-registry.auth-token=my-token
+----
+
+=== How It Works
+
+When the Apicurio Registry SDK is on the classpath and the configuration above is present, Quarkus automatically registers
+an `ApicurioRegistryMcpTools` CDI bean with three `@Tool` methods:
+
+- **`searchMcpServers`** -- searches the registry for MCP server definitions matching a query
+- **`connectMcpServer`** -- connects to an MCP server by its registry group/artifact ID, making its tools available
+- **`disconnectMcpServer`** -- disconnects a previously connected MCP server
+
+These tools are designed to be used by the LLM as part of an AI service. The LLM can autonomously discover and connect to
+MCP servers based on the user's request.
+
+=== Usage with an AI Service
+
+Register `ApicurioRegistryMcpTools` as a tool in your AI service:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpTools;
+
+@RegisterAiService(tools = ApicurioRegistryMcpTools.class)
+public interface DynamicToolAgent {
+
+    String chat(@UserMessage String message);
+}
+----
+
+With this setup, the LLM can:
+
+1. Search the registry for relevant MCP servers (e.g., "find servers for filesystem operations")
+2. Connect to a discovered server, which dynamically adds its tools to the available tool set
+3. Use the newly connected server's tools to fulfill the user's request
+4. Disconnect from servers when they are no longer needed
+
+=== Registering MCP Server Definitions
+
+MCP server definitions are stored in Apicurio Registry as `MCP_TOOL` artifacts with JSON content:
+
+[source,json]
+----
+{
+    "name": "My Filesystem Server",
+    "description": "Provides tools for filesystem operations",
+    "url": "http://filesystem-server:8080/mcp",
+    "transportType": "STREAMABLE_HTTP"
+}
+----
+
+You can register these artifacts through the Apicurio Registry UI, REST API, or CLI.
+
+=== Programmatic Usage
+
+For cases where CDI injection is not available, use the builder API:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpToolsBuilder;
+
+ApicurioRegistryMcpTools tools = ApicurioRegistryMcpToolsBuilder.create()
+    .registryUrl("http://localhost:8080/apis/registry/v3")
+    .basicAuth("admin", "password")  // optional
+    .toolProvider(myMcpToolProvider)
+    .vertx(vertx)
+    .build();
+----
+
 == Exposing MCP Resources as Tools
 
 Some MCP servers provide **resources** (files, database records, API responses, etc.) that can be accessed programmatically.
