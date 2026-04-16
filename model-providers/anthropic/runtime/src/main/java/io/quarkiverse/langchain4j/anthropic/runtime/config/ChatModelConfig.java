@@ -78,6 +78,13 @@ public interface ChatModelConfig {
     Optional<Boolean> logResponses();
 
     /**
+     * Specifies the desired format for the model's output.
+     * <p>
+     * <strong>Allowable values:</strong> <code>[text, json]</code>
+     */
+    Optional<String> responseFormat();
+
+    /**
      * Cache system messages to reduce costs for repeated prompts.
      * Requires minimum 1024 tokens (Claude Opus/Sonnet) or 2048-4096 tokens (Haiku).
      * Supported models: Claude Opus 4.1, Sonnet 4.5, Haiku 4.5, and later models.
