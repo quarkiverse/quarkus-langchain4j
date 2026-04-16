@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import dev.langchain4j.data.message.ChatMessage;
@@ -23,7 +23,7 @@ public class NoopChatMemory implements CommittableChatMemory {
 
     @Override
     public List<ChatMessage> messages() {
-        return Collections.emptyList();
+        return new ArrayList<>();
     }
 
     @Override
