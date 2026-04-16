@@ -94,6 +94,13 @@ public interface ChatModelConfig {
     Boolean cacheTools();
 
     /**
+     * Specifies the desired format for the model's output.
+     * <p>
+     * <strong>Allowable values:</strong> <code>[text, json]</code>
+     */
+    Optional<String> responseFormat();
+
+    /**
      * Thinking related configuration
      */
     ThinkingConfig thinking();

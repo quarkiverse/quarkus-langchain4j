@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.anthropic.runtime;
 
+import static dev.langchain4j.model.chat.request.ResponseFormat.JSON;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.time.Duration;
@@ -18,11 +19,13 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicServerTool;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.anthropic.QuarkusAnthropicClient;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
@@ -84,6 +87,14 @@ public class AnthropicRecorder {
 
             if (chatModelConfig.stopSequences().isPresent()) {
                 builder.stopSequences(chatModelConfig.stopSequences().get());
+            }
+
+            if (chatModelConfig.responseFormat().isPresent()) {
+                ResponseFormat responseFormat = toResponseFormat(chatModelConfig.responseFormat().get());
+                builder.responseFormat(responseFormat);
+                if (responseFormat == ResponseFormat.JSON) {
+                    builder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
+                }
             }
 
             ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
@@ -220,6 +231,14 @@ public class AnthropicRecorder {
                 builder.stopSequences(chatModelConfig.stopSequences().get());
             }
 
+            if (chatModelConfig.responseFormat().isPresent()) {
+                ResponseFormat responseFormat = toResponseFormat(chatModelConfig.responseFormat().get());
+                builder.responseFormat(responseFormat);
+                if (responseFormat == ResponseFormat.JSON) {
+                    builder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
+                }
+            }
+
             ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
             if (thinkingConfig.type().isPresent()) {
                 if (chatModelConfig.topK().isPresent()) {
@@ -339,5 +358,14 @@ public class AnthropicRecorder {
                 "SRCFG00014: The config property quarkus.langchain4j.anthropic%s%s is required but it could not be found in any config source"
                         .formatted(
                                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    private static ResponseFormat toResponseFormat(String format) {
+        return switch (format.toLowerCase()) {
+            case "json" -> ResponseFormat.JSON;
+            case "text" -> ResponseFormat.TEXT;
+            default -> throw new IllegalArgumentException(
+                    String.format("Unknown response format: %s, must be one of: [json, text]", format));
+        };
     }
 }
