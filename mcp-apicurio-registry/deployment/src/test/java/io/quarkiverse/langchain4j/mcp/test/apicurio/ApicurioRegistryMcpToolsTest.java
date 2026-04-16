@@ -9,6 +9,7 @@ import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -29,21 +30,28 @@ import io.quarkus.test.QuarkusUnitTest;
 /**
  * Integration test for ApicurioRegistryMcpTools that starts a real Apicurio Registry
  * instance using Testcontainers.
+ * <p>
+ * Currently disabled because the MCP_TOOL artifact type is not yet supported
+ * in Apicurio Registry releases. Once a release with MCP_TOOL support is available,
+ * update the container image version and re-enable this test.
  */
+@Disabled("Requires Apicurio Registry with MCP_TOOL artifact type support (not yet released)")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ApicurioRegistryMcpToolsTest {
 
-    @SuppressWarnings("resource")
-    static GenericContainer<?> registryContainer = new GenericContainer<>(
-            "quay.io/apicurio/apicurio-registry:latest-release")
-            .withExposedPorts(8080)
-            .waitingFor(Wait.forHttp("/health/ready").forStatusCode(200));
+    // Update this image to a version that supports MCP_TOOL artifact type when available
+    private static final String REGISTRY_IMAGE = "quay.io/apicurio/apicurio-registry:latest-release";
 
-    static {
-        registryContainer.start();
-    }
+    @SuppressWarnings("resource")
+    static GenericContainer<?> registryContainer;
 
     static String registryUrl() {
+        if (registryContainer == null) {
+            registryContainer = new GenericContainer<>(REGISTRY_IMAGE)
+                    .withExposedPorts(8080)
+                    .waitingFor(Wait.forHttp("/health/ready").forStatusCode(200));
+            registryContainer.start();
+        }
         return "http://" + registryContainer.getHost() + ":"
                 + registryContainer.getMappedPort(8080) + "/apis/registry/v3";
     }
