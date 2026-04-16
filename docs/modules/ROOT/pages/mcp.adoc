@@ -385,7 +385,7 @@ IMPORTANT: This feature is experimental and may change in future releases.
 
 === Dependencies
 
-Add the Apicurio Registry Java SDK as a dependency alongside the MCP extension:
+Add the Apicurio Registry MCP extension alongside the MCP extension:
 
 [source,xml]
 ----
@@ -394,9 +394,8 @@ Add the Apicurio Registry Java SDK as a dependency alongside the MCP extension:
     <artifactId>quarkus-langchain4j-mcp</artifactId>
 </dependency>
 <dependency>
-    <groupId>io.apicurio</groupId>
-    <artifactId>apicurio-registry-java-sdk</artifactId>
-    <version>3.2.1</version>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mcp-apicurio-registry</artifactId>
 </dependency>
 ----
 
@@ -418,7 +417,7 @@ quarkus.langchain4j.mcp.apicurio-registry.auth-token=my-token
 
 === How It Works
 
-When the Apicurio Registry SDK is on the classpath and the configuration above is present, Quarkus automatically registers
+When the `quarkus-langchain4j-mcp-apicurio-registry` extension is on the classpath and the configuration above is present, Quarkus automatically registers
 an `ApicurioRegistryMcpTools` CDI bean with three `@Tool` methods:
 
 - **`searchMcpServers`** -- searches the registry for MCP server definitions matching a query

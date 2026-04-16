@@ -38,12 +38,4 @@ public interface McpRuntimeConfiguration {
     @WithDefault("false")
     Optional<Boolean> exposeResourcesAsTools();
 
-    /**
-     * Apicurio Registry configuration for dynamic MCP server discovery.
-     * When configured, provides tools that allow the LLM to search for
-     * and connect to MCP servers registered in an Apicurio Registry instance.
-     */
-    @ConfigDocSection
-    @WithName("apicurio-registry")
-    Optional<ApicurioRegistryConfig> apicurioRegistry();
 }
