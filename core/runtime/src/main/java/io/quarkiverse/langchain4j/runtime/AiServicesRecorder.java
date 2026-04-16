@@ -34,6 +34,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateIn
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -241,9 +242,8 @@ public class AiServicesRecorder {
                             quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
                                     ChatMemoryProvider.class));
                         } else {
-                            Supplier<? extends ChatMemoryProvider> supplier = (Supplier<? extends ChatMemoryProvider>) loadClass(
-                                    info.chatMemoryProviderSupplierClassName())
-                                    .getConstructor().newInstance();
+                            Supplier<? extends ChatMemoryProvider> supplier = createSupplier(
+                                    info.chatMemoryProviderSupplierClassName());
                             quarkusAiServices.chatMemoryProvider(supplier.get());
                         }
                     }
@@ -284,9 +284,8 @@ public class AiServicesRecorder {
                                         ModelName.Literal.of(info.moderationModelName())));
                             }
                         } else {
-                            Supplier<? extends ModerationModel> supplier = (Supplier<? extends ModerationModel>) loadClass(
-                                    info.moderationModelSupplierClassName())
-                                    .getConstructor().newInstance();
+                            Supplier<? extends ModerationModel> supplier = createSupplier(
+                                    info.moderationModelSupplierClassName());
                             quarkusAiServices.moderationModel(supplier.get());
                         }
                     }
@@ -304,9 +303,7 @@ public class AiServicesRecorder {
                             }
 
                         } else {
-                            Supplier<? extends ImageModel> supplier = (Supplier<? extends ImageModel>) loadClass(
-                                    info.imageModelSupplierClassName())
-                                    .getConstructor().newInstance();
+                            Supplier<? extends ImageModel> supplier = createSupplier(info.imageModelSupplierClassName());
                             quarkusAiServices.imageModel(supplier.get());
                         }
                     }
@@ -327,8 +324,8 @@ public class AiServicesRecorder {
                         quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
                     }
 
-                    if (info.maxSequentialToolInvocations() != null && info.maxSequentialToolInvocations() > 0) {
-                        quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
+                    if (info.maxToolCallsPerResponse() != null && info.maxToolCallsPerResponse() != 0) {
+                        quarkusAiServices.maxToolCallsPerResponse(info.maxToolCallsPerResponse());
                     }
 
                     quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());
@@ -352,10 +349,17 @@ public class AiServicesRecorder {
         };
     }
 
+    @SuppressWarnings("unchecked")
     private static <T> Supplier<T> createSupplier(String className) throws InstantiationException, IllegalAccessException,
             InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
-        return (Supplier<T>) Thread
-                .currentThread().getContextClassLoader().loadClass(className)
-                .getConstructor().newInstance();
+        Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+        InstanceHandle<?> instance = Arc.container().instance(clazz);
+        if (instance.isAvailable()) {
+            return (Supplier<T>) instance.get();
+        } else {
+            return (Supplier<T>) clazz
+                    .getConstructor().newInstance();
+        }
+
     }
 }

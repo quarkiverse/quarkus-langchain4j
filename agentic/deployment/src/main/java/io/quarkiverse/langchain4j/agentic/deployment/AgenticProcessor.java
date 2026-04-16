@@ -35,6 +35,7 @@ import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.agent.ChatMessagesAccess;
+import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.service.IllegalConfigurationException;
@@ -498,6 +499,21 @@ public class AgenticProcessor {
                     if (agentInstance == null) {
                         continue;
                     }
+
+                    AnnotationInstance parallelMapperAnnotation = agenticMethod
+                            .annotation(AgenticLangChain4jDotNames.PARALLEL_MAPPER_AGENT);
+                    if (parallelMapperAnnotation != null) {
+                        AnnotationValue subAgentsValue = parallelMapperAnnotation.value("subAgent");
+                        if (subAgentsValue != null) {
+                            // The first argument of the subagent method of a ParallelMapperAgent is implicitly passed by the mapper
+                            subagentMethod(subAgentsValue.asClass().name(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap)
+                                    .ifPresent(subAgentMethod -> {
+                                        String parameterName = determineParameterName(subAgentMethod.parameters().get(0));
+                                        builder.addUserProvidedKey(parameterName);
+                                    });
+                        }
+                    }
+
                     AnnotationValue outputKeyValue = agentInstance.value("outputKey");
                     if (outputKeyValue != null) {
                         builder.addKeyType(outputKeyValue.asString(),
@@ -518,25 +534,16 @@ public class AgenticProcessor {
                         // in order to determine the type associated with the outputKey, we need to look up
                         // the interface and check the return key and type of (the single agent-related) method
 
-                        List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subAgentType.name());
-                        if (subAgentMethods == null) {
-                            subAgentMethods = classToNonAiAgentMethodsMap.get(subAgentType.name());
-                        }
-                        if (subAgentMethods.size() != 1) {
-                            log.warn("Unable to determine type of outputKey for subagent with type '%s'"
-                                    .formatted(subAgentType));
-                        } else {
-                            MethodInfo subAgentMethod = subAgentMethods.get(0);
-                            AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
-                                    .map(ann -> subAgentMethod.annotation(ann))
-                                    .filter(Objects::nonNull)
-                                    .map(ann -> ann.value("outputKey"))
-                                    .filter(Objects::nonNull)
-                                    .map(key -> key.asString())
-                                    .findFirst()
-                                    .ifPresent(outputKeyString -> builder.addKeyType(outputKeyString,
-                                            determineAgentMethodReturnType(subAgentMethod.returnType())));
-                        }
+                        subagentMethod(subAgentType.name(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap)
+                                .ifPresent(subAgentMethod -> AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
+                                        .map(subAgentMethod::annotation)
+                                        .filter(Objects::nonNull)
+                                        .map(ann -> ann.value("outputKey"))
+                                        .filter(Objects::nonNull)
+                                        .map(AnnotationValue::asString)
+                                        .findFirst()
+                                        .ifPresent(outputKeyString -> builder.addKeyType(outputKeyString,
+                                                determineAgentMethodReturnType(subAgentMethod.returnType()))));
                     }
                 }
             }
@@ -583,6 +590,20 @@ public class AgenticProcessor {
         });
 
         return builder.build();
+    }
+
+    private Optional<MethodInfo> subagentMethod(DotName subagentName, Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap,
+            Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap) {
+        List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subagentName);
+        if (subAgentMethods == null) {
+            subAgentMethods = classToNonAiAgentMethodsMap.get(subagentName);
+        }
+        if (subAgentMethods.size() != 1) {
+            log.warn("Unable to determine agentic method for subagent with type '%s'"
+                    .formatted(subagentName));
+            return Optional.empty();
+        }
+        return Optional.of(subAgentMethods.get(0));
     }
 
     private DotName determineAgentMethodReturnType(Type type) {
@@ -635,9 +656,7 @@ public class AgenticProcessor {
                     }
                     DotName expectedParameterTypeName = outputKeyBuildItem.getKeyToTypeMap().get(parameterName);
                     if (expectedParameterTypeName == null) {
-                        boolean doesNotNeedResolution = outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)
-                                || outputKeyBuildItem.getSupervisedKeys().contains(parameterName);
-                        if (!doesNotNeedResolution) {
+                        if (needsResolution(outputKeyBuildItem, parameterName)) {
                             throw new IllegalConfigurationException(
                                     "No agent provides an output key named '%s'. This means that parameter no.%d of method '%s' of class '%s' cannot be resolved"
                                             .formatted(
@@ -645,6 +664,10 @@ public class AgenticProcessor {
                                                     method.declaringClass().name()));
                         }
                     } else if (!expectedParameterTypeName.equals(parameterType.name())) {
+                        if (isParallelMapperOutput(method.declaringClass(), parameterName)) {
+                            // allow ParallelMapperAgent to transform the type of its output
+                            continue;
+                        }
                         throw new IllegalConfigurationException(
                                 "Parameter no.%d of method '%s' of class '%s' was expected to be of type '%s'".formatted(i,
                                         method.name(), method.declaringClass().name(), expectedParameterTypeName));
@@ -652,6 +675,20 @@ public class AgenticProcessor {
                 }
             });
         });
+    }
+
+    private static boolean needsResolution(OutputKeyBuildItem outputKeyBuildItem, String parameterName) {
+        return !outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)
+                && !outputKeyBuildItem.getSupervisedKeys().contains(parameterName);
+    }
+
+    private static boolean isParallelMapperOutput(ClassInfo agentClass, String parameterName) {
+        return agentClass.methods().stream().filter(m -> m.annotation(ParallelMapperAgent.class) != null)
+                .findFirst()
+                .flatMap(m -> Optional.ofNullable(m.annotation(ParallelMapperAgent.class).value("outputKey")))
+                .map(AnnotationValue::asString)
+                .map(outputKey -> outputKey.equals(parameterName))
+                .orElse(false);
     }
 
     private String determineParameterName(MethodParameterInfo parameter) {

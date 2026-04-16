@@ -52,4 +52,9 @@ public interface LangChain4jConfig {
      * Tracing related configuration
      */
     TracingConfig tracing();
+
+    /**
+     * AI Service configuration
+     */
+    AiServiceConfig aiService();
 }

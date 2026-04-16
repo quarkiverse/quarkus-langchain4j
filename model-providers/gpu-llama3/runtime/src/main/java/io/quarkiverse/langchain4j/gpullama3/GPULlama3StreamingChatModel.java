@@ -1,10 +1,7 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
-import static dev.langchain4j.internal.Utils.getOrDefault;
 import static io.quarkiverse.langchain4j.runtime.VertxUtil.runOutEventLoop;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -48,68 +45,13 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
 
     private static final Logger LOG = Logger.getLogger(GPULlama3StreamingChatModel.class);
 
-    private final Builder builderConfig;
-    private volatile boolean initialized = false;
-
-    private GPULlama3StreamingChatModel(Builder builder, boolean lazy) {
-        if (lazy) {
-            this.builderConfig = builder;
-            // Don't initialize yet!
-        } else {
-            this.builderConfig = null;
-            // Original background initialization
-            runOutEventLoop(() -> {
-                LOG.debug("Starting GPULlama3 StreamingChatModel initialization on worker thread");
-                doInitialization(builder);
-                initialized = true;
-            });
-        }
+    private GPULlama3StreamingChatModel(GPULlama3ModelHolder holder) {
+        // no initialization here, it is done lazily by ensureInitialized() when first doChat() is called
+        this.holder = holder;
     }
 
-    private GPULlama3StreamingChatModel(Builder builder) {
-        this(builder, false); // Default to original background initialization
-    }
-
-    // Add factory method for lazy initialization
-    public static GPULlama3StreamingChatModel createLazy(Builder builder) {
-        return new GPULlama3StreamingChatModel(builder, true);
-    }
-
-    private void ensureInitialized() {
-        if (!initialized && builderConfig != null) {
-            if (!initialized) {
-                LOG.debug("Lazy initialization of GPULlama3StreamingChatModel");
-                doInitialization(builderConfig);
-                initialized = true;
-            }
-        }
-    }
-
-    private void doInitialization(Builder builder) {
-        GPULlama3ModelRegistry gpuLlama3ModelRegistry = GPULlama3ModelRegistry.getOrCreate(builder.modelCachePath);
-        try {
-            Path modelPath = gpuLlama3ModelRegistry.downloadModel(builder.modelName, builder.quantization,
-                    Optional.empty(), Optional.empty());
-            Double temp = getOrDefault(builder.temperature, 0.1);
-            Double topP = getOrDefault(builder.topP, 1.0);
-            Integer seed = getOrDefault(builder.seed, 12345);
-            Integer maxTokens = getOrDefault(builder.maxTokens, 512);
-            Boolean onGPU = getOrDefault(builder.onGPU, Boolean.TRUE);
-
-            LOG.info("GPULlama3StreamingChatModel Instantiation {modelPath=" + modelPath +
-                    ", temperature=" + temp +
-                    ", topP=" + topP +
-                    ", seed=" + seed +
-                    ", maxTokens=" + maxTokens +
-                    ", onGPU=" + onGPU + "}...");
-
-            init(modelPath, temp, topP, seed, maxTokens, onGPU);
-            LOG.info("GPULlama3StreamingChatModel Instantiation Complete!");
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    public static GPULlama3StreamingChatModel create(GPULlama3ModelHolder holder) {
+        return new GPULlama3StreamingChatModel(holder);
     }
 
     @Override
@@ -123,7 +65,8 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
         // Run the GPU operations on a worker thread using runOutEventLoop
         runOutEventLoop(() -> {
             try {
-                ensureInitialized(); // Build happens HERE on first call!
+                // Lazy initialization point: if not initialized yet, do it now
+                holder.ensureInitialized();
                 LOG.debug("Executing GPU Llama inference on worker thread");
                 coreDoChat(chatRequest, handler);
             } catch (Exception e) {
@@ -139,13 +82,10 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
      */
     private void coreDoChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         try {
-            // Create streaming parser using the utility class
             GPULlama3ResponseParser.StreamingParser parser = GPULlama3ResponseParser.createStreamingParser(handler, getModel());
 
-            // Generate response with streaming callback
             String rawResponse = modelResponse(chatRequest, parser::onToken);
 
-            // Parse the complete response and send final result
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
 
             ChatResponse chatResponse = ChatResponse.builder()
@@ -168,17 +108,23 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
 
     public static class Builder {
 
+        private GPULlama3ModelHolder modelHolder;
         private Optional<Path> modelCachePath;
         private String modelName = Consts.DEFAULT_CHAT_MODEL_NAME;
         private String quantization = Consts.DEFAULT_CHAT_MODEL_QUANTIZATION;
-        protected Double temperature;
-        protected Double topP;
-        protected Integer seed;
-        protected Integer maxTokens;
-        protected Boolean onGPU;
+        private Double temperature;
+        private Double topP;
+        private Integer seed;
+        private Integer maxTokens;
+        private Boolean onGPU;
 
         public Builder() {
             // This is public so it can be extended
+        }
+
+        public Builder modelHolder(GPULlama3ModelHolder modelHolder) {
+            this.modelHolder = modelHolder;
+            return this;
         }
 
         public Builder modelCachePath(Optional<Path> modelCachePath) {
@@ -222,7 +168,11 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
         }
 
         public GPULlama3StreamingChatModel build() {
-            return new GPULlama3StreamingChatModel(this);
+            GPULlama3ModelHolder h = modelHolder != null
+                    ? modelHolder
+                    : new GPULlama3ModelHolder(modelCachePath, modelName, quantization,
+                            temperature, topP, seed, maxTokens, onGPU);
+            return new GPULlama3StreamingChatModel(h);
         }
     }
 }

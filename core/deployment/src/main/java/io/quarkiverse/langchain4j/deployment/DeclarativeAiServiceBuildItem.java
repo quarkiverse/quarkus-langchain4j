@@ -37,6 +37,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName toolArgumentsErrorHandlerDotName;
     private final DotName toolExecutionErrorHandlerDotName;
     private final Integer maxSequentialToolInvocations;
+    private final Integer maxToolCallsPerResponse;
     private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
     private final boolean shouldThrowExceptionOnEventError;
@@ -65,6 +66,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName toolArgumentsErrorHandlerDotName,
             DotName toolExecutionErrorHandlerDotName,
             Integer maxSequentialToolInvocations,
+            Integer maxToolCallsPerResponse,
             boolean allowContinuousForcedToolCalling,
             boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError) {
         this.serviceClassInfo = serviceClassInfo;
@@ -90,6 +92,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.toolArgumentsErrorHandlerDotName = toolArgumentsErrorHandlerDotName;
         this.toolExecutionErrorHandlerDotName = toolExecutionErrorHandlerDotName;
         this.maxSequentialToolInvocations = maxSequentialToolInvocations;
+        this.maxToolCallsPerResponse = maxToolCallsPerResponse;
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
@@ -214,6 +217,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public Integer getMaxSequentialToolInvocations() {
         return maxSequentialToolInvocations;
+    }
+
+    public Integer getMaxToolCallsPerResponse() {
+        return maxToolCallsPerResponse;
     }
 
     public boolean isAllowContinuousForcedToolCalling() {

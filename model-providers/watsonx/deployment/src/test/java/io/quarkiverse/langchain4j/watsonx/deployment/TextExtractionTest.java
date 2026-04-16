@@ -707,6 +707,14 @@ public class TextExtractionTest extends WireMockAbstract {
                 .response("Hello")
                 .build();
 
+        mockTextExtractionBuilder(DELETE,
+                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID), 204)
+                .build();
+
+        mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 200)
+                .response("Hello")
+                .build();
+
         TextExtractionParameters options = TextExtractionParameters.builder()
                 .timeout(Duration.ofMillis(100))
                 .build();

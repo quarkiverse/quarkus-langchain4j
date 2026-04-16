@@ -318,7 +318,7 @@ jobs:
       - name: Run MCP conformance tests
         run: |
           cd integration-tests/mcp-conformance
-          npm -y exec -- @modelcontextprotocol/conformance@0.1.15 client --command "sh client-command.sh" --suite all --expected-failures conformance-baseline.yml
+          npm -y exec -- @modelcontextprotocol/conformance@0.1.16 client --command "sh client-command.sh" --suite all --expected-failures conformance-baseline.yml
           
 
   build-report:

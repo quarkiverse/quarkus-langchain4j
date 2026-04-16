@@ -45,6 +45,6 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultTol
 == Going Further
 
 [.lead]
-* xref:https://quarkus.io/guides/smallrye-fault-tolerance[Quarkus Fault Tolerance Guide]
+* https://quarkus.io/guides/smallrye-fault-tolerance[Quarkus Fault Tolerance Guide]
 * xref:ai-services.adoc[AI Services Reference]
 * xref:enable-disable-integrations.adoc[Enabling and Disabling AI Model Integrations]

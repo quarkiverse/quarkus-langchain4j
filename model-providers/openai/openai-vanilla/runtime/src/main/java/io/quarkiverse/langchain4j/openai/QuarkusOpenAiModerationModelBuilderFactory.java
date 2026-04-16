@@ -46,6 +46,7 @@ public class QuarkusOpenAiModerationModelBuilderFactory implements OpenAiModerat
             AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
             AdditionalPropertiesHack.setLogCurl(logCurl);
+            AdditionalPropertiesHack.setProxy(proxy);
             return super.build();
         }
     }

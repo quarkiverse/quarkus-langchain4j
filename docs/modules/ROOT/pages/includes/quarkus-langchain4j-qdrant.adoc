@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-enabled[`quarkus.langchain4j.qdrant.devservices.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-enabled[`+++quarkus.langchain4j.qdrant.devservices.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-qdrant-image-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-qdrant-image-name[`quarkus.langchain4j.qdrant.devservices.qdrant-image-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-qdrant-image-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-qdrant-image-name[`+++quarkus.langchain4j.qdrant.devservices.qdrant-image-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.qdrant-image-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++docker.io/qdrant/qdrant:v1.16-unprivileged+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-port]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-port[`quarkus.langchain4j.qdrant.devservices.port`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-port]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-port[`+++quarkus.langchain4j.qdrant.devservices.port+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.port+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-shared]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-shared[`quarkus.langchain4j.qdrant.devservices.shared`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-shared]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-shared[`+++quarkus.langchain4j.qdrant.devservices.shared+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.shared+++[]
 endif::add-copy-button-to-config-props[]
@@ -91,7 +91,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-service-name[`quarkus.langchain4j.qdrant.devservices.service-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-service-name[`+++quarkus.langchain4j.qdrant.devservices.service-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.service-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++qdrant+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-distance]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-distance[`quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-distance]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-distance[`+++quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance+++[]
 endif::add-copy-button-to-config-props[]
@@ -133,7 +133,7 @@ endif::add-copy-button-to-env-var[]
 a|`unknown-distance`, `cosine`, `euclid`, `dot`, `manhattan`
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-size]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-size[`quarkus.langchain4j.qdrant.devservices.collection.vector-params.size`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-size]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-size[`+++quarkus.langchain4j.qdrant.devservices.collection.vector-params.size+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.collection.vector-params.size+++[]
 endif::add-copy-button-to-config-props[]
@@ -154,7 +154,7 @@ endif::add-copy-button-to-env-var[]
 |long
 |`+++0l+++`
 
-a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-host]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-host[`quarkus.langchain4j.qdrant.host`]##
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-host]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-host[`+++quarkus.langchain4j.qdrant.host+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.host+++[]
 endif::add-copy-button-to-config-props[]
@@ -175,7 +175,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-port]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-port[`quarkus.langchain4j.qdrant.port`]##
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-port]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-port[`+++quarkus.langchain4j.qdrant.port+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.port+++[]
 endif::add-copy-button-to-config-props[]
@@ -196,7 +196,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++6334+++`
 
-a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-api-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-api-key[`quarkus.langchain4j.qdrant.api-key`]##
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-api-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-api-key[`+++quarkus.langchain4j.qdrant.api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -217,7 +217,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-use-tls]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-use-tls[`quarkus.langchain4j.qdrant.use-tls`]##
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-use-tls]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-use-tls[`+++quarkus.langchain4j.qdrant.use-tls+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.use-tls+++[]
 endif::add-copy-button-to-config-props[]
@@ -238,7 +238,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-payload-text-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-payload-text-key[`quarkus.langchain4j.qdrant.payload-text-key`]##
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-payload-text-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-payload-text-key[`+++quarkus.langchain4j.qdrant.payload-text-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.payload-text-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -259,7 +259,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++text_segment+++`
 
-a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-collection-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-collection-name[`quarkus.langchain4j.qdrant.collection.name`]##
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-collection-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-collection-name[`+++quarkus.langchain4j.qdrant.collection.name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.collection.name+++[]
 endif::add-copy-button-to-config-props[]

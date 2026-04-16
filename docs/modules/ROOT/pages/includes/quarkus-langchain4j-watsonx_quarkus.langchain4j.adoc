@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-enabled[`quarkus.langchain4j.watsonx.chat-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-enabled[`+++quarkus.langchain4j.watsonx.chat-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled[`quarkus.langchain4j.watsonx.embedding-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled[`+++quarkus.langchain4j.watsonx.embedding-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled[`quarkus.langchain4j.watsonx.scoring-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled[`+++quarkus.langchain4j.watsonx.scoring-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-enabled[`quarkus.langchain4j.watsonx.moderation-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-enabled[`+++quarkus.langchain4j.watsonx.moderation-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -91,7 +91,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url[`quarkus.langchain4j.watsonx.base-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url[`+++quarkus.langchain4j.watsonx.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -114,7 +114,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key[`quarkus.langchain4j.watsonx.api-key`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key[`+++quarkus.langchain4j.watsonx.api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -135,7 +135,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout[`quarkus.langchain4j.watsonx.timeout`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout[`+++quarkus.langchain4j.watsonx.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -156,7 +156,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++60s+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version[`quarkus.langchain4j.watsonx.version`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version[`+++quarkus.langchain4j.watsonx.version+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.version+++[]
 endif::add-copy-button-to-config-props[]
@@ -177,7 +177,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id[`quarkus.langchain4j.watsonx.space-id`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id[`+++quarkus.langchain4j.watsonx.space-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.space-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -200,7 +200,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id[`quarkus.langchain4j.watsonx.project-id`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id[`+++quarkus.langchain4j.watsonx.project-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.project-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -223,7 +223,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests[`quarkus.langchain4j.watsonx.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests[`+++quarkus.langchain4j.watsonx.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -244,7 +244,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-responses[`quarkus.langchain4j.watsonx.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-responses[`+++quarkus.langchain4j.watsonx.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -265,7 +265,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests-curl[`quarkus.langchain4j.watsonx.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests-curl[`+++quarkus.langchain4j.watsonx.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -286,7 +286,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration[`quarkus.langchain4j.watsonx.enable-integration`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration[`+++quarkus.langchain4j.watsonx.enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.enable-integration+++[]
 endif::add-copy-button-to-config-props[]
@@ -307,7 +307,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-base-url[`quarkus.langchain4j.watsonx.iam.base-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-base-url[`+++quarkus.langchain4j.watsonx.iam.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.iam.base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -328,7 +328,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-timeout[`quarkus.langchain4j.watsonx.iam.timeout`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-timeout[`+++quarkus.langchain4j.watsonx.iam.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.iam.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -349,7 +349,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type[`quarkus.langchain4j.watsonx.iam.grant-type`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type[`+++quarkus.langchain4j.watsonx.iam.grant-type+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.iam.grant-type+++[]
 endif::add-copy-button-to-config-props[]
@@ -370,7 +370,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-cos-url[`quarkus.langchain4j.watsonx.text-extraction.cos-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-cos-url[`+++quarkus.langchain4j.watsonx.text-extraction.cos-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.cos-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -391,7 +391,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection[`quarkus.langchain4j.watsonx.text-extraction.document-reference.connection`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection[`+++quarkus.langchain4j.watsonx.text-extraction.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.document-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
@@ -412,7 +412,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-bucket-name[`quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-bucket-name[`+++quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -433,7 +433,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-connection[`quarkus.langchain4j.watsonx.text-extraction.results-reference.connection`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-connection[`+++quarkus.langchain4j.watsonx.text-extraction.results-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.results-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
@@ -454,7 +454,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-bucket-name[`quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-bucket-name[`+++quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -475,7 +475,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests[`quarkus.langchain4j.watsonx.text-extraction.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests[`+++quarkus.langchain4j.watsonx.text-extraction.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -496,7 +496,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-responses[`quarkus.langchain4j.watsonx.text-extraction.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-responses[`+++quarkus.langchain4j.watsonx.text-extraction.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -517,7 +517,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests-curl[`quarkus.langchain4j.watsonx.text-extraction.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests-curl[`+++quarkus.langchain4j.watsonx.text-extraction.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -538,7 +538,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-cos-url[`quarkus.langchain4j.watsonx.text-classification.cos-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-cos-url[`+++quarkus.langchain4j.watsonx.text-classification.cos-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-classification.cos-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -559,7 +559,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-connection[`quarkus.langchain4j.watsonx.text-classification.document-reference.connection`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-connection[`+++quarkus.langchain4j.watsonx.text-classification.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-classification.document-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
@@ -580,7 +580,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-bucket-name[`quarkus.langchain4j.watsonx.text-classification.document-reference.bucket-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-bucket-name[`+++quarkus.langchain4j.watsonx.text-classification.document-reference.bucket-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-classification.document-reference.bucket-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -601,7 +601,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests[`quarkus.langchain4j.watsonx.text-classification.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests[`+++quarkus.langchain4j.watsonx.text-classification.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-classification.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -622,7 +622,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-responses[`quarkus.langchain4j.watsonx.text-classification.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-responses[`+++quarkus.langchain4j.watsonx.text-classification.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-classification.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -643,7 +643,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests-curl[`quarkus.langchain4j.watsonx.text-classification.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-log-requests-curl[`+++quarkus.langchain4j.watsonx.text-classification.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.text-classification.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -664,7 +664,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name[`quarkus.langchain4j.watsonx.chat-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name[`+++quarkus.langchain4j.watsonx.chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -689,7 +689,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-4-h-small+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice[`quarkus.langchain4j.watsonx.chat-model.tool-choice`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx.chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.tool-choice+++[]
 endif::add-copy-button-to-config-props[]
@@ -721,7 +721,7 @@ endif::add-copy-button-to-env-var[]
 a|`auto`, `required`, `none`
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name[`quarkus.langchain4j.watsonx.chat-model.tool-choice-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name[`+++quarkus.langchain4j.watsonx.chat-model.tool-choice-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.tool-choice-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -744,7 +744,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty[`quarkus.langchain4j.watsonx.chat-model.frequency-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty[`+++quarkus.langchain4j.watsonx.chat-model.frequency-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.frequency-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -767,7 +767,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs[`quarkus.langchain4j.watsonx.chat-model.logprobs`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs[`+++quarkus.langchain4j.watsonx.chat-model.logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.logprobs+++[]
 endif::add-copy-button-to-config-props[]
@@ -790,7 +790,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs[`quarkus.langchain4j.watsonx.chat-model.top-logprobs`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx.chat-model.top-logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.top-logprobs+++[]
 endif::add-copy-button-to-config-props[]
@@ -813,7 +813,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-output-tokens[`quarkus.langchain4j.watsonx.chat-model.max-output-tokens`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-output-tokens[`+++quarkus.langchain4j.watsonx.chat-model.max-output-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.max-output-tokens+++[]
 endif::add-copy-button-to-config-props[]
@@ -834,7 +834,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++1024+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-presence-penalty[`quarkus.langchain4j.watsonx.chat-model.presence-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-presence-penalty[`+++quarkus.langchain4j.watsonx.chat-model.presence-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.presence-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -857,7 +857,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed[`quarkus.langchain4j.watsonx.chat-model.seed`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed[`+++quarkus.langchain4j.watsonx.chat-model.seed+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.seed+++[]
 endif::add-copy-button-to-config-props[]
@@ -878,7 +878,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-stop[`quarkus.langchain4j.watsonx.chat-model.stop`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-stop[`+++quarkus.langchain4j.watsonx.chat-model.stop+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.stop+++[]
 endif::add-copy-button-to-config-props[]
@@ -903,7 +903,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature[`quarkus.langchain4j.watsonx.chat-model.temperature`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature[`+++quarkus.langchain4j.watsonx.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.temperature+++[]
 endif::add-copy-button-to-config-props[]
@@ -928,7 +928,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++${quarkus.langchain4j.temperature:1.0}+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p[`quarkus.langchain4j.watsonx.chat-model.top-p`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p[`+++quarkus.langchain4j.watsonx.chat-model.top-p+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.top-p+++[]
 endif::add-copy-button-to-config-props[]
@@ -951,7 +951,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++1+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format[`quarkus.langchain4j.watsonx.chat-model.response-format`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format[`+++quarkus.langchain4j.watsonx.chat-model.response-format+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.response-format+++[]
 endif::add-copy-button-to-config-props[]
@@ -974,7 +974,7 @@ endif::add-copy-button-to-env-var[]
 a|`text`, `json`, `json-schema`
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-choice[`quarkus.langchain4j.watsonx.chat-model.guided-choice`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-choice[`+++quarkus.langchain4j.watsonx.chat-model.guided-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.guided-choice+++[]
 endif::add-copy-button-to-config-props[]
@@ -997,7 +997,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-grammar]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-grammar[`quarkus.langchain4j.watsonx.chat-model.guided-grammar`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-grammar]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-grammar[`+++quarkus.langchain4j.watsonx.chat-model.guided-grammar+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.guided-grammar+++[]
 endif::add-copy-button-to-config-props[]
@@ -1020,7 +1020,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-regex]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-regex[`quarkus.langchain4j.watsonx.chat-model.guided-regex`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-regex]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-regex[`+++quarkus.langchain4j.watsonx.chat-model.guided-regex+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.guided-regex+++[]
 endif::add-copy-button-to-config-props[]
@@ -1043,7 +1043,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty[`quarkus.langchain4j.watsonx.chat-model.length-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty[`+++quarkus.langchain4j.watsonx.chat-model.length-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.length-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -1066,7 +1066,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-repetition-penalty[`quarkus.langchain4j.watsonx.chat-model.repetition-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-repetition-penalty[`+++quarkus.langchain4j.watsonx.chat-model.repetition-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.repetition-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -1089,7 +1089,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests[`quarkus.langchain4j.watsonx.chat-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests[`+++quarkus.langchain4j.watsonx.chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -1110,7 +1110,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses[`quarkus.langchain4j.watsonx.chat-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses[`+++quarkus.langchain4j.watsonx.chat-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -1131,7 +1131,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl[`quarkus.langchain4j.watsonx.chat-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.chat-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -1152,7 +1152,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-enabled[`quarkus.langchain4j.watsonx.chat-model.thinking.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-enabled[`+++quarkus.langchain4j.watsonx.chat-model.thinking.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -1173,7 +1173,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think[`quarkus.langchain4j.watsonx.chat-model.thinking.tags.think`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think+++[]
 endif::add-copy-button-to-config-props[]
@@ -1196,7 +1196,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response[`quarkus.langchain4j.watsonx.chat-model.thinking.tags.response`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response+++[]
 endif::add-copy-button-to-config-props[]
@@ -1219,7 +1219,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-effort[`quarkus.langchain4j.watsonx.chat-model.thinking.effort`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-effort[`+++quarkus.langchain4j.watsonx.chat-model.thinking.effort+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.effort+++[]
 endif::add-copy-button-to-config-props[]
@@ -1242,7 +1242,7 @@ endif::add-copy-button-to-env-var[]
 a|`low`, `medium`, `high`
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-include-reasoning]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-include-reasoning[`quarkus.langchain4j.watsonx.chat-model.thinking.include-reasoning`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-include-reasoning]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-include-reasoning[`+++quarkus.langchain4j.watsonx.chat-model.thinking.include-reasoning+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.include-reasoning+++[]
 endif::add-copy-button-to-config-props[]
@@ -1263,7 +1263,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name[`quarkus.langchain4j.watsonx.embedding-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name[`+++quarkus.langchain4j.watsonx.embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -1288,7 +1288,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-embedding-278m-multilingual+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests[`quarkus.langchain4j.watsonx.embedding-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests[`+++quarkus.langchain4j.watsonx.embedding-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -1309,7 +1309,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses[`quarkus.langchain4j.watsonx.embedding-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses[`+++quarkus.langchain4j.watsonx.embedding-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -1330,7 +1330,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests-curl[`quarkus.langchain4j.watsonx.embedding-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.embedding-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -1351,7 +1351,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-model-name[`quarkus.langchain4j.watsonx.scoring-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-model-name[`+++quarkus.langchain4j.watsonx.scoring-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -1377,7 +1377,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++cross-encoder/ms-marco-minilm-l-12-v2+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests[`quarkus.langchain4j.watsonx.scoring-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests[`+++quarkus.langchain4j.watsonx.scoring-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -1398,7 +1398,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-responses[`quarkus.langchain4j.watsonx.scoring-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-responses[`+++quarkus.langchain4j.watsonx.scoring-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -1419,7 +1419,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests-curl[`quarkus.langchain4j.watsonx.scoring-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.scoring-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -1440,7 +1440,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-pii-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-pii-enabled[`quarkus.langchain4j.watsonx.moderation-model.pii.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-pii-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-pii-enabled[`+++quarkus.langchain4j.watsonx.moderation-model.pii.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.pii.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -1461,7 +1461,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-enabled[`quarkus.langchain4j.watsonx.moderation-model.hap.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-enabled[`+++quarkus.langchain4j.watsonx.moderation-model.hap.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.hap.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -1482,7 +1482,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-threshold[`quarkus.langchain4j.watsonx.moderation-model.hap.threshold`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-hap-threshold[`+++quarkus.langchain4j.watsonx.moderation-model.hap.threshold+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.hap.threshold+++[]
 endif::add-copy-button-to-config-props[]
@@ -1503,7 +1503,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-enabled[`quarkus.langchain4j.watsonx.moderation-model.granite-guardian.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-enabled[`+++quarkus.langchain4j.watsonx.moderation-model.granite-guardian.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.granite-guardian.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -1524,7 +1524,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-threshold[`quarkus.langchain4j.watsonx.moderation-model.granite-guardian.threshold`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-granite-guardian-threshold[`+++quarkus.langchain4j.watsonx.moderation-model.granite-guardian.threshold+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.granite-guardian.threshold+++[]
 endif::add-copy-button-to-config-props[]
@@ -1545,7 +1545,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests[`quarkus.langchain4j.watsonx.moderation-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests[`+++quarkus.langchain4j.watsonx.moderation-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -1566,7 +1566,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-responses[`quarkus.langchain4j.watsonx.moderation-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-responses[`+++quarkus.langchain4j.watsonx.moderation-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -1587,7 +1587,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests-curl[`quarkus.langchain4j.watsonx.moderation-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-moderation-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.moderation-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.moderation-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -1608,7 +1608,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-base-url[`quarkus.langchain4j.watsonx.built-in-tool.base-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-base-url[`+++quarkus.langchain4j.watsonx.built-in-tool.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -1633,7 +1633,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-timeout[`quarkus.langchain4j.watsonx.built-in-tool.timeout`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-timeout[`+++quarkus.langchain4j.watsonx.built-in-tool.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -1656,7 +1656,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests[`quarkus.langchain4j.watsonx.built-in-tool.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests[`+++quarkus.langchain4j.watsonx.built-in-tool.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -1677,7 +1677,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-responses[`quarkus.langchain4j.watsonx.built-in-tool.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-responses[`+++quarkus.langchain4j.watsonx.built-in-tool.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -1698,7 +1698,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests-curl[`quarkus.langchain4j.watsonx.built-in-tool.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-log-requests-curl[`+++quarkus.langchain4j.watsonx.built-in-tool.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -1719,7 +1719,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-tavily-search-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-tavily-search-api-key[`quarkus.langchain4j.watsonx.built-in-tool.tavily-search.api-key`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-tavily-search-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-tavily-search-api-key[`+++quarkus.langchain4j.watsonx.built-in-tool.tavily-search.api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.tavily-search.api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -1740,7 +1740,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-python-interpreter-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-python-interpreter-deployment-id[`quarkus.langchain4j.watsonx.built-in-tool.python-interpreter.deployment-id`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-python-interpreter-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-python-interpreter-deployment-id[`+++quarkus.langchain4j.watsonx.built-in-tool.python-interpreter.deployment-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.python-interpreter.deployment-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -1761,7 +1761,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-rag-query-vector-index-ids]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-rag-query-vector-index-ids[`quarkus.langchain4j.watsonx.built-in-tool.rag-query.vector-index-ids`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-rag-query-vector-index-ids]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-tool-rag-query-vector-index-ids[`+++quarkus.langchain4j.watsonx.built-in-tool.rag-query.vector-index-ids+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-tool.rag-query.vector-index-ids+++[]
 endif::add-copy-button-to-config-props[]
@@ -1786,7 +1786,7 @@ h|[[quarkus-langchain4j-watsonx_section_quarkus-langchain4j-watsonx]] [.section-
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url[`quarkus.langchain4j.watsonx."model-name".base-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url[`+++quarkus.langchain4j.watsonx."model-name".base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -1809,7 +1809,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key[`quarkus.langchain4j.watsonx."model-name".api-key`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key[`+++quarkus.langchain4j.watsonx."model-name".api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".api-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -1830,7 +1830,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout[`quarkus.langchain4j.watsonx."model-name".timeout`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout[`+++quarkus.langchain4j.watsonx."model-name".timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -1851,7 +1851,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++60s+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version[`quarkus.langchain4j.watsonx."model-name".version`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version[`+++quarkus.langchain4j.watsonx."model-name".version+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".version+++[]
 endif::add-copy-button-to-config-props[]
@@ -1872,7 +1872,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id[`quarkus.langchain4j.watsonx."model-name".space-id`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id[`+++quarkus.langchain4j.watsonx."model-name".space-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".space-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -1895,7 +1895,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id[`quarkus.langchain4j.watsonx."model-name".project-id`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id[`+++quarkus.langchain4j.watsonx."model-name".project-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".project-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -1918,7 +1918,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests[`quarkus.langchain4j.watsonx."model-name".log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests[`+++quarkus.langchain4j.watsonx."model-name".log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -1939,7 +1939,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-responses[`quarkus.langchain4j.watsonx."model-name".log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-responses[`+++quarkus.langchain4j.watsonx."model-name".log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -1960,7 +1960,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -1981,7 +1981,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-enable-integration[`quarkus.langchain4j.watsonx."model-name".enable-integration`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-enable-integration[`+++quarkus.langchain4j.watsonx."model-name".enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".enable-integration+++[]
 endif::add-copy-button-to-config-props[]
@@ -2002,7 +2002,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-base-url[`quarkus.langchain4j.watsonx."model-name".iam.base-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-base-url[`+++quarkus.langchain4j.watsonx."model-name".iam.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".iam.base-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -2023,7 +2023,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-timeout[`quarkus.langchain4j.watsonx."model-name".iam.timeout`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-timeout[`+++quarkus.langchain4j.watsonx."model-name".iam.timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".iam.timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -2044,7 +2044,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type[`quarkus.langchain4j.watsonx."model-name".iam.grant-type`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type[`+++quarkus.langchain4j.watsonx."model-name".iam.grant-type+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".iam.grant-type+++[]
 endif::add-copy-button-to-config-props[]
@@ -2065,7 +2065,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-cos-url[`quarkus.langchain4j.watsonx."model-name".text-extraction.cos-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-cos-url[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.cos-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.cos-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -2086,7 +2086,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection[`quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.connection`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
@@ -2107,7 +2107,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-bucket-name[`quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.bucket-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-bucket-name[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.bucket-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.bucket-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -2128,7 +2128,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-connection[`quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.connection`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-connection[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
@@ -2149,7 +2149,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-bucket-name[`quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.bucket-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-bucket-name[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.bucket-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.bucket-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -2170,7 +2170,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests[`quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -2191,7 +2191,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-responses[`quarkus.langchain4j.watsonx."model-name".text-extraction.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-responses[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -2212,7 +2212,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -2233,7 +2233,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-cos-url[`quarkus.langchain4j.watsonx."model-name".text-classification.cos-url`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-cos-url[`+++quarkus.langchain4j.watsonx."model-name".text-classification.cos-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-classification.cos-url+++[]
 endif::add-copy-button-to-config-props[]
@@ -2254,7 +2254,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-connection[`quarkus.langchain4j.watsonx."model-name".text-classification.document-reference.connection`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-connection[`+++quarkus.langchain4j.watsonx."model-name".text-classification.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-classification.document-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
@@ -2275,7 +2275,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-bucket-name[`quarkus.langchain4j.watsonx."model-name".text-classification.document-reference.bucket-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-bucket-name[`+++quarkus.langchain4j.watsonx."model-name".text-classification.document-reference.bucket-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-classification.document-reference.bucket-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -2296,7 +2296,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests[`quarkus.langchain4j.watsonx."model-name".text-classification.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests[`+++quarkus.langchain4j.watsonx."model-name".text-classification.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-classification.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -2317,7 +2317,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-responses[`quarkus.langchain4j.watsonx."model-name".text-classification.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-responses[`+++quarkus.langchain4j.watsonx."model-name".text-classification.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-classification.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -2338,7 +2338,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".text-classification.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".text-classification.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-classification.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -2359,7 +2359,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name[`quarkus.langchain4j.watsonx."model-name".chat-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -2384,7 +2384,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-4-h-small+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice[`quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice+++[]
 endif::add-copy-button-to-config-props[]
@@ -2416,7 +2416,7 @@ endif::add-copy-button-to-env-var[]
 a|`auto`, `required`, `none`
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name[`quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name[`+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -2439,7 +2439,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty[`quarkus.langchain4j.watsonx."model-name".chat-model.frequency-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty[`+++quarkus.langchain4j.watsonx."model-name".chat-model.frequency-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.frequency-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -2462,7 +2462,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs[`quarkus.langchain4j.watsonx."model-name".chat-model.logprobs`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs[`+++quarkus.langchain4j.watsonx."model-name".chat-model.logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.logprobs+++[]
 endif::add-copy-button-to-config-props[]
@@ -2485,7 +2485,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs[`quarkus.langchain4j.watsonx."model-name".chat-model.top-logprobs`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx."model-name".chat-model.top-logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.top-logprobs+++[]
 endif::add-copy-button-to-config-props[]
@@ -2508,7 +2508,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-output-tokens[`quarkus.langchain4j.watsonx."model-name".chat-model.max-output-tokens`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-output-tokens[`+++quarkus.langchain4j.watsonx."model-name".chat-model.max-output-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.max-output-tokens+++[]
 endif::add-copy-button-to-config-props[]
@@ -2529,7 +2529,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++1024+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-presence-penalty[`quarkus.langchain4j.watsonx."model-name".chat-model.presence-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-presence-penalty[`+++quarkus.langchain4j.watsonx."model-name".chat-model.presence-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.presence-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -2552,7 +2552,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed[`quarkus.langchain4j.watsonx."model-name".chat-model.seed`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed[`+++quarkus.langchain4j.watsonx."model-name".chat-model.seed+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.seed+++[]
 endif::add-copy-button-to-config-props[]
@@ -2573,7 +2573,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-stop[`quarkus.langchain4j.watsonx."model-name".chat-model.stop`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-stop[`+++quarkus.langchain4j.watsonx."model-name".chat-model.stop+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.stop+++[]
 endif::add-copy-button-to-config-props[]
@@ -2598,7 +2598,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature[`quarkus.langchain4j.watsonx."model-name".chat-model.temperature`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature[`+++quarkus.langchain4j.watsonx."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.temperature+++[]
 endif::add-copy-button-to-config-props[]
@@ -2623,7 +2623,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++${quarkus.langchain4j.temperature:1.0}+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p[`quarkus.langchain4j.watsonx."model-name".chat-model.top-p`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p[`+++quarkus.langchain4j.watsonx."model-name".chat-model.top-p+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.top-p+++[]
 endif::add-copy-button-to-config-props[]
@@ -2646,7 +2646,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++1+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format[`quarkus.langchain4j.watsonx."model-name".chat-model.response-format`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format[`+++quarkus.langchain4j.watsonx."model-name".chat-model.response-format+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.response-format+++[]
 endif::add-copy-button-to-config-props[]
@@ -2669,7 +2669,7 @@ endif::add-copy-button-to-env-var[]
 a|`text`, `json`, `json-schema`
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-choice[`quarkus.langchain4j.watsonx."model-name".chat-model.guided-choice`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-choice[`+++quarkus.langchain4j.watsonx."model-name".chat-model.guided-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.guided-choice+++[]
 endif::add-copy-button-to-config-props[]
@@ -2692,7 +2692,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-grammar]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-grammar[`quarkus.langchain4j.watsonx."model-name".chat-model.guided-grammar`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-grammar]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-grammar[`+++quarkus.langchain4j.watsonx."model-name".chat-model.guided-grammar+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.guided-grammar+++[]
 endif::add-copy-button-to-config-props[]
@@ -2715,7 +2715,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-regex]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-regex[`quarkus.langchain4j.watsonx."model-name".chat-model.guided-regex`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-regex]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-regex[`+++quarkus.langchain4j.watsonx."model-name".chat-model.guided-regex+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.guided-regex+++[]
 endif::add-copy-button-to-config-props[]
@@ -2738,7 +2738,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty[`quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty[`+++quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -2761,7 +2761,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-repetition-penalty[`quarkus.langchain4j.watsonx."model-name".chat-model.repetition-penalty`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-repetition-penalty[`+++quarkus.langchain4j.watsonx."model-name".chat-model.repetition-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.repetition-penalty+++[]
 endif::add-copy-button-to-config-props[]
@@ -2784,7 +2784,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests[`quarkus.langchain4j.watsonx."model-name".chat-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -2805,7 +2805,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses[`quarkus.langchain4j.watsonx."model-name".chat-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -2826,7 +2826,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".chat-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -2847,7 +2847,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-enabled[`quarkus.langchain4j.watsonx."model-name".chat-model.thinking.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-enabled[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -2868,7 +2868,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think[`quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think+++[]
 endif::add-copy-button-to-config-props[]
@@ -2891,7 +2891,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response[`quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response+++[]
 endif::add-copy-button-to-config-props[]
@@ -2914,7 +2914,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-effort[`quarkus.langchain4j.watsonx."model-name".chat-model.thinking.effort`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-effort[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.effort+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.effort+++[]
 endif::add-copy-button-to-config-props[]
@@ -2937,7 +2937,7 @@ endif::add-copy-button-to-env-var[]
 a|`low`, `medium`, `high`
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-include-reasoning]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-include-reasoning[`quarkus.langchain4j.watsonx."model-name".chat-model.thinking.include-reasoning`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-include-reasoning]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-include-reasoning[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.include-reasoning+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.include-reasoning+++[]
 endif::add-copy-button-to-config-props[]
@@ -2958,7 +2958,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name[`quarkus.langchain4j.watsonx."model-name".embedding-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -2983,7 +2983,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-embedding-278m-multilingual+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests[`quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -3004,7 +3004,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses[`quarkus.langchain4j.watsonx."model-name".embedding-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -3025,7 +3025,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -3046,7 +3046,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-model-name[`quarkus.langchain4j.watsonx."model-name".scoring-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".scoring-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -3072,7 +3072,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++cross-encoder/ms-marco-minilm-l-12-v2+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests[`quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -3093,7 +3093,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-responses[`quarkus.langchain4j.watsonx."model-name".scoring-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -3114,7 +3114,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]
@@ -3135,7 +3135,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-pii-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-pii-enabled[`quarkus.langchain4j.watsonx."model-name".moderation-model.pii.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-pii-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-pii-enabled[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.pii.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.pii.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -3156,7 +3156,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-enabled[`quarkus.langchain4j.watsonx."model-name".moderation-model.hap.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-enabled[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.hap.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.hap.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -3177,7 +3177,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-threshold[`quarkus.langchain4j.watsonx."model-name".moderation-model.hap.threshold`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-hap-threshold[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.hap.threshold+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.hap.threshold+++[]
 endif::add-copy-button-to-config-props[]
@@ -3198,7 +3198,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-enabled[`quarkus.langchain4j.watsonx."model-name".moderation-model.granite-guardian.enabled`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-enabled[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.granite-guardian.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.granite-guardian.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -3219,7 +3219,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-threshold[`quarkus.langchain4j.watsonx."model-name".moderation-model.granite-guardian.threshold`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-granite-guardian-threshold[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.granite-guardian.threshold+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.granite-guardian.threshold+++[]
 endif::add-copy-button-to-config-props[]
@@ -3240,7 +3240,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests[`quarkus.langchain4j.watsonx."model-name".moderation-model.log-requests`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -3261,7 +3261,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-responses[`quarkus.langchain4j.watsonx."model-name".moderation-model.log-responses`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -3282,7 +3282,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".moderation-model.log-requests-curl`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-moderation-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".moderation-model.log-requests-curl+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".moderation-model.log-requests-curl+++[]
 endif::add-copy-button-to-config-props[]

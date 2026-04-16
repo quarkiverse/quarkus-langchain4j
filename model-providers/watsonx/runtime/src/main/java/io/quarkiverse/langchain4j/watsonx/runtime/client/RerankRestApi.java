@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
-import com.ibm.watsonx.ai.rerank.RerankRequest;
+import com.ibm.watsonx.ai.rerank.RerankPayload;
 import com.ibm.watsonx.ai.rerank.RerankResponse;
 
 import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
@@ -33,7 +33,7 @@ public interface RerankRestApi {
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
             @QueryParam("version") String version,
-            RerankRequest request);
+            RerankPayload rerankPayload);
 
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {

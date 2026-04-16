@@ -33,7 +33,7 @@ public interface IBMCloudAuthRestApi {
 
     @POST
     @Path("/identity/token")
-    Uni<TokenResponse> asyncToken(
+    Uni<TokenResponse> tokenAsync(
             @RestForm(value = "apikey") String apikey,
             @RestForm(value = "grant_type") String grantType);
 

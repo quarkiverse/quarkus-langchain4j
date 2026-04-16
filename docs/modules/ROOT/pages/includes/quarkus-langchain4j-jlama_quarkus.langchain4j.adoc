@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-include-models-in-artifact]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-include-models-in-artifact[`quarkus.langchain4j.jlama.include-models-in-artifact`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-include-models-in-artifact]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-include-models-in-artifact[`+++quarkus.langchain4j.jlama.include-models-in-artifact+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.include-models-in-artifact+++[]
 endif::add-copy-button-to-config-props[]
@@ -28,7 +28,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-enabled[`quarkus.langchain4j.jlama.chat-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-enabled[`+++quarkus.langchain4j.jlama.chat-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.chat-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-enabled[`quarkus.langchain4j.jlama.embedding-model.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-enabled[`+++quarkus.langchain4j.jlama.embedding-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.embedding-model.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -70,7 +70,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-model-name[`quarkus.langchain4j.jlama.chat-model.model-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-model-name[`+++quarkus.langchain4j.jlama.chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.chat-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -91,7 +91,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++tjake/TinyLlama-1.1B-Chat-v1.0-Jlama-Q4+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-model-name[`quarkus.langchain4j.jlama.embedding-model.model-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-embedding-model-model-name[`+++quarkus.langchain4j.jlama.embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.embedding-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++intfloat/e5-small-v2+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-models-path]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-models-path[`quarkus.langchain4j.jlama.models-path`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-models-path]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-models-path[`+++quarkus.langchain4j.jlama.models-path+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.models-path+++[]
 endif::add-copy-button-to-config-props[]
@@ -133,7 +133,7 @@ endif::add-copy-button-to-env-var[]
 |path
 |`+++${user.home}/.langchain4j/models+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-temperature[`quarkus.langchain4j.jlama.chat-model.temperature`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-temperature[`+++quarkus.langchain4j.jlama.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.chat-model.temperature+++[]
 endif::add-copy-button-to-config-props[]
@@ -156,7 +156,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0.3f+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-max-tokens[`quarkus.langchain4j.jlama.chat-model.max-tokens`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-chat-model-max-tokens[`+++quarkus.langchain4j.jlama.chat-model.max-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.chat-model.max-tokens+++[]
 endif::add-copy-button-to-config-props[]
@@ -179,7 +179,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-enable-integration]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-enable-integration[`quarkus.langchain4j.jlama.enable-integration`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-enable-integration]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-enable-integration[`+++quarkus.langchain4j.jlama.enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.enable-integration+++[]
 endif::add-copy-button-to-config-props[]
@@ -200,7 +200,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-requests]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-requests[`quarkus.langchain4j.jlama.log-requests`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-requests]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-requests[`+++quarkus.langchain4j.jlama.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -221,7 +221,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-responses]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-responses[`quarkus.langchain4j.jlama.log-responses`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-responses]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-log-responses[`+++quarkus.langchain4j.jlama.log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama.log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -246,7 +246,7 @@ h|[[quarkus-langchain4j-jlama_section_quarkus-langchain4j-jlama]] [.section-name
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-model-name[`quarkus.langchain4j.jlama."model-name".chat-model.model-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-model-name[`+++quarkus.langchain4j.jlama."model-name".chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama."model-name".chat-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -267,7 +267,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++tjake/TinyLlama-1.1B-Chat-v1.0-Jlama-Q4+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-embedding-model-model-name[`quarkus.langchain4j.jlama."model-name".embedding-model.model-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-embedding-model-model-name[`+++quarkus.langchain4j.jlama."model-name".embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama."model-name".embedding-model.model-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -288,7 +288,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++intfloat/e5-small-v2+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-temperature[`quarkus.langchain4j.jlama."model-name".chat-model.temperature`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-temperature[`+++quarkus.langchain4j.jlama."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama."model-name".chat-model.temperature+++[]
 endif::add-copy-button-to-config-props[]
@@ -311,7 +311,7 @@ endif::add-copy-button-to-env-var[]
 |double
 |`+++0.3f+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-max-tokens[`quarkus.langchain4j.jlama."model-name".chat-model.max-tokens`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-chat-model-max-tokens[`+++quarkus.langchain4j.jlama."model-name".chat-model.max-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama."model-name".chat-model.max-tokens+++[]
 endif::add-copy-button-to-config-props[]
@@ -334,7 +334,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-enable-integration[`quarkus.langchain4j.jlama."model-name".enable-integration`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-enable-integration[`+++quarkus.langchain4j.jlama."model-name".enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama."model-name".enable-integration+++[]
 endif::add-copy-button-to-config-props[]
@@ -355,7 +355,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-requests[`quarkus.langchain4j.jlama."model-name".log-requests`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-requests[`+++quarkus.langchain4j.jlama."model-name".log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama."model-name".log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -376,7 +376,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-responses[`quarkus.langchain4j.jlama."model-name".log-responses`]##
+a| [[quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-jlama_quarkus-langchain4j-jlama-model-name-log-responses[`+++quarkus.langchain4j.jlama."model-name".log-responses+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.jlama."model-name".log-responses+++[]
 endif::add-copy-button-to-config-props[]

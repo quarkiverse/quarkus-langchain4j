@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -54,6 +55,7 @@ import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
+import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.vertx.core.Context;
 
 /**
@@ -72,6 +74,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private final Consumer<String> partialResponseHandler;
     private final Consumer<PartialThinking> partialThinkingHandler;
+    private final Consumer<PartialToolCall> partialToolCallHandler;
     private final Consumer<Response<AiMessage>> completionHandler;
     private final Consumer<BeforeToolExecution> beforeToolExecutionHandler;
     private final Consumer<ChatResponse> intermediateResponseHandler;
@@ -98,6 +101,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Object memoryId,
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
+            Consumer<PartialToolCall> partialToolCallHandler,
             Consumer<BeforeToolExecution> beforeToolExecutionHandler,
             Consumer<ChatResponse> intermediateResponseHandler,
             Consumer<ToolExecution> toolExecuteHandler,
@@ -121,6 +125,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
         this.partialThinkingHandler = partialThinkingHandler;
+        this.partialToolCallHandler = partialToolCallHandler;
         this.beforeToolExecutionHandler = beforeToolExecutionHandler;
         this.intermediateResponseHandler = intermediateResponseHandler;
         this.completeResponseHandler = completeResponseHandler;
@@ -153,6 +158,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             InvocationContext invocationContext, Object memoryId,
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
+            Consumer<PartialToolCall> partialToolCallHandler,
             Consumer<BeforeToolExecution> beforeToolExecutionHandler,
             Consumer<ChatResponse> intermediateResponseHandler,
             Consumer<ToolExecution> toolExecuteHandler, Consumer<ChatResponse> completeResponseHandler,
@@ -168,6 +174,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.memoryId = memoryId;
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
         this.partialThinkingHandler = partialThinkingHandler;
+        this.partialToolCallHandler = partialToolCallHandler;
         this.beforeToolExecutionHandler = beforeToolExecutionHandler;
         this.intermediateResponseHandler = intermediateResponseHandler;
         this.toolExecuteHandler = toolExecuteHandler;
@@ -268,10 +275,25 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     }
 
     @Override
+    public void onPartialToolCall(PartialToolCall partialToolCall) {
+        if (isCancelled()) {
+            streamingHandle.cancel();
+            return;
+        }
+        if (partialToolCallHandler != null) {
+            execute(new Runnable() {
+                @Override
+                public void run() {
+                    partialToolCallHandler.accept(partialToolCall);
+                }
+            });
+        }
+    }
+
+    @Override
     public void onPartialToolCall(PartialToolCall partialToolCall, PartialToolCallContext context) {
         captureStreamingHandle(context.streamingHandle());
-        // Delegate to the default implementation which does nothing special
-        StreamingChatResponseHandler.super.onPartialToolCall(partialToolCall, context);
+        onPartialToolCall(partialToolCall);
     }
 
     private void captureStreamingHandle(StreamingHandle handle) {
@@ -426,7 +448,22 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         return;
                     }
                     addToMemory(aiMessage);
-                    for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                    List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
+                    int maxToolCallsPerResponse;
+                    if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
+                        maxToolCallsPerResponse = context.maxToolCallsPerResponse;
+                    } else {
+                        maxToolCallsPerResponse = ConfigProvider.getConfig()
+                                .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
+                                .orElse(0);
+                    }
+                    int toolCallsCount = 0;
+                    for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+                        if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                            throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
+                                    toolExecutionRequests.size());
+                        }
+                        toolCallsCount++;
                         if (isCancelled()) {
                             // Fill cancelled tools with error results to keep memory consistent:
                             // every tool request must have a matching tool result
@@ -439,6 +476,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         if (beforeToolExecutionHandler != null) {
                             BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
                                     .request(toolExecutionRequest)
+                                    .invocationContext(invocationContext)
                                     .build();
                             beforeToolExecutionHandler.accept(beforeToolExecution);
                         }
@@ -464,6 +502,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         ToolExecution toolExecution = ToolExecution.builder()
                                 .request(toolExecutionRequest)
                                 .result(toolExecutionResult)
+                                .invocationContext(invocationContext)
                                 .build();
                         if (toolExecuteHandler != null) {
                             toolExecuteHandler.accept(toolExecution);
@@ -504,6 +543,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             memoryId,
                             partialResponseHandler,
                             partialThinkingHandler,
+                            partialToolCallHandler,
                             beforeToolExecutionHandler,
                             intermediateResponseHandler,
                             toolExecuteHandler,

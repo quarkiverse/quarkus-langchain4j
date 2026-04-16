@@ -65,8 +65,8 @@ public final class QuarkusTextExtractionRestClient extends TextExtractionRestCli
     }
 
     @Override
-    public CompletableFuture<Boolean> asyncDeleteFile(DeleteFileRequest request) {
-        return cosClient.asyncDeleteFile(request.bucketName(), request.fileName(), request.requestTrackingId())
+    public CompletableFuture<Boolean> deleteFileAsync(DeleteFileRequest request) {
+        return cosClient.deleteFileAsync(request.bucketName(), request.fileName(), request.requestTrackingId())
                 .map(v -> true)
                 .onFailure(WatsonxRestClientUtils::shouldRetry).retry().atMost(10)
                 .subscribe().asCompletionStage();

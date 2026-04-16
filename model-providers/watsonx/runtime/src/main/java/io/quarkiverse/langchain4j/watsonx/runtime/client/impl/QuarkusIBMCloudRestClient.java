@@ -32,8 +32,8 @@ public final class QuarkusIBMCloudRestClient extends IBMCloudRestClient {
     }
 
     @Override
-    public CompletableFuture<TokenResponse> asyncToken(String apiKey, String grantType) {
-        return client.asyncToken(apiKey, grantType).subscribeAsCompletionStage();
+    public CompletableFuture<TokenResponse> tokenAsync(String apiKey, String grantType) {
+        return client.tokenAsync(apiKey, grantType).subscribeAsCompletionStage();
     }
 
     public static final class QuarkusIBMCloudRestClientBuilderFactory implements IBMCloudRestClientBuilderFactory {

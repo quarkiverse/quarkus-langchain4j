@@ -41,7 +41,7 @@ public interface TextExtractionRestApi {
 
     @DELETE
     @Path("{bucket_name}/{file_name}")
-    Uni<Void> asyncDeleteFile(
+    Uni<Void> deleteFileAsync(
             @PathParam("bucket_name") String bucketName,
             @PathParam("file_name") String fileName,
             @HeaderParam(REQUEST_ID_HEADER) String requestId);

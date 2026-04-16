@@ -7,6 +7,10 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_I
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_INPUT_GUARDRAIL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_INPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_OUTPUT_GUARDRAIL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.FORCE_ALLOW;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
@@ -209,6 +213,9 @@ public class AiServicesProcessor {
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
 
+    private static final Set<DotName> GUARDRAIL_ANNOTATIONS = Set.of(
+            TOOL_INPUT_GUARDRAIL, TOOL_INPUT_GUARDRAILS, TOOL_OUTPUT_GUARDRAIL, TOOL_OUTPUT_GUARDRAILS);
+
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
@@ -320,7 +327,32 @@ public class AiServicesProcessor {
                         }
                     }
                 }
+
+                checkGuardrailOnAiServiceMethod(serviceMethodInfo);
             }
+        }
+    }
+
+    /**
+     * Check that the given method does not have any tool guardrail annotations, and logs a warning if it does.
+     */
+    private static void checkGuardrailOnAiServiceMethod(MethodInfo agentAiMethod) {
+        if (agentAiMethod.hasAnnotation(DotNames.TOOL)) {
+            return;
+        }
+
+        List<DotName> dotNames = GUARDRAIL_ANNOTATIONS.stream()
+                .filter(agentAiMethod::hasAnnotation)
+                .toList();
+
+        if (!dotNames.isEmpty()) {
+            log.warnf(
+                    "AI service method '%s#%s' is annotated with %s, but tool guardrail annotations apply only to @Tool methods. "
+                            +
+                            "Please remove the guardrail annotations or annotate the method with @Tool if it's meant to be a tool method.",
+                    agentAiMethod.declaringClass().name(),
+                    agentAiMethod.name(),
+                    dotNames);
         }
     }
 
@@ -346,6 +378,7 @@ public class AiServicesProcessor {
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
             BuildProducer<ToolProviderMetaBuildItem> toolProviderProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer) {
         IndexView index = indexBuildItem.getIndex();
@@ -381,18 +414,19 @@ public class AiServicesProcessor {
 
             DotName chatLanguageModelSupplierClassDotName = getSupplierDotName(instance.value("chatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER,
-                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                    supplierDotName -> validateSupplierAndRegister(
                             supplierDotName,
                             index,
-                            reflectiveClassProducer));
+                            reflectiveClassProducer,
+                            unremovableBeanProducer));
 
             DotName streamingChatLanguageModelSupplierClassDotName = getSupplierDotName(
                     instance.value("streamingChatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_STREAMING_CHAT_MODEL_SUPPLIER,
-                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                    supplierDotName -> validateSupplierAndRegister(
                             supplierDotName,
                             index,
-                            reflectiveClassProducer));
+                            reflectiveClassProducer, unremovableBeanProducer));
 
             String chatModelName = chatModelName(instance, chatLanguageModelSupplierClassDotName,
                     streamingChatLanguageModelSupplierClassDotName, chatModelNames);
@@ -412,8 +446,8 @@ public class AiServicesProcessor {
                     if (declaredScope != null) {
                         customRetrievalAugmentorSupplierClassIsABean = true;
                     } else {
-                        validateSupplierAndRegisterForReflection(retrievalAugmentorSupplierClassName, index,
-                                reflectiveClassProducer);
+                        validateSupplierAndRegister(retrievalAugmentorSupplierClassName, index,
+                                reflectiveClassProducer, unremovableBeanProducer);
                     }
                 }
             }
@@ -422,7 +456,8 @@ public class AiServicesProcessor {
             AnnotationValue moderationModelSupplierValue = instance.value("moderationModelSupplier");
             if (moderationModelSupplierValue != null) {
                 moderationModelSupplierClassName = moderationModelSupplierValue.asClass().name();
-                validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
+                validateSupplierAndRegister(moderationModelSupplierClassName, index, reflectiveClassProducer,
+                        unremovableBeanProducer);
             }
 
             DotName toolProviderClassName = LangChain4jDotNames.BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER;
@@ -432,7 +467,8 @@ public class AiServicesProcessor {
                     toolProviderClassName = null;
                 } else {
                     toolProviderClassName = toolProviderValue.asClass().name();
-                    validateSupplierAndRegisterForReflection(toolProviderClassName, index, reflectiveClassProducer);
+                    validateSupplierAndRegister(toolProviderClassName, index, reflectiveClassProducer,
+                            unremovableBeanProducer);
                     toolProviderInfos.add(new ToolProviderInfo(toolProviderClassName.toString(),
                             declarativeAiServiceClassInfo.simpleName()));
                 }
@@ -468,7 +504,7 @@ public class AiServicesProcessor {
 
             List<ClassInfo> tools = tools(instance, index);
             DotName chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName(reflectiveClassProducer,
-                    instance, index);
+                    unremovableBeanProducer, instance, index);
             if (!tools.isEmpty() && chatMemoryProviderSupplierClassDotName == null) {
                 throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
                         + declarativeAiServiceClassInfo.name() + "'");
@@ -476,6 +512,14 @@ public class AiServicesProcessor {
             Integer maxSequentialToolInvocations = instance.value("maxSequentialToolInvocations") != null
                     ? instance.value("maxSequentialToolInvocations").asInt()
                     : 0;
+
+            Integer maxToolCallsPerResponse = instance.value("maxToolCallsPerResponse") != null
+                    ? instance.value("maxToolCallsPerResponse").asInt()
+                    : 0;
+            if (maxToolCallsPerResponse < 0) {
+                throw new IllegalArgumentException(
+                        "maxToolCallsPerResponse must be 0 or greater, but was: " + maxToolCallsPerResponse);
+            }
 
             boolean allowContinuousForcedToolCalling = instance.value("allowContinuousForcedToolCalling") != null
                     ? instance.value("allowContinuousForcedToolCalling").asBoolean()
@@ -491,7 +535,8 @@ public class AiServicesProcessor {
                 DotName supplierDotName = systemMessageProviderSupplierValue.asClass().name();
                 if (!LangChain4jDotNames.NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER.equals(supplierDotName)) {
                     systemMessageProviderClassDotName = supplierDotName;
-                    validateSupplierAndRegisterForReflection(systemMessageProviderClassDotName, index, reflectiveClassProducer);
+                    validateSupplierAndRegister(systemMessageProviderClassDotName, index, reflectiveClassProducer,
+                            unremovableBeanProducer);
                 }
             }
 
@@ -505,7 +550,7 @@ public class AiServicesProcessor {
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
                             moderationModelSupplierClassName,
-                            imageModelSupplierClassName(reflectiveClassProducer, instance, index),
+                            imageModelSupplierClassName(reflectiveClassProducer, unremovableBeanProducer, instance, index),
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
                             systemMessageProviderClassDotName,
                             cdiScope(customScopes, declarativeAiServiceClassInfo),
@@ -520,6 +565,7 @@ public class AiServicesProcessor {
                             toolArgumentsErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
                             toolExecutionErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
                             maxSequentialToolInvocations,
+                            maxToolCallsPerResponse,
                             allowContinuousForcedToolCalling,
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
                             impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
@@ -611,17 +657,20 @@ public class AiServicesProcessor {
     }
 
     private DotName imageModelSupplierClassName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             AnnotationInstance instance, IndexView index) {
         DotName imageModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER;
         AnnotationValue imageModelSupplierValue = instance.value("imageModelSupplier");
         if (imageModelSupplierValue != null) {
             imageModelSupplierClassName = imageModelSupplierValue.asClass().name();
-            validateSupplierAndRegisterForReflection(imageModelSupplierClassName, index, reflectiveClassProducer);
+            validateSupplierAndRegister(imageModelSupplierClassName, index, reflectiveClassProducer,
+                    unremovableBeanProducer);
         }
         return imageModelSupplierClassName;
     }
 
     private DotName chatMemoryProviderSupplierClassDotName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             AnnotationInstance instance, IndexView index) {
         // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
         DotName chatMemoryProviderSupplierClassDotName = LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
@@ -633,8 +682,8 @@ public class AiServicesProcessor {
                 chatMemoryProviderSupplierClassDotName = null;
             } else if (!chatMemoryProviderSupplierClassDotName
                     .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
-                validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
-                        reflectiveClassProducer);
+                validateSupplierAndRegister(chatMemoryProviderSupplierClassDotName, index,
+                        reflectiveClassProducer, unremovableBeanProducer);
             }
         }
         return chatMemoryProviderSupplierClassDotName;
@@ -805,20 +854,18 @@ public class AiServicesProcessor {
         return dotName;
     }
 
-    private void validateSupplierAndRegisterForReflection(DotName supplierDotName, IndexView index,
-            BuildProducer<ReflectiveClassBuildItem> producer) {
+    private void validateSupplierAndRegister(DotName supplierDotName, IndexView index,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer) {
         ClassInfo classInfo = index.getClassByName(supplierDotName);
         if (classInfo == null) {
             log.warn("'" + supplierDotName.toString() + "' cannot be indexed"); // TODO: maybe this should be an error
             return;
         }
 
-        if (!classInfo.hasNoArgsConstructor()) {
-            throw new IllegalConfigurationException(
-                    "Class '" + supplierDotName.toString() + "' which must contain a no-args constructor.");
-        }
-
-        producer.produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
+        reflectiveClassProducer
+                .produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
+        unremovableBeanProducer.produce(UnremovableBeanBuildItem.beanTypes(supplierDotName));
     }
 
     private boolean isImageOrImageResultResult(Type returnType) {
@@ -1020,6 +1067,7 @@ public class AiServicesProcessor {
                                     classInputGuardrails(bi),
                                     classOutputGuardrails(bi),
                                     maxSequentialToolInvocations,
+                                    bi.getMaxToolCallsPerResponse(),
                                     allowContinuousForcedToolCalling,
                                     bi.isShouldThrowExceptionOnEventError())))
                     .setRuntimeInit()

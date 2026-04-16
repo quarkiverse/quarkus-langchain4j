@@ -15,12 +15,13 @@ import jakarta.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
-import com.ibm.watsonx.ai.embedding.EmbeddingRequest;
+import com.ibm.watsonx.ai.embedding.EmbeddingPayload;
 import com.ibm.watsonx.ai.embedding.EmbeddingResponse;
 
 import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.smallrye.mutiny.Uni;
 
 @Path("/ml/v1")
 public interface EmbeddingRestApi {
@@ -33,7 +34,17 @@ public interface EmbeddingRestApi {
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
             @QueryParam("version") String version,
-            EmbeddingRequest embeddingRequest);
+            EmbeddingPayload embeddingPayload);
+
+    @POST
+    @Path("/text/embeddings")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Uni<EmbeddingResponse> embeddingAsync(
+            @HeaderParam(REQUEST_ID_HEADER) String requestId,
+            @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
+            @QueryParam("version") String version,
+            EmbeddingPayload embeddingPayload);
 
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {

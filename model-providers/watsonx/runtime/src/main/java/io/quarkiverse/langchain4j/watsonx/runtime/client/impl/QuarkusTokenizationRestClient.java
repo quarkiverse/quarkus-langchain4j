@@ -60,8 +60,8 @@ public final class QuarkusTokenizationRestClient extends TokenizationRestClient 
     }
 
     @Override
-    public CompletableFuture<TokenizationResponse> asyncTokenize(String transactionId, TokenizationRequest request) {
-        return client.asyncTokenize(UUID.randomUUID().toString(), transactionId, version, request)
+    public CompletableFuture<TokenizationResponse> tokenizeAsync(String transactionId, TokenizationRequest request) {
+        return client.tokenizeAsync(UUID.randomUUID().toString(), transactionId, version, request)
                 .onFailure(WatsonxRestClientUtils::shouldRetry).retry().atMost(10)
                 .subscribeAsCompletionStage();
     }

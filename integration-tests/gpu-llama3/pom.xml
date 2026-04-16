@@ -11,7 +11,7 @@
     <name>Quarkus LangChain4j - Integration Tests - GPULlama3</name>
     <properties>
         <skipITs>true</skipITs>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>${java.specification.version}</maven.compiler.release>
         <!-- TornadoVM argfile path -->
         <tornado.argfile>${env.TORNADOVM_HOME}/tornado-argfile</tornado.argfile>
     </properties>
@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -64,7 +64,7 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <executions>
                     <execution>

@@ -26,7 +26,7 @@ public class BearerTokenHeaderFactory extends ReactiveClientHeadersFactory {
             MultivaluedMap<String, String> clientOutgoingHeaders) {
 
         return Uni.createFrom()
-                .completionStage(authenticator.asyncToken())
+                .completionStage(authenticator.tokenAsync())
                 .onItem()
                 .transform(new Function<String, String>() {
                     @Override

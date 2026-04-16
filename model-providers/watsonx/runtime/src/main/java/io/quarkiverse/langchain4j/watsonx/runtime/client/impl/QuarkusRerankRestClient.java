@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import com.ibm.watsonx.ai.rerank.RerankRequest;
+import com.ibm.watsonx.ai.rerank.RerankPayload;
 import com.ibm.watsonx.ai.rerank.RerankResponse;
 import com.ibm.watsonx.ai.rerank.RerankRestClient;
 
@@ -47,12 +47,12 @@ public final class QuarkusRerankRestClient extends RerankRestClient {
     }
 
     @Override
-    public RerankResponse rerank(String transactionId, RerankRequest request) {
+    public RerankResponse rerank(String transactionId, RerankPayload rerankPayload) {
         var requestId = UUID.randomUUID().toString();
         return retryOn(requestId, new Callable<RerankResponse>() {
             @Override
             public RerankResponse call() throws Exception {
-                return client.rerank(requestId, transactionId, version, request);
+                return client.rerank(requestId, transactionId, version, rerankPayload);
             }
         });
     }

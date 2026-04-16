@@ -10,6 +10,10 @@ import io.quarkus.infinispan.client.InfinispanClientName;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
+/**
+ * Quarkus recorder that creates the {@link InfinispanEmbeddingStore} bean at runtime,
+ * wiring the Infinispan cache manager and configuration together.
+ */
 @Recorder
 public class InfinispanEmbeddingStoreRecorder {
     private final RuntimeValue<InfinispanEmbeddingStoreConfig> runtimeConfig;
@@ -32,8 +36,10 @@ public class InfinispanEmbeddingStoreRecorder {
                             new InfinispanClientName.Literal(clientName));
                 }
                 builder.cacheManager(cacheManager);
-                builder.schema(new InfinispanSchema(runtimeConfig.getValue().cacheName(), runtimeConfig.getValue().dimension(),
-                        runtimeConfig.getValue().distance()));
+                InfinispanEmbeddingStoreConfig config = runtimeConfig.getValue();
+                builder.schema(new InfinispanSchema(config.cacheName(), config.dimension(),
+                        config.distance(), config.similarity(), config.createCache(),
+                        config.cacheConfig().orElse(null)));
                 return builder.build();
             }
         };

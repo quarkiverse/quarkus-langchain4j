@@ -17,6 +17,7 @@ import jakarta.enterprise.util.TypeLiteral;
 import dev.langchain4j.model.bedrock.BedrockChatModel;
 import dev.langchain4j.model.bedrock.BedrockChatRequestParameters;
 import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
+import dev.langchain4j.model.bedrock.BedrockGuardrailConfiguration;
 import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockTitanEmbeddingModel;
 import dev.langchain4j.model.chat.ChatModel;
@@ -27,6 +28,7 @@ import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.AwsClientConfig;
+import io.quarkiverse.langchain4j.bedrock.runtime.config.GuardrailConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.LangChain4jBedrockConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
@@ -91,6 +93,10 @@ public class BedrockRecorder {
 
             if (modelConfig.reasoning().isPresent()) {
                 paramBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
+            }
+
+            if (modelConfig.guardrail().guardrailIdentifier().isPresent()) {
+                paramBuilder.guardrailConfiguration(buildGuardrailConfiguration(modelConfig.guardrail()));
             }
 
             var clientBuilder = BedrockRuntimeClient.builder();
@@ -180,6 +186,10 @@ public class BedrockRecorder {
 
             if (modelConfig.reasoning().isPresent()) {
                 paramsBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
+            }
+
+            if (modelConfig.guardrail().guardrailIdentifier().isPresent()) {
+                paramsBuilder.guardrailConfiguration(buildGuardrailConfiguration(modelConfig.guardrail()));
             }
 
             var builder = BedrockStreamingChatModel.builder()
@@ -280,6 +290,16 @@ public class BedrockRecorder {
             config = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return config;
+    }
+
+    private static BedrockGuardrailConfiguration buildGuardrailConfiguration(GuardrailConfig guardrailConfig) {
+        var builder = BedrockGuardrailConfiguration.builder()
+                .guardrailIdentifier(guardrailConfig.guardrailIdentifier().get());
+
+        guardrailConfig.guardrailVersion().ifPresent(builder::guardrailVersion);
+        guardrailConfig.streamProcessingMode().ifPresent(builder::streamProcessingMode);
+
+        return builder.build();
     }
 
     private void configureClient(

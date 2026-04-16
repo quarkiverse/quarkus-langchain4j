@@ -11,7 +11,6 @@
     <properties>
         <skipITs>true</skipITs>
         <maven.compiler.release>21</maven.compiler.release>
-        <quarkus.version>3.18.0</quarkus.version>
     </properties>
     <dependencies>
         <dependency>
@@ -24,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -61,7 +60,7 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <executions>
                     <execution>

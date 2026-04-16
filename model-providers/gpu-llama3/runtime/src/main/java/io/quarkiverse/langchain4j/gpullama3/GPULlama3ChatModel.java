@@ -1,9 +1,5 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
-import static dev.langchain4j.internal.Utils.getOrDefault;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -20,96 +16,19 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
 
     private static final Logger LOG = Logger.getLogger(GPULlama3ChatModel.class);
 
-    private final Builder builderConfig;
-    private volatile boolean initialized = false;
-
-    /**
-     * Default constructor.
-     *
-     * @param builder
-     */
-    private GPULlama3ChatModel(Builder builder) {
-        this(builder, false);
+    private GPULlama3ChatModel(GPULlama3ModelHolder holder) {
+        // no initialization here, it is done lazily by ensureInitialized() when first doChat() is called
+        this.holder = holder;
     }
 
-    /**
-     * Constructor with lazy initialization.
-     *
-     * @param builder the builder used to configure the model.
-     * @param lazy if true, the model is not initialized until the first call to doChat.
-     */
-    private GPULlama3ChatModel(Builder builder, boolean lazy) {
-        if (lazy) {
-            // lazy initialization
-            this.builderConfig = builder;
-        } else {
-            this.builderConfig = null;
-            // original immediate initialization
-            doInitialization(builder);
-        }
-    }
-
-    /**
-     * The factory method for creating a lazy initialized model.
-     *
-     * @param builder the builder used to configure the model.
-     * @return the model.
-     */
-    public static GPULlama3ChatModel createLazy(Builder builder) {
-        return new GPULlama3ChatModel(builder, true);
-    }
-
-    /**
-     * Ensure that the model is initialized.
-     */
-    private void ensureInitialized() {
-        if (!initialized && builderConfig != null) {
-            if (!initialized) {
-                doInitialization(builderConfig);
-                initialized = true;
-            }
-        }
-    }
-
-    // @formatter:off
-    /**
-     * Performs the actual initialization.
-     */
-    private void doInitialization(Builder builder) {
-        GPULlama3ModelRegistry gpuLlama3ModelRegistry = GPULlama3ModelRegistry.getOrCreate(builder.modelCachePath);
-        try {
-            Path modelPath = gpuLlama3ModelRegistry.downloadModel(builder.modelName, builder.quantization,
-                    Optional.empty(), Optional.empty());
-            Double temp = getOrDefault(builder.temperature, 0.1);
-            Double topP = getOrDefault(builder.topP, 1.0);
-            Integer seed = getOrDefault(builder.seed, 12345);
-            Integer maxTokens = getOrDefault(builder.maxTokens, 512);
-            Boolean onGPU = getOrDefault(builder.onGPU, Boolean.TRUE);
-
-            LOG.info("GPULlama3ChatModel Instantiation {modelPath=" + modelPath +
-                    ", temperature=" + temp +
-                    ", topP=" + topP +
-                    ", seed=" + seed +
-                    ", maxTokens=" + maxTokens +
-                    ", onGPU=" + onGPU + "}...");
-
-            init(modelPath, temp, topP, seed, maxTokens, onGPU);
-            LOG.info("GPULlama3ChatModel Instantiation Complete!");
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    // @formatter:on
-
-    public static Builder builder() {
-        return new Builder();
+    public static GPULlama3ChatModel create(GPULlama3ModelHolder holder) {
+        return new GPULlama3ChatModel(holder);
     }
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
-        ensureInitialized(); // If in lazy path, init model
+        // Lazy initialization point: if not initialized yet, do it now
+        holder.ensureInitialized();
 
         ChatRequestValidationUtils.validateMessages(chatRequest.messages());
         ChatRequestParameters parameters = chatRequest.parameters();
@@ -135,19 +54,29 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
         }
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static class Builder {
 
+        private GPULlama3ModelHolder modelHolder;
         private Optional<Path> modelCachePath;
         private String modelName = Consts.DEFAULT_CHAT_MODEL_NAME;
         private String quantization = Consts.DEFAULT_CHAT_MODEL_QUANTIZATION;
-        protected Double temperature;
-        protected Double topP;
-        protected Integer seed;
-        protected Integer maxTokens;
-        protected Boolean onGPU;
+        private Double temperature;
+        private Double topP;
+        private Integer seed;
+        private Integer maxTokens;
+        private Boolean onGPU;
 
         public Builder() {
             // This is public so it can be extended
+        }
+
+        public Builder modelHolder(GPULlama3ModelHolder modelHolder) {
+            this.modelHolder = modelHolder;
+            return this;
         }
 
         public Builder modelCachePath(Optional<Path> modelCachePath) {
@@ -191,7 +120,11 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
         }
 
         public GPULlama3ChatModel build() {
-            return new GPULlama3ChatModel(this);
+            GPULlama3ModelHolder h = modelHolder != null
+                    ? modelHolder
+                    : new GPULlama3ModelHolder(modelCachePath, modelName, quantization,
+                            temperature, topP, seed, maxTokens, onGPU);
+            return new GPULlama3ChatModel(h);
         }
     }
 }
