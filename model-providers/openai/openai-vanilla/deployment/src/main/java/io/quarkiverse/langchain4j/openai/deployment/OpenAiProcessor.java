@@ -46,6 +46,7 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 
 public class OpenAiProcessor {
 
@@ -60,10 +61,10 @@ public class OpenAiProcessor {
 
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
-            BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
-            BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
-            BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
-            LangChain4jOpenAiBuildConfig config) {
+                                   BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+                                   BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
+                                   BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
+                                   LangChain4jOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
@@ -82,11 +83,11 @@ public class OpenAiProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(OpenAiRecorder recorder,
-            List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
-            List<SelectedModerationModelProviderBuildItem> selectedModeration,
-            List<SelectedImageModelProviderBuildItem> selectedImage,
-            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+                       List<SelectedChatModelProviderBuildItem> selectedChatItem,
+                       List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+                       List<SelectedModerationModelProviderBuildItem> selectedModeration,
+                       List<SelectedImageModelProviderBuildItem> selectedImage,
+                       BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
@@ -96,6 +97,7 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .createWith(recorder.chatModel(configName));
@@ -109,6 +111,7 @@ public class OpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
@@ -124,7 +127,8 @@ public class OpenAiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -138,7 +142,8 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.moderationModel(configName));
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
+                        .createWith(recorder.moderationModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -173,7 +178,7 @@ public class OpenAiProcessor {
 
     @BuildStep
     void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer,
-            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+                       BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         serviceProviderProducer
                 .produce(new ServiceProviderBuildItem(OpenAiChatModelBuilderFactory.class.getName(),
                         QuarkusOpenAiChatModelBuilderFactory.class.getName()));
