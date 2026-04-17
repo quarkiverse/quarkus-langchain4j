@@ -148,6 +148,17 @@ public interface ChatModelConfig {
         Optional<Boolean> sendThinking();
 
         /**
+         * Controls how thinking content is returned by the Anthropic API.
+         * <p>
+         * Valid values: {@code "summarized"} and {@code "omitted"}. On Claude Opus 4.7
+         * the server default is {@code "omitted"} (thinking blocks are empty in the
+         * response). On earlier Opus/Sonnet models the default is {@code "summarized"}.
+         * Set to {@code "summarized"} explicitly on Opus 4.7+ if your product renders
+         * thinking text to users.
+         */
+        Optional<String> display();
+
+        /**
          * Enable interleaved thinking for Claude 4 models, allowing reasoning between tool calls.
          * Requires Claude 4 model (e.g., claude-opus-4-20250514) and thinking.type: enabled.
          */
