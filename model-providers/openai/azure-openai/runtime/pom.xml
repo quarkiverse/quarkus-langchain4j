@@ -15,6 +15,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>${azure-auth-library-oauth2-http.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit-internal</artifactId>
             <scope>test</scope>
