@@ -127,6 +127,10 @@ public class AnthropicRecorder {
                 builder.sendThinking(thinkingConfig.sendThinking().get());
             }
 
+            if (thinkingConfig.display().isPresent()) {
+                builder.thinkingDisplay(thinkingConfig.display().get());
+            }
+
             // Pass caching configuration to builder
             builder.cacheSystemMessages(chatModelConfig.cacheSystemMessages());
             builder.cacheTools(chatModelConfig.cacheTools());
@@ -270,6 +274,10 @@ public class AnthropicRecorder {
 
             if (thinkingConfig.sendThinking().isPresent()) {
                 builder.sendThinking(thinkingConfig.sendThinking().get());
+            }
+
+            if (thinkingConfig.display().isPresent()) {
+                builder.thinkingDisplay(thinkingConfig.display().get());
             }
 
             // Pass caching configuration to builder
