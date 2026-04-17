@@ -176,6 +176,7 @@ public class McpProcessor {
                         clients.put(name, McpTransportType.STDIO);
                     }
                 }));
+
         if (!clients.isEmpty()) {
             boolean hasResourceUpdatedObserver = hasObserverForType(combinedIndex.getIndex(),
                     MCP_RESOURCE_UPDATED_EVENT);

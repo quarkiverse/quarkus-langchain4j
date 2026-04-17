@@ -37,4 +37,5 @@ public interface McpRuntimeConfiguration {
      */
     @WithDefault("false")
     Optional<Boolean> exposeResourcesAsTools();
+
 }
