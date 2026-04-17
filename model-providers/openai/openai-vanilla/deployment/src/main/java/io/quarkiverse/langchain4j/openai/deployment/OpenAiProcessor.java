@@ -61,10 +61,10 @@ public class OpenAiProcessor {
 
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
-                                   BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
-                                   BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
-                                   BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
-                                   LangChain4jOpenAiBuildConfig config) {
+            BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
+            BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
+            LangChain4jOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
@@ -83,11 +83,11 @@ public class OpenAiProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(OpenAiRecorder recorder,
-                       List<SelectedChatModelProviderBuildItem> selectedChatItem,
-                       List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
-                       List<SelectedModerationModelProviderBuildItem> selectedModeration,
-                       List<SelectedImageModelProviderBuildItem> selectedImage,
-                       BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+            List<SelectedChatModelProviderBuildItem> selectedChatItem,
+            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedModerationModelProviderBuildItem> selectedModeration,
+            List<SelectedImageModelProviderBuildItem> selectedImage,
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
@@ -178,7 +178,7 @@ public class OpenAiProcessor {
 
     @BuildStep
     void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer,
-                       BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         serviceProviderProducer
                 .produce(new ServiceProviderBuildItem(OpenAiChatModelBuilderFactory.class.getName(),
                         QuarkusOpenAiChatModelBuilderFactory.class.getName()));

@@ -359,7 +359,7 @@ public class OpenAiRecorder {
 
     @SuppressWarnings({ "deprecation", "removal" })
     private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
-                                         ProxyConfigurationRegistry proxyRegistry) {
+            ProxyConfigurationRegistry proxyRegistry) {
         if (openAiConfig.proxyHost().isPresent()) {
             return Optional.of(new Proxy(Type.valueOf(openAiConfig.proxyType()),
                     new InetSocketAddress(openAiConfig.proxyHost().get(), openAiConfig.proxyPort())));
@@ -371,7 +371,7 @@ public class OpenAiRecorder {
     }
 
     private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,
-                                                                           String configName) {
+            String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig;
         if (NamedConfigUtil.isDefault(configName)) {
             openAiConfig = runtimeConfig.defaultConfig();

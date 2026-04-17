@@ -167,4 +167,3 @@ public interface LangChain4jOpenAiConfig {
         ImageModelConfig imageModel();
     }
 }
-
