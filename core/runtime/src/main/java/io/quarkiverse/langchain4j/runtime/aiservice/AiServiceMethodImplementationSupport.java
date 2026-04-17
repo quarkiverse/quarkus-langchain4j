@@ -173,7 +173,7 @@ public class AiServiceMethodImplementationSupport {
                 .interfaceName(context.aiServiceClass.getName())
                 .methodName(createInfo.getMethodName())
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
-                .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory()))
+                .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory(), context.defaultMemoryIdProvider))
                 .invocationParameters(findInvocationParams(methodArgs))
                 .managedParameters(LangChain4jManaged.current())
                 .timestampNow()
@@ -1172,12 +1172,18 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static Object memoryId(AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
-            boolean hasChatMemoryProvider) {
+            boolean hasChatMemoryProvider, DefaultMemoryIdProvider defaultMemoryIdProvider) {
         if (createInfo.getMemoryIdParamPosition().isPresent()) {
             return methodArgs[createInfo.getMemoryIdParamPosition().get()];
         }
 
         if (hasChatMemoryProvider) {
+            if (defaultMemoryIdProvider != null) {
+                Object memoryId = defaultMemoryIdProvider.getMemoryId();
+                if (memoryId != null) {
+                    return memoryId;
+                }
+            }
             for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
                 Object memoryId = provider.getMemoryId();
                 if (memoryId != null) {

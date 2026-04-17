@@ -16,6 +16,8 @@
         <module>chatbot-easy-rag</module>
         <module>chatbot-web-search</module>
         <module>chatbot</module>
+        <module>chat-scopes-terminal</module>
+        <module>chat-scopes-web</module>
         <module>cli-translator</module>
         <module>email-a-poem</module>
         <module>email-a-poem-kotlin</module>
