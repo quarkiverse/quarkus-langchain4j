@@ -46,6 +46,7 @@ import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -105,10 +106,6 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -122,6 +119,10 @@ public class OpenAiRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
+
                     return builder.build();
                 }
             };
@@ -166,10 +167,6 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -184,6 +181,10 @@ public class OpenAiRecorder {
                         SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
+
                     return builder.build();
                 }
             };
@@ -198,7 +199,7 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
@@ -224,30 +225,29 @@ public class OpenAiRecorder {
             }
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
                     return builder.build();
                 }
             };
+
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
 
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(
+                        SyntheticCreationalContext<EmbeddingModel> embeddingModelSyntheticCreationalContext) {
                     return new DisabledEmbeddingModel();
                 }
-
             };
         }
     }
 
-    public Supplier<ModerationModel> moderationModel(String configName) {
+    public Function<SyntheticCreationalContext<ModerationModel>, ModerationModel> moderationModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
@@ -270,25 +270,23 @@ public class OpenAiRecorder {
                     .modelName(moderationModelConfig.modelName());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ModerationModel get() {
+                public ModerationModel apply(SyntheticCreationalContext<ModerationModel> context) {
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
 
                 @Override
-                public ModerationModel get() {
+                public ModerationModel apply(
+                        SyntheticCreationalContext<ModerationModel> moderationModelSyntheticCreationalContext) {
                     return new DisabledModerationModel();
                 }
-
             };
         }
     }
@@ -357,6 +355,19 @@ public class OpenAiRecorder {
             };
         }
 
+    }
+
+    @SuppressWarnings({ "deprecation", "removal" })
+    private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
+            ProxyConfigurationRegistry proxyRegistry) {
+        if (openAiConfig.proxyHost().isPresent()) {
+            return Optional.of(new Proxy(Type.valueOf(openAiConfig.proxyType()),
+                    new InetSocketAddress(openAiConfig.proxyHost().get(), openAiConfig.proxyPort())));
+        }
+        return proxyRegistry.get(openAiConfig.proxyConfigurationName())
+                .map(proxyConfiguration -> new Proxy(
+                        Type.valueOf(proxyConfiguration.type().name()),
+                        new InetSocketAddress(proxyConfiguration.host(), proxyConfiguration.port())));
     }
 
     private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,

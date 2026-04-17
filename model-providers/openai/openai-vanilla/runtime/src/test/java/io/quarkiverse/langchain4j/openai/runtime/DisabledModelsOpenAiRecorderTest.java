@@ -46,7 +46,7 @@ class DisabledModelsOpenAiRecorderTest {
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }
@@ -60,7 +60,7 @@ class DisabledModelsOpenAiRecorderTest {
 
     @Test
     void disabledModerationModel() {
-        assertThat(recorder.moderationModel(NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.moderationModel(NamedConfigUtil.DEFAULT_NAME))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledModerationModel.class);
     }
