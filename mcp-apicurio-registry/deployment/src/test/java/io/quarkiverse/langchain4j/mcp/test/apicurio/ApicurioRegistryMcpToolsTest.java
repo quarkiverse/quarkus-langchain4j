@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.mcp.test.apicurio;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -31,16 +33,14 @@ import io.quarkus.test.QuarkusUnitTest;
  * Integration test for ApicurioRegistryMcpTools that starts a real Apicurio Registry
  * instance using Testcontainers.
  * <p>
- * Currently disabled because the MCP_TOOL artifact type is not yet supported
- * in Apicurio Registry releases. Once a release with MCP_TOOL support is available,
- * update the container image version and re-enable this test.
+ * Requires a registry snapshot that includes MCP_TOOL artifact type support.
+ * Re-enable once the latest-snapshot image includes this feature.
  */
-@Disabled("Requires Apicurio Registry with MCP_TOOL artifact type support (not yet released)")
+@Disabled("Waiting for Apicurio Registry latest-snapshot to include MCP_TOOL artifact type support")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ApicurioRegistryMcpToolsTest {
 
-    // Update this image to a version that supports MCP_TOOL artifact type when available
-    private static final String REGISTRY_IMAGE = "quay.io/apicurio/apicurio-registry:latest-release";
+    private static final String REGISTRY_IMAGE = "quay.io/apicurio/apicurio-registry:latest-snapshot";
 
     @SuppressWarnings("resource")
     static GenericContainer<?> registryContainer;
@@ -49,7 +49,9 @@ public class ApicurioRegistryMcpToolsTest {
         if (registryContainer == null) {
             registryContainer = new GenericContainer<>(REGISTRY_IMAGE)
                     .withExposedPorts(8080)
-                    .waitingFor(Wait.forHttp("/health/ready").forStatusCode(200));
+                    .waitingFor(Wait.forHttp("/apis/registry/v3/system/info")
+                            .forStatusCode(200)
+                            .withStartupTimeout(Duration.ofMinutes(2)));
             registryContainer.start();
         }
         return "http://" + registryContainer.getHost() + ":"
@@ -62,7 +64,9 @@ public class ApicurioRegistryMcpToolsTest {
                     .addClass(MockStreamableHttpMcpServer.class)
                     .addAsResource(
                             new StringAsset(
-                                    "quarkus.langchain4j.mcp.apicurio-registry.url=" + registryUrl() + "\n"),
+                                    "quarkus.http.test-port=0\n"
+                                            + "quarkus.langchain4j.mcp.apicurio-registry.url=" + registryUrl()
+                                            + "\n"),
                             "application.properties"));
 
     @Inject

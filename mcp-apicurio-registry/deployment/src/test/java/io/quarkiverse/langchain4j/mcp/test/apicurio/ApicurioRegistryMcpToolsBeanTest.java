@@ -25,7 +25,8 @@ public class ApicurioRegistryMcpToolsBeanTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(
                             new StringAsset(
-                                    "quarkus.langchain4j.mcp.apicurio-registry.url=http://localhost:8080/apis/registry/v3\n"),
+                                    "quarkus.http.test-port=0\n"
+                                            + "quarkus.langchain4j.mcp.apicurio-registry.url=http://localhost:8080/apis/registry/v3\n"),
                             "application.properties"));
 
     @Inject
