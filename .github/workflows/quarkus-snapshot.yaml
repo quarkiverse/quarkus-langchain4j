@@ -4,28 +4,6 @@ on:
   watch:
     types: [started]
 
-  # For this CI to work, ECOSYSTEM_CI_TOKEN needs to contain a GitHub with rights to close the Quarkus issue that the user/bot has opened,
-  # while 'ECOSYSTEM_CI_REPO_PATH' needs to be set to the corresponding path in the 'quarkusio/quarkus-ecosystem-ci' repository
-
-env:
-  ECOSYSTEM_CI_REPO: quarkusio/quarkus-ecosystem-ci
-  ECOSYSTEM_CI_REPO_FILE: context.yaml
-  JAVA_VERSION: 21
-
-  #########################
-  # Repo specific setting #
-  #########################
-
-  ECOSYSTEM_CI_REPO_PATH: quarkiverse-langchain4j
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash
-
 permissions:
   contents: read
 
@@ -33,43 +11,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build:
-    name: "Build against latest Quarkus snapshot"
-    runs-on: ubuntu-latest
-    # Allow <ADMIN> to manually launch the ecosystem CI in addition to the bots
-    if: github.actor == 'quarkusbot' || github.actor == 'quarkiversebot' || github.actor == '<ADMIN>'
-
-    steps:
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-
-        # jbang is required for some tests, eg McpToolsStreamableHttpTransportTest
-      - name: Setup JBang
-        uses: jbangdev/setup-jbang@main
-
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          path: current-repo
-
-      - name: Reclaim Disk Space
-        run: current-repo/.github/ci-prerequisites.sh
-
-      - name: Checkout Ecosystem
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ env.ECOSYSTEM_CI_REPO }}
-          path: ecosystem-ci
-
-      - name: Setup and Run Tests
-        run: ./ecosystem-ci/setup-and-test
-        env:
-          ECOSYSTEM_CI_TOKEN: ${{ secrets.ECOSYSTEM_CI_TOKEN }}
+    uses: quarkiverse/.github/.github/workflows/quarkus-ecosystem-ci.yml@main
+    secrets: inherit
+    with:
+      ecosystem_ci_repo_path: quarkiverse-langchain4j
+      java_version: 21
