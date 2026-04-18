@@ -98,7 +98,20 @@ public class ChatMemoryFlushStrategyTest {
         }
     }
 
+    @ApplicationScoped
+    public static class PingService {
+        public String ping() {
+            return "pong";
+        }
+    }
+
+    @ApplicationScoped
     public static class ImmediateFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
+
+        public ImmediateFlushStrategySupplier(PingService pingService) {
+            System.out.println("ping: " + pingService.ping());
+        }
+
         @Override
         public ChatMemoryFlushStrategy get() {
             return ChatMemoryFlushStrategy.IMMEDIATE;
