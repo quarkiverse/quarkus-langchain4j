@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ollama.runtime.config;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -71,4 +72,11 @@ public interface ChatModelConfig {
      */
     @ConfigDocDefault("false")
     Optional<Boolean> logResponses();
+
+    /**
+     * Additional model options to pass to Ollama.
+     * For example, to enable thinking mode: {@code quarkus.langchain4j.ollama.chat-model.options.think=true}
+     */
+    @ConfigDocDefault("{}")
+    Map<String, String> options();
 }
