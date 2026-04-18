@@ -24,6 +24,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public Integer maxSequentialToolExecutions;
     public Integer maxToolCallsPerResponse;
     public boolean allowContinuousForcedToolCalling;
+    public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
 
     // needed by Arc
     public QuarkusAiServiceContext() {
