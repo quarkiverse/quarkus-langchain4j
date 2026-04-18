@@ -1,0 +1,53 @@
+= Understand Tool Guardrails
+
+include::./includes/attributes.adoc[]
+:diataxis-type: concept
+
+Tool guardrails provide validation and control mechanisms for tool (function) invocations in AI applications.
+Unlike LLM guardrails, which validate prompts and responses from the LLM, tool guardrails operate on the **input parameters** and **output results** of tools that the LLM can invoke using xref:function-calling.adoc[function calling].
+
+[NOTE]
+====
+Tool guardrails are important for:
+
+* **Security**: Prevent unauthorized access to sensitive operations.
+* **Data Validation**: Ensure parameters meet format and business rule requirements.
+* **Privacy Protection**: Filter sensitive data from tool outputs.
+* **Cost Control**: Limit expensive operations through rate limiting.
+* **Reliability**: Prevent malformed requests from causing errors.
+====
+
+== How Tool Guardrails Work
+
+Tool guardrails operate at two stages:
+
+1. **Input Guardrails** (`@ToolInputGuardrails`) - Execute **before** the tool, validating parameters and context
+2. **Output Guardrails** (`@ToolOutputGuardrails`) - Execute **after** the tool, validating or transforming results
+
+Both types can:
+
+* Allow execution to proceed (`success()`)
+* Block execution with an error message (`failure()`)
+* Transform requests/responses (`successWith()`)
+
+When an input guardrail fails, the tool is **not executed**. The error message is returned to the LLM as the tool result, and the LLM can retry with corrected parameters.
+
+When an output guardrail modifies the result, the **modified** result is returned to the LLM. The original tool result is **never** seen by the LLM. Multiple output guardrails can chain transformations.
+
+== Event Loop Compatibility
+
+Tool guardrails (both `@ToolInputGuardrails` and `@ToolOutputGuardrails`) have synchronous, blocking APIs by design, as they perform operations like JSON parsing, validation, and potentially database lookups or external API calls.
+
+Consequently, tools annotated with guardrails cannot execute on the Vert.x event loop and must be marked as blocking. If you attempt to use a tool with guardrails from the event loop (for example, in a reactive endpoint or streaming AI service), the framework throws a `ToolExecutionException` with the message "Cannot execute guardrails on the event loop thread."
+
+To use guardrails with your tools, ensure the tool methods are properly detected or annotated as blocking (e.g., using `@Blocking` annotation or by returning blocking types instead of `Uni/Multi`).
+
+Tools without guardrails can continue to use reactive execution models without any restrictions. This architectural decision ensures application responsiveness by preventing blocking operations on the event loop.
+
+== Related Resources
+
+* xref:tool-guardrails-tutorial.adoc[Create your first tool guardrail] -- A step-by-step tutorial
+* xref:tool-guardrails-howto.adoc[Validate tool invocations] -- Task-oriented recipes for common guardrail patterns
+* xref:tool-guardrails-reference.adoc[Tool guardrails reference] -- API interfaces, metrics, and CDI integration details
+* xref:function-calling.adoc[Function Calling] -- How to declare and use tools in AI services
+* xref:guardrails.adoc[LLM Guardrails] -- Guardrails for prompts and responses

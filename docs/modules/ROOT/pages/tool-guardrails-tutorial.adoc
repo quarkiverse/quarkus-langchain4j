@@ -1,0 +1,85 @@
+= Create Your First Tool Guardrail
+
+include::./includes/attributes.adoc[]
+:diataxis-type: tutorial
+
+In this tutorial, you create a tool input guardrail that validates a parameter before a tool executes.
+By the end, you will have a working guardrail that rejects negative numbers and returns a clear error message to the LLM.
+
+== Prerequisites
+
+* A Quarkus project with the `quarkus-langchain4j` extension
+* Familiarity with xref:function-calling.adoc[function calling] in Quarkus LangChain4j
+
+== Step 1: Create the Guardrail Bean
+
+Create a CDI bean that implements `ToolInputGuardrail`. This bean contains your validation logic.
+
+[source,java]
+----
+@ApplicationScoped  // <1>
+public class PositiveNumberGuardrail implements ToolInputGuardrail {  // <2>
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {  // <3>
+        JsonObject args = request.argumentsAsJson();
+        int number = args.getInteger("amount");
+
+        if (number < 0) {
+            return ToolInputGuardrailResult.failure(  // <4>
+                "Amount must be positive, got: " + number);
+        }
+
+        return ToolInputGuardrailResult.success();  // <5>
+    }
+}
+----
+<1> Make it a CDI bean with a scope annotation.
+<2> Implement the `ToolInputGuardrail` interface.
+<3> Override the `validate` method.
+<4> Return failure if validation fails. The error message goes back to the LLM.
+<5> Return success if validation passes. The tool proceeds normally.
+
+== Step 2: Apply the Guardrail to a Tool
+
+Annotate your tool method with `@ToolInputGuardrails` and reference your guardrail class:
+
+[source,java]
+----
+@ApplicationScoped
+public class BankingTools {
+
+    @Tool("Transfer money between accounts")
+    @ToolInputGuardrails({ PositiveNumberGuardrail.class })  // <1>
+    public String transfer(int amount, String from, String to) {
+        // This only executes if amount is positive
+        return "Transferred $" + amount + " from " + from + " to " + to;
+    }
+}
+----
+<1> The guardrail runs before every call to `transfer()`.
+
+== Step 3: Verify the Behavior
+
+When the LLM invokes `transfer` with a negative amount, the guardrail intercepts the call:
+
+1. The `validate()` method receives the tool arguments as JSON.
+2. It detects that `amount` is negative.
+3. It returns a failure message: `"Amount must be positive, got: -50"`.
+4. The tool method **does not execute**.
+5. The LLM receives the error message and can retry with a corrected value.
+
+Notice that the guardrail message is written for the LLM, not the end user. Clear, actionable messages help the LLM correct its parameters on the next attempt.
+
+== What You Learned
+
+* Tool guardrails are CDI beans that implement `ToolInputGuardrail` or `ToolOutputGuardrail`.
+* The `validate()` method inspects tool arguments and returns `success()` or `failure()`.
+* Apply guardrails to tools using the `@ToolInputGuardrails` annotation.
+* When a guardrail fails, the tool does not execute and the error message goes to the LLM.
+
+== Next Steps
+
+* xref:tool-guardrails-howto.adoc[Validate tool invocations] -- Recipes for email validation, authorization, rate limiting, and more
+* xref:tool-guardrails-reference.adoc[Tool guardrails reference] -- Full API reference for both input and output guardrail interfaces
+* xref:tool-guardrails-concept.adoc[Understand tool guardrails] -- Architecture and design rationale
