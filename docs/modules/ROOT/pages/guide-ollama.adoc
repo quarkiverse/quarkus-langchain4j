@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: tutorial
 
 This guide shows how to use local Ollama models with the Quarkus LangChain4j extension.
 You'll learn how to:

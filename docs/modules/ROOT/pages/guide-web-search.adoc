@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 The Quarkus LangChain4j extension supports integrating the https://tavily.com/[Tavily] web search engine to enrich your AI services with up-to-date external knowledge.
 

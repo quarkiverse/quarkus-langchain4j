@@ -3,6 +3,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: concept
 
 [.lead]
 **Build intelligent, AI-infused applications by integrating Large Language Models into your Quarkus services with a declarative, developer-friendly API.**

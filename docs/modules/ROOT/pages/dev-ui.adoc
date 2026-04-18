@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: reference
 
 If you use the Dev mode, the `quarkus-langchain4j` project provides several pages
 in the Dev UI to facilitate development:

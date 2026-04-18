@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://www.ibm.com/products/watsonx-ai/foundation-models[IBM watsonx.ai] enables the development of generative AI applications using foundation models from IBM and Hugging Face.
 

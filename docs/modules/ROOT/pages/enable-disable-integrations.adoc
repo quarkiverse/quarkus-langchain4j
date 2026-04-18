@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 By default, all AI provider integrations (e.g., OpenAI, HuggingFace, Azure OpenAI) are enabled. This means that live API calls are made to the respective providers when an AI service is invoked.
 

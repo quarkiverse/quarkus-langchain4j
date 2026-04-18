@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Mistral provides highly efficient embedding models that can be used to build RAG systems and perform vector similarity search.
 

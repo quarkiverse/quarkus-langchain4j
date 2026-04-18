@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://mistral.ai/[Mistral] is a French AI company offering high-performance open-weight LLMs. This extension allows seamless integration of Mistral's chat models into Quarkus applications.
 

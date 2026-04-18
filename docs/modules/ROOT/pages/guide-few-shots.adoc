@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: tutorial
 
 Few-shot prompting lets you guide an LLM by embedding a handful of input–output examples directly in the prompt—no fine-tuning required.
 It strikes a balance between zero-shot and one-shot prompting, boosting accuracy on tasks like classification, extraction, and summarization while keeping your code simple.
