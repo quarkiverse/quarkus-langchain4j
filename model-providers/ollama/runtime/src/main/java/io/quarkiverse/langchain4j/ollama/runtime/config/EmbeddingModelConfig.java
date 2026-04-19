@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ollama.runtime.config;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
@@ -53,4 +54,11 @@ public interface EmbeddingModelConfig {
      */
     @ConfigDocDefault("false")
     Optional<Boolean> logResponses();
+
+    /**
+     * Additional model options to pass to Ollama.
+     * These are passed as-is to the Ollama API.
+     */
+    @ConfigDocDefault("{}")
+    Map<String, String> options();
 }

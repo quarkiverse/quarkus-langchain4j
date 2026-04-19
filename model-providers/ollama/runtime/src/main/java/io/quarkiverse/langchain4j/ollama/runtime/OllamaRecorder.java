@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.ollama.runtime;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -89,6 +90,15 @@ public class OllamaRecorder {
             }
             if (chatModelConfig.format().isEmpty() || !"json".equals(chatModelConfig.format().get())) {
                 ollamaChatModelBuilder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
+            }
+
+            Map<String, String> additionalOptions = chatModelConfig.options();
+            if (additionalOptions != null && !additionalOptions.isEmpty()) {
+                for (Map.Entry<String, String> entry : additionalOptions.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue();
+                    applyOptionToBuilder(ollamaChatModelBuilder, key, value);
+                }
             }
 
             return new Function<>() {
@@ -192,6 +202,14 @@ public class OllamaRecorder {
             if (chatModelConfig.seed().isPresent()) {
                 optionsBuilder.seed(chatModelConfig.seed().get());
             }
+
+            Map<String, String> additionalOptions = chatModelConfig.options();
+            if (additionalOptions != null && !additionalOptions.isEmpty()) {
+                for (Map.Entry<String, String> entry : additionalOptions.entrySet()) {
+                    optionsBuilder.option(entry.getKey(), convertOptionValue(entry.getKey(), entry.getValue()));
+                }
+            }
+
             var builder = OllamaStreamingChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
                     .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
@@ -244,5 +262,54 @@ public class OllamaRecorder {
             ollamaConfig = runtimeConfig.namedConfig().get(configName);
         }
         return ollamaConfig;
+    }
+
+    private static void applyOptionToBuilder(OllamaChatModel.OllamaChatModelBuilder builder, String key, String value) {
+        switch (key) {
+            case "think":
+                builder.think(Boolean.parseBoolean(value));
+                break;
+            case "returnThinking":
+                builder.returnThinking(Boolean.parseBoolean(value));
+                break;
+            case "numCtx":
+                builder.numCtx(Integer.parseInt(value));
+                break;
+            case "numPredict":
+                builder.numPredict(Integer.parseInt(value));
+                break;
+            case "repeatLastN":
+                builder.repeatLastN(Integer.parseInt(value));
+                break;
+            case "repeatPenalty":
+                builder.repeatPenalty(Double.parseDouble(value));
+                break;
+            case "mirostat":
+                builder.mirostat(Integer.parseInt(value));
+                break;
+            case "mirostatEta":
+                builder.mirostatEta(Double.parseDouble(value));
+                break;
+            case "mirostatTau":
+                builder.mirostatTau(Double.parseDouble(value));
+                break;
+            case "minP":
+                builder.minP(Double.parseDouble(value));
+                break;
+            case "seed":
+                builder.seed(Integer.parseInt(value));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static Object convertOptionValue(String key, String value) {
+        return switch (key) {
+            case "think", "returnThinking" -> Boolean.parseBoolean(value);
+            case "numCtx", "numPredict", "repeatLastN", "mirostat", "seed" -> Integer.parseInt(value);
+            case "repeatPenalty", "mirostatEta", "mirostatTau", "minP", "temperature", "topP" -> Double.parseDouble(value);
+            default -> value;
+        };
     }
 }
