@@ -132,11 +132,11 @@ When running your application in development mode (`mvn quarkus:dev`), Quarkus p
 
 Access the Dev UI by navigating to `http://localhost:8080/q/dev-ui` and clicking on the **MCP clients** card:
 
-image::mcp-dev-ui-card.png[MCP Dev UI Card,400,align="center"]
+image::mcp-dev-ui-card.png[MCP Dev UI Card,width=400,align="center"]
 
 The MCP Dev UI provides a comprehensive interface for interacting with your MCP clients:
 
-image::mcp-dev-ui-tools.png[MCP Dev UI Tools Interface,800,align="center"]
+image::mcp-dev-ui-tools.png[MCP Dev UI Tools Interface,width=800,align="center"]
 
 **Features:**
 
