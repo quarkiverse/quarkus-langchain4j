@@ -91,6 +91,35 @@ public class OllamaRecorder {
                 ollamaChatModelBuilder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
             }
 
+            ChatModelConfig.ModelOptionsConfig modelOptions = chatModelConfig.modelOptions();
+            if (modelOptions.think().isPresent()) {
+                ollamaChatModelBuilder.think(modelOptions.think().get());
+            }
+            if (modelOptions.returnThinking().isPresent()) {
+                ollamaChatModelBuilder.returnThinking(modelOptions.returnThinking().get());
+            }
+            if (modelOptions.numCtx().isPresent()) {
+                ollamaChatModelBuilder.numCtx(modelOptions.numCtx().getAsInt());
+            }
+            if (modelOptions.repeatLastN().isPresent()) {
+                ollamaChatModelBuilder.repeatLastN(modelOptions.repeatLastN().getAsInt());
+            }
+            if (modelOptions.repeatPenalty().isPresent()) {
+                ollamaChatModelBuilder.repeatPenalty(modelOptions.repeatPenalty().getAsDouble());
+            }
+            if (modelOptions.mirostat().isPresent()) {
+                ollamaChatModelBuilder.mirostat(modelOptions.mirostat().getAsInt());
+            }
+            if (modelOptions.mirostatEta().isPresent()) {
+                ollamaChatModelBuilder.mirostatEta(modelOptions.mirostatEta().getAsDouble());
+            }
+            if (modelOptions.mirostatTau().isPresent()) {
+                ollamaChatModelBuilder.mirostatTau(modelOptions.mirostatTau().getAsDouble());
+            }
+            if (modelOptions.minP().isPresent()) {
+                ollamaChatModelBuilder.minP(modelOptions.minP().getAsDouble());
+            }
+
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
@@ -192,6 +221,36 @@ public class OllamaRecorder {
             if (chatModelConfig.seed().isPresent()) {
                 optionsBuilder.seed(chatModelConfig.seed().get());
             }
+
+            ChatModelConfig.ModelOptionsConfig modelOptions = chatModelConfig.modelOptions();
+            if (modelOptions.think().isPresent()) {
+                optionsBuilder.option("think", modelOptions.think().get());
+            }
+            if (modelOptions.returnThinking().isPresent()) {
+                optionsBuilder.option("returnThinking", modelOptions.returnThinking().get());
+            }
+            if (modelOptions.numCtx().isPresent()) {
+                optionsBuilder.option("numCtx", modelOptions.numCtx().getAsInt());
+            }
+            if (modelOptions.repeatLastN().isPresent()) {
+                optionsBuilder.option("repeatLastN", modelOptions.repeatLastN().getAsInt());
+            }
+            if (modelOptions.repeatPenalty().isPresent()) {
+                optionsBuilder.option("repeatPenalty", modelOptions.repeatPenalty().getAsDouble());
+            }
+            if (modelOptions.mirostat().isPresent()) {
+                optionsBuilder.option("mirostat", modelOptions.mirostat().getAsInt());
+            }
+            if (modelOptions.mirostatEta().isPresent()) {
+                optionsBuilder.option("mirostatEta", modelOptions.mirostatEta().getAsDouble());
+            }
+            if (modelOptions.mirostatTau().isPresent()) {
+                optionsBuilder.option("mirostatTau", modelOptions.mirostatTau().getAsDouble());
+            }
+            if (modelOptions.minP().isPresent()) {
+                optionsBuilder.option("minP", modelOptions.minP().getAsDouble());
+            }
+
             var builder = OllamaStreamingChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
                     .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
