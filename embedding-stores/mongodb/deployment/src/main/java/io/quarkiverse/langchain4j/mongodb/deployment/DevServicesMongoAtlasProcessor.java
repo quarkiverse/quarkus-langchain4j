@@ -42,7 +42,6 @@ import io.quarkus.devservices.common.ConfigureUtil;
 import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.devservices.common.Labels;
 import io.quarkus.mongodb.deployment.MongoClientNameBuildItem;
-import io.quarkus.mongodb.runtime.MongodbConfig;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigUtils;
 
@@ -243,7 +242,7 @@ public class DevServicesMongoAtlasProcessor {
     }
 
     private String getConfigPrefix(String connectionName) {
-        String configPrefix = "quarkus." + MongodbConfig.CONFIG_NAME + ".";
+        String configPrefix = "quarkus.mongodb.";
         if (!isDefault(connectionName)) {
             configPrefix = configPrefix + connectionName + ".";
         }
