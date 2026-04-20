@@ -1,16 +1,20 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
+import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.output.FinishReason;
 
 public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel {
 
@@ -40,7 +44,22 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             // Generate a raw response from the model
             String rawResponse = modelResponse(chatRequest, null);
 
-            // Parse thinking and actual response using the GPULlama3ResponseParser
+            // Check for a tool call before doing thinking-tag parsing
+            Optional<ToolCallExtract> maybeToolCall = holder.chatFormat.extractToolCall(rawResponse);
+            if (maybeToolCall.isPresent()) {
+                ToolCallExtract tc = maybeToolCall.get();
+                LOG.infof("[Tool call]  → %s(%s)", tc.name(), tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
+                ToolExecutionRequest toolReq = ToolExecutionRequest.builder()
+                        .name(tc.name())
+                        .arguments(tc.argumentsJson())
+                        .build();
+                return ChatResponse.builder()
+                        .aiMessage(AiMessage.from(List.of(toolReq)))
+                        .finishReason(FinishReason.TOOL_EXECUTION)
+                        .build();
+            }
+
+            // Plain text response — separate thinking content if present
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
 
             return ChatResponse.builder()

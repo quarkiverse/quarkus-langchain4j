@@ -3,10 +3,13 @@ package io.quarkiverse.langchain4j.gpullama3;
 import static io.quarkiverse.langchain4j.runtime.VertxUtil.runOutEventLoop;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
+import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -14,6 +17,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import dev.langchain4j.model.output.FinishReason;
 
 /**
  * GPULlama3StreamingChatModel is a specialized implementation of the {@link StreamingChatModel} for Quarkus-Langchain4j
@@ -82,10 +86,28 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
      */
     private void coreDoChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         try {
+            // Create streaming parser for thinking-tag separation
             GPULlama3ResponseParser.StreamingParser parser = GPULlama3ResponseParser.createStreamingParser(handler, getModel());
 
             String rawResponse = modelResponse(chatRequest, parser::onToken);
 
+            // Check for a tool call first — tool call tokens are not streamed as partial response
+            Optional<ToolCallExtract> maybeToolCall = holder.chatFormat.extractToolCall(rawResponse);
+            if (maybeToolCall.isPresent()) {
+                ToolCallExtract tc = maybeToolCall.get();
+                ToolExecutionRequest toolReq = ToolExecutionRequest.builder()
+                        .name(tc.name())
+                        .arguments(tc.argumentsJson())
+                        .build();
+                ChatResponse chatResponse = ChatResponse.builder()
+                        .aiMessage(AiMessage.from(List.of(toolReq)))
+                        .finishReason(FinishReason.TOOL_EXECUTION)
+                        .build();
+                handler.onCompleteResponse(chatResponse);
+                return;
+            }
+
+            // Plain text — parse thinking and deliver final response
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
 
             ChatResponse chatResponse = ChatResponse.builder()
