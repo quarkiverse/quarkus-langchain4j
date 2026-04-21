@@ -80,7 +80,7 @@
                 </property>
             </activation>
             <properties>
-                <quarkus-langchain4j.version>1.9.0.CR2</quarkus-langchain4j.version>
+                <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
