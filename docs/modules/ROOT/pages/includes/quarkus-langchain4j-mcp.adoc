@@ -114,6 +114,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-tracing-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-tracing-enabled[`+++quarkus.langchain4j.mcp.tracing.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.tracing.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether tracing is enabled for MCP clients. Requires the OpenTelemetry extension to be present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_TRACING_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_TRACING_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp[Configured MCP clients]##
 h|Type
 h|Default

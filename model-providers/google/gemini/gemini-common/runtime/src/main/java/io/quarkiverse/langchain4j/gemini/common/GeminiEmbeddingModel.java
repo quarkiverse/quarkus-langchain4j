@@ -56,7 +56,7 @@ public abstract class GeminiEmbeddingModel implements EmbeddingModel {
         return Response.from(allEmbeddings);
     }
 
-    private EmbedContentRequest getEmbedContentRequest(String model, String text) {
+    protected EmbedContentRequest getEmbedContentRequest(String model, String text) {
         Content.Part part = Content.Part.ofText(text);
         Content content = Content.ofPart(part);
 
@@ -65,9 +65,8 @@ public abstract class GeminiEmbeddingModel implements EmbeddingModel {
             embedTaskType = EmbedContentRequest.TaskType.valueOf(this.taskType);
         }
 
-        EmbedContentRequest embedContentRequest = new EmbedContentRequest("models/" + model, content,
+        return new EmbedContentRequest("models/" + model, content,
                 embedTaskType, null, this.dimension);
-        return embedContentRequest;
     }
 
     protected abstract EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest);

@@ -65,6 +65,13 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
     }
 
     @Override
+    protected EmbedContentRequest getEmbedContentRequest(String model, String text) {
+        var withModel = super.getEmbedContentRequest(model, text);
+        return new EmbedContentRequest(null, withModel.content(), withModel.taskType(), withModel.title(),
+                withModel.outputDimensionality());
+    }
+
+    @Override
     protected EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest) {
         return restApi.embedContent(embedContentRequest, apiMetadata);
     }

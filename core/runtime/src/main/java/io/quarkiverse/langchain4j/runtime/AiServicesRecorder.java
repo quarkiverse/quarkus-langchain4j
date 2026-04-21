@@ -33,6 +33,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
@@ -124,6 +125,12 @@ public class AiServicesRecorder {
                     Class<?> serviceClass = loadClass(info.serviceClassName());
 
                     QuarkusAiServiceContext aiServiceContext = new QuarkusAiServiceContext(serviceClass);
+                    if (info.defaultMemoryIdProviderClassName() != null) {
+                        aiServiceContext.defaultMemoryIdProvider = (DefaultMemoryIdProvider) Thread
+                                .currentThread().getContextClassLoader().loadClass(info.defaultMemoryIdProviderClassName())
+                                .getConstructor().newInstance();
+                    }
+
                     // we don't really care about QuarkusAiServices here, all we care about is that it
                     // properly populates QuarkusAiServiceContext which is what we are trying to construct
                     var quarkusAiServices = INSTANCE.create(aiServiceContext);
