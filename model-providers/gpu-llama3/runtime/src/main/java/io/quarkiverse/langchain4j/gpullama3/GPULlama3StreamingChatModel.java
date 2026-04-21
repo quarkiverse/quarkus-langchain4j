@@ -87,40 +87,53 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
      */
     private void coreDoChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         try {
-            // Create streaming parser for thinking-tag separation
-            GPULlama3ResponseParser.StreamingParser parser = GPULlama3ResponseParser.createStreamingParser(handler, getModel());
+            // Suppress token streaming on every turn where tools are present: the model may decide
+            // to call a tool on any turn (including after a prior tool result), and tool-call JSON
+            // must never be forwarded as partial responses to the handler.
+            boolean hasTools = chatRequest.toolSpecifications() != null
+                    && !chatRequest.toolSpecifications().isEmpty();
+            boolean hasPriorToolResult = chatRequest.messages().stream()
+                    .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
+            boolean suppressStreaming = hasTools;
 
-            String rawResponse = modelResponse(chatRequest, parser::onToken);
+            GPULlama3ResponseParser.StreamingParser parser = suppressStreaming
+                    ? null
+                    : GPULlama3ResponseParser.createStreamingParser(handler, getModel());
 
-            // Check for tool calls — tool call tokens are not streamed as partial response
+            // Generate response; null tokenConsumer means no partial-response callbacks
+            String rawResponse = modelResponse(chatRequest, parser != null ? parser::onToken : null);
+
+            // Check for tool calls
             List<ToolCallExtract> toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
             if (!toolCalls.isEmpty()) {
+                LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
                 List<ToolExecutionRequest> toolReqs = new ArrayList<>();
                 for (ToolCallExtract tc : toolCalls) {
+                    LOG.infof("[Tool call] → %s(%s)", tc.name(),
+                            tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
                     toolReqs.add(ToolExecutionRequest.builder()
                             .name(tc.name())
                             .arguments(tc.argumentsJson())
                             .build());
                 }
-                ChatResponse chatResponse = ChatResponse.builder()
+                handler.onCompleteResponse(ChatResponse.builder()
                         .aiMessage(AiMessage.from(toolReqs))
                         .finishReason(FinishReason.TOOL_EXECUTION)
-                        .build();
-                handler.onCompleteResponse(chatResponse);
+                        .build());
                 return;
             }
 
             // Plain text — parse thinking and deliver final response
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
 
-            ChatResponse chatResponse = ChatResponse.builder()
+            LOG.infof("[LLM response]\n%s", parsed.getActualResponse());
+
+            handler.onCompleteResponse(ChatResponse.builder()
                     .aiMessage(AiMessage.builder()
                             .text(parsed.getActualResponse())
                             .thinking(parsed.getThinkingContent())
                             .build())
-                    .build();
-
-            handler.onCompleteResponse(chatResponse);
+                    .build());
         } catch (Exception e) {
             LOG.error("Error in GPULlama3 coreDoChat", e);
             handler.onError(e);

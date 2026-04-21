@@ -3,8 +3,10 @@ package io.quarkiverse.langchain4j.gpullama3;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.IntConsumer;
+import java.util.stream.Collectors;
 
 import org.beehive.gpullama3.inference.sampler.Sampler;
 import org.beehive.gpullama3.model.Model;
@@ -64,15 +66,29 @@ abstract class GPULlama3BaseModel {
 
         processPromptMessages(request.messages(), promptTokens, toolsJson);
 
-        // Tool-aware stop tokens only for the first generation (tool call turn).
-        // On the synthesis turn (messages contain a prior tool result) use regular stops,
-        // matching ToolCallingSession which switches to getStopTokens() for the final answer.
-        boolean hasPriorToolResult = request.messages().stream()
-                .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
-        Set<Integer> stopTokens = (toolsJson != null && !hasPriorToolResult)
+        if (toolsJson != null) {
+            boolean hasPriorToolResult = request.messages().stream()
+                    .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
+            String toolNames = tools.stream()
+                    .map(ToolSpecification::name)
+                    .collect(Collectors.joining(", "));
+            long priorResultCount = request.messages().stream()
+                    .filter(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT)
+                    .count();
+            if (hasPriorToolResult) {
+                LOG.infof("[Tool turn] %d tool(s) available: %s  (after %d result(s))",
+                        tools.size(), toolNames, priorResultCount);
+            } else {
+                LOG.infof("[Tool turn] %d tool(s) available: %s", tools.size(), toolNames);
+            }
+        }
+
+        // Use tool-aware stop tokens whenever tools are present so the model can signal a tool
+        // call (eom_id on LLaMA 3.1) or a regular response (eot_id) on every turn — including
+        // turns that already contain prior tool results.
+        Set<Integer> stopTokens = (toolsJson != null)
                 ? holder.chatFormat.getToolAwareStopTokens()
                 : holder.chatFormat.getStopTokens();
-        System.err.println("[GPU-DEBUG] hasPriorToolResult=" + hasPriorToolResult + "  stopTokens=" + stopTokens);
 
         List<Integer> responseTokens;
 
@@ -115,8 +131,8 @@ abstract class GPULlama3BaseModel {
             promptTokens.add(stopToken);
         }
 
-        System.err.println("[GPU-DEBUG] stopToken=" + stopToken + "  responseTokens=" + responseTokens.size());
-        System.err.println("[GPU-DEBUG] raw response: >>>" + responseText + "<<<");
+        LOG.debug("stopToken=" + stopToken + "  responseTokens=" + responseTokens.size()
+                + "  raw response: >>>" + responseText + "<<<");
 
         if (stopToken == null) {
             return "Ran out of context length...\n Increase context length with by passing to llama-tornado --max-tokens XXX";
@@ -144,11 +160,19 @@ abstract class GPULlama3BaseModel {
      */
     private void processPromptMessages(List<ChatMessage> messageList, List<Integer> promptTokens, String toolsJson) {
         boolean toolsInjected = false;
-        boolean userMessageInjection = toolsJson != null && holder.chatFormat.injectsToolsInUserMessage();
 
-        System.err.println("\n[GPU-DEBUG] ── processPromptMessages  msgs=" + messageList.size()
-                + "  toolsJson=" + (toolsJson != null)
-                + "  userMsgInjection=" + userMessageInjection + " ──────────────");
+        // Tool definitions and calling instructions are injected into the first user message
+        // (Llama) or system message (Qwen3) only on the FIRST tool-calling turn.
+        // On subsequent turns the conversation history already contains them; re-injecting
+        // the "respond with a JSON function call" instruction causes the model to call tools
+        // again instead of synthesising the final answer.
+        boolean hasPriorToolResult = messageList.stream()
+                .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
+        boolean injectTools = toolsJson != null && !hasPriorToolResult;
+        boolean userMessageInjection = injectTools && holder.chatFormat.injectsToolsInUserMessage();
+
+        LOG.debug("processPromptMessages: msgs=" + messageList.size()
+                + "  injectTools=" + injectTools + "  userMsgInjection=" + userMessageInjection);
 
         for (ChatMessage msg : messageList) {
             switch (msg.type()) {
@@ -156,7 +180,7 @@ abstract class GPULlama3BaseModel {
                     SystemMessage systemMessage = (SystemMessage) msg;
                     if (holder.model.shouldAddSystemPrompt()) {
                         String content = systemMessage.text();
-                        if (toolsJson != null) {
+                        if (injectTools) {
                             if (userMessageInjection) {
                                 String prefix = holder.chatFormat.toolSystemMessagePrefix();
                                 if (!prefix.isEmpty())
@@ -166,8 +190,8 @@ abstract class GPULlama3BaseModel {
                                 toolsInjected = true;
                             }
                         }
-                        System.err.println("[GPU-DEBUG] SYSTEM (first 300): "
-                                + content.substring(0, Math.min(300, content.length())));
+                        LOG.debugf("SYSTEM (first 300): %s",
+                                content.substring(0, Math.min(300, content.length())));
                         promptTokens.addAll(
                                 holder.chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.SYSTEM, content)));
                     }
@@ -175,12 +199,11 @@ abstract class GPULlama3BaseModel {
                 case USER -> {
                     UserMessage userMessage = (UserMessage) msg;
                     String userText = userMessage.singleText();
-                    if (toolsJson != null && !toolsInjected && userMessageInjection) {
+                    if (injectTools && !toolsInjected && userMessageInjection) {
                         userText = holder.chatFormat.toolFirstUserMessagePrefix(toolsJson) + userText;
                         toolsInjected = true;
                     }
-                    System.err.println("[GPU-DEBUG] USER (first 200): "
-                            + userText.substring(0, Math.min(200, userText.length())));
+                    LOG.debugf("USER (first 200): %s", userText.substring(0, Math.min(200, userText.length())));
                     promptTokens.addAll(holder.chatFormat.encodeMessage(
                             new ChatFormat.Message(ChatFormat.Role.USER, userText)));
                 }
@@ -200,9 +223,7 @@ abstract class GPULlama3BaseModel {
                 case TOOL_EXECUTION_RESULT -> {
                     ToolExecutionResultMessage toolMessage = (ToolExecutionResultMessage) msg;
                     String resultText = unwrapToolResult(toolMessage.text());
-                    LOG.infof("[Tool result] ← %s: %s", toolMessage.toolName(),
-                            resultText.length() > 120 ? resultText.substring(0, 120).replace("\n", " ") + "…"
-                                    : resultText.replace("\n", " "));
+                    LOG.infof("[Tool result] ← %s:\n%s", toolMessage.toolName(), resultText);
                     promptTokens.addAll(holder.chatFormat.encodeToolResultTurn(
                             toolMessage.id(), toolMessage.toolName(), resultText));
                 }
@@ -213,41 +234,14 @@ abstract class GPULlama3BaseModel {
         }
 
         // Fallback: no system or user message encountered — inject tools at the start
-        if (toolsJson != null && !toolsInjected && !userMessageInjection && holder.model.shouldAddSystemPrompt()) {
+        if (injectTools && !toolsInjected && !userMessageInjection && holder.model.shouldAddSystemPrompt()) {
             String toolsOnlySystem = holder.chatFormat.toolSystemPromptSuffix(toolsJson).stripLeading();
             promptTokens.addAll(0,
                     holder.chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.SYSTEM, toolsOnlySystem)));
         }
 
-        // After a tool result, small models tend to echo the raw data instead of synthesising.
-        // An explicit user instruction breaks the JSON-continuation pattern.
-        boolean lastIsTool = !messageList.isEmpty()
-                && messageList.getLast().type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT;
-        if (lastIsTool) {
-            promptTokens.addAll(holder.chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.USER,
-                    "Answer the user's original question in natural language using the tool result above. Be concise.")));
-        }
-
         // Prime the model to start generating an assistant response
         promptTokens.addAll(holder.chatFormat.encodeHeader(new ChatFormat.Message(ChatFormat.Role.ASSISTANT, "")));
-    }
-
-    /**
-     * @deprecated unused after moving tool injection into chatFormat.toolFirstUserMessagePrefix
-     */
-    @Deprecated(forRemoval = true)
-    private static String buildIndividualToolsJson(String openAiArrayJson) {
-        // openAiArrayJson is already built by buildToolsJson as a pretty array.
-        // Strip the outer [ ] and split on top-level object boundaries to get individual objects.
-        // Simpler: just strip the enclosing brackets and the leading/trailing whitespace.
-        String stripped = openAiArrayJson.strip();
-        if (stripped.startsWith("["))
-            stripped = stripped.substring(1);
-        if (stripped.endsWith("]"))
-            stripped = stripped.substring(0, stripped.length() - 1);
-        // Remove leading/trailing commas+whitespace between objects (the array separator)
-        // Each object starts with "  {" — trim to just the objects
-        return stripped.strip();
     }
 
     /**
@@ -259,51 +253,38 @@ abstract class GPULlama3BaseModel {
      * than flat JSON without the {@code type/function} wrapper) triggers reliable tool calling.
      */
     static String buildToolsJson(List<ToolSpecification> tools) {
-        StringBuilder sb = new StringBuilder("[\n");
-        for (int i = 0; i < tools.size(); i++) {
-            ToolSpecification tool = tools.get(i);
-            sb.append("  {\n");
-            sb.append("    \"type\": \"function\",\n");
-            sb.append("    \"function\": {\n");
-            sb.append("      \"name\": \"").append(escapeJson(tool.name())).append("\",\n");
+        List<Map<String, Object>> toolArray = new ArrayList<>();
+        for (ToolSpecification tool : tools) {
+            Map<String, Object> funcMap = new LinkedHashMap<>();
+            funcMap.put("name", tool.name());
             if (tool.description() != null) {
-                sb.append("      \"description\": \"").append(escapeJson(tool.description())).append("\",\n");
+                funcMap.put("description", tool.description());
             }
-            sb.append("      \"parameters\": ").append(buildParametersJson(tool)).append("\n");
-            sb.append("    }\n");
-            sb.append("  }");
-            if (i < tools.size() - 1)
-                sb.append(",");
-            sb.append("\n");
+            funcMap.put("parameters", buildParametersMap(tool));
+
+            Map<String, Object> toolMap = new LinkedHashMap<>();
+            toolMap.put("type", "function");
+            toolMap.put("function", funcMap);
+            toolArray.add(toolMap);
         }
-        sb.append("]");
-        return sb.toString();
+        return Json.toJson(toolArray);
     }
 
-    private static String buildParametersJson(ToolSpecification tool) {
-        if (tool.parameters() == null) {
-            return "{\"type\":\"object\",\"properties\":{}}";
-        }
-        var params = new LinkedHashMap<String, Object>();
+    private static Map<String, Object> buildParametersMap(ToolSpecification tool) {
+        Map<String, Object> params = new LinkedHashMap<>();
         params.put("type", "object");
-        var props = new LinkedHashMap<String, Object>();
-        for (var entry : tool.parameters().properties().entrySet()) {
-            props.put(entry.getKey(), JsonSchemaElementUtils.toMap(entry.getValue()));
+        Map<String, Object> props = new LinkedHashMap<>();
+        if (tool.parameters() != null) {
+            for (var entry : tool.parameters().properties().entrySet()) {
+                props.put(entry.getKey(), JsonSchemaElementUtils.toMap(entry.getValue()));
+            }
+            List<String> required = tool.parameters().required();
+            if (required != null && !required.isEmpty()) {
+                params.put("required", required);
+            }
         }
         params.put("properties", props);
-        List<String> required = tool.parameters().required();
-        if (required != null && !required.isEmpty()) {
-            params.put("required", required);
-        }
-        return Json.toJson(params);
-    }
-
-    private static String escapeJson(String s) {
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+        return params;
     }
 
     /**
