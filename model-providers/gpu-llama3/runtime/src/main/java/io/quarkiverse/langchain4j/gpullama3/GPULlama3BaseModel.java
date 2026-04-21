@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.IntConsumer;
 
-import org.beehive.gpullama3.auxiliary.LastRunMetrics;
 import org.beehive.gpullama3.inference.sampler.Sampler;
 import org.beehive.gpullama3.model.Model;
 import org.beehive.gpullama3.model.format.ChatFormat;
@@ -73,6 +72,7 @@ abstract class GPULlama3BaseModel {
         Set<Integer> stopTokens = (toolsJson != null && !hasPriorToolResult)
                 ? holder.chatFormat.getToolAwareStopTokens()
                 : holder.chatFormat.getStopTokens();
+        System.err.println("[GPU-DEBUG] hasPriorToolResult=" + hasPriorToolResult + "  stopTokens=" + stopTokens);
 
         List<Integer> responseTokens;
 
@@ -115,6 +115,9 @@ abstract class GPULlama3BaseModel {
             promptTokens.add(stopToken);
         }
 
+        System.err.println("[GPU-DEBUG] stopToken=" + stopToken + "  responseTokens=" + responseTokens.size());
+        System.err.println("[GPU-DEBUG] raw response: >>>" + responseText + "<<<");
+
         if (stopToken == null) {
             return "Ran out of context length...\n Increase context length with by passing to llama-tornado --max-tokens XXX";
         } else {
@@ -123,40 +126,63 @@ abstract class GPULlama3BaseModel {
     }
     // @formatter:on
 
-    public void printLastMetrics() {
-        LastRunMetrics.printMetrics();
-    }
-
     /**
-     * Encodes all conversation messages into {@code promptTokens}.
+     * Encodes all conversation messages into {@code promptTokens} using the <b>native Llama 3.2
+     * chat template</b> extracted from the GGUF metadata.
      *
-     * Handles: UserMessage, SystemMessage (with optional tool-definition suffix),
-     * AiMessage (plain text and with tool execution requests), ToolExecutionResultMessage.
-     *
-     * @param messageList messages in conversation order
-     * @param toolsJson OpenAI-format tools JSON array, or {@code null} when no tools are registered
+     * <p>
+     * Key template behaviours reproduced here:
+     * <ul>
+     * <li>System message gets an {@code "Environment: ipython\n"} prefix when tools are active.</li>
+     * <li>Tool definitions are injected into the <em>first</em> user message
+     * ({@code tools_in_user_message = true} is the default in the template).</li>
+     * <li>Assistant tool-call turns are encoded as native JSON:
+     * {@code {"name":"…","parameters":{…}}} — not {@code <tool_call>} XML.</li>
+     * <li>Tool results use the {@code ipython} role (handled by
+     * {@link ChatFormat#encodeToolResultTurn}).</li>
+     * </ul>
      */
     private void processPromptMessages(List<ChatMessage> messageList, List<Integer> promptTokens, String toolsJson) {
-        boolean injectedTools = false;
+        boolean toolsInjected = false;
+        boolean userMessageInjection = toolsJson != null && holder.chatFormat.injectsToolsInUserMessage();
+
+        System.err.println("\n[GPU-DEBUG] ── processPromptMessages  msgs=" + messageList.size()
+                + "  toolsJson=" + (toolsJson != null)
+                + "  userMsgInjection=" + userMessageInjection + " ──────────────");
 
         for (ChatMessage msg : messageList) {
             switch (msg.type()) {
-                case USER -> {
-                    UserMessage userMessage = (UserMessage) msg;
-                    promptTokens.addAll(holder.chatFormat.encodeMessage(
-                            new ChatFormat.Message(ChatFormat.Role.USER, userMessage.singleText())));
-                }
                 case SYSTEM -> {
                     SystemMessage systemMessage = (SystemMessage) msg;
                     if (holder.model.shouldAddSystemPrompt()) {
                         String content = systemMessage.text();
-                        if (toolsJson != null && !injectedTools) {
-                            content = content + holder.chatFormat.toolSystemPromptSuffix(toolsJson);
-                            injectedTools = true;
+                        if (toolsJson != null) {
+                            if (userMessageInjection) {
+                                String prefix = holder.chatFormat.toolSystemMessagePrefix();
+                                if (!prefix.isEmpty())
+                                    content = prefix + content;
+                            } else {
+                                content = content + holder.chatFormat.toolSystemPromptSuffix(toolsJson);
+                                toolsInjected = true;
+                            }
                         }
+                        System.err.println("[GPU-DEBUG] SYSTEM (first 300): "
+                                + content.substring(0, Math.min(300, content.length())));
                         promptTokens.addAll(
                                 holder.chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.SYSTEM, content)));
                     }
+                }
+                case USER -> {
+                    UserMessage userMessage = (UserMessage) msg;
+                    String userText = userMessage.singleText();
+                    if (toolsJson != null && !toolsInjected && userMessageInjection) {
+                        userText = holder.chatFormat.toolFirstUserMessagePrefix(toolsJson) + userText;
+                        toolsInjected = true;
+                    }
+                    System.err.println("[GPU-DEBUG] USER (first 200): "
+                            + userText.substring(0, Math.min(200, userText.length())));
+                    promptTokens.addAll(holder.chatFormat.encodeMessage(
+                            new ChatFormat.Message(ChatFormat.Role.USER, userText)));
                 }
                 case AI -> {
                     AiMessage aiMessage = (AiMessage) msg;
@@ -173,34 +199,33 @@ abstract class GPULlama3BaseModel {
                 }
                 case TOOL_EXECUTION_RESULT -> {
                     ToolExecutionResultMessage toolMessage = (ToolExecutionResultMessage) msg;
-                    // LangChain4j serializes String tool results via Json.toJson(), producing a
-                    // JSON-quoted string with escaped newlines. Unwrap it to plain readable text.
                     String resultText = unwrapToolResult(toolMessage.text());
                     LOG.infof("[Tool result] ← %s: %s", toolMessage.toolName(),
                             resultText.length() > 120 ? resultText.substring(0, 120).replace("\n", " ") + "…"
                                     : resultText.replace("\n", " "));
-                    String wrapped = "Tool '" + toolMessage.toolName() + "' returned:\n" + resultText;
                     promptTokens.addAll(holder.chatFormat.encodeToolResultTurn(
-                            toolMessage.id(), toolMessage.toolName(), wrapped));
+                            toolMessage.id(), toolMessage.toolName(), resultText));
                 }
                 default -> {
-                    // Unsupported message types are silently skipped to avoid breaking existing flows
+                    // Unsupported message types are silently skipped
                 }
             }
         }
 
-        // If tools were requested but no system message was present, inject a tool-only system message
-        if (toolsJson != null && !injectedTools && holder.model.shouldAddSystemPrompt()) {
+        // Fallback: no system or user message encountered — inject tools at the start
+        if (toolsJson != null && !toolsInjected && !userMessageInjection && holder.model.shouldAddSystemPrompt()) {
             String toolsOnlySystem = holder.chatFormat.toolSystemPromptSuffix(toolsJson).stripLeading();
             promptTokens.addAll(0,
                     holder.chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.SYSTEM, toolsOnlySystem)));
         }
 
-        // After tool results, inject a synthesis instruction so the model answers from the result
-        if (!messageList.isEmpty()
-                && messageList.getLast().type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT) {
+        // After a tool result, small models tend to echo the raw data instead of synthesising.
+        // An explicit user instruction breaks the JSON-continuation pattern.
+        boolean lastIsTool = !messageList.isEmpty()
+                && messageList.getLast().type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT;
+        if (lastIsTool) {
             promptTokens.addAll(holder.chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.USER,
-                    "Using only the tool result above, answer the user's original question.")));
+                    "Answer the user's original question in natural language using the tool result above. Be concise.")));
         }
 
         // Prime the model to start generating an assistant response
@@ -208,23 +233,44 @@ abstract class GPULlama3BaseModel {
     }
 
     /**
-     * Converts a LangChain4j {@link ToolSpecification} list to the pretty-printed JSON array
-     * expected by both {@code LlamaChatFormat} and {@code Qwen3ChatFormat} tool system prompts.
+     * @deprecated unused after moving tool injection into chatFormat.toolFirstUserMessagePrefix
+     */
+    @Deprecated(forRemoval = true)
+    private static String buildIndividualToolsJson(String openAiArrayJson) {
+        // openAiArrayJson is already built by buildToolsJson as a pretty array.
+        // Strip the outer [ ] and split on top-level object boundaries to get individual objects.
+        // Simpler: just strip the enclosing brackets and the leading/trailing whitespace.
+        String stripped = openAiArrayJson.strip();
+        if (stripped.startsWith("["))
+            stripped = stripped.substring(1);
+        if (stripped.endsWith("]"))
+            stripped = stripped.substring(0, stripped.length() - 1);
+        // Remove leading/trailing commas+whitespace between objects (the array separator)
+        // Each object starts with "  {" — trim to just the objects
+        return stripped.strip();
+    }
+
+    /**
+     * Builds the tools JSON array in OpenAI / native Llama 3.2 format:
+     * {@code [{"type":"function","function":{"name":...,"description":...,"parameters":{...}}}]}.
      *
-     * Uses the same indented format as {@code ToolRegistry.toToolsJson()} so that small models
-     * (1B/3B) can cleanly distinguish the outer tool envelope from the nested parameters schema
-     * and do not confuse the schema definition with the arguments they must fill in.
+     * This matches the format Ollama sends to the model and the format Llama 3.2 expects in its
+     * native {@code <|start_header_id|>tools<|end_header_id|>} section. Using this format (rather
+     * than flat JSON without the {@code type/function} wrapper) triggers reliable tool calling.
      */
     static String buildToolsJson(List<ToolSpecification> tools) {
         StringBuilder sb = new StringBuilder("[\n");
         for (int i = 0; i < tools.size(); i++) {
             ToolSpecification tool = tools.get(i);
             sb.append("  {\n");
-            sb.append("    \"name\": \"").append(escapeJson(tool.name())).append("\",\n");
+            sb.append("    \"type\": \"function\",\n");
+            sb.append("    \"function\": {\n");
+            sb.append("      \"name\": \"").append(escapeJson(tool.name())).append("\",\n");
             if (tool.description() != null) {
-                sb.append("    \"description\": \"").append(escapeJson(tool.description())).append("\",\n");
+                sb.append("      \"description\": \"").append(escapeJson(tool.description())).append("\",\n");
             }
-            sb.append("    \"parameters\": ").append(buildParametersJson(tool)).append("\n");
+            sb.append("      \"parameters\": ").append(buildParametersJson(tool)).append("\n");
+            sb.append("    }\n");
             sb.append("  }");
             if (i < tools.size() - 1)
                 sb.append(",");

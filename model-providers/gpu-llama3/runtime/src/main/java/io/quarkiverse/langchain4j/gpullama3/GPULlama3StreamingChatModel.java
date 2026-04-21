@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.gpullama3;
 import static io.quarkiverse.langchain4j.runtime.VertxUtil.runOutEventLoop;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -91,16 +92,18 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
 
             String rawResponse = modelResponse(chatRequest, parser::onToken);
 
-            // Check for a tool call first — tool call tokens are not streamed as partial response
-            Optional<ToolCallExtract> maybeToolCall = holder.chatFormat.extractToolCall(rawResponse);
-            if (maybeToolCall.isPresent()) {
-                ToolCallExtract tc = maybeToolCall.get();
-                ToolExecutionRequest toolReq = ToolExecutionRequest.builder()
-                        .name(tc.name())
-                        .arguments(tc.argumentsJson())
-                        .build();
+            // Check for tool calls — tool call tokens are not streamed as partial response
+            List<ToolCallExtract> toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
+            if (!toolCalls.isEmpty()) {
+                List<ToolExecutionRequest> toolReqs = new ArrayList<>();
+                for (ToolCallExtract tc : toolCalls) {
+                    toolReqs.add(ToolExecutionRequest.builder()
+                            .name(tc.name())
+                            .arguments(tc.argumentsJson())
+                            .build());
+                }
                 ChatResponse chatResponse = ChatResponse.builder()
-                        .aiMessage(AiMessage.from(List.of(toolReq)))
+                        .aiMessage(AiMessage.from(toolReqs))
                         .finishReason(FinishReason.TOOL_EXECUTION)
                         .build();
                 handler.onCompleteResponse(chatResponse);

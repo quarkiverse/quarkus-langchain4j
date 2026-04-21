@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,17 +45,21 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             // Generate a raw response from the model
             String rawResponse = modelResponse(chatRequest, null);
 
-            // Check for a tool call before doing thinking-tag parsing
-            Optional<ToolCallExtract> maybeToolCall = holder.chatFormat.extractToolCall(rawResponse);
-            if (maybeToolCall.isPresent()) {
-                ToolCallExtract tc = maybeToolCall.get();
-                LOG.infof("[Tool call]  → %s(%s)", tc.name(), tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
-                ToolExecutionRequest toolReq = ToolExecutionRequest.builder()
-                        .name(tc.name())
-                        .arguments(tc.argumentsJson())
-                        .build();
+            // Use extractAllToolCalls to handle batched tool calls (matches ToolCallingSession)
+            List<ToolCallExtract> toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
+            System.err.println("[GPU-DEBUG] extractAllToolCalls result: " + toolCalls.size() + " call(s)");
+            if (!toolCalls.isEmpty()) {
+                List<ToolExecutionRequest> toolReqs = new ArrayList<>();
+                for (ToolCallExtract tc : toolCalls) {
+                    LOG.infof("[Tool call]  → %s(%s)", tc.name(),
+                            tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
+                    toolReqs.add(ToolExecutionRequest.builder()
+                            .name(tc.name())
+                            .arguments(tc.argumentsJson())
+                            .build());
+                }
                 return ChatResponse.builder()
-                        .aiMessage(AiMessage.from(List.of(toolReq)))
+                        .aiMessage(AiMessage.from(toolReqs))
                         .finishReason(FinishReason.TOOL_EXECUTION)
                         .build();
             }
