@@ -45,6 +45,23 @@ public class McpApicurioRegistryProcessor {
         if (!buildTimeConfig.enabled()) {
             return;
         }
+
+        // Ensure an McpToolProvider exists so that dynamically discovered MCP clients
+        // can be added to it at runtime. This is a defaultBean, so if the MCP processor
+        // already created one (when static MCP clients are configured), ours is ignored.
+        if (mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
+                    .configure(LangChain4jDotNames.TOOL_PROVIDER)
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ClassType.create(TRACER) }, null))
+                    .createWith(mcpRecorder.toolProviderFunction(Collections.emptySet()));
+            beanProducer.produce(configurator.done());
+        }
+
         log.info("Apicurio Registry MCP integration enabled, registering ApicurioRegistryMcpTools bean");
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(APICURIO_REGISTRY_MCP_TOOLS)
@@ -52,25 +69,9 @@ public class McpApicurioRegistryProcessor {
                 .defaultBean()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.apicurioRegistryMcpToolsSupplier(vertxBuildItem.getVertx()))
+                .addInjectionPoint(ClassType.create(LangChain4jDotNames.TOOL_PROVIDER))
+                .createWith(recorder.apicurioRegistryMcpToolsFunction(vertxBuildItem.getVertx()))
                 .done());
-
-        // When no static MCP clients are configured, we still need an McpToolProvider
-        // so that dynamically discovered MCP clients can be added to it at runtime.
-        if (mcpBuildTimeConfiguration.clients() == null || mcpBuildTimeConfiguration.clients().isEmpty()) {
-            if (mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
-                SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
-                        .configure(LangChain4jDotNames.TOOL_PROVIDER)
-                        .setRuntimeInit()
-                        .defaultBean()
-                        .unremovable()
-                        .scope(ApplicationScoped.class)
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(TRACER) }, null))
-                        .createWith(mcpRecorder.toolProviderFunction(Collections.emptySet()));
-                beanProducer.produce(configurator.done());
-            }
-        }
     }
 
     @BuildStep
@@ -80,8 +81,9 @@ public class McpApicurioRegistryProcessor {
         if (!buildTimeConfig.enabled()) {
             return;
         }
+        // Register Apicurio SDK model classes used for artifact metadata and search results
         reflectiveClass.produce(ReflectiveClassBuildItem.builder(
-                "io.quarkiverse.langchain4j.mcp.runtime.apicurio.McpServerDefinition")
+                "io.apicurio.registry.rest.client.models.ArtifactMetaData")
                 .fields(true).methods(true).build());
     }
 }

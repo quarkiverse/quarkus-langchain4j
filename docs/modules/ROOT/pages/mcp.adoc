@@ -377,9 +377,12 @@ https://www.apicur.io/registry/[Apicurio Registry] can be used as a centralized 
 and connection of MCP servers at runtime. Instead of manually configuring each MCP server in `application.properties`, your AI
 service can search a registry for available servers and connect to them on demand.
 
-The registry stores MCP server definitions (name, description, URL, transport type) as versioned `MCP_TOOL` artifacts. The
-Quarkus integration provides `@Tool`-annotated methods that allow the LLM itself to search the registry and connect to discovered
-servers -- no redeployment or config changes needed when new MCP servers become available.
+The registry stores MCP tool definitions as versioned `MCP_TOOL` artifacts, validated against the official
+https://modelcontextprotocol.io/specification/2025-11-25/server/tools[MCP specification]. Tool definitions follow the spec
+(`name`, `inputSchema`, optional `description`, `title`, `annotations`, `outputSchema`), while connection metadata
+(server URL, transport type) is stored as **artifact labels** -- keeping the artifact content spec-compliant.
+The Quarkus integration provides `@Tool`-annotated methods that allow the LLM itself to search the registry and connect to
+discovered servers -- no redeployment or config changes needed when new MCP servers become available.
 
 IMPORTANT: This feature is experimental and may change in future releases.
 
@@ -449,21 +452,36 @@ With this setup, the LLM can:
 3. Use the newly connected server's tools to fulfill the user's request
 4. Disconnect from servers when they are no longer needed
 
-=== Registering MCP Server Definitions
+=== Registering MCP Tool Definitions
 
-MCP server definitions are stored in Apicurio Registry as `MCP_TOOL` artifacts with JSON content:
+MCP tool definitions are stored in Apicurio Registry as `MCP_TOOL` artifacts. The artifact **content** follows the
+official MCP specification:
 
 [source,json]
 ----
 {
-    "name": "My Filesystem Server",
-    "description": "Provides tools for filesystem operations",
-    "url": "http://filesystem-server:8080/mcp",
-    "transportType": "STREAMABLE_HTTP"
+    "name": "list-files",
+    "description": "List files in a directory",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "Directory path to list"
+            }
+        },
+        "required": ["path"]
+    }
 }
 ----
 
-You can register these artifacts through the Apicurio Registry UI, REST API, or CLI.
+Connection metadata is stored as **artifact labels** (key-value metadata on the artifact):
+
+- `mcp-server-url` -- the URL of the MCP server hosting this tool (e.g., `http://filesystem-server:8080/mcp`)
+- `mcp-transport-type` -- the transport type (e.g., `streamable-http`)
+
+The registry validates tool definitions against the MCP spec using its content validation rules. You can register
+these artifacts through the Apicurio Registry UI, REST API, or CLI.
 
 === Programmatic Usage
 

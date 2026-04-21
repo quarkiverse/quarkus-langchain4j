@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.mcp.runtime.apicurio;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -11,6 +9,8 @@ import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import io.apicurio.registry.rest.client.RegistryClient;
+import io.apicurio.registry.rest.client.models.ArtifactMetaData;
+import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.SearchedArtifact;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.vertx.core.Vertx;
@@ -65,22 +65,39 @@ public class ApicurioRegistryMcpTools {
         }
 
         try {
-            String content = new String(
-                    registryClient.groups().byGroupId(groupId)
-                            .artifacts().byArtifactId(artifactId)
-                            .versions().byVersionExpression("branch=latest")
-                            .content().get().readAllBytes(),
-                    StandardCharsets.UTF_8);
+            // Read connection metadata from artifact labels
+            ArtifactMetaData metadata = registryClient.groups().byGroupId(groupId)
+                    .artifacts().byArtifactId(artifactId).get();
 
-            McpServerDefinition serverDef = McpServerDefinition.fromJson(content);
+            Labels labels = metadata.getLabels();
+            Map<String, Object> labelData = labels != null ? labels.getAdditionalData() : null;
+            if (labelData == null || labelData.isEmpty()) {
+                return "Failed to connect to MCP server '" + key
+                        + "': artifact has no labels with connection metadata";
+            }
+
+            String url = labelData.get("mcp-server-url") != null
+                    ? labelData.get("mcp-server-url").toString()
+                    : null;
+            String transportType = labelData.get("mcp-transport-type") != null
+                    ? labelData.get("mcp-transport-type").toString()
+                    : null;
+            if (url == null || url.isBlank()) {
+                return "Failed to connect to MCP server '" + key
+                        + "': missing 'mcp-server-url' label";
+            }
+
+            McpServerDefinition serverDef = new McpServerDefinition(url,
+                    transportType != null ? transportType : "streamable-http");
 
             McpClient client = createMcpClient(key, serverDef);
             connectedServers.put(key, client);
             mcpToolProvider.addMcpClient(client);
 
             return "Connected to MCP server '" + key + "'. Its tools are now available.";
-        } catch (IOException e) {
-            return "Failed to connect to MCP server '" + key + "': " + e.getMessage();
+        } catch (Exception e) {
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
+            return "Failed to connect to MCP server '" + key + "': " + msg;
         }
     }
 

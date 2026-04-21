@@ -6,7 +6,7 @@ to dynamically discover and connect to MCP servers registered in an Apicurio Reg
 ## Prerequisites
 
 - A running Apicurio Registry instance (e.g. via `docker run -p 8080:8080 quay.io/apicurio/apicurio-registry:latest-release`)
-- MCP server definitions registered as `MCP_TOOL` artifacts in the registry
+- MCP tool definitions registered as `MCP_TOOL` artifacts in the registry (following the MCP spec), with connection metadata stored as artifact labels (`mcp-server-url`, `mcp-transport-type`)
 - An OpenAI API key (or configure a different model provider)
 
 ## Running

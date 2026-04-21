@@ -1,27 +1,16 @@
 package io.quarkiverse.langchain4j.mcp.runtime.apicurio;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
- * Represents an MCP server definition as stored in Apicurio Registry.
- * This is the content of an MCP_TOOL artifact.
+ * Connection metadata for an MCP server, extracted from Apicurio Registry artifact labels.
+ * <p>
+ * The artifact content itself follows the official MCP spec (name, inputSchema, etc.)
+ * and is validated by the registry. Connection details are stored as artifact labels:
+ * <ul>
+ * <li>{@code mcp-server-url} — the URL of the MCP server</li>
+ * <li>{@code mcp-transport-type} — the transport type (e.g., "streamable-http")</li>
+ * </ul>
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public record McpServerDefinition(
-        @JsonProperty("name") String name,
-        @JsonProperty("description") String description,
-        @JsonProperty("url") String url,
-        @JsonProperty("transportType") String transportType) {
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
-    public static McpServerDefinition fromJson(String json) {
-        try {
-            return MAPPER.readValue(json, McpServerDefinition.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse MCP server definition: " + e.getMessage(), e);
-        }
-    }
+        String url,
+        String transportType) {
 }
