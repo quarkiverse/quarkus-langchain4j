@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Web Chat</title>
+    <link rel="stylesheet" href="/webjars/font-awesome/css/all.min.css">
+    <script src="/_chat/javascript/chatscopes.js"></script>
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            background-color: #333639;
+            color: #e8e8e8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .banner {
+            height: 70px;
+            background-color: #333639;
+            color: white;
+            padding-left: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            border-bottom: 3px solid #BCAE79;
+        }
+
+        .banner img {
+            height: 40px;
+            margin-right: 15px;
+        }
+
+        .main-content {
+            height: calc(100vh - 70px);
+            display: flex;
+        }
+
+        .container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+
+        .left-panel {
+            width: 100%;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .panel-content {
+            line-height: 1.6;
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 90px;
+            height: calc(100% - 60px);
+            background-color: transparent;
+        }
+
+        .input-container {
+            position: fixed;
+            bottom: 20px;
+            left: 2%;
+            /*transform: translateX(-50%)*/
+            width: 95%;
+            /*max-width: 1160px;*/
+            display: flex;
+            background-color: #444750;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            padding: 5px;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            background-color: transparent;
+            color: #e8e8e8;
+            outline: none;
+        }
+
+        #message-input::placeholder {
+            color: #aaa;
+        }
+
+        .button-group {
+            display: flex;
+            padding-right: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            width: 38px;
+            height: 38px;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #ask-button {
+            background-color: #59666C;
+            position: relative;
+        }
+
+        #ask-button:hover {
+            background-color: #4a575c;
+        }
+
+        #search-button {
+            background-color: #59666C;
+        }
+
+        #search-button:hover {
+            background-color: #4a575c;
+        }
+
+        #data-button {
+            background-color: #BCAE79;
+            color: #333;
+        }
+
+        #data-button:hover {
+            background-color: #a89c69;
+        }
+
+        .btn i {
+            font-size: 18px;
+        }
+
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #aaaaaa;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+        }
+
+        .clear-btn:hover {
+            color: #e8e8e8;
+        }
+
+        .clear-btn i {
+            font-size: 18px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #4e5c64;
+            margin-left: auto;
+            border-radius: 18px;
+            border-bottom-right-radius: 4px;
+            color: #fff;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .assistant-message {
+            margin-right: auto;
+            color: #e8e8e8;
+            padding: 0 0 0 15px;
+            border-left: 3px solid #59666C;
+        }
+
+        .data-message {
+            margin-right: auto;
+            color: #e8e8e8;
+            padding: 0 0 0 15px;
+            border-left: 3px solid #BCAE79;
+            max-width: 90%;
+        }
+
+        .data-message ol {
+            margin-left: 20px;
+
+        }
+
+        .data-message ul {
+            margin-left: 20px;
+
+        }
+
+        .data-message ul.icon-list {
+            list-style: none;
+        }
+
+        .loading-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            transition: opacity 0.5s ease-out;
+            position: relative;
+            padding-left: 6px;
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px 6px 9px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #7a8388 0%, #677177 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 2px rgba(0, 0, 0, 0.28);
+            margin-top: 2px;
+            position: relative;
+        }
+
+        .loading::before {
+            content: "";
+            position: absolute;
+            left: -3px;
+            bottom: 4px;
+            width: 8px;
+            height: 8px;
+            background: #677177;
+            border-bottom-left-radius: 7px;
+            transform: rotate(35deg);
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #eef2f4;
+            opacity: 0.4;
+            animation: typing-ios 1.35s infinite ease-in-out;
+            transform: translateY(1px) scale(0.9);
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.16s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.32s;
+        }
+
+        @keyframes typing-ios {
+            0%,
+            60%,
+            100% {
+                transform: translateY(1px) scale(0.9);
+                opacity: 0.35;
+            }
+
+            30% {
+                transform: translateY(-1px) scale(1);
+                opacity: 1;
+            }
+        }
+
+        pre {
+            background-color: #2a2d30;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            color: #e8e8e8;
+            border-left: 2px solid #BCAE79;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 14px;
+            background-color: #2a2d30;
+        }
+
+        table th {
+            background-color: #59666C;
+            color: white;
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #444;
+        }
+
+        table td {
+            padding: 8px;
+            border: 1px solid #444;
+            color: #e8e8e8;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #333639;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .expandable-json {
+            cursor: pointer;
+            color: #BCAE79;
+            text-decoration: underline;
+            font-style: italic;
+        }
+
+        .nested-table {
+            margin-top: 8px;
+            margin-left: 15px;
+            border-left: 2px solid #BCAE79;
+        }
+
+        .expand-collapse-btn {
+            background: none;
+            border: none;
+            color: #BCAE79;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 5px;
+            margin-right: 5px;
+        }
+
+        /* List styling */
+        ul {
+            margin-left: 20px;
+            padding-left: 10px;
+        }
+
+        ul li {
+            margin-bottom: 5px;
+        }
+
+ 
+    </style>
+</head>
+
+<body>
+    <!-- Banner across the top -->
+    <div class="banner">
+        <div style="display: flex; align-items: center;">
+            AI Travel Agent
+        </div>
+    </div>
+
+    <!-- Main content area -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Left Panel (50% width) -->
+            <div class="left-panel">
+                <div class="chat-container" id="chat-container">
+                    <div class="message assistant-message">
+                        Hello! I'm your AI Travel Agent. Enter 'Help' to get a list of things I can do.
+      
+                    </div>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="message-input" placeholder="Book your vacation..."
+                        autocomplete="off" autofocus>
+                    <div class="button-group">
+                        <button id="ask-button" class="btn" title="Chat with me">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+            $(document).ready(async function () {
+            const $chatContainer = $('#chat-container');
+            const $messageInput = $('#message-input');
+
+            var client = new ChatScopesClient();
+            const openResult = await client.open("ws://localhost:8080/_chat/routes");
+            var builder = client.builder();
+            builder.messageHandler(addJsonMessage);
+            builder.objectHandler(addJsonMessage);
+            builder.thinkingHandler(console.log);
+
+            // PushPlaceholder and PopPlaceholder are used to give a visual indication
+            // of what the current conversation is.
+            builder.eventHandler('PushPlaceholder', pushPlaceholder);
+            builder.eventHandler('PopPlaceholder', popPlaceholder);
+            placeholderStack = [ "Book your vacation..." ];
+
+            session = await builder.connect();
+
+            function pushPlaceholder(data) {
+                console.log("pushPlaceholder: " + data);
+                placeholderStack.push(data);                
+                updatePlaceholder();
+            }
+
+            function popPlaceholder(data) {
+                console.log("popPlaceholder: " + data);
+                placeholderStack.pop();
+                updatePlaceholder();
+            }
+
+            function updatePlaceholder() {
+                let placeholder = placeholderStack[placeholderStack.length - 1];
+                $messageInput.attr('placeholder', placeholder);
+            }
+                        // Add clear button to chat container
+            const $clearButton = $('<button>', {
+                id: 'clear-button',
+                class: 'clear-btn',
+                html: '<i class="fas fa-trash"></i>',
+                css: { display: 'none' }
+            });
+
+            // Function to update clear button visibility
+            function updateClearButtonVisibility() {
+                if ($chatContainer.children().length > 2) {
+                    $clearButton.css('display', 'flex');
+                    $chatContainer.append($clearButton);
+                } else {
+                    $clearButton.css('display', 'none');
+                }
+            }
+
+            // Function to add a message to the chat
+            function addMessage(text, isUser) {
+                const $messageDiv = $('<div>', {
+                    class: `message ${isUser ? 'user-message' : 'assistant-message'}`
+                });
+
+                // Basic Markdown-like formatting for code blocks
+                $messageDiv.html(text.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>'));
+
+                $chatContainer.append($messageDiv);
+                $chatContainer.scrollTop($chatContainer[0].scrollHeight);
+                updateClearButtonVisibility();
+            }
+
+            // Convert a string to a JSON object if possible
+            function asJsonObject(str) {
+                try {
+                    const json = JSON.parse(str);
+                    return typeof json === 'object' && json;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // Function to create expandable JSON cells
+            function createExpandableJson(value, $parentElement) {
+                if (typeof value === 'object' && value !== null) {
+                    const $expandBtn = $('<button>', {
+                        class: 'expand-collapse-btn',
+                        text: '+'
+                    });
+
+                    const $jsonPreview = $('<span>', {
+                        class: 'expandable-json',
+                        text: Array.isArray(value) ?
+                            `Array[${value.length}]` :
+                            `Object{${Object.keys(value).length} properties}`
+                    });
+
+                    const $container = $('<div>');
+                    $container.append($expandBtn, $jsonPreview);
+
+                    const $nestedContainer = $('<div>', {
+                        class: 'nested-table',
+                        css: { display: 'none' }
+                    });
+
+                    if (Array.isArray(value)) {
+                        createArrayTable(value, $nestedContainer);
+                    } else {
+                        createObjectTable(value, $nestedContainer);
+                    }
+
+                    $container.append($nestedContainer);
+                    $parentElement.append($container);
+
+                    $expandBtn.on('click', function () {
+                        if ($nestedContainer.css('display') === 'none') {
+                            $nestedContainer.css('display', 'block');
+                            $expandBtn.text('-');
+                        } else {
+                            $nestedContainer.css('display', 'none');
+                            $expandBtn.text('+');
+                        }
+                    });
+                } else {
+                    let jsonValue;
+                    if (typeof value === 'string' && ((jsonValue = asJsonObject(value)) !== null)) {
+                        try {
+                            createExpandableJson(jsonValue, $parentElement);
+                        } catch (e) {
+                            $parentElement.text(String(value));
+                        }
+                    } else {
+                        $parentElement.text(value !== null ? value && String(value) || '' : 'null');
+                    }
+                }
+            }
+
+            // Function to create a table for an array
+            function createArrayTable(arr, $container) {
+                if (arr.length === 0) {
+                    const $emptyMsg = $('<div>', {
+                        text: '[empty array]',
+                        css: {
+                            fontStyle: 'italic',
+                            color: '#aaa'
+                        }
+                    });
+                    $container.append($emptyMsg);
+                    return;
+                }
+
+                const $tableContainer = $('<div>', { class: 'table-container' });
+                const $table = $('<table>');
+
+                // Determine if we need a complex table or a simple list
+                let isComplexArray = false;
+                for (const item of arr) {
+                    if (typeof item === 'object' && item !== null) {
+                        isComplexArray = true;
+                        break;
+                    }
+                }
+
+                if (isComplexArray) {
+                    // Create header with all possible keys
+                    const keys = new Set();
+                    $.each(arr, function (_, item) {
+                        if (typeof item === 'object' && item !== null) {
+                            $.each(item, function (key) {
+                                keys.add(key);
+                            });
+                        }
+                    });
+
+                    const $thead = $('<thead>');
+                    const $headerRow = $('<tr>');
+
+                    keys.forEach(key => {
+                        const $th = $('<th>', { text: capitalize(key) });
+                        $headerRow.append($th);
+                    });
+
+                    $thead.append($headerRow);
+                    $table.append($thead);
+
+                    // Create table body
+                    const $tbody = $('<tbody>');
+
+                    $.each(arr, function (_, item) {
+                        if (typeof item === 'object' && item !== null) {
+                            const $row = $('<tr>');
+
+                            keys.forEach(key => {
+                                const $td = $('<td>');
+                                const value = item[key];
+                                createExpandableJson(value, $td);
+                                $row.append($td);
+                            });
+
+                            $tbody.append($row);
+                        }
+                    });
+
+                    $table.append($tbody);
+                } else {
+                    // Simple list for primitive values
+                    const $tbody = $('<tbody>');
+
+                    $.each(arr, function (index, item) {
+                        const $row = $('<tr>');
+
+                        const $indexCell = $('<td>', {
+                            text: index,
+                            css: { width: '50px' }
+                        });
+                        $row.append($indexCell);
+
+                        const $valueCell = $('<td>', {
+                            text: item !== null ? String(item) : 'null'
+                        });
+                        $row.append($valueCell);
+
+                        $tbody.append($row);
+                    });
+
+                    const $thead = $('<thead>');
+                    const $headerRow = $('<tr>');
+
+                    $headerRow.append(
+                        $('<th>', { text: 'Index' }),
+                        $('<th>', { text: 'Value' })
+                    );
+
+                    $thead.append($headerRow);
+                    $table.append($thead, $tbody);
+                }
+
+                $tableContainer.append($table);
+                $container.append($tableContainer);
+            }
+
+            // Function to create a table for an object
+            function createObjectTable(obj, $container) {
+                const $tableContainer = $('<div>', { class: 'table-container' });
+                const $table = $('<table>');
+                const $thead = $('<thead>');
+                const $headerRow = $('<tr>');
+
+                $headerRow.append(
+                    $('<th>', { text: 'Property' }),
+                    $('<th>', { text: 'Value' })
+                );
+
+                $thead.append($headerRow);
+                $table.append($thead);
+
+                const $tbody = $('<tbody>');
+
+                $.each(obj, function (key, value) {
+                    const $row = $('<tr>');
+
+                    const $keyCell = $('<td>', {
+                        text: key,
+                        css: { width: '30%' }
+                    });
+                    $row.append($keyCell);
+
+                    const $valueCell = $('<td>');
+                    createExpandableJson(value, $valueCell);
+                    $row.append($valueCell);
+
+                    $tbody.append($row);
+                });
+
+                $table.append($tbody);
+                $tableContainer.append($table);
+                $container.append($tableContainer);
+            }
+
+            function addJsonMessage(data) {
+                const $messageDiv = $('<div>', { class: 'message data-message' });
+
+                if (Array.isArray(data)) {
+                    const $container = $('<div>');
+                    createArrayTable(data, $container);
+                    $messageDiv.append($container);
+                } else if (typeof data === 'object' && data !== null) {
+                    const $container = $('<div>');
+                    createObjectTable(data, $container);
+                    $messageDiv.append($container);
+                } else if (typeof data === 'string') {
+                    $messageDiv.html(data);
+                } else {
+                    // Not an array or object
+                    $messageDiv.text(data);
+                }
+
+                $chatContainer.append($messageDiv);
+                $chatContainer.scrollTop($chatContainer[0].scrollHeight);
+                updateClearButtonVisibility();
+            }
+
+
+            // Show and hide loading indicator
+            function showLoading() {
+                const $loadingDiv = $('<div>', {
+                    class: 'loading-container',
+                    id: 'loading-message',
+                    html: '<div class="loading"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>'
+                });
+                const $clearButtonInChat = $chatContainer.children('#clear-button');
+                if ($clearButtonInChat.length) {
+                    $loadingDiv.insertBefore($clearButtonInChat);
+                } else {
+                    $chatContainer.append($loadingDiv);
+                }
+                $chatContainer.scrollTop($chatContainer[0].scrollHeight);
+            }
+
+            function hideLoading() {
+                const $loadingMessage = $('#loading-message');
+                if ($loadingMessage.length) {
+                    $loadingMessage.css({
+                        position: 'absolute',
+                        transition: 'opacity 0.5s',
+                        opacity: '0'
+                    });
+
+                    // Remove completely after animation
+                    setTimeout(() => {
+                        $loadingMessage.remove();
+                    }, 500);
+                }
+            }
+
+            function capitalize(str) {
+                const splitStr = str.toLowerCase().split(' ');
+                for (let i = 0; i < splitStr.length; i++) {
+                    splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].slice(1);
+                }
+                return splitStr.join(' ');
+            }
+
+            async function handleMessage(message) {
+                console.log("handleMessage: " + message);
+                addJsonMessage(message);
+                hideLoading();
+            }
+
+            // Send a message to the Ask API
+            async function sendAskMessage(message) {
+                console.log("Sending message: " + message);
+                if (message.trim() === '') return;
+
+                addMessage(message, true);
+                $messageInput.val('');
+                showLoading();
+
+
+                try {
+                    await session.chat(message);
+
+                    hideLoading();
+                } catch (error) {
+                    hideLoading();
+                    addMessage(`Sorry, there was an error processing your request: ${error.statusText || error.message}`, false);
+                    console.error('Error:', error);
+                }
+            }
+
+            // Clear chat history
+            async function clearChat() {
+                try {
+                    chatContext = null;
+                    // Keep only the initial greeting
+                    while ($chatContainer.children().length > 1) {
+                        $chatContainer.children().last().remove();
+                    }
+
+                    updateClearButtonVisibility();
+                } catch (error) {
+                    console.error('Error clearing chat:', error);
+                }
+            }
+
+            // Event listeners
+            $('#ask-button').on('click', function () {
+                sendAskMessage($messageInput.val());
+            });
+
+            // Event listeners
+            $('#clear-button').on('click', function () {
+                clearChat()
+            });
+
+            $messageInput.on('keypress', function (e) {
+                if (e.which === 13) { // Enter key
+                    // Default to "Ask" when pressing Enter
+                    sendAskMessage($messageInput.val());
+                }
+            });
+
+            $clearButton.on('click', clearChat);
+
+            // Initialize
+            updateClearButtonVisibility();
+
+
+        });
+    </script>
+</body>
+
+</html>

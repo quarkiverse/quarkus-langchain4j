@@ -33,5 +33,6 @@ public record DeclarativeAiServiceCreateInfo(
         Integer maxSequentialToolInvocations,
         Integer maxToolCallsPerResponse,
         boolean allowContinuousForcedToolCalling,
-        boolean shouldThrowExceptionOnEventError) {
+        boolean shouldThrowExceptionOnEventError,
+        String defaultMemoryIdProviderClassName) {
 }
