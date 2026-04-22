@@ -13,9 +13,6 @@ import java.util.function.Supplier;
 
 import javax.net.ssl.SSLContext;
 
-import jakarta.enterprise.inject.Instance;
-import jakarta.enterprise.util.TypeLiteral;
-
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpClientListener;
@@ -27,7 +24,6 @@ import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.mcp.registryclient.DefaultMcpRegistryClient;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
-import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.*;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
@@ -46,9 +42,6 @@ import io.vertx.core.http.HttpClientOptions;
 
 @Recorder
 public class McpRecorder {
-
-    private static final TypeLiteral<Instance<Tracer>> TRACER_TYPE_LITERAL = new TypeLiteral<>() {
-    };
 
     public static Map<String, LocalLaunchParams> claudeConfigContents = Collections.emptyMap();
 
@@ -203,8 +196,7 @@ public class McpRecorder {
                     clients.add(context.getInjectedReference(McpClient.class, qualifier));
                 }
                 boolean exposeResourcesAsTools = mcpRuntimeConfiguration.getValue().exposeResourcesAsTools().orElse(false);
-                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL),
-                        exposeResourcesAsTools);
+                return new QuarkusMcpToolProvider(clients, exposeResourcesAsTools);
             }
         };
     }
