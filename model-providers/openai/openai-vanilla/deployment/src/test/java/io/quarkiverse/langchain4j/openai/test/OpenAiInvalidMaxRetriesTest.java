@@ -17,8 +17,11 @@ public class OpenAiInvalidMaxRetriesTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.openai.api-key", "somekey")
             .overrideConfigKey("quarkus.langchain4j.openai.max-retries", "0")
-            .assertException(t -> assertThat(t).rootCause()
-                    .hasMessageContaining("max-retries must be greater than zero"));
+            .assertException(t -> {
+                assertThat(t)
+                        .isInstanceOf(RuntimeException.class)
+                        .hasMessageContaining("max-retries must be greater than zero");
+            });
 
     @Test
     void test() {
