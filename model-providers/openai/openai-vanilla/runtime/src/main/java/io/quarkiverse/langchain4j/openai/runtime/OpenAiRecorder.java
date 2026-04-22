@@ -75,6 +75,9 @@ public class OpenAiRecorder {
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
+            }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             var builder = (QuarkusOpenAiChatModelBuilderFactory.Builder) OpenAiChatModel.builder();
             builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
@@ -206,6 +209,9 @@ public class OpenAiRecorder {
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
+            }
             EmbeddingModelConfig embeddingModelConfig = openAiConfig.embeddingModel();
             var builder = (QuarkusOpenAiEmbeddingModelBuilderFactory.Builder) OpenAiEmbeddingModel.builder();
             builder
@@ -254,6 +260,9 @@ public class OpenAiRecorder {
             String apiKey = openAiConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+            }
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
             ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
             var builder = (QuarkusOpenAiModerationModelBuilderFactory.Builder) OpenAiModerationModel.builder();
@@ -372,6 +381,12 @@ public class OpenAiRecorder {
 
     private ConfigValidationException.Problem[] createApiKeyConfigProblems(String configName) {
         return createConfigProblems("api-key", configName);
+    }
+
+    private ConfigValidationException.Problem[] createMaxRetriesConfigProblems(String configName) {
+        return new ConfigValidationException.Problem[] { new ConfigValidationException.Problem(String.format(
+                "SRCFG00014: The config property quarkus.langchain4j.openai%smax-retries must be greater than zero",
+                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."))) };
     }
 
     private ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {

@@ -64,6 +64,10 @@ public class AnthropicRecorder {
                 throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
+            if (chatModelConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblem(configName));
+            }
+
             var builder = AnthropicChatModel.builder()
                     .baseUrl(anthropicConfig.baseUrl())
                     .apiKey(apiKey)
@@ -347,6 +351,12 @@ public class AnthropicRecorder {
 
     private static ConfigValidationException.Problem[] createApiKeyConfigProblem(String configName) {
         return createConfigProblems("api-key", configName);
+    }
+
+    private static ConfigValidationException.Problem[] createMaxRetriesConfigProblem(String configName) {
+        return new ConfigValidationException.Problem[] { new ConfigValidationException.Problem(
+                "SRCFG00014: The config property quarkus.langchain4j.anthropic%schat-model.max-retries must be greater than zero"
+                        .formatted(NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."))) };
     }
 
     private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
