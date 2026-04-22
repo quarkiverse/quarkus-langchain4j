@@ -8,12 +8,22 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
+import dev.langchain4j.model.mistralai.MistralAiChatModel;
+import dev.langchain4j.model.mistralai.MistralAiEmbeddingModel;
+import dev.langchain4j.model.mistralai.MistralAiModerationModel;
+import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
@@ -40,6 +50,18 @@ public class MistralAiProcessor {
 
     private static final String FEATURE = "langchain4j-mistralai";
     private static final String PROVIDER = "mistralai";
+
+    private static final DotName MISTRAL_CHAT_MODEL_BUILDER = DotName
+            .createSimple(MistralAiChatModel.MistralAiChatModelBuilder.class);
+    private static final DotName MISTRAL_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(MistralAiStreamingChatModel.MistralAiStreamingChatModelBuilder.class);
+    private static final DotName MISTRAL_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(MistralAiEmbeddingModel.MistralAiEmbeddingModelBuilder.class);
+    private static final DotName MISTRAL_MODERATION_MODEL_BUILDER = DotName
+            .createSimple(MistralAiModerationModel.Builder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -91,7 +113,11 @@ public class MistralAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(MISTRAL_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
@@ -100,7 +126,11 @@ public class MistralAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(MISTRAL_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
@@ -115,7 +145,11 @@ public class MistralAiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(MISTRAL_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -129,7 +163,11 @@ public class MistralAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.moderationModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(MISTRAL_MODERATION_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.moderationModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

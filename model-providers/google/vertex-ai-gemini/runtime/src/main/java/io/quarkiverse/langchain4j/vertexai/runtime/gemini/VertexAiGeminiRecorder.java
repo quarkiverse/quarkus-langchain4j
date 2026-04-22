@@ -7,9 +7,9 @@ import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -20,6 +20,7 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
@@ -33,6 +34,12 @@ public class VertexAiGeminiRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<VertexAiGeminiChatLanguageModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<VertexAiGeminiStreamingChatLanguageModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<VertexAiGeminiEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private final RuntimeValue<LangChain4jVertexAiGeminiConfig> runtimeConfig;
 
@@ -40,7 +47,7 @@ public class VertexAiGeminiRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         var vertexAiConfig = correspondingVertexAiConfig(configName);
 
         if (vertexAiConfig.enableIntegration()) {
@@ -78,9 +85,22 @@ public class VertexAiGeminiRecorder {
                 builder.taskType(embeddingModelConfig.taskType().get());
             }
 
-            return builder::build;
+            return new Function<>() {
+                @Override
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                }
+            };
         } else {
-            return DisabledEmbeddingModel::new;
+            return new Function<>() {
+                @Override
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    return new DisabledEmbeddingModel();
+                }
+            };
         }
     }
 
@@ -134,6 +154,9 @@ public class VertexAiGeminiRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -199,6 +222,9 @@ public class VertexAiGeminiRecorder {
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };

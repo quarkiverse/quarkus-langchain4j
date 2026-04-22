@@ -1,6 +1,10 @@
 package io.quarkiverse.langchain4j.jlama.runtime;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
+
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
@@ -8,6 +12,7 @@ import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.jlama.JlamaChatModel;
 import io.quarkiverse.langchain4j.jlama.JlamaEmbeddingModel;
 import io.quarkiverse.langchain4j.jlama.JlamaStreamingChatModel;
@@ -15,11 +20,19 @@ import io.quarkiverse.langchain4j.jlama.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaConfig;
 import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class JlamaAiRecorder {
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<JlamaChatModel.JlamaChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<JlamaStreamingChatModel.JlamaStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<JlamaEmbeddingModel.JlamaEmbeddingModelBuilder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
     private final RuntimeValue<LangChain4jJlamaConfig> runtimeConfig;
     private final RuntimeValue<LangChain4jJlamaFixedRuntimeConfig> fixedRuntimeConfig;
 
@@ -29,7 +42,7 @@ public class JlamaAiRecorder {
         this.fixedRuntimeConfig = fixedRuntimeConfig;
     }
 
-    public Supplier<ChatModel> chatModel(String configName) {
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(configName);
         LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
                 configName);
@@ -48,23 +61,26 @@ public class JlamaAiRecorder {
             chatModelConfig.temperature().ifPresent(temp -> builder.temperature((float) temp));
             chatModelConfig.maxTokens().ifPresent(builder::maxTokens);
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
         LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(configName);
         LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
                 configName);
@@ -77,23 +93,26 @@ public class JlamaAiRecorder {
 
             chatModelConfig.temperature().ifPresent(temp -> builder.temperature((float) temp));
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatModel get() {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatModel get() {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     return new DisabledStreamingChatModel();
                 }
             };
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(configName);
         LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
                 configName);
@@ -103,16 +122,19 @@ public class JlamaAiRecorder {
                     .modelName(jlamaFixedRuntimeConfig.embeddingModel().modelName())
                     .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };

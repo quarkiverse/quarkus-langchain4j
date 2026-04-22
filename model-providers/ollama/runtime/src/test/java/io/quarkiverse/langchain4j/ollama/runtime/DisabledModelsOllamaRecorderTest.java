@@ -38,7 +38,7 @@ class DisabledModelsOllamaRecorderTest {
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }

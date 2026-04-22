@@ -5,13 +5,20 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MOD
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.vertexai.runtime.VertexAiChatLanguageModel;
 import io.quarkiverse.langchain4j.vertexai.runtime.VertexAiRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -29,6 +36,11 @@ public class VertexAiProcessor {
 
     private static final String FEATURE = "langchain4j-vertexai";
     private static final String PROVIDER = "vertexai";
+
+    private static final DotName VERTEX_AI_CHAT_MODEL_BUILDER = DotName
+            .createSimple(VertexAiChatLanguageModel.Builder.class);
+    private static final AnnotationInstance ANY = AnnotationInstance
+            .builder(DotName.createSimple(Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -56,7 +68,11 @@ public class VertexAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(VERTEX_AI_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.chatModel(configName));
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
