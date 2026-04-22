@@ -5,7 +5,7 @@
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-parent</artifactId>
     <relativePath>../../../pom.xml</relativePath>
-    <version>999-SNAPSHOT</version>
+    <version>1.9.1</version>
   </parent>
   <artifactId>quarkus-langchain4j-chat-scopes</artifactId>
   <name>Quarkus LangChain4j - Chat Scopes - Runtime</name>
