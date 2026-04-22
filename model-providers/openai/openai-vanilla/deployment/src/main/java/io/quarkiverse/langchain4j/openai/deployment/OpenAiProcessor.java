@@ -9,14 +9,20 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
+import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.openai.spi.OpenAiChatModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiEmbeddingModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiModerationModelBuilderFactory;
@@ -33,6 +39,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBui
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
@@ -52,6 +59,20 @@ public class OpenAiProcessor {
     private static final String FEATURE = "langchain4j-openai";
     private static final String PROVIDER = "openai";
     private static final String OPEN_AI_EMBEDDING_DESERIALIZER = "dev.langchain4j.model.openai.internal.embedding.OpenAiEmbeddingDeserializer";
+
+    private static final DotName OPENAI_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiChatModel.OpenAiChatModelBuilder.class);
+    private static final DotName OPENAI_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder.class);
+    private static final DotName OPENAI_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder.class);
+    private static final DotName OPENAI_MODERATION_MODEL_BUILDER = DotName
+            .createSimple(OpenAiModerationModel.OpenAiModerationModelBuilder.class);
+    private static final DotName OPENAI_IMAGE_MODEL_BUILDER = DotName
+            .createSimple(QuarkusOpenAiImageModel.Builder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -98,6 +119,10 @@ public class OpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
@@ -109,6 +134,10 @@ public class OpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
@@ -124,7 +153,11 @@ public class OpenAiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -138,7 +171,11 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.moderationModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_MODERATION_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.moderationModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -152,7 +189,11 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.imageModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_IMAGE_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.imageModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

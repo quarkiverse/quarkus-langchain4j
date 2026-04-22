@@ -16,15 +16,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.apache.commons.io.file.PathUtils;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
+import io.quarkiverse.langchain4j.llama3.Llama3ChatModel;
 import io.quarkiverse.langchain4j.llama3.Llama3ModelRegistry;
+import io.quarkiverse.langchain4j.llama3.Llama3StreamingChatModel;
 import io.quarkiverse.langchain4j.llama3.ProgressReporter;
 import io.quarkiverse.langchain4j.llama3.runtime.Llama3PreloadRecorder;
 import io.quarkiverse.langchain4j.llama3.runtime.Llama3Recorder;
@@ -62,6 +70,12 @@ public class Llama3Processor {
     private static final String FEATURE = "langchain4j-llama3-java";
     private static final String PROVIDER = "llama3-java";
 
+    private static final DotName LLAMA3_CHAT_MODEL_BUILDER = DotName.createSimple(Llama3ChatModel.Builder.class);
+    private static final DotName LLAMA3_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(Llama3StreamingChatModel.Builder.class);
+    private static final AnnotationInstance ANY = AnnotationInstance
+            .builder(DotName.createSimple(Any.class)).build();
+
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
@@ -98,7 +112,11 @@ public class Llama3Processor {
                 String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem.configure(CHAT_MODEL).setRuntimeInit().defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(LLAMA3_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
@@ -107,7 +125,12 @@ public class Llama3Processor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(LLAMA3_STREAMING_CHAT_MODEL_BUILDER) },
+                                        null) },
+                                null), ANY)
+                        .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }

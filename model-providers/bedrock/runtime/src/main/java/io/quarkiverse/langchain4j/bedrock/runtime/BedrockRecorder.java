@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -27,6 +27,7 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.AwsClientConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.GuardrailConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.LangChain4jBedrockConfig;
@@ -48,6 +49,14 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 public class BedrockRecorder {
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockStreamingChatModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockCohereEmbeddingModel.Builder>>> COHERE_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockTitanEmbeddingModel.BedrockTitanEmbeddingModelBuilder>>> TITAN_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private final RuntimeValue<LangChain4jConfig> rootRuntimeConfig;
@@ -116,6 +125,9 @@ public class BedrockRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -202,6 +214,9 @@ public class BedrockRecorder {
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -215,7 +230,7 @@ public class BedrockRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(final String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(final String configName) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
@@ -230,7 +245,7 @@ public class BedrockRecorder {
 
             var modelId = modelConfig.modelId();
 
-            Supplier<EmbeddingModel> supplier;
+            Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> function;
             if (modelId.contains("cohere")) {
                 var builder = BedrockCohereEmbeddingModel.builder()
                         .model(modelId)
@@ -244,9 +259,13 @@ public class BedrockRecorder {
                     builder.truncate(modelConfig.cohere().truncate().get());
                 }
 
-                supplier = new Supplier<EmbeddingModel>() {
+                function = new Function<>() {
                     @Override
-                    public EmbeddingModel get() {
+                    public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(COHERE_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
                         return builder.build();
                     }
                 };
@@ -263,19 +282,23 @@ public class BedrockRecorder {
                     builder.normalize(modelConfig.titan().normalize().get());
                 }
 
-                supplier = new Supplier<EmbeddingModel>() {
+                function = new Function<>() {
                     @Override
-                    public EmbeddingModel get() {
+                    public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(TITAN_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
                         return builder.build();
                     }
                 };
             }
 
-            return supplier;
+            return function;
         } else {
-            return new Supplier<EmbeddingModel>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };
