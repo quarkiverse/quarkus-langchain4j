@@ -22,6 +22,7 @@
         <module>email-a-poem</module>
         <module>email-a-poem-kotlin</module>
         <module>fraud-detection</module>
+        <module>image-to-plantuml</module>
         <module>mcp-tools</module>
         <module>mcp-client-server</module>
         <module>movie-similarity-search</module>
