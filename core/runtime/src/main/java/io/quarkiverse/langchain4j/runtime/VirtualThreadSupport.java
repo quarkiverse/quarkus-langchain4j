@@ -8,6 +8,13 @@ import java.lang.invoke.MethodType;
  * Small compatibility helper for virtual-thread detection on JDKs that compile at release 17 but run
  * on 21+. {@code Thread#isVirtual()} is not present in the Java 17 API, so a direct call does not
  * compile; at runtime the method is available whenever the JVM supports virtual threads.
+ *
+ * <p>
+ * Quarkus uses the same {@link MethodHandle}-based lookup internally (see
+ * {@code io.quarkus.vertx.utils.AppendBuffer#isVirtualThread}), but does not expose the helper as a
+ * public API. This class mirrors that pattern so the rest of the extension does not have to
+ * duplicate the reflective boilerplate.
+ * </p>
  */
 public final class VirtualThreadSupport {
 
