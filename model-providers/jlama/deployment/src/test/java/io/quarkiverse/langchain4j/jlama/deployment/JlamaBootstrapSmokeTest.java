@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Regression test for https://github.com/quarkiverse/quarkus-langchain4j/issues/TODO
+ * Regression test for https://github.com/quarkiverse/quarkus-langchain4j/issues/2375
  * <p>
  * The devMode {@code jvmOptions} block in runtime/pom.xml previously included
  * {@code enable-native-access=ALL-UNNAMED}. On Quarkus 3.32+, the new
