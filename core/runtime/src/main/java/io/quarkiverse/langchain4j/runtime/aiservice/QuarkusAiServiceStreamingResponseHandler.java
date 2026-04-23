@@ -10,8 +10,11 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+
+import jakarta.enterprise.inject.spi.CDI;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
@@ -56,6 +59,11 @@ import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
+import io.quarkiverse.langchain4j.runtime.VirtualThreadSupport;
+import io.quarkiverse.langchain4j.runtime.config.ToolsConfig;
+import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
+import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
+import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.vertx.core.Context;
 
 /**
@@ -314,7 +322,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         return streamingHandle;
     }
 
-    private void executeTools(Runnable runnable) {
+    private void executeTools(Runnable runnable, List<ToolExecutionRequest> toolExecutionRequests) {
         Runnable safeRunnable = new Runnable() {
             @Override
             public void run() {
@@ -326,11 +334,137 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             }
         };
 
-        if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
+        ToolsDispatcher dispatcher = toolsDispatcher();
+        if (shouldDispatchToVirtualThread(toolExecutionRequests, dispatcher)) {
+            if (VirtualThreadSupport.isCurrentThreadVirtual()) {
+                // Already on a virtual thread, run inline. The isVirtual() guard in
+                // QuarkusToolExecutor keeps per-tool dispatch from re-submitting.
+                safeRunnable.run();
+            } else {
+                executeOnVirtualThread(safeRunnable, dispatcher);
+            }
+        } else if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
             executeOnWorkerThread(safeRunnable, false);
         } else {
             safeRunnable.run();
         }
+    }
+
+    private static ToolsDispatcher toolsDispatcher() {
+        try {
+            return CDI.current().select(ToolsDispatcher.class).get();
+        } catch (RuntimeException ignored) {
+            // CDI not available (e.g. bootstrap paths where the container is not yet up);
+            // fall back to defaults.
+            return ToolsDispatcher.DEFAULT;
+        }
+    }
+
+    private boolean shouldDispatchToVirtualThread(List<ToolExecutionRequest> toolExecutionRequests,
+            ToolsDispatcher dispatcher) {
+        switch (dispatcher.dispatchMode()) {
+            case WORKER:
+                return false;
+            case VIRTUAL_THREAD:
+                return true;
+            case AUTO:
+            default:
+                BatchExecutionMode mode = determineBatchMode(toolExecutionRequests);
+                switch (mode) {
+                    case ALL_VIRTUAL_THREAD:
+                        return true;
+                    case MIXED:
+                        logMixedBatch(dispatcher.mixedBatchLogLevel());
+                        return false;
+                    case NONE_VIRTUAL_THREAD:
+                    default:
+                        return false;
+                }
+        }
+    }
+
+    private BatchExecutionMode determineBatchMode(List<ToolExecutionRequest> toolExecutionRequests) {
+        if (toolExecutionRequests == null || toolExecutionRequests.isEmpty()) {
+            return BatchExecutionMode.NONE_VIRTUAL_THREAD;
+        }
+        boolean anyVirtual = false;
+        boolean anyOther = false;
+        for (ToolExecutionRequest request : toolExecutionRequests) {
+            ToolExecutor toolExecutor = toolExecutors.get(request.name());
+            if (toolExecutor instanceof QuarkusToolExecutor quarkusToolExecutor
+                    && quarkusToolExecutor.getMethodCreateInfo() != null
+                    && quarkusToolExecutor.getMethodCreateInfo()
+                            .executionModel() == ToolMethodCreateInfo.ExecutionModel.VIRTUAL_THREAD) {
+                anyVirtual = true;
+            } else {
+                // Unknown executors (e.g. MCP) are treated as non-virtual-thread.
+                anyOther = true;
+            }
+        }
+        if (anyVirtual && anyOther) {
+            return BatchExecutionMode.MIXED;
+        }
+        if (anyVirtual) {
+            return BatchExecutionMode.ALL_VIRTUAL_THREAD;
+        }
+        return BatchExecutionMode.NONE_VIRTUAL_THREAD;
+    }
+
+    private void logMixedBatch(ToolsConfig.MixedBatchLogLevel level) {
+        String message = "Mixed tool execution models in a single batch: at least one @RunOnVirtualThread tool is "
+                + "scheduled alongside a blocking or non-blocking tool. Falling back to worker-thread dispatch for the "
+                + "whole batch. Annotate all tools in this batch with @RunOnVirtualThread to enable virtual-thread "
+                + "dispatch, or set quarkus.langchain4j.tools.mixed-batch-log-level=off to silence this warning.";
+        switch (level) {
+            case WARN:
+                log.warn(message);
+                break;
+            case INFO:
+                log.info(message);
+                break;
+            case DEBUG:
+                log.debug(message);
+                break;
+            case OFF:
+            default:
+                // no-op
+                break;
+        }
+    }
+
+    private void executeOnVirtualThread(Runnable runnable, ToolsDispatcher dispatcher) {
+        VirtualThreadsRecorder.getCurrent().execute(new Runnable() {
+            @Override
+            public void run() {
+                Semaphore semaphore = dispatcher.semaphore();
+                boolean acquired = false;
+                try {
+                    if (semaphore != null) {
+                        semaphore.acquire();
+                        acquired = true;
+                    }
+                    runnable.run();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    onError(e);
+                } catch (Throwable t) {
+                    // Defensive: safeRunnable already routes Exception to onError, but catch
+                    // Throwable here so nothing escapes into the virtual-thread executor's
+                    // uncaught-exception handler silently.
+                    onError(t);
+                } finally {
+                    if (acquired) {
+                        semaphore.release();
+                    }
+                }
+            }
+        });
+    }
+
+    private enum BatchExecutionMode {
+        ALL_VIRTUAL_THREAD,
+        NONE_VIRTUAL_THREAD,
+        MIXED
     }
 
     private void execute(Runnable runnable) {
@@ -561,7 +695,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     fireRequestIssuedEvent(chatRequest);
                     effectiveStreamingChatModel.chat(chatRequest, handler);
                 }
-            });
+            }, aiMessage.toolExecutionRequests());
         } else {
             if (completeResponseHandler != null) {
                 Runnable runnable = new Runnable() {

@@ -20,6 +20,7 @@ import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
+import io.quarkiverse.langchain4j.runtime.VirtualThreadSupport;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.mutiny.Uni;
@@ -88,6 +89,11 @@ public class QuarkusToolExecutor implements ToolExecutor {
             case VIRTUAL_THREAD:
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
                     throw new BlockingToolNotAllowedException("Cannot execute virtual thread tools on event loop thread");
+                }
+                if (VirtualThreadSupport.isCurrentThreadVirtual()) {
+                    // Already on a virtual thread (e.g. dispatched there by the streaming handler):
+                    // invoke directly instead of submitting to yet another virtual thread.
+                    return invoke(params, invokerInstance);
                 }
                 try {
                     return VirtualThreadsRecorder.getCurrent().submit(() -> invoke(params, invokerInstance))

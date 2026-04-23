@@ -236,9 +236,9 @@ public class ToolExecutionModelTest {
             }
         }).get();
 
-        // At the moment, we create a virtual thread every time.
-        assertThat(r).contains(uuid, "quarkus-virtual-thread-")
-                .doesNotContain(caller.get());
+        // When the caller is already running on a virtual thread, the tool executes on that
+        // same virtual thread instead of being re-dispatched onto a new one.
+        assertThat(r).contains(uuid, "quarkus-virtual-thread-", caller.get());
     }
 
     @Test

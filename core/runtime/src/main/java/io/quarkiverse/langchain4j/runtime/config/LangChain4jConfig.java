@@ -57,4 +57,9 @@ public interface LangChain4jConfig {
      * AI Service configuration
      */
     AiServiceConfig aiService();
+
+    /**
+     * Tool execution configuration
+     */
+    ToolsConfig tools();
 }
