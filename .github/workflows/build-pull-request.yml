@@ -134,11 +134,8 @@ jobs:
           STATUS=$(git status --porcelain docs/modules/ROOT/pages/includes/)
           if [ -n "$STATUS" ]; then
             echo -e "Generated documentation is not up to date."
-            echo ""
-            echo "The following generated files were changed or added and must be committed:"
-            echo ""
-            echo "$STATUS" | sed 's/^?? / /; s/^ M / /; s/^/* /'
-            echo ""
+            echo "'git status' output after rebuilding the docs:"
+            git status
             echo "To fix this (make sure you use JDK 22+ so that all modules are activated):"
             echo "  1. Run: mvn clean install"
             echo "  2. Commit the generated documentation files"
