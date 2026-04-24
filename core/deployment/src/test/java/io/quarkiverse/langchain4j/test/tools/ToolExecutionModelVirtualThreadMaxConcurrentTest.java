@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -37,7 +38,9 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Multi;
 
@@ -73,6 +76,31 @@ public class ToolExecutionModelVirtualThreadMaxConcurrentTest {
         }
         for (CompletionStage<List<String>> stage : stages) {
             stage.toCompletableFuture().join();
+        }
+        assertThat(SlowVirtualTool.peakInFlight.get()).isLessThanOrEqualTo(MAX_CONCURRENT);
+        assertThat(SlowVirtualTool.peakInFlight.get()).isGreaterThan(0);
+    }
+
+    @Test
+    @EnabledForJreRange(min = JRE.JAVA_21)
+    void maxConcurrentBoundsInFlightDispatchesWhenCallerAlreadyRunsOnVirtualThread() throws Exception {
+        SlowVirtualTool.reset();
+        List<Future<List<String>>> futures = new ArrayList<>();
+        for (int i = 0; i < CALLERS; i++) {
+            String uuid = UUID.randomUUID().toString();
+            futures.add(VirtualThreadsRecorder.getCurrent().submit(() -> {
+                Arc.container().requestContext().activate();
+                try {
+                    return aiService.slowVirtualTool("mem-" + uuid, "slowVirtualTool - " + uuid)
+                            .collect().asList()
+                            .await().indefinitely();
+                } finally {
+                    Arc.container().requestContext().deactivate();
+                }
+            }));
+        }
+        for (Future<List<String>> future : futures) {
+            future.get();
         }
         assertThat(SlowVirtualTool.peakInFlight.get()).isLessThanOrEqualTo(MAX_CONCURRENT);
         assertThat(SlowVirtualTool.peakInFlight.get()).isGreaterThan(0);

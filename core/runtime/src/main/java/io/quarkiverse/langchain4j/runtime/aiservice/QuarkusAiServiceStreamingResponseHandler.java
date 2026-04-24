@@ -5,6 +5,7 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static java.util.Objects.nonNull;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -336,13 +337,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
         ToolsDispatcher dispatcher = toolsDispatcher();
         if (shouldDispatchToVirtualThread(toolExecutionRequests, dispatcher)) {
-            if (VirtualThreadSupport.isCurrentThreadVirtual()) {
-                // Already on a virtual thread, run inline. The isVirtual() guard in
-                // QuarkusToolExecutor keeps per-tool dispatch from re-submitting.
-                safeRunnable.run();
-            } else {
-                executeOnVirtualThread(safeRunnable, dispatcher);
-            }
+            executeWithBatchVirtualThreadDispatch(safeRunnable, dispatcher);
         } else if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
             executeOnWorkerThread(safeRunnable, false);
         } else {
@@ -363,18 +358,16 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private boolean shouldDispatchToVirtualThread(List<ToolExecutionRequest> toolExecutionRequests,
             ToolsDispatcher dispatcher) {
         switch (dispatcher.dispatchMode()) {
-            case WORKER:
+            case LEGACY:
                 return false;
-            case VIRTUAL_THREAD:
-                return true;
             case AUTO:
             default:
-                BatchExecutionMode mode = determineBatchMode(toolExecutionRequests);
-                switch (mode) {
+                BatchDispatchDecision decision = determineBatchDispatchDecision(toolExecutionRequests);
+                switch (decision.mode()) {
                     case ALL_VIRTUAL_THREAD:
                         return true;
                     case MIXED:
-                        logMixedBatch(dispatcher.mixedBatchLogLevel());
+                        logMixedBatch(dispatcher.mixedBatchLogLevel(), decision);
                         return false;
                     case NONE_VIRTUAL_THREAD:
                     default:
@@ -383,14 +376,18 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    private BatchExecutionMode determineBatchMode(List<ToolExecutionRequest> toolExecutionRequests) {
+    private BatchDispatchDecision determineBatchDispatchDecision(List<ToolExecutionRequest> toolExecutionRequests) {
         if (toolExecutionRequests == null || toolExecutionRequests.isEmpty()) {
-            return BatchExecutionMode.NONE_VIRTUAL_THREAD;
+            return new BatchDispatchDecision(BatchExecutionMode.NONE_VIRTUAL_THREAD, List.of(), List.of());
         }
         boolean anyVirtual = false;
         boolean anyOther = false;
+        LinkedHashSet<String> requestedToolNames = new LinkedHashSet<>();
+        LinkedHashSet<String> nonVirtualThreadToolNames = new LinkedHashSet<>();
         for (ToolExecutionRequest request : toolExecutionRequests) {
-            ToolExecutor toolExecutor = toolExecutors.get(request.name());
+            String toolName = request.name();
+            requestedToolNames.add(toolName);
+            ToolExecutor toolExecutor = toolExecutors.get(toolName);
             if (toolExecutor instanceof QuarkusToolExecutor quarkusToolExecutor
                     && quarkusToolExecutor.getMethodCreateInfo() != null
                     && quarkusToolExecutor.getMethodCreateInfo()
@@ -399,22 +396,28 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             } else {
                 // Unknown executors (e.g. MCP) are treated as non-virtual-thread.
                 anyOther = true;
+                nonVirtualThreadToolNames.add(toolName);
             }
         }
         if (anyVirtual && anyOther) {
-            return BatchExecutionMode.MIXED;
+            return new BatchDispatchDecision(BatchExecutionMode.MIXED, List.copyOf(requestedToolNames),
+                    List.copyOf(nonVirtualThreadToolNames));
         }
         if (anyVirtual) {
-            return BatchExecutionMode.ALL_VIRTUAL_THREAD;
+            return new BatchDispatchDecision(BatchExecutionMode.ALL_VIRTUAL_THREAD, List.copyOf(requestedToolNames),
+                    List.of());
         }
-        return BatchExecutionMode.NONE_VIRTUAL_THREAD;
+        return new BatchDispatchDecision(BatchExecutionMode.NONE_VIRTUAL_THREAD, List.copyOf(requestedToolNames),
+                List.copyOf(nonVirtualThreadToolNames));
     }
 
-    private void logMixedBatch(ToolsConfig.MixedBatchLogLevel level) {
-        String message = "Mixed tool execution models in a single batch: at least one @RunOnVirtualThread tool is "
-                + "scheduled alongside a blocking or non-blocking tool. Falling back to worker-thread dispatch for the "
-                + "whole batch. Annotate all tools in this batch with @RunOnVirtualThread to enable virtual-thread "
-                + "dispatch, or set quarkus.langchain4j.tools.mixed-batch-log-level=off to silence this warning.";
+    private void logMixedBatch(ToolsConfig.MixedBatchLogLevel level, BatchDispatchDecision decision) {
+        String message = "Mixed tool execution models detected for AI service method " + aiServiceMethodDescription()
+                + ". Requested tools: " + decision.requestedToolNames()
+                + ". Non-VIRTUAL_THREAD tools: " + decision.nonVirtualThreadToolNames()
+                + ". Skipping the full-batch virtual-thread dispatch optimization and using legacy per-tool scheduling "
+                + "instead. The optimization only applies when every requested tool resolves to the VIRTUAL_THREAD "
+                + "execution model. Set quarkus.langchain4j.tools.mixed-batch-log-level=off to silence this warning.";
         switch (level) {
             case WARN:
                 log.warn(message);
@@ -432,8 +435,22 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    private void executeOnVirtualThread(Runnable runnable, ToolsDispatcher dispatcher) {
-        VirtualThreadsRecorder.getCurrent().execute(new Runnable() {
+    private String aiServiceMethodDescription() {
+        if (methodCreateInfo == null) {
+            return "<unknown>";
+        }
+        return simpleTypeName(methodCreateInfo.getInterfaceName()) + "#" + methodCreateInfo.getMethodName();
+    }
+
+    private String simpleTypeName(String typeName) {
+        int packageSeparator = typeName.lastIndexOf('.');
+        String simpleName = packageSeparator >= 0 ? typeName.substring(packageSeparator + 1) : typeName;
+        int nestedSeparator = simpleName.lastIndexOf('$');
+        return nestedSeparator >= 0 ? simpleName.substring(nestedSeparator + 1) : simpleName;
+    }
+
+    private void executeWithBatchVirtualThreadDispatch(Runnable runnable, ToolsDispatcher dispatcher) {
+        Runnable guardedRunnable = new Runnable() {
             @Override
             public void run() {
                 Semaphore semaphore = dispatcher.semaphore();
@@ -458,13 +475,49 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     }
                 }
             }
-        });
+        };
+
+        if (VirtualThreadSupport.isCurrentThreadVirtual()) {
+            // Already on a virtual thread, run inline but still apply the concurrency cap.
+            guardedRunnable.run();
+        } else {
+            executeOnVirtualThread(guardedRunnable);
+        }
+    }
+
+    private void executeOnVirtualThread(Runnable runnable) {
+        VirtualThreadsRecorder.getCurrent().execute(runnable);
     }
 
     private enum BatchExecutionMode {
         ALL_VIRTUAL_THREAD,
         NONE_VIRTUAL_THREAD,
         MIXED
+    }
+
+    private static final class BatchDispatchDecision {
+        private final BatchExecutionMode mode;
+        private final List<String> requestedToolNames;
+        private final List<String> nonVirtualThreadToolNames;
+
+        private BatchDispatchDecision(BatchExecutionMode mode, List<String> requestedToolNames,
+                List<String> nonVirtualThreadToolNames) {
+            this.mode = mode;
+            this.requestedToolNames = requestedToolNames;
+            this.nonVirtualThreadToolNames = nonVirtualThreadToolNames;
+        }
+
+        private BatchExecutionMode mode() {
+            return mode;
+        }
+
+        private List<String> requestedToolNames() {
+            return requestedToolNames;
+        }
+
+        private List<String> nonVirtualThreadToolNames() {
+            return nonVirtualThreadToolNames;
+        }
     }
 
     private void execute(Runnable runnable) {

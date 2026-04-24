@@ -13,7 +13,7 @@ import io.quarkus.arc.Unremovable;
 /**
  * Holds the resolved tool-dispatch policy: the global dispatch mode, the log level for
  * mixed-batch warnings, and the (optional) shared semaphore that bounds concurrent
- * virtual-thread dispatches.
+ * batches using the batch-level virtual-thread dispatch path.
  *
  * <p>
  * Exposed as a CDI singleton so the semaphore is shared across every

@@ -127,9 +127,10 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 // Uni/CompletionStage results are awaited synchronously here because the
                 // ToolExecutor interface is imperative and must return a String. For slow
                 // tools (long-running HTTP calls, expensive DB queries, etc.) the await
-                // ties up whichever thread reached this point, so users should annotate
-                // the tool with @RunOnVirtualThread — the streaming-handler dispatch makes
-                // sure the await then parks a virtual thread rather than a worker thread.
+                // ties up whichever thread reached this point. In this branch, tools
+                // returning Uni/CompletionStage still follow the legacy non-blocking
+                // scheduling model; proper async propagation through the streaming tool
+                // pipeline remains follow-up work.
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
                     throw new BlockingToolNotAllowedException(
                             "Cannot execute tools returning Uni on event loop thread due to a tool executor limitation");

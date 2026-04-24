@@ -2,10 +2,18 @@ package io.quarkiverse.langchain4j.test.tools;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -37,14 +45,27 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkiverse.langchain4j.runtime.ContextLocals;
+import io.quarkiverse.langchain4j.runtime.VirtualThreadSupport;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceStreamingResponseHandler;
 import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
+import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 
 public class ToolExecutionModelVirtualThreadDispatchTest {
 
+    private static final String DUPLICATED_CONTEXT_LOCAL_KEY = "dispatch-test-local";
+    private static final String MIXED_BATCH_METHOD = "MyAiService#mixedTools";
+    private static final String MIXED_BATCH_REQUESTED_TOOLS = "Requested tools: [hi, hiVirtualThread]";
+    private static final String MIXED_BATCH_NON_VIRTUAL_TOOLS = "Non-VIRTUAL_THREAD tools: [hi]";
+    private static final String MIXED_BATCH_DECISION = "Skipping the full-batch virtual-thread dispatch optimization "
+            + "and using legacy per-tool scheduling instead";
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyAiService.class));
@@ -66,47 +87,164 @@ public class ToolExecutionModelVirtualThreadDispatchTest {
     }
 
     @Test
+    @EnabledForJreRange(min = JRE.JAVA_21)
+    @ActivateRequestContext
+    void allVirtualThreadBatchRunsSerializedLoopOnOneVirtualThread() throws InterruptedException {
+        String uuid = UUID.randomUUID().toString();
+        List<Thread> beforeToolThreads = new java.util.concurrent.CopyOnWriteArrayList<>();
+        List<ChatEvent> events = executeChatEventStreamBlocking(
+                () -> aiService.virtualToolBatchEvents("mem-" + uuid,
+                        "hiVirtualThread,hiVirtualThreadAgain - " + uuid),
+                event -> {
+                    if (event instanceof ChatEvent.BeforeToolExecutionEvent) {
+                        beforeToolThreads.add(Thread.currentThread());
+                    }
+                });
+        String response = extractPartialResponseText(events);
+
+        assertThat(response).contains("VIRTUAL:", "VIRTUAL_AGAIN:", uuid);
+        assertThat(beforeToolThreads).hasSize(2);
+        assertThat(beforeToolThreads)
+                .allSatisfy(thread -> assertThat(VirtualThreadSupport.isVirtualThread(thread)).isTrue());
+        assertThat(new HashSet<>(beforeToolThreads)).hasSize(1);
+    }
+
+    @Test
     void blockingBatchRunsOnWorkerThread() {
         String uuid = UUID.randomUUID().toString();
         String r = invokeFromEventLoop(() -> aiService.singleBlockingTool("mem-" + uuid, "hi - " + uuid));
-        // When the streaming call is subscribed on the event loop, the tool loop is dispatched
-        // onto the Quarkus worker pool (`executor-thread-<n>`) — not onto a virtual thread.
         assertThat(r).contains(uuid, "executor-thread");
         assertThat(r).doesNotContain("quarkus-virtual-thread-");
     }
 
     @Test
     @EnabledForJreRange(min = JRE.JAVA_21)
-    void mixedBatchFallsBackToWorkerDispatch() {
-        String uuid = UUID.randomUUID().toString();
-        String r = invokeFromEventLoop(() -> aiService.mixedTools("mem-" + uuid, "hi,hiVirtualThread - " + uuid));
-        // Blocking tool must run on a worker thread.
-        assertThat(r).contains("BLOCKING:").contains("executor-thread");
-        // Virtual-thread tool still lands on a virtual thread (QuarkusToolExecutor submits it
-        // per-tool even in the mixed-batch fallback path).
-        assertThat(r).contains("VIRTUAL:").contains("quarkus-virtual-thread-");
-        assertThat(r).contains(uuid);
+    void mixedBatchFallsBackToLegacyPerToolScheduling() {
+        Logger logger = Logger.getLogger(QuarkusAiServiceStreamingResponseHandler.class.getName());
+        CapturingHandler handler = new CapturingHandler();
+        logger.addHandler(handler);
+        try {
+            String uuid = UUID.randomUUID().toString();
+            String r = invokeFromEventLoop(() -> aiService.mixedTools("mem-" + uuid, "hi,hiVirtualThread - " + uuid));
+
+            assertThat(r).contains("BLOCKING:").contains("executor-thread");
+            assertThat(r).contains("VIRTUAL:").contains("quarkus-virtual-thread-");
+            assertThat(r).contains(uuid);
+            Awaitility.await().atMost(java.time.Duration.ofSeconds(10))
+                    .untilAsserted(() -> assertThat(handler.messages()).anySatisfy(message -> assertThat(message)
+                            .contains(MIXED_BATCH_METHOD)
+                            .contains(MIXED_BATCH_REQUESTED_TOOLS)
+                            .contains(MIXED_BATCH_NON_VIRTUAL_TOOLS)
+                            .contains(MIXED_BATCH_DECISION)));
+        } finally {
+            logger.removeHandler(handler);
+        }
     }
 
     @Test
     @EnabledForJreRange(min = JRE.JAVA_21)
     @ActivateRequestContext
     void virtualThreadToolFailureSurfacesThroughToolErrorHandler() {
-        // Quarkus wires a default toolExecutionErrorHandler that converts tool exceptions into
-        // tool-result text (so the LLM can recover). We assert the exception message ends up in
-        // the final stream output, proving the exception thrown inside the virtual-thread
-        // dispatch is captured and routed back through the normal tool-result pipeline.
         String r = aiService.failingVirtualTool("mem-" + UUID.randomUUID(), "failingVirtualThread - boom")
                 .collect().asList().map(l -> String.join(" ", l)).await().indefinitely();
         assertThat(r).contains("boom");
     }
 
+    @Test
+    @EnabledForJreRange(min = JRE.JAVA_21)
+    void fullVirtualThreadBatchPreservesDuplicatedContextLocalsWhenSubmittedToVirtualThread() throws InterruptedException {
+        AtomicReference<String> expectedLocal = new AtomicReference<>();
+        AtomicReference<String> observedLocal = new AtomicReference<>();
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        Context duplicatedContext = VertxContext.getOrCreateDuplicatedContext(vertx);
+
+        duplicatedContext.executeBlocking(v -> {
+            String uuid = UUID.randomUUID().toString();
+            try {
+                Arc.container().requestContext().activate();
+                expectedLocal.set(uuid);
+                ContextLocals.put(DUPLICATED_CONTEXT_LOCAL_KEY, uuid);
+                List<ChatEvent> events = executeChatEventStreamBlocking(
+                        () -> aiService.virtualToolBatchEvents("mem-" + uuid,
+                                "hiVirtualThread,hiVirtualThreadAgain - " + uuid),
+                        event -> {
+                            if (event instanceof ChatEvent.BeforeToolExecutionEvent) {
+                                observedLocal.compareAndSet(null, ContextLocals.get(DUPLICATED_CONTEXT_LOCAL_KEY));
+                            }
+                        });
+                String response = extractPartialResponseText(events);
+                assertThat(response).contains(uuid);
+            } catch (Throwable t) {
+                failure.set(t);
+            } finally {
+                ContextLocals.remove(DUPLICATED_CONTEXT_LOCAL_KEY);
+                Arc.container().requestContext().deactivate();
+                latch.countDown();
+            }
+        }, false);
+
+        assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+        if (failure.get() != null) {
+            throw new AssertionError("Duplicated-context submit-path invocation failed", failure.get());
+        }
+        assertThat(observedLocal.get()).isEqualTo(expectedLocal.get());
+    }
+
+    @Test
+    @EnabledForJreRange(min = JRE.JAVA_21)
+    void fullVirtualThreadBatchPreservesDuplicatedContextLocalsWhenAlreadyOnVirtualThread() throws InterruptedException {
+        AtomicReference<String> expectedLocal = new AtomicReference<>();
+        AtomicReference<String> observedLocal = new AtomicReference<>();
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        Context duplicatedContext = VertxContext.getOrCreateDuplicatedContext(vertx);
+
+        duplicatedContext.executeBlocking(v -> {
+            String uuid = UUID.randomUUID().toString();
+            try {
+                expectedLocal.set(uuid);
+                ContextLocals.put(DUPLICATED_CONTEXT_LOCAL_KEY, uuid);
+                VirtualThreadsRecorder.getCurrent().submit(() -> {
+                    try {
+                        Arc.container().requestContext().activate();
+                        List<ChatEvent> events = executeChatEventStreamBlocking(
+                                () -> aiService.virtualToolBatchEvents("mem-" + uuid,
+                                        "hiVirtualThread,hiVirtualThreadAgain - " + uuid),
+                                event -> {
+                                    if (event instanceof ChatEvent.BeforeToolExecutionEvent) {
+                                        observedLocal.compareAndSet(null, ContextLocals.get(DUPLICATED_CONTEXT_LOCAL_KEY));
+                                    }
+                                });
+                        String response = extractPartialResponseText(events);
+                        assertThat(response).contains(uuid);
+                        return null;
+                    } finally {
+                        Arc.container().requestContext().deactivate();
+                    }
+                }).get();
+            } catch (Throwable t) {
+                failure.set(t);
+            } finally {
+                ContextLocals.remove(DUPLICATED_CONTEXT_LOCAL_KEY);
+                latch.countDown();
+            }
+        }, false);
+
+        assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+        if (failure.get() != null) {
+            throw new AssertionError("Duplicated-context inline-VT invocation failed", failure.get());
+        }
+        assertThat(observedLocal.get()).isEqualTo(expectedLocal.get());
+    }
+
     private String invokeFromEventLoop(Supplier<Multi<String>> serviceCall) {
         AtomicReference<String> result = new AtomicReference<>();
         AtomicReference<Throwable> failure = new AtomicReference<>();
-        vertx.getOrCreateContext().runOnContext(x -> {
+        Context context = vertx.getOrCreateContext();
+        context.runOnContext(x -> {
+            Arc.container().requestContext().activate();
             try {
-                Arc.container().requestContext().activate();
                 serviceCall.get()
                         .collect().asList().map(l -> String.join(" ", l))
                         .subscribeAsCompletionStage()
@@ -116,10 +254,10 @@ public class ToolExecutionModelVirtualThreadDispatchTest {
                             } else {
                                 result.set(r);
                             }
+                            context.runOnContext(ignored -> Arc.container().requestContext().deactivate());
                         });
             } catch (Throwable t) {
                 failure.set(t);
-            } finally {
                 Arc.container().requestContext().deactivate();
             }
         });
@@ -131,11 +269,54 @@ public class ToolExecutionModelVirtualThreadDispatchTest {
         return result.get();
     }
 
+    private List<ChatEvent> executeChatEventStreamBlocking(Supplier<Multi<ChatEvent>> serviceCall,
+            Consumer<ChatEvent> eventObserver) throws InterruptedException {
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        List<ChatEvent> events = new java.util.concurrent.CopyOnWriteArrayList<>();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        serviceCall.get()
+                .onItem().invoke(event -> {
+                    events.add(event);
+                    if (eventObserver != null) {
+                        eventObserver.accept(event);
+                    }
+                })
+                .subscribe().with(
+                        item -> {
+                        },
+                        t -> {
+                            failure.set(t);
+                            latch.countDown();
+                        },
+                        latch::countDown);
+
+        assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+        if (failure.get() != null) {
+            throw new AssertionError("Chat event stream failed", failure.get());
+        }
+        return events;
+    }
+
+    private String extractPartialResponseText(List<ChatEvent> events) {
+        StringBuilder response = new StringBuilder();
+        for (ChatEvent event : events) {
+            if (event instanceof ChatEvent.PartialResponseEvent partialResponseEvent) {
+                response.append(partialResponseEvent.getChunk());
+            }
+        }
+        return response.toString();
+    }
+
     @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
         @ToolBox(VirtualTool.class)
         Multi<String> singleVirtualTool(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
+
+        @ToolBox({ VirtualTool.class, VirtualToolAgain.class })
+        Multi<ChatEvent> virtualToolBatchEvents(@MemoryId String memoryId,
+                @UserMessage String userMessageContainingTheToolId);
 
         @ToolBox(BlockingTool.class)
         Multi<String> singleBlockingTool(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
@@ -161,6 +342,15 @@ public class ToolExecutionModelVirtualThreadDispatchTest {
         @RunOnVirtualThread
         public String hiVirtualThread(String m) {
             return "VIRTUAL:" + m + " " + Thread.currentThread();
+        }
+    }
+
+    @Singleton
+    public static class VirtualToolAgain {
+        @Tool("hiVirtualThreadAgain")
+        @RunOnVirtualThread
+        public String hiVirtualThreadAgain(String m) {
+            return "VIRTUAL_AGAIN:" + m + " " + Thread.currentThread();
         }
     }
 
@@ -213,7 +403,7 @@ public class ToolExecutionModelVirtualThreadDispatchTest {
                 }
                 String[] toolIds = segments[0].split(",");
                 String content = segments[1];
-                java.util.List<ToolExecutionRequest> requests = new java.util.ArrayList<>();
+                List<ToolExecutionRequest> requests = new ArrayList<>();
                 int i = 0;
                 for (String toolId : toolIds) {
                     requests.add(ToolExecutionRequest.builder()
@@ -261,4 +451,25 @@ public class ToolExecutionModelVirtualThreadDispatchTest {
         }
     }
 
+    private static final class CapturingHandler extends Handler {
+
+        private final List<String> messages = new ArrayList<>();
+
+        @Override
+        public synchronized void publish(LogRecord record) {
+            messages.add(record.getMessage());
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() {
+        }
+
+        synchronized List<String> messages() {
+            return List.copyOf(messages);
+        }
+    }
 }

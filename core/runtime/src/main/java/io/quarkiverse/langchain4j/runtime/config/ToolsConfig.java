@@ -10,12 +10,11 @@ public interface ToolsConfig {
      * Controls how a batch of tool invocations emitted by a streaming AI service is dispatched.
      * <ul>
      * <li>{@code auto} (default): honor per-tool execution model detected at build time. When every tool
-     * in a batch is annotated {@code @RunOnVirtualThread} the batch is dispatched directly onto a virtual
-     * thread, releasing the calling event-loop/worker thread immediately. Otherwise the current
-     * worker-thread behavior is kept.</li>
-     * <li>{@code virtual-thread}: always dispatch tool batches onto a virtual thread, regardless of
-     * per-tool annotations.</li>
-     * <li>{@code worker}: always dispatch tool batches onto a worker thread (historical behavior).</li>
+     * in a batch resolves to {@code VIRTUAL_THREAD} the batch is dispatched directly onto a virtual
+     * thread, releasing the calling event-loop/worker thread immediately. Otherwise the historical
+     * per-tool scheduling behavior is kept.</li>
+     * <li>{@code legacy}: disable the batch-level virtual-thread optimization and keep the historical
+     * per-tool scheduling behavior.</li>
      * </ul>
      */
     @WithDefault("auto")
@@ -28,8 +27,10 @@ public interface ToolsConfig {
 
     /**
      * Log level at which a warning is emitted when a tool batch contains a mix of
-     * {@code @RunOnVirtualThread} and blocking/non-blocking tools and the extension falls back to
-     * worker-thread dispatch for the whole batch. Set to {@code off} to silence entirely.
+     * virtual-thread-eligible and other tools and the extension skips the
+     * full-batch virtual-thread optimization, falling back to the historical per-tool scheduling
+     * behavior. The warning includes the AI service method plus the requested and non-virtual
+     * tool names. Set to {@code off} to silence entirely.
      */
     @WithDefault("warn")
     MixedBatchLogLevel mixedBatchLogLevel();
@@ -37,17 +38,19 @@ public interface ToolsConfig {
     interface VirtualThreadConfig {
 
         /**
-         * Maximum number of tool batches that can be in flight concurrently on virtual threads. When
-         * unset, dispatch is unbounded (the default). A value of 0 or a negative value is treated as
-         * unbounded.
+         * Maximum number of tool batches that can be in flight concurrently when using the
+         * batch-level virtual-thread dispatch path. This applies only to full
+         * {@code VIRTUAL_THREAD} batches in {@code auto} mode. The permit is held for the batch
+         * until tool execution finishes and the synchronous handoff to the next model call
+         * returns. When unset, dispatch is unbounded (the default). A value of 0 or a negative
+         * value is treated as unbounded.
          */
         OptionalInt maxConcurrent();
     }
 
     enum DispatchMode {
         AUTO,
-        VIRTUAL_THREAD,
-        WORKER
+        LEGACY
     }
 
     enum MixedBatchLogLevel {
