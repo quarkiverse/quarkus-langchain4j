@@ -15,14 +15,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.quarkiverse.poi</groupId>
             <artifactId>quarkus-poi</artifactId>
             <version>${quarkus-poi.version}</version>
