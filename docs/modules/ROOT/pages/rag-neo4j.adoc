@@ -125,7 +125,9 @@ RETURN ...
 ----
 
 [NOTE]
+====
 Metadata filtering is fully supported using standard Cypher conditions alongside vector similarity.
+====
 
 == Summary
 

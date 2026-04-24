@@ -55,7 +55,9 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/fewshots/SentimentAiS
 <2> When the method is invoked, Quarkus Langchain4j will replace `\{text}` with the actual text parameter.
 
 [TIP]
+====
 While in this example we added the few-shot example in the user message, they can also be added in the system message.
+====
 
 == Step 3. Invoke the AI Service from an HTTP Endpoint
 
