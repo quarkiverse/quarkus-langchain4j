@@ -21,8 +21,10 @@ image::chatbot-architecture.png[width=1000,align="center"]
 Embeddings denote data representations, typically in a lower-dimensional space (arrays of floats), preserving essential characteristics of the original data. In the realm of language or text, word embeddings represent words as numerical vectors in a continuous space.
 
 [TIP]
+====
 .Why Use Vectors/Embeddings?
 Efficiently comparing documents to user queries during the RAG process, a crucial step in finding relevant documents, relies on computing similarity (or distance) between documents and queries. Vectorizing documents significantly speeds up this process.
+====
 
 == The Ingestion Process
 
