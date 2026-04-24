@@ -130,6 +130,8 @@ public class SemanticSimilarityStrategy implements EvaluationStrategy<String> {
             throw new IllegalArgumentException("Vector magnitude cannot be zero");
         }
 
-        return dotProduct / (magnitudeA * magnitudeB);
+        double cosineSimilarity = dotProduct / (magnitudeA * magnitudeB);
+        // Floating-point drift can produce tiny out-of-range values (e.g. 1.0000000001).
+        return Math.max(-1.0, Math.min(1.0, cosineSimilarity));
     }
 }
