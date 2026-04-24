@@ -9,7 +9,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 
 @RegisterAiService
 @SystemMessage("""
-        You are a police and helpful assistant.
+        You are a polite and helpful assistant.
         """)
 @ApplicationScoped // For demo purpose.
 public interface Assistant {
