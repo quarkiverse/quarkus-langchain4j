@@ -32,10 +32,10 @@ Add the following dependencies in your `pom.xml`:
 
 [source,xml,subs=attributes+]
 ----
-<!-- Or any other model provider that supports streaming, such as OpenAI -->
+<!-- Or any other model provider that supports streaming, such as Ollama -->
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-ollama</artifactId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
     <version>{project-version}</version>
 </dependency>
 <dependency>
@@ -48,11 +48,11 @@ Add the following dependencies in your `pom.xml`:
 </dependency>
 ----
 
-If you are using Ollama, configure your model in `application.properties`:
+Configure your OpenAI API key in `application.properties`:
 
 [source,properties]
 ----
-quarkus.langchain4j.ollama.chat-model.model-name=qwen3:1.7b
+quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
 ----
 
 == Streamed Responses in AI Services
