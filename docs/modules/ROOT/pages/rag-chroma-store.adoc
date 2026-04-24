@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Chroma is a lightweight, open-source vector database designed for embedding-based search.
 It can be used as a document store in Retrieval-Augmented Generation (RAG) pipelines with Quarkus LangChain4j.

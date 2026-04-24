@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Quarkus LangChain4j integrates with Infinispan Server to provide a scalable, distributed vector store for Retrieval-Augmented Generation (RAG).
 This extension enables you to persist and query embedding vectors for document retrieval.

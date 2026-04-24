@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 The Model Context Protocol (MCP) is an open standard that enables seamless integration between AI applications and external data sources, tools, and services.
 MCP allows LLMs to dynamically discover and execute tools provided by external servers, making it possible to extend AI capabilities without hardcoding integrations.

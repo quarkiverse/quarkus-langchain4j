@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: tutorial
 
 This guide shows you how to implement a simple text summarization service using Quarkus LangChain4j and run it as a standalone CLI application.
 The service reads a plain text file (such as an article or report), sends the content to a Large Language Model, and receives a structured Markdown summary in return.

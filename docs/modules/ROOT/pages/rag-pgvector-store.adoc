@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 The PGVector extension allows you to use PostgreSQL as a vector database for Retrieval-Augmented Generation (RAG) with Quarkus LangChain4j.
 It leverages the `pgvector` extension in PostgreSQL to store and search vector embeddings efficiently.

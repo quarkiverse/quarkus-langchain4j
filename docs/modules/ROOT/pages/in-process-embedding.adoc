@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 In Retrieval-Augmented Generation (RAG) and other semantic search scenarios, embedding models are used to convert documents into vector representations. These vectors are stored in a vector database and used for similarity search.
 
