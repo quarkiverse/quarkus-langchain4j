@@ -113,7 +113,7 @@
                 </property>
             </activation>
             <properties>
-                <quarkus-langchain4j.version>1.9.0</quarkus-langchain4j.version>
+                <quarkus-langchain4j.version>1.9.1</quarkus-langchain4j.version>
             </properties>
             <dependencyManagement>
                 <dependencies>

@@ -7,8 +7,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -37,6 +37,7 @@ import dev.langchain4j.model.watsonx.WatsonxEmbeddingModel;
 import dev.langchain4j.model.watsonx.WatsonxModerationModel;
 import dev.langchain4j.model.watsonx.WatsonxScoringModel;
 import dev.langchain4j.model.watsonx.WatsonxStreamingChatModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.QuarkusRestClientConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
@@ -61,6 +62,20 @@ public class WatsonxRecorder {
 
     private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxStreamingChatModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxScoringModel.Builder>>> SCORING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxModerationModel.Builder>>> MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<TextExtractionService.Builder>>> TEXT_EXTRACTION_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<TextClassificationService.Builder>>> TEXT_CLASSIFICATION_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private final RuntimeValue<LangChain4jWatsonxConfig> runtimeConfig;
@@ -184,10 +199,12 @@ public class WatsonxRecorder {
                                     chatModelConfig.logRequestsCurl(),
                                     specificConfig.logRequestsCurl()));
                     try {
-                        return builder
-                                .authenticator(authenticator)
-                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
-                                .build();
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
                     } finally {
                         QuarkusRestClientConfig.clear();
                     }
@@ -317,10 +334,13 @@ public class WatsonxRecorder {
                                     chatModelConfig.logRequestsCurl(),
                                     specificConfig.logRequestsCurl()));
                     try {
-                        return builder
-                                .authenticator(authenticator)
-                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
-                                .build();
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
                     } finally {
                         QuarkusRestClientConfig.clear();
                     }
@@ -336,15 +356,15 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
         EmbeddingModelConfig embeddingModelConfig = watsonxConfig.embeddingModel();
 
         if (!watsonxConfig.enableIntegration()) {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };
@@ -390,9 +410,9 @@ public class WatsonxRecorder {
                         defaultConfig.projectId().orElse(null),
                         watsonxConfig.projectId()));
 
-        return new Supplier<>() {
+        return new Function<>() {
             @Override
-            public WatsonxEmbeddingModel get() {
+            public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                 var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
                 QuarkusRestClientConfig.setLogCurl(
                         firstOrDefault(
@@ -400,7 +420,11 @@ public class WatsonxRecorder {
                                 embeddingModelConfig.logRequestsCurl(),
                                 watsonxConfig.logRequestsCurl()));
                 try {
-                    return builder.authenticator(authenticator).build();
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
                 }
@@ -409,7 +433,7 @@ public class WatsonxRecorder {
 
     }
 
-    public Supplier<ScoringModel> scoringModel(String configName) {
+    public Function<SyntheticCreationalContext<ScoringModel>, ScoringModel> scoringModel(String configName) {
         WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
         ScoringModelConfig rerankModelConfig = watsonxConfig.scoringModel();
@@ -455,9 +479,9 @@ public class WatsonxRecorder {
                         defaultConfig.projectId().orElse(null),
                         watsonxConfig.projectId()));
 
-        return new Supplier<>() {
+        return new Function<>() {
             @Override
-            public WatsonxScoringModel get() {
+            public ScoringModel apply(SyntheticCreationalContext<ScoringModel> context) {
                 var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
                 QuarkusRestClientConfig.setLogCurl(
                         firstOrDefault(
@@ -465,7 +489,11 @@ public class WatsonxRecorder {
                                 rerankModelConfig.logRequestsCurl(),
                                 watsonxConfig.logRequestsCurl()));
                 try {
-                    return builder.authenticator(authenticator).build();
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(SCORING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
                 }
@@ -473,7 +501,8 @@ public class WatsonxRecorder {
         };
     }
 
-    public Supplier<WatsonxModerationModel> moderationModel(String configName) {
+    public Function<SyntheticCreationalContext<WatsonxModerationModel>, WatsonxModerationModel> moderationModel(
+            String configName) {
         WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
         ModerationModelConfig moderationModelConfig = watsonxConfig.moderationModel();
@@ -544,9 +573,9 @@ public class WatsonxRecorder {
                         defaultConfig.projectId().orElse(null),
                         watsonxConfig.projectId()));
 
-        return new Supplier<>() {
+        return new Function<>() {
             @Override
-            public WatsonxModerationModel get() {
+            public WatsonxModerationModel apply(SyntheticCreationalContext<WatsonxModerationModel> context) {
                 var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
                 QuarkusRestClientConfig.setLogCurl(
                         firstOrDefault(
@@ -554,7 +583,11 @@ public class WatsonxRecorder {
                                 moderationModelConfig.logRequestsCurl(),
                                 watsonxConfig.logRequestsCurl()));
                 try {
-                    return builder.authenticator(authenticator).build();
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
                 }
@@ -562,7 +595,8 @@ public class WatsonxRecorder {
         };
     }
 
-    public Supplier<TextExtractionService> textExtraction(String configName) {
+    public Function<SyntheticCreationalContext<TextExtractionService>, TextExtractionService> textExtraction(
+            String configName) {
         WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
         TextExtractionConfig textExtractionConfig = watsonxConfig.textExtraction().orElse(null);
@@ -605,9 +639,9 @@ public class WatsonxRecorder {
                         defaultConfig.projectId().orElse(null),
                         watsonxConfig.projectId()));
 
-        return new Supplier<>() {
+        return new Function<>() {
             @Override
-            public TextExtractionService get() {
+            public TextExtractionService apply(SyntheticCreationalContext<TextExtractionService> context) {
                 var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
                 QuarkusRestClientConfig.setLogCurl(
                         firstOrDefault(
@@ -615,7 +649,11 @@ public class WatsonxRecorder {
                                 textExtractionConfig.logRequestsCurl(),
                                 watsonxConfig.logRequestsCurl()));
                 try {
-                    return builder.authenticator(authenticator).build();
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(TEXT_EXTRACTION_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
                 }
@@ -623,7 +661,8 @@ public class WatsonxRecorder {
         };
     }
 
-    public Supplier<TextClassificationService> textClassification(String configName) {
+    public Function<SyntheticCreationalContext<TextClassificationService>, TextClassificationService> textClassification(
+            String configName) {
         WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
         TextClassificationConfig textClassificationConfig = watsonxConfig.textClassification().orElse(null);
@@ -664,9 +703,9 @@ public class WatsonxRecorder {
                         defaultConfig.projectId().orElse(null),
                         watsonxConfig.projectId()));
 
-        return new Supplier<>() {
+        return new Function<>() {
             @Override
-            public TextClassificationService get() {
+            public TextClassificationService apply(SyntheticCreationalContext<TextClassificationService> context) {
                 var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
                 QuarkusRestClientConfig.setLogCurl(
                         firstOrDefault(
@@ -674,7 +713,11 @@ public class WatsonxRecorder {
                                 textClassificationConfig.logRequestsCurl(),
                                 watsonxConfig.logRequestsCurl()));
                 try {
-                    return builder.authenticator(authenticator).build();
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(TEXT_CLASSIFICATION_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
                 }

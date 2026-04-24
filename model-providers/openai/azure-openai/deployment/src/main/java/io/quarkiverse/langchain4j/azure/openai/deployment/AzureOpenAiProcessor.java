@@ -8,13 +8,19 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
@@ -37,6 +43,18 @@ public class AzureOpenAiProcessor {
 
     private static final String FEATURE = "langchain4j-azure-openai";
     private static final String PROVIDER = "azure-openai";
+
+    private static final DotName AZURE_OPENAI_CHAT_MODEL_BUILDER = DotName
+            .createSimple(AzureOpenAiChatModel.Builder.class);
+    private static final DotName AZURE_OPENAI_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(AzureOpenAiStreamingChatModel.Builder.class);
+    private static final DotName AZURE_OPENAI_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(AzureOpenAiEmbeddingModel.Builder.class);
+    private static final DotName AZURE_OPENAI_IMAGE_MODEL_BUILDER = DotName
+            .createSimple(AzureOpenAiImageModel.Builder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -82,6 +100,10 @@ public class AzureOpenAiProcessor {
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AZURE_OPENAI_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(chatModel);
                 addQualifierIfNecessary(chatBuilder, configName);
                 beanProducer.produce(chatBuilder.done());
@@ -96,6 +118,11 @@ public class AzureOpenAiProcessor {
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AZURE_OPENAI_STREAMING_CHAT_MODEL_BUILDER) },
+                                        null) },
+                                null), ANY)
                         .createWith(streamingChatModel);
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
@@ -115,6 +142,10 @@ public class AzureOpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AZURE_OPENAI_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(embeddingModel);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
@@ -133,6 +164,10 @@ public class AzureOpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AZURE_OPENAI_IMAGE_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(imageModel);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());

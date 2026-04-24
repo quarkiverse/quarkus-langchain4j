@@ -5,9 +5,9 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.util.TypeLiteral;
@@ -22,6 +22,7 @@ import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
@@ -54,6 +55,12 @@ public class OllamaRecorder {
     }
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OllamaChatModel.OllamaChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OllamaStreamingChatLanguageModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OllamaEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
@@ -91,11 +98,43 @@ public class OllamaRecorder {
                 ollamaChatModelBuilder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
             }
 
+            ChatModelConfig.ModelOptionsConfig modelOptions = chatModelConfig.modelOptions();
+            if (modelOptions.think().isPresent()) {
+                ollamaChatModelBuilder.think(modelOptions.think().get());
+            }
+            if (modelOptions.returnThinking().isPresent()) {
+                ollamaChatModelBuilder.returnThinking(modelOptions.returnThinking().get());
+            }
+            if (modelOptions.numCtx().isPresent()) {
+                ollamaChatModelBuilder.numCtx(modelOptions.numCtx().getAsInt());
+            }
+            if (modelOptions.repeatLastN().isPresent()) {
+                ollamaChatModelBuilder.repeatLastN(modelOptions.repeatLastN().getAsInt());
+            }
+            if (modelOptions.repeatPenalty().isPresent()) {
+                ollamaChatModelBuilder.repeatPenalty(modelOptions.repeatPenalty().getAsDouble());
+            }
+            if (modelOptions.mirostat().isPresent()) {
+                ollamaChatModelBuilder.mirostat(modelOptions.mirostat().getAsInt());
+            }
+            if (modelOptions.mirostatEta().isPresent()) {
+                ollamaChatModelBuilder.mirostatEta(modelOptions.mirostatEta().getAsDouble());
+            }
+            if (modelOptions.mirostatTau().isPresent()) {
+                ollamaChatModelBuilder.mirostatTau(modelOptions.mirostatTau().getAsDouble());
+            }
+            if (modelOptions.minP().isPresent()) {
+                ollamaChatModelBuilder.minP(modelOptions.minP().getAsDouble());
+            }
+
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     ollamaChatModelBuilder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            ollamaChatModelBuilder, configName);
 
                     // TODO: we should obtain this from the context
                     Optional<ModelAuthProvider> maybeModelAuthProvider = ModelAuthProvider
@@ -128,7 +167,7 @@ public class OllamaRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig.getValue(), configName);
         LangChain4jOllamaFixedRuntimeConfig.OllamaConfig ollamaFixedConfig = correspondingOllamaFixedConfig(fixedRuntimeConfig,
                 configName);
@@ -154,16 +193,19 @@ public class OllamaRecorder {
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), ollamaConfig.logResponses()))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName);
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };
@@ -192,6 +234,36 @@ public class OllamaRecorder {
             if (chatModelConfig.seed().isPresent()) {
                 optionsBuilder.seed(chatModelConfig.seed().get());
             }
+
+            ChatModelConfig.ModelOptionsConfig modelOptions = chatModelConfig.modelOptions();
+            if (modelOptions.think().isPresent()) {
+                optionsBuilder.option("think", modelOptions.think().get());
+            }
+            if (modelOptions.returnThinking().isPresent()) {
+                optionsBuilder.option("returnThinking", modelOptions.returnThinking().get());
+            }
+            if (modelOptions.numCtx().isPresent()) {
+                optionsBuilder.option("numCtx", modelOptions.numCtx().getAsInt());
+            }
+            if (modelOptions.repeatLastN().isPresent()) {
+                optionsBuilder.option("repeatLastN", modelOptions.repeatLastN().getAsInt());
+            }
+            if (modelOptions.repeatPenalty().isPresent()) {
+                optionsBuilder.option("repeatPenalty", modelOptions.repeatPenalty().getAsDouble());
+            }
+            if (modelOptions.mirostat().isPresent()) {
+                optionsBuilder.option("mirostat", modelOptions.mirostat().getAsInt());
+            }
+            if (modelOptions.mirostatEta().isPresent()) {
+                optionsBuilder.option("mirostatEta", modelOptions.mirostatEta().getAsDouble());
+            }
+            if (modelOptions.mirostatTau().isPresent()) {
+                optionsBuilder.option("mirostatTau", modelOptions.mirostatTau().getAsDouble());
+            }
+            if (modelOptions.minP().isPresent()) {
+                optionsBuilder.option("minP", modelOptions.minP().getAsDouble());
+            }
+
             var builder = OllamaStreamingChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
                     .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
@@ -209,6 +281,9 @@ public class OllamaRecorder {
                         SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };

@@ -1,22 +1,33 @@
 package io.quarkiverse.langchain4j.llama3.runtime;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
+
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.llama3.Llama3ChatModel;
 import io.quarkiverse.langchain4j.llama3.Llama3StreamingChatModel;
 import io.quarkiverse.langchain4j.llama3.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.llama3.runtime.config.LangChain4jLlama3FixedRuntimeConfig;
 import io.quarkiverse.langchain4j.llama3.runtime.config.LangChain4jLlama3RuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class Llama3Recorder {
+
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<Llama3ChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<Llama3StreamingChatModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private final RuntimeValue<LangChain4jLlama3RuntimeConfig> runtimeConfig;
     private final RuntimeValue<LangChain4jLlama3FixedRuntimeConfig> fixedRuntimeConfig;
@@ -27,7 +38,7 @@ public class Llama3Recorder {
         this.fixedRuntimeConfig = fixedRuntimeConfig;
     }
 
-    public Supplier<ChatModel> chatModel(String configName) {
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(configName);
         LangChain4jLlama3FixedRuntimeConfig.Llama3Config llama3FixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
                 configName);
@@ -49,23 +60,27 @@ public class Llama3Recorder {
                 builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
+            String configName) {
         LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(configName);
         LangChain4jLlama3FixedRuntimeConfig.Llama3Config llama3FixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
                 configName);
@@ -87,16 +102,20 @@ public class Llama3Recorder {
                 builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatModel get() {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatModel get() {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     return new DisabledStreamingChatModel();
                 }
             };

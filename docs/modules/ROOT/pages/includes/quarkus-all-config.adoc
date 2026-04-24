@@ -6768,6 +6768,27 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-model-options-model-options]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-model-options-model-options[`+++quarkus.langchain4j.ollama.devservices.model-options."model-options"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.devservices.model-options."model-options"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Additional model options to apply when pulling/loading the model. These options will be propagated to the chat-model configuration. For example: `quarkus.langchain4j.ollama.devservices.model-options.think=true`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_MODEL_OPTIONS__MODEL_OPTIONS_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_MODEL_OPTIONS__MODEL_OPTIONS_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|`+++{}+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id[`+++quarkus.langchain4j.ollama.chat-model.model-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-id+++[]
@@ -7150,6 +7171,195 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-think]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-think[`+++quarkus.langchain4j.ollama.chat-model.model-options.think+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.think+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable thinking mode for models that support it (e.g., Qwen3). When enabled, the model will output its reasoning process.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_THINK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_THINK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-return-thinking]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-return-thinking[`+++quarkus.langchain4j.ollama.chat-model.model-options.return-thinking+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.return-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to return thinking/reasoning content in the response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_RETURN_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_RETURN_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-num-ctx]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-num-ctx[`+++quarkus.langchain4j.ollama.chat-model.model-options.num-ctx+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.num-ctx+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the size of the context window used to generate the next token.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_NUM_CTX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_NUM_CTX+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-repeat-last-n]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-repeat-last-n[`+++quarkus.langchain4j.ollama.chat-model.model-options.repeat-last-n+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.repeat-last-n+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The last N tokens to penalize. Higher values will penalize more.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_REPEAT_LAST_N+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_REPEAT_LAST_N+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-repeat-penalty]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-repeat-penalty[`+++quarkus.langchain4j.ollama.chat-model.model-options.repeat-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.repeat-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The penalty for repeated tokens. Higher values will penalize repetition more.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_REPEAT_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_REPEAT_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-mirostat]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-mirostat[`+++quarkus.langchain4j.ollama.chat-model.model-options.mirostat+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.mirostat+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Mirostat sampling for controlling perplexity. 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIROSTAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIROSTAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-mirostat-eta]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-mirostat-eta[`+++quarkus.langchain4j.ollama.chat-model.model-options.mirostat-eta+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.mirostat-eta+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls the learning rate of Mirostat. Lower values result in slower adjustments.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_ETA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_ETA+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-mirostat-tau]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-mirostat-tau[`+++quarkus.langchain4j.ollama.chat-model.model-options.mirostat-tau+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.mirostat-tau+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls the target perplexity for Mirostat. Lower values produce more focused outputs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_TAU+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_TAU+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-min-p]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-options-min-p[`+++quarkus.langchain4j.ollama.chat-model.model-options.min-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-options.min-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the minimum probability relative to the most likely token. Lower values will result in more diverse outputs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIN_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_OPTIONS_MIN_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature[`+++quarkus.langchain4j.ollama.embedding-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -7684,6 +7894,195 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-think]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-think[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.think+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.think+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable thinking mode for models that support it (e.g., Qwen3). When enabled, the model will output its reasoning process.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_THINK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_THINK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-return-thinking]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-return-thinking[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.return-thinking+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.return-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to return thinking/reasoning content in the response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_RETURN_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_RETURN_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-num-ctx]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-num-ctx[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.num-ctx+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.num-ctx+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the size of the context window used to generate the next token.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_NUM_CTX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_NUM_CTX+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-repeat-last-n]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-repeat-last-n[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.repeat-last-n+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.repeat-last-n+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The last N tokens to penalize. Higher values will penalize more.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_REPEAT_LAST_N+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_REPEAT_LAST_N+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-repeat-penalty]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-repeat-penalty[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.repeat-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.repeat-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The penalty for repeated tokens. Higher values will penalize repetition more.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_REPEAT_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_REPEAT_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-mirostat]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-mirostat[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.mirostat+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.mirostat+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Mirostat sampling for controlling perplexity. 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIROSTAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIROSTAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-mirostat-eta]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-mirostat-eta[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.mirostat-eta+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.mirostat-eta+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls the learning rate of Mirostat. Lower values result in slower adjustments.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_ETA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_ETA+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-mirostat-tau]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-mirostat-tau[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.mirostat-tau+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.mirostat-tau+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls the target perplexity for Mirostat. Lower values produce more focused outputs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_TAU+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIROSTAT_TAU+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-min-p]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-options-min-p[`+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.min-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-options.min-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the minimum probability relative to the most likely token. Lower values will result in more diverse outputs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIN_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_OPTIONS_MIN_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature[`+++quarkus.langchain4j.ollama."model-name".embedding-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]

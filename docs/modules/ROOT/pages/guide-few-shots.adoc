@@ -51,11 +51,13 @@ Inside the same interface, define a method with `@UserMessage` that inlines your
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/fewshots/SentimentAiService.java[]
 ----
 
-<1>	The multi-line string contains two complete "INPUT: … OUTPUT: …" pairs followed by the placeholder `\{text}` for the new query.
+<1>	The multi-line string contains two complete `INPUT: … OUTPUT: …` pairs followed by the placeholder `\{text}` for the new query.
 <2> When the method is invoked, Quarkus Langchain4j will replace `\{text}` with the actual text parameter.
 
 [TIP]
+====
 While in this example we added the few-shot example in the user message, they can also be added in the system message.
+====
 
 == Step 3. Invoke the AI Service from an HTTP Endpoint
 
@@ -69,7 +71,7 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/fewshots/SentimentRes
 This `SentimentResource` bean handles HTTP GET requests, delegates to the few-shot prompt method, and returns the classification.
 The endpoint can be tested with a simple HTTP client or browser by accessing:
 
-[source,curl]
+[source,bash]
 ----
 curl http://localhost:8080/sentiment?text=I%20love%20this%20product!
 ----

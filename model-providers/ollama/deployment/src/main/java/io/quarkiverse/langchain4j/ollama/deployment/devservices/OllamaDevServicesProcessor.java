@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.ollama.deployment.devservices;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.jboss.logging.Logger;
@@ -80,6 +81,10 @@ public class OllamaDevServicesProcessor {
         if (isOllamaClientRunning()) {
             log.infof("Not starting Ollama dev services container, as there is already an Ollama instance running on port %d",
                     OllamaContainer.DEFAULT_OLLAMA_PORT);
+
+            Map<String, String> modelOptions = ollamaDevServicesBuildConfig.modelOptions();
+            ollamaDevServicesBuildItemBuildProducer.produce(
+                    new DevServicesOllamaConfigBuildItem(Map.of(), modelOptions));
             return;
         }
 
@@ -117,7 +122,12 @@ public class OllamaDevServicesProcessor {
 
                 if (devService.isOwner()) {
                     log.info("Dev Services for Ollama started.");
-                    ollamaDevServicesBuildItemBuildProducer.produce(new DevServicesOllamaConfigBuildItem(devServiceConfig));
+                    Map<String, String> modelOptions = ollamaDevServicesBuildConfig.modelOptions();
+                    if (modelOptions != null && !modelOptions.isEmpty()) {
+                        log.infof("Applying model options from Dev Services: %s", modelOptions);
+                    }
+                    ollamaDevServicesBuildItemBuildProducer.produce(
+                            new DevServicesOllamaConfigBuildItem(devServiceConfig, modelOptions));
                 }
 
                 // Configure the watch dog

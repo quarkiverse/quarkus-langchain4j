@@ -7,12 +7,18 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.model.bedrock.BedrockChatModel;
+import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
+import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
+import dev.langchain4j.model.bedrock.BedrockTitanEmbeddingModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.bedrock.runtime.BedrockRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -39,6 +45,17 @@ public class BedrockProcessor {
 
     private static final String FEATURE = "langchain4j-bedrock";
     private static final String PROVIDER = "bedrock";
+
+    private static final DotName BEDROCK_CHAT_MODEL_BUILDER = DotName.createSimple(BedrockChatModel.Builder.class);
+    private static final DotName BEDROCK_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(BedrockStreamingChatModel.Builder.class);
+    private static final DotName BEDROCK_COHERE_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(BedrockCohereEmbeddingModel.Builder.class);
+    private static final DotName BEDROCK_TITAN_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(BedrockTitanEmbeddingModel.BedrockTitanEmbeddingModelBuilder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -82,6 +99,10 @@ public class BedrockProcessor {
                         .addInjectionPoint(ParameterizedType.create(
                                 DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(BEDROCK_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(chatModel);
 
                 addQualifierIfNecessary(builder, configName);
@@ -96,6 +117,10 @@ public class BedrockProcessor {
                         .addInjectionPoint(ParameterizedType.create(
                                 DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(BEDROCK_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(streamingChatModel);
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
@@ -111,7 +136,15 @@ public class BedrockProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(BEDROCK_COHERE_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(BEDROCK_TITAN_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

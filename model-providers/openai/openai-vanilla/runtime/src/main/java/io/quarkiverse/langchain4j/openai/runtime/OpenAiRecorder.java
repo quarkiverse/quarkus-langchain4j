@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -32,6 +33,7 @@ import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
@@ -56,6 +58,16 @@ public class OpenAiRecorder {
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiModerationModel.OpenAiModerationModelBuilder>>> MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<QuarkusOpenAiImageModel.Builder>>> IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private static final String DUMMY_KEY = "dummy";
     private static final String OPENAI_BASE_URL = "https://api.openai.com/v1/";
@@ -74,6 +86,9 @@ public class OpenAiRecorder {
             String apiKey = openAiConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+            }
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             var builder = (QuarkusOpenAiChatModelBuilderFactory.Builder) OpenAiChatModel.builder();
@@ -122,6 +137,9 @@ public class OpenAiRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -184,6 +202,9 @@ public class OpenAiRecorder {
                         SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -198,13 +219,16 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+            }
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
             EmbeddingModelConfig embeddingModelConfig = openAiConfig.embeddingModel();
             var builder = (QuarkusOpenAiEmbeddingModelBuilderFactory.Builder) OpenAiEmbeddingModel.builder();
@@ -229,31 +253,35 @@ public class OpenAiRecorder {
                         new InetSocketAddress(host, openAiConfig.proxyPort())));
             });
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
-
             };
         }
     }
 
-    public Supplier<ModerationModel> moderationModel(String configName) {
+    public Function<SyntheticCreationalContext<ModerationModel>, ModerationModel> moderationModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+            }
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
             ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
             var builder = (QuarkusOpenAiModerationModelBuilderFactory.Builder) OpenAiModerationModel.builder();
@@ -275,25 +303,26 @@ public class OpenAiRecorder {
                         new InetSocketAddress(host, openAiConfig.proxyPort())));
             });
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ModerationModel get() {
+                public ModerationModel apply(SyntheticCreationalContext<ModerationModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public ModerationModel get() {
+                public ModerationModel apply(SyntheticCreationalContext<ModerationModel> context) {
                     return new DisabledModerationModel();
                 }
-
             };
         }
     }
 
-    public Supplier<ImageModel> imageModel(String configName) {
+    public Function<SyntheticCreationalContext<ImageModel>, ImageModel> imageModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
@@ -341,17 +370,19 @@ public class OpenAiRecorder {
 
             builder.persistDirectory(persistDirectory);
 
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public ImageModel get() {
+                public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ImageModel get() {
+                public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
                     return new DisabledImageModel();
                 }
             };
@@ -372,6 +403,12 @@ public class OpenAiRecorder {
 
     private ConfigValidationException.Problem[] createApiKeyConfigProblems(String configName) {
         return createConfigProblems("api-key", configName);
+    }
+
+    private ConfigValidationException.Problem[] createMaxRetriesConfigProblems(String configName) {
+        return new ConfigValidationException.Problem[] { new ConfigValidationException.Problem(String.format(
+                "SRCFG00014: The config property quarkus.langchain4j.openai%smax-retries must be greater than zero",
+                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."))) };
     }
 
     private ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {

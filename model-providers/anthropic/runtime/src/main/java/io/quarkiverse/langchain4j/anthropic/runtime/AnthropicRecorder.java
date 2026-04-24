@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.anthropic.runtime;
 
-import static dev.langchain4j.model.chat.request.ResponseFormat.JSON;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.time.Duration;
@@ -11,6 +10,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -26,6 +26,7 @@ import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.anthropic.QuarkusAnthropicClient;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
@@ -41,6 +42,10 @@ public class AnthropicRecorder {
     private static final Logger LOG = Logger.getLogger(AnthropicRecorder.class);
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<AnthropicChatModel.AnthropicChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<AnthropicStreamingChatModel.AnthropicStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private static final String DUMMY_KEY = "dummy";
@@ -62,6 +67,10 @@ public class AnthropicRecorder {
 
             if (DUMMY_KEY.equals(apiKey)) {
                 throw new ConfigValidationException(createApiKeyConfigProblem(configName));
+            }
+
+            if (chatModelConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblem(configName));
             }
 
             var builder = AnthropicChatModel.builder()
@@ -183,6 +192,9 @@ public class AnthropicRecorder {
                             .collect(Collectors.toList()));
                     QuarkusAnthropicClient.setLogCurlHint(logCurl);
                     QuarkusAnthropicClient.setDisableBetaHint(disableBeta);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -325,6 +337,10 @@ public class AnthropicRecorder {
                             .collect(Collectors.toList()));
                     QuarkusAnthropicClient.setLogCurlHint(logCurl);
                     QuarkusAnthropicClient.setDisableBetaHint(disableBeta);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -347,6 +363,12 @@ public class AnthropicRecorder {
 
     private static ConfigValidationException.Problem[] createApiKeyConfigProblem(String configName) {
         return createConfigProblems("api-key", configName);
+    }
+
+    private static ConfigValidationException.Problem[] createMaxRetriesConfigProblem(String configName) {
+        return new ConfigValidationException.Problem[] { new ConfigValidationException.Problem(
+                "SRCFG00014: The config property quarkus.langchain4j.anthropic%schat-model.max-retries must be greater than zero"
+                        .formatted(NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."))) };
     }
 
     private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {

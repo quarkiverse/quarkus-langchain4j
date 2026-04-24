@@ -7,9 +7,11 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
@@ -20,7 +22,10 @@ import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandida
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiChatLanguageModel;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiEmbeddingModel;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiRecorder;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiStreamingChatLanguageModel;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -37,6 +42,16 @@ public class VertexAiGeminiProcessor {
 
     private static final String FEATURE = "langchain4j-vertexai-gemini";
     private static final String PROVIDER = "vertexai-gemini";
+
+    private static final DotName VERTEX_AI_GEMINI_CHAT_MODEL_BUILDER = DotName
+            .createSimple(VertexAiGeminiChatLanguageModel.Builder.class);
+    private static final DotName VERTEX_AI_GEMINI_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(VertexAiGeminiStreamingChatLanguageModel.Builder.class);
+    private static final DotName VERTEX_AI_GEMINI_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(VertexAiGeminiEmbeddingModel.Builder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -72,6 +87,10 @@ public class VertexAiGeminiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(VERTEX_AI_GEMINI_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(chatModel);
 
                 addQualifierIfNecessary(builder, configName);
@@ -87,6 +106,10 @@ public class VertexAiGeminiProcessor {
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(VERTEX_AI_GEMINI_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(streamingChatModel);
 
                 addQualifierIfNecessary(streamingBuilder, configName);
@@ -102,7 +125,11 @@ public class VertexAiGeminiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(VERTEX_AI_GEMINI_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

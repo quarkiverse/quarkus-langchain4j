@@ -29,14 +29,14 @@ class DisabledModelsHuggingFaceRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatModel.class);
     }
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }

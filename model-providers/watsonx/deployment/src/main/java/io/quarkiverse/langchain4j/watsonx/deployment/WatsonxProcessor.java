@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
@@ -57,6 +58,24 @@ public class WatsonxProcessor {
 
     private static final String FEATURE = "langchain4j-watsonx";
     private static final String PROVIDER = "watsonx";
+
+    private static final DotName WATSONX_CHAT_MODEL_BUILDER = DotName
+            .createSimple(dev.langchain4j.model.watsonx.WatsonxChatModel.Builder.class);
+    private static final DotName WATSONX_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(dev.langchain4j.model.watsonx.WatsonxStreamingChatModel.Builder.class);
+    private static final DotName WATSONX_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(dev.langchain4j.model.watsonx.WatsonxEmbeddingModel.Builder.class);
+    private static final DotName WATSONX_SCORING_MODEL_BUILDER = DotName
+            .createSimple(dev.langchain4j.model.watsonx.WatsonxScoringModel.Builder.class);
+    private static final DotName WATSONX_MODERATION_MODEL_BUILDER = DotName
+            .createSimple(dev.langchain4j.model.watsonx.WatsonxModerationModel.Builder.class);
+    private static final DotName TEXT_EXTRACTION_SERVICE_BUILDER = DotName
+            .createSimple(com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService.Builder.class);
+    private static final DotName TEXT_CLASSIFICATION_SERVICE_BUILDER = DotName
+            .createSimple(com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService.Builder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -234,7 +253,11 @@ public class WatsonxProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.textExtraction(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(TEXT_EXTRACTION_SERVICE_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.textExtraction(configName));
                 addQualifierIfNecessary(textExtractionBuilder, configName);
                 beanProducer.produce(textExtractionBuilder.done());
             }
@@ -255,7 +278,11 @@ public class WatsonxProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.textClassification(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(TEXT_CLASSIFICATION_SERVICE_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.textClassification(configName));
                 addQualifierIfNecessary(textClassificationBuilder, configName);
                 beanProducer.produce(textClassificationBuilder.done());
             }
@@ -279,6 +306,10 @@ public class WatsonxProcessor {
                     .scope(ApplicationScoped.class)
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                    new Type[] { ClassType.create(WATSONX_CHAT_MODEL_BUILDER) }, null) },
+                            null), ANY)
                     .createWith(chatModel);
 
             addQualifierIfNecessary(chatBuilder, configName);
@@ -292,6 +323,10 @@ public class WatsonxProcessor {
                     .scope(ApplicationScoped.class)
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                    new Type[] { ClassType.create(WATSONX_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                            null), ANY)
                     .createWith(streamingChatModel);
 
             addQualifierIfNecessary(streamingBuilder, configName);
@@ -307,7 +342,11 @@ public class WatsonxProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(WATSONX_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -322,7 +361,11 @@ public class WatsonxProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.scoringModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(WATSONX_SCORING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.scoringModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -336,7 +379,11 @@ public class WatsonxProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.moderationModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(WATSONX_MODERATION_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.moderationModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

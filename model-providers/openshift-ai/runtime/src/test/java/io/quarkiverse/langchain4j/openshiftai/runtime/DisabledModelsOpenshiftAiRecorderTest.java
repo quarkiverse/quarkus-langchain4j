@@ -28,7 +28,7 @@ class DisabledModelsOpenshiftAiRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatModel.class);
     }
