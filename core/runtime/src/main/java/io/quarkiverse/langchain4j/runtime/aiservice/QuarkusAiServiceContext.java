@@ -29,6 +29,24 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public boolean allowContinuousForcedToolCalling;
     public DefaultMemoryIdProvider defaultMemoryIdProvider;
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
+    /**
+     * True when a {@link dev.langchain4j.memory.chat.ChatMemoryProvider} is configured (per-memory-id mode).
+     * False when only a single shared {@link dev.langchain4j.memory.ChatMemory} is configured.
+     * Used to guard DefaultMemoryIdProvider usage: providers must only be consulted when a
+     * ChatMemoryProvider exists — otherwise we risk returning a non-null id from e.g.
+     * RequestScopeStateDefaultMemoryIdProvider when only a single shared memory exists,
+     * causing {@link dev.langchain4j.service.memory.ChatMemoryService#getOrCreateChatMemory}
+     * to receive a null-chatMemoryProvider.
+     */
+    private boolean hasChatMemoryProvider = false;
+
+    public boolean hasChatMemoryProvider() {
+        return hasChatMemoryProvider;
+    }
+
+    public void setHasChatMemoryProvider(boolean hasChatMemoryProvider) {
+        this.hasChatMemoryProvider = hasChatMemoryProvider;
+    }
 
     // needed by Arc
     public QuarkusAiServiceContext() {
@@ -37,6 +55,18 @@ public class QuarkusAiServiceContext extends AiServiceContext {
 
     public QuarkusAiServiceContext(Class<?> aiServiceClass) {
         super(aiServiceClass);
+    }
+
+    @Override
+    public void initChatMemories(ChatMemory chatMemory) {
+        super.initChatMemories(chatMemory);
+        this.hasChatMemoryProvider = false;
+    }
+
+    @Override
+    public void initChatMemories(dev.langchain4j.memory.chat.ChatMemoryProvider chatMemoryProvider) {
+        super.initChatMemories(chatMemoryProvider);
+        this.hasChatMemoryProvider = true;
     }
 
     /**
