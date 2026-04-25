@@ -5,6 +5,7 @@ import static dev.langchain4j.internal.RetryUtils.withRetry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.Proxy;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,6 +66,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
                 .logRequests(builder.logRequests)
                 .logResponses(builder.logResponses)
                 .logCurl(builder.logCurl != null && builder.logCurl)
+                .proxy(builder.proxy)
                 .build();
     }
 
@@ -154,6 +156,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         private Boolean logResponses;
         private Boolean logCurl;
         private Optional<Path> persistDirectory;
+        private Proxy proxy;
 
         public Builder baseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
@@ -237,6 +240,11 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         public Builder persistDirectory(Optional<Path> persistDirectory) {
             this.persistDirectory = persistDirectory;
+            return this;
+        }
+
+        public Builder proxy(Proxy proxy) {
+            this.proxy = proxy;
             return this;
         }
 

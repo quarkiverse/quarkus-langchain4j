@@ -301,68 +301,33 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-type]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-type[`+++quarkus.langchain4j.openai.proxy-type+++`]##
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-configuration-name[`+++quarkus.langchain4j.openai.proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai.proxy-type+++[]
+config_property_copy_button:+++quarkus.langchain4j.openai.proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The Proxy type
+Proxy configuration name.
+
+There are some rules for using Quarkus Proxy Registry configuration:
+
+ - If `quarkus.langchain4j.openai.proxy-host` is set, it takes precedence over `proxy-host` configuration.
+ - If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used.
+ - If the proxy configuration name is set, the configuration from `quarkus.proxy.<name>.++*++` will be used.
+ - If the proxy configuration name is set, but no proxy configuration is found with that name, then an error will be thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_TYPE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_TYPE+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|`+++HTTP+++`
-
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-host]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-host[`+++quarkus.langchain4j.openai.proxy-host+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai.proxy-host+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-The Proxy host
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_HOST+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_HOST+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |
-
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-port]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-port[`+++quarkus.langchain4j.openai.proxy-port+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai.proxy-port+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-The Proxy port
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_PORT+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_PORT+++`
-endif::add-copy-button-to-env-var[]
---
-|int
-|`+++3128+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-model-name[`+++quarkus.langchain4j.openai.chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1039,6 +1004,75 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-type]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-type[[.line-through]#`+++quarkus.langchain4j.openai.proxy-type+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.proxy-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `quarkus.langchain4j.openai.proxy-configuration-name` instead._
+
+The Proxy type
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++HTTP+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-host]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-host[[.line-through]#`+++quarkus.langchain4j.openai.proxy-host+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.proxy-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `quarkus.langchain4j.openai.proxy-configuration-name` instead._
+
+The Proxy host
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-port]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-proxy-port[[.line-through]#`+++quarkus.langchain4j.openai.proxy-port+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.proxy-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `quarkus.langchain4j.openai.proxy-configuration-name` instead._
+
+The Proxy port
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_PROXY_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++3128+++`
+
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-max-tokens[[.line-through]#`+++quarkus.langchain4j.openai.chat-model.max-tokens+++`#]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.max-tokens+++[]
@@ -1276,68 +1310,33 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-type]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-type[`+++quarkus.langchain4j.openai."model-name".proxy-type+++`]##
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-configuration-name[`+++quarkus.langchain4j.openai."model-name".proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai."model-name".proxy-type+++[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The Proxy type
+Proxy configuration name.
+
+There are some rules for using Quarkus Proxy Registry configuration:
+
+ - If `quarkus.langchain4j.openai.proxy-host` is set, it takes precedence over `proxy-host` configuration.
+ - If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used.
+ - If the proxy configuration name is set, the configuration from `quarkus.proxy.<name>.++*++` will be used.
+ - If the proxy configuration name is set, but no proxy configuration is found with that name, then an error will be thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_TYPE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_TYPE+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|`+++HTTP+++`
-
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-host]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-host[`+++quarkus.langchain4j.openai."model-name".proxy-host+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai."model-name".proxy-host+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-The Proxy host
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_HOST+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_HOST+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |
-
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-port]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-proxy-port[`+++quarkus.langchain4j.openai."model-name".proxy-port+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai."model-name".proxy-port+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-The Proxy port
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_PORT+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__PROXY_PORT+++`
-endif::add-copy-button-to-env-var[]
---
-|int
-|`+++3128+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-model-name[`+++quarkus.langchain4j.openai."model-name".chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]

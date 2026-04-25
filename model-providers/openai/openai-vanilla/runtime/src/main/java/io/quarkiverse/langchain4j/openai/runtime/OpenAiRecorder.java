@@ -17,6 +17,8 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import org.jboss.logging.Logger;
+
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
@@ -48,6 +50,7 @@ import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -55,6 +58,8 @@ import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class OpenAiRecorder {
+
+    private static final Logger log = Logger.getLogger(OpenAiRecorder.class);
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
@@ -120,10 +125,6 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -137,9 +138,14 @@ public class OpenAiRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
+
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
+
                     return builder.build();
                 }
             };
@@ -184,10 +190,6 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -202,6 +204,10 @@ public class OpenAiRecorder {
                         SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
+
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
@@ -248,17 +254,17 @@ public class OpenAiRecorder {
             }
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
             return new Function<>() {
                 @Override
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
+
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
+
                     return builder.build();
                 }
             };
@@ -298,10 +304,6 @@ public class OpenAiRecorder {
                     .modelName(moderationModelConfig.modelName());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
-            openAiConfig.proxyHost().ifPresent(host -> {
-                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
-                        new InetSocketAddress(host, openAiConfig.proxyPort())));
-            });
 
             return new Function<>() {
                 @Override
@@ -309,6 +311,8 @@ public class OpenAiRecorder {
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
                     return builder.build();
                 }
             };
@@ -376,6 +380,8 @@ public class OpenAiRecorder {
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    resolveProxy(openAiConfig, proxyRegistry).ifPresent(builder::proxy);
                     return builder.build();
                 }
             };
@@ -388,6 +394,41 @@ public class OpenAiRecorder {
             };
         }
 
+    }
+
+    @SuppressWarnings({ "removal" })
+    private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
+            ProxyConfigurationRegistry proxyRegistry) {
+
+        if (openAiConfig.proxyConfigurationName().isPresent()) {
+            String configName = openAiConfig.proxyConfigurationName().get();
+
+            if (openAiConfig.proxyHost().isPresent()) {
+                log.warnf("Both 'proxy-configuration-name' (%s) and deprecated 'proxy-host' (%s) are set. " +
+                        "The 'proxy-host' configuration will be ignored. " +
+                        "Please remove 'proxy-host' and 'proxy-port' from your configuration.",
+                        configName, openAiConfig.proxyHost().get());
+            }
+
+            return proxyRegistry.get(openAiConfig.proxyConfigurationName())
+                    .map(pc -> new Proxy(
+                            Type.valueOf(pc.type().name()),
+                            new InetSocketAddress(pc.host(), pc.port())));
+        }
+
+        if (openAiConfig.proxyHost().isPresent()) {
+            log.warnf("Using deprecated 'proxy-host' configuration. " +
+                    "Please migrate to 'proxy-configuration-name' using Quarkus Proxy Registry. " +
+                    "The 'proxy-host', 'proxy-port', and 'proxy-type' properties will be removed in a future version.");
+
+            return Optional.of(new Proxy(
+                    Type.valueOf(openAiConfig.proxyType()),
+                    new InetSocketAddress(openAiConfig.proxyHost().get(), openAiConfig.proxyPort())));
+        }
+        return proxyRegistry.get(openAiConfig.proxyConfigurationName())
+                .map(pc -> new Proxy(
+                        Type.valueOf(pc.type().name()),
+                        new InetSocketAddress(pc.host(), pc.port())));
     }
 
     private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,
