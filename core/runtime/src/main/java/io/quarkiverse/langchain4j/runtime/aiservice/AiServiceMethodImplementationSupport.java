@@ -422,6 +422,9 @@ public class AiServiceMethodImplementationSupport {
                         : getMaxSequentialToolExecutions();
         int executionsLeft = maxSequentialToolExecutions;
         List<ChatResponse> intermediateResponses = new ArrayList<>();
+        // Maintain a local copy of messages for the tool execution loop
+        // This is needed because NoopChatMemory (used by AgentWithoutMemory) discards all messages
+        List<ChatMessage> currentMessages = new ArrayList<>(messagesToSend);
         while (true) {
             if (executionsLeft-- == 0) {
                 throw runtime("Something is wrong, exceeded %s sequential tool executions",
@@ -430,6 +433,7 @@ public class AiServiceMethodImplementationSupport {
 
             AiMessage aiMessage = response.aiMessage();
             committableChatMemory.add(aiMessage);
+            currentMessages.add(aiMessage);
 
             if (!aiMessage.hasToolExecutionRequests()) {
                 break;
@@ -490,6 +494,7 @@ public class AiServiceMethodImplementationSupport {
             }
             for (ToolExecutionResultMessage toolResult : toolResults) {
                 committableChatMemory.add(toolResult);
+                currentMessages.add(toolResult);
             }
             if (immediateToolReturn) {
                 if (!TypeUtil.isResult(returnType)) {
@@ -519,7 +524,7 @@ public class AiServiceMethodImplementationSupport {
 
             log.debug("Attempting to obtain AI response");
             ChatModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
-            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(committableChatMemory.messages());
+            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(currentMessages);
             DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
             if (supportsJsonSchema(effectiveChatModel)) {
                 Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
