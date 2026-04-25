@@ -1,0 +1,54 @@
+name: "Quarkus ecosystem CI"
+
+# This workflow integrates quarkus-langchain4j into the Quarkus Ecosystem CI pipeline.
+# It runs against Quarkus 999-SNAPSHOT (main branch) to catch breaking changes early.
+#
+# Triggers:
+#   - workflow_dispatch: Manual trigger for testing / ad-hoc runs
+#   - schedule: Weekly run every Sunday at 02:00 UTC for continuous feedback
+#
+# How it works:
+#   The workflow delegates to the shared quarkiverse/.github workflow which:
+#   1. Reads quarkus-langchain4j config from quarkusio/quarkus-ecosystem-ci repo
+#      (path: quarkiverse-langchain4j/context.yaml)
+#   2. Installs the latest Quarkus 999-SNAPSHOT (pre-built or builds from source)
+#   3. Updates Quarkus version properties in all pom.xml files
+#   4. Runs .github/quarkus-ecosystem-test script (test subset defined below)
+#   5. Reports results back to the tracking issue in quarkusio/quarkus
+#
+# Test scope:
+#   Runs a representative subset of tests that cover the main extension functionality
+#   without requiring external API keys or GPU resources:
+#     - core module: fundamental chat model, AI service, tool framework
+#     - model-providers/openai: most widely used provider
+#     - integration-tests/easy-rag: key RAG feature
+#     - integration-tests/multiple-providers: tool framework integration
+#
+# Requirements:
+#   - ECOSYSTEM_CI_TOKEN secret: GitHub token with write access to quarkusio/quarkus
+#     (used to post CI results to the tracking issue)
+#   - quarkusio/quarkus-ecosystem-ci repo must have quarkiverse-langchain4j/context.yaml
+#     (this file exists and is maintained by the Quarkus CI team)
+#
+# Related: https://github.com/quarkiverse/quarkus-langchain4j/issues/2341
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Sunday at 02:00 UTC
+    - cron: '0 2 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: quarkiverse/.github/.github/workflows/quarkus-ecosystem-ci.yml@main
+    secrets: inherit
+    with:
+      ecosystem_ci_repo_path: quarkiverse-langchain4j
+      java_version: 21
