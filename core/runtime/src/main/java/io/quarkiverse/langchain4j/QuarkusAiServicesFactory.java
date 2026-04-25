@@ -70,8 +70,9 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
-        public AiServices<T> maxSequentialToolInvocations(Integer maxSequentialToolInvocations) {
-            quarkusAiServiceContext().maxSequentialToolExecutions = maxSequentialToolInvocations;
+        @Override
+        public AiServices<T> maxSequentialToolsInvocations(int maxSequentialToolsInvocations) {
+            quarkusAiServiceContext().maxSequentialToolExecutions = maxSequentialToolsInvocations;
             return this;
         }
 

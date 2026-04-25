@@ -329,7 +329,7 @@ public class AiServicesRecorder {
                     }
 
                     if (info.maxSequentialToolInvocations() != null && info.maxSequentialToolInvocations() > 0) {
-                        quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
+                        quarkusAiServices.maxSequentialToolsInvocations(info.maxSequentialToolInvocations());
                     }
 
                     if (info.maxToolCallsPerResponse() != null && info.maxToolCallsPerResponse() != 0) {
