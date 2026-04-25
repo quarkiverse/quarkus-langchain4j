@@ -18,6 +18,7 @@
         <module>google/gemini/gemini-common</module>
         <module>google/vertex-ai</module>
         <module>google/vertex-ai-gemini</module>
+        <module>google/vertex-ai-models</module>
         <module>hugging-face</module>
         <module>jaxrs-client</module>
         <module>mistral</module>
