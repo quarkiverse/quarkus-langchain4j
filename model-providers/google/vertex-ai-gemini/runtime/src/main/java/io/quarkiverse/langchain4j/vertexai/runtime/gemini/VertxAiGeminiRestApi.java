@@ -21,10 +21,6 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequest;
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequests;
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
@@ -38,17 +34,13 @@ import io.vertx.core.http.HttpClientResponse;
 @Path("v1/projects/{projectId}/locations/{location}/publishers/{publisher}/models")
 public interface VertxAiGeminiRestApi {
 
+    @Path("{modelId}:predict")
+    @POST
+    PredictResponse predict(PredictRequest request, @BeanParam ApiMetadata apiMetadata);
+
     @Path("{modelId}:generateContent")
     @POST
     GenerateContentResponse generateContent(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);
-
-    @Path("{modelId}:batchEmbedContents")
-    @POST
-    EmbedContentResponses batchEmbedContents(EmbedContentRequests embedContentRequest, @BeanParam ApiMetadata apiMetadata);
-
-    @Path("{modelId}:embedContent")
-    @POST
-    EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest, @BeanParam ApiMetadata apiMetadata);
 
     @Path("{modelId}:streamGenerateContent")
     @POST

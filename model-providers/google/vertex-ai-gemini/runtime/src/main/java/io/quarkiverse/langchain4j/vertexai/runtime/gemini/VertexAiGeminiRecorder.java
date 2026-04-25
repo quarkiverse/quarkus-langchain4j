@@ -52,16 +52,17 @@ public class VertexAiGeminiRecorder {
 
         if (vertexAiConfig.enableIntegration()) {
             var embeddingModelConfig = vertexAiConfig.embeddingModel();
-            Optional<String> baseUrl = vertexAiConfig.baseUrl();
-
             String location = vertexAiConfig.location();
-            if (baseUrl.isEmpty() && DUMMY_KEY.equals(location)) {
+            if (DUMMY_KEY.equals(location)) {
                 throw new ConfigValidationException(createConfigProblems("location", configName));
             }
             String projectId = vertexAiConfig.projectId();
-            if (baseUrl.isEmpty() && DUMMY_KEY.equals(projectId)) {
+            if (DUMMY_KEY.equals(projectId)) {
                 throw new ConfigValidationException(createConfigProblems("project-id", configName));
             }
+            Optional<String> baseUrl = vertexAiConfig.baseUrl()
+                    .or(() -> Optional.of("https://" + location + "-aiplatform.googleapis.com"));
+
             var builder = VertexAiGeminiEmbeddingModel.builder()
                     .baseUrl(baseUrl)
                     .location(location)
@@ -77,13 +78,8 @@ public class VertexAiGeminiRecorder {
                         new InetSocketAddress(host, vertexAiConfig.proxyPort())));
             });
 
-            if (embeddingModelConfig.outputDimension().isPresent()) {
-                builder.dimension(embeddingModelConfig.outputDimension().get());
-            }
-
-            if (embeddingModelConfig.taskType().isPresent()) {
-                builder.taskType(embeddingModelConfig.taskType().get());
-            }
+            builder.outputDimensionality(embeddingModelConfig.outputDimension().orElse(null));
+            builder.taskType(embeddingModelConfig.taskType().orElse(null));
 
             return new Function<>() {
                 @Override

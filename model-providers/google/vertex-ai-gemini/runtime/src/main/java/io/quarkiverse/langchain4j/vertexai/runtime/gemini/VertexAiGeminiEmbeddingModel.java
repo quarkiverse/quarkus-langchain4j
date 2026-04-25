@@ -5,26 +5,32 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequest;
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequests;
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
-import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
-import io.quarkiverse.langchain4j.gemini.common.GeminiEmbeddingModel;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.PredictRequest.Instance;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.PredictRequest.Parameters;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
-public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
+public class VertexAiGeminiEmbeddingModel implements EmbeddingModel {
 
     private final VertxAiGeminiRestApi restApi;
     private final VertxAiGeminiRestApi.ApiMetadata apiMetadata;
+    private final String taskType;
+    private final Integer outputDimensionality;
 
     public VertexAiGeminiEmbeddingModel(Builder builder) {
-        super(builder.modelId, builder.dimension, builder.taskType);
+        this.taskType = builder.taskType;
+        this.outputDimensionality = builder.outputDimensionality;
 
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
@@ -65,20 +71,22 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
     }
 
     @Override
-    protected EmbedContentRequest getEmbedContentRequest(String model, String text) {
-        var withModel = super.getEmbedContentRequest(model, text);
-        return new EmbedContentRequest(null, withModel.content(), withModel.taskType(), withModel.title(),
-                withModel.outputDimensionality());
-    }
+    public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
+        List<Embedding> result = new ArrayList<>();
+        for (TextSegment textSegment : textSegments) {
+            PredictRequest.Instance instance = new PredictRequest.Instance(textSegment.text(), taskType, null);
+            PredictRequest.Parameters parameters = new PredictRequest.Parameters(true, outputDimensionality);
+            PredictRequest predictRequest = new PredictRequest(List.of(instance), parameters);
 
-    @Override
-    protected EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest) {
-        return restApi.embedContent(embedContentRequest, apiMetadata);
-    }
-
-    @Override
-    protected EmbedContentResponses batchEmbedContents(EmbedContentRequests embedContentRequests) {
-        return restApi.batchEmbedContents(embedContentRequests, apiMetadata);
+            PredictResponse predictResponse = restApi.predict(predictRequest, apiMetadata);
+            List<Float> floatList = predictResponse.getPredictions().get(0).getEmbeddings().getValues();
+            float[] floatArray = new float[floatList.size()];
+            for (int i = 0; i < floatList.size(); i++) {
+                floatArray[i] = floatList.get(i);
+            }
+            result.add(new Embedding(floatArray));
+        }
+        return Response.from(result);
     }
 
     public static Builder builder() {
@@ -92,8 +100,8 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
         private String location;
         private String modelId;
         private String publisher;
-        private Integer dimension;
         private String taskType;
+        private Integer outputDimensionality;
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
@@ -124,13 +132,13 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
             return this;
         }
 
-        public Builder dimension(Integer dimension) {
-            this.dimension = dimension;
+        public Builder taskType(String taskType) {
+            this.taskType = taskType;
             return this;
         }
 
-        public Builder taskType(String taskType) {
-            this.taskType = taskType;
+        public Builder outputDimensionality(Integer outputDimensionality) {
+            this.outputDimensionality = outputDimensionality;
             return this;
         }
 
