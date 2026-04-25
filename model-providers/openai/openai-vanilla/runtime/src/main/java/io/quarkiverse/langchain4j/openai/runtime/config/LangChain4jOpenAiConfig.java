@@ -107,20 +107,45 @@ public interface LangChain4jOpenAiConfig {
 
         /**
          * The Proxy type
+         *
+         * @deprecated Use {@code quarkus.langchain4j.openai.proxy-configuration-name} instead.
          */
         @WithDefault("HTTP")
+        @Deprecated(forRemoval = true)
         String proxyType();
 
         /**
          * The Proxy host
+         *
+         * @deprecated Use {@code quarkus.langchain4j.openai.proxy-configuration-name} instead.
          */
+        @Deprecated(forRemoval = true)
         Optional<String> proxyHost();
 
         /**
          * The Proxy port
+         *
+         * @deprecated Use {@code quarkus.langchain4j.openai.proxy-configuration-name} instead.
          */
+        @Deprecated(forRemoval = true)
         @WithDefault("3128")
         Integer proxyPort();
+
+        /**
+         * Proxy configuration name.
+         * <p>
+         * There are some rules for using Quarkus Proxy Registry configuration:
+         * <ul>
+         * <li>If {@code quarkus.langchain4j.openai.proxy-host} is set, it takes precedence over <code>proxy-host</code>
+         * configuration.</li>
+         * <li>If not set and the default proxy configuration is configured ({@code quarkus.proxy.*}) then that will be
+         * used.</li>
+         * <li>If the proxy configuration name is set, the configuration from {@code quarkus.proxy.<name>.*} will be used.</li>
+         * <li>If the proxy configuration name is set, but no proxy configuration is found with that name, then an error will be
+         * thrown at runtime.</li>
+         * </ul>
+         */
+        Optional<String> proxyConfigurationName();
 
         /**
          * Chat model related settings
