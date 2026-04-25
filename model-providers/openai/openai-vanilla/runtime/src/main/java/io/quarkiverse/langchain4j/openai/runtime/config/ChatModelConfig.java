@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.openai.runtime.config;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -22,18 +23,22 @@ public interface ChatModelConfig {
      * A value of 0.9 is good for more creative applications, while 0 (argmax sampling) is good for ones with a well-defined
      * answer.
      * It is recommended to alter this or topP, but not both.
+     * <p>
+     * When not set, the field will be omitted from API requests.
      */
-    @WithDefault("${quarkus.langchain4j.temperature:1.0}")
-    Double temperature();
+    @ConfigDocDefault("1.0")
+    OptionalDouble temperature();
 
     /**
      * An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens
      * with topP probability mass.
      * 0.1 means only the tokens comprising the top 10% probability mass are considered.
      * It is recommended to alter this or temperature, but not both.
+     * <p>
+     * When not set, the field will be omitted from API requests.
      */
-    @WithDefault("1.0")
-    Double topP();
+    @ConfigDocDefault("1.0")
+    OptionalDouble topP();
 
     /**
      * The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed
