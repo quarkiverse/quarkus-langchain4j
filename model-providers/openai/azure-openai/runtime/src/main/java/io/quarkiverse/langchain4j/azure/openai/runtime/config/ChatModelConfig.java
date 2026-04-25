@@ -61,7 +61,7 @@ public interface ChatModelConfig {
      * It is recommended to alter this or topP, but not both.
      */
     @WithDefault("${quarkus.langchain4j.temperature:1.0}")
-    Double temperature();
+    Optional<Double> temperature();
 
     /**
      * An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens
@@ -70,7 +70,7 @@ public interface ChatModelConfig {
      * It is recommended to alter this or temperature, but not both.
      */
     @WithDefault("1.0")
-    Double topP();
+    Optional<Double> topP();
 
     /**
      * If specified, our system will make the best effort to sample deterministically, such that repeated requests with the same

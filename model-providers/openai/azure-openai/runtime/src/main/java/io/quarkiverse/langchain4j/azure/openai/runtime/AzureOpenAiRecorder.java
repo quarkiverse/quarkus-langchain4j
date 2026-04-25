@@ -92,8 +92,8 @@ public class AzureOpenAiRecorder {
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
                     .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
-                    .temperature(chatModelConfig.temperature())
-                    .topP(chatModelConfig.topP())
+                    .temperature(chatModelConfig.temperature().orElse(null))
+                    .topP(chatModelConfig.topP().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
@@ -154,8 +154,8 @@ public class AzureOpenAiRecorder {
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
                     .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
-                    .temperature(chatModelConfig.temperature())
-                    .topP(chatModelConfig.topP())
+                    .temperature(chatModelConfig.temperature().orElse(null))
+                    .topP(chatModelConfig.topP().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
