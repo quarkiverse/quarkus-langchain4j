@@ -519,7 +519,19 @@ public class AiServiceMethodImplementationSupport {
 
             log.debug("Attempting to obtain AI response");
             ChatModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
-            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(committableChatMemory.messages());
+            List<ChatMessage> messagesForRequest = committableChatMemory.messages();
+            // When using NoopChatMemory (stateless agents), the messages list may be empty
+            // after tool execution consumes messages. In this case, use the userMessage as fallback
+            // to avoid "messages cannot be null or empty" IllegalArgumentException.
+            if (messagesForRequest.isEmpty()) {
+                log.debugv("NoopChatMemory detected: messages list is empty, injecting userMessage as fallback");
+                messagesForRequest = new ArrayList<>();
+                if (systemMessage.isPresent()) {
+                    messagesForRequest.add(systemMessage.get());
+                }
+                messagesForRequest.add(userMessage);
+            }
+            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(messagesForRequest);
             DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
             if (supportsJsonSchema(effectiveChatModel)) {
                 Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
