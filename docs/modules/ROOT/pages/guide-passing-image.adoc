@@ -11,15 +11,15 @@ This guide shows you how to build a Quarkus microservice that sends image dataâ€
 * A Quarkus project with the `quarkus-langchain4j-openai` extension (or another model provider that supports a model with vision capabilities)
 * `quarkus.langchain4j.openai.api-key` set in `application.properties`
 * A vision-capable model (for example: `gpt-4.1-mini`, `o3`. The default model has vision capabilities, but you can specify a different one if needed)
-
++
 [source,properties]
 ----
 quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
 quarkus.langchain4j.openai.chat-model.model-name=gpt-4.1-mini
 ----
-
++
 * Set the temperature to 0.0 for deterministic outputs, especially for tasks like OCR or object detection where precision matters:
-
++
 [source,properties]
 ----
 quarkus.langchain4j.openai.chat-model.temperature=0

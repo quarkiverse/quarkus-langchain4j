@@ -5,7 +5,7 @@ include::./includes/customization.adoc[]
 
 Azure OpenAI provides image generation models that can create or modify images based on natural language prompts. These models enable use cases such as visual storytelling, creative content generation, and image editing workflows.
 
-For an overview of how image models fit into AI workflows, refer to the xref:models.adoc#_image_models_[Image Models] section of the Models documentation.
+For an overview of how image models fit into AI workflows, refer to the xref:models.adoc#_image_models[Image Models] section of the Models documentation.
 
 == Prerequisites
 
@@ -16,14 +16,8 @@ include::./azure-openai-chat-model.adoc[tags=azure-openai-prerequisites]
 To use Azure OpenAI image models in your Quarkus application, add the following extension:
 
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-azure-openai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-azure-openai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Azure OpenAI image model.
 
@@ -62,7 +56,7 @@ import jakarta.inject.Inject;
 == Related Topics
 
 [.lead]
-* xref:models.adoc#_image_models_[Image Models Overview]
+* xref:models.adoc#_image_models[Image Models Overview]
 * xref:ai-services.adoc[AI Services Reference]
 
 

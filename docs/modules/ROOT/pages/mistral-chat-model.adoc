@@ -11,14 +11,8 @@ To use Mistral models, you need an API key from the https://docs.mistral.ai/plat
 
 Add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-mistral-ai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 [NOTE]
 ====

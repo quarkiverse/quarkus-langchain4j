@@ -16,6 +16,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -26,12 +27,14 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 
 /**
  * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by
  * using the class as a CDI bean.
  * Under the hood LangChain4j's {@link AiServices#builder(Class)} is called
- * while also providing the builder with the proper {@link ChatLanguageModel} bean (mandatory), {@code tools} bean (optional),
+ * while also providing the builder with the proper {@link ChatModel} bean (mandatory), {@code tools} bean (optional),
  * {@link ChatMemoryProvider} and {@link ContentRetriever} beans (which by default are configured if such beans exist).
  * <p>
  * NOTE: The resulting CDI bean is {@link jakarta.enterprise.context.RequestScoped} by default. If you need to change the scope,
@@ -48,7 +51,7 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 public @interface RegisterAiService {
 
     /**
-     * Configures the way to obtain the {@link StreamingChatLanguageModel} to use.
+     * Configures the way to obtain the {@link StreamingChatModel} to use.
      * If not configured, the default CDI bean implementing the model is looked up.
      * Such a bean provided automatically by extensions such as {@code quarkus-langchain4j-openai},
      * {@code quarkus-langchain4j-azure-openai} or
@@ -57,7 +60,7 @@ public @interface RegisterAiService {
     Class<? extends Supplier<StreamingChatModel>> streamingChatLanguageModelSupplier() default BeanStreamingChatLanguageModelSupplier.class;
 
     /**
-     * Configures the way to obtain the {@link ChatLanguageModel} to use.
+     * Configures the way to obtain the {@link ChatModel} to use.
      * If not configured, the default CDI bean implementing the model is looked up.
      * Such a bean provided automatically by extensions such as {@code quarkus-langchain4j-openai},
      * {@code quarkus-langchain4j-azure-openai} or
@@ -67,7 +70,7 @@ public @interface RegisterAiService {
 
     /**
      * When {@code chatLanguageModelSupplier} is set to {@code BeanChatLanguageModelSupplier.class} (which is the default)
-     * this allows the selection of the {@link ChatLanguageModel} CDI bean to use.
+     * this allows the selection of the {@link ChatModel} CDI bean to use.
      * <p>
      * If not set, the default model (i.e. the one configured without setting the model name) is used.
      * An example of the default model configuration is the following:
@@ -89,6 +92,16 @@ public @interface RegisterAiService {
      * If that property is unset too, the default is 10 invocations.
      */
     int maxSequentialToolInvocations() default 0;
+
+    /**
+     * Defines the maximum number of tool calls allowed per single LLM response.
+     * If this number is exceeded, a {@code ToolCallsLimitExceededException} will be thrown.
+     * If not specified (left to zero) for a specific AI service,
+     * the AI service will use the value of the common {@code quarkus.langchain4j.ai-service.max-tool-calls-per-response}
+     * property.
+     * If that property is unset too, the default is {@code 0} (unlimited).
+     */
+    int maxToolCallsPerResponse() default 0;
 
     /**
      * Tool classes to use. All tools are expected to be CDI beans.
@@ -122,6 +135,26 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanChatMemoryProviderSupplier.class;
 
     /**
+     * Configures the flush strategy for the committable chat memory.
+     * <p>
+     * By default, Quarkus Langchain4j defers committing messages to the {@link ChatMemory}
+     * until the AI service method completes successfully. This enables seamless
+     * {@code @Retry} support - if a failure occurs, the uncommitted messages are discarded.
+     * This is the default strategy for most use cases as it leads to more predictable behavior
+     * in case of errors and allows the retry mechanism to work as expected.
+     * <p>
+     * A custom {@link ChatMemoryFlushStrategy} can be provided to control this behavior,
+     * for example to use {@link ChatMemoryFlushStrategy#IMMEDIATE} so that messages are
+     * persisted as they are added.
+     * <p>
+     * The supplier may or may not be a CDI bean. If it is not a CDI bean,
+     * Quarkus will create an instance by calling its no-arg constructor.
+     *
+     * @see ChatMemoryFlushStrategy
+     */
+    Class<? extends Supplier<ChatMemoryFlushStrategy>> chatMemoryFlushStrategySupplier() default DefaultChatMemoryFlushStrategySupplier.class;
+
+    /**
      * Configures the way to obtain the {@link RetrievalAugmentor} to use
      * (when using RAG). The Supplier may or may not be a CDI bean (but most
      * typically it will, so consider adding a bean-defining annotation to
@@ -148,7 +181,49 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
 
     /**
-     * Marker that is used to tell Quarkus to use the {@link ChatLanguageModel} that has been configured as a CDI bean by
+     * By default, after first tool call execution, in subsequent prompts the {@code toolChoice} of
+     * {@link dev.langchain4j.model.chat.request.ChatRequestParameters}
+     * is set to {@link ToolChoice#AUTO}.
+     * By enabling this option {@link ToolChoice#AUTO} will not be set and instead whatever value was used in the initial prompt
+     * will
+     * continue to be used.
+     * <p>
+     * BEWARE: This is dangerous as it can result in an infinite-loop when using the AiService in combination with the
+     * {@code toolChoice} option set to {@link ToolChoice#REQUIRED}.
+     */
+    boolean allowContinuousForcedToolCalling() default false;
+
+    /**
+     * Configures a {@link SystemMessageProvider} to dynamically supply a system message based on the memory ID.
+     * This is useful when the system message needs to be determined at runtime, for example based on user context
+     * or other dynamic factors.
+     * <p>
+     * If not configured (left at the default), no dynamic system message provider is used. In that case,
+     * the system message can still be provided via the {@link dev.langchain4j.service.SystemMessage} annotation
+     * on the AiService method.
+     *
+     * @see <a href="https://docs.langchain4j.dev/tutorials/ai-services#system-message-provider">LangChain4j System Message
+     *      Provider</a>
+     */
+    Class<? extends SystemMessageProvider> systemMessageProviderSupplier() default NoSystemMessageProviderSupplier.class;
+
+    /**
+     * Indicates whether exceptions thrown during
+     * <a href="https://docs.langchain4j.dev/tutorials/observability#types-of-events">AI service event execution</a>
+     * should be rethrown during an AI service interaction, or should be quietly &quot;eaten&quot; by the event handler.
+     * <p>
+     * If {@code true}, exceptions thrown from AI Service event execution will be rethrown by an AI service interaction. This
+     * also means that exceptions can be caught
+     * and dealt with by application code should an AI service event handler fail for some reason.
+     * <p>
+     * Otherwise, errors will be handled silently.
+     * <p>
+     * Default is {@code false} to preserve backwards compatibility.
+     */
+    boolean shouldThrowExceptionOnEventError() default false;
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link ChatModel} that has been configured as a CDI bean by
      * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
      * {@code quarkus-langchain4j-hugging-face}).
      */
@@ -161,7 +236,7 @@ public @interface RegisterAiService {
     }
 
     /**
-     * Marker that is used to tell Quarkus to use the {@link StreamingChatLanguageModel} that has been configured as a CDI bean
+     * Marker that is used to tell Quarkus to use the {@link StreamingChatModel} that has been configured as a CDI bean
      * by * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
      * {@code quarkus-langchain4j-hugging-face}).
      */
@@ -289,6 +364,42 @@ public @interface RegisterAiService {
 
         @Override
         public ToolExecutionResultMessage apply(ToolExecutionRequest toolExecutionRequest) {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used when the user does not want any {@link SystemMessageProvider} configured for the AiService.
+     * This is the default.
+     */
+    final class NoSystemMessageProviderSupplier implements SystemMessageProvider {
+
+        @Override
+        public java.util.Optional<String> getSystemMessage(Object memoryId) {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link SystemMessageProvider} that the user has configured as a CDI bean.
+     * If no such bean exists, then no system message provider will be used.
+     */
+    final class BeanIfExistsSystemMessageProviderSupplier implements SystemMessageProvider {
+
+        @Override
+        public java.util.Optional<String> getSystemMessage(Object memoryId) {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that uses the default flush strategy which only commits on success.
+     * This is the default behavior that enables seamless {@code @Retry} support.
+     */
+    final class DefaultChatMemoryFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
+
+        @Override
+        public ChatMemoryFlushStrategy get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }

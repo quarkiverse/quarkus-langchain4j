@@ -18,10 +18,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson-deployment</artifactId>
         </dependency>
-         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-jaxb-deployment</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core-deployment</artifactId>
@@ -29,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-internal</artifactId>
+            <artifactId>quarkus-junit-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

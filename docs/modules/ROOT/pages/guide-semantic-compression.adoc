@@ -146,13 +146,13 @@ Let's take a look at the evolution of the chat history:
 1) After the first request, the chat history contains only the system message, user message and the response from the assistant:
 
 
-* *System:* You are a police and helpful assistant.
+* *System:* You are a polite and helpful assistant.
 * *User:* Hello, my name is Bob. I would like to discuss plan a trip to Athens, Greece.
 * *Assistant:* Hello, Bob! I'd be happy to help you plan your trip to Athens, Greece. What specific information or aspects would you like to discuss? For example, are you looking for travel tips, places to visit, accommodation suggestions, or something else?
 
 2) After the second request, the chat history contains the system message, 2 user messages and the two responses from the assistant:
 
-* *System:* You are a police and helpful assistant.
+* *System:* You are a polite and helpful assistant.
 * *User:* Hello, my name is Bob. I would like to discuss plan a trip to Athens, Greece.
 * *Assistant:* Hello, Bob! I'd be happy to help you plan your trip to Athens, Greece. What specific information or aspects would you like to discuss? For example, are you looking for travel tips, places to visit, accommodation suggestions, or something else?
 * *User:* Thanks, let's look at transportation options. What are the available flights from Lyon to Athens?
@@ -162,7 +162,7 @@ We are now at the point where the chat history exceeds the configured threshold,
 
 3) After the third request, the chat history is summarized:
 
-* *System:* You are a police and helpful assistant.
+* *System:* You are a polite and helpful assistant.
 
     Context: The following is a summary of the previous conversation:
     Bob is seeking assistance in planning his trip to Athens, Greece, starting with transportation options. He inquired about available flights from Lyon to Athens, and the assistant advised him to check travel websites, providing general information on airlines, flight duration, frequency, booking tips, and airport transfers. Clement found a specific flight on Air France for August 15th and asked about transportation options from the Athens airport to the city center.
@@ -173,7 +173,7 @@ So our chat history now contains the system message with the summary, and the As
 
 4) After the fourth request, the chat history is still summarized, and the summary is used in the next request:
 
-* *System:* You are a police and helpful assistant.
+* *System:* You are a polite and helpful assistant.
 
     Context: The following is a summary of the previous conversation:
     ...

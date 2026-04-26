@@ -436,7 +436,7 @@ public class ToolGuardrailWithUniTest {
 
                 return ToolInputGuardrailResult.success();
             } catch (Exception e) {
-                return ToolInputGuardrailResult.failure("Failed to validate message: " + e.getMessage(), e);
+                return ToolInputGuardrailResult.fatal("Failed to validate message: " + e.getMessage(), e);
             }
         }
 
@@ -467,7 +467,7 @@ public class ToolGuardrailWithUniTest {
 
                 return ToolInputGuardrailResult.success();
             } catch (Exception e) {
-                return ToolInputGuardrailResult.failure("Failed to validate product ID: " + e.getMessage(), e);
+                return ToolInputGuardrailResult.fatal("Failed to validate product ID: " + e.getMessage(), e);
             }
         }
 
@@ -501,7 +501,7 @@ public class ToolGuardrailWithUniTest {
 
                 return ToolOutputGuardrailResult.success();
             } catch (Exception e) {
-                return ToolOutputGuardrailResult.failure("Failed to filter prices: " + e.getMessage(), e);
+                return ToolOutputGuardrailResult.fatal("Failed to filter prices: " + e.getMessage(), e);
             }
         }
 
@@ -541,7 +541,7 @@ public class ToolGuardrailWithUniTest {
                                 .resultText(modifiedJson)
                                 .build());
             } catch (Exception e) {
-                return ToolOutputGuardrailResult.failure(
+                return ToolOutputGuardrailResult.fatal(
                         "Failed to transform inventory status: " + e.getMessage(), e);
             }
         }

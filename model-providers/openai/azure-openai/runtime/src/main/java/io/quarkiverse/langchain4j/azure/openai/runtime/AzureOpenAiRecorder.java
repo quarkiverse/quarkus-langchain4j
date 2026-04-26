@@ -15,6 +15,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -32,6 +33,7 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.image.ImageModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
@@ -60,6 +62,14 @@ public class AzureOpenAiRecorder {
     };
     private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<AzureOpenAiChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<AzureOpenAiStreamingChatModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<AzureOpenAiEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<AzureOpenAiImageModel.Builder>>> IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private final RuntimeValue<LangChain4jAzureOpenAiConfig> runtimeConfig;
 
@@ -86,8 +96,9 @@ public class AzureOpenAiRecorder {
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
-                    .temperature(chatModelConfig.temperature())
-                    .topP(chatModelConfig.topP())
+                    .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
+                    .temperature(chatModelConfig.temperature().orElse(null))
+                    .topP(chatModelConfig.topP().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
@@ -112,6 +123,9 @@ public class AzureOpenAiRecorder {
                             configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -143,8 +157,9 @@ public class AzureOpenAiRecorder {
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
-                    .temperature(chatModelConfig.temperature())
-                    .topP(chatModelConfig.topP())
+                    .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
+                    .temperature(chatModelConfig.temperature().orElse(null))
+                    .topP(chatModelConfig.topP().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
@@ -166,6 +181,10 @@ public class AzureOpenAiRecorder {
                             configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -209,6 +228,9 @@ public class AzureOpenAiRecorder {
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -239,6 +261,7 @@ public class AzureOpenAiRecorder {
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
                     .modelName(imageModelConfig.modelName())
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .size(imageModelConfig.size())
@@ -272,7 +295,9 @@ public class AzureOpenAiRecorder {
                 public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
-
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };

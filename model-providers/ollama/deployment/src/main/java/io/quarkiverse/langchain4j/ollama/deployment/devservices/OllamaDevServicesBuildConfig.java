@@ -1,5 +1,9 @@
 package io.quarkiverse.langchain4j.ollama.deployment.devservices;
 
+import java.util.Map;
+import java.util.OptionalInt;
+
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -25,4 +29,20 @@ public interface OllamaDevServicesBuildConfig {
      */
     @WithDefault(OLLAMA_IMAGE)
     String imageName();
+
+    /**
+     * The port that the dev service should be exposed on.
+     * <p>
+     * <strong>Default:</strong> A random free port.
+     * </p>
+     */
+    OptionalInt port();
+
+    /**
+     * Additional model options to apply when pulling/loading the model.
+     * These options will be propagated to the chat-model configuration.
+     * For example: {@code quarkus.langchain4j.ollama.devservices.model-options.think=true}
+     */
+    @ConfigDocDefault("{}")
+    Map<String, String> modelOptions();
 }

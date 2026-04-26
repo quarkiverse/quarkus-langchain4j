@@ -14,7 +14,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <maven.compiler.release>21</maven.compiler.release>
+        <!-- Align the compiler release with the running JDK so preview-enabled dependencies link on JDK 21 and 24 builds -->
+        <maven.compiler.release>${java.specification.version}</maven.compiler.release>
     </properties>
 
     <modules>

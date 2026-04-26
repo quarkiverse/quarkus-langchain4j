@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.deployment.devservice;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -190,6 +191,19 @@ public class DevServicesOllamaProcessor {
             for (var bi : allOllamaModels) {
                 modelBaseUrls.put(bi.getBaseUrlProperty(), ollamaBaseUrl);
             }
+
+            Map<String, String> modelOptions = ollamaDevServicesConfig
+                    .map(DevServicesOllamaConfigBuildItem::getModelOptions)
+                    .orElse(Collections.emptyMap());
+
+            if (!modelOptions.isEmpty()) {
+                LOGGER.infof("Applying model options from Dev Services: %s", modelOptions);
+                for (Map.Entry<String, String> entry : modelOptions.entrySet()) {
+                    modelBaseUrls.put("quarkus.langchain4j.ollama.chat-model.model-options." + entry.getKey(),
+                            entry.getValue());
+                }
+            }
+
             producer.produce(new DevServicesResultBuildItem("ollama", null, modelBaseUrls));
 
         } catch (OllamaClient.ServerUnavailableException e) {

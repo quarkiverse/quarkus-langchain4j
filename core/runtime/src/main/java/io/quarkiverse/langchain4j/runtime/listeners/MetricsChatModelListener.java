@@ -76,23 +76,31 @@ public class MetricsChatModelListener implements ChatModelListener {
 
         ChatRequest request = responseContext.chatRequest();
         ChatResponse response = responseContext.chatResponse();
-        Tags tags = Tags.empty();
-        if (request.parameters().modelName() != null) {
-            tags = tags.and("gen_ai.request.model", request.parameters().modelName());
-        }
-        if (response.metadata().modelName() != null) {
-            tags = tags.and("gen_ai.response.model", response.metadata().modelName());
-        }
+        String requestModel = request.parameters().modelName() != null
+                ? request.parameters().modelName()
+                : "none";
+        String responseModel = response.metadata().modelName() != null
+                ? response.metadata().modelName()
+                : "none";
+
+        String aiServiceClassName = "none";
+        String aiServiceMethodName = "none";
         if (ContextLocals.duplicatedContextActive()) {
-            String aiServiceClassName = ContextLocals.get(AiServiceConstants.AI_SERVICE_CLASS_NAME);
-            if (aiServiceClassName != null) {
-                tags = tags.and("ai_service.class_name", aiServiceClassName);
+            String cls = ContextLocals.get(AiServiceConstants.AI_SERVICE_CLASS_NAME);
+            if (cls != null) {
+                aiServiceClassName = cls;
             }
-            String aiServiceMethodName = ContextLocals.get(AiServiceConstants.AI_SERVICE_METHODNAME);
-            if (aiServiceMethodName != null) {
-                tags = tags.and("ai_service.method_name", aiServiceMethodName);
+            String mtd = ContextLocals.get(AiServiceConstants.AI_SERVICE_METHODNAME);
+            if (mtd != null) {
+                aiServiceMethodName = mtd;
             }
         }
+
+        Tags tags = Tags.of("gen_ai.request.model", requestModel)
+                .and("gen_ai.response.model", responseModel)
+                .and("ai_service.class_name", aiServiceClassName)
+                .and("ai_service.method_name", aiServiceMethodName)
+                .and("error.type", "none");
 
         recordTokenUsage(responseContext, tags);
         recordDuration(responseContext, endTime, tags);
@@ -109,11 +117,19 @@ public class MetricsChatModelListener implements ChatModelListener {
             return;
         }
 
-        Tags tags = Tags.of("gen_ai.request.model", errorContext.chatRequest().parameters().modelName());
+        String requestModel = errorContext.chatRequest().parameters().modelName() != null
+                ? errorContext.chatRequest().parameters().modelName()
+                : "none";
+        String errorType = errorContext.error() != null
+                ? errorContext.error().getMessage()
+                : "none";
 
-        if (errorContext.error() != null) {
-            tags = tags.and("error.type", errorContext.error().getMessage());
-        }
+        Tags tags = Tags.of("gen_ai.request.model", requestModel)
+                .and("gen_ai.response.model", "none")
+                .and("ai_service.class_name", "none")
+                .and("ai_service.method_name", "none")
+                .and("error.type", errorType);
+
         duration.withTags(tags).record(endTime - startTime, TimeUnit.NANOSECONDS);
     }
 

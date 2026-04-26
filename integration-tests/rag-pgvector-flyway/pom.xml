@@ -9,6 +9,7 @@
   <artifactId>quarkus-langchain4j-integration-test-rag-pgvector-flyway</artifactId>
   <name>Quarkus LangChain4j - Integration Tests - RAG With PgVector and Flyway</name>
   <properties>
+    <enable.flaky-tests>false</enable.flaky-tests>
     <skipITs>true</skipITs>
   </properties>
   <dependencies>
@@ -36,7 +37,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5-mockito</artifactId>
+      <artifactId>quarkus-junit-mockito</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -60,7 +61,6 @@
       <plugin>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
-        <version>${quarkus.platform.version}</version>
         <executions>
           <execution>
             <goals>

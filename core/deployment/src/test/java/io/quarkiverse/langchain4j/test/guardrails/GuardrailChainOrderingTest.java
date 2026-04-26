@@ -491,7 +491,7 @@ public class GuardrailChainOrderingTest {
             ExecutionTracker.recordInput("InputGuardrail3");
 
             if (request.arguments().contains("fatal-at-3")) {
-                return ToolInputGuardrailResult.failure(
+                return ToolInputGuardrailResult.fatal(
                         "Fatal failure at guardrail 3",
                         new SecurityException("Unauthorized"));
             }
@@ -602,7 +602,7 @@ public class GuardrailChainOrderingTest {
             ExecutionTracker.recordOutput("OutputGuardrail3");
 
             if (request.resultText().contains("fatal-at-3")) {
-                return ToolOutputGuardrailResult.failure(
+                return ToolOutputGuardrailResult.fatal(
                         "Fatal failure at guardrail 3",
                         new SecurityException("Data leak detected"));
             }

@@ -19,9 +19,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.apache.commons.io.file.PathUtils;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +35,15 @@ import com.github.tjake.jlama.safetensors.SafeTensorSupport;
 import com.github.tjake.jlama.util.ProgressReporter;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.jlama.JlamaChatModel;
+import io.quarkiverse.langchain4j.jlama.JlamaEmbeddingModel;
 import io.quarkiverse.langchain4j.jlama.JlamaModelRegistry;
+import io.quarkiverse.langchain4j.jlama.JlamaStreamingChatModel;
 import io.quarkiverse.langchain4j.jlama.runtime.JlamaAiRecorder;
 import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -64,6 +73,16 @@ public class JlamaProcessor {
     private static final String FEATURE = "langchain4j-jlama";
     private static final String PROVIDER = "jlama";
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(JlamaProcessor.class);
+
+    private static final DotName JLAMA_CHAT_MODEL_BUILDER = DotName
+            .createSimple(JlamaChatModel.JlamaChatModelBuilder.class);
+    private static final DotName JLAMA_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(JlamaStreamingChatModel.JlamaStreamingChatModelBuilder.class);
+    private static final DotName JLAMA_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(JlamaEmbeddingModel.JlamaEmbeddingModelBuilder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -99,13 +118,21 @@ public class JlamaProcessor {
                 String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem.configure(CHAT_MODEL).setRuntimeInit().defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(JLAMA_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
                 var streamingBuilder = SyntheticBeanBuildItem.configure(STREAMING_CHAT_MODEL).setRuntimeInit()
                         .defaultBean().scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(JLAMA_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
@@ -116,7 +143,11 @@ public class JlamaProcessor {
                 String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem.configure(EMBEDDING_MODEL).setRuntimeInit().defaultBean()
                         .unremovable().scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(JLAMA_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

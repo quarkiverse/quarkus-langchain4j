@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.guardrails;
 
+import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
+
 /**
  * Exception thrown when tool guardrail validation fails critically.
  * <p>
@@ -23,7 +25,9 @@ package io.quarkiverse.langchain4j.guardrails;
  * @see ToolInputGuardrailResult
  * @see ToolOutputGuardrailResult
  */
-public class ToolGuardrailException extends RuntimeException {
+public class ToolGuardrailException extends RuntimeException implements PreventsErrorHandlerExecution {
+
+    private final boolean fatal;
 
     /**
      * Constructs a new tool guardrail exception with the specified detail message.
@@ -31,7 +35,18 @@ public class ToolGuardrailException extends RuntimeException {
      * @param message the detail message
      */
     public ToolGuardrailException(String message) {
+        this(message, false);
+    }
+
+    /**
+     * Constructs a new tool guardrail exception with the specified detail message.
+     *
+     * @param message the detail message
+     * @param fatal whether the exception is fatal (meaning no retries should be attempted)
+     */
+    public ToolGuardrailException(String message, boolean fatal) {
         super(message);
+        this.fatal = fatal;
     }
 
     /**
@@ -42,5 +57,23 @@ public class ToolGuardrailException extends RuntimeException {
      */
     public ToolGuardrailException(String message, Throwable cause) {
         super(message, cause);
+        this.fatal = false;
     }
+
+    /**
+     * Constructs a new tool guardrail exception with the specified detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
+     * @param fatal whether the exception is fatal (meaning no retries should be attempted)
+     */
+    public ToolGuardrailException(String message, Throwable cause, boolean fatal) {
+        super(message, cause);
+        this.fatal = fatal;
+    }
+
+    public boolean isFatal() {
+        return fatal;
+    }
+
 }

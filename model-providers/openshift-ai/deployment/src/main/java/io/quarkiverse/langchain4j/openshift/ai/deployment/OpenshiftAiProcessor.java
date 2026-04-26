@@ -5,12 +5,19 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MOD
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
+import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.OpenshiftAiRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -30,6 +37,11 @@ public class OpenshiftAiProcessor {
     private static final String FEATURE = "langchain4j-openshift-ai";
 
     private static final String PROVIDER = "openshift-ai";
+
+    private static final DotName OPENSHIFT_AI_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenshiftAiChatModel.Builder.class);
+    private static final AnnotationInstance ANY = AnnotationInstance
+            .builder(DotName.createSimple(Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -59,7 +71,11 @@ public class OpenshiftAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENSHIFT_AI_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

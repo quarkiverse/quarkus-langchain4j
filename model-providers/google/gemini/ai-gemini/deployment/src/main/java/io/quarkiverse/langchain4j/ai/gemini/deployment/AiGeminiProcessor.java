@@ -7,12 +7,17 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -37,6 +42,16 @@ public class AiGeminiProcessor {
 
     private static final String FEATURE = "langchain4j-ai-gemini";
     private static final String PROVIDER = "ai-gemini";
+
+    private static final DotName AI_GEMINI_CHAT_MODEL_BUILDER = DotName
+            .createSimple(GoogleAiGeminiChatModel.GoogleAiGeminiChatModelBuilder.class);
+    private static final DotName AI_GEMINI_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(GoogleAiGeminiStreamingChatModel.GoogleAiGeminiStreamingChatModelBuilder.class);
+    private static final DotName AI_GEMINI_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(GoogleAiEmbeddingModel.GoogleAiEmbeddingModelBuilder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -75,6 +90,10 @@ public class AiGeminiProcessor {
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AI_GEMINI_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(chatModel);
 
                 addQualifierIfNecessary(builder, configName);
@@ -90,6 +109,10 @@ public class AiGeminiProcessor {
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AI_GEMINI_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(streamingChatModel);
 
                 addQualifierIfNecessary(streamingBuilder, configName);
@@ -111,6 +134,10 @@ public class AiGeminiProcessor {
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AI_GEMINI_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(embeddingModel);
 
                 addQualifierIfNecessary(builder, configName);

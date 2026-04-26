@@ -7,6 +7,10 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_I
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_INPUT_GUARDRAIL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_INPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_OUTPUT_GUARDRAIL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.FORCE_ALLOW;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
@@ -45,6 +49,7 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import jakarta.interceptor.InterceptorBinding;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -77,6 +82,12 @@ import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.service.output.JsonSchemas;
 import dev.langchain4j.service.output.ServiceOutputParser;
+import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
+import dev.langchain4j.service.tool.ToolErrorContext;
+import dev.langchain4j.service.tool.ToolErrorHandlerResult;
+import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
+import dev.langchain4j.spi.classloading.ClassInstanceFactory;
+import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
@@ -187,6 +198,12 @@ public class AiServicesProcessor {
             QuarkusAiServiceContext.class, "evictChatMemory", boolean.class, Object.class);
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_GET_CHAT_MEMORY = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "getChatMemory", ChatMemory.class, Object.class);
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_CLEAR_CHAT_MEMORY = MethodDescriptor
+            .ofMethod(
+                    QuarkusAiServiceContext.class, "clearChatMemory", void.class);
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_GET_ALL_CHAT_MEMORY_IDS = MethodDescriptor
+            .ofMethod(
+                    QuarkusAiServiceContext.class, "getAllChatMemoryIds", Collection.class);
 
     public static final MethodDescriptor CHAT_MEMORY_SEEDER_CONTEXT_METHOD_NAME = MethodDescriptor
             .ofMethod(ChatMemorySeeder.Context.class, "methodName", String.class);
@@ -201,6 +218,9 @@ public class AiServicesProcessor {
     private static final ResultHandle[] EMPTY_RESULT_HANDLES_ARRAY = new ResultHandle[0];
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
+
+    private static final Set<DotName> GUARDRAIL_ANNOTATIONS = Set.of(
+            TOOL_INPUT_GUARDRAIL, TOOL_INPUT_GUARDRAILS, TOOL_OUTPUT_GUARDRAIL, TOOL_OUTPUT_GUARDRAILS);
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -244,6 +264,10 @@ public class AiServicesProcessor {
                 RequestScopeStateDefaultMemoryIdProvider.class.getName()));
         serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 PromptTemplateFactoryContentFilterProvider.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                ClassMetadataProviderFactory.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                ClassInstanceFactory.class.getName()));
 
         // needed because various LLMs use these, so let's be proactive
         // there isn't one great place to put this, so this is probably as good as any
@@ -309,7 +333,32 @@ public class AiServicesProcessor {
                         }
                     }
                 }
+
+                checkGuardrailOnAiServiceMethod(serviceMethodInfo);
             }
+        }
+    }
+
+    /**
+     * Check that the given method does not have any tool guardrail annotations, and logs a warning if it does.
+     */
+    private static void checkGuardrailOnAiServiceMethod(MethodInfo agentAiMethod) {
+        if (agentAiMethod.hasAnnotation(DotNames.TOOL)) {
+            return;
+        }
+
+        List<DotName> dotNames = GUARDRAIL_ANNOTATIONS.stream()
+                .filter(agentAiMethod::hasAnnotation)
+                .toList();
+
+        if (!dotNames.isEmpty()) {
+            log.warnf(
+                    "AI service method '%s#%s' is annotated with %s, but tool guardrail annotations apply only to @Tool methods. "
+                            +
+                            "Please remove the guardrail annotations or annotate the method with @Tool if it's meant to be a tool method.",
+                    agentAiMethod.declaringClass().name(),
+                    agentAiMethod.name(),
+                    dotNames);
         }
     }
 
@@ -335,6 +384,8 @@ public class AiServicesProcessor {
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
             BuildProducer<ToolProviderMetaBuildItem> toolProviderProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer) {
         IndexView index = indexBuildItem.getIndex();
 
@@ -369,18 +420,19 @@ public class AiServicesProcessor {
 
             DotName chatLanguageModelSupplierClassDotName = getSupplierDotName(instance.value("chatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER,
-                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                    supplierDotName -> validateSupplierAndRegister(
                             supplierDotName,
                             index,
-                            reflectiveClassProducer));
+                            reflectiveClassProducer,
+                            unremovableBeanProducer));
 
             DotName streamingChatLanguageModelSupplierClassDotName = getSupplierDotName(
                     instance.value("streamingChatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_STREAMING_CHAT_MODEL_SUPPLIER,
-                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                    supplierDotName -> validateSupplierAndRegister(
                             supplierDotName,
                             index,
-                            reflectiveClassProducer));
+                            reflectiveClassProducer, unremovableBeanProducer));
 
             String chatModelName = chatModelName(instance, chatLanguageModelSupplierClassDotName,
                     streamingChatLanguageModelSupplierClassDotName, chatModelNames);
@@ -400,8 +452,8 @@ public class AiServicesProcessor {
                     if (declaredScope != null) {
                         customRetrievalAugmentorSupplierClassIsABean = true;
                     } else {
-                        validateSupplierAndRegisterForReflection(retrievalAugmentorSupplierClassName, index,
-                                reflectiveClassProducer);
+                        validateSupplierAndRegister(retrievalAugmentorSupplierClassName, index,
+                                reflectiveClassProducer, unremovableBeanProducer);
                     }
                 }
             }
@@ -410,7 +462,8 @@ public class AiServicesProcessor {
             AnnotationValue moderationModelSupplierValue = instance.value("moderationModelSupplier");
             if (moderationModelSupplierValue != null) {
                 moderationModelSupplierClassName = moderationModelSupplierValue.asClass().name();
-                validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
+                validateSupplierAndRegister(moderationModelSupplierClassName, index, reflectiveClassProducer,
+                        unremovableBeanProducer);
             }
 
             DotName toolProviderClassName = LangChain4jDotNames.BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER;
@@ -420,7 +473,8 @@ public class AiServicesProcessor {
                     toolProviderClassName = null;
                 } else {
                     toolProviderClassName = toolProviderValue.asClass().name();
-                    validateSupplierAndRegisterForReflection(toolProviderClassName, index, reflectiveClassProducer);
+                    validateSupplierAndRegister(toolProviderClassName, index, reflectiveClassProducer,
+                            unremovableBeanProducer);
                     toolProviderInfos.add(new ToolProviderInfo(toolProviderClassName.toString(),
                             declarativeAiServiceClassInfo.simpleName()));
                 }
@@ -456,7 +510,7 @@ public class AiServicesProcessor {
 
             List<ClassInfo> tools = tools(instance, index);
             DotName chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName(reflectiveClassProducer,
-                    instance, index);
+                    unremovableBeanProducer, instance, index);
             if (!tools.isEmpty() && chatMemoryProviderSupplierClassDotName == null) {
                 throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
                         + declarativeAiServiceClassInfo.name() + "'");
@@ -464,6 +518,45 @@ public class AiServicesProcessor {
             Integer maxSequentialToolInvocations = instance.value("maxSequentialToolInvocations") != null
                     ? instance.value("maxSequentialToolInvocations").asInt()
                     : 0;
+
+            Integer maxToolCallsPerResponse = instance.value("maxToolCallsPerResponse") != null
+                    ? instance.value("maxToolCallsPerResponse").asInt()
+                    : 0;
+            if (maxToolCallsPerResponse < 0) {
+                throw new IllegalArgumentException(
+                        "maxToolCallsPerResponse must be 0 or greater, but was: " + maxToolCallsPerResponse);
+            }
+
+            boolean allowContinuousForcedToolCalling = instance.value("allowContinuousForcedToolCalling") != null
+                    ? instance.value("allowContinuousForcedToolCalling").asBoolean()
+                    : false;
+
+            boolean shouldThrowExceptionOnEventError = instance.value("shouldThrowExceptionOnEventError") != null
+                    ? instance.value("shouldThrowExceptionOnEventError").asBoolean()
+                    : false;
+
+            DotName systemMessageProviderClassDotName = null;
+            AnnotationValue systemMessageProviderSupplierValue = instance.value("systemMessageProviderSupplier");
+            if (systemMessageProviderSupplierValue != null) {
+                DotName supplierDotName = systemMessageProviderSupplierValue.asClass().name();
+                if (!LangChain4jDotNames.NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER.equals(supplierDotName)) {
+                    systemMessageProviderClassDotName = supplierDotName;
+                    validateSupplierAndRegister(systemMessageProviderClassDotName, index, reflectiveClassProducer,
+                            unremovableBeanProducer);
+                }
+            }
+
+            DotName chatMemoryFlushStrategySupplierClassDotName = null;
+            AnnotationValue chatMemoryFlushStrategySupplierValue = instance.value("chatMemoryFlushStrategySupplier");
+            if (chatMemoryFlushStrategySupplierValue != null) {
+                DotName supplierDotName = chatMemoryFlushStrategySupplierValue.asClass().name();
+                if (!LangChain4jDotNames.DEFAULT_CHAT_MEMORY_FLUSH_STRATEGY_SUPPLIER.equals(supplierDotName)) {
+                    chatMemoryFlushStrategySupplierClassDotName = supplierDotName;
+                    validateSupplierAndRegister(chatMemoryFlushStrategySupplierClassDotName, index,
+                            reflectiveClassProducer, unremovableBeanProducer);
+                }
+            }
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -474,8 +567,9 @@ public class AiServicesProcessor {
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
                             moderationModelSupplierClassName,
-                            imageModelSupplierClassName(reflectiveClassProducer, instance, index),
+                            imageModelSupplierClassName(reflectiveClassProducer, unremovableBeanProducer, instance, index),
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
+                            systemMessageProviderClassDotName,
                             cdiScope(customScopes, declarativeAiServiceClassInfo),
                             chatModelName,
                             moderationModelName,
@@ -485,9 +579,15 @@ public class AiServicesProcessor {
                             toolHallucinationStrategy(instance),
                             classInputGuardrails(declarativeAiServiceClassInfo, index),
                             classOutputGuardrails(declarativeAiServiceClassInfo, index),
+                            toolArgumentsErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
+                            toolExecutionErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
                             maxSequentialToolInvocations,
+                            maxToolCallsPerResponse,
+                            allowContinuousForcedToolCalling,
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
-                            impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name())));
+                            impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
+                            shouldThrowExceptionOnEventError,
+                            chatMemoryFlushStrategySupplierClassDotName));
 
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
@@ -520,6 +620,9 @@ public class AiServicesProcessor {
                     }
                     case FIELD -> {
                         ci = instance.target().asField().declaringClass();
+                    }
+                    case METHOD_PARAMETER -> {
+                        ci = instance.target().asMethodParameter().method().declaringClass();
                     }
                     default -> {
                         ci = null;
@@ -572,17 +675,20 @@ public class AiServicesProcessor {
     }
 
     private DotName imageModelSupplierClassName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             AnnotationInstance instance, IndexView index) {
         DotName imageModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER;
         AnnotationValue imageModelSupplierValue = instance.value("imageModelSupplier");
         if (imageModelSupplierValue != null) {
             imageModelSupplierClassName = imageModelSupplierValue.asClass().name();
-            validateSupplierAndRegisterForReflection(imageModelSupplierClassName, index, reflectiveClassProducer);
+            validateSupplierAndRegister(imageModelSupplierClassName, index, reflectiveClassProducer,
+                    unremovableBeanProducer);
         }
         return imageModelSupplierClassName;
     }
 
     private DotName chatMemoryProviderSupplierClassDotName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             AnnotationInstance instance, IndexView index) {
         // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
         DotName chatMemoryProviderSupplierClassDotName = LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
@@ -594,8 +700,8 @@ public class AiServicesProcessor {
                 chatMemoryProviderSupplierClassDotName = null;
             } else if (!chatMemoryProviderSupplierClassDotName
                     .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
-                validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
-                        reflectiveClassProducer);
+                validateSupplierAndRegister(chatMemoryProviderSupplierClassDotName, index,
+                        reflectiveClassProducer, unremovableBeanProducer);
             }
         }
         return chatMemoryProviderSupplierClassDotName;
@@ -633,6 +739,97 @@ public class AiServicesProcessor {
         return new OutputGuardrailsLiteral(
                 declarativeAiServiceBuildItem.getOutputGuardrails().asClassNames(),
                 declarativeAiServiceBuildItem.getOutputGuardrails().maxRetries());
+    }
+
+    private DotName toolArgumentsErrorHandlerDotName(ClassInfo aiServiceClassInfo,
+            BuildProducer<GeneratedBeanBuildItem> generatedBean) {
+        return toolErrorHandlerDotName(aiServiceClassInfo, LangChain4jDotNames.HANDLE_TOOL_ARGUMENT_ERROR, generatedBean,
+                ToolArgumentsErrorHandler.class);
+    }
+
+    private DotName toolExecutionErrorHandlerDotName(ClassInfo aiServiceClassInfo,
+            BuildProducer<GeneratedBeanBuildItem> generatedBean) {
+        return toolErrorHandlerDotName(aiServiceClassInfo, LangChain4jDotNames.HANDLE_TOOL_EXECUTION_ERROR, generatedBean,
+                ToolExecutionErrorHandler.class);
+    }
+
+    private DotName toolErrorHandlerDotName(ClassInfo aiServiceClassInfo, DotName annotationName,
+            BuildProducer<GeneratedBeanBuildItem> generatedBean,
+            Class<?> interfaceType) {
+        List<AnnotationInstance> instances = aiServiceClassInfo.annotations(annotationName);
+        if (instances.isEmpty()) {
+            return null;
+        }
+        if (instances.size() > 1) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only once in an AI Service. Offending class is '%s'".formatted(annotationName,
+                            aiServiceClassInfo.name()));
+        }
+        AnnotationTarget target = instances.get(0).target();
+        if (target.kind() != AnnotationTarget.Kind.METHOD) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only methods. Offending class is '%s'".formatted(annotationName,
+                            aiServiceClassInfo.name()));
+        }
+        MethodInfo targetMethod = target.asMethod();
+        if (!Modifier.isStatic(targetMethod.flags())) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only on static methods. Offending class is '%s'".formatted(annotationName,
+                            aiServiceClassInfo.name()));
+        }
+        DotName returnType = targetMethod.returnType().name();
+        if ((!returnType.equals(DotNames.STRING)) && !returnType.equals(LangChain4jDotNames.TOOL_ERROR_HANDLER_RESULT)) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only on static methods that return '%s' or '%s'. Offending class is '%s'"
+                            .formatted(annotationName,
+                                    DotNames.STRING, LangChain4jDotNames.TOOL_ERROR_HANDLER_RESULT, aiServiceClassInfo.name()));
+        }
+
+        ClassOutput output = new GeneratedBeanGizmoAdaptor(generatedBean);
+        String generatedClassName = aiServiceClassInfo.name().toString() + "$" + annotationName.withoutPackagePrefix();
+        ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
+                .classOutput(output)
+                .interfaces(interfaceType)
+                .className(generatedClassName);
+        try (ClassCreator classCreator = classCreatorBuilder.build()) {
+            classCreator.addAnnotation(Singleton.class);
+
+            MethodCreator handleMethod = classCreator.getMethodCreator(MethodDescriptor.ofMethod(generatedClassName, "handle",
+                    ToolErrorHandlerResult.class, Throwable.class, ToolErrorContext.class));
+
+            List<ResultHandle> paramHandles = new ArrayList<>();
+            for (MethodParameterInfo parameter : targetMethod.parameters()) {
+                DotName paramTypeDotName = parameter.type().name();
+                if (paramTypeDotName.equals(DotNames.THROWABLE) || paramTypeDotName.equals(DotNames.EXCEPTION)) {
+                    paramHandles.add(handleMethod.getMethodParam(0));
+                } else if (paramTypeDotName.equals(LangChain4jDotNames.TOOL_ERROR_CONTEXT)) {
+                    paramHandles.add(handleMethod.getMethodParam(1));
+                } else {
+                    throw new IllegalConfigurationException(
+                            "`@%s` can be used only on static methods that use the parameters of type '%s' or '%s'. Offending class is '%s'"
+                                    .formatted(annotationName,
+                                            DotNames.THROWABLE, LangChain4jDotNames.TOOL_ERROR_CONTEXT,
+                                            aiServiceClassInfo.name()));
+                }
+            }
+
+            ResultHandle result = handleMethod.invokeStaticInterfaceMethod(targetMethod,
+                    paramHandles.toArray(new ResultHandle[0]));
+            if (returnType.equals(LangChain4jDotNames.TOOL_ERROR_HANDLER_RESULT)) {
+                handleMethod.returnValue(result);
+            } else if (returnType.equals(DotNames.STRING)) {
+                ResultHandle toolErrorHandlerResultResult = handleMethod.invokeStaticMethod(
+                        MethodDescriptor.ofMethod(ToolErrorHandlerResult.class, "text", ToolErrorHandlerResult.class,
+                                String.class),
+                        result);
+                handleMethod.returnValue(toolErrorHandlerResultResult);
+            } else {
+                throw new IllegalStateException("Unhandled result type: " + returnType);
+            }
+
+        }
+
+        return DotName.createSimple(generatedClassName);
     }
 
     private static List<ClassInfo> tools(AnnotationInstance instance, IndexView index) {
@@ -675,20 +872,18 @@ public class AiServicesProcessor {
         return dotName;
     }
 
-    private void validateSupplierAndRegisterForReflection(DotName supplierDotName, IndexView index,
-            BuildProducer<ReflectiveClassBuildItem> producer) {
+    private void validateSupplierAndRegister(DotName supplierDotName, IndexView index,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer) {
         ClassInfo classInfo = index.getClassByName(supplierDotName);
         if (classInfo == null) {
             log.warn("'" + supplierDotName.toString() + "' cannot be indexed"); // TODO: maybe this should be an error
             return;
         }
 
-        if (!classInfo.hasNoArgsConstructor()) {
-            throw new IllegalConfigurationException(
-                    "Class '" + supplierDotName.toString() + "' which must contain a no-args constructor.");
-        }
-
-        producer.produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
+        reflectiveClassProducer
+                .produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
+        unremovableBeanProducer.produce(UnremovableBeanBuildItem.beanTypes(supplierDotName));
     }
 
     private boolean isImageOrImageResultResult(Type returnType) {
@@ -746,6 +941,7 @@ public class AiServicesProcessor {
             ClassInfo declarativeAiServiceClassInfo = bi.getServiceClassInfo();
             String serviceClassName = declarativeAiServiceClassInfo.name().toString();
             Integer maxSequentialToolInvocations = bi.getMaxSequentialToolInvocations();
+            boolean allowContinuousForcedToolCalling = bi.isAllowContinuousForcedToolCalling();
 
             String chatLanguageModelSupplierClassName = (bi.getChatLanguageModelSupplierClassDotName() != null
                     ? bi.getChatLanguageModelSupplierClassDotName().toString()
@@ -779,6 +975,14 @@ public class AiServicesProcessor {
                 allToolHallucinationStrategies.add(bi.getToolHallucinationStrategyClassDotName());
             }
 
+            String toolArgumentsErrorHandlerDotName = (bi.getToolArgumentsErrorHandlerDotName() != null
+                    ? bi.getToolArgumentsErrorHandlerDotName().toString()
+                    : null);
+
+            String toolExecutionErrorHandlerDotName = (bi.getToolExecutionErrorHandlerDotName() != null
+                    ? bi.getToolExecutionErrorHandlerDotName().toString()
+                    : null);
+
             String chatMemoryProviderSupplierClassName = bi.getChatMemoryProviderSupplierClassDotName() != null
                     ? bi.getChatMemoryProviderSupplierClassDotName().toString()
                     : null;
@@ -797,6 +1001,17 @@ public class AiServicesProcessor {
 
             String chatMemorySeederClassName = (bi.getChatMemorySeederClassDotName() != null
                     ? bi.getChatMemorySeederClassDotName().toString()
+                    : null);
+
+            String systemMessageProviderClassName = (bi.getSystemMessageProviderClassDotName() != null
+                    ? bi.getSystemMessageProviderClassDotName().toString()
+                    : null);
+            String defaultMemoryIdProviderClassName = (bi.getDefaultMemoryIdProviderClassDotName() != null
+                    ? bi.getDefaultMemoryIdProviderClassDotName().toString()
+                    : null);
+
+            String chatMemoryFlushStrategySupplierClassName = (bi.getChatMemoryFlushStrategySupplierClassDotName() != null
+                    ? bi.getChatMemoryFlushStrategySupplierClassDotName().toString()
                     : null);
 
             // determine whether the method returns Multi<String>
@@ -860,10 +1075,12 @@ public class AiServicesProcessor {
                                     toolToQualifierMap,
                                     toolProviderSupplierClassName,
                                     chatMemoryProviderSupplierClassName,
+                                    chatMemoryFlushStrategySupplierClassName,
                                     retrievalAugmentorSupplierClassName,
                                     moderationModelSupplierClassName,
                                     imageModelSupplierClassName,
                                     chatMemorySeederClassName,
+                                    systemMessageProviderClassName,
                                     chatModelName,
                                     moderationModelName,
                                     bi.getImageModelName(),
@@ -871,9 +1088,15 @@ public class AiServicesProcessor {
                                     injectModerationModelBean,
                                     injectImageModel,
                                     toolHallucinationStrategyClassName,
+                                    toolArgumentsErrorHandlerDotName,
+                                    toolExecutionErrorHandlerDotName,
                                     classInputGuardrails(bi),
                                     classOutputGuardrails(bi),
-                                    maxSequentialToolInvocations)))
+                                    maxSequentialToolInvocations,
+                                    bi.getMaxToolCallsPerResponse(),
+                                    allowContinuousForcedToolCalling,
+                                    bi.isShouldThrowExceptionOnEventError(),
+                                    defaultMemoryIdProviderClassName)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -916,6 +1139,12 @@ public class AiServicesProcessor {
 
             if (bi.getToolHallucinationStrategyClassDotName() != null) {
                 configurator.addInjectionPoint(ClassType.create(bi.getToolHallucinationStrategyClassDotName()));
+            }
+            if (bi.getToolArgumentsErrorHandlerDotName() != null) {
+                configurator.addInjectionPoint(ClassType.create(bi.getToolArgumentsErrorHandlerDotName()));
+            }
+            if (bi.getToolExecutionErrorHandlerDotName() != null) {
+                configurator.addInjectionPoint(ClassType.create(bi.getToolExecutionErrorHandlerDotName()));
             }
 
             if (LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
@@ -1084,7 +1313,8 @@ public class AiServicesProcessor {
             MethodInfo method,
             List<String> associatedTools,
             List<ToolMethodBuildItem> tools,
-            DotName toolProviderClassDotName) {
+            DotName toolProviderClassDotName,
+            List<String> mcpClientNames) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
                 || method.returnType().name().equals(DotNames.MULTI);
@@ -1094,6 +1324,13 @@ public class AiServicesProcessor {
         if (!reactive) {
             // We are already on a thread we can block.
             return false;
+        }
+
+        if (mcpClientNames != null) {
+            // MCP clients are blocking for now, so we need to switch to a worker thread
+            // note: null means no MCP clients, empty list means that there is a McpToolBox annotation that takes all
+            // MCP clients
+            return true;
         }
 
         // If a ToolProvider is configured for a reactive method, assume it may provide blocking tools at runtime
@@ -1387,6 +1624,12 @@ public class AiServicesProcessor {
                                         "Unable to determine the CDI scope of " + iface));
                         DotName scopeInfo = matchingBI.getCdiScope();
                         classCreator.addAnnotation(scopeInfo.toString());
+                        // copy class level interceptor binding annotations
+                        for (AnnotationInstance annotationInstance : iface.declaredAnnotations()) {
+                            if (shouldCopyAnnotation(annotationInstance, index)) {
+                                classCreator.addAnnotation(annotationInstance);
+                            }
+                        }
                         if (matchingBI.getBeanName().isPresent()) {
                             classCreator.addAnnotation(
                                     AnnotationInstance.builder(NAMED).add("value", matchingBI.getBeanName().get()).build());
@@ -1521,6 +1764,24 @@ public class AiServicesProcessor {
                                 mc.getMethodParam(0));
                         mc.returnVoid();
                     }
+                    // methods from ChatMemoryRemovable.removeAll()
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "removeAll", void.class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_CLEAR_CHAT_MEMORY, contextHandle);
+                        mc.returnVoid();
+                    }
+                    // methods from ChatMemoryRemovable.getAllChatMemoryIds()
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "getAllChatMemoryIds", Collection.class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        ResultHandle result = mc.invokeVirtualMethod(
+                                QUARKUS_AI_SERVICES_CONTEXT_GET_ALL_CHAT_MEMORY_IDS,
+                                contextHandle);
+                        mc.returnValue(result);
+                    }
 
                     // methods from ChatMemoryAccess
                     {
@@ -1623,6 +1884,11 @@ public class AiServicesProcessor {
                     if (declaringClass.isInterface()) {
                         detectedForCreate.add(declaringClass.name().toString());
                     }
+                } else if (kind == AnnotationTarget.Kind.METHOD_PARAMETER) {
+                    ClassInfo declaringClass = target.asMethodParameter().method().declaringClass();
+                    if (declaringClass.isInterface()) {
+                        detectedForCreate.add(declaringClass.name().toString());
+                    }
                 }
 
             }
@@ -1701,7 +1967,7 @@ public class AiServicesProcessor {
 
         //  Detect if tools execution may block the caller thread.
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
-                methodToolClassInfo.keySet());
+                methodToolClassInfo.keySet(), methodMcpClientNames);
 
         TypeArgMapper typeArgMapper = new TypeArgMapper(method.declaringClass(), index);
         var methodReturnTypeSignature = typeSignature(method.returnType(), typeArgMapper);
@@ -1779,7 +2045,7 @@ public class AiServicesProcessor {
     }
 
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
-            Collection<String> methodToolClassNames) {
+            Collection<String> methodToolClassNames, List<String> mcpClientNames) {
         List<String> allTools = new ArrayList<>(methodToolClassNames);
         DotName toolProviderClassDotName = null;
         // We need to combine it with the tools that are registered globally - unfortunately, we don't have access to the AI service here, so, re-parsing.
@@ -1795,7 +2061,8 @@ public class AiServicesProcessor {
                 toolProviderClassDotName = toolProviderValue.asClass().name();
             }
         }
-        return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools, toolProviderClassDotName);
+        return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools, toolProviderClassDotName,
+                mcpClientNames);
     }
 
     private void validateReturnType(MethodInfo method) {
@@ -2029,6 +2296,8 @@ public class AiServicesProcessor {
                         continue;
                     } else if (pdfParamPosition.isPresent() && i == pdfParamPosition.get()) {
                         continue;
+                    } else if (videoParamPosition.isPresent() && i == videoParamPosition.get()) {
+                        continue;
                     } else if (parameter.type().name().equals(INVOCATION_PARAMETERS)) {
                         continue;
                     } else if (parameter.hasAnnotation(LangChain4jDotNames.MEMORY_ID)) {
@@ -2065,8 +2334,10 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @ImageUrl if the parameter is of type Image
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.IMAGE))
+        // we don't need @ImageUrl if the parameter is of type Image or List<Image>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.IMAGE)
+                        || isListOf(pi.type(), LangChain4jDotNames.IMAGE))
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
@@ -2076,8 +2347,10 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @AudioUrl if the parameter is of type Image
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.AUDIO))
+        // we don't need @AudioUrl if the parameter is of type Audio or List<Audio>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.AUDIO)
+                        || isListOf(pi.type(), LangChain4jDotNames.AUDIO))
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
@@ -2087,8 +2360,10 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @PdfUrl if the parameter is of type PdfFile
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE))
+        // we don't need @PdfUrl if the parameter is of type PdfFile or List<PdfFile>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE)
+                        || isListOf(pi.type(), LangChain4jDotNames.PDF_FILE))
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
@@ -2098,9 +2373,21 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @VideoUrl if the parameter is of type PdfFile
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.VIDEO))
+        // we don't need @VideoUrl if the parameter is of type Video or List<Video>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.VIDEO)
+                        || isListOf(pi.type(), LangChain4jDotNames.VIDEO))
                 .map(pi -> (int) pi.position()).findFirst();
+    }
+
+    private static boolean isListOf(org.jboss.jandex.Type type, DotName elementType) {
+        if (type.kind() == org.jboss.jandex.Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType pt = type.asParameterizedType();
+            return DotNames.LIST.equals(pt.name())
+                    && pt.arguments().size() == 1
+                    && pt.arguments().get(0).name().equals(elementType);
+        }
+        return false;
     }
 
     private void validateImageUrlParam(MethodParameterInfo param) {
@@ -2110,7 +2397,8 @@ public class AiServicesProcessor {
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.IMAGE)) {
+                || typeName.equals(LangChain4jDotNames.IMAGE)
+                || isListOf(type, LangChain4jDotNames.IMAGE)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @ImageUrl type '" + type.name() + "'");
@@ -2118,12 +2406,13 @@ public class AiServicesProcessor {
 
     private void validateAudioUrlParam(MethodParameterInfo param) {
         if (param == null) {
-            throw new IllegalArgumentException("Unhandled @ImageUrl annotation");
+            throw new IllegalArgumentException("Unhandled @AudioUrl annotation");
         }
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.AUDIO)) {
+                || typeName.equals(LangChain4jDotNames.AUDIO)
+                || isListOf(type, LangChain4jDotNames.AUDIO)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @AudioUrl type '" + type.name() + "'");
@@ -2136,7 +2425,8 @@ public class AiServicesProcessor {
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.PDF_FILE)) {
+                || typeName.equals(LangChain4jDotNames.PDF_FILE)
+                || isListOf(type, LangChain4jDotNames.PDF_FILE)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @PdfUrl type '" + type.name() + "'");
@@ -2149,7 +2439,8 @@ public class AiServicesProcessor {
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.VIDEO)) {
+                || typeName.equals(LangChain4jDotNames.VIDEO)
+                || isListOf(type, LangChain4jDotNames.VIDEO)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @VideoUrl type '" + type.name() + "'");

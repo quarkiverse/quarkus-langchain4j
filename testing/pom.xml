@@ -14,7 +14,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>scorer</module>
+        <module>evaluation</module>
     </modules>
 
 

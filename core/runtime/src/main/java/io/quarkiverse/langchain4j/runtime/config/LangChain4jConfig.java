@@ -27,6 +27,12 @@ public interface LangChain4jConfig {
     Optional<Boolean> logResponses();
 
     /**
+     * Whether clients should log requests as cURL commands
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logRequestsCurl();
+
+    /**
      * Global timeout for requests to LLM APIs
      */
     @ConfigDocDefault("10s")
@@ -46,4 +52,9 @@ public interface LangChain4jConfig {
      * Tracing related configuration
      */
     TracingConfig tracing();
+
+    /**
+     * AI Service configuration
+     */
+    AiServiceConfig aiService();
 }

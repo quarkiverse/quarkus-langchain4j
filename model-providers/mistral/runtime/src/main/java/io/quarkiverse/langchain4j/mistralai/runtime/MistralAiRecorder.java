@@ -5,7 +5,11 @@ import static io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMis
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.time.Duration;
-import java.util.function.Supplier;
+import java.util.function.Function;
+
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
@@ -19,24 +23,36 @@ import dev.langchain4j.model.mistralai.MistralAiModerationModel;
 import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
 import dev.langchain4j.model.moderation.ModerationModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.mistralai.QuarkusMistralAiClient;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class MistralAiRecorder {
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<MistralAiChatModel.MistralAiChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<MistralAiStreamingChatModel.MistralAiStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<MistralAiEmbeddingModel.MistralAiEmbeddingModelBuilder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<MistralAiModerationModel.Builder>>> MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
     private final RuntimeValue<LangChain4jMistralAiConfig> runtimeConfig;
 
     public MistralAiRecorder(RuntimeValue<LangChain4jMistralAiConfig> runtimeConfig) {
         this.runtimeConfig = runtimeConfig;
     }
 
-    public Supplier<ChatModel> chatModel(String configName) {
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
@@ -72,23 +88,29 @@ public class MistralAiRecorder {
                 builder.randomSeed(chatModelConfig.randomSeed().getAsInt());
             }
 
-            return new Supplier<>() {
+            var logCurl = firstOrDefault(false, mistralAiConfig.logRequestsCurl());
+
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    QuarkusMistralAiClient.setLogCurlHint(logCurl);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
@@ -124,23 +146,30 @@ public class MistralAiRecorder {
                 builder.randomSeed(chatModelConfig.randomSeed().getAsInt());
             }
 
-            return new Supplier<>() {
+            var logCurl = firstOrDefault(false, mistralAiConfig.logRequestsCurl());
+
+            return new Function<>() {
                 @Override
-                public StreamingChatModel get() {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    QuarkusMistralAiClient.setLogCurlHint(logCurl);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatModel get() {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     return new DisabledStreamingChatModel();
                 }
             };
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
@@ -160,23 +189,26 @@ public class MistralAiRecorder {
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), mistralAiConfig.logResponses()))
                     .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };
         }
     }
 
-    public Supplier<ModerationModel> moderationModel(String configName) {
+    public Function<SyntheticCreationalContext<ModerationModel>, ModerationModel> moderationModel(String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
@@ -196,16 +228,22 @@ public class MistralAiRecorder {
                     .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), mistralAiConfig.logResponses()))
                     .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
-            return new Supplier<>() {
+            var logCurl = firstOrDefault(false, mistralAiConfig.logRequestsCurl());
+
+            return new Function<>() {
                 @Override
-                public ModerationModel get() {
+                public ModerationModel apply(SyntheticCreationalContext<ModerationModel> context) {
+                    QuarkusMistralAiClient.setLogCurlHint(logCurl);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ModerationModel get() {
+                public ModerationModel apply(SyntheticCreationalContext<ModerationModel> context) {
                     return new DisabledModerationModel();
                 }
             };

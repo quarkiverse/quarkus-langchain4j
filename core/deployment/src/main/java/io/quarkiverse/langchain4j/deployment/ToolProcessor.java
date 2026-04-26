@@ -41,6 +41,9 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
@@ -71,9 +74,12 @@ import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolGuardrailService;
 import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolInputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolOutputGuardrailsLiteral;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
-import io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem;
+import io.quarkus.arc.deployment.BeanArchiveIndexBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
+import io.quarkus.arc.processor.BeanDeploymentValidator.ValidationContext;
+import io.quarkus.arc.processor.BeanInfo;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
@@ -99,6 +105,7 @@ import io.quarkus.gizmo.ResultHandle;
 public class ToolProcessor {
 
     private static final DotName TOOL = DotName.createSimple(Tool.class);
+
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
     private static final DotName JSON_IGNORE = DotName.createSimple(JsonIgnore.class);
     private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
@@ -233,7 +240,7 @@ public class ToolProcessor {
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
-            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrors,
             BuildProducer<ToolsMetadataBeforeRemovalBuildItem> toolsMetadataProducer) {
 
         IndexView index = indexBuildItem.getIndex();
@@ -271,7 +278,7 @@ public class ToolProcessor {
                     causeValidationError = true;
                 }
                 if (causeValidationError) {
-                    validation.produce(
+                    validationErrors.produce(
                             new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
                                     "@Tool is only supported on non-abstract classes, all other usages are ignored. Offending method is '"
                                             + methodInfo.declaringClass().name().toString() + "#" + methodInfo.name() + "'")));
@@ -294,7 +301,7 @@ public class ToolProcessor {
                     // Validation
                     // - Must not have another tool with the same name
                     if (discoveredToolNames.contains(toolName)) {
-                        validation.produce(
+                        validationErrors.produce(
                                 new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
                                         "Duplicate tool name '" + toolName + "' found in class '"
                                                 + className + "'. Tools name must be unique within a class.")));
@@ -337,6 +344,8 @@ public class ToolProcessor {
 
                     String toolName = getToolName(nameValue, toolMethod);
                     String toolDescription = getToolDescription(descriptionValue);
+
+                    AnnotationValue metadataValue = instance.value("metadata");
                     AnnotationValue returnBehavior = instance.value("returnBehavior");
                     ReturnBehavior returnBehaviorEnum = ReturnBehavior.TO_LLM;
                     if (returnBehavior != null) {
@@ -378,6 +387,20 @@ public class ToolProcessor {
                                     .required(required)
                                     .build());
 
+                    if (metadataValue != null) {
+                        String metadataJson = metadataValue.asString();
+                        if (!metadataJson.isEmpty()) {
+                            try {
+                                Map<String, Object> toolMetadata = ObjectMapperHolder.OBJECT_MAPPER.readValue(metadataJson,
+                                        ObjectMapperHolder.MAP_TYPE_REF);
+                                builder.metadata(toolMetadata);
+                            } catch (JsonProcessingException e) {
+                                throw new ValidationException("Invalid metadata JSON for tool " + toolName + " in " + className,
+                                        e);
+                            }
+                        }
+                    }
+
                     Map<String, Integer> nameToParamPosition = toolMethod.parameters().stream().collect(
                             Collectors.toMap(MethodParameterInfo::name, i -> Integer.valueOf(i.position())));
 
@@ -403,8 +426,8 @@ public class ToolProcessor {
                             inputGuardrails,
                             outputGuardrails);
 
-                    validateExecutionModel(methodCreateInfo, toolMethod, validation);
-                    validateGuardrails(toolMethod, inputGuardrails, outputGuardrails, index, validation);
+                    validateExecutionModel(methodCreateInfo, toolMethod, validationErrors);
+                    validateGuardrails(toolMethod, inputGuardrails, outputGuardrails, index, validationErrors);
 
                     toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
 
@@ -432,39 +455,71 @@ public class ToolProcessor {
     }
 
     @BuildStep
-    public void validateThatGuardrailsAreCDIBeans(BeanRegistrationPhaseBuildItem registrationPhaseBuildItem,
-            List<ToolMethodBuildItem> toolsBuildItem,
-            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrorBuildItem) {
+    public void validateGuardrailsBeans(List<ToolMethodBuildItem> toolsBuildItem,
+            BeanArchiveIndexBuildItem beanArchiveIndex,
+            ValidationPhaseBuildItem validationPhase,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrors) {
+        IndexView index = beanArchiveIndex.getIndex();
         for (ToolMethodBuildItem item : toolsBuildItem) {
             String methodName = item.getToolsMethodInfo().declaringClass().name() + "." + item.getToolsMethodInfo().name();
             var ig = item.getToolMethodCreateInfo().getInputGuardrails();
             var og = item.getToolMethodCreateInfo().getOutputGuardrails();
+            ValidationContext validationContext = validationPhase.getContext();
             if (ig != null && ig.hasGuardrails()) {
-                for (String className : ig.getClassNames()) {
-                    if (registrationPhaseBuildItem.getContext().beans().classBeans()
-                            .withBeanType(DotName.createSimple(className)).isEmpty()) {
-                        String msg = String.format("Input guardrail class '%s' for tool method '%s' is not a CDI bean. "
-                                + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
-                                className, methodName);
-                        validationErrorBuildItem
+                for (String inputGuardrailClassName : ig.getClassNames()) {
+                    DotName classDotName = DotName.createSimple(inputGuardrailClassName);
+                    List<BeanInfo> beans = validationContext.beans().withBeanType(classDotName).collect();
+                    if (beans.size() > 1) {
+                        String message = String.format(
+                                "There must be exactly one bean that matches the input guardrail '%s' declared on '%s':\n\t- %s",
+                                inputGuardrailClassName,
+                                methodName,
+                                beans.stream().map(Object::toString).collect(Collectors.joining("\n\t- ")));
+                        validationErrors.produce(new ValidationErrorBuildItem(new IllegalStateException(message)));
+                    } else if (beans.isEmpty() && !hasNoArgsCtor(index, classDotName)) {
+                        String msg = String.format(
+                                "Input guardrail class '%s' for tool method '%s' is neither a CDI bean, nor declares a public no-args constructor. "
+                                        + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
+                                inputGuardrailClassName, methodName);
+                        validationErrors
                                 .produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new ValidationException(msg)));
                     }
                 }
             }
             if (og != null && og.hasGuardrails()) {
-                for (String className : og.getClassNames()) {
-                    if (registrationPhaseBuildItem.getContext().beans().classBeans()
-                            .withBeanType(DotName.createSimple(className)).isEmpty()) {
-                        String msg = String.format("Output guardrail class '%s' for tool method '%s' is not a CDI bean. "
-                                + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
-                                className, methodName);
-                        validationErrorBuildItem
+                for (String outputGuardrailClassName : og.getClassNames()) {
+                    DotName classDotName = DotName.createSimple(outputGuardrailClassName);
+                    List<BeanInfo> beans = validationPhase.getContext().beans().withBeanType(classDotName).collect();
+                    if (beans.size() > 1) {
+                        String message = String.format(
+                                "There must be exactly one bean that matches the output guardrail '%s' declared on '%s':\n\t- %s",
+                                outputGuardrailClassName,
+                                methodName,
+                                beans.stream().map(Object::toString).collect(Collectors.joining("\n\t- ")));
+
+                        validationErrors.produce(new ValidationErrorBuildItem(new IllegalStateException(message)));
+                    } else if (beans.isEmpty() && !hasNoArgsCtor(index, classDotName)) {
+                        String msg = String.format(
+                                "Output guardrail class '%s' for tool method '%s' is neither a CDI bean, nor declares a public no-args constructor. "
+                                        + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
+                                outputGuardrailClassName, methodName);
+                        validationErrors
                                 .produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new ValidationException(msg)));
                     }
                 }
             }
         }
 
+    }
+
+    private static boolean hasNoArgsCtor(IndexView index,
+            DotName classDotName) {
+        boolean hasNoArgsCtor = false;
+        ClassInfo igClassInfo = index.getClassByName(classDotName);
+        if (igClassInfo != null) {
+            hasNoArgsCtor = igClassInfo.hasNoArgsConstructor();
+        }
+        return hasNoArgsCtor;
     }
 
     public static String resolveToolName(MethodInfo toolMethod) {
@@ -651,6 +706,7 @@ public class ToolProcessor {
     public ToolsMetadataBuildItem filterOutRemovedTools(
             ToolsMetadataBeforeRemovalBuildItem beforeRemoval,
             ValidationPhaseBuildItem validationPhase,
+            BuildProducer<ValidationErrorBuildItem> validationErrors, // make sure the build step is executed at the right time
             RecorderContext recorderContext,
             ToolsRecorder recorder) {
         if (beforeRemoval != null) {
@@ -1058,5 +1114,11 @@ public class ToolProcessor {
                 .map(type -> type.name().toString())
                 .distinct()
                 .toList();
+    }
+
+    private static class ObjectMapperHolder {
+        private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+        private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
+        };
     }
 }

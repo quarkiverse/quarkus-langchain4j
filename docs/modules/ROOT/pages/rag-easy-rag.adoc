@@ -11,6 +11,8 @@ is to add a dependency that provides an embedding model, and provide a
 single configuration property, `quarkus.langchain4j.easy-rag.path`, which
 denotes a path in the local filesystem where your documents are stored.
 
+WARNING: Native mode compilation is not supported with the Easy RAG extension.
+
 NOTE: You can also define `quarkus.langchain4j.easy-rag.path-type=CLASSPATH` if you wish to define a location relative to the application's classpath.
 
 On startup, Quarkus will automatically scan all files in the directory and

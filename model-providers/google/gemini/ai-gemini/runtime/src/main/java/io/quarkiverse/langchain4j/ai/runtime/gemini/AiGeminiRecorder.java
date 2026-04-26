@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -16,9 +17,15 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.googleai.GeminiThinkingConfig;
+import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.LangChain4jAiGeminiConfig;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
@@ -30,6 +37,12 @@ public class AiGeminiRecorder {
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<GoogleAiGeminiChatModel.GoogleAiGeminiChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<GoogleAiGeminiStreamingChatModel.GoogleAiGeminiStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<GoogleAiEmbeddingModel.GoogleAiEmbeddingModelBuilder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private final RuntimeValue<LangChain4jAiGeminiConfig> runtimeConfig;
@@ -47,28 +60,44 @@ public class AiGeminiRecorder {
 
             String apiKey = aiConfig.apiKey().orElse(null);
 
-            var builder = AiGeminiEmbeddingModel.builder()
-                    .configName(configName)
-                    .baseUrl(baseUrl)
-                    .key(apiKey)
-                    .modelId(embeddingModelConfig.modelId())
+            var httpClientBuilder = new JaxRsHttpClientBuilder();
+
+            var builder = GoogleAiEmbeddingModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
+                    .baseUrl(determineBaseUrl(baseUrl))
+                    .apiKey(apiKey)
+                    .modelName(embeddingModelConfig.modelId())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), aiConfig.logResponses()));
 
-            if (embeddingModelConfig.outputDimension().isPresent()) {
-                builder.dimension(embeddingModelConfig.outputDimension().get());
-            }
-
             if (embeddingModelConfig.taskType().isPresent()) {
-                builder.taskType(embeddingModelConfig.taskType().get());
+                Optional<GoogleAiEmbeddingModel.TaskType> taskType = Optional.empty();
+                for (GoogleAiEmbeddingModel.TaskType t : GoogleAiEmbeddingModel.TaskType.values()) {
+                    if (t.name().equals(embeddingModelConfig.taskType().get())) {
+                        taskType = Optional.of(t);
+                        break;
+                    }
+                }
+                if (taskType.isPresent()) {
+                    builder.taskType(taskType.get());
+                }
             }
-
+            if (embeddingModelConfig.outputDimension().isPresent()) {
+                builder.outputDimensionality(embeddingModelConfig.outputDimension().get());
+            }
             return new Function<>() {
                 @Override
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, isAuthProviderAvailable(context, configName),
                             configName);
+                    if (apiKey == null) {
+                        httpClientBuilder
+                                .addClientProvider(new ModelAuthProviderFilter(embeddingModelConfig.modelId()));
+                    }
 
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -89,11 +118,14 @@ public class AiGeminiRecorder {
             var chatModelConfig = aiConfig.chatModel();
             Optional<String> baseUrl = aiConfig.baseUrl();
 
+            var httpClientBuilder = new JaxRsHttpClientBuilder();
+
             String apiKey = aiConfig.apiKey().orElse(null);
-            var builder = AiGeminiChatLanguageModel.builder()
-                    .baseUrl(baseUrl)
-                    .key(apiKey)
-                    .modelId(chatModelConfig.modelId())
+            var builder = GoogleAiGeminiChatModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
+                    .baseUrl(determineBaseUrl(baseUrl))
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelId())
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), aiConfig.logResponses()));
@@ -110,13 +142,11 @@ public class AiGeminiRecorder {
             if (chatModelConfig.timeout().isPresent()) {
                 builder.timeout(chatModelConfig.timeout().get());
             }
-            ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
-            if (thinkingConfig.includeThoughts()) {
-                builder.includeThoughts(thinkingConfig.includeThoughts());
-            }
-            if (thinkingConfig.thinkingBudget().isPresent()) {
-                builder.thinkingBudget(thinkingConfig.thinkingBudget().getAsLong());
-            }
+
+            configureThinking(chatModelConfig, builder);
+            // TODO: what do we do with these?
+            builder.returnThinking(true);
+            builder.sendThinking(true);
 
             // TODO: add the rest of the properties
 
@@ -128,6 +158,14 @@ public class AiGeminiRecorder {
 
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    if (apiKey == null) {
+                        httpClientBuilder.addClientProvider(new ModelAuthProviderFilter(chatModelConfig.modelId()));
+                    }
+
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -142,6 +180,20 @@ public class AiGeminiRecorder {
 
     }
 
+    private String determineBaseUrl(Optional<String> baseUrl) {
+        return baseUrl.orElse("https://generativelanguage.googleapis.com/v1beta");
+    }
+
+    private void configureThinking(ChatModelConfig chatModelConfig,
+            GoogleAiGeminiChatModel.GoogleAiGeminiChatModelBaseBuilder builder) {
+        GeminiThinkingConfig.Builder geminiThinkingConfigBuilder = GeminiThinkingConfig.builder()
+                .includeThoughts(chatModelConfig.thinking().includeThoughts());
+        if (chatModelConfig.thinking().thinkingBudget().isPresent()) {
+            geminiThinkingConfigBuilder.thinkingBudget(chatModelConfig.thinking().thinkingBudget().getAsInt());
+        }
+        builder.thinkingConfig(geminiThinkingConfigBuilder.build());
+    }
+
     public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
         var aiConfig = correspondingAiConfig(configName);
 
@@ -150,10 +202,14 @@ public class AiGeminiRecorder {
             Optional<String> baseUrl = aiConfig.baseUrl();
 
             String apiKey = aiConfig.apiKey().orElse(null);
-            var builder = AiGeminiStreamingChatLanguageModel.builder()
-                    .baseUrl(baseUrl)
-                    .key(apiKey)
-                    .modelId(chatModelConfig.modelId())
+
+            var httpClientBuilder = new JaxRsHttpClientBuilder();
+
+            var builder = GoogleAiGeminiStreamingChatModel.builder()
+                    .baseUrl(determineBaseUrl(baseUrl))
+                    .httpClientBuilder(httpClientBuilder)
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelId())
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), aiConfig.logResponses()));
@@ -171,7 +227,10 @@ public class AiGeminiRecorder {
                 builder.timeout(chatModelConfig.timeout().get());
             }
 
-            // TODO: add the rest of the properties
+            configureThinking(chatModelConfig, builder);
+            // TODO: what do we do with these?
+            builder.returnThinking(true);
+            builder.sendThinking(true);
 
             return new Function<>() {
                 @Override
@@ -181,6 +240,14 @@ public class AiGeminiRecorder {
 
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+
+                    if (apiKey == null) {
+                        httpClientBuilder.addClientProvider(new ModelAuthProviderFilter(chatModelConfig.modelId()));
+                    }
+
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };

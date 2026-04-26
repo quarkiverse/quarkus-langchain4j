@@ -7,13 +7,16 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.model.ollama.OllamaChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.devservice.Langchain4jDevServicesEnabled;
@@ -24,6 +27,8 @@ import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandida
 import io.quarkiverse.langchain4j.deployment.items.ImplicitlyUserConfiguredChatProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
+import io.quarkiverse.langchain4j.ollama.OllamaStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.ollama.runtime.OllamaRecorder;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -51,6 +56,16 @@ public class OllamaProcessor {
 
     private static final String FEATURE = "langchain4j-ollama";
     private static final String PROVIDER = "ollama";
+
+    private static final DotName OLLAMA_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OllamaChatModel.OllamaChatModelBuilder.class);
+    private static final DotName OLLAMA_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OllamaStreamingChatLanguageModel.Builder.class);
+    private static final DotName OLLAMA_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(OllamaEmbeddingModel.Builder.class);
+
+    private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
+            Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -168,6 +183,10 @@ public class OllamaProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OLLAMA_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
@@ -179,6 +198,10 @@ public class OllamaProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OLLAMA_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
@@ -194,7 +217,11 @@ public class OllamaProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OLLAMA_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

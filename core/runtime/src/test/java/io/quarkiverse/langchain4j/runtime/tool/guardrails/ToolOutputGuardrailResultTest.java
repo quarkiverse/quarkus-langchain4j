@@ -1,6 +1,10 @@
 package io.quarkiverse.langchain4j.runtime.tool.guardrails;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -44,11 +48,12 @@ class ToolOutputGuardrailResultTest {
     }
 
     @Test
-    void testFailure_withMessageAndCause() {
+    void testFatal_withMessageAndCause() {
         Exception cause = new RuntimeException("Root cause");
-        ToolOutputGuardrailResult result = ToolOutputGuardrailResult.failure("Validation failed", cause);
+        ToolOutputGuardrailResult result = ToolOutputGuardrailResult.fatal("Validation failed", cause);
 
         assertFalse(result.isSuccess());
+        assertTrue(result.isFatalFailure());
         assertNull(result.modifiedResult());
         assertEquals("Validation failed", result.errorMessage());
         assertSame(cause, result.cause());

@@ -28,12 +28,12 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-mockito</artifactId>
+            <artifactId>quarkus-junit-mockito</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -64,6 +64,10 @@
                 <exclusion>
                     <groupId>com.github.spullara.mustache.java</groupId>
                     <artifactId>compiler</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>dev.langchain4j</groupId>
+                    <artifactId>langchain4j-http-client-jdk</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

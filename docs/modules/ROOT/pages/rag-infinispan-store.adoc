@@ -6,11 +6,13 @@ include::./includes/customization.adoc[]
 Quarkus LangChain4j integrates with Infinispan Server to provide a scalable, distributed vector store for Retrieval-Augmented Generation (RAG).
 This extension enables you to persist and query embedding vectors for document retrieval.
 
+NOTE: This extension uses Infinispan 16.0 capabilities, including embedded metadata objects with typed fields for metadata filtering.
+
 == Prerequisites
 
 To use Infinispan as a vector-capable embedding store:
 
-* An Infinispan Server must be running and accessible
+* An Infinispan Server 16.0+ must be running and accessible
 * The Quarkus Infinispan client must be configured
 * Vector embeddings must have a fixed dimension that matches your embedding model
 
@@ -24,14 +26,8 @@ It automatically registers the required schema on startup.
 
 To enable Infinispan support in your Quarkus project, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-infinispan</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-infinispan
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 This extension builds upon the https://quarkus.io/guides/infinispan-client[Quarkus Infinispan client].
 Ensure that the default Infinispan client is correctly configured* For more details, see:
@@ -71,20 +67,98 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithIn
 
 This demonstrates how to store and retrieve embedded documents using Infinispan as the backend.
 
+== Metadata Filtering
+
+The Infinispan embedding store supports metadata filtering when searching for embeddings.
+Metadata is stored as embedded Protobuf objects with typed fields (`String`, `Long`, `Double`),
+enabling efficient server-side filtering using Infinispan's Ickle query language.
+
+Supported filter types:
+
+* `IsEqualTo`, `IsNotEqualTo` — equality comparisons
+* `IsGreaterThan`, `IsGreaterThanOrEqualTo` — greater-than comparisons
+* `IsLessThan`, `IsLessThanOrEqualTo` — less-than comparisons
+* `IsIn`, `IsNotIn` — membership checks
+* `And`, `Or`, `Not` — logical operators
+
+Example usage:
+
+[source,java]
+----
+import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
+
+EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+    .queryEmbedding(embedding)
+    .filter(metadataKey("category").isEqualTo("science"))
+    .maxResults(10)
+    .build();
+
+EmbeddingSearchResult<TextSegment> result = embeddingStore.search(request);
+----
+
+You can also remove embeddings by filter:
+
+[source,java]
+----
+embeddingStore.removeAll(metadataKey("category").isEqualTo("outdated"));
+----
+
 == Configuration
 
 By default, the extension uses the default Infinispan client and cache.
 You can customize its behavior via the following configuration options:
 
+[source,properties]
+----
+quarkus.langchain4j.infinispan.dimension=384 <1>
+quarkus.langchain4j.infinispan.cache-name=my-cache <2>
+quarkus.langchain4j.infinispan.distance=5 <3>
+quarkus.langchain4j.infinispan.similarity=COSINE <4>
+quarkus.langchain4j.infinispan.create-cache=true <5>
+quarkus.langchain4j.infinispan.cache-config=<your-config> <6>
+----
+<1> Required: vector dimension matching your embedding model
+<2> Cache name (default: embeddings-cache)
+<3> Maximum distance for knn query (default: 3)
+<4> Vector similarity metric (default: COSINE). Supported values: `COSINE`, `L2`, `INNER_PRODUCT`, `MAX_INNER_PRODUCT`
+<5> Whether to create the cache on startup if it doesn't exist (default: true). Set to false if using a pre-configured cache on the server
+<6> Provide a full XML/JSON cache configuration. When set, overrides the default cache configuration
+
 include::includes/quarkus-langchain4j-infinispan.adoc[leveloffset=+1,opts=optional]
 
 == How It Works
 
-The Infinispan extension registers a Protobuf schema to define an indexable entity with a vector field.
+The Infinispan extension registers a Protobuf schema to define indexable entities with vector and metadata fields.
 For example, for a dimension of 384, the following schema is generated and registered:
 
 [source,protobuf]
 ----
+/**
+ * @Indexed
+ */
+message LangchainMetadata384 {
+
+   /**
+    * @Basic(projectable=true)
+    */
+   optional string name = 1;
+
+   /**
+    * @Basic(projectable=true)
+    */
+   optional string value = 2;
+
+   /**
+    * @Basic(projectable=true)
+    */
+   optional int64 value_int = 3;
+
+   /**
+    * @Basic(projectable=true)
+    */
+   optional double value_float = 4;
+}
+
 /**
  * @Indexed
  */
@@ -96,19 +170,28 @@ message LangchainItem384 {
    optional string id = 1;
 
    /**
-    * @Vector(dimension=384, similarity=COSINE)
+    * @Vector(dimension=384, similarity=COSINE) <1>
     */
    repeated float floatVector = 2;
 
    optional string text = 3;
 
-   repeated string metadataKeys = 4;
-
-   repeated string metadataValues = 5;
+   /**
+    * @Embedded
+    */
+   repeated LangchainMetadata384 metadata = 4;
 }
 ----
 
-The embedding vector is stored as a `repeated float` and indexed for similarity search.
+<1> The similarity metric is configurable via `quarkus.langchain4j.infinispan.similarity`.
+
+Each metadata entry is stored as an embedded `LangchainMetadata` object with three typed value fields:
+
+* `value` — for String values
+* `value_int` — for Integer and Long values
+* `value_float` — for Float and Double values
+
+This typed approach ensures that numeric comparisons (greater-than, less-than, etc.) work correctly during filtering.
 
 == Infinispan Cache Configuration
 
@@ -143,15 +226,15 @@ Below is the default configuration that may be used or customized:
 }
 ----
 
-NOTE: The name of the indexed entity (`LangchainItem384`) changes depending on the configured embedding dimension.
+NOTE: The name of the indexed entity (`LangchainItem384`) changes depending on the configured embedding dimension. The metadata type is embedded within the item and does not need to be listed separately.
 
 == Summary
 
 To use Infinispan as a distributed vector store for RAG with Quarkus LangChain4j:
 
-* Ensure Infinispan Server is running with indexing enabled
+* Ensure Infinispan Server 16.0+ is running with indexing enabled
 * Add the required extension dependency
 * Set the embedding vector dimension
 * Configure or allow the extension to create an indexed cache
 * Use `InfinispanEmbeddingStore` to ingest and retrieve documents for similarity search
-
+* Use metadata filters for fine-grained search and removal

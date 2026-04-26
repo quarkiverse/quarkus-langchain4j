@@ -4,18 +4,24 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.function.Supplier;
+import java.util.function.Function;
+
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceEmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -25,6 +31,10 @@ public class HuggingFaceRecorder {
 
     private static final String DUMMY_KEY = "dummy";
     private static final String HUGGING_FACE_URL_MARKER = "api-inference.huggingface.co";
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<QuarkusHuggingFaceChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<QuarkusHuggingFaceEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private final RuntimeValue<LangChain4jHuggingFaceConfig> runtimeConfig;
 
@@ -32,7 +42,7 @@ public class HuggingFaceRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
-    public Supplier<ChatModel> chatModel(String configName) {
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(
                 runtimeConfig.getValue(), configName);
 
@@ -66,23 +76,26 @@ public class HuggingFaceRecorder {
                 builder.maxNewTokens(chatModelConfig.maxNewTokens().get());
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(
                 runtimeConfig.getValue(), configName);
 
@@ -104,16 +117,19 @@ public class HuggingFaceRecorder {
                 builder.accessToken(apiKey);
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };

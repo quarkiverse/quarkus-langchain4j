@@ -1,0 +1,25 @@
+---
+- name: "QuarkusSample1"
+  parameters:
+    - "What is Quarkus?"
+  expected-output: |
+    Quarkus is a Kubernetes-native Java framework tailored for GraalVM and OpenJDK HotSpot.
+  tags:
+    - "quarkus"
+    - "java"
+- name: "QuarkusSample2"
+  parameters:
+    - "What are the benefits of Quarkus?"
+  expected-output: |
+    Quarkus offers fast startup time, low memory footprint, and developer joy with live coding.
+  tags:
+    - "quarkus"
+    - "benefits"
+- name: "QuarkusSample3"
+  parameters:
+    - "Does Quarkus support CDI?"
+  expected-output: |
+    Yes, Quarkus has full support for CDI (Contexts and Dependency Injection) through Arc.
+  tags:
+    - "quarkus"
+    - "cdi"

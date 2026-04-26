@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.react.chatbot;
 
 import java.util.Map;
-import java.util.List;
 import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;

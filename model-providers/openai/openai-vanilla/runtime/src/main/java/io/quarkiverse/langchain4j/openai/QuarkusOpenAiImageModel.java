@@ -64,6 +64,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
                 .writeTimeout(builder.timeout)
                 .logRequests(builder.logRequests)
                 .logResponses(builder.logResponses)
+                .logCurl(builder.logCurl != null && builder.logCurl)
                 .build();
     }
 
@@ -151,6 +152,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         private Integer maxRetries;
         private Boolean logRequests;
         private Boolean logResponses;
+        private Boolean logCurl;
         private Optional<Path> persistDirectory;
 
         public Builder baseUrl(String baseUrl) {
@@ -195,6 +197,11 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         public Builder logResponses(Boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public Builder logCurl(Boolean logCurl) {
+            this.logCurl = logCurl;
             return this;
         }
 

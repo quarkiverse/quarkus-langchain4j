@@ -24,25 +24,25 @@ public class AssistantResourceWithMetrics {
     @GET
     @Path("a1")
     public String assistant1() {
-        return assistant1.chat("test");
+        return assistant1.chat("Hello, answer with word 'test'");
     }
 
     @GET
     @Path("a2")
     public String assistant2() {
-        return assistant2.chat("test");
+        return assistant2.chat("Hello, answer with word 'test'");
     }
 
     @GET
     @Path("a2c2")
     public String assistant2Chat2() {
-        return assistant2.chat2("test");
+        return assistant2.chat2("Hello, answer with word 'test'");
     }
 
     @GET
     @Path("a3")
     public String assistant3() {
-        return assistant3.chat("test");
+        return assistant3.chat("Hello, answer with word 'test'");
     }
 
     @RegisterAiService

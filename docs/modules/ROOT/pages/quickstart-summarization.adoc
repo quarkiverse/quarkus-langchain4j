@@ -11,14 +11,8 @@ The service reads a plain text file (such as an article or report), sends the co
 
 Make sure you’ve added your preferred LLM provider to your `pom.xml`. For example, to use OpenAI:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-  <groupId>io.quarkiverse.langchain4j</groupId>
-  <artifactId>quarkus-langchain4j-openai</artifactId>
-  <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-openai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 Then configure your API key in `application.properties`:
 
@@ -69,7 +63,7 @@ This interface defines a system message to guide the model's behavior and a meth
 
 Let's look at the `summarize` method.
 The `@UserMessage` annotation specifies how the input should be formatted when sent to the model.
-The `{input}` placeholder will be replaced with the actual content passed to the method.
+The `\{input}` placeholder will be replaced with the actual content passed to the method.
 
 [#main-app]
 == Writing the Main Application

@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name[`quarkus.langchain4j.memorystore.redis.client-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name[`+++quarkus.langchain4j.memorystore.redis.client-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.memorystore.redis.client-name+++[]
 endif::add-copy-button-to-config-props[]

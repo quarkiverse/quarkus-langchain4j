@@ -89,9 +89,11 @@ public interface LangChain4jAzureOpenAiConfig {
         Optional<String> adToken();
 
         /**
-         * The API version to use for this operation. This follows the YYYY-MM-DD format
+         * The API version to use for this operation. This follows the YYYY-MM-DD format.
+         * API versions {@code 2023-12-01-preview} and later support the {@code tools} parameter
+         * for function calling. Older versions use the deprecated {@code functions} parameter.
          */
-        @WithDefault("2023-05-15")
+        @WithDefault("2024-10-21")
         String apiVersion();
 
         /**
@@ -128,6 +130,13 @@ public interface LangChain4jAzureOpenAiConfig {
         @ConfigDocDefault("false")
         @WithDefault("${quarkus.langchain4j.log-responses}")
         Optional<Boolean> logResponses();
+
+        /**
+         * Whether the OpenAI client should log requests as cURL commands
+         */
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests-curl}")
+        Optional<Boolean> logRequestsCurl();
 
         /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI provider.

@@ -56,6 +56,7 @@ public record ToolInputGuardrailResult(
         boolean isSuccess,
         String errorMessage,
         Throwable cause,
+        boolean isFatalFailure,
         ToolExecutionRequest modifiedRequest) implements ToolGuardrailResult<ToolInputGuardrailResult> {
 
     /**
@@ -67,7 +68,7 @@ public record ToolInputGuardrailResult(
      * @return a success result
      */
     public static ToolInputGuardrailResult success() {
-        return new ToolInputGuardrailResult(true, null, null, null);
+        return new ToolInputGuardrailResult(true, null, null, false, null);
     }
 
     /**
@@ -81,7 +82,7 @@ public record ToolInputGuardrailResult(
      * @return a success result with request modification
      */
     public static ToolInputGuardrailResult successWith(ToolExecutionRequest modifiedRequest) {
-        return new ToolInputGuardrailResult(true, null, null, modifiedRequest);
+        return new ToolInputGuardrailResult(true, null, null, false, modifiedRequest);
     }
 
     /**
@@ -95,7 +96,22 @@ public record ToolInputGuardrailResult(
      * @return a failure result
      */
     public static ToolInputGuardrailResult failure(String errorMessage) {
-        return new ToolInputGuardrailResult(false, errorMessage, null, null);
+        return new ToolInputGuardrailResult(false, errorMessage, null, false, null);
+    }
+
+    /**
+     * Creates a fatal failure result with an error message.
+     * <p>
+     * The tool execution will be skipped, and the exception will be thrown, stopping
+     * the conversation. This should be used for critical failures that cannot be recovered from,
+     * such as authorization failures or system errors.
+     * </p>
+     *
+     * @param failure the exception that caused the failure
+     * @return a fatal failure result
+     */
+    public static ToolInputGuardrailResult fatal(Throwable failure) {
+        return new ToolInputGuardrailResult(false, failure.getMessage(), failure.getCause(), true, null);
     }
 
     /**
@@ -110,7 +126,7 @@ public record ToolInputGuardrailResult(
      * @param cause the exception that caused the failure
      * @return a fatal failure result
      */
-    public static ToolInputGuardrailResult failure(String errorMessage, Throwable cause) {
-        return new ToolInputGuardrailResult(false, errorMessage, cause, null);
+    public static ToolInputGuardrailResult fatal(String errorMessage, Throwable cause) {
+        return new ToolInputGuardrailResult(false, errorMessage, cause, true, null);
     }
 }

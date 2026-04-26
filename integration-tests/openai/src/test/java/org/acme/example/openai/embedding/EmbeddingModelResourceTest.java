@@ -6,14 +6,14 @@ import java.net.URL;
 
 import org.acme.example.openai.TestUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "mockgpt does not implement embeddings")
+@EnabledIf(value = "org.acme.example.openai.TestUtils#usesLLM", disabledReason = "mockgpt does not implement embeddings")
 public class EmbeddingModelResourceTest {
 
     @TestHTTPEndpoint(EmbeddingModelResource.class)

@@ -4,7 +4,7 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped

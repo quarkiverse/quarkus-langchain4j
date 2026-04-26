@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
@@ -272,7 +273,7 @@ class ToolExecutorTest {
         ToolExecutor toolExecutor = getToolExecutor(methodName);
 
         assertThatThrownBy(() -> toolExecutor.execute(request, null))
-                .isExactlyInstanceOf(IllegalArgumentException.class);
+                .isExactlyInstanceOf(ToolArgumentsException.class);
     }
 
     private ToolExecutor getToolExecutor(String methodName) {

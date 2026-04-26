@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
@@ -17,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -29,30 +27,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.ibm.watsonx.ai.chat.model.AssistantMessage;
+import com.ibm.watsonx.ai.chat.model.ChatMessage;
+import com.ibm.watsonx.ai.chat.model.Image.Detail;
+import com.ibm.watsonx.ai.chat.model.ImageContent;
+import com.ibm.watsonx.ai.chat.model.TextChatRequest;
+import com.ibm.watsonx.ai.chat.model.TextContent;
+import com.ibm.watsonx.ai.chat.model.Tool;
+import com.ibm.watsonx.ai.chat.model.ToolCall;
+import com.ibm.watsonx.ai.chat.model.ToolMessage;
+import com.ibm.watsonx.ai.chat.model.schema.JsonSchema;
 
-import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ImageContent;
-import dev.langchain4j.data.message.ImageContent.DetailLevel;
-import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageAssistant;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageTool;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUser;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool.TextChatParameterFunction;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall.TextChatFunctionCall;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
@@ -63,16 +56,19 @@ public class AiChatServiceTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
+            .overrideConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
+            .overrideConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideConfigKey("quarkus.langchain4j.watsonx.log-requests", "true")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.log-responses", "true")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.timeout", "60s")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class, Calculator.class));
 
     @Override
     void handlerBeforeEach() {
         mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
+                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
                 .response(BEARER_TOKEN, new Date())
                 .build();
     }
@@ -117,30 +113,27 @@ public class AiChatServiceTest extends WireMockAbstract {
 
     @Singleton
     static class Calculator {
-        @Tool("Execute the sum of two numbers")
+        @dev.langchain4j.agent.tool.Tool("Execute the sum of two numbers")
         @Blocking
         public int sum(int first, int second) {
             return first + second;
         }
     }
 
-    static List<TextChatParameterTool> tools = List.of(
-            new TextChatParameterTool("function", new TextChatParameterFunction(
-                    "sum",
-                    "Execute the sum of two numbers",
-                    Map.<String, Object> of(
-                            "type", "object",
-                            "properties", Map.<String, Object> of(
-                                    "first", Map.<String, Object> of("type", "integer"),
-                                    "second", Map.<String, Object> of("type", "integer")),
-                            "required", List.of("first", "second")))));
+    static List<Tool> tools = List.of(
+            Tool.of("sum", "Execute the sum of two numbers",
+                    JsonSchema.object()
+                            .property("first", JsonSchema.integer())
+                            .property("second", JsonSchema.integer())
+                            .required("first", "second")
+                            .build()));
 
     @Test
     void chat() throws Exception {
 
-        var messages = List.<TextChatMessage> of(
-                TextChatMessageSystem.of("This is a systemMessage"),
-                TextChatMessageUser.of("This is a userMessage Hello"));
+        var messages = List.<ChatMessage> of(
+                com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
+                com.ibm.watsonx.ai.chat.model.UserMessage.text("This is a userMessage Hello"));
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
@@ -153,11 +146,10 @@ public class AiChatServiceTest extends WireMockAbstract {
     @Test
     void chat_with_image() throws Exception {
 
-        var messages = List.<TextChatMessage> of(
-                TextChatMessageUser.of(
-                        dev.langchain4j.data.message.UserMessage.from(
-                                TextContent.from("Tell me more about this image"),
-                                ImageContent.from("test", "jpeg", DetailLevel.LOW))));
+        var messages = List.<ChatMessage> of(
+                com.ibm.watsonx.ai.chat.model.UserMessage.of(
+                        TextContent.of("Tell me more about this image"),
+                        ImageContent.of("jpeg", "test", Detail.LOW)));
 
         var RESPONSE = """
                 {
@@ -200,9 +192,9 @@ public class AiChatServiceTest extends WireMockAbstract {
     @Test
     void chat_with_tool() throws Exception {
 
-        var STARTED = List.<TextChatMessage> of(
-                TextChatMessageSystem.of("This is a systemMessage"),
-                TextChatMessageUser.of("Execute the sum of 1 + 1"));
+        var STARTED = List.<ChatMessage> of(
+                com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
+                com.ibm.watsonx.ai.chat.model.UserMessage.text("Execute the sum of 1 + 1"));
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(STARTED, tools)))
@@ -240,13 +232,12 @@ public class AiChatServiceTest extends WireMockAbstract {
                                 }""")
                 .build();
 
-        var TOOL_CALL = List.<TextChatMessage> of(
-                TextChatMessageSystem.of("This is a systemMessage"),
-                TextChatMessageUser.of("Execute the sum of 1 + 1"),
-                TextChatMessageAssistant.of(List.of(
-                        new TextChatToolCall(null, "chatcmpl-tool-3f621ce6ad9240da963d661215621711", "function",
-                                new TextChatFunctionCall("sum", "{\"first\":1, \"second\":1}")))),
-                TextChatMessageTool.of("2", "chatcmpl-tool-3f621ce6ad9240da963d661215621711"));
+        var TOOL_CALL = List.<ChatMessage> of(
+                com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
+                com.ibm.watsonx.ai.chat.model.UserMessage.text("Execute the sum of 1 + 1"),
+                AssistantMessage.tools(
+                        ToolCall.of("chatcmpl-tool-3f621ce6ad9240da963d661215621711", "sum", "{\"first\":1, \"second\":1}")),
+                ToolMessage.of("2", "chatcmpl-tool-3f621ce6ad9240da963d661215621711"));
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(TOOL_CALL, tools)))
@@ -298,9 +289,9 @@ public class AiChatServiceTest extends WireMockAbstract {
     @Test
     void streaming_chat() throws Exception {
 
-        var messages = List.<TextChatMessage> of(
-                TextChatMessageSystem.of("This is a systemMessage"),
-                TextChatMessageUser.of("This is a userMessage Hello"));
+        var messages = List.<ChatMessage> of(
+                com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
+                com.ibm.watsonx.ai.chat.model.UserMessage.text("This is a userMessage Hello"));
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
@@ -309,15 +300,15 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .build();
 
         var result = aiService.streaming("Hello").collect().asList().await().indefinitely();
-        assertEquals(List.of(" He", "llo"), result);
+        assertEquals(List.of("He", "llo"), result);
     }
 
     @Test
     void streaming_chat_with_tool() throws Exception {
 
-        var STARTED = List.<TextChatMessage> of(
-                TextChatMessageSystem.of("This is a systemMessage"),
-                TextChatMessageUser.of("Execute the sum of 1 + 1"));
+        var STARTED = List.<ChatMessage> of(
+                com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
+                com.ibm.watsonx.ai.chat.model.UserMessage.text("Execute the sum of 1 + 1"));
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(STARTED, tools)))
@@ -326,13 +317,12 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .response(RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API)
                 .build();
 
-        var TOOL_CALL = List.<TextChatMessage> of(
-                TextChatMessageSystem.of("This is a systemMessage"),
-                TextChatMessageUser.of("Execute the sum of 1 + 1"),
-                TextChatMessageAssistant.of(List.of(
-                        new TextChatToolCall(null, "chatcmpl-tool-7cf5dfd7c52441e59a7585243b22a86a", "function",
-                                new TextChatFunctionCall("sum", "{\"first\": 1, \"second\": 1}")))),
-                TextChatMessageTool.of("2", "chatcmpl-tool-7cf5dfd7c52441e59a7585243b22a86a"));
+        var TOOL_CALL = List.<ChatMessage> of(
+                com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
+                com.ibm.watsonx.ai.chat.model.UserMessage.text("Execute the sum of 1 + 1"),
+                AssistantMessage.tools(
+                        ToolCall.of("chatcmpl-tool-7cf5dfd7c52441e59a7585243b22a86a", "sum", "{\"first\": 1, \"second\": 1}")),
+                ToolMessage.of("2", "chatcmpl-tool-7cf5dfd7c52441e59a7585243b22a86a"));
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(TOOL_CALL, tools)))
@@ -356,14 +346,11 @@ public class AiChatServiceTest extends WireMockAbstract {
                                 event: message
                                 data: {"id":"chat-049e3ff7ff08416fb5c334d05af059da","model_id":"mistralai/mistral-large","choices":[],"created":1728810714,"model_version":"2.0.0","created_at":"2024-10-13T09:11:55.715Z","usage":{"completion_tokens":36,"prompt_tokens":88,"total_tokens":124}}
 
-                                id: 5
-                                event: close
-                                data: {}
                                 """)
                 .build();
 
-        var result = aiServiceWithTool.streaming("streaming", "Execute the sum of 1 + 1").collect().asList().await()
-                .indefinitely();
+        var result = aiServiceWithTool.streaming("streaming", "Execute the sum of 1 + 1")
+                .collect().asList().await().indefinitely();
         assertEquals(List.of("The res", "ult is 2"), result);
 
         var messages = memory.getMessages("streaming");
@@ -385,25 +372,27 @@ public class AiChatServiceTest extends WireMockAbstract {
         }
     }
 
-    private TextChatRequest generateChatRequest(List<TextChatMessage> messages, List<TextChatParameterTool> tools) {
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
+    private TextChatRequest generateChatRequest(List<ChatMessage> messages, List<Tool> tools) {
+        LangChain4jWatsonxConfig.WatsonxConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         String modelId = chatModelConfig.modelName();
         String spaceId = watsonConfig.spaceId().orElse(null);
         String projectId = watsonConfig.projectId().orElse(null);
 
-        TextChatParameters parameters = TextChatParameters.builder()
+        return TextChatRequest.builder()
+                .modelId(modelId)
+                .projectId(projectId)
+                .spaceId(spaceId)
+                .messages(messages)
+                .tools(tools)
                 .frequencyPenalty(0.0)
                 .logprobs(false)
-                .maxTokens(1024)
-                .n(1)
+                .maxCompletionTokens(1024)
                 .presencePenalty(0.0)
                 .temperature(1.0)
                 .topP(1.0)
-                .timeLimit(DEFAULT_TIME_LIMIT)
                 .stop(List.of())
+                .timeLimit(60000l)
                 .build();
-
-        return new TextChatRequest(modelId, spaceId, projectId, messages, tools, parameters);
     }
 }

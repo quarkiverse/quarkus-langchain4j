@@ -23,7 +23,7 @@ Your interactions with LLM providers are typically authenticated using API keys 
 === Best Practices
 
 * *Avoid Hardcoding Secrets*: Never embed API keys, tokens, or other credentials directly in your source code, prompts, or user-controlled inputs.
-* *Use Quarkus Vaults*: Store your secrets securely using Quarkus's built-in support for credential management. You can manage secrets in `application.properties` and protect them using the link https://quarkus.io/guides/credentials[Quarkus Credentials Provider].
+* *Use Quarkus Vaults*: Store your secrets securely using Quarkus's built-in support for credential management. You can manage secrets in `application.properties` and protect them with the https://quarkus.io/guides/credentials[Quarkus Credentials Provider].
 
 For example, store your OpenAI API key as property in `application.properties`:
 
@@ -47,7 +47,7 @@ A malicious user might craft a prompt that manipulates the LLM to ignore its ori
 
 * *Sanitize User Input*: Before adding user input to a prompt, sanitize it to neutralize any characters or instructions that could alter the prompt's meaning.
 * *Use Delimiters and Context*: Clearly separate instructions from user-provided data in your prompts. For example:
-
++
 [source,java]
 ----
 // User input is clearly demarcated.

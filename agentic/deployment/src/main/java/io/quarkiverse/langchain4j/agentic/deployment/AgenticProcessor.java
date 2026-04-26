@@ -34,7 +34,12 @@ import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agentic.agent.ChatMessagesAccess;
+import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
+import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.service.IllegalConfigurationException;
+import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
@@ -57,7 +62,6 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 public class AgenticProcessor {
 
@@ -70,15 +74,18 @@ public class AgenticProcessor {
 
     @BuildStep
     void detectAgents(CombinedIndexBuildItem indexBuildItem,
-            BuildProducer<DetectedAiAgentAsMapBuildItem> mapProducer,
+            BuildProducer<DetectedAiAgentAsMapBuildItem> aiMapProducer,
+            BuildProducer<DetectedNonAiAgentAsMapBuildItem> nonAiMapProducer,
             BuildProducer<DetectedAiAgentBuildItem> producer) {
         IndexView index = indexBuildItem.getIndex();
 
         Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap = new HashMap<>();
+        Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap = new HashMap<>();
         for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
-            collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap);
+            collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap);
         }
-        mapProducer.produce(DetectedAiAgentAsMapBuildItem.from(ifaceToAgentMethodsMap));
+        aiMapProducer.produce(DetectedAiAgentAsMapBuildItem.from(ifaceToAgentMethodsMap));
+        nonAiMapProducer.produce(DetectedNonAiAgentAsMapBuildItem.from(classToNonAiAgentMethodsMap));
 
         ifaceToAgentMethodsMap.forEach((classInfo, methods) -> {
             Optional<MethodInfo> chatModelSupplier = classInfo.methods().stream()
@@ -99,8 +106,7 @@ public class AgenticProcessor {
     private void validate(DetectedAiAgentBuildItem item) {
         ClassInfo iface = item.getIface();
         validateActivationCondition(iface);
-        validateBeforeAgentInvocation(iface);
-        validateAfterAgentInvocation(iface);
+        validateAgentListenerSupplier(iface);
         validateChatMemoryProviderSupplier(iface);
         validateChatMemorySupplier(iface);
         validateChatModelSupplier(iface);
@@ -108,7 +114,6 @@ public class AgenticProcessor {
         validateErrorHandler(iface);
         validateExitCondition(iface);
         validateHumanInTheLoop(iface);
-        validateHumanInTheLoopResponseSupplier(iface);
         validateOutput(iface);
         validateParallelExecutor(iface);
         validateRetrievalAugmentorSupplier(iface);
@@ -131,8 +136,8 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateBeforeAgentInvocation(ClassInfo iface) {
-        DotName annotationToValidate = AgenticLangChain4jDotNames.BEFORE_AGENT_INVOCATION;
+    private void validateAgentListenerSupplier(ClassInfo iface) {
+        DotName annotationToValidate = AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER;
         List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
         for (AnnotationInstance instance : instances) {
             if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
@@ -141,25 +146,8 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENT_REQUEST),
-                    annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.VOID),
-                    annotationToValidate);
-        }
-    }
-
-    private void validateAfterAgentInvocation(ClassInfo iface) {
-        DotName annotationToValidate = AgenticLangChain4jDotNames.AFTER_AGENT_INVOCATION;
-        List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
-        for (AnnotationInstance instance : instances) {
-            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
-                log.warnf("Unhandled '@%s' annotation: '%s'", annotationToValidate.withoutPackagePrefix(), instance.target());
-                continue;
-            }
-            MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENT_RESPONSE), annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
+            validateNoMethodParameters(method, annotationToValidate);
+            validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.AGENT_LISTENER), annotationToValidate);
         }
     }
 
@@ -269,23 +257,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
-        }
-    }
-
-    private void validateHumanInTheLoopResponseSupplier(ClassInfo iface) {
-        DotName annotationToValidate = AgenticLangChain4jDotNames.HUMAN_IN_THE_LOOP_RESPONSE_SUPPLIER;
-        List<AnnotationInstance> instances = iface
-                .annotations(annotationToValidate);
-        for (AnnotationInstance instance : instances) {
-            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
-                log.warnf("Unhandled '@%s' annotation: '%s'", annotationToValidate.withoutPackagePrefix(), instance.target());
-                continue;
-            }
-            MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.STRING), annotationToValidate);
         }
     }
 
@@ -475,29 +446,34 @@ public class AgenticProcessor {
 
     @BuildStep
     void nativeSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
-            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<NativeImageProxyDefinitionBuildItem> proxyProducer) {
-        String[] agentClassNames = detectedAiAgentBuildItems.stream().map(bi -> bi.getIface().name().toString())
-                .toArray(String[]::new);
-        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(agentClassNames).methods(true).fields(false).build());
-        proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(agentClassNames));
+
+        detectedAiAgentBuildItems.stream().map(bi -> bi.getIface().name().toString())
+                .forEach(c -> {
+                    // we need to declare the list of interfaces in the exact order that `dev.langchain4j.agentic.agent.AgentBuilder#build` declares them in the `Proxy#newProxyInstance` call
+                    proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(List.of(c, InternalAgent.class.getName(),
+                            AgenticScopeOwner.class.getName(), ChatMemoryAccess.class.getName(),
+                            ChatMessagesAccess.class.getName())));
+                });
     }
 
     private static void collectAgentsWithMethodAnnotations(IndexView index, DotName annotation,
-            Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap) {
+            Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap,
+            Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap) {
         Collection<AnnotationInstance> annotations = index.getAnnotations(annotation);
         for (AnnotationInstance ai : annotations) {
             if (ai.target().kind() != AnnotationTarget.Kind.METHOD) {
                 continue;
             }
             MethodInfo methodInfo = ai.target().asMethod();
-            if (!methodInfo.declaringClass().isInterface()) {
-                // we need to skio non-AI agents (https://docs.langchain4j.dev/tutorials/agents/#non-ai-agents)
-                continue;
+            if (methodInfo.declaringClass().isInterface()) {
+                ClassInfo iface = methodInfo.declaringClass();
+                addMethodToMap(methodInfo, iface, ifaceToAgentMethodsMap);
+                index.getAllKnownSubinterfaces(iface.name())
+                        .forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
+            } else {
+                addMethodToMap(methodInfo, methodInfo.declaringClass(), classToNonAiAgentMethodsMap);
             }
-            ClassInfo iface = methodInfo.declaringClass();
-            addMethodToMap(methodInfo, iface, ifaceToAgentMethodsMap);
-            index.getAllKnownSubinterfaces(iface.name()).forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
         }
     }
 
@@ -507,9 +483,12 @@ public class AgenticProcessor {
 
     @BuildStep
     public OutputKeyBuildItem outputKeyItems(DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
+            DetectedNonAiAgentAsMapBuildItem detectedNonAiAgentAsMapBuildItem,
             CombinedIndexBuildItem indexBuildItem,
             BeanDiscoveryFinishedBuildItem beanDiscoveryFinished) {
         Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap = detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap();
+        Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap = detectedNonAiAgentAsMapBuildItem
+                .getClassToNonAiAgentMethodsMap();
 
         OutputKeyBuildItem.Builder builder = OutputKeyBuildItem.of();
         for (var entry : ifaceToAgentMethodsMap.entrySet()) {
@@ -520,6 +499,21 @@ public class AgenticProcessor {
                     if (agentInstance == null) {
                         continue;
                     }
+
+                    AnnotationInstance parallelMapperAnnotation = agenticMethod
+                            .annotation(AgenticLangChain4jDotNames.PARALLEL_MAPPER_AGENT);
+                    if (parallelMapperAnnotation != null) {
+                        AnnotationValue subAgentsValue = parallelMapperAnnotation.value("subAgent");
+                        if (subAgentsValue != null) {
+                            // The first argument of the subagent method of a ParallelMapperAgent is implicitly passed by the mapper
+                            subagentMethod(subAgentsValue.asClass().name(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap)
+                                    .ifPresent(subAgentMethod -> {
+                                        String parameterName = determineParameterName(subAgentMethod.parameters().get(0));
+                                        builder.addUserProvidedKey(parameterName);
+                                    });
+                        }
+                    }
+
                     AnnotationValue outputKeyValue = agentInstance.value("outputKey");
                     if (outputKeyValue != null) {
                         builder.addKeyType(outputKeyValue.asString(),
@@ -540,22 +534,16 @@ public class AgenticProcessor {
                         // in order to determine the type associated with the outputKey, we need to look up
                         // the interface and check the return key and type of (the single agent-related) method
 
-                        List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subAgentType.name());
-                        if (subAgentMethods.size() != 1) {
-                            log.warn("Unable to determine type of outputKey for subagent with type '%s'"
-                                    .formatted(subAgentType));
-                        } else {
-                            MethodInfo subAgentMethod = subAgentMethods.get(0);
-                            AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
-                                    .map(ann -> subAgentMethod.annotation(ann))
-                                    .filter(Objects::nonNull)
-                                    .map(ann -> ann.value("outputKey"))
-                                    .filter(Objects::nonNull)
-                                    .map(key -> key.asString())
-                                    .findFirst()
-                                    .ifPresent(outputKeyString -> builder.addKeyType(outputKeyString,
-                                            determineAgentMethodReturnType(subAgentMethod.returnType())));
-                        }
+                        subagentMethod(subAgentType.name(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap)
+                                .ifPresent(subAgentMethod -> AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
+                                        .map(subAgentMethod::annotation)
+                                        .filter(Objects::nonNull)
+                                        .map(ann -> ann.value("outputKey"))
+                                        .filter(Objects::nonNull)
+                                        .map(AnnotationValue::asString)
+                                        .findFirst()
+                                        .ifPresent(outputKeyString -> builder.addKeyType(outputKeyString,
+                                                determineAgentMethodReturnType(subAgentMethod.returnType()))));
                     }
                 }
             }
@@ -602,6 +590,20 @@ public class AgenticProcessor {
         });
 
         return builder.build();
+    }
+
+    private Optional<MethodInfo> subagentMethod(DotName subagentName, Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap,
+            Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap) {
+        List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subagentName);
+        if (subAgentMethods == null) {
+            subAgentMethods = classToNonAiAgentMethodsMap.get(subagentName);
+        }
+        if (subAgentMethods.size() != 1) {
+            log.warn("Unable to determine agentic method for subagent with type '%s'"
+                    .formatted(subagentName));
+            return Optional.empty();
+        }
+        return Optional.of(subAgentMethods.get(0));
     }
 
     private DotName determineAgentMethodReturnType(Type type) {
@@ -654,9 +656,7 @@ public class AgenticProcessor {
                     }
                     DotName expectedParameterTypeName = outputKeyBuildItem.getKeyToTypeMap().get(parameterName);
                     if (expectedParameterTypeName == null) {
-                        boolean doesNotNeedResolution = outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)
-                                || outputKeyBuildItem.getSupervisedKeys().contains(parameterName);
-                        if (!doesNotNeedResolution) {
+                        if (needsResolution(outputKeyBuildItem, parameterName)) {
                             throw new IllegalConfigurationException(
                                     "No agent provides an output key named '%s'. This means that parameter no.%d of method '%s' of class '%s' cannot be resolved"
                                             .formatted(
@@ -664,6 +664,10 @@ public class AgenticProcessor {
                                                     method.declaringClass().name()));
                         }
                     } else if (!expectedParameterTypeName.equals(parameterType.name())) {
+                        if (isParallelMapperOutput(method.declaringClass(), parameterName)) {
+                            // allow ParallelMapperAgent to transform the type of its output
+                            continue;
+                        }
                         throw new IllegalConfigurationException(
                                 "Parameter no.%d of method '%s' of class '%s' was expected to be of type '%s'".formatted(i,
                                         method.name(), method.declaringClass().name(), expectedParameterTypeName));
@@ -671,6 +675,20 @@ public class AgenticProcessor {
                 }
             });
         });
+    }
+
+    private static boolean needsResolution(OutputKeyBuildItem outputKeyBuildItem, String parameterName) {
+        return !outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)
+                && !outputKeyBuildItem.getSupervisedKeys().contains(parameterName);
+    }
+
+    private static boolean isParallelMapperOutput(ClassInfo agentClass, String parameterName) {
+        return agentClass.methods().stream().filter(m -> m.annotation(ParallelMapperAgent.class) != null)
+                .findFirst()
+                .flatMap(m -> Optional.ofNullable(m.annotation(ParallelMapperAgent.class).value("outputKey")))
+                .map(AnnotationValue::asString)
+                .map(outputKey -> outputKey.equals(parameterName))
+                .orElse(false);
     }
 
     private String determineParameterName(MethodParameterInfo parameter) {

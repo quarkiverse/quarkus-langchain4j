@@ -26,7 +26,7 @@ When using Dev Mode:
 - The extension will automatically pull the configured model.
 - JVM flags are set up automatically to enable the C2 compiler, which is required for proper inference performance.
 - Disk space is required for downloaded models. The model directory can be customized via:
-
++
 [source,properties]
 ----
 quarkus.langchain4j.jlama.models-path=/path/to/model/storage
@@ -41,14 +41,8 @@ Jlama models can be large (several GB) and may take time to download and initial
 
 To integrate Jlama into your Quarkus project, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-jlama</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-jlama
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Jlama chat model.
 

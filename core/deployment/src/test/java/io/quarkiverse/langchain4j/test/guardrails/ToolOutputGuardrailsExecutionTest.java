@@ -256,7 +256,6 @@ public class ToolOutputGuardrailsExecutionTest {
 
     // Guardrails
 
-    @ApplicationScoped
     public static class ValidationGuardrail implements ToolOutputGuardrail {
         static int executionCount = 0;
         static ToolOutputGuardrailRequest lastRequest = null;
@@ -328,7 +327,7 @@ public class ToolOutputGuardrailsExecutionTest {
         @Override
         public ToolOutputGuardrailResult validate(ToolOutputGuardrailRequest request) {
             executionCount++;
-            return ToolOutputGuardrailResult.failure(
+            return ToolOutputGuardrailResult.fatal(
                     "Fatal output validation error",
                     new SecurityException("Data leak detected"));
         }

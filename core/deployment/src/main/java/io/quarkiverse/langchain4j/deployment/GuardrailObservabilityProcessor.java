@@ -1,6 +1,10 @@
 package io.quarkiverse.langchain4j.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.*;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.MICROMETER_COUNTED;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.MICROMETER_TIMED;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.TransformType;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.WITH_SPAN;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.shouldTransformMethod;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -16,6 +20,8 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.observability.api.event.InputGuardrailExecutedEvent;
 import dev.langchain4j.observability.api.event.OutputGuardrailExecutedEvent;
+import io.quarkiverse.langchain4j.runtime.observability.ToolInputGuardrailExecutedEvent;
+import io.quarkiverse.langchain4j.runtime.observability.ToolOutputGuardrailExecutedEvent;
 import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
@@ -81,20 +87,43 @@ public class GuardrailObservabilityProcessor {
                 MethodCreator onInputGuardrailExecuted = classCreator.getMethodCreator("onInputGuardrailExecuted", "V",
                         InputGuardrailExecutedEvent.class);
                 onInputGuardrailExecuted.getParameterAnnotations(0).addAnnotation(Observes.class);
-                var support1 = MethodDescriptor.ofMethod(
+                var inputGuardrailObserverMethod = MethodDescriptor.ofMethod(
                         GUARDRAIL_METRICS_OBSERVER_SUPPORT_CLASS,
                         "onInputGuardrailExecuted", "V", InputGuardrailExecutedEvent.class);
-                onInputGuardrailExecuted.invokeStaticMethod(support1, onInputGuardrailExecuted.getMethodParam(0));
+                onInputGuardrailExecuted.invokeStaticMethod(inputGuardrailObserverMethod,
+                        onInputGuardrailExecuted.getMethodParam(0));
                 onInputGuardrailExecuted.returnVoid();
 
                 MethodCreator onOutputGuardrailExecuted = classCreator.getMethodCreator("onOutputGuardrailExecuted", "V",
                         OutputGuardrailExecutedEvent.class);
                 onOutputGuardrailExecuted.getParameterAnnotations(0).addAnnotation(Observes.class);
-                var support2 = MethodDescriptor.ofMethod(
+                var outputGuardrailObserverMethod = MethodDescriptor.ofMethod(
                         GUARDRAIL_METRICS_OBSERVER_SUPPORT_CLASS,
                         "onOutputGuardrailExecuted", "V", OutputGuardrailExecutedEvent.class);
-                onOutputGuardrailExecuted.invokeStaticMethod(support2, onOutputGuardrailExecuted.getMethodParam(0));
+                onOutputGuardrailExecuted.invokeStaticMethod(outputGuardrailObserverMethod,
+                        onOutputGuardrailExecuted.getMethodParam(0));
                 onOutputGuardrailExecuted.returnVoid();
+
+                MethodCreator onToolInputGuardrailExecuted = classCreator.getMethodCreator("onToolInputGuardrailExecuted", "V",
+                        ToolInputGuardrailExecutedEvent.class);
+                onToolInputGuardrailExecuted.getParameterAnnotations(0).addAnnotation(Observes.class);
+                var inputToolGuardrailObserverMethod = MethodDescriptor.ofMethod(
+                        GUARDRAIL_METRICS_OBSERVER_SUPPORT_CLASS,
+                        "onToolInputGuardrailExecuted", "V", ToolInputGuardrailExecutedEvent.class);
+                onToolInputGuardrailExecuted.invokeStaticMethod(inputToolGuardrailObserverMethod,
+                        onToolInputGuardrailExecuted.getMethodParam(0));
+                onToolInputGuardrailExecuted.returnVoid();
+
+                MethodCreator onToolOutputGuardrailExecuted = classCreator.getMethodCreator("onToolOutputGuardrailExecuted",
+                        "V",
+                        ToolOutputGuardrailExecutedEvent.class);
+                onToolOutputGuardrailExecuted.getParameterAnnotations(0).addAnnotation(Observes.class);
+                var outputToolGuardrailObserverMethod = MethodDescriptor.ofMethod(
+                        GUARDRAIL_METRICS_OBSERVER_SUPPORT_CLASS,
+                        "onToolOutputGuardrailExecuted", "V", ToolOutputGuardrailExecutedEvent.class);
+                onToolOutputGuardrailExecuted.invokeStaticMethod(outputToolGuardrailObserverMethod,
+                        onToolOutputGuardrailExecuted.getMethodParam(0));
+                onToolOutputGuardrailExecuted.returnVoid();
             }
         }
 

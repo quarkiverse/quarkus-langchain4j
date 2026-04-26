@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.anthropic;
 
-import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onCompleteToolCall;
-import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onPartialThinking;
-import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onPartialToolCall;
 import static dev.langchain4j.internal.Utils.isNotNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
@@ -31,11 +28,13 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ToolCallBuilder;
+import dev.langchain4j.model.anthropic.AnthropicTokenUsage;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicMessage;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicMessageContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingData;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingException;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicToolResultContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicToolUseContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicUsage;
@@ -44,9 +43,15 @@ import dev.langchain4j.model.anthropic.internal.client.AnthropicClientBuilderFac
 import dev.langchain4j.model.anthropic.internal.client.AnthropicCreateMessageOptions;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.CompleteToolCall;
+import dev.langchain4j.model.chat.response.PartialResponse;
+import dev.langchain4j.model.chat.response.PartialResponseContext;
+import dev.langchain4j.model.chat.response.PartialThinking;
+import dev.langchain4j.model.chat.response.PartialThinkingContext;
 import dev.langchain4j.model.chat.response.PartialToolCall;
+import dev.langchain4j.model.chat.response.PartialToolCallContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.model.chat.response.StreamingHandle;
+import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.Handler;
@@ -60,21 +65,24 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     private final String apiKey;
     private final String anthropicVersion;
     private final String configuredBeta;
+    private final Boolean disableBetaHeader;
     private final AnthropicRestApi restApi;
 
     public QuarkusAnthropicClient(Builder builder) {
         this.apiKey = builder.apiKey;
         this.anthropicVersion = builder.version;
         this.configuredBeta = builder.beta;
+        this.disableBetaHeader = builder.disableBetaHeader;
 
         try {
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder().baseUri(new URI(builder.baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
 
-            if (builder.logRequests || builder.logResponses) {
+            if (builder.logRequests || builder.logResponses || builder.logCurl) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE).clientLogger(
-                        new QuarkusAnthropicClient.AnthropicClientLogger(builder.logRequests, builder.logResponses));
+                        new QuarkusAnthropicClient.AnthropicClientLogger(builder.logRequests, builder.logResponses,
+                                builder.logCurl));
             }
 
             this.restApi = restApiBuilder.build(AnthropicRestApi.class);
@@ -116,6 +124,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     }
 
     private String buildBetaHeaderForRequest(AnthropicCreateMessageRequest request) {
+        if (Boolean.TRUE.equals(disableBetaHeader)) {
+            return null;
+        }
         boolean toolsPresent = hasTools(request);
 
         // If beta configured, use it (may need to combine with tools beta)
@@ -152,6 +163,8 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     }
 
     private static class AnthropicStreamingSubscriber implements MultiSubscriber<AnthropicStreamingData> {
+        private static final Logger log = Logger.getLogger(AnthropicStreamingSubscriber.class);
+
         private final StreamingChatResponseHandler handler;
         private Subscription subscription;
         private volatile AtomicReference<StringBuffer> contentBuilder = new AtomicReference<>(new StringBuffer());
@@ -159,6 +172,8 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final List<String> contents = synchronizedList(new ArrayList<>());
         private final AtomicInteger inputTokenCount = new AtomicInteger();
         private final AtomicInteger outputTokenCount = new AtomicInteger();
+        private final AtomicInteger cacheCreationInputTokens = new AtomicInteger();
+        private final AtomicInteger cacheReadInputTokens = new AtomicInteger();
 
         private volatile String currentContentBlockStartType;
         private final ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
@@ -169,10 +184,29 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final List<String> redactedThinkings = synchronizedList(new ArrayList<>());
         private final AnthropicCreateMessageOptions options;
         private volatile boolean completionHandled = false;
+        private final AnthropicStreamingHandle streamingHandle = new AnthropicStreamingHandle();
 
         private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler, AnthropicCreateMessageOptions options) {
             this.handler = handler;
             this.options = options;
+        }
+
+        private class AnthropicStreamingHandle implements StreamingHandle {
+            private volatile boolean cancelled = false;
+
+            @Override
+            public void cancel() {
+                log.debug("Streaming cancelled by client");
+                cancelled = true;
+                if (subscription != null) {
+                    subscription.cancel();
+                }
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return cancelled;
+            }
         }
 
         @Override
@@ -216,11 +250,19 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
         private void handleUsage(AnthropicUsage usage) {
             if (usage.inputTokens != null) {
-                inputTokenCount.addAndGet(usage.inputTokens);
+                inputTokenCount.set(usage.inputTokens);
             }
 
             if (usage.outputTokens != null) {
-                outputTokenCount.addAndGet(usage.outputTokens);
+                outputTokenCount.set(usage.outputTokens);
+            }
+
+            if (usage.cacheCreationInputTokens != null) {
+                cacheCreationInputTokens.set(usage.cacheCreationInputTokens);
+            }
+
+            if (usage.cacheReadInputTokens != null) {
+                cacheReadInputTokens.set(usage.cacheReadInputTokens);
             }
         }
 
@@ -236,13 +278,17 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
                 if (isNotNullOrEmpty(text)) {
                     contentBuilder.get().append(text);
-                    handler.onPartialResponse(text);
+                    handler.onPartialResponse(
+                            new PartialResponse(text),
+                            new PartialResponseContext(streamingHandle));
                 }
             } else if ("thinking".equals(currentContentBlockStartType) && options.returnThinking()) {
                 String thinking = data.contentBlock.thinking;
                 if (isNotNullOrEmpty(thinking)) {
                     thinkingBuilder.append(thinking);
-                    onPartialThinking(handler, thinking);
+                    handler.onPartialThinking(
+                            new PartialThinking(thinking),
+                            new PartialThinkingContext(streamingHandle));
                 }
                 String signature = data.contentBlock.signature;
                 if (isNotNullOrEmpty(signature)) {
@@ -270,13 +316,17 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
                 if (isNotNullOrEmpty(text)) {
                     contentBuilder.get().append(text);
-                    handler.onPartialResponse(text);
+                    handler.onPartialResponse(
+                            new PartialResponse(text),
+                            new PartialResponseContext(streamingHandle));
                 }
             } else if ("thinking".equals(currentContentBlockStartType) && options.returnThinking()) {
                 String thinking = data.delta.thinking;
                 if (isNotNullOrEmpty(thinking)) {
                     thinkingBuilder.append(thinking);
-                    onPartialThinking(handler, thinking);
+                    handler.onPartialThinking(
+                            new PartialThinking(thinking),
+                            new PartialThinkingContext(streamingHandle));
                 }
                 String signature = data.delta.signature;
                 if (isNotNullOrEmpty(signature)) {
@@ -298,7 +348,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                             .name(toolCallBuilder.name())
                             .partialArguments(partialJson)
                             .build();
-                    onPartialToolCall(handler, partialToolRequest);
+                    handler.onPartialToolCall(
+                            partialToolRequest,
+                            new PartialToolCallContext(streamingHandle));
                 }
             }
         }
@@ -320,10 +372,12 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                             .name(completeToolCall.toolExecutionRequest().name())
                             .partialArguments(completeToolCall.toolExecutionRequest().arguments())
                             .build();
-                    onPartialToolCall(handler, partialToolRequest);
+                    handler.onPartialToolCall(
+                            partialToolRequest,
+                            new PartialToolCallContext(streamingHandle));
                 }
 
-                onCompleteToolCall(handler, completeToolCall);
+                handler.onCompleteToolCall(completeToolCall);
             }
         }
 
@@ -381,13 +435,18 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
             return ChatResponse.builder()
                     .aiMessage(aiMessage)
-                    .tokenUsage(new TokenUsage(inputTokenCount.get(), outputTokenCount.get()))
+                    .tokenUsage(AnthropicTokenUsage.builder()
+                            .inputTokenCount(inputTokenCount.get())
+                            .outputTokenCount(outputTokenCount.get())
+                            .cacheCreationInputTokens(cacheCreationInputTokens.get())
+                            .cacheReadInputTokens(cacheReadInputTokens.get())
+                            .build())
                     .finishReason(toFinishReason(stopReason))
                     .build();
         }
 
         private void handleError(AnthropicStreamingData data) {
-            onFailure(new RuntimeException("Got error processing data (%s)".formatted(data)));
+            onFailure(new AnthropicStreamingException(data.error.message, data.error.type));
         }
 
         @Override
@@ -412,14 +471,44 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
     }
 
+    private static final ThreadLocal<Boolean> LOG_CURL_HINT = new ThreadLocal<>();
+
+    public static void setLogCurlHint(boolean logCurl) {
+        LOG_CURL_HINT.set(logCurl);
+    }
+
+    static boolean getAndClearLogCurlHint() {
+        Boolean value = LOG_CURL_HINT.get();
+        LOG_CURL_HINT.remove();
+        return value != null && value;
+    }
+
+    private static final ThreadLocal<Boolean> DISABLE_BETA_HEADER_HINT = new ThreadLocal<>();
+
+    public static void setDisableBetaHint(boolean disableBetaHint) {
+        DISABLE_BETA_HEADER_HINT.set(disableBetaHint);
+    }
+
+    static boolean getAndClearDisableBetaHint() {
+        Boolean value = DISABLE_BETA_HEADER_HINT.get();
+        DISABLE_BETA_HEADER_HINT.remove();
+        return value != null && value;
+    }
+
     public static class QuarkusAnthropicClientBuilderFactory implements AnthropicClientBuilderFactory {
         @Override
         public AnthropicClient.Builder get() {
-            return new Builder();
+            Builder builder = new Builder();
+            builder.logCurl = getAndClearLogCurlHint();
+            builder.disableBetaHeader = getAndClearDisableBetaHint();
+            return builder;
         }
     }
 
     public static class Builder extends AnthropicClient.Builder<QuarkusAnthropicClient, Builder> {
+        public boolean logCurl;
+        public boolean disableBetaHeader;
+
         @Override
         public QuarkusAnthropicClient build() {
             return new QuarkusAnthropicClient(this);
@@ -434,10 +523,16 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
         private final boolean logRequests;
         private final boolean logResponses;
+        private final boolean logCurl;
 
         public AnthropicClientLogger(boolean logRequests, boolean logResponses) {
+            this(logRequests, logResponses, false);
+        }
+
+        public AnthropicClientLogger(boolean logRequests, boolean logResponses, boolean logCurl) {
             this.logRequests = logRequests;
             this.logResponses = logResponses;
+            this.logCurl = logCurl;
         }
 
         @Override
@@ -454,6 +549,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                 } catch (Exception e) {
                     log.warn("Failed to log request", e);
                 }
+            }
+            if (logCurl) {
+                CurlRequestLogger.logCurl(log, request, body);
             }
         }
 

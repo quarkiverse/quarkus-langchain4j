@@ -93,7 +93,7 @@ In Quarkus LangChain4j, streaming responses are exposed as `Multi<String>` seque
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=streaming-ai-service,indent=0]
 ----
 
-[#_embedding_models]== Embedding Models
+== Embedding Models
 
 Embedding models convert #unstructured input (text or images) into numerical vectors known as _embeddings_#.
 An embedding is a high-dimensional representation that captures semantic similarity: items with similar meaning are close together in vector space.
@@ -140,7 +140,7 @@ The output is generally an image URL, byte stream, or base64-encoded representat
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=image-service,indent=0]
 ----
 
-[#_reasoning_models]== Reasoning Models
+== Reasoning Models
 
 Reasoning models go beyond plain generation by supporting structured planning, problem-solving, and tool invocation. They are commonly used when the model needs to make decisions, call external tools, or follow multi-step workflows.
 They are the base for building complex AI agents that can reason about tasks, invoke APIs, and produce structured outputs, paving the way for #agentic architectures#.
@@ -205,6 +205,78 @@ flowchart LR
     classDef node fill:#4A93E9,stroke:white,color:white
     classDef edge stroke-width:3px,stroke:#DF1862
 ----
+
+== Customizing Model Builders
+
+When Quarkus LangChain4j creates a model instance (chat, streaming, embedding, image, or moderation), it configures a builder using properties from `application.properties` and then calls `build()`.
+Sometimes you need to set builder options that are not exposed as configuration properties — for example, a custom HTTP header, a proxy, or a seed value.
+
+`ModelBuilderCustomizer` is a CDI bean interface that lets you intercept the builder right before `build()` is called, giving you full access to the provider's builder API.
+
+=== Basic Usage
+
+Implement `ModelBuilderCustomizer` parameterized with the builder type of the model you want to customize, and make it a CDI bean:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
+
+    @Override
+    public void customize(OpenAiChatModel.OpenAiChatModelBuilder builder) {
+        builder.seed(42);
+    }
+}
+----
+
+This customizer applies to the _default_ (unnamed) model configuration.
+
+=== Targeting Named Model Configurations
+
+If you have multiple model configurations (e.g., `quarkus.langchain4j.openai.my-model.chat-model.model-name=...`), you can target a specific one using the `@ModelName` qualifier:
+
+[source,java]
+----
+@ApplicationScoped
+@ModelName("my-model")
+public class MyNamedCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
+
+    @Override
+    public void customize(OpenAiChatModel.OpenAiChatModelBuilder builder) {
+        builder.seed(99);
+    }
+}
+----
+
+When a named model has `@ModelName`-qualified customizers, those take precedence and unqualified customizers are **not** applied for that model.
+Unqualified customizers still apply to any model that has no `@ModelName`-qualified customizers.
+
+=== Priority
+
+When multiple customizers apply to the same model, you can control the order in which they are applied by overriding the `priority()` method:
+
+[source,java]
+----
+@ApplicationScoped
+public class HighPriorityCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
+
+    @Override
+    public void customize(OpenAiChatModel.OpenAiChatModelBuilder builder) {
+        builder.seed(42);
+    }
+
+    @Override
+    public int priority() {
+        return 100; // applied before customizers with lower priority
+    }
+}
+----
+
+Higher priority values are applied first.
+The default priority is `0`.
+This follows the same convention as Quarkus's `ObjectMapperCustomizer`.
+
+NOTE: `ModelBuilderCustomizer` works with all model providers that use a builder pattern. Providers that do not use a builder (such as Cohere and GPU-Llama3) are not supported. The type parameter must match the builder type exposed by the provider (e.g., `OpenAiChatModel.OpenAiChatModelBuilder`, `AnthropicChatModel.AnthropicChatModelBuilder`, `BedrockChatModel.Builder`, etc.).
 
 == Related Guides
 

@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.ollama.runtime.config;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
@@ -71,4 +72,62 @@ public interface ChatModelConfig {
      */
     @ConfigDocDefault("false")
     Optional<Boolean> logResponses();
+
+    /**
+     * Additional model options for advanced configuration.
+     */
+    ModelOptionsConfig modelOptions();
+
+    @ConfigGroup
+    interface ModelOptionsConfig {
+
+        /**
+         * Enable thinking mode for models that support it (e.g., Qwen3).
+         * When enabled, the model will output its reasoning process.
+         */
+        Optional<Boolean> think();
+
+        /**
+         * Whether to return thinking/reasoning content in the response.
+         */
+        Optional<Boolean> returnThinking();
+
+        /**
+         * Sets the size of the context window used to generate the next token.
+         */
+        OptionalInt numCtx();
+
+        /**
+         * The last N tokens to penalize. Higher values will penalize more.
+         */
+        OptionalInt repeatLastN();
+
+        /**
+         * The penalty for repeated tokens. Higher values will penalize repetition more.
+         */
+        OptionalDouble repeatPenalty();
+
+        /**
+         * Enable Mirostat sampling for controlling perplexity.
+         * 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0.
+         */
+        OptionalInt mirostat();
+
+        /**
+         * Controls the learning rate of Mirostat. Lower values result in slower adjustments.
+         */
+        OptionalDouble mirostatEta();
+
+        /**
+         * Controls the target perplexity for Mirostat. Lower values produce more focused outputs.
+         */
+        OptionalDouble mirostatTau();
+
+        /**
+         * Sets the minimum probability relative to the most likely token.
+         * Lower values will result in more diverse outputs.
+         */
+        OptionalDouble minP();
+
+    }
 }

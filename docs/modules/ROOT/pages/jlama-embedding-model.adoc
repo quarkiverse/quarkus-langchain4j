@@ -20,14 +20,8 @@ See xref:jlama-chat-model.adoc[Jlama Chat Models] for Dev Mode details and model
 
 To enable embedding model support, include:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-jlama</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-jlama
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 == Default Model
 

@@ -3,50 +3,114 @@
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-The `quarkus-langchain4j-testing-scorer-junit5` extension provides a pragmatic and extensible testing framework for evaluating AI-infused applications.
-It integrates with JUnit 5 and offers tools for automating evaluation processes, scoring outputs, and generating evaluation reports using customizable evaluation strategies.
+The `quarkus-langchain4j-testing-evaluation-junit5` extension provides a pragmatic and extensible testing framework for evaluating AI-infused and agentic applications.
+It integrates with JUnit 5, `@QuarkusTest` and offers tools for automating evaluation processes, scoring outputs, and generating evaluation reports using customizable evaluation strategies.
+
+You can use this testing framework:
+
+- using the API directly - to programmatically define and run evaluations in your tests or even applications
+- using JUnit 5 extension - to declaratively define evaluation tests with annotations
+
+== Features
+
+The evaluation framework provides:
+
+**Core Capabilities:**
+
+- **Concurrent Evaluation** - Execute evaluations in parallel with configurable concurrency
+- **Fluent Builder API** - Readable, chainable evaluation definitions (samples, evaluation strategy, reporting)
+- **Rich Evaluation Results** - Scores, explanations, and metadata for detailed analysis
+- **Multiple Evaluation Strategies** - Semantic similarity, AI judge, and custom strategies
+- **Flexible Sample Loading** - YAML, JSON, or custom formats via SPI or CDI
+
+**Testing Approaches:**
+
+- **Programmatic Testing** - Traditional programmatic test definitions with `Scorer`
+- **Declarative Testing** - `@EvaluationTest` for annotation-driven test configuration
+- **Test Templates** - `@StrategyTest` to run tests against multiple strategies
+- **Multiple Sample Sources** - `@SampleSources` to combine samples from different files
+
+**Assertions and Reporting:**
+
+- **Fluent Assertions** - `EvaluationAssertions` for readable test verification
+- **Readable Test Names** - `EvaluationDisplayNameGenerator` shows scores and pass/fail status
+- **Multi-Format Reports** - Generate Markdown, JSON, or custom format reports
+
+**Extensibility:**
+
+- **Custom Strategies** - Implement `EvaluationStrategy` for domain-specific evaluation logic
+- **Custom Sample Loaders** - Support any sample format via `SampleLoader` interface
+- **Custom Report Formatters** - Generate reports in any format via `ReportFormatter` interface
 
 == Maven Dependency
 
-To use the `ScorerExtension`, include the following Maven dependency in your pom.xml:
+To use the `EvaluationExtension`, include the following Maven dependency in your pom.xml:
 
-[source, xml]
+[source,xml]
 ----
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-testing-scorer-junit5</artifactId>
+    <artifactId>quarkus-langchain4j-testing-evaluation-junit5</artifactId>
     <scope>test</scope>
 </dependency>
 ----
 
+== Prerequisites
+
+IMPORTANT: For the evaluation framework to work correctly with AI Services, you MUST configure the Maven compiler to preserve parameter names.
+
+Add this to your pom.xml:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.13.0</version>
+    <configuration>
+        <parameters>true</parameters>  <!--1-->
+    </configuration>
+</plugin>
+----
+<1> REQUIRED for `@RegisterAiService` when using with the evaluation framework
+
+Without this configuration, you may encounter errors like:
+
+[source]
+----
+java.lang.IllegalStateException: Duplicate key null
+(attempted merging values 0 and 1)
+----
+
+This occurs because the Java compiler strips parameter names by default, and the LangChain4j framework needs them to map method parameters to template variables in `@SystemMessage` and `@UserMessage` annotations.
+
 == Using the extension
 
-To use the extension, annotate your test class with `@ExtendWith(ScorerExtension.class)` or `@AiScorer`:
+To use the extension, annotate your test class with `@ExtendWith(EvaluationExtension.class)` or `@Evaluate`:
 
 [source,java]
 ----
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import io.quarkiverse.langchain4j.scorer.junit5.ScorerExtension;
+import io.quarkiverse.langchain4j.evaluation.junit5.EvaluationExtension;
 
-@ExtendWith(ScorerExtension.class)
+@ExtendWith(EvaluationExtension.class)
 public class MyScorerTests {
 
     // Test cases go here
 }
 ----
 
-Or, you can use the `@AiScorer` annotation:
+Or, you can use the `@Evaluate` annotation:
 
 [source,java]
 ----
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
+import io.quarkiverse.langchain4j.evaluation.junit5.Evaluate;
 
-@AiScorer
+@Evaluate
 public class MyScorerTests {
-
     // Test cases go here
 }
 ----
@@ -58,24 +122,60 @@ This Junit 5 extension can be combined with `@QuarkusTest` to test Quarkus appli
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
+import io.quarkiverse.langchain4j.evaluation.junit5.Evaluate;
 
 @QuarkusTest
-@AiScorer
+@Evaluate
 public class MyScorerTests {
-
     // Test cases go here
 }
 ----
 
 == Concepts
 
+=== Evaluation
+
+An **Evaluation** is the process of testing whether an AI system's output meets expectations for a given input.
+Unlike traditional unit tests that check for exact matches, evaluations assess AI outputs using flexible criteria such as semantic similarity, correctness, or custom domain-specific logic.
+
+In the context of Quarkus Langchain4J, an evaluation consists of:
+
+1. **A Sample** - The test case containing input parameters and expected output (and optional metadata like tags)
+2. **A Function Under Test** - The AI service, model, or function being evaluated, it receives the input parameters and produce an actual output
+3. **An Evaluation Strategy** - The logic that determines if the actual output is acceptable based on the expected output
+4. **An Evaluation Result** - The outcome containing pass/fail status, optional score, explanation, and metadata
+
+The evaluation process works as follows:
+
+[mermaid]
+----
+flowchart TD
+    A[Sample<br/>input + expected output] --> B[Function Under Test<br/>produces actual output]
+    B --> C[Evaluation Strategy<br/>compares actual vs expected]
+    C --> D[Evaluation Result<br/>passed/failed, score, explanation]
+
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C fill:#ffe1f5
+    style D fill:#e1ffe1
+----
+
+For example, testing a customer support chatbot:
+
+- **Sample**: Input = "What are your business hours?", Expected = "We're open Monday-Friday, 9am-5pm"
+- **Function**: The chatbot's response generation (e.g., `chatbot.chat("What are your business hours?")`)
+- **Strategy**: Semantic similarity (≥80% match), AI judge, or custom logic
+- **Result**: Passed (score=0.92, explanation="Response conveys the same business hours information")
+
+This approach recognizes that AI outputs are often non-deterministic and may vary in phrasing while remaining correct.
+It also provides flexibility to define evaluation criteria that align with application requirements.
+
 === Scorer
 
-The `Scorer` (`io.quarkiverse.langchain4j.testing.scorer.Scorer`) is a utility that evaluates a _set of samples_ (represented by `io.quarkiverse.langchain4j.testing.scorer.Samples`) against a function (part of the application) and a set of evaluation strategies.
-It can run evaluations concurrently and produces an `EvaluationReport` summarizing the results and providing the _score_.
+The `Scorer` (`io.quarkiverse.langchain4j.testing.evaluation.Scorer`) is the cornerstone component that orchestrates evaluations for a _set of samples_ (represented by `io.quarkiverse.langchain4j.testing.evaluation.Samples`) against a function (part of the application) and evaluation strategies.
+It can run evaluations concurrently and produces an `EvaluationReport` summarizing the results and providing an aggregate _score_.
 
-The _score_ is the percentage of passed evaluations (between 0.0 and 100.0).
+The produced _score_ is the percentage of passed evaluations (between 0.0 and 100.0).
 It is calculated as the ratio of the number of passed evaluations to the total number of evaluations.
 
 In general, tests using the `Scorer` follow this pattern:
@@ -83,18 +183,20 @@ In general, tests using the `Scorer` follow this pattern:
 [source,java]
 ----
 
-@Inject CustomerSupportAssistant assistant; // The AI Service to test
+// The AI Service to test, or whatever entry point of your application
+@Inject CustomerSupportAssistant assistant;
 
  @Test
-void testAiService(@ScorerConfiguration(concurrency = 5) Scorer scorer, // The scorer instance, with concurrency set to 5
-                   @SampleLocation("src/test/resources/samples.yaml") Samples<String> samples) { // The samples loaded from a YAML file
+void testAiService(
+        // The scorer instance, with concurrency set to 5
+        @ScorerConfiguration(concurrency = 5) Scorer scorer,
+        // The samples loaded from a YAML file, or custom loader
+        @SampleLocation("src/test/resources/samples.yaml") Samples<String> samples) {
 
     // Define the function that will be evaluated
     // The parameters comes from the sample
     // The output of this function will be compared to the expected output in the samples
-    Function<Parameters, String> function = parameters -> {
-        return assistant.chat(parameters.get(0));
-    };
+    Function<Parameters, String> function = parameters -> assistant.chat(parameters.get(0));
 
     EvaluationReport report = scorer.evaluate(samples, function,
             new SemanticSimilarityStrategy(0.8)); // The evaluation strategy
@@ -102,22 +204,109 @@ void testAiService(@ScorerConfiguration(concurrency = 5) Scorer scorer, // The s
 }
 ----
 
+==== Fluent Builder API
+
+The framework provides a fluent builder API through the `Evaluation` class for more readable evaluation definitions:
+
+[source,java]
+----
+import static io.quarkiverse.langchain4j.testing.evaluation.EvaluationAssertions.assertThat;
+
+@Test
+void evaluateWithFluentBuilder() {
+    EvaluationReport<String> report = Evaluation.<String>builder()
+        .withSamples("src/test/resources/customer-support-samples.yaml")
+        .evaluate(params -> bot.chat(params.get(0)))
+        .using(new SemanticSimilarityStrategy(0.80))
+        .run();
+
+    assertThat(report)
+        .hasScoreGreaterThan(75.0)
+        .hasAtLeastPassedEvaluations(4);
+}
+----
+
+When using this API, the `scorer` is created automatically.
+The fluent API also supports filtering by tags:
+
+[source,java]
+----
+@Test
+void evaluateFilteredByTags() {
+    // Evaluate only samples with specific tags
+    EvaluationReport<String> report = Evaluation.<String>builder()
+        .withSamples("src/test/resources/customer-support-samples.yaml")
+        .withTags("critical") // Only evaluate critical samples
+        .evaluate(params -> bot.chat(params.get(0)))
+        .using(new SemanticSimilarityStrategy(0.75))
+        .run();
+
+    assertThat(report)
+        .hasScoreGreaterThan(70.0)
+        .hasAtLeastPassedEvaluations(2);
+}
+----
+
+You can apply multiple strategies to the same samples:
+
+[source,java]
+----
+@Test
+void evaluateWithMultipleStrategies() {
+    // Apply multiple strategies to the same samples
+    EvaluationReport<String> report = Evaluation.<String>builder()
+        .withSamples("src/test/resources/smoke-tests.yaml")
+        .withConcurrency(1)
+        .evaluate(params -> bot.chat(params.get(0)))
+        .using(new SemanticSimilarityStrategy(0.85))
+        .using(new SemanticSimilarityStrategy(0.75))
+        .run();
+
+    assertThat(report).hasScoreGreaterThan(60.0);
+}
+----
+
+The fluent API supports _deferred_ executions, allowing you to build evaluation definitions and execute them later:
+
+[source,java]
+----
+@Test
+void deferredExecution() {
+    // Build the evaluation definition
+    EvaluationRunner<String> runner = Evaluation.<String>builder()
+        .withSamples("src/test/resources/smoke-tests.yaml")
+        .evaluate(params -> bot.chat(params.get(0)))
+        .using(new SemanticSimilarityStrategy(0.80))
+        .build();
+
+    // Execute later (can be called multiple times)
+    EvaluationReport<String> report1 = runner.run();
+    EvaluationReport<String> report2 = runner.run();
+
+    assertThat(report1).hasScoreGreaterThan(60.0);
+    assertThat(report2).hasScoreGreaterThan(60.0);
+}
+----
+
+When multiple strategies are added, each sample is evaluated against all strategies, and results are aggregated in the report.
+
 === Samples
 
-A `Sample` (`io.quarkiverse.langchain4j.testing.scorer.EvaluationSample`) represents a single input-output test case.
+A `Sample` (`io.quarkiverse.langchain4j.testing.evaluation.EvaluationSample`) represents a single input-output test case.
 It includes:
-- a name: the name of the sample,
-- the parameters: the parameter data for the test,
-- the expected output: the expected result that will be evaluated,
-- the tags: metadata that can categorize the sample for targeted evaluation (tags are optional).
+
+* a name: the name of the sample,
+* the parameters: the parameter data for the test (input),
+* the expected output: the expected result that will be evaluated,
+* the tags: metadata that can categorize the sample for targeted evaluation (tags are optional).
 
 When tags are set, the score can be calculated per tag (in addition to the global score).
 
-A list of samples is represented by `Samples` (`io.quarkiverse.langchain4j.testing.scorer.Samples`).
+A list of samples is represented by `Samples` (`io.quarkiverse.langchain4j.testing.evaluation.Samples`).
 
 Samples can be defined using a builder pattern:
 
-[source, java]
+[source,java]
 ----
 var s1 = EvaluationSample.<String>builder()
             .withName("sample1")
@@ -125,18 +314,18 @@ var s1 = EvaluationSample.<String>builder()
             .withExpectedOutput("my expected result2")
             .build();
 
-    var s2 = EvaluationSample.<String>builder()
+var s2 = EvaluationSample.<String>builder()
             .withName("sample2")
             .withParameter("value2")
             .withExpectedOutput("my expected results")
             .build();
 
-    Samples<String> samples = new Samples<>(List.of(s1, s2));
+Samples<String> samples = new Samples<>(List.of(s1, s2));
 ----
 
 Alternatively, samples can be loaded from a YAML file using the `@SampleLocation` annotation:
 
-[source, yaml]
+[source,yaml]
 ----
 - name: Sample1
   parameters:
@@ -150,12 +339,53 @@ Alternatively, samples can be loaded from a YAML file using the `@SampleLocation
   tags: ["tag1"]
 ----
 
+=== YAML Sample Format Reference
+
+The YAML format MUST follow this exact structure:
+
+[source,yaml]
+----
+- name: unique_sample_identifier        # Required: unique name
+  parameters:                            # Required: MUST be plural "parameters"
+    - "first parameter value"
+    - "second parameter value"           # Optional: multiple parameters
+  expected-output: |                     # Required: hyphenated, can be multiline
+    The expected output content here
+    Can span multiple lines
+  tags: ["tag1", "tag2"]                 # Optional: for filtering
+----
+
+For samples with multiple expected outputs (e.g., testing retrievers), use `expected-outputs` (plural):
+
+[source,yaml]
+----
+- name: retriever_test_sample
+  parameters:
+    - "search query"
+  expected-outputs:                      # Note: plural form
+    - "expected segment 1"
+    - "expected segment 2"
+    - "expected segment 3"
+  tags: ["retriever"]
+----
+
+IMPORTANT: Common format requirements:
+
+* Use `parameters` (plural), not `parameter` or `input`
+* Use `expected-output` (hyphenated) for single String output, or `expected-outputs` (plural) for List<String> output
+* You MUST use either `expected-output` or `expected-outputs`, not both
+* Parameters must be a list, even for single values
+* The file can optionally start with `---` as YAML document separator
+* Multiline expected output uses the `|` (pipe) character for literal block style
+
+NOTE: You can implement your own loader to support custom sample formats (see the <<_custom_sample_loaders,Custom Sample Loaders section>>).
+
 === Evaluation Strategy
 
-An `EvaluationStrategy` (`io.quarkiverse.langchain4j.testing.scorer.EvaluationStrategy`) defines how to evaluate a sample.
+An `EvaluationStrategy` (`io.quarkiverse.langchain4j.testing.evaluation.EvaluationStrategy`) defines how to evaluate a sample.
 The framework includes ready-to-use strategies (detailed below), and you can implement custom ones.
 
-[source, java]
+[source,java]
 ----
 /**
  * A strategy to evaluate the output of a model.
@@ -167,28 +397,70 @@ public interface EvaluationStrategy<T> {
      * Evaluate the output of a model.
      * @param sample the sample to evaluate.
      * @param output the output of the model.
-     * @return {@code true} if the output is correct, {@code false} otherwise.
+     * @return an EvaluationResult with pass/fail status, optional score, explanation, and metadata.
      */
-    boolean evaluate(EvaluationSample<T> sample, T output);
+    EvaluationResult evaluate(EvaluationSample<T> sample, T output);
 
 }
 ----
 
+Strategies return an `EvaluationResult` which can be created using:
+
+- `EvaluationResult.passed(double score)`: Create a passing result with a score (0.0-1.0)
+- `EvaluationResult.failed(double score, String explanation)`: Create a failing result with score and explanation
+- `EvaluationResult.failed(String explanation)`: Create a failing result with explanation (score defaults to 0.0)
+- `EvaluationResult.fromBoolean(boolean)`: Convert boolean to result (passed=1.0, failed=0.0)
+- Fluent API for adding explanations and metadata:
+
+[source,java]
+----
+ var result = EvaluationResult
+        .passed(0.95)
+        .withExplanation("Response semantically matches expected output")
+        .withMetadata(Map.of("similarityScore", 0.95, "method", "cosine"));
+----
+
 === Evaluation Report
 
-The `EvaluationReport` aggregates the results of all evaluations. It provides:
+The `EvaluationReport` aggregates the results of all evaluations.
+It provides:
 
-- a global score (percentage of passed evaluations).
-- the scores per tag.
-- the possibility to dump the report as Markdown.
+* A global score (percentage of passed evaluations, 0.0-100.0)
+* Scores per tag (for categorized evaluations)
+* Access to individual evaluation results with scores, explanations, and metadata
+* Report generation in multiple formats (Markdown, JSON, or custom formats)
 
-== Writing Tests with Scorer
+==== Fluent Assertions for Reports
 
-=== Example Test Using Field Injection
+The framework provides `EvaluationAssertions` for readable test assertions:
 
-[source, java]
+[source,java]
 ----
-@ExtendWith(ScorerExtension.class)
+import static io.quarkiverse.langchain4j.testing.evaluation.EvaluationAssertions.assertThat;
+
+assertThat(report)
+    .hasScore(80.0)                    // Exact score
+    .hasScoreGreaterThan(70.0)         // Minimum score
+    .hasScoreBetween(70.0, 90.0)       // Score range
+    .hasPassedCount(8)                  // Exact passed count
+    .hasAtLeastPassedEvaluations(4)     // Minimum passed
+    .hasFailedCount(2)                  // Exact failed count
+    .hasAtMostFailedEvaluations(3)      // Maximum failed
+    .hasEvaluationCount(10);             // Total count
+----
+
+== Writing Evaluation Test
+
+You can write evaluation tests in multiple ways:
+
+- programmatic using a `scorer` object directly injected in a field or as a method parameter
+- declarative using the `@EvaluationTest` annotation
+
+=== Example Test Using Field Injection (programmatic)
+
+[source,java]
+----
+@ExtendWith(EvaluationExtension.class)
 public class ScorerFieldInjectionTest {
 
     @ScorerConfiguration(concurrency = 4)
@@ -217,12 +489,12 @@ public class ScorerFieldInjectionTest {
 }
 ----
 
-=== Example Test Using Parameter Injection
+=== Example Test Using Parameter Injection (programmatic)
 
-[source, java]
+[source,java]
 ----
 
-@ExtendWith(ScorerExtension.class)
+@ExtendWith(EvaluationExtension.class)
 public class ScorerParameterInjectionTest {
 
     // ....
@@ -242,32 +514,340 @@ public class ScorerParameterInjectionTest {
         }, strategy);
 
         // Assert results
-        assertThat(report.evaluations()).isNotEmpty();
-        assertThat(report.score()).isGreaterThan(50.0);
+        assertThat(report).hasScoreGreaterThan(50.0);
     }
 }
 ----
+
+=== Declarative Testing with @EvaluationTest
+
+The `@EvaluationTest` annotation provides a declarative way to define evaluation tests without writing explicit test methods:
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+@DisplayNameGeneration(EvaluationDisplayNameGenerator.class)
+public class DeclarativeEvaluationTest {
+
+    @Inject
+    CustomerSupportBot bot;
+
+    /**
+     * Define a reusable evaluation function.
+     * This function will be referenced by name in the test annotations.
+     */
+    @EvaluationFunction("chatbot")
+    public Function<Parameters, String> chatbotFunction() {
+        return params -> bot.chat(params.get(0));
+    }
+
+    /**
+     * Declarative test using @EvaluationTest.
+     * The framework automatically loads samples, evaluates them,
+     * and asserts the minimum score.
+     */
+    @EvaluationTest(
+        samples = "smoke-tests.yaml",
+        strategy = SemanticSimilarityStrategy.class,
+        function = "chatbot",
+        minScore = 70.0
+    )
+    void smokeTestsWithSemanticSimilarity() {
+        // Test body can be empty - evaluation happens automatically
+        // The test will fail if score is below 70%
+    }
+
+    /**
+     * Another @EvaluationTest with a different configuration.
+     */
+    @EvaluationTest(
+        samples = "customer-support-samples.yaml",
+        strategy = AiJudgeStrategy.class,
+        function = "chatbot",
+        minScore = 85.0
+    )
+    void criticalCustomerSupportEvaluation() {
+        // Higher threshold for critical evaluations
+    }
+}
+----
+
+When using `@EvaluationTest`, the framework automatically:
+
+- Loads samples from the specified location
+- Injects the evaluation function by name
+- Applies the specified evaluation strategy (the instance is created using a no-arg constructor)
+- Evaluates the samples and generates a report
+
+=== Test Templates with @StrategyTest
+
+The `@StrategyTest` annotation enables testing the same function against multiple evaluation strategies:
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+@DisplayNameGeneration(EvaluationDisplayNameGenerator.class)
+public class DeclarativeEvaluationTest {
+
+    @Inject
+    CustomerSupportBot bot;
+
+    /**
+     * Test using multiple strategies with @StrategyTest.
+     * The test runs once for each strategy.
+     */
+    @StrategyTest(strategies = {
+        SemanticSimilarityStrategy.class,
+        AiJudgeStrategy.class,
+    })
+    void customerSupportWithMultipleStrategies(
+            @SampleLocation("src/test/resources/smoke-tests.yaml") Samples<String> samples,
+            EvaluationStrategy<String> strategy,
+            Scorer scorer) {
+        // This test method will execute twice:
+        // 1. Once with SemanticSimilarityStrategy
+        // 2. Once with AiJudgeStrategy
+        // Each execution appears as a separate test in the results
+
+        var report = scorer.evaluate(
+                samples,
+                params -> bot.chat(params.get(0)),
+                strategy);
+
+        System.out.printf("Strategy %s - Score: %.2f%%%n",
+                strategy.getClass().getSimpleName(),
+                report.score());
+
+        assertThat(report).hasScoreGreaterThan(60.0);
+    }
+}
+----
+
+The `customerSupportWithMultipleStrategies` method is invoked once for each specified strategy, allowing you to compare performance across different evaluation approaches.
+
+=== Loading Samples from Multiple Sources
+
+When you need to combine samples from multiple files or sources, use the `@SampleSources` annotation. This is useful for:
+
+- Combining different test suites (e.g., smoke tests + regression tests)
+- Organizing samples by category or feature in separate files
+- Reusing common sample sets across different tests
+
+==== Basic Usage
+
+The `@SampleSources` annotation accepts an array of `@SampleLocation` annotations and merges all samples into a single `Samples` instance:
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+public class CombinedEvaluationTest {
+
+    @Inject
+    CustomerSupportBot bot;
+
+    @Test
+    void evaluateWithMultipleSampleSources(
+            @SampleSources({
+                @SampleLocation("src/test/resources/smoke-tests.yaml"),
+                @SampleLocation("src/test/resources/regression-tests.yaml"),
+                @SampleLocation("src/test/resources/edge-cases.yaml")
+            }) Samples<String> samples,
+            @ScorerConfiguration(concurrency = 3) Scorer scorer) {
+
+        // All samples from all three files are combined
+        EvaluationReport<String> report = scorer.evaluate(
+                samples,
+                params -> bot.chat(params.get(0)),
+                new SemanticSimilarityStrategy(0.85));
+
+        assertThat(report)
+                .hasScoreGreaterThan(80.0)
+                .hasAtLeastPassedEvaluations(4);
+    }
+}
+----
+
+==== Sample Order Preservation
+
+Samples from multiple sources are combined in the order they appear in the `@SampleSources` array. Within each source, the original order is preserved:
+
+[source,java]
+----
+@Test
+void samplesAreOrderedCorrectly(
+        @SampleSources({
+            @SampleLocation("src/test/resources/smoke-tests.yaml"),      // First
+            @SampleLocation("src/test/resources/regression-tests.yaml")  // Second
+        }) Samples<String> samples) {
+
+    var sampleNames = samples.stream()
+            .map(sample -> sample.name())
+            .toList();
+
+    // Samples from smoke-tests.yaml come first, then regression-tests.yaml
+    assertThat(sampleNames).containsExactly(
+        "Smoke Test 1",
+        "Smoke Test 2",
+        "Regression Test 1",
+        "Regression Test 2"
+    );
+}
+----
+
+==== Filtering Combined Samples by Tags
+
+You can filter combined samples by tags, which is useful when you want to run specific subsets of your combined sample set:
+
+[source,java]
+----
+@Test
+void evaluateOnlyCriticalSamples(
+        @SampleSources({
+            @SampleLocation("src/test/resources/smoke-tests.yaml"),
+            @SampleLocation("src/test/resources/regression-tests.yaml")
+        }) Samples<String> samples,
+        Scorer scorer) {
+
+    // Filter to only evaluate samples tagged as "critical"
+    var criticalSamples = samples.filterByTags("critical");
+
+    var report = scorer.evaluate(
+            criticalSamples,
+            params -> bot.chat(params.get(0)),
+            new SemanticSimilarityStrategy(0.90));
+
+    assertThat(report)
+            .hasPassedForTag("critical")
+            .hasScoreGreaterThan(95.0);
+}
+----
+
+==== Use with @StrategyTest
+
+`@SampleSources` can be combined with `@StrategyTest` to test multiple sample sources against multiple strategies:
+
+[source,java]
+----
+@StrategyTest(strategies = {
+    SemanticSimilarityStrategy.class,
+    AiJudgeStrategy.class
+})
+void evaluateMultipleSourcesWithMultipleStrategies(
+        @SampleSources({
+            @SampleLocation("src/test/resources/smoke-tests.yaml"),
+            @SampleLocation("src/test/resources/regression-tests.yaml")
+        }) Samples<String> samples,
+        EvaluationStrategy<String> strategy,
+        Scorer scorer) {
+
+    // This test runs 2 times (once per strategy)
+    // Each execution uses all combined samples
+    var report = scorer.evaluate(
+            samples,
+            params -> bot.chat(params.get(0)),
+            strategy);
+
+    assertThat(report).hasScoreGreaterThan(70.0);
+}
+----
+
+NOTE: All samples from all specified sources are merged into a single `Samples` instance, so filtering, evaluation, and reporting work seamlessly across the combined set.
+
+=== Readable Test Names with EvaluationDisplayNameGenerator
+
+You can produce readable test _display_ names showing sample names, scores, and pass/fail status:
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+@DisplayNameGeneration(EvaluationDisplayNameGenerator.class)
+public class DeclarativeEvaluationTest {
+
+    @Inject
+    CustomerSupportBot bot;
+
+    @EvaluationFunction("chatbot")
+    public Function<Parameters, String> chatbotFunction() {
+        return params -> bot.chat(params.get(0));
+    }
+
+    @EvaluationTest(
+        samples = "smoke-tests.yaml",
+        strategy = SemanticSimilarityStrategy.class,
+        function = "chatbot",
+        minScore = 70.0
+    )
+    void smokeTestsWithSemanticSimilarity() {
+        // Test names will show sample results with scores
+    }
+}
+----
+
+=== Test Suite Reporting
+
+Generate aggregate reports across all tests using `@ReportConfiguration`:
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+@ExtendWith(SuiteEvaluationReporter.class)  // Enable test suite reporting
+public class SuiteReportingTest {
+
+    @ReportConfiguration(
+        outputDir = "target",
+        fileName = "test-suite-report",
+        formats = {"markdown", "json"},
+        includeDetails = true
+    )
+    private EvaluationReport<String> smokeTestReport;
+
+    @Test
+    void smokeTests(@ScorerConfiguration(concurrency = 5) Scorer scorer,
+                    @SampleLocation("smoke-tests.yaml") Samples<String> samples) {
+        smokeTestReport = scorer.evaluate(samples,
+            params -> myService.process(params.get(0)),
+            new SemanticSimilarityStrategy(0.8));
+
+        // Register report for test suite aggregation
+        ReportRegistry.registerReport(
+            getClass().getSimpleName(),
+            "smokeTestReport",
+            smokeTestReport);
+    }
+}
+----
+
+This generates:
+
+* `target/evaluation-suite-report.md`: Aggregated test suite report
+* `target/evaluation-suite-report.json`: Aggregated test suite JSON report
 
 == Built-in Evaluation Strategies
 
 === Semantic Similarity
 
-The `SemanticSimilarityStrategy` (`io.quarkiverse.langchain4j.testing.scorer.similarity.SemanticSimilarityStrategy`) evaluates the similarity between the actual output and the expected output using cosine similarity. It requires an embedding model and a minimum similarity threshold.
+The `SemanticSimilarityStrategy` (`io.quarkiverse.langchain4j.testing.evaluation.similarity.SemanticSimilarityStrategy`) evaluates the similarity between the actual output and the expected output using cosine similarity.
+It requires an embedding model and a minimum similarity threshold.
 
 **Maven Dependency:**
 
-[source, xml]
+[source,xml]
 ----
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-testing-scorer-semantic-similarity</artifactId>
+    <artifactId>quarkus-langchain4j-testing-evaluation-semantic-similarity</artifactId>
     <scope>test</scope>
 </dependency>
 ----
 
 **Examples:**
 
-[source, java]
+[source,java]
 ----
 EvaluationStrategy<String> strategy = new SemanticSimilarityStrategy(0.9);
 EvaluationStrategy<String> strategy2 = new SemanticSimilarityStrategy(embeddingModel, 0.85);
@@ -280,18 +860,18 @@ It uses a configurable evaluation prompt and `ChatModel`.
 
 **Maven Dependency**
 
-[source, xml]
+[source,xml]
 ----
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-testing-scorer-ai-judge</artifactId>
+    <artifactId>quarkus-langchain4j-testing-evaluation-ai-judge</artifactId>
     <scope>test</scope>
 </dependency>
 ----
 
-**Example:**
+**Basic Example:**
 
-[source, java]
+[source,java]
 ----
 EvaluationStrategy<String> strategy = new AiJudgeStrategy(myChatLanguageModel, """
                 You are an AI evaluating a response and the expected output.
@@ -304,27 +884,151 @@ EvaluationStrategy<String> strategy = new AiJudgeStrategy(myChatLanguageModel, "
                 """);
 ----
 
+==== Advanced Usage: Structured JSON Output
+
+For reliable parsing and detailed evaluation results, request JSON output in your judge prompt:
+
+[source,java]
+----
+@ApplicationScoped
+@RegisterAiService
+public interface LlmJudgeService {
+
+    @SystemMessage("""
+        You are an expert evaluator for an AI application.
+
+        Your role is to judge whether an actual response correctly
+        addresses what was expected based on the user's question.
+
+        Evaluation Criteria:
+        - Does the response address the user's question?
+        - Is the information accurate and relevant?
+        - Does it cover key concepts from the expected output?
+        - Is it helpful and informative?
+
+        Scoring Guidelines:
+        - 100: Perfect response - fully addresses the question
+        - 80-99: Good response - addresses well, minor gaps
+        - 60-79: Adequate response - addresses but missing info
+        - 40-59: Partial response - only partially addresses
+        - 20-39: Poor response - barely relevant or mostly incorrect
+        - 0-19: Incorrect response - completely wrong or off-topic
+
+        Respond with ONLY a JSON object in this exact format:
+        {
+          "score": <number 0-100>,
+          "passed": <true or false>,
+          "explanation": "<brief explanation of the score>"
+        }
+        """)
+    @UserMessage("""
+        Question: {{question}}
+        Expected Behavior: {{expectedOutput}}
+        Actual Response: {{actualResponse}}
+
+        Evaluate the actual response and provide your judgment as JSON.
+        """)
+    String judgeResponse(String question, String expectedOutput, String actualResponse);
+}
+----
+
+==== Robust JSON Parsing
+
+LLMs may wrap JSON in markdown code blocks. Handle this robustly:
+
+[source,java]
+----
+private JudgmentResult parseJudgment(String response) throws Exception {
+    String cleaned = response.trim();
+
+    // Remove markdown code blocks
+    if (cleaned.startsWith("```json")) {
+        cleaned = cleaned.substring(7);
+    }
+    if (cleaned.startsWith("```")) {
+        cleaned = cleaned.substring(3);
+    }
+    if (cleaned.endsWith("```")) {
+        cleaned = cleaned.substring(0, cleaned.length() - 3);
+    }
+
+    // Parse JSON
+    JsonNode root = objectMapper.readTree(cleaned.trim());
+
+    int score = root.get("score").asInt();
+    boolean passed = root.get("passed").asBoolean();
+    String explanation = root.get("explanation").asText();
+
+    return new JudgmentResult(score, passed, explanation);
+}
+
+private record JudgmentResult(int score, boolean passed, String explanation) {}
+----
+
+==== Fallback Strategy
+
+Always provide a fallback when LLM judge fails:
+
+[source,java]
+----
+public class LlmJudgeEvaluationStrategy implements EvaluationStrategy<String> {
+
+    private final LlmJudgeService judgeService;
+
+    @Override
+    public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
+        try {
+            return evaluateWithLlmJudge(sample, output);
+        } catch (Exception e) {
+            LOG.warn("LLM judge failed for sample: " + sample.name(), e);
+            return fallbackEvaluation(sample, output);
+        }
+    }
+
+    private EvaluationResult fallbackEvaluation(
+            EvaluationSample<String> sample, String output) {
+        // Simple keyword-based fallback
+        boolean contains = output.toLowerCase()
+            .contains(sample.expectedOutput().toLowerCase());
+
+        return EvaluationResult.fromBoolean(contains)
+            .withExplanation("Fallback evaluation (LLM judge unavailable)");
+    }
+}
+----
+
+==== Cost Considerations
+
+LLM as judge adds API costs:
+
+* Per evaluation: ~$0.001-0.003 (gpt-4o-mini)
+* For 20 samples: ~$0.03-0.06 additional cost
+* Consider caching judge results for identical inputs
+
 == Creating a Custom Evaluation Strategy
 
 To implement your own evaluation strategy, implement the `EvaluationStrategy` interface:
 
-[source, java]
+// TODO Can't it be a bean?
+
+[source,java]
 ----
-import io.quarkiverse.langchain4j.testing.scorer.*;
+import io.quarkiverse.langchain4j.testing.evaluation.*;
 
 public class MyCustomStrategy implements EvaluationStrategy<String> {
 
     @Override
-    public boolean evaluate(EvaluationSample<String> sample, String output) {
+    public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
         // Custom evaluation logic
-        return output.equalsIgnoreCase(sample.expectedOutput());
+        boolean matches = output.equalsIgnoreCase(sample.expectedOutput());
+        return EvaluationResult.fromBoolean(matches);
     }
 }
 ----
 
 Then, use the custom strategy in your test:
 
-[source, java]
+[source,java]
 ----
 EvaluationStrategy<String> strategy = new MyCustomStrategy();
 EvaluationReport report = scorer.evaluate(samples, parameters -> {
@@ -332,14 +1036,14 @@ EvaluationReport report = scorer.evaluate(samples, parameters -> {
 }, strategy);
 ----
 
-Here is an exmaple of a custom strategy that can be used to verify the correctness of a vector search:
+Here is an example of a custom strategy that can be used to verify the correctness of a vector search:
 
-[source, java]
+[source,java]
 ----
 public class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<String>> {
 
         @Override
-        public boolean evaluate(EvaluationSample<List<String>> sample, List<String> response) {
+        public EvaluationResult evaluate(EvaluationSample<List<String>> sample, List<String> response) {
             List<String> expected = sample.expectedOutput();
             int found = 0;
             for (String seg : expected) {
@@ -356,7 +1060,16 @@ public class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<St
                     System.out.println("Segment not found: " + seg);
                 }
             }
-            return found == expected.size();
+            double score = (double) found / expected.size();
+            boolean passed = found == expected.size();
+
+            if (passed) {
+                return EvaluationResult.passed(score)
+                    .withExplanation(String.format("Found %d of %d expected segments", found, expected.size()));
+            } else {
+                return EvaluationResult.failed(score,
+                    String.format("Found %d of %d expected segments", found, expected.size()));
+            }
         }
 
     }
@@ -366,7 +1079,7 @@ public class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<St
 
 You can load samples directly from a YAML file using the `@SampleLocation` annotation:
 
-[source, yaml]
+[source,yaml]
 ----
 - name: Sample1
   parameters:
@@ -382,12 +1095,639 @@ You can load samples directly from a YAML file using the `@SampleLocation` annot
 
 Then, inject the samples into your test method:
 
-[source, java]
+[source,java]
 ----
 @Test
 void evaluateWithSamples(@SampleLocation("test-samples.yaml") Samples<String> samples) {
     // Use samples in your test
 }
+----
+
+=== @SampleLocation Path Resolution
+
+The `@SampleLocation` annotation expects **filesystem paths relative to the project root**, NOT classpath resource paths.
+
+[source,java]
+----
+@SampleLocation("src/test/resources/samples.yaml")      // Relative to project root
+@SampleLocation("test-data/samples.yaml")                // Also relative to project root
+@SampleLocation("/absolute/path/to/samples.yaml")       // Absolute path (not recommended)
+----
+
+NOTE: Always use the full path from the project root for clarity and reliability.
+
+[#_custom_sample_loaders]
+== Custom Sample Loaders
+
+The framework supports custom sample loaders through a hybrid discovery mechanism using both Java ServiceLoader (SPI) and CDI.
+
+=== Implementing a Custom Sample Loader
+
+Create a class implementing the `SampleLoader` interface:
+
+[source,java]
+----
+package com.example;
+
+import io.quarkiverse.langchain4j.testing.evaluation.*;
+
+public class JsonSampleLoader implements SampleLoader {
+
+    @Override
+    public boolean supports(String source) {
+        return source.endsWith(".json");
+    }
+
+    @Override
+    public <T> Samples<T> load(String source, Class<T> outputType) {
+        // Load and parse JSON file
+        // Return Samples<T>
+    }
+}
+----
+
+=== Registering via ServiceLoader (SPI)
+
+Create `META-INF/services/io.quarkiverse.langchain4j.testing.evaluation.SampleLoader`:
+
+[source]
+----
+com.example.JsonSampleLoader
+----
+
+=== Registering via CDI
+
+Make your loader a CDI bean:
+
+[source,java]
+----
+@ApplicationScoped
+public class JsonSampleLoader implements SampleLoader {
+    // Implementation
+}
+----
+
+The framework automatically discovers loaders from both sources, with CDI beans taking precedence.
+CDI is the recommended approach for better integration with Quarkus.
+
+Also, the samples can be loaded from a remote location (HTTP URL, database, etc.) by implementing the custom logic in the `load` method.
+
+== Custom Report Formatters
+
+Create custom report formatters to export evaluation results in different formats.
+
+=== Implementing a Custom Report Formatter
+
+[source,java]
+----
+package com.example;
+
+import io.quarkiverse.langchain4j.testing.evaluation.*;
+import java.io.Writer;
+import java.util.Map;
+
+public class HtmlReportFormatter implements ReportFormatter {
+
+    @Override
+    public String format() {
+        return "html";
+    }
+
+    @Override
+    public String fileExtension() {
+        return ".html";
+    }
+
+    @Override
+    public void format(EvaluationReport<?> report, Writer writer, Map<String, Object> config) {
+        // Generate HTML report
+        writer.write("<html><body>");
+        writer.write("<h1>Evaluation Report</h1>");
+        writer.write("<p>Score: " + report.score() + "%</p>");
+        // ... more HTML generation
+        writer.write("</body></html>");
+    }
+}
+----
+
+=== Registering via ServiceLoader (SPI)
+
+Create `META-INF/services/io.quarkiverse.langchain4j.testing.evaluation.ReportFormatter`:
+
+[source]
+----
+com.example.HtmlReportFormatter
+----
+
+=== Registering via CDI
+
+[source,java]
+----
+@ApplicationScoped
+public class HtmlReportFormatter implements ReportFormatter {
+    // Implementation
+}
+----
+
+IMPORTANT: Your formatter may also push the result to an external system (database, dashboard, etc.) instead of writing to a file.
+
+=== Using Custom Formatters
+
+[source,java]
+----
+@ReportConfiguration(
+    outputDir = "target/reports",
+    fileName = "my-report",
+    formats = {"html", "markdown", "json"}
+)
+private EvaluationReport<String> report;
+----
+
+== Testing Guardrails
+
+Guardrails are critical for production AI applications. Test them thoroughly for accuracy.
+
+=== Unit Testing InputGuardrails
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+public class GuardrailEvaluationTest {
+
+    @Inject
+    OffTopicDetectionGuardrail guardrail;
+
+    @Test
+    public void testGuardrailAccuracy(
+        @ScorerConfiguration(concurrency = 2) Scorer scorer,
+        @SampleLocation("src/test/resources/guardrail-samples.yaml") Samples<String> samples) {
+
+        EvaluationReport<String> report = scorer.evaluate(
+            samples,
+            params -> evaluateGuardrail(params.get(0)),
+            new GuardrailEvaluationStrategy()
+        );
+
+        // Expect perfect accuracy for guardrails
+        assertThat(report).hasScore(100.0);
+    }
+
+    private String evaluateGuardrail(String input) {
+        try {
+            UserMessage message = UserMessage.from(input);
+            guardrail.validate(message);
+            return "ACCEPT";
+        } catch (InputGuardrailException e) {
+            return "REJECT:" + e.getMessage();
+        }
+    }
+}
+----
+
+=== Guardrail Evaluation Strategy
+
+[source,java]
+----
+public class GuardrailEvaluationStrategy implements EvaluationStrategy<String> {
+
+    @Override
+    public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
+        String expectedBehavior = sample.expectedOutput();
+
+        // Check if output matches expected behavior
+        if (expectedBehavior.startsWith("ACCEPT")) {
+            if (output.equals("ACCEPT")) {
+                return EvaluationResult.passed(1.0)
+                    .withExplanation("Correctly accepted on-topic question");
+            } else {
+                return EvaluationResult.failed("False negative: incorrectly rejected on-topic question");
+            }
+        } else if (expectedBehavior.startsWith("REJECT")) {
+            if (output.startsWith("REJECT")) {
+                return EvaluationResult.passed(1.0)
+                    .withExplanation("Correctly rejected off-topic question");
+            } else {
+                return EvaluationResult.failed("False positive: incorrectly accepted off-topic question");
+            }
+        }
+
+        return EvaluationResult.failed("Unknown expected behavior: " + expectedBehavior);
+    }
+}
+----
+
+=== Sample Format for Guardrails
+
+[source,yaml]
+----
+- name: on_topic_ai_services
+  parameters:
+    - "How do I use @RegisterAiService?"
+  expected-output: "ACCEPT"
+  tags: ["on-topic", "ai-services"]
+
+- name: on_topic_rag
+  parameters:
+    - "How does RAG work in Quarkus LangChain4j?"
+  expected-output: "ACCEPT"
+  tags: ["on-topic", "rag"]
+
+- name: off_topic_weather
+  parameters:
+    - "What's the weather today?"
+  expected-output: "REJECT"
+  tags: ["off-topic", "weather"]
+
+- name: off_topic_cooking
+  parameters:
+    - "How do I bake a cake?"
+  expected-output: "REJECT"
+  tags: ["off-topic", "cooking"]
+----
+
+=== Metrics to Track
+
+For production guardrails, track these metrics:
+
+* **Accuracy**: Overall percentage of correct classifications
+* **False Positive Rate**: Incorrectly accepted off-topic questions
+* **False Negative Rate**: Incorrectly rejected on-topic questions
+* **Precision**: Of accepted questions, how many were truly on-topic
+* **Recall**: Of all on-topic questions, how many were accepted
+
+Target: 100% accuracy for guardrails, 0% false negatives (security critical)
+
+== Testing REST APIs
+
+You can combine RestAssured with the evaluation framework to test HTTP endpoints:
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+public class RestApiEvaluationTest {
+
+    @Inject
+    LlmJudgeService judgeService;
+
+    @Test
+    public void testRestApi(
+        @ScorerConfiguration(concurrency = 2) Scorer scorer,
+        @SampleLocation("src/test/resources/api-samples.yaml") Samples<String> samples) {
+
+        EvaluationReport<String> report = scorer.evaluate(
+            samples,
+            params -> callApi(params.get(0)),
+            new LlmJudgeEvaluationStrategy(judgeService)
+        );
+
+        assertThat(report).hasScoreGreaterThan(80.0);
+    }
+
+    private String callApi(String input) {
+        try {
+            Response response = RestAssured
+                .given()
+                    .contentType(ContentType.JSON)
+                    .body(Map.of("message", input, "memoryId", UUID.randomUUID().toString()))
+                .when()
+                    .post("/api/chat")
+                .then()
+                    .extract().response();
+
+            int statusCode = response.getStatusCode();
+            String body = response.body().asString();
+
+            // Format for evaluation: encode both status and response
+            return String.format("STATUS:%d|RESPONSE:%s", statusCode, body);
+
+        } catch (Exception e) {
+            return String.format("STATUS:500|ERROR:%s", e.getMessage());
+        }
+    }
+}
+----
+
+Your evaluation strategy can then parse this format:
+
+[source,java]
+----
+public class RestApiEvaluationStrategy implements EvaluationStrategy<String> {
+
+    @Override
+    public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
+        // Parse: "STATUS:200|RESPONSE:..."
+        String[] parts = output.split("\\|", 2);
+        int statusCode = Integer.parseInt(parts[0].replace("STATUS:", ""));
+        String response = parts[1].substring(parts[1].indexOf(":") + 1);
+
+        // Validate based on expected behavior
+        if (statusCode >= 200 && statusCode < 300) {
+            return evaluateSuccessResponse(sample, response);
+        } else {
+            return evaluateErrorResponse(sample, statusCode, response);
+        }
+    }
+}
+----
+
+Sample format for API tests:
+
+[source,yaml]
+----
+- name: successful_query
+  parameters:
+    - "How do I use Quarkus LangChain4j?"
+  expected-output: |
+    Should explain basic setup with dependency and @RegisterAiService.
+  tags: ["success", "on-topic"]
+
+- name: off_topic_rejection
+  parameters:
+    - "What's the weather today?"
+  expected-output: |
+    Should be rejected with appropriate message.
+  tags: ["rejection", "off-topic"]
+
+- name: empty_input_validation
+  parameters:
+    - ""
+  expected-output: |
+    Should return HTTP 400 with validation error.
+  tags: ["validation", "edge-case"]
+----
+
+== Multi-Layered Testing Strategy
+
+[source,java]
+----
+// Level 1: Component Test
+@Test
+void testRetrieverComponent(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> retriever.retrieve(params.get(0)),
+        new KeywordRelevanceStrategy()  // Fast, simple
+    );
+    assertThat(report).hasScoreGreaterThan(70.0);
+}
+
+// Level 2: Integration Test
+@Test
+void testAiServiceWithRetriever(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> aiService.chat(params.get(0)),
+        new SemanticSimilarityStrategy(0.80)  // More sophisticated
+    );
+    assertThat(report).hasScoreGreaterThan(80.0);
+}
+
+// Level 3: End-to-End Test
+@Test
+void testCompleteChatFlow(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> chatService.processMessage(params.get(0)),
+        new SemanticSimilarityStrategy(0.85)
+    );
+    assertThat(report).hasScoreGreaterThan(85.0);
+}
+
+// Level 4: REST API Test
+@Test
+void testRestApiEndpoint(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> callHttpApi(params.get(0)),
+        new LlmJudgeEvaluationStrategy(judge)  // Most thorough
+    );
+    assertThat(report).hasScoreGreaterThan(80.0);
+}
+----
+
+== Testing Edge Cases
+
+Real-world AI applications must handle edge cases gracefully. Include these in your evaluation tests.
+
+=== Common Edge Cases to Test
+
+[source,yaml]
+----
+# Empty input
+- name: empty_message
+  parameters:
+    - ""
+  expected-output: |
+    Should return validation error or prompt user for input.
+  tags: ["edge-case", "validation"]
+
+# Very long input
+- name: very_long_question
+  parameters:
+    - "Can you explain Quarkus LangChain4j in detail including all features like AI services, RAG, evaluation, guardrails, tools, embeddings, chat memory, and how they all work together with examples and best practices for each feature?"
+  expected-output: |
+    Should handle long input gracefully without truncation errors.
+  tags: ["edge-case", "long-input"]
+
+# Special characters
+- name: special_characters
+  parameters:
+    - "How do I use @RegisterAiService & <configure> embeddings? (with examples!)"
+  expected-output: |
+    Should handle special characters correctly in parsing and response.
+  tags: ["edge-case", "special-chars"]
+
+# Multilingual input
+- name: multilingual_question
+  parameters:
+    - "Comment utiliser Quarkus LangChain4j?" # French: How to use
+  expected-output: |
+    Should recognize as on-topic and attempt to answer.
+  tags: ["edge-case", "multilingual"]
+
+# Ambiguous follow-up
+- name: follow_up_without_context
+  parameters:
+    - "Can you explain that in more detail?"
+  expected-output: |
+    Should ask for clarification or context.
+  tags: ["edge-case", "ambiguous"]
+
+# SQL injection attempt
+- name: sql_injection_attempt
+  parameters:
+    - "'; DROP TABLE users; --"
+  expected-output: |
+    Should handle safely without execution or error.
+  tags: ["edge-case", "security"]
+
+# Extremely off-topic
+- name: completely_unrelated
+  parameters:
+    - "What is the meaning of life?"
+  expected-output: "REJECT"
+  tags: ["edge-case", "off-topic"]
+
+# Mixed language
+- name: code_in_question
+  parameters:
+    - "Why does `@Inject ChatModel model;` not work?"
+  expected-output: |
+    Should parse code blocks and provide relevant answer.
+  tags: ["edge-case", "code-snippet"]
+----
+
+== Cost Considerations
+
+Evaluation tests make API calls which incur costs. Estimate costs before running large test suites.
+
+=== Per-Sample Cost Estimation
+
+[source]
+----
+Typical costs per sample (using OpenAI):
+
+RAG Retrieval:
+- Embeddings (text-embedding-3-small): ~$0.001
+- 5 retrievals: ~$0.005
+
+AI Response Generation:
+- Chat completion (gpt-4o-mini): ~$0.01-0.05
+- Depends on context size and response length
+
+LLM as Judge:
+- Evaluation (gpt-4o-mini): ~$0.001-0.003
+- Input: question + expected + actual (~300-600 tokens)
+- Output: JSON judgment (~100-150 tokens)
+
+Guardrail Classification:
+- Topic detection (gpt-4o-mini): ~$0.0001-0.001
+- Very short prompts and responses
+
+Example: 20-sample test suite
+- On-topic: ~$0.015 × 14 = $0.21
+- Off-topic: ~$0.001 × 5 = $0.005
+- Edge cases: ~$0.01 × 1 = $0.01
+- Total: ~$0.22 per test run
+----
+
+=== Cost Optimization Strategies
+
+1. **Use Smaller Models for Evaluation**
++
+[source,java]
+----
+// Use gpt-4o-mini for judges (10x cheaper than gpt-4)
+@RegisterAiService(chatModelName = "gpt-4o-mini")
+public interface LlmJudgeService { ... }
+----
+
+
+2. **Reuse Vector Stores**
+
+
+3. **Filter by Tags**
++
+[source,java]
+----
+// Run only critical tests during development
+Samples<String> criticalOnly = samples.filterByTags("critical");
+----
+
+== Troubleshooting
+
+=== "Duplicate key null" Error
+
+*Full Error:*
+[source]
+----
+java.lang.IllegalStateException: Duplicate key null
+(attempted merging values 0 and 1)
+at io.quarkiverse.langchain4j.deployment.AiServicesProcessor...
+----
+
+*Cause:* Maven compiler not preserving parameter names for `@RegisterAiService` methods
+
+*Solution:* Add to pom.xml:
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <parameters>true</parameters>
+    </configuration>
+</plugin>
+----
+
+Then run: `mvn clean compile test-compile`
+
+=== "File not found" for Sample Loading
+
+*Error:* `File not found: evaluation-samples/samples.yaml`
+
+*Cause:* `@SampleLocation` expects filesystem paths, not classpath paths
+
+*Solution:* Use full path from project root:
+[source,java]
+----
+@SampleLocation("src/test/resources/evaluation-samples/samples.yaml")
+----
+
+=== YAML Parsing Errors
+
+*Error:* `Cannot parse YAML sample file`
+
+*Common causes:*
+
+1. Using `expected` instead of `expected-output`
+2. Using `parameter` instead of `parameters` (must be plural)
+3. Not using list format for parameters
+
+*Solution:* Follow exact YAML format:
+[source,yaml]
+----
+- name: sample1
+  parameters:          # Plural, must be list
+    - "value"
+  expected-output: |   # Hyphenated
+    Expected result
+----
+
+=== Low Evaluation Scores
+
+*Symptom:* Tests consistently scoring lower than expected
+
+*Possible causes:*
+
+1. **Limited RAG Content**
+* Only 3 documentation pages ingested
+* Questions about topics not in those pages will fail
+* Solution: Ingest more relevant documentation
+
+2. **Threshold Too High**
+* AI responses are non-deterministic
+* 100% semantic similarity is unrealistic
+* Solution: Use 70-85% thresholds for semantic similarity
+
+3. **Wrong Evaluation Strategy**
+* Keyword matching too strict for AI responses
+* Solution: Use SemanticSimilarity or AI Judge instead
+
+4. **Poor Sample Quality**
+* Expected outputs too specific or too generic
+* Solution: Review and improve sample quality
+
+*Example adjustments:*
+[source,java]
+----
+// Too strict - may fail
+assertThat(report).hasScoreGreaterThan(95.0);
+
+// Reasonable for AI systems
+assertThat(report).hasScoreGreaterThan(75.0);
 ----
 
 == Example of tests using Quarkus
@@ -396,7 +1736,7 @@ Let's imagine an _AI Service_ used by a Chatbot to generate responses.
 Let's also imagine that this _AI Service_ has access to a (RAG) _content retriever_.
 The associated tests could be:
 
-[source, java]
+[source,java]
 ----
 package dev.langchain4j.quarkus;
 
@@ -408,17 +1748,17 @@ import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.query.Metadata;
-import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
-import io.quarkiverse.langchain4j.scorer.junit5.SampleLocation;
-import io.quarkiverse.langchain4j.scorer.junit5.ScorerConfiguration;
-import io.quarkiverse.langchain4j.testing.scorer.EvaluationReport;
-import io.quarkiverse.langchain4j.testing.scorer.EvaluationSample;
-import io.quarkiverse.langchain4j.testing.scorer.EvaluationStrategy;
-import io.quarkiverse.langchain4j.testing.scorer.Parameters;
-import io.quarkiverse.langchain4j.testing.scorer.Samples;
-import io.quarkiverse.langchain4j.testing.scorer.Scorer;
-import io.quarkiverse.langchain4j.testing.scorer.judge.AiJudgeStrategy;
-import io.quarkiverse.langchain4j.testing.scorer.similarity.SemanticSimilarityStrategy;
+import io.quarkiverse.langchain4j.evaluation.junit5.Evaluate;
+import io.quarkiverse.langchain4j.evaluation.junit5.SampleLocation;
+import io.quarkiverse.langchain4j.evaluation.junit5.ScorerConfiguration;
+import io.quarkiverse.langchain4j.testing.evaluation.EvaluationReport;
+import io.quarkiverse.langchain4j.testing.evaluation.EvaluationSample;
+import io.quarkiverse.langchain4j.testing.evaluation.EvaluationStrategy;
+import io.quarkiverse.langchain4j.testing.evaluation.Parameters;
+import io.quarkiverse.langchain4j.testing.evaluation.Samples;
+import io.quarkiverse.langchain4j.testing.evaluation.Scorer;
+import io.quarkiverse.langchain4j.testing.evaluation.judge.AiJudgeStrategy;
+import io.quarkiverse.langchain4j.testing.evaluation.similarity.SemanticSimilarityStrategy;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -432,7 +1772,7 @@ import java.util.function.Function;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
-@AiScorer
+@Evaluate
 public class AssistantTest {
 
     // Just a function calling the AI Service and returning the response as a String.
@@ -504,7 +1844,7 @@ public class AssistantTest {
     public static class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<String>> {
 
         @Override
-        public boolean evaluate(EvaluationSample<List<String>> sample, List<String> response) {
+        public EvaluationResult evaluate(EvaluationSample<List<String>> sample, List<String> response) {
             List<String> expected = sample.expectedOutput();
             int found = 0;
             for (String seg : expected) {
@@ -521,17 +1861,26 @@ public class AssistantTest {
                     System.out.println("Segment not found: " + seg);
                 }
             }
-            return found == expected.size();
+            double score = (double) found / expected.size();
+            boolean passed = found == expected.size();
+
+            if (passed) {
+                return EvaluationResult.passed(score)
+                    .withExplanation(String.format("Found %d of %d expected segments", found, expected.size()));
+            } else {
+                return EvaluationResult.failed(score,
+                    String.format("Found %d of %d expected segments", found, expected.size()));
+            }
         }
 
     }
 }
 ----
 
-This test class demonstrates how to use the `ScorerExtension` to evaluate an AI Service and a RAG retriever using different strategies.
+This test class demonstrates how to use the `EvaluationExtension` to evaluate an AI Service and a RAG retriever using different strategies.
 The associated samples are:
 
-[source, yaml]
+[source,yaml]
 ----
 ---
 - name: "car types"
@@ -591,7 +1940,7 @@ The associated samples are:
 
 and for the content retriever:
 
-[source, yaml]
+[source,yaml]
 ----
 ---
 - name: cancellation_policy_test

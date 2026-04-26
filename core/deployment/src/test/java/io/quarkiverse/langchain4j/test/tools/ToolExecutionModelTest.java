@@ -41,6 +41,7 @@ import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.test.Lists;
 import io.quarkus.arc.Arc;
@@ -80,7 +81,7 @@ public class ToolExecutionModelTest {
             try {
                 Arc.container().requestContext().activate();
                 aiService.hello("abc", "hi - " + uuid);
-            } catch (IllegalStateException e) {
+            } catch (BlockingToolNotAllowedException e) {
                 failure.set(e);
             } finally {
                 Arc.container().requestContext().deactivate();
@@ -249,7 +250,7 @@ public class ToolExecutionModelTest {
             try {
                 Arc.container().requestContext().activate();
                 aiService.hello("abc", "hiVirtualThread - " + uuid);
-            } catch (IllegalStateException e) {
+            } catch (BlockingToolNotAllowedException e) {
                 failure.set(e);
             } finally {
                 Arc.container().requestContext().deactivate();

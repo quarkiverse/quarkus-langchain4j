@@ -6,12 +6,16 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.model.anthropic.AnthropicChatModel;
+import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.anthropic.runtime.AnthropicRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -33,6 +37,13 @@ import io.smallrye.config.Priorities;
 public class AnthropicProcessor {
     private static final String FEATURE = "langchain4j-anthropic";
     private static final String PROVIDER = "anthropic";
+
+    private static final DotName ANTHROPIC_CHAT_MODEL_BUILDER = DotName
+            .createSimple(AnthropicChatModel.AnthropicChatModelBuilder.class);
+    private static final DotName ANTHROPIC_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(AnthropicStreamingChatModel.AnthropicStreamingChatModelBuilder.class);
+    private static final AnnotationInstance ANY = AnnotationInstance
+            .builder(DotName.createSimple(Any.class)).build();
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -62,6 +73,10 @@ public class AnthropicProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(ANTHROPIC_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.chatModel(configName));
 
                 addQualifierIfNecessary(builder, configName);
@@ -74,6 +89,11 @@ public class AnthropicProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(ANTHROPIC_STREAMING_CHAT_MODEL_BUILDER) },
+                                        null) },
+                                null), ANY)
                         .createWith(recorder.streamingChatModel(configName));
 
                 addQualifierIfNecessary(streamingBuilder, configName);

@@ -1,9 +1,16 @@
 package io.quarkiverse.langchain4j.infinispan.runtime;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
+/**
+ * Represents an embedding stored in Infinispan.
+ * Holds the embedding vector, optional text content, and a set of typed metadata entries.
+ * This is the object that gets serialized to and from Infinispan using Protobuf.
+ */
 public class LangchainInfinispanItem {
 
     private String id;
@@ -12,68 +19,49 @@ public class LangchainInfinispanItem {
 
     private String text;
 
-    private List<String> metadataKeys;
+    private Set<LangchainMetadata> metadata;
 
-    private List<String> metadataValues;
+    private Map<String, Object> metadataMap;
 
-    public LangchainInfinispanItem(String id, float[] floatVector, String text, List<String> metadataKeys,
-            List<String> metadataValues) {
+    public LangchainInfinispanItem(String id, float[] floatVector, String text, Set<LangchainMetadata> metadata,
+            Map<String, Object> metadataMap) {
         this.id = id;
         this.floatVector = floatVector;
         this.text = text;
-        this.metadataKeys = metadataKeys;
-        this.metadataValues = metadataValues;
+        this.metadata = metadata;
+        this.metadataMap = metadataMap;
     }
 
-    /**
-     * the id of the embedding
-     *
-     * @return id
-     */
     public String getId() {
         return id;
     }
 
-    /**
-     * Vector
-     *
-     * @return the vector
-     */
     public float[] getFloatVector() {
         return floatVector;
     }
 
-    /**
-     * Maps to the text segment text
-     *
-     * @return text
-     */
     public String getText() {
         return text;
     }
 
-    /**
-     * Maps to the text segment metadata keys
-     *
-     * @return metadata keys
-     */
-    public List<String> getMetadataKeys() {
-        return metadataKeys;
+    public Set<LangchainMetadata> getMetadata() {
+        return metadata;
     }
 
-    /**
-     * Maps to the text segment metadata values
-     *
-     * @return metadata values
-     */
-    public List<String> getMetadataValues() {
-        return metadataValues;
+    public Map<String, Object> getMetadataMap() {
+        if (metadataMap == null && metadata != null) {
+            metadataMap = new HashMap<>();
+            for (LangchainMetadata meta : metadata) {
+                metadataMap.put(meta.getName(), meta.getValue());
+            }
+        }
+        return metadataMap;
     }
 
     @Override
     public String toString() {
         return "LangchainInfinispanItem{" + "id='" + id + '\'' + ", floatVector=" + Arrays.toString(floatVector)
-                + ", text='" + text + '\'' + ", metadataKeys=" + metadataKeys + ", metadataValues=" + metadataValues + '}';
+                + ", text='" + text + '\'' + ", metadata=" + metadata + '}';
     }
 
     @Override
@@ -84,14 +72,12 @@ public class LangchainInfinispanItem {
             return false;
         LangchainInfinispanItem that = (LangchainInfinispanItem) o;
         return Objects.equals(id, that.id) && Arrays.equals(floatVector, that.floatVector) && Objects.equals(text,
-                that.text) && Objects.equals(metadataKeys, that.metadataKeys)
-                && Objects.equals(metadataValues,
-                        that.metadataValues);
+                that.text) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(id, text, metadataKeys, metadataValues);
+        int result = Objects.hash(id, text, metadata);
         result = 31 * result + Arrays.hashCode(floatVector);
         return result;
     }

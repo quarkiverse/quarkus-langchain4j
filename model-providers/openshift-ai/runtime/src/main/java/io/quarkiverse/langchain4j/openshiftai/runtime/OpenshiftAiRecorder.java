@@ -6,20 +6,29 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.Function;
+
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class OpenshiftAiRecorder {
+
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenshiftAiChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private static final String DUMMY_URL = "https://dummy.ai/api";
     private static final String DUMMY_MODEL_ID = "dummy";
@@ -31,7 +40,7 @@ public class OpenshiftAiRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
-    public Supplier<ChatModel> chatModel(String configName) {
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         LangChain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig = correspondingOpenshiftAiConfig(
                 runtimeConfig.getValue(), configName);
 
@@ -61,16 +70,19 @@ public class OpenshiftAiRecorder {
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openshiftAiConfig.logResponses()))
                     .modelId(modelId);
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatModel get() {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     return new DisabledChatModel();
                 }
             };

@@ -8,13 +8,13 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.exception.ToolExecutionException;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.quarkiverse.langchain4j.guardrails.ToolGuardrailException;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolInvocationContext;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
+import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 
@@ -68,7 +68,7 @@ public class ToolGuardrailsWrapper implements QuarkusToolExecutor.Wrapper {
         // Check if we're on the Vert.x event loop
         // If so, dispatch guardrail execution to worker thread to prevent blocking
         if (io.vertx.core.Context.isOnEventLoopThread()) {
-            throw new ToolExecutionException(
+            throw new BlockingToolNotAllowedException(
                     "Cannot execute guardrails tools on the event loop thread. Make sure your tool function is marked or detected as blocking.");
         }
 
@@ -114,7 +114,7 @@ public class ToolGuardrailsWrapper implements QuarkusToolExecutor.Wrapper {
                 }
             } catch (ToolGuardrailException e) {
                 // Check if this is a fatal failure (has a cause)
-                if (e.getCause() != null) {
+                if (e.isFatal()) {
                     // Fatal failure - re-throw to stop execution
                     log.errorv("Input guardrail failed fatally for tool {0}: {1}",
                             toolExecutionRequest.name(), e.getMessage());
@@ -161,7 +161,7 @@ public class ToolGuardrailsWrapper implements QuarkusToolExecutor.Wrapper {
                 }
             } catch (ToolGuardrailException e) {
                 // Check if this is a fatal failure (has a cause)
-                if (e.getCause() != null) {
+                if (e.isFatal()) {
                     // Fatal failure - re-throw to stop execution
                     log.errorv("Output guardrail failed fatally for tool {0}: {1}",
                             toolExecutionRequest.name(), e.getMessage());

@@ -6,8 +6,10 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
@@ -15,12 +17,15 @@ import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import dev.langchain4j.mcp.client.protocol.McpClientMessage;
-import dev.langchain4j.mcp.client.protocol.McpInitializationNotification;
-import dev.langchain4j.mcp.client.protocol.McpInitializeRequest;
+import dev.langchain4j.mcp.client.McpCallContext;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
+import dev.langchain4j.mcp.protocol.McpClientMessage;
+import dev.langchain4j.mcp.protocol.McpInitializationNotification;
+import dev.langchain4j.mcp.protocol.McpInitializeRequest;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.mcp.auth.McpAuthenticationException;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.quarkus.tls.TlsConfiguration;
@@ -41,6 +46,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     private volatile McpPostEndpoint postEndpoint;
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
+    private final McpHeadersSupplier headersSupplier;
 
     private volatile Runnable onFailure;
     private volatile boolean closed;
@@ -71,6 +77,13 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (mcpClientAuthProvider != null) {
             clientBuilder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
+        this.headersSupplier = getOrDefault(builder.headersSupplier, new McpHeadersSupplier() {
+            @Override
+            public Map<String, String> apply(McpCallContext i) {
+                return Map.of();
+            }
+        });
+        clientBuilder.register(new McpHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             clientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             clientBuilder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -90,6 +103,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (mcpClientAuthProvider != null) {
             builder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
+        builder.register(new McpHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             builder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -122,17 +136,39 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
     @Override
     public CompletableFuture<JsonNode> executeOperationWithResponse(McpClientMessage operation) {
-        return execute(operation, operation.getId()).subscribeAsCompletionStage();
+        McpCallContext context = new McpCallContext(null, operation);
+        return execute(context, operation.getId()).subscribeAsCompletionStage();
+    }
+
+    @Override
+    public CompletableFuture<JsonNode> executeOperationWithResponse(McpCallContext context) {
+        return execute(context, context.message().getId()).subscribeAsCompletionStage();
     }
 
     @Override
     public void executeOperationWithoutResponse(McpClientMessage operation) {
-        execute(operation, null).subscribe().with(ignored -> {
+        McpCallContext context = new McpCallContext(null, operation);
+        execute(context, null).subscribe().with(ignored -> {
         });
     }
 
-    private Uni<JsonNode> execute(McpClientMessage request, Long id) {
+    @Override
+    public void executeOperationWithoutResponse(McpCallContext context) {
+        execute(context, null).subscribe().with(ignored -> {
+        });
+    }
+
+    private Uni<JsonNode> execute(McpClientMessage message, Long id) {
+        McpCallContext context = new McpCallContext(null, message);
+        return execute(context, id);
+    }
+
+    private Uni<JsonNode> execute(McpCallContext context, Long id) {
+        // NOTE: the id parameter is necessary because it will be null for responses to server-initiated operations
+        // even though the ID inside the message itself will be set to an actual number, and in these cases
+        // we don't want to register the operation in the operation handler
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
+        McpClientMessage request = context.message();
         Uni<JsonNode> uni = Uni.createFrom().completionStage(future);
         if (id != null) {
             operationHandler.startOperation(id, future);
@@ -142,7 +178,12 @@ public class QuarkusHttpMcpTransport implements McpTransport {
                 .onItem().invoke(response -> {
                     int statusCode = response.getStatus();
                     if (!isExpectedStatusCode(statusCode)) {
-                        future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
+                        if (statusCode == 401) {
+                            String wwwAuth = response.getHeaderString("WWW-Authenticate");
+                            future.completeExceptionally(new McpAuthenticationException(statusCode, wwwAuth));
+                        } else {
+                            future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
+                        }
                     }
                     // For messages with null ID, we don't wait for a response in the SSE channel,
                     // so if the server accepted the request, we consider the operation done
@@ -203,6 +244,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         private boolean logResponses = false;
         private TlsConfiguration tlsConfiguration;
         private McpClientAuthProvider mcpClientAuthProvider;
+        private McpHeadersSupplier headersSupplier;
 
         /**
          * The initial URL where to connect to the server and request a SSE
@@ -240,6 +282,26 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
         public QuarkusHttpMcpTransport.Builder mcpClientAuthProvider(McpClientAuthProvider mcpClientAuthProvider) {
             this.mcpClientAuthProvider = mcpClientAuthProvider;
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder headers(Map<String, String> headers) {
+            this.headersSupplier = new McpHeadersSupplier() {
+                @Override
+                public Map<String, String> apply(McpCallContext i) {
+                    return headers;
+                }
+            };
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder headers(Supplier<Map<String, String>> headersSupplier) {
+            this.headersSupplier = new McpHeadersSupplier() {
+                @Override
+                public Map<String, String> apply(McpCallContext i) {
+                    return headersSupplier.get();
+                }
+            };
             return this;
         }
 

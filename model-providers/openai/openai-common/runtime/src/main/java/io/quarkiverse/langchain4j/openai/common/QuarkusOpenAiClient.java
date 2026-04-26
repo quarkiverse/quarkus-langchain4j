@@ -98,9 +98,10 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             .connectTimeout(builder.getConnectTimeout().toSeconds(), TimeUnit.SECONDS)
                             .readTimeout(builder.getReadTimeout().toSeconds(), TimeUnit.SECONDS);
                     boolean logResponses = builder.logResponses || builder.logStreamingResponses;
-                    if (builder.logRequests || logResponses) {
+                    if (builder.logRequests || logResponses || builder.logCurl) {
                         restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                        restApiBuilder.clientLogger(new OpenAiRestApi.OpenAiClientLogger(builder.logRequests, logResponses));
+                        restApiBuilder.clientLogger(
+                                new OpenAiRestApi.OpenAiClientLogger(builder.logRequests, logResponses, builder.logCurl));
                     }
                     if (builder.proxy != null) {
                         if (builder.proxy.type() != Proxy.Type.HTTP) {
@@ -121,12 +122,12 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             }
                         });
                     }
-                    if (builder.customHeaders != null) {
+                    if (builder.customHeadersSupplier != null) {
                         restApiBuilder.clientHeadersFactory(new ClientHeadersFactory() {
                             @Override
                             public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
                                     MultivaluedMap<String, String> clientOutgoingHeaders) {
-                                return new MultivaluedHashMap(builder.customHeaders);
+                                return new MultivaluedHashMap(builder.customHeadersSupplier.get());
                             }
                         });
                     }
@@ -386,6 +387,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             var result = new Builder();
             result.configName(AdditionalPropertiesHack.getAndClearConfigName());
             result.tlsConfigurationName(AdditionalPropertiesHack.getAndClearTlsConfigurationName());
+            result.logCurl(AdditionalPropertiesHack.getAndClearLogCurl());
+            result.proxy(AdditionalPropertiesHack.getAndClearProxy());
             return result;
         }
     }
@@ -405,6 +408,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
         public Proxy proxy;
         public boolean logStreamingResponses;
+        public boolean logCurl;
 
         public Duration getConnectTimeout() {
             return connectTimeout == null ? Duration.ofSeconds(60) : connectTimeout;
@@ -446,6 +450,11 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
         public Builder logStreamingResponses(boolean logStreamingResponses) {
             this.logStreamingResponses = logStreamingResponses;
+            return this;
+        }
+
+        public Builder logCurl(boolean logCurl) {
+            this.logCurl = logCurl;
             return this;
         }
 
@@ -495,7 +504,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             }
             Builder builder = (Builder) o;
             return logRequests == builder.logRequests && logResponses == builder.logResponses
-                    && logStreamingResponses == builder.logStreamingResponses && Objects.equals(baseUrl, builder.baseUrl)
+                    && logStreamingResponses == builder.logStreamingResponses
+                    && logCurl == builder.logCurl && Objects.equals(baseUrl, builder.baseUrl)
                     && Objects.equals(apiVersion, builder.apiVersion) && Objects.equals(openAiApiKey,
                             builder.openAiApiKey)
                     && Objects.equals(azureApiKey, builder.azureApiKey)
@@ -514,7 +524,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         public int hashCode() {
             return Objects.hash(baseUrl, apiVersion, openAiApiKey, azureApiKey, organizationId, callTimeout, connectTimeout,
                     readTimeout,
-                    writeTimeout, proxy, logRequests, logResponses, logStreamingResponses, userAgent, azureAdToken, configName);
+                    writeTimeout, proxy, logRequests, logResponses, logStreamingResponses, logCurl, userAgent, azureAdToken,
+                    configName);
         }
     }
 

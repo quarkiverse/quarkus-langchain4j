@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.jaxrsclient;
 
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,9 @@ import dev.langchain4j.http.client.HttpRequest;
 import dev.langchain4j.http.client.SuccessfulHttpResponse;
 import dev.langchain4j.http.client.sse.ServerSentEventListener;
 import dev.langchain4j.http.client.sse.ServerSentEventParser;
+import io.quarkus.runtime.BlockingOperationControl;
 import io.quarkus.tls.TlsConfiguration;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.SSLOptions;
 import io.vertx.core.net.TrustOptions;
@@ -107,7 +110,9 @@ public class JaxRsHttpClient implements HttpClient {
         for (var headers : request.headers().entrySet()) {
             List<String> values = headers.getValue();
             if ((values != null) && (!values.isEmpty())) {
-                invocationBuilder.header(headers.getKey(), values);
+                for (String value : values) {
+                    invocationBuilder.header(headers.getKey(), value);
+                }
             }
         }
 
@@ -130,6 +135,52 @@ public class JaxRsHttpClient implements HttpClient {
 
     @Override
     public void execute(HttpRequest request, ServerSentEventParser parser, ServerSentEventListener listener) {
+        if (!BlockingOperationControl.isBlockingAllowed()) {
+            Infrastructure.getDefaultExecutor().execute(() -> executeBlocking(request, parser, listener));
+            return;
+        }
+        executeBlocking(request, parser, listener);
+    }
 
+    private void executeBlocking(HttpRequest request, ServerSentEventParser parser, ServerSentEventListener listener) {
+        try {
+            WebTarget target = delegate.target(request.url());
+            Invocation.Builder invocationBuilder = target.request();
+
+            for (var headers : request.headers().entrySet()) {
+                List<String> values = headers.getValue();
+                if ((values != null) && (!values.isEmpty())) {
+                    for (String value : values) {
+                        invocationBuilder.header(headers.getKey(), value);
+                    }
+                }
+            }
+
+            try (Response response = switch (request.method()) {
+                case GET -> invocationBuilder.get();
+                case POST -> invocationBuilder.post(Entity.json(request.body()));
+                case DELETE -> invocationBuilder.delete();
+            }) {
+                if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                    HttpException httpException = new HttpException(response.getStatus(), response.readEntity(String.class));
+                    listener.onError(httpException);
+                    return;
+                }
+
+                listener.onOpen(SuccessfulHttpResponse.builder()
+                        .statusCode(response.getStatus())
+                        .headers(response.getStringHeaders())
+                        .body(null)
+                        .build());
+
+                try (InputStream inputStream = response.readEntity(InputStream.class)) {
+                    parser.parse(inputStream, listener);
+                }
+            }
+        } catch (Throwable t) {
+            listener.onError(t);
+        } finally {
+            listener.onClose();
+        }
     }
 }

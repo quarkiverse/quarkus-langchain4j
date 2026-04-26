@@ -64,7 +64,7 @@ class McpTlsHttpTransportTest extends McpTlsTestBase {
     @AfterAll
     static void teardown() {
         if (process != null && process.isAlive()) {
-            process.destroyForcibly();
+            McpServerHelper.destroyProcessTree(process);
         }
     }
 }

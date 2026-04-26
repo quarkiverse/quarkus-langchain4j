@@ -53,6 +53,7 @@ public record ToolOutputGuardrailResult(
         boolean isSuccess,
         String errorMessage,
         Throwable cause,
+        boolean isFatalFailure,
         dev.langchain4j.service.tool.ToolExecutionResult modifiedResult)
         implements
             ToolGuardrailResult<ToolOutputGuardrailResult> {
@@ -66,7 +67,7 @@ public record ToolOutputGuardrailResult(
      * @return a success result
      */
     public static ToolOutputGuardrailResult success() {
-        return new ToolOutputGuardrailResult(true, null, null, null);
+        return new ToolOutputGuardrailResult(true, null, null, false, null);
     }
 
     /**
@@ -81,7 +82,7 @@ public record ToolOutputGuardrailResult(
      * @return a success result with result modification
      */
     public static ToolOutputGuardrailResult successWith(dev.langchain4j.service.tool.ToolExecutionResult modifiedResult) {
-        return new ToolOutputGuardrailResult(true, null, null, modifiedResult);
+        return new ToolOutputGuardrailResult(true, null, null, false, modifiedResult);
     }
 
     /**
@@ -95,7 +96,7 @@ public record ToolOutputGuardrailResult(
      * @return a failure result
      */
     public static ToolOutputGuardrailResult failure(String errorMessage) {
-        return new ToolOutputGuardrailResult(false, errorMessage, null, null);
+        return new ToolOutputGuardrailResult(false, errorMessage, null, false, null);
     }
 
     /**
@@ -109,7 +110,21 @@ public record ToolOutputGuardrailResult(
      * @param cause the exception that caused the failure
      * @return a fatal failure result
      */
-    public static ToolOutputGuardrailResult failure(String errorMessage, Throwable cause) {
-        return new ToolOutputGuardrailResult(false, errorMessage, cause, null);
+    public static ToolOutputGuardrailResult fatal(String errorMessage, Throwable cause) {
+        return new ToolOutputGuardrailResult(false, errorMessage, cause, true, null);
+    }
+
+    /**
+     * Creates a fatal failure result with an error message and exception.
+     * <p>
+     * The exception will be thrown, stopping the conversation. This should be used for
+     * critical failures that cannot be recovered from, such as system errors or security violations.
+     * </p>
+     *
+     * @param failure the exception that caused the failure
+     * @return a fatal failure result
+     */
+    public static ToolOutputGuardrailResult fatal(Throwable failure) {
+        return new ToolOutputGuardrailResult(false, failure.getMessage(), failure.getCause(), true, null);
     }
 }

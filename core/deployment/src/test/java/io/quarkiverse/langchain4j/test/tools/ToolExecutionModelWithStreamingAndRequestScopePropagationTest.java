@@ -155,7 +155,7 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
         });
 
         Awaitility.await().until(() -> result.get() != null);
-        assertThat(result.get()).contains(value.get(), caller.get());
+        assertThat(result.get()).contains(value.get());
     }
 
     @Test

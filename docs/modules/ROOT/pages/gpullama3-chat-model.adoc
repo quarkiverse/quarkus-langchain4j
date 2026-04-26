@@ -3,48 +3,67 @@
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-https://github.com/beehive-lab/GPULlama3.java[GPULlama3.java] provides a *Java-native implementation of Llama3* that runs entirely in Java and executes automatically on GPUs via https://github.com/beehive-lab/TornadoVM[TornadoVM].
+https://github.com/beehive-lab/GPULlama3.java[GPULlama3.java] provides a *Java-native implementation* of LLMs that runs entirely in Java and executes automatically on GPUs via https://github.com/beehive-lab/TornadoVM[TornadoVM].
 
-This extension allows Quarkus applications to use locally hosted Llama3 and other compatible models (e.g., *Mistral*, *Qwen3*, *Phi3*) for chat-based inference, leveraging GPU acceleration without requiring native CUDA code.
+This extension allows Quarkus applications to use locally hosted LLMs (*Llama3*, *Mistral*, *Qwen2.5*, *Deepseek-R1-Distill-Qwen*, *Qwen3*, *Phi3*, *IBM Granite 3.2+*, *IBM Granite 4.0*) for chat-based inference, leveraging GPU acceleration without requiring native CUDA code.
+
+https://github.com/beehive-lab/gpullama3-quarkus-langchain4j-demo[Here] you can see a collection of demo Quarkus applications with GPULlama3.java!
 
 [#_prerequisites]
 == Prerequisites
 
-=== Java Version and TornadoVM
+=== Java Version and TornadoVM SDK
+Provided support for JDK 21 and JDK 25.
+JDK version leads to different TornadoVM SDK.
+Install both with SDKMAN!:
 
-GPULlama3.java requires *Java 21 or later* due to its use of the https://openjdk.org/jeps/448[Java Vector API] and TornadoVM integration.
+.Available TornadoVM backends
+NOTE: opencl, ptx, spirv, full
 
-Install TornadoVM locally as follows:
-
+* JDK 21:
 [source,shell]
 ----
-cd ~
-git clone git@github.com:beehive-lab/TornadoVM.git
-cd ~/TornadoVM
-./bin/tornadovm-installer --jdk jdk21 --backend opencl
-source setvars.sh
+# Java version
+sdk install java 21.0.2-open
+sdk use java 21.0.2-open
+
+# TornadoVM SDK
+sdk install tornadovm 3.0.0-<backend>
+sdk use tornadovm 3.0.0-<backend>
+----
+* JDK 25:
+[source,shell]
+----
+# Java version
+sdk install java 25.0.2-open
+sdk use java 25.0.2-open
+
+# TornadoVM SDK
+sdk install tornadovm 3.0.0-jdk25-<backend>
+sdk use tornadovm 3.0.0-jdk25-<backend>
 ----
 
-The above steps:
+To verify installation:
+[source, shell]
+----
+tornado --devices
+tornado --version
+----
 
-- Set the `TORNADOVM_SDK` environment variable to the TornadoVM SDK path.
-- Create a `tornado-argfile` under `~/TornadoVM` containing the JVM arguments required to enable TornadoVM.
+The TornadoVM installation:
+
+- Sets the `TORNADOVM_HOME` environment variable to the TornadoVM SDK path.
+- `TORNADOVM_HOME` contains the `tornado-argfile` with all the JVM arguments required to enable TornadoVM.
 - ⚠️ The `tornado-argfile` should be used for *building* and *running* the Quarkus application (see section Building & Running the Quarkus Application).
 
 == Using GPULlama3.java
 
 To integrate the GPULlama3 chat model into your Quarkus application, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-gpu-llama3
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
-Important: If no other LLM extension is configured, xref:ai-services.adoc[AI Services] will automatically use the GPU-accelerated GPULlama3!
+IMPORTANT: If no other LLM extension is configured, xref:ai-services.adoc[AI Services] will automatically use the GPU-accelerated GPULlama3!
 
 Sample implementation for ChatModel:
 [source,java]
@@ -138,16 +157,16 @@ To run your Quarkus application in **dev mode** with TornadoVM:
 1. Ensure your `pom.xml` contains the `quarkus-langchain4j-gpu-llama3` dependency (shown earlier).
 
 2. Add the TornadoVM argfile as a Maven property:
-
++
 [source,xml]
 ----
 <properties>
-    <tornado.argfile>/path/to/tornado-argfile</tornado.argfile>
+    <tornado.argfile>${env.TORNADOVM_HOME}/tornado-argfile</tornado.argfile>
 </properties>
 ----
-
++
 3. Pass the argfile to the JVM in the plugin configuration for dev mode:
-
++
 [source,xml]
 ----
 <plugin>
@@ -158,9 +177,9 @@ To run your Quarkus application in **dev mode** with TornadoVM:
     </configuration>
 </plugin>
 ----
-
++
 4. Launch dev mode explicitly:
-
++
 [source,shell]
 ----
 mvn quarkus:dev
@@ -173,29 +192,31 @@ mvn quarkus:dev
 To build and run your application in **production mode**:
 
 1. Build the Quarkus application:
-
++
 [source,shell]
 ----
 mvn clean package
 ----
-
++
 2. Run the generated jar with the TornadoVM argfile:
-
++
 [source,shell]
 ----
-java @/path/to/tornado-argfile -jar target/quarkus-app/quarkus-run.jar
+java @$TORNADOVM_HOME/tornado-argfile -jar target/quarkus-app/quarkus-run.jar
 ----
 
-⚠ **Important:** Ensure `TORNADOVM_SDK` and the `tornado-argfile` path are correctly set.
+IMPORTANT: Ensure `TORNADOVM_SDK` and the `tornado-argfile` path are correctly set.
 
 
 == Supported Models and Quantizations
 
-The following models have been tested with GPULlama3.java and can be found in link:++https://huggingface.co/beehive-lab/collections[Beehive Lab's HuggingFace Collections].
+The following models have been tested with GPULlama3.java and can be found in https://huggingface.co/beehive-lab/collections[Beehive Lab's HuggingFace Collections].
 
-⚠️ **Important:**
+[IMPORTANT]
+====
 Quantization format names are model-dependent. Some models require `F16`, others `fp16` (lowercase), as defined in their GGUF files.
 Use **exactly** the spelling listed below, or the model may fail to load.
+====
 
 [cols="2a,1,3a", options="header"]
 |===
@@ -217,6 +238,11 @@ Use **exactly** the spelling listed below, or the model may fail to load.
 | **Phi 3 Mini 4k**| `Q8_0` |`bartowski/Phi-3-mini-4k-instruct-GGUF`
 | **Phi 3 Mini 128k** | `Q8_0` | `QuantFactory/Phi-3-mini-4k-instruct-GGUF`
 | **Phi 3.1 Mini 128k** | `Q8_0` | `bartowski/Phi-3.1-mini-128k-instruct-GGUF`
+| **Granite 3.2 2B** | `F16`, `Q8_0` | `ibm-research/granite-3.2-2b-instruct-GGUF`
+| **Granite 3.2 8B** | `F16`, `Q8_0` | `ibm-research/granite-3.2-8b-instruct-GGUF`
+| **Granite 3.3 2B** | `F16`, `Q8_0` | `ibm-research/granite-3.3-2b-instruct-GGUF`
+| **Granite 3.3 8B** | `F16`, `Q8_0` | `ibm-research/granite-3.3-8b-instruct-GGUF`
+| **Granite 4.0 1B** | `F16`, `Q8_0` | `ibm-research/granite-4.0-1b-instruct-GGUF`
 |===
 
 Each entry corresponds to a GGUF model tested to run on TornadoVM via GPULlama3.java.
@@ -229,5 +255,5 @@ include::includes/quarkus-langchain4j-gpu-llama3.adoc[leveloffset=+1,opts=option
 == Limitations
 
 * TornadoVM currently does **not** support GraalVM Native Image builds.
-* Ensure that the TornadoVM environment (`TORNADOVM_SDK` and `tornado-argfile`) is properly set before running Quarkus.
+* Ensure that the TornadoVM environment (`TORNADOVM_HOME` and `tornado-argfile`) is properly set before running Quarkus.
 * Only Java 21 or newer versions are supported.

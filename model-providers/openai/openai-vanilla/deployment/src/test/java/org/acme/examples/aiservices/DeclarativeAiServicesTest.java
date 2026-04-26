@@ -593,6 +593,89 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         });
     }
 
+    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @ApplicationScoped
+    interface MultiImageDescriber {
+
+        @UserMessage("Describe all {count} images")
+        String describeAll(int count, List<Image> images);
+    }
+
+    @Inject
+    MultiImageDescriber multiImageDescriber;
+
+    @Test
+    public void test_multi_image_describer() throws Exception {
+        wiremock().register(post(urlEqualTo("/v1/chat/completions"))
+                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "id": "chatcmpl-123",
+                                  "object": "chat.completion",
+                                  "created": 1677652288,
+                                  "model": "gpt-4o-mini",
+                                  "system_fingerprint": "fp_44709d6fcb",
+                                  "choices": [{
+                                    "index": 0,
+                                    "message": {
+                                      "role": "assistant",
+                                      "content": "Two images described"
+                                    },
+                                    "logprobs": null,
+                                    "finish_reason": "stop"
+                                  }],
+                                  "usage": {
+                                    "prompt_tokens": 9,
+                                    "completion_tokens": 12,
+                                    "total_tokens": 21,
+                                    "completion_tokens_details": {
+                                      "reasoning_tokens": 0
+                                    }
+                                  }
+                                }
+                                """)));
+
+        var images = List.of(
+                Image.builder().url("https://example.com/img1.png").build(),
+                Image.builder().url("https://example.com/img2.png").build());
+
+        String response = multiImageDescriber.describeAll(2, images);
+
+        assertThat(response).isEqualTo("Two images described");
+
+        Map<String, Object> requestAsMap = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0)));
+        assertMessages(requestAsMap, new Consumer<>() {
+            @Override
+            public void accept(List<? extends Map> maps) {
+                assertThat(maps).singleElement().satisfies((Consumer<Map>) map -> {
+                    assertThat(map).containsEntry("role", "user").containsKey("content");
+                    assertThat(map.get("content")).isInstanceOfSatisfying(List.class, contents -> {
+                        // text + 2 images = 3 content parts
+                        assertThat(contents).hasSize(3);
+                        assertThat(contents.get(0)).isInstanceOfSatisfying(Map.class, content -> {
+                            assertThat(content).containsEntry("type", "text")
+                                    .containsEntry("text", "Describe all 2 images");
+                        });
+                        assertThat(contents.get(1)).isInstanceOfSatisfying(Map.class, content -> {
+                            assertThat(content).containsEntry("type", "image_url");
+                            assertThat(content.get("image_url")).isInstanceOfSatisfying(Map.class,
+                                    imageUrlMap -> assertThat(imageUrlMap).containsEntry("url",
+                                            "https://example.com/img1.png"));
+                        });
+                        assertThat(contents.get(2)).isInstanceOfSatisfying(Map.class, content -> {
+                            assertThat(content).containsEntry("type", "image_url");
+                            assertThat(content.get("image_url")).isInstanceOfSatisfying(Map.class,
+                                    imageUrlMap -> assertThat(imageUrlMap).containsEntry("url",
+                                            "https://example.com/img2.png"));
+                        });
+                    });
+                });
+            }
+        });
+    }
+
     @RegisterAiService
     @Named("namedAssistant")
     @ApplicationScoped

@@ -8,14 +8,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.bedrock.BedrockChatModel;
+import dev.langchain4j.model.bedrock.BedrockChatRequestParameters;
 import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
+import dev.langchain4j.model.bedrock.BedrockGuardrailConfiguration;
 import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockTitanEmbeddingModel;
 import dev.langchain4j.model.chat.ChatModel;
@@ -23,10 +25,11 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.AwsClientConfig;
+import io.quarkiverse.langchain4j.bedrock.runtime.config.GuardrailConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.LangChain4jBedrockConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
@@ -47,6 +50,14 @@ public class BedrockRecorder {
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockStreamingChatModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockCohereEmbeddingModel.Builder>>> COHERE_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockTitanEmbeddingModel.BedrockTitanEmbeddingModelBuilder>>> TITAN_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private final RuntimeValue<LangChain4jConfig> rootRuntimeConfig;
     private final RuntimeValue<LangChain4jBedrockConfig> runtimeConfig;
@@ -63,7 +74,7 @@ public class BedrockRecorder {
         if (config.enableIntegration()) {
             var modelConfig = config.chatModel();
 
-            var paramBuilder = ChatRequestParameters.builder()
+            var paramBuilder = BedrockChatRequestParameters.builder()
                     .maxOutputTokens(modelConfig.maxTokens());
 
             if (modelConfig.temperature().isPresent()) {
@@ -85,6 +96,18 @@ public class BedrockRecorder {
                 }
             }
 
+            if (modelConfig.promptCaching().isPresent()) {
+                paramBuilder.promptCaching(modelConfig.promptCaching().get());
+            }
+
+            if (modelConfig.reasoning().isPresent()) {
+                paramBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
+            }
+
+            if (modelConfig.guardrail().guardrailIdentifier().isPresent()) {
+                paramBuilder.guardrailConfiguration(buildGuardrailConfiguration(modelConfig.guardrail()));
+            }
+
             var clientBuilder = BedrockRuntimeClient.builder();
 
             clientBuilder.httpClient(
@@ -102,6 +125,9 @@ public class BedrockRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -147,7 +173,7 @@ public class BedrockRecorder {
 
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
-            var paramsBuilder = ChatRequestParameters.builder()
+            var paramsBuilder = BedrockChatRequestParameters.builder()
                     .maxOutputTokens(modelConfig.maxTokens());
 
             if (modelConfig.temperature().isPresent()) {
@@ -166,6 +192,18 @@ public class BedrockRecorder {
                 paramsBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
             }
 
+            if (modelConfig.promptCaching().isPresent()) {
+                paramsBuilder.promptCaching(modelConfig.promptCaching().get());
+            }
+
+            if (modelConfig.reasoning().isPresent()) {
+                paramsBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
+            }
+
+            if (modelConfig.guardrail().guardrailIdentifier().isPresent()) {
+                paramsBuilder.guardrailConfiguration(buildGuardrailConfiguration(modelConfig.guardrail()));
+            }
+
             var builder = BedrockStreamingChatModel.builder()
                     .modelId(modelConfig.modelId().orElse("anthropic.claude-v2"))
                     .client(clientBuilder.build())
@@ -176,6 +214,9 @@ public class BedrockRecorder {
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
                     return builder.build();
                 }
             };
@@ -189,7 +230,7 @@ public class BedrockRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(final String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(final String configName) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
@@ -204,7 +245,7 @@ public class BedrockRecorder {
 
             var modelId = modelConfig.modelId();
 
-            Supplier<EmbeddingModel> supplier;
+            Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> function;
             if (modelId.contains("cohere")) {
                 var builder = BedrockCohereEmbeddingModel.builder()
                         .model(modelId)
@@ -218,9 +259,13 @@ public class BedrockRecorder {
                     builder.truncate(modelConfig.cohere().truncate().get());
                 }
 
-                supplier = new Supplier<EmbeddingModel>() {
+                function = new Function<>() {
                     @Override
-                    public EmbeddingModel get() {
+                    public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(COHERE_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
                         return builder.build();
                     }
                 };
@@ -237,19 +282,23 @@ public class BedrockRecorder {
                     builder.normalize(modelConfig.titan().normalize().get());
                 }
 
-                supplier = new Supplier<EmbeddingModel>() {
+                function = new Function<>() {
                     @Override
-                    public EmbeddingModel get() {
+                    public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(TITAN_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
                         return builder.build();
                     }
                 };
             }
 
-            return supplier;
+            return function;
         } else {
-            return new Supplier<EmbeddingModel>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };
@@ -264,6 +313,16 @@ public class BedrockRecorder {
             config = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return config;
+    }
+
+    private static BedrockGuardrailConfiguration buildGuardrailConfiguration(GuardrailConfig guardrailConfig) {
+        var builder = BedrockGuardrailConfiguration.builder()
+                .guardrailIdentifier(guardrailConfig.guardrailIdentifier().get());
+
+        guardrailConfig.guardrailVersion().ifPresent(builder::guardrailVersion);
+        guardrailConfig.streamProcessingMode().ifPresent(builder::streamProcessingMode);
+
+        return builder.build();
     }
 
     private void configureClient(

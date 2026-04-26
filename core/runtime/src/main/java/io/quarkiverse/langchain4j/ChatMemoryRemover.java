@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import dev.langchain4j.memory.ChatMemory;
@@ -38,5 +40,27 @@ public final class ChatMemoryRemover {
         if (obj instanceof ChatMemoryRemovable r) {
             r.remove(memoryIds.toArray(EMPTY_OBJECT_ARRAY));
         }
+    }
+
+    /**
+     * @param aiService The bean that implements the AI Service annotated with {@link RegisterAiService}
+     */
+    public static void removeAll(Object aiService) {
+        var obj = ClientProxy.unwrap(aiService);
+        if (obj instanceof ChatMemoryRemovable r) {
+            r.removeAll();
+        }
+    }
+
+    /**
+     * @param aiService The bean that implements the AI Service annotated with {@link RegisterAiService}
+     * @return The collection of all memory IDs for the chat memories of the AiService
+     */
+    public static Collection<Object> getAllChatMemoryIds(Object aiService) {
+        var obj = ClientProxy.unwrap(aiService);
+        if (obj instanceof ChatMemoryRemovable r) {
+            return r.getAllChatMemoryIds();
+        }
+        return Collections.emptyList();
     }
 }

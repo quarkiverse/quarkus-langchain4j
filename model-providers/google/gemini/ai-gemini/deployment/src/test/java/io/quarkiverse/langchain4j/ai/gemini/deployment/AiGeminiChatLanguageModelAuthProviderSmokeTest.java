@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatModel;
-import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiChatLanguageModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
@@ -39,11 +39,11 @@ public class AiGeminiChatLanguageModelAuthProviderSmokeTest extends WiremockAwar
 
     @Test
     void test() {
-        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(AiGeminiChatLanguageModel.class);
+        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(GoogleAiGeminiChatModel.class);
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:generateContent", CHAT_MODEL_ID)))
+                        String.format("/models/%s:generateContent", CHAT_MODEL_ID)))
                         .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
@@ -104,7 +104,7 @@ public class AiGeminiChatLanguageModelAuthProviderSmokeTest extends WiremockAwar
         assertThat(response).isEqualTo("Nice to meet you");
 
         LoggedRequest loggedRequest = singleLoggedRequest();
-        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Quarkus REST Client");
+        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("LangChain4j");
         String requestBody = new String(loggedRequest.getBody());
         assertThat(requestBody).contains("hello");
     }

@@ -16,10 +16,10 @@ import java.lang.annotation.Target;
  *
  * <pre>
  * {@code
- * @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+ * &#64;RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
  * public interface VideoDescriber {
  *
- *     @UserMessage("Describe the video")
+ *     &#64;UserMessage("Describe the video")
  *     Report describe(@VideoUrl String url);
  * }
  * </pre>
@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * <li>URL</li>
  * <li>URI</li>
  * <li>dev.langchain4j.data.video.Video</li>
+ * <li>List&lt;dev.langchain4j.data.video.Video&gt;</li>
  * </ul>
  *
  */

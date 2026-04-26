@@ -26,6 +26,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.scoring.ScoringModel;
+import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
@@ -599,6 +600,7 @@ public class BeansProcessor {
     public void unremovableBeans(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(ObjectMapper.class));
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(ModelAuthProvider.class));
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(ModelBuilderCustomizer.class));
     }
 
     @BuildStep

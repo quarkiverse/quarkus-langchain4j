@@ -1,0 +1,15 @@
+---
+- name: "Regression Test 1"
+  parameters:
+    - "test"
+  expected-output: "test"
+  tags:
+    - regression
+
+- name: "Regression Test 2"
+  parameters:
+    - "data"
+  expected-output: "data"
+  tags:
+    - regression
+    - critical

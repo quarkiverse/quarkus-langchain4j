@@ -14,10 +14,12 @@ public record DeclarativeAiServiceCreateInfo(
         Map<String, AnnotationLiteral<?>> toolsClassInfo,
         String toolProviderSupplier,
         String chatMemoryProviderSupplierClassName,
+        String chatMemoryFlushStrategySupplierClassName,
         String retrievalAugmentorSupplierClassName,
         String moderationModelSupplierClassName,
         String imageModelSupplierClassName,
         String chatMemorySeederClassName,
+        String systemMessageProviderClassName,
         String chatModelName,
         String moderationModelName,
         String imageModelName,
@@ -25,7 +27,13 @@ public record DeclarativeAiServiceCreateInfo(
         boolean needsModerationModel,
         boolean needsImageModel,
         String toolHallucinationStrategyClassName,
+        String toolArgumentsErrorHandlerClassName,
+        String toolExecutionErrorHandlerClassName,
         InputGuardrailsLiteral inputGuardrails,
         OutputGuardrailsLiteral outputGuardrails,
-        Integer maxSequentialToolInvocations) {
+        Integer maxSequentialToolInvocations,
+        Integer maxToolCallsPerResponse,
+        boolean allowContinuousForcedToolCalling,
+        boolean shouldThrowExceptionOnEventError,
+        String defaultMemoryIdProviderClassName) {
 }

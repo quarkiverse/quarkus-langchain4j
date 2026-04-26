@@ -23,7 +23,8 @@ public class NonCDIBeanGuardrailTest {
                     .addClasses(MyTools.class, NotACDIBeanGuardrail.class))
             .assertException(t -> {
                 // Expect build-time validation error for non-CDI bean guardrail
-                if (t.getMessage() != null && t.getMessage().contains("is not a CDI bean")) {
+                if (t.getMessage() != null
+                        && t.getMessage().contains("is neither a CDI bean, nor declares a public no-args constructor")) {
                     System.out.println("✓ Correctly caught non-CDI bean guardrail: " + t.getMessage());
                 } else {
                     throw new AssertionError("Expected 'is not a CDI bean' error but got: " + t.getMessage());
@@ -45,6 +46,11 @@ public class NonCDIBeanGuardrailTest {
 
     // NOTE: This class is intentionally NOT annotated with @ApplicationScoped or any CDI annotation
     public static class NotACDIBeanGuardrail implements ToolInputGuardrail {
+
+        // introduce a no-args constructor
+        public NotACDIBeanGuardrail(String dummy) {
+        }
+
         @Override
         public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
             return ToolInputGuardrailResult.success();

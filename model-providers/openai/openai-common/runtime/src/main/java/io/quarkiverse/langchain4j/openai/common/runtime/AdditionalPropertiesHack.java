@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.openai.common.runtime;
 
+import java.net.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,12 +19,14 @@ public final class AdditionalPropertiesHack {
     }
 
     static final ThreadLocal<Map<String, String>> PROPS = new ThreadLocal<>();
+    static final ThreadLocal<Proxy> PROXY = new ThreadLocal<>();
     static {
         reset();
     }
 
     public static void reset() {
         PROPS.set(new HashMap<>());
+        PROXY.remove();
     }
 
     public static void setConfigName(String configName) {
@@ -60,5 +63,34 @@ public final class AdditionalPropertiesHack {
             return null;
         }
         return map.remove("tlsConfigurationName");
+    }
+
+    public static void setLogCurl(boolean logCurl) {
+        Map<String, String> map = PROPS.get();
+        if (map == null) {
+            // this should never happen
+            return;
+        }
+        map.put("logCurl", Boolean.toString(logCurl));
+    }
+
+    public static boolean getAndClearLogCurl() {
+        Map<String, String> map = PROPS.get();
+        if (map == null) {
+            // this should never happen
+            return false;
+        }
+        String value = map.remove("logCurl");
+        return Boolean.parseBoolean(value);
+    }
+
+    public static void setProxy(Proxy proxy) {
+        PROXY.set(proxy);
+    }
+
+    public static Proxy getAndClearProxy() {
+        Proxy proxy = PROXY.get();
+        PROXY.remove();
+        return proxy;
     }
 }

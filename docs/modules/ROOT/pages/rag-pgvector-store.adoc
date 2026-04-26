@@ -26,14 +26,8 @@ NOTE: In dev mode, the `quarkus-langchain4j-pgvector` extension will automatical
 
 To enable PGVector integration in your Quarkus project, add the following Maven dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-pgvector</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-pgvector
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 This extension requires a configured Quarkus datasource.
 For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide].
@@ -58,6 +52,34 @@ If the embedding dimension is missing or mismatched, ingestion and retrieval wil
 
 If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
 ====
+
+== Embedding Index
+
+Use-index controls whether the engine should create and use an index over the embeddings table. 
+To create an index, you need the index-list-size parameter, which is a fine-tuning parameter.
+This basically creates an IVFFlat index with clusters to extend the effectivness of nearest neighbor search.
+If you set the `use-index=true` you will have to also se the `index-list-size`.
+
+[NOTE]
+====
+This is something you rarely would need in development. 
+====
+
+[source,properties]
+----
+quarkus.langchain4j.pgvector.use-index=true
+quarkus.langchain4j.pgvector.index-list-size=10
+----
+
+Higher number of lists values speed up queries by reducing the search space during query time.
+However, it also decreases the region size, which can lead to more recall errors by excluding some points.
+Additionally, more distance comparisons are required to find the closest cluster during step one of the query process.
+
+Here are some recommendations for setting the lists parameter:
+
+* For datasets with less than one million rows, use lists = rows / 1000.
+* For datasets with more than one million rows, use lists = sqrt(rows).
+* It is generally advisable to have at least 10 clusters.
 
 == Usage Example
 
@@ -84,7 +106,7 @@ The PGVector extension maps each ingested document to a row in a PostgreSQL tabl
 * Optional metadata
 * The vector embedding (stored as a `vector` type column)
 
-During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding <=> :query_vector LIMIT N`.
+During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding +<=>+ :query_vector LIMIT N`.
 
 The extension manages schema creation and indexing automatically unless overridden.
 

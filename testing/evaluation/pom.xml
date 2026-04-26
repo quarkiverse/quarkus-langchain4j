@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.quarkiverse.langchain4j</groupId>
+        <artifactId>quarkus-langchain4j-testing</artifactId>
+        <version>999-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>quarkus-langchain4j-testing-evaluation-parent</artifactId>
+    <name>Quarkus LangChain4j - Testing - Evaluation Parent</name>
+
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>evaluation-core</module>
+        <module>evaluation-strategies/semantic-similarity</module>
+        <module>evaluation-strategies/ai-judge</module>
+        <module>evaluation-junit5</module>
+    </modules>
+
+
+</project>

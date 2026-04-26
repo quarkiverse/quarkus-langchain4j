@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -18,7 +20,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
-import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
@@ -26,18 +28,21 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
+import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
-import io.opentelemetry.api.trace.Tracer;
-import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRegistryClientName;
+import io.quarkiverse.langchain4j.mcp.runtime.McpResourceUpdatedEvent;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
+import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
+import io.quarkus.arc.deployment.OpenTelemetrySdkBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -50,6 +55,9 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
+import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
+import io.quarkus.runtime.metrics.MetricsFactory;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
 
@@ -62,12 +70,17 @@ public class McpProcessor {
     private static final DotName MCP_REGISTRY_CLIENT = DotName.createSimple(McpRegistryClient.class);
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
     private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
-    private static final DotName TRACER = DotName.createSimple(Tracer.class);
+    private static final DotName MCP_RESOURCE_UPDATED_EVENT = DotName.createSimple(McpResourceUpdatedEvent.class);
+    private static final DotName OBSERVES = DotName.createSimple("jakarta.enterprise.event.Observes");
+    private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client", "tracing");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @BuildStep
     public void generateMcpConfigFileContents(McpBuildTimeConfiguration mcpBuildTimeConfiguration,
             BuildProducer<McpConfigFileContentsBuildItem> producer) {
+        if (!mcpBuildTimeConfiguration.enabled()) {
+            return;
+        }
         if (mcpBuildTimeConfiguration.configFile().isEmpty()) {
             return;
         }
@@ -127,18 +140,53 @@ public class McpProcessor {
             BuildProducer<HealthBuildItem> healthBuildItems,
             ShutdownContextBuildItem shutdown,
             Capabilities capabilities,
+            Optional<MetricsCapabilityBuildItem> metricsCapability,
             CoreVertxBuildItem vertxBuildItem,
-            McpRecorder recorder) {
-        Map<String, McpTransportType> clients = new HashMap<>();
-        if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
-            mcpBuildTimeConfiguration.clients().forEach((name, config) -> clients.put(name, config.transportType()));
+            BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
+            CombinedIndexBuildItem combinedIndex,
+            McpRecorder recorder,
+            Optional<OpenTelemetrySdkBuildItem> openTelemetrySdkBuildItem) {
+        if (!mcpBuildTimeConfiguration.enabled()) {
+            return;
         }
-        if (maybeMcpConfigFileContents.isPresent()) {
-            maybeMcpConfigFileContents.get().getContents().keySet().forEach(name -> {
-                clients.put(name, McpTransportType.STDIO);
+        boolean micrometerPresent = metricsCapability.isPresent()
+                && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
+        if (!micrometerPresent) {
+            // to avoid breaking native compilation if Micrometer isn't present
+            runtimeInitializedClasses.produce(
+                    new RuntimeInitializedClassBuildItem("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener"));
+        }
+        boolean openTelemetryPresent = openTelemetrySdkBuildItem.isPresent();
+        if (!openTelemetryPresent) {
+            // to avoid breaking native compilation if OpenTelemetry isn't present
+            runtimeInitializedClasses.produce(
+                    new RuntimeInitializedClassBuildItem(
+                            "io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener"));
+            runtimeInitializedClasses.produce(
+                    new RuntimeInitializedClassBuildItem(
+                            "io.quarkiverse.langchain4j.mcp.runtime.TracingMcpMetaSupplier"));
+        }
+        Map<String, McpClientBuildTimeConfig> rawConfiguredClients = mcpBuildTimeConfiguration.clients();
+        final Map<String, McpClientBuildTimeConfig> configuredClients = rawConfiguredClients == null ? Collections.emptyMap()
+                : rawConfiguredClients;
+        Map<String, McpTransportType> clients = new HashMap<>();
+        if (!configuredClients.isEmpty()) {
+            configuredClients.forEach((name, config) -> {
+                if (isConfigurableClient(name) && config.enabled()) {
+                    clients.put(name, config.transportType());
+                }
             });
         }
+        maybeMcpConfigFileContents.ifPresent(
+                mcpConfigFileContentsBuildItem -> mcpConfigFileContentsBuildItem.getContents().keySet().forEach(name -> {
+                    McpClientBuildTimeConfig config = configuredClients.get(name);
+                    if (config == null || config.enabled()) {
+                        clients.put(name, McpTransportType.STDIO);
+                    }
+                }));
         if (!clients.isEmpty()) {
+            boolean hasResourceUpdatedObserver = hasObserverForType(combinedIndex.getIndex(),
+                    MCP_RESOURCE_UPDATED_EVENT);
             // generate MCP clients
             List<AnnotationInstance> qualifiers = new ArrayList<>();
             clients.forEach((client, transportType) -> {
@@ -154,8 +202,15 @@ public class McpProcessor {
                         .unremovable()
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
-                        .supplier(
-                                recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx()))
+                        .addInjectionPoint(ClassType.create(DotName.createSimple(ExecutorService.class)))
+                        .createWith(
+                                recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
+                                        micrometerPresent && configuredClients.containsKey(client)
+                                                && configuredClients.get(client).metricsEnabled(),
+                                        hasResourceUpdatedObserver,
+                                        openTelemetrySdkBuildItem.isPresent()
+                                                ? openTelemetrySdkBuildItem.get().isRuntimeEnabled()
+                                                : null))
                         .done());
             });
             // generate a tool provider if configured to do so
@@ -166,8 +221,6 @@ public class McpProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(TRACER) }, null))
                         .createWith(recorder.toolProviderFunction(clients.keySet()));
                 for (AnnotationInstance qualifier : qualifiers) {
                     configurator.addInjectionPoint(ClassType.create(MCP_CLIENT), qualifier);
@@ -188,6 +241,9 @@ public class McpProcessor {
             McpBuildTimeConfiguration mcpBuildTimeConfiguration,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             McpRecorder recorder) {
+        if (!mcpBuildTimeConfiguration.enabled()) {
+            return;
+        }
         mcpBuildTimeConfiguration.registryClients().forEach((clientName, x) -> {
             AnnotationInstance qualifier = AnnotationInstance.builder(MCP_REGISTRY_CLIENT_NAME)
                     .add("value", clientName)
@@ -215,8 +271,8 @@ public class McpProcessor {
     @BuildStep
     public void reflectionRegistrations(BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
             CombinedIndexBuildItem indexBuildItem) {
-        // register everything in the dev.langchain4j.mcp.client.protocol package
-        String PROTOCOL_PACKAGE_PATTERN = "dev\\.langchain4j\\.mcp\\.client\\.protocol\\..+";
+        // register everything in the dev.langchain4j.mcp.protocol package
+        String PROTOCOL_PACKAGE_PATTERN = "dev\\.langchain4j\\.mcp\\.protocol\\..+";
         IndexView index = indexBuildItem.getIndex();
         for (ClassInfo clazz : index.getKnownClasses()) {
             if (clazz.name().toString().matches(PROTOCOL_PACKAGE_PATTERN)) {
@@ -224,11 +280,34 @@ public class McpProcessor {
                         .produce(ReflectiveClassBuildItem.builder(clazz.name().toString()).fields(true).methods(true).build());
             }
         }
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder(McpRoot.class).methods(true).build());
     }
 
     @BuildStep
     public void addMcpAuthProvider(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpClientAuthProvider.class));
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpHeadersSupplier.class));
+    }
+
+    private static boolean isConfigurableClient(String clientName) {
+        return !RESERVED_MCP_SECTION_NAMES.contains(clientName);
+    }
+
+    /**
+     * Returns true if the combined index contains at least one CDI observer method
+     * whose observed event type matches the given DotName.
+     */
+    private static boolean hasObserverForType(IndexView index, DotName eventType) {
+        for (AnnotationInstance annotation : index.getAnnotations(OBSERVES)) {
+            if (annotation.target().kind() == org.jboss.jandex.AnnotationTarget.Kind.METHOD_PARAMETER) {
+                MethodParameterInfo param = annotation.target().asMethodParameter();
+                Type paramType = param.method().parameterType(param.position());
+                if (paramType.name().equals(eventType)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

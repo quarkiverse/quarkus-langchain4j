@@ -16,7 +16,7 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
 
     private OllamaEmbeddingModel(Builder builder) {
         client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
-                builder.configName, builder.tlsConfigurationName);
+                false, builder.configName, builder.tlsConfigurationName);
         model = builder.model;
     }
 

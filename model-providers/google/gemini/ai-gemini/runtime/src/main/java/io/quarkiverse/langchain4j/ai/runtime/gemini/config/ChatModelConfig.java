@@ -4,9 +4,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
-import java.util.OptionalLong;
 
-import io.quarkiverse.langchain4j.gemini.common.ThinkingConfig;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
@@ -120,6 +118,6 @@ public interface ChatModelConfig {
          * model might overflow or underflow the token budget.
          * See <a href="https://ai.google.dev/gemini-api/docs/thinking#set-budget">Gemini API docs</a> for more details.
          */
-        OptionalLong thinkingBudget();
+        OptionalInt thinkingBudget();
     }
 }

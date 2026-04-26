@@ -1,0 +1,20 @@
+---
+- name: "GreetingTest1"
+  parameters:
+    - "Hello"
+  expected-output: "Hello"
+  tags:
+    - "greeting"
+    - "simple"
+- name: "GreetingTest2"
+  parameters:
+    - "Hi"
+  expected-output: "Hi"
+  tags:
+    - "greeting"
+- name: "FarewellTest"
+  parameters:
+    - "Goodbye"
+  expected-output: "Goodbye"
+  tags:
+    - "farewell"

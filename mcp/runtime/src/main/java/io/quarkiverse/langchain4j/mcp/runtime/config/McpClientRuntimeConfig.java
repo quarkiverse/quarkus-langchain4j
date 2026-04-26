@@ -107,11 +107,60 @@ public interface McpClientRuntimeConfig {
     Optional<String> tlsConfigurationName();
 
     /**
+     * Static HTTP headers to include in all requests to the MCP server.
+     * This only applies to MCP clients using the HTTP or streamable HTTP transport.
+     */
+    @ConfigDocMapKey("header-name")
+    Map<String, String> header();
+
+    /**
      * Whether to cache the tool list obtained from the MCP server.
      * When set to true (the default), the tool list is cached until the server notifies of changes
      * or the cache is manually evicted. When false, the client always fetches a fresh tool list from the server.
      * This is useful when using MCP servers that don't support tool list change notifications.
      */
     Optional<Boolean> cacheToolList();
+
+    /**
+     * Whether to cache the resource and resource template lists obtained from the MCP server.
+     * When set to true (the default), the lists are cached until the server notifies of changes
+     * or the cache is manually evicted. When false, the client always fetches fresh lists from the server.
+     * This is useful when using MCP servers that don't support resource list change notifications.
+     */
+    Optional<Boolean> cacheResourceList();
+
+    /**
+     * Whether to cache the prompt list obtained from the MCP server.
+     * When set to true (the default), the prompt list is cached until the server notifies of changes
+     * or the cache is manually evicted. When false, the client always fetches a fresh prompt list from the server.
+     * This is useful when using MCP servers that don't support prompt list change notifications.
+     */
+    Optional<Boolean> cachePromptList();
+
+    /**
+     * Whether the MCP client should perform health checks regularly and try to reconnect immediately if a connection issue is
+     * detected.
+     * The default is true.
+     */
+    @WithDefault("true")
+    Boolean autoHealthCheck();
+
+    /**
+     * The interval for automatic health checks (if enabled using the "autoHealthCheck" property).
+     * The default is 60 seconds.
+     */
+    @WithDefault("60s")
+    Duration autoHealthCheckInterval();
+
+    /**
+     * Whether to open a subsidiary SSE channel for the streamable HTTP transport.
+     * When enabled, the transport will open a long-lived HTTP GET-based SSE stream after
+     * initialization, allowing the server to send notifications and requests to the client
+     * without the client first sending data via HTTP POST. This is useful for receiving
+     * server-initiated messages such as tool list change notifications.
+     * Only applies to MCP clients using the streamable HTTP transport.
+     */
+    @WithDefault("false")
+    boolean subsidiaryChannel();
 
 }

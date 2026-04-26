@@ -1,6 +1,6 @@
-# Secure MCP command line client-server example using the SSE transport protocol with Keycloak and AI Gemini.
+# Secure MCP command line client-server example using the Streamable HTTP transport protocol with Keycloak and AI Gemini.
 
-This sample showcases how Quarkus MCP client can acquire OAuth2 client_credentials grant tokens from Keycloak and use them to access secure Quarkus MCP server using the [SSE transport protocol](https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse) protocol.
+This sample showcases how Quarkus MCP client can acquire OAuth2 client_credentials grant tokens from Keycloak and use them to access secure Quarkus MCP server using the [Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http) protocol.
 
 Quarkus MCP server gives the LLM a tool that can return a name of the service account. AI Gemini uses this tool to include a service account name in a poem about Java.
 

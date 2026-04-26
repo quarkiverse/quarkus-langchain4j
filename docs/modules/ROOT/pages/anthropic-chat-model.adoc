@@ -15,14 +15,8 @@ To use Anthropic models, you need an API key. Follow the steps on the https://do
 
 To enable Anthropic LLM integration in your project, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-anthropic</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+:provider-artifact: quarkus-langchain4j-anthropic
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Anthropic chat model.
 
@@ -51,9 +45,9 @@ quarkus.langchain4j.anthropic.chat-model.model-name=claude-opus-4-20250514
 
 Refer to https://docs.anthropic.com/claude/docs/models-overview[Anthropic's model catalog] for available versions, such as:
 
-- `claude-sonnet-4-20250514	`
+- `claude-sonnet-4-20250514`
 - `claude-3-opus-20240229`
-- `claude-3-haiku-20240307	`
+- `claude-3-haiku-20240307`
 
 == Usage
 
@@ -73,6 +67,161 @@ public interface Assistant {
     String chat(String input);
 }
 ----
+
+== Advanced Tool Use Features
+These features enable more efficient tool orchestration, improved accuracy, and reduced token consumption.
+
+All features are optional and can be enabled independently.
+
+=== Tool Search
+
+Anthropic's Tool Search Tool allows Claude to use search tools to access thousands of tools without consuming its context window
+
+The `Tool Search Tool` lets Claude dynamically discover tools instead of loading all definitions upfront. You provide all your tool definitions to the API, but mark tools with `defer_loading: true` to make them discoverable on-demand. Deferred tools aren't loaded into Claude's context initially. Claude only sees the `Tool Search Tool` itself plus any tools with `defer_loading: false` (your most critical, frequently-used tools).
+
+When Claude needs specific capabilities, it searches for relevant tools. The `Tool Search Tool` returns references to matching tools, which get expanded into full definitions in Claude's context.
+
+To enable this feature, set the following property:
+
+[source,properties]
+----
+quarkus.langchain4j.anthropic.chat-model.tool-search.enabled=true
+----
+
+You can optionally specify the search type (`regex` is the default, or `bm25`):
+
+[source,properties]
+----
+quarkus.langchain4j.anthropic.chat-model.tool-search.type=bm25
+----
+
+[NOTE]
+====
+Under the hood, when Tool Search is enabled, the Quarkus extension automatically:
+
+* Adds the `AnthropicServerTool` (either `regex` or `bm25` variant) to the model request.
+* Configures the `toolMetadataKeysToSend` to include `defer_loading`, allowing the model to see which tools can be discovered on-demand.
+* Includes the required `advanced-tool-use-2025-11-20` beta header in all requests.
+====
+
+When tool search is enabled, you can mark specific tools to be discovered on-demand using the `defer_loading` metadata:
+
+[source,java]
+----
+@Tool(name = "get_weather", value = "Get the weather for a city", metadata = "{\"defer_loading\": true}")
+public String getWeather(String city) {
+    // ...
+}
+----
+
+=== Programmatic Tool Calling
+
+Anthropic's Programmatic Tool Calling allows Claude to invoke tools in a code execution environment
+reducing the impact on the model’s context window.
+
+Programmatic Tool Calling enables Claude to orchestrate tools through code rather than through individual
+API round-trips. Instead of Claude requesting tools one at a time with each result being returned to its context,
+Claude writes code that calls multiple tools, processes their outputs, and controls what information actually
+enters its context window.
+
+Claude excels at writing code and by letting it express orchestration logic in Python rather than through natural
+language tool invocations, you get more reliable, precise control flow. Loops, conditionals,
+data transformations, and error handling are all explicit in code rather than implicit in Claude's reasoning.
+
+To enable this feature, set the following property:
+
+[source,properties]
+----
+quarkus.langchain4j.anthropic.chat-model.programmatic-tool-calling.enabled=true
+----
+
+[NOTE]
+====
+Under the hood, when Programmatic Tool Calling is enabled, the extension automatically:
+
+* Adds the Code Execution server tool
+* Sends the `"allowed_callers"` metadata key with tool definitions
+* Includes the required beta header in all requests
+====
+
+Tools that should be callable from generated code must include the
+`allowed_callers` metadata:
+
+[source,java]
+----
+@Tool(
+    name = "get_weather",
+    value = "Get the weather for a city",
+    metadata = "{\"allowed_callers\": [\"code_execution_20250825\"]}"
+)
+public String getWeather(String city) {
+    // ...
+}
+----
+
+=== Tool Use Examples
+This feature provides a universal standard for demonstrating how to effectively use a given tool.
+
+Tool Use Examples let you provide sample tool calls directly in your tool definitions.
+Instead of relying on schema alone, you show Claude concrete usage patterns.
+
+__ For example, format ambiguity: __
+__ if a date is passed as `string`, should it use "2024-11-06", "Nov 6, 2024", or "2024-11-06T00:00:00Z"?__
+
+To enable this feature, set the following property:
+
+[source,properties]
+----
+quarkus.langchain4j.anthropic.chat-model.tool-use-examples.enabled=true
+----
+
+[NOTE]
+====
+Under the hood, when Tool Use Examples is enabled, the extension automatically:
+
+* Sends the `"input_examples"` metadata key with tool definitions
+* Includes the required beta header in all requests
+====
+
+Tools that include examples must define the `input_examples` metadata:
+
+[source,java]
+----
+        private static final String METADATA = """
+                {
+                  "input_examples": [
+                    {
+                      "title": "Login page returns 500 error",
+                      "priority": "critical",
+                      "labels": ["bug", "authentication"],
+                      "date": "2024-11-06"
+                    },
+                    {
+                      "title": "Update API documentation",
+                      "date": "2024-12-01"
+                    },
+                    {
+                      "title": "Brainstorming session"
+                    }
+                  ]
+                }
+                """;
+
+        @Tool(name = "create_ticket", value = "Create a support ticket", metadata = METADATA)
+        public String createTicket(String title, String priority, String date) {
+            return "TICKET-123";
+        }
+----
+
+==== References
+
+For more details on Anthropic's Tool Search and advanced tool use, see:
+
+- https://www.anthropic.com/engineering/advanced-tool-use[Introducing advanced tool use on the Claude Developer Platform]
+- https://github.com/langchain4j/langchain4j/blob/main/docs/docs/integrations/language-models/anthropic.md#tool-search-tool[LangChain4j Anthropic Tool Search Tool Documentation]
+- https://github.com/langchain4j/langchain4j/blob/main/docs/docs/integrations/language-models/anthropic.md#programmatic-tool-calling[LangChain4j Anthropic Programmatic Tool Calling Documentation]
+- https://github.com/langchain4j/langchain4j/blob/main/docs/docs/integrations/language-models/anthropic.md#tool-use-examples[LangChain4j Anthropic Tool Use Examples Documentation]
+- https://github.com/langchain4j/langchain4j/blob/main/langchain4j-anthropic/src/main/java/dev/langchain4j/model/anthropic/AnthropicChatModel.java#L321[LangChain4j AnthropicChatModel Source Code]
 
 == Configuration Reference
 

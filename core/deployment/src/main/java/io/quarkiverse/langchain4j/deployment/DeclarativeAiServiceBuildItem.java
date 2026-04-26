@@ -26,15 +26,23 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName moderationModelSupplierDotName;
     private final DotName imageModelSupplierDotName;
     private final DotName chatMemorySeederClassDotName;
+    private final DotName systemMessageProviderClassDotName;
     private final DotName cdiScope;
+    private DotName defaultMemoryIdProviderClassDotName;
     private final String chatModelName;
     private final String moderationModelName;
     private final String imageModelName;
     private final Optional<String> beanName;
     private final DeclarativeAiServiceInputGuardrails inputGuardrails;
     private final DeclarativeAiServiceOutputGuardrails outputGuardrails;
+    private final DotName toolArgumentsErrorHandlerDotName;
+    private final DotName toolExecutionErrorHandlerDotName;
     private final Integer maxSequentialToolInvocations;
+    private final Integer maxToolCallsPerResponse;
+    private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
+    private final boolean shouldThrowExceptionOnEventError;
+    private final DotName chatMemoryFlushStrategySupplierClassDotName;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -47,6 +55,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName moderationModelSupplierDotName,
             DotName imageModelSupplierDotName,
             DotName chatMemorySeederClassDotName,
+            DotName systemMessageProviderClassDotName,
             DotName cdiScope,
             String chatModelName,
             String moderationModelName,
@@ -56,7 +65,13 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName toolHallucinationStrategyClassDotName,
             DeclarativeAiServiceInputGuardrails inputGuardrails,
             DeclarativeAiServiceOutputGuardrails outputGuardrails,
-            Integer maxSequentialToolInvocations, boolean makeDefaultBean) {
+            DotName toolArgumentsErrorHandlerDotName,
+            DotName toolExecutionErrorHandlerDotName,
+            Integer maxSequentialToolInvocations,
+            Integer maxToolCallsPerResponse,
+            boolean allowContinuousForcedToolCalling,
+            boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
+            DotName chatMemoryFlushStrategySupplierClassDotName) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -67,6 +82,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
         this.imageModelSupplierDotName = imageModelSupplierDotName;
         this.chatMemorySeederClassDotName = chatMemorySeederClassDotName;
+        this.systemMessageProviderClassDotName = systemMessageProviderClassDotName;
         this.cdiScope = cdiScope;
         this.chatModelName = chatModelName;
         this.moderationModelName = moderationModelName;
@@ -76,8 +92,14 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
+        this.toolArgumentsErrorHandlerDotName = toolArgumentsErrorHandlerDotName;
+        this.toolExecutionErrorHandlerDotName = toolExecutionErrorHandlerDotName;
         this.maxSequentialToolInvocations = maxSequentialToolInvocations;
+        this.maxToolCallsPerResponse = maxToolCallsPerResponse;
+        this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
+        this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
+        this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -120,6 +142,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return chatMemorySeederClassDotName;
     }
 
+    public DotName getSystemMessageProviderClassDotName() {
+        return systemMessageProviderClassDotName;
+    }
+
     public DotName getCdiScope() {
         return cdiScope;
     }
@@ -156,8 +182,20 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return outputGuardrails;
     }
 
+    public DotName getToolArgumentsErrorHandlerDotName() {
+        return toolArgumentsErrorHandlerDotName;
+    }
+
+    public DotName getToolExecutionErrorHandlerDotName() {
+        return toolExecutionErrorHandlerDotName;
+    }
+
     public boolean isMakeDefaultBean() {
         return makeDefaultBean;
+    }
+
+    public boolean isShouldThrowExceptionOnEventError() {
+        return shouldThrowExceptionOnEventError;
     }
 
     public record DeclarativeAiServiceInputGuardrails(List<ClassInfo> inputGuardrailClassInfos) {
@@ -183,5 +221,25 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public Integer getMaxSequentialToolInvocations() {
         return maxSequentialToolInvocations;
+    }
+
+    public Integer getMaxToolCallsPerResponse() {
+        return maxToolCallsPerResponse;
+    }
+
+    public boolean isAllowContinuousForcedToolCalling() {
+        return allowContinuousForcedToolCalling;
+    }
+
+    public DotName getChatMemoryFlushStrategySupplierClassDotName() {
+        return chatMemoryFlushStrategySupplierClassDotName;
+    }
+
+    public DotName getDefaultMemoryIdProviderClassDotName() {
+        return defaultMemoryIdProviderClassDotName;
+    }
+
+    public void setDefaultMemoryIdProviderClassDotName(DotName defaultMemoryIdProviderClassDotName) {
+        this.defaultMemoryIdProviderClassDotName = defaultMemoryIdProviderClassDotName;
     }
 }

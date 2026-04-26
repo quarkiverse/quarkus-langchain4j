@@ -24,7 +24,7 @@
 
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-internal</artifactId>
+            <artifactId>quarkus-junit-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -63,31 +63,20 @@
                         </configuration>
                     </execution>
                 </executions>
-              <configuration>
-                <parentFirstArtifacts>
-                  <parentFirstArtifact>org.graalvm:graal-sdk</parentFirstArtifact>
-                  <parentFirstArtifact>io.github.beehive-lab:gpu-llama3</parentFirstArtifact>
-                </parentFirstArtifacts>
-                <runnerParentFirstArtifacts>
-                  <runnerParentFirstArtifact>org.graalvm:graal-sdk</runnerParentFirstArtifact>
-                  <runnerParentFirstArtifact>io.github.beehive-lab:gpu-llama3</runnerParentFirstArtifact>
-                </runnerParentFirstArtifacts>
-              </configuration>
+                <configuration>
+                    <parentFirstArtifacts>
+                        <parentFirstArtifact>org.graalvm:graal-sdk</parentFirstArtifact>
+                        <parentFirstArtifact>io.github.beehive-lab:gpu-llama3</parentFirstArtifact>
+                    </parentFirstArtifacts>
+                    <runnerParentFirstArtifacts>
+                        <runnerParentFirstArtifact>org.graalvm:graal-sdk</runnerParentFirstArtifact>
+                        <runnerParentFirstArtifact>io.github.beehive-lab:gpu-llama3</runnerParentFirstArtifact>
+                    </runnerParentFirstArtifacts>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                  <!--
-                      In order for vector support to work on JDK 21+, we need to build the module with JDK 23,
-                      because in that version Vector is no longer preview, so we build target and runtime versions
-                      don't need to match (remember that preview features only work on the same runtime version as the target
-                   -->
-                  <source>21</source>
-                  <target>21</target>
-                  <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
-                    <compilerArgs>
-                      <arg>--add-modules=jdk.incubator.vector</arg>
-                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>io.quarkus</groupId>
@@ -95,6 +84,16 @@
                             <version>${quarkus.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                    <release combine.self="override" />
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine combine.children="append">--enable-preview</argLine>
                 </configuration>
             </plugin>
         </plugins>

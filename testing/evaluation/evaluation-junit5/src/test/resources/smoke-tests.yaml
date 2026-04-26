@@ -1,0 +1,16 @@
+---
+- name: "Smoke Test 1"
+  parameters:
+    - "hello"
+  expected-output: "hello"
+  tags:
+    - smoke
+    - basic
+
+- name: "Smoke Test 2"
+  parameters:
+    - "world"
+  expected-output: "world"
+  tags:
+    - smoke
+    - basic

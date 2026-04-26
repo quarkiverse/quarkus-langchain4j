@@ -119,7 +119,8 @@ public class RAGTest {
                     boolean second = line.contains("""
                             gen_ai_token_type="output"
                             """.trim());
-                    return first && second;
+                    boolean third = line.contains("Bot");
+                    return first && second && third;
                 })
                 .orElseThrow(() -> new AssertionError("There is no metric for output tokens!"));
         assertTrue(outputTokensMetric.contains("ai_service_class_name=\"io.quarkiverse.langchain4j.sample.chatbot.Bot\""));

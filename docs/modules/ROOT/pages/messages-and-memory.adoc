@@ -258,6 +258,46 @@ This is useful for:
 * distributed services (e.g., multiple Quarkus pods/replicas)
 * external control over retention or eviction
 
+[#_chat_memory_flush_strategy]
+== Chat Memory Flush Strategy
+
+By default, Quarkus Langchain4j accumulates messages in memory and only persists them to the `ChatMemoryStore` after the invocation completes successfully.
+This enables seamless `@Retry` support - on failure the uncommitted messages are discarded and the retry starts with a clean slate.
+
+When using `IMMEDIATE` flush, each message is written to the `ChatMemoryStore` immediately when it is added.
+The store always reflects the current state of the conversation, even if the invocation eventually fails.
+
+You can enable immediate flushing by providing a `ChatMemoryFlushStrategy` supplier via the `chatMemoryFlushStrategySupplier` attribute on `@RegisterAiService`:
+
+[source,java]
+----
+@RegisterAiService(
+    chatMemoryFlushStrategySupplier = ImmediateFlushStrategySupplier.class
+)
+public interface MyAssistant {
+    String chat(String message);
+}
+----
+
+The supplier returns a `ChatMemoryFlushStrategy` enum value:
+
+[source,java]
+----
+public class ImmediateFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
+    @Override
+    public ChatMemoryFlushStrategy get() {
+        return ChatMemoryFlushStrategy.IMMEDIATE;
+    }
+}
+----
+
+The `ChatMemoryFlushStrategy` enum has two values:
+
+* `DEFERRED` (default) - buffer messages in memory and only writes them to the `ChatMemoryStore` after the LLM invocation succeeds.
+* `IMMEDIATE` - writes messages to the `ChatMemoryStore` immediately when they are added.
+
+If no strategy is configured, the default `DEFERRED` behavior is used.
+
 == Memory Compression and Eviction
 
 LLMs have a token limit — if the full memory exceeds that limit, the prompt will be rejected or truncated.

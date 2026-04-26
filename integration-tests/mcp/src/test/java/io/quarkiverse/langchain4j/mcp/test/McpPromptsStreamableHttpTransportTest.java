@@ -38,7 +38,7 @@ class McpPromptsStreamableHttpTransportTest extends McpPromptsTestBase {
     @AfterAll
     static void teardown() {
         if (process != null && process.isAlive()) {
-            process.destroyForcibly();
+            McpServerHelper.destroyProcessTree(process);
         }
     }
 }

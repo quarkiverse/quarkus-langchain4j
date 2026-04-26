@@ -10,8 +10,10 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -19,6 +21,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -28,18 +31,31 @@ import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.PartialResponse;
+import dev.langchain4j.model.chat.response.PartialResponseContext;
 import dev.langchain4j.model.chat.response.PartialThinking;
+import dev.langchain4j.model.chat.response.PartialThinkingContext;
+import dev.langchain4j.model.chat.response.PartialToolCall;
+import dev.langchain4j.model.chat.response.PartialToolCallContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
+import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import dev.langchain4j.service.tool.BeforeToolExecution;
+import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
+import dev.langchain4j.service.tool.ToolErrorContext;
+import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
+import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
+import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
+import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.vertx.core.Context;
 
 /**
@@ -51,12 +67,14 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private final Logger log = Logger.getLogger(QuarkusAiServiceStreamingResponseHandler.class);
 
+    private final ChatRequest chatRequest;
     private final QuarkusAiServiceContext context;
     private final InvocationContext invocationContext;
     private final Object memoryId;
 
     private final Consumer<String> partialResponseHandler;
     private final Consumer<PartialThinking> partialThinkingHandler;
+    private final Consumer<PartialToolCall> partialToolCallHandler;
     private final Consumer<Response<AiMessage>> completionHandler;
     private final Consumer<BeforeToolExecution> beforeToolExecutionHandler;
     private final Consumer<ChatResponse> intermediateResponseHandler;
@@ -75,12 +93,15 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final AiServiceMethodCreateInfo methodCreateInfo;
     private final Object[] methodArgs;
     private final ExecutorService executor;
+    private final AtomicBoolean cancelled;
+    private volatile StreamingHandle streamingHandle = NoopStreamingHandle.INSTANCE;
 
-    QuarkusAiServiceStreamingResponseHandler(QuarkusAiServiceContext context,
+    QuarkusAiServiceStreamingResponseHandler(ChatRequest chatRequest, QuarkusAiServiceContext context,
             InvocationContext invocationContext,
             Object memoryId,
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
+            Consumer<PartialToolCall> partialToolCallHandler,
             Consumer<BeforeToolExecution> beforeToolExecutionHandler,
             Consumer<ChatResponse> intermediateResponseHandler,
             Consumer<ToolExecution> toolExecuteHandler,
@@ -95,13 +116,16 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             boolean switchToWorkerForEmission,
             Context cxtx,
             AiServiceMethodCreateInfo methodCreateInfo,
-            Object[] methodArgs) {
+            Object[] methodArgs,
+            AtomicBoolean cancelled) {
+        this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = ensureNotNull(context, "context");
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
 
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
         this.partialThinkingHandler = partialThinkingHandler;
+        this.partialToolCallHandler = partialToolCallHandler;
         this.beforeToolExecutionHandler = beforeToolExecutionHandler;
         this.intermediateResponseHandler = intermediateResponseHandler;
         this.completeResponseHandler = completeResponseHandler;
@@ -120,6 +144,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.switchToWorkerForEmission = switchToWorkerForEmission;
         this.methodCreateInfo = methodCreateInfo;
         this.methodArgs = methodArgs;
+        this.cancelled = cancelled;
         if (executionContext == null) {
             // We do not have a context, but we still need to make sure we are not blocking the event loop and ordered
             // is respected.
@@ -129,10 +154,11 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    public QuarkusAiServiceStreamingResponseHandler(QuarkusAiServiceContext context, InvocationContext invocationContext,
-            Object memoryId,
+    public QuarkusAiServiceStreamingResponseHandler(ChatRequest chatRequest, QuarkusAiServiceContext context,
+            InvocationContext invocationContext, Object memoryId,
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
+            Consumer<PartialToolCall> partialToolCallHandler,
             Consumer<BeforeToolExecution> beforeToolExecutionHandler,
             Consumer<ChatResponse> intermediateResponseHandler,
             Consumer<ToolExecution> toolExecuteHandler, Consumer<ChatResponse> completeResponseHandler,
@@ -140,12 +166,15 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
             List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
-            ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs) {
+            ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
+            AtomicBoolean cancelled) {
+        this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = context;
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = memoryId;
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
         this.partialThinkingHandler = partialThinkingHandler;
+        this.partialToolCallHandler = partialToolCallHandler;
         this.beforeToolExecutionHandler = beforeToolExecutionHandler;
         this.intermediateResponseHandler = intermediateResponseHandler;
         this.toolExecuteHandler = toolExecuteHandler;
@@ -162,12 +191,20 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.executor = executor;
         this.methodCreateInfo = methodCreateInfo;
         this.methodArgs = methodArgs;
+        this.cancelled = cancelled;
     }
 
     private <T> void fireInvocationComplete(T result) {
         context.eventListenerRegistrar.fireEvent(AiServiceCompletedEvent.builder()
                 .invocationContext(invocationContext)
                 .result(result)
+                .build());
+    }
+
+    private void fireRequestIssuedEvent(ChatRequest chatRequest) {
+        context.eventListenerRegistrar.fireEvent(AiServiceRequestIssuedEvent.builder()
+                .invocationContext(invocationContext)
+                .request(chatRequest)
                 .build());
     }
 
@@ -182,6 +219,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private void fireResponseReceivedEvent(ChatResponse chatResponse) {
         context.eventListenerRegistrar.fireEvent(AiServiceResponseReceivedEvent.builder()
                 .invocationContext(invocationContext)
+                .request(chatRequest)
                 .response(chatResponse)
                 .build());
     }
@@ -195,6 +233,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     @Override
     public void onPartialResponse(String partialResponse) {
+        if (isCancelled()) {
+            streamingHandle.cancel();
+            return;
+        }
         execute(new Runnable() {
             @Override
             public void run() {
@@ -206,6 +248,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     @Override
     public void onPartialThinking(PartialThinking partialThinking) {
+        if (isCancelled()) {
+            streamingHandle.cancel();
+            return;
+        }
         if (partialThinkingHandler != null) {
             execute(new Runnable() {
                 @Override
@@ -216,11 +262,74 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
+    @Override
+    public void onPartialResponse(PartialResponse partialResponse, PartialResponseContext context) {
+        captureStreamingHandle(context.streamingHandle());
+        onPartialResponse(partialResponse.text());
+    }
+
+    @Override
+    public void onPartialThinking(PartialThinking partialThinking, PartialThinkingContext context) {
+        captureStreamingHandle(context.streamingHandle());
+        onPartialThinking(partialThinking);
+    }
+
+    @Override
+    public void onPartialToolCall(PartialToolCall partialToolCall) {
+        if (isCancelled()) {
+            streamingHandle.cancel();
+            return;
+        }
+        if (partialToolCallHandler != null) {
+            execute(new Runnable() {
+                @Override
+                public void run() {
+                    partialToolCallHandler.accept(partialToolCall);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onPartialToolCall(PartialToolCall partialToolCall, PartialToolCallContext context) {
+        captureStreamingHandle(context.streamingHandle());
+        onPartialToolCall(partialToolCall);
+    }
+
+    private void captureStreamingHandle(StreamingHandle handle) {
+        if (this.streamingHandle == NoopStreamingHandle.INSTANCE) {
+            this.streamingHandle = handle;
+        }
+    }
+
+    /**
+     * Returns the StreamingHandle that can be used to cancel the underlying stream.
+     * <p>
+     * Returns {@link NoopStreamingHandle} until the first partial response is received
+     * from a provider that supports cancellation.
+     *
+     * @apiNote This uses langchain4j's experimental StreamingHandle API (since 1.8.0)
+     */
+    public StreamingHandle getStreamingHandle() {
+        return streamingHandle;
+    }
+
     private void executeTools(Runnable runnable) {
+        Runnable safeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception e) {
+                    onError(e);
+                }
+            }
+        };
+
         if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
-            executeOnWorkerThread(runnable, false);
+            executeOnWorkerThread(safeRunnable, false);
         } else {
-            runnable.run();
+            safeRunnable.run();
         }
     }
 
@@ -246,8 +355,79 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
+    /**
+     * Executes a tool and handles any exceptions using the configured error handlers.
+     * <p>
+     * If a {@link ToolArgumentsException} occurs and {@code toolArgumentsErrorHandler} is configured,
+     * the handler is invoked and an error result is returned to the LLM instead of propagating the exception.
+     * <p>
+     * For other exceptions, if {@code toolExecutionErrorHandler} is configured (and the exception does not
+     * implement {@link PreventsErrorHandlerExecution}), the handler is invoked and an error result is returned.
+     * <p>
+     * This allows the LLM to recover from tool failures by receiving error feedback and potentially retrying.
+     *
+     * @param toolExecutionRequest the tool execution request from the LLM
+     * @param toolExecutor the executor for the tool
+     * @param invocationContext the current invocation context
+     * @param toolArgumentsErrorHandler optional handler for argument parsing errors
+     * @param toolExecutionErrorHandler optional handler for execution errors
+     * @return the tool execution result, which may indicate an error if handled by an error handler
+     */
+    private ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
+            InvocationContext invocationContext,
+            ToolArgumentsErrorHandler toolArgumentsErrorHandler,
+            ToolExecutionErrorHandler toolExecutionErrorHandler) {
+        ToolExecutionResult toolExecutionResult;
+        try {
+            toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
+        } catch (ToolArgumentsException e) {
+            if (toolArgumentsErrorHandler != null) {
+                log.debugv(e, "Error occurred while executing tool arguments. Executing  ",
+                        toolArgumentsErrorHandler.getClass().getName() + "' to handle it");
+                ToolErrorContext errorContext = ToolErrorContext.builder()
+                        .toolExecutionRequest(toolExecutionRequest)
+                        .invocationContext(invocationContext)
+                        .build();
+                ToolErrorHandlerResult toolErrorHandlerResult = toolArgumentsErrorHandler.handle(e, errorContext);
+                return ToolExecutionResult.builder()
+                        .isError(true)
+                        .resultText(toolErrorHandlerResult.text())
+                        .build();
+            } else {
+                throw e;
+            }
+        } catch (Exception e) {
+            if (e instanceof PreventsErrorHandlerExecution) {
+                // preserve semantics for existing code
+                throw e;
+            }
+            if (toolExecutionErrorHandler != null) {
+                log.debugv(e, "Error occurred while executing tool. Executing '",
+                        toolExecutionErrorHandler.getClass().getName() + "' to handle it");
+                ToolErrorContext errorContext = ToolErrorContext.builder()
+                        .toolExecutionRequest(toolExecutionRequest)
+                        .invocationContext(invocationContext)
+                        .build();
+                ToolErrorHandlerResult toolErrorHandlerResult = toolExecutionErrorHandler.handle(e, errorContext);
+                return ToolExecutionResult.builder()
+                        .isError(true)
+                        .resultText(toolErrorHandlerResult.text())
+                        .build();
+            } else {
+                throw e;
+            }
+        }
+        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
+
+        return toolExecutionResult;
+    }
+
     @Override
     public void onCompleteResponse(ChatResponse completeResponse) {
+        if (isCancelled()) {
+            shutdown();
+            return;
+        }
         fireResponseReceivedEvent(completeResponse);
         AiMessage aiMessage = completeResponse.aiMessage();
 
@@ -263,31 +443,76 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             executeTools(new Runnable() {
                 @Override
                 public void run() {
+                    if (isCancelled()) {
+                        shutdown();
+                        return;
+                    }
                     addToMemory(aiMessage);
-                    for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                    List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
+                    int maxToolCallsPerResponse;
+                    if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
+                        maxToolCallsPerResponse = context.maxToolCallsPerResponse;
+                    } else {
+                        maxToolCallsPerResponse = ConfigProvider.getConfig()
+                                .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
+                                .orElse(0);
+                    }
+                    int toolCallsCount = 0;
+                    for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+                        if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                            throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
+                                    toolExecutionRequests.size());
+                        }
+                        toolCallsCount++;
+                        if (isCancelled()) {
+                            // Fill cancelled tools with error results to keep memory consistent:
+                            // every tool request must have a matching tool result
+                            ToolExecutionResultMessage cancelledResult = ToolExecutionResultMessage.from(
+                                    toolExecutionRequest, "Tool execution was cancelled");
+                            QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
+                            continue;
+                        }
                         // Call before tool execution handler
                         if (beforeToolExecutionHandler != null) {
                             BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
                                     .request(toolExecutionRequest)
+                                    .invocationContext(invocationContext)
                                     .build();
                             beforeToolExecutionHandler.accept(beforeToolExecution);
                         }
 
                         String toolName = toolExecutionRequest.name();
                         ToolExecutor toolExecutor = toolExecutors.get(toolName);
-                        String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
-                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult);
+                        // Execute the tool with argumentsErrorHandler and executionErrorHandler.
+                        // If execution fails, these handlers convert exceptions into error results
+                        // that are sent back to the LLM, allowing it to recover from tool failures.
+                        ToolExecutionResult toolExecutionResult = executeTool(
+                                toolExecutionRequest,
+                                toolExecutor,
+                                invocationContext,
+                                context.toolService.argumentsErrorHandler(),
+                                context.toolService.executionErrorHandler());
+
+                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
+
                         ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
                                 toolExecutionRequest,
-                                toolExecutionResult);
+                                toolExecutionResult.resultText());
+
                         ToolExecution toolExecution = ToolExecution.builder()
                                 .request(toolExecutionRequest)
-                                .result(ToolExecutionResult.builder().resultText(toolExecutionResult).build())
+                                .result(toolExecutionResult)
+                                .invocationContext(invocationContext)
                                 .build();
                         if (toolExecuteHandler != null) {
                             toolExecuteHandler.accept(toolExecution);
                         }
                         QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
+                    }
+
+                    if (isCancelled()) {
+                        shutdown();
+                        return;
                     }
 
                     DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
@@ -312,11 +537,13 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             .parameters(parametersBuilder.build())
                             .build();
                     QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
+                            chatRequest,
                             context,
                             invocationContext,
                             memoryId,
                             partialResponseHandler,
                             partialThinkingHandler,
+                            partialToolCallHandler,
                             beforeToolExecutionHandler,
                             intermediateResponseHandler,
                             toolExecuteHandler,
@@ -328,7 +555,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             toolSpecifications,
                             toolExecutors,
                             mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
-                            methodArgs);
+                            methodArgs,
+                            cancelled);
+
+                    fireRequestIssuedEvent(chatRequest);
                     effectiveStreamingChatModel.chat(chatRequest, handler);
                 }
             });
@@ -377,6 +607,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         if (executor != null) {
             executor.shutdown();
         }
+    }
+
+    private boolean isCancelled() {
+        return cancelled.get();
     }
 
     private void addToMemory(ChatMessage chatMessage) {

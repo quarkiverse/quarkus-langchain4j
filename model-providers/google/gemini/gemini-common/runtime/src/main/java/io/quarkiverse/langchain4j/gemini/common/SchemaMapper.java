@@ -15,6 +15,9 @@ import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 
 public class SchemaMapper {
     public static Schema fromJsonSchemaToSchema(JsonSchema jsonSchema) {
+        if (jsonSchema == null || jsonSchema.rootElement() == null) {
+            return null;
+        }
         var result = fromJsonSchemaToSchema(jsonSchema.rootElement());
         if ((result == null) || result.isEffectiveEmptyObject()) {
             return null;

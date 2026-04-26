@@ -26,9 +26,9 @@ class AzureOpenAiRecorderEndpointTests {
 
     @Test
     void noEndpointConfigSet() {
-        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT),
-                ConfigValidationException.class);
+        var configValidationException = catchThrowableOfType(ConfigValidationException.class,
+                () -> AzureOpenAiRecorder.getEndpoint(this.config,
+                        NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT));
 
         assertThat(configValidationException.getProblemCount())
                 .isEqualTo(2);
@@ -50,9 +50,9 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .resourceName();
 
-        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT),
-                ConfigValidationException.class);
+        var configValidationException = catchThrowableOfType(ConfigValidationException.class,
+                () -> AzureOpenAiRecorder.getEndpoint(this.config,
+                        NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT));
 
         assertThat(configValidationException.getProblemCount())
                 .isEqualTo(1);
@@ -69,9 +69,9 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .deploymentName();
 
-        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT),
-                ConfigValidationException.class);
+        var configValidationException = catchThrowableOfType(ConfigValidationException.class,
+                () -> AzureOpenAiRecorder.getEndpoint(this.config,
+                        NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT));
 
         assertThat(configValidationException.getProblemCount())
                 .isEqualTo(1);
@@ -192,6 +192,11 @@ class AzureOpenAiRecorderEndpointTests {
         }
 
         @Override
+        public Optional<Boolean> logRequestsCurl() {
+            return Optional.empty();
+        }
+
+        @Override
         public Boolean enableIntegration() {
             return null;
         }
@@ -250,13 +255,13 @@ class AzureOpenAiRecorderEndpointTests {
                 }
 
                 @Override
-                public Double temperature() {
-                    return null;
+                public Optional<Double> temperature() {
+                    return Optional.empty();
                 }
 
                 @Override
-                public Double topP() {
-                    return null;
+                public Optional<Double> topP() {
+                    return Optional.empty();
                 }
 
                 @Override

@@ -23,6 +23,10 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.infinispan.client.InfinispanClientName;
 import io.quarkus.infinispan.client.deployment.InfinispanClientNameBuildItem;
 
+/**
+ * Quarkus build step processor that registers the Infinispan embedding store extension.
+ * Sets up the schema producer, Infinispan client, and creates the embedding store bean.
+ */
 public class InfinispanEmbeddingStoreProcessor {
 
     public static final DotName INFINISPAN_EMBEDDING_STORE = DotName.createSimple(InfinispanEmbeddingStore.class);

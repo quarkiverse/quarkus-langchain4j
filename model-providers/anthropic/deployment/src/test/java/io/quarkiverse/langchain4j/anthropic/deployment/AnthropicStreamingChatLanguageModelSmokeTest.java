@@ -23,8 +23,8 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
+import dev.langchain4j.model.anthropic.AnthropicTokenUsage;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -52,7 +52,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
         // See https://docs.anthropic.com/claude/reference/messages-streaming#raw-http-stream-response
         var eventStream = """
                 event: message_start
-                data: {"type":"message_start","message":{"id":"msg_01Grp1T2X3zAkZETBiUgFsJK","type":"message","role":"assistant","content":[],"model":"claude-3-haiku-20240307","stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":14,"output_tokens":1}}      }
+                data: {"type":"message_start","message":{"id":"msg_01Grp1T2X3zAkZETBiUgFsJK","type":"message","role":"assistant","content":[],"model":"claude-3-haiku-20240307","stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":14,"output_tokens":1,"cache_creation_input_tokens":100,"cache_read_input_tokens":50}}      }
 
                 event: content_block_start
                 data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}           }
@@ -191,7 +191,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                         .withHeader("anthropic-version", not(absent()))
                         .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
 
-        var streamingResponse = new AtomicReference<AiMessage>();
+        var streamingResponse = new AtomicReference<ChatResponse>();
         streamingChatModel.chat("Hello, how are you today?", new StreamingChatResponseHandler() {
             @Override
             public void onPartialResponse(String token) {
@@ -204,7 +204,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
 
             @Override
             public void onCompleteResponse(ChatResponse response) {
-                streamingResponse.set(response.aiMessage());
+                streamingResponse.set(response);
             }
         });
 
@@ -213,10 +213,19 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                 .pollInterval(Duration.ofSeconds(2))
                 .until(() -> streamingResponse.get() != null);
 
-        assertThat(streamingResponse.get().text())
+        assertThat(streamingResponse.get().aiMessage().text())
                 .isNotNull()
                 .isEqualTo(
                         "As an AI language model, I don't have personal feelings or emotions, but I'm here and ready to assist you to the best of my abilities. How can I help you today?");
+
+        assertThat(streamingResponse.get().tokenUsage())
+                .isInstanceOf(AnthropicTokenUsage.class);
+
+        var tokenUsage = (AnthropicTokenUsage) streamingResponse.get().tokenUsage();
+        assertThat(tokenUsage.inputTokenCount()).isEqualTo(14);
+        assertThat(tokenUsage.outputTokenCount()).isEqualTo(41);
+        assertThat(tokenUsage.cacheCreationInputTokens()).isEqualTo(100);
+        assertThat(tokenUsage.cacheReadInputTokens()).isEqualTo(50);
 
         assertThat(wireMockServer.getAllServeEvents())
                 .hasSize(1);

@@ -16,10 +16,10 @@ import java.lang.annotation.Target;
  *
  * <pre>
  * {@code
- * @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+ * &#64;RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
  * public interface ImageDescriber {
  *
- *     @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
+ *     &#64;UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
  *             + " with only the Java code. If it is not, respond with 'NOT AN IMAGE'")
  *     Report describe(@ImageUrl String url);
  * }
@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
  * <li>URL</li>
  * <li>URI</li>
  * <li>dev.langchain4j.data.image.Image</li>
+ * <li>List&lt;dev.langchain4j.data.image.Image&gt;</li>
  * </ul>
  *
  */

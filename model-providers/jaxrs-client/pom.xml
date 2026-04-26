@@ -30,5 +30,10 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-tls-registry</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

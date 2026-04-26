@@ -16,10 +16,10 @@ import java.lang.annotation.Target;
  *
  * <pre>
  * {@code
- * @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+ * &#64;RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
  * public interface AudioDescriber {
  *
- *     @UserMessage("Describe the audio")
+ *     &#64;UserMessage("Describe the audio")
  *     Report describe(@AudioUrl String url);
  * }
  * </pre>
@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * <li>URL</li>
  * <li>URI</li>
  * <li>dev.langchain4j.data.audio.Audio</li>
+ * <li>List&lt;dev.langchain4j.data.audio.Audio&gt;</li>
  * </ul>
  *
  */

@@ -15,8 +15,10 @@ import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
 
@@ -58,13 +60,35 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
+        public AiServices<T> systemMessageProvider(SystemMessageProvider systemMessageProvider) {
+            context.systemMessageProvider = memoryId -> systemMessageProvider.getSystemMessage(memoryId);
+            return this;
+        }
+
         public AiServices<T> imageModel(ImageModel imageModel) {
             quarkusAiServiceContext().imageModel = imageModel;
             return this;
         }
 
-        public AiServices<T> maxSequentialToolInvocations(Integer maxSequentialToolInvocations) {
-            quarkusAiServiceContext().maxSequentialToolExecutions = maxSequentialToolInvocations;
+        @Override
+        public AiServices<T> maxSequentialToolsInvocations(int maxSequentialToolsInvocations) {
+            quarkusAiServiceContext().maxSequentialToolExecutions = maxSequentialToolsInvocations;
+            return this;
+        }
+
+        public AiServices<T> maxToolCallsPerResponse(Integer maxToolCallsPerResponse) {
+            quarkusAiServiceContext().maxToolCallsPerResponse = maxToolCallsPerResponse;
+            return this;
+        }
+
+        public AiServices<T> allowContinuousForcedToolCalling(boolean allowContinuousForcedToolCalling) {
+            quarkusAiServiceContext().allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
+            return this;
+        }
+
+        public AiServices<T> chatMemoryFlushStrategy(
+                ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
+            quarkusAiServiceContext().chatMemoryFlushStrategy = chatMemoryFlushStrategy;
             return this;
         }
 
