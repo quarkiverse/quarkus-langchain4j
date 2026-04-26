@@ -18,6 +18,12 @@
             <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
             <version>${azure-auth-library-oauth2-http.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.azureservices</groupId>
+            <artifactId>quarkus-azure-identity</artifactId>
+            <version>${io.quarkiverse.azureservices-quarkus-azure-identity.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>

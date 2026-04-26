@@ -31,8 +31,8 @@ public interface LangChain4jAzureOpenAiBuildConfig {
     ImageModelBuildConfig imageModel();
 
     /**
-     * If true, enables the use of Azure Default Credentials for authentication.
+     * If true, provides model auth provider, which uses Default Azure Credential for authentication.
      */
     @WithDefault("false")
-    boolean azureDefaultCredentialsEnabled();
+    boolean defaultAzureCredentialModelAuthProvider();
 }

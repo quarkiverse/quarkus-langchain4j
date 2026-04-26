@@ -19,8 +19,8 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
 import com.azure.core.credential.AccessToken;
+import com.azure.core.credential.TokenCredential;
 import com.azure.core.credential.TokenRequestContext;
-import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 
 import dev.langchain4j.model.chat.ChatModel;
@@ -286,12 +286,12 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ModelAuthProvider>, ModelAuthProvider> modelAuthProvider() {
+    public Function<SyntheticCreationalContext<ModelAuthProvider>, ModelAuthProvider> defaultAzureCredentialModelAuthProvider() {
         return new Function<>() {
             @Override
             public ModelAuthProvider apply(
                     SyntheticCreationalContext<ModelAuthProvider> modelAuthProviderSyntheticCreationalContext) {
-                return new AzureOpenAiRecorder.ApplicationDefaultAuthProvider();
+                return new DefaultAzureCredentialModelAuthProvider();
             }
         };
     }
@@ -382,9 +382,9 @@ public class AzureOpenAiRecorder {
         });
     }
 
-    public static class ApplicationDefaultAuthProvider implements ModelAuthProvider {
+    public static class DefaultAzureCredentialModelAuthProvider implements ModelAuthProvider {
         private static final String SCOPE = "https://cognitiveservices.azure.com/.default";
-        private static final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder().build();
+        private static final TokenCredential credential = new DefaultAzureCredentialBuilder().build();
         private static final TokenRequestContext context = new TokenRequestContext().addScopes(SCOPE);
         private static volatile AccessToken currentToken;
 
@@ -392,7 +392,7 @@ public class AzureOpenAiRecorder {
         public String getAuthorization(Input input) {
             AccessToken token = currentToken;
             if (token == null || token.isExpired()) {
-                synchronized (ApplicationDefaultAuthProvider.class) {
+                synchronized (this) {
                     token = currentToken;
                     if (token == null || token.isExpired()) {
                         currentToken = credential.getTokenSync(context);
