@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +36,8 @@ public class VertexAiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.location", "test-location")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.project-id", "test-project")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.log-requests", "true");
 
     @Inject
@@ -44,44 +47,42 @@ public class VertexAiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     void testBatch() {
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1/projects/dummy/locations/dummy/publishers/google/models/%s:batchEmbedContents",
+                        String.format("/v1/projects/test-project/locations/test-location/publishers/google/models/%s:predict",
                                 EMBED_MODEL_ID)))
                         .withHeader("Authorization", equalTo("Bearer " + API_KEY))
+                        .withRequestBody(equalToJson("""
+                                { "instances": [ { "content": "Hello" } ], "parameters": { "autoTruncate": true } }
+                                        """))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
                                          {
-                                           "embeddings": [
+                                           "predictions": [
                                              {
-                                               "values": [
-                                                 -0.010632273,
-                                                 0.019375853,
-                                                 0.020965198,
-                                                 0.0007706437,
-                                                 -0.061464068,
-                                                 -0.007153866,
-                                                 -0.028534686
-                                               ]
-                                             },
-                                             {
-                                               "values": [
-                                                 0.018468002,
-                                                 0.0054281265,
-                                                 -0.017658807,
-                                                 0.013859263,
-                                                 0.05341865,
-                                                 0.026714388,
-                                                 0.0018762478
-                                               ]
+                                               "embeddings": {
+                                                 "values": [
+                                                   -0.010632273,
+                                                   0.019375853,
+                                                   0.020965198,
+                                                   0.0007706437,
+                                                   -0.061464068,
+                                                   -0.007153866,
+                                                   -0.028534686
+                                                 ],
+                                                 "statistics": {
+                                                   "truncated": false,
+                                                   "token_count": 1
+                                                 }
+                                               }
                                              }
                                            ]
                                           }
                                         """)));
 
-        List<TextSegment> textSegments = List.of(TextSegment.from("Hello"), TextSegment.from("Bye"));
+        List<TextSegment> textSegments = List.of(TextSegment.from("Hello")); // Only one for gemini-embedding-001
         Response<List<Embedding>> response = embeddingModel.embedAll(textSegments);
 
-        assertThat(response.content()).hasSize(2);
+        assertThat(response.content()).hasSize(1);
     }
 
     @Test
@@ -90,29 +91,40 @@ public class VertexAiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1/projects/dummy/locations/dummy/publishers/google/models/%s:embedContent",
+                        String.format("/v1/projects/test-project/locations/test-location/publishers/google/models/%s:predict",
                                 EMBED_MODEL_ID)))
                         .withHeader("Authorization", equalTo("Bearer " + API_KEY))
+                        .withRequestBody(equalToJson("""
+                                { "instances": [ { "content": "Hello World" } ], "parameters": { "autoTruncate": true } }
+                                        """))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
                                          {
-                                            "embedding": {
-                                              "values": [
-                                                0.013168517,
-                                                -0.00871193,
-                                                -0.046782672,
-                                                0.00069969177,
-                                                -0.009518872,
-                                                -0.008720178,
-                                                0.06010358
-                                                ]
-                                            }
-                                         }
+                                           "predictions": [
+                                             {
+                                               "embeddings": {
+                                                 "values": [
+                                                   0.013168517,
+                                                   -0.00871193,
+                                                   -0.046782672,
+                                                   0.00069969177,
+                                                   -0.009518872,
+                                                   -0.008720178,
+                                                   0.06010358
+                                                 ],
+                                                 "statistics": {
+                                                   "truncated": false,
+                                                   "token_count": 2
+                                                 }
+                                               }
+                                             }
+                                           ]
+                                          }
                                         """)));
 
-        float[] response = embeddingModel.embed("Hello World").content().vector();
-        assertThat(response).hasSize(7);
+        Response<List<Embedding>> response = embeddingModel.embedAll(List.of(TextSegment.from("Hello World")));
+        assertThat(response.content().get(0).vector()).hasSize(7);
     }
 
     @Singleton
