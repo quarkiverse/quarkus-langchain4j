@@ -60,6 +60,7 @@ public class MarkdownReportFormatter implements ReportFormatter {
                     .append(evaluation.sample().name())
                     .append(": ")
                     .append(evaluation.passed() ? "PASSED" : "FAILED")
+                    .append(" (" + String.format("%.2f", evaluation.score() * 100) + "%" + ")")
                     .append("\n");
 
             if (includeDetails) {
