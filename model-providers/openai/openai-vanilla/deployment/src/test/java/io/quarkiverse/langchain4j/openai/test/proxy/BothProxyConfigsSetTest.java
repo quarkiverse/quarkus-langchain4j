@@ -1,5 +1,8 @@
 package io.quarkiverse.langchain4j.openai.test.proxy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 import java.util.logging.LogRecord;
 
 import jakarta.inject.Inject;
@@ -29,7 +32,15 @@ public class BothProxyConfigsSetTest extends OpenAiBaseTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.proxy-host", "proxy.example.com")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.proxy-port", "8080")
             .overrideRuntimeConfigKey("quarkus.proxy.local.host", "localhost")
-            .overrideRuntimeConfigKey("quarkus.proxy.local.port", "${quarkus.wiremock.devservices.port}");
+            .overrideRuntimeConfigKey("quarkus.proxy.local.port", "${quarkus.wiremock.devservices.port}")
+            .setLogRecordPredicate(record -> true)
+            .assertLogRecords(BothProxyConfigsSetTest::verifyLogRecords);
+
+    private static void verifyLogRecords(List<LogRecord> logRecords) {
+        assertThat(logRecords.stream().map(LogRecord::getMessage))
+                .contains(
+                        "Both 'proxy-configuration-name' (%s) and deprecated 'proxy-host' (%s) are set. The 'proxy-host' configuration will be ignored. Please remove 'proxy-host' and 'proxy-port' from your configuration.");
+    }
 
     @Inject
     ChatModel chatModel;
@@ -47,14 +58,6 @@ public class BothProxyConfigsSetTest extends OpenAiBaseTest {
         String response = chatModel.chat("hello");
         softly.assertThat(response).isEqualTo("response");
         LoggedRequest loggedRequest = singleLoggedRequest();
-
-        test.assertLogRecords(logRecords -> {
-            softly.assertThat(logRecords.stream().map(LogRecord::getMessage).toList())
-                    .anyMatch(l -> l.contains(
-                            "Both 'proxy-configuration-name' (local) and deprecated 'proxy-host' (proxy.example.com) are set. "
-                                    +
-                                    "The 'proxy-host' configuration will be ignored. Please remove 'proxy-host' and 'proxy-port' from your configuration."));
-        });
 
         softly.assertThat(loggedRequest.getHost()).contains("localhost");
 

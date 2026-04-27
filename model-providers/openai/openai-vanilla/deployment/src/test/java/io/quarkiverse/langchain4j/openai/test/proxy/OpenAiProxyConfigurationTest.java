@@ -1,5 +1,8 @@
 package io.quarkiverse.langchain4j.openai.test.proxy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 import java.util.logging.LogRecord;
 
 import jakarta.inject.Inject;
@@ -26,7 +29,15 @@ public class OpenAiProxyConfigurationTest extends OpenAiBaseTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     WiremockAware.wiremockUrlForConfig("/v1"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.proxy-host", "localhost")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.proxy-port", "${quarkus.wiremock.devservices.port}");
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.proxy-port", "${quarkus.wiremock.devservices.port}")
+            .setLogRecordPredicate(record -> true)
+            .assertLogRecords(OpenAiProxyConfigurationTest::verifyLogRecords);
+
+    private static void verifyLogRecords(List<LogRecord> logRecords) {
+        assertThat(logRecords.stream().map(LogRecord::getMessage))
+                .contains(
+                        "Using deprecated 'proxy-host' configuration. Please migrate to 'proxy-configuration-name' using Quarkus Proxy Registry. The 'proxy-host', 'proxy-port', and 'proxy-type' properties will be removed in a future version.");
+    }
 
     @Inject
     ChatModel chatModel;
@@ -45,10 +56,6 @@ public class OpenAiProxyConfigurationTest extends OpenAiBaseTest {
         softly.assertThat(response).isEqualTo("response");
         LoggedRequest loggedRequest = singleLoggedRequest();
         softly.assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("langchain4j-openai");
-
-        test.assertLogRecords(l -> softly.assertThat(l.stream().map(LogRecord::getMessage).toList()).contains(
-                "Using deprecated 'proxy-host' configuration. " +
-                        "Please switch to 'proxy-configuration-name' and define the proxy configuration as a named configuration."));
 
         softly.assertAll();
     }

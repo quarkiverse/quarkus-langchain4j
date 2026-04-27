@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.openai.test.proxy;
 
-import java.util.List;
-import java.util.logging.LogRecord;
-
 import jakarta.inject.Inject;
 
 import org.assertj.core.api.SoftAssertions;
@@ -46,11 +43,6 @@ public class DefaultProxyAvailableTest extends OpenAiBaseTest {
         softly.assertThat(response).isEqualTo("response");
         LoggedRequest loggedRequest = singleLoggedRequest();
         softly.assertThat(loggedRequest.getHost()).isEqualTo("localhost");
-
-        test.assertLogRecords(logRecords -> {
-            List<String> list = logRecords.stream().map(LogRecord::getMessage).toList();
-            softly.assertThat(list).doesNotContain("Both 'proxy-configuration-name' ");
-        });
 
         softly.assertAll();
     }

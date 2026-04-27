@@ -425,10 +425,8 @@ public class OpenAiRecorder {
                     Type.valueOf(openAiConfig.proxyType()),
                     new InetSocketAddress(openAiConfig.proxyHost().get(), openAiConfig.proxyPort())));
         }
-        return proxyRegistry.get(openAiConfig.proxyConfigurationName())
-                .map(pc -> new Proxy(
-                        Type.valueOf(pc.type().name()),
-                        new InetSocketAddress(pc.host(), pc.port())));
+
+        return Optional.empty();
     }
 
     private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,
