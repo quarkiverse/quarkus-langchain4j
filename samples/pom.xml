@@ -11,6 +11,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>apicurio-registry-mcp</module>
         <module>dynamic-mcp-clients</module>
         <module>chatbot-easy-rag-kotlin</module>
         <module>chatbot-easy-rag</module>
