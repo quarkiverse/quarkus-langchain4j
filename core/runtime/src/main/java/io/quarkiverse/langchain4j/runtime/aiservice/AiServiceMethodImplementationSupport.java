@@ -261,7 +261,7 @@ public class AiServiceMethodImplementationSupport {
         toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
         toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
         for (ToolProvider toolProvider : context.toolService.toolProviders()) {
-            ToolProviderRequest request = new QuarkusToolProviderRequest(memoryId, userMessage,
+            ToolProviderRequest request = new QuarkusToolProviderRequest(invocationContext, userMessage,
                     methodCreateInfo.getMcpClientNames());
             ToolProviderResult result = toolProvider.provideTools(request);
             immediateReturnToolNames = Utils.copy(result.immediateReturnToolNames());
