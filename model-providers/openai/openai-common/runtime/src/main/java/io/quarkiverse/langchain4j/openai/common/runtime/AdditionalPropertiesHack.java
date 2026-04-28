@@ -9,8 +9,7 @@ import java.util.Map;
  * This only works because:
  * <ul>
  * <li>The creation of beans does not happen in parallel</li>
- * <li>The creation of beans happens on the same thread</li>
- * <li>Setting up a model builder always precedes setting up a client builder</li>
+ * <li>Setting up a model builder always precedes setting up a client builder on the same thread</li>
  * </ul>
  */
 public final class AdditionalPropertiesHack {
@@ -18,70 +17,36 @@ public final class AdditionalPropertiesHack {
     private AdditionalPropertiesHack() {
     }
 
-    static final ThreadLocal<Map<String, String>> PROPS = new ThreadLocal<>();
+    static final ThreadLocal<Map<String, String>> PROPS = ThreadLocal.withInitial(HashMap::new);
     static final ThreadLocal<Proxy> PROXY = new ThreadLocal<>();
-    static {
-        reset();
-    }
 
     public static void reset() {
-        PROPS.set(new HashMap<>());
+        PROPS.get().clear();
         PROXY.remove();
     }
 
     public static void setConfigName(String configName) {
-        Map<String, String> map = PROPS.get();
-        if (map == null) {
-            // this should never happen
-            return;
-        }
-        map.put("configName", configName);
+        PROPS.get().put("configName", configName);
     }
 
     public static void setTlsConfigurationName(String tlsConfigurationName) {
-        Map<String, String> map = PROPS.get();
-        if (map == null) {
-            // this should never happen
-            return;
-        }
-        map.put("tlsConfigurationName", tlsConfigurationName);
+        PROPS.get().put("tlsConfigurationName", tlsConfigurationName);
     }
 
     public static String getAndClearConfigName() {
-        Map<String, String> map = PROPS.get();
-        if (map == null) {
-            // this should never happen
-            return null;
-        }
-        return map.remove("configName");
+        return PROPS.get().remove("configName");
     }
 
     public static String getAndClearTlsConfigurationName() {
-        Map<String, String> map = PROPS.get();
-        if (map == null) {
-            // this should never happen
-            return null;
-        }
-        return map.remove("tlsConfigurationName");
+        return PROPS.get().remove("tlsConfigurationName");
     }
 
     public static void setLogCurl(boolean logCurl) {
-        Map<String, String> map = PROPS.get();
-        if (map == null) {
-            // this should never happen
-            return;
-        }
-        map.put("logCurl", Boolean.toString(logCurl));
+        PROPS.get().put("logCurl", Boolean.toString(logCurl));
     }
 
     public static boolean getAndClearLogCurl() {
-        Map<String, String> map = PROPS.get();
-        if (map == null) {
-            // this should never happen
-            return false;
-        }
-        String value = map.remove("logCurl");
-        return Boolean.parseBoolean(value);
+        return Boolean.parseBoolean(PROPS.get().remove("logCurl"));
     }
 
     public static void setProxy(Proxy proxy) {
