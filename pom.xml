@@ -52,6 +52,8 @@
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
     <gpu-llama3.version>0.4.0</gpu-llama3.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
+    <azure-auth-library-oauth2-http.version>1.18.1</azure-auth-library-oauth2-http.version>
+    <io.quarkiverse.azureservices-quarkus-azure-identity.version>1.2.2</io.quarkiverse.azureservices-quarkus-azure-identity.version>
   </properties>
   <dependencyManagement>
     <dependencies>
