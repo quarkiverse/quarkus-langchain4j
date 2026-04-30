@@ -14,7 +14,7 @@ endif::[]
 </dependency>
 ----
 
-Even better, if you use the Quarkus platformn BOM (default for projects generated), add the Quarkus Langchain4J BOM and all dependency versions will align:
+Even better, if you use the Quarkus platform BOM (default for projects generated), add the Quarkus Langchain4J BOM and all dependency versions will align:
 
 [source,xml,subs=attributes+]
 ----
