@@ -11,8 +11,8 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.skills.ClassPathSkillLoader;
-import dev.langchain4j.skills.FileSystemSkill;
 import dev.langchain4j.skills.FileSystemSkillLoader;
+import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
@@ -39,11 +39,11 @@ public class SkillsRecorder {
                     return new SkillsToolProvider(request -> ToolProviderResult.builder().build(), null);
                 }
                 List<String> directories = config.directories().get();
-                List<FileSystemSkill> allSkills = new ArrayList<>();
+                List<Skill> allSkills = new ArrayList<>();
                 for (String directory : directories) {
                     if (directory.startsWith("classpath:")) {
                         String dir = directory.substring("classpath:".length());
-                        List<FileSystemSkill> loaded = ClassPathSkillLoader.loadSkills(dir);
+                        List<Skill> loaded = ClassPathSkillLoader.loadSkills(dir);
                         if (!loaded.isEmpty()) {
                             log.infof("Loaded %d skill(s) from directory: %s", loaded.size(), directory);
                             allSkills.addAll(loaded);
@@ -53,7 +53,7 @@ public class SkillsRecorder {
                     } else {
                         Path dirPath = resolveDirectory(directory);
                         if (dirPath != null && Files.isDirectory(dirPath)) {
-                            List<FileSystemSkill> loaded = FileSystemSkillLoader.loadSkills(dirPath);
+                            List<? extends Skill> loaded = FileSystemSkillLoader.loadSkills(dirPath);
                             if (!loaded.isEmpty()) {
                                 log.infof("Loaded %d skill(s) from directory: %s", loaded.size(), dirPath.toAbsolutePath());
                                 allSkills.addAll(loaded);
