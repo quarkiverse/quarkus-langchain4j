@@ -50,6 +50,7 @@ import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.proxy.ProxyConfiguration;
 import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
@@ -411,9 +412,7 @@ public class OpenAiRecorder {
             }
 
             return proxyRegistry.get(openAiConfig.proxyConfigurationName())
-                    .map(pc -> new Proxy(
-                            Type.valueOf(pc.type().name()),
-                            new InetSocketAddress(pc.host(), pc.port())));
+                    .map(mapProxyConfiguration());
         }
 
         if (openAiConfig.proxyHost().isPresent()) {
@@ -426,7 +425,14 @@ public class OpenAiRecorder {
                     new InetSocketAddress(openAiConfig.proxyHost().get(), openAiConfig.proxyPort())));
         }
 
-        return Optional.empty();
+        return proxyRegistry.get(Optional.empty())
+                .map(mapProxyConfiguration());
+    }
+
+    private Function<ProxyConfiguration, Proxy> mapProxyConfiguration() {
+        return pc -> new Proxy(
+                Type.valueOf(pc.type().name()),
+                new InetSocketAddress(pc.host(), pc.port()));
     }
 
     private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,

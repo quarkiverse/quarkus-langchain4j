@@ -136,7 +136,8 @@ public interface LangChain4jOpenAiConfig {
          * <p>
          * There are some rules for using Quarkus Proxy Registry configuration:
          * <ul>
-         * <li>If {@code quarkus.langchain4j.openai.proxy-host} is set, it takes precedence over <code>proxy-host</code>
+         * <li>If {@code quarkus.langchain4j.openai.proxy-configuration-name} is set, it takes precedence over
+         * <code>proxy-host</code>
          * configuration.</li>
          * <li>If not set and the default proxy configuration is configured ({@code quarkus.proxy.*}) then that will be
          * used.</li>

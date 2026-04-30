@@ -1,10 +1,8 @@
 package io.quarkiverse.langchain4j.openai.test.proxy;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import jakarta.inject.Inject;
 
+import org.assertj.core.api.SoftAssertions;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -36,9 +34,10 @@ public class ProxyImageModelTest extends OpenAiBaseTest {
     public void shouldLoadImageModel() {
 
         Response<Image> response = imageModel.generate("whatever");
-        assertNotNull(response);
-        assertNotNull(response.content().url());
-
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response).isNotNull();
+            softly.assertThat(response.content().url()).isNotNull();
+            softly.assertThat(wiremock().getServeEvents()).hasSize(1);
+        });
     }
 }
