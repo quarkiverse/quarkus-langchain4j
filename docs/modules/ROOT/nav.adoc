@@ -42,6 +42,11 @@
 ** xref:messages-and-memory.adoc[Messages and Memory]
 ** xref:function-calling.adoc[Function Calling]
 ** xref:guardrails.adoc[Guardrails]
+** Tool Guardrails
+*** xref:tool-guardrails-concept.adoc[Understand tool guardrails]
+*** xref:tool-guardrails-tutorial.adoc[Create your first tool guardrail]
+*** xref:tool-guardrails-howto.adoc[Validate tool invocations]
+*** xref:tool-guardrails-reference.adoc[Tool guardrails reference]
 ** xref:response-augmenter.adoc[Response Augmenter]
 ** xref:chat-scopes.adoc[Chat Scopes Framework]
 * xref:models.adoc[Models]
