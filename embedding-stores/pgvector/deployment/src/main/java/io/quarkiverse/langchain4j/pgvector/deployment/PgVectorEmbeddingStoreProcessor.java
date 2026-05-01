@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.pgvector.deployment;
 
+import java.util.Map;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
 
@@ -14,10 +16,12 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.agroal.api.AgroalDataSource;
 import io.agroal.api.AgroalPoolInterceptor;
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.pgvector.PgVectorAgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreRecorder;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.agroal.DataSource;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -55,34 +59,81 @@ class PgVectorEmbeddingStoreProcessor {
             PgVectorEmbeddingStoreBuildTimeConfig buildTimeConfig,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
 
-        AnnotationInstance datasourceQualifier = buildTimeConfig.datasource()
-                .map(dn -> AnnotationInstance.builder(DataSource.class).add("value", dn).build())
-                .orElse(AnnotationInstance.builder(Default.class).build());
+        String defaultDatasourceName = buildTimeConfig.defaultConfig().datasource().orElse(null);
+        AnnotationInstance defaultDatasourceQualifier = resolveDatasourceQualifier(defaultDatasourceName);
 
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(PG_VECTOR_EMBEDDING_STORE)
-                .types(ClassType.create(dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore.class),
-                        ClassType.create(EmbeddingStore.class),
-                        ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
-                .setRuntimeInit()
-                .defaultBean()
-                .unremovable()
-                .scope(ApplicationScoped.class)
-                .createWith(recorder.embeddingStoreFunction(buildTimeConfig.datasource().orElse(null)))
-                .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)), datasourceQualifier)
-                .done());
+        if (buildTimeConfig.defaultConfig().defaultStoreEnabled()) {
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(PG_VECTOR_EMBEDDING_STORE)
+                    .types(ClassType.create(dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore.class),
+                            ClassType.create(EmbeddingStore.class),
+                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .createWith(recorder.embeddingStoreFunction(defaultDatasourceName, NamedConfigUtil.DEFAULT_NAME))
+                    .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)),
+                            defaultDatasourceQualifier)
+                    .done());
 
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
-                .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
-                .setRuntimeInit()
-                .unremovable()
-                .scope(ApplicationScoped.class)
-                .supplier(recorder.pgVectorAgroalPoolInterceptor())
-                .qualifiers(datasourceQualifier)
-                .done());
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
+                    .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
+                    .setRuntimeInit()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .supplier(recorder.pgVectorAgroalPoolInterceptor(NamedConfigUtil.DEFAULT_NAME))
+                    .qualifiers(defaultDatasourceQualifier)
+                    .done());
 
-        embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+        }
+
+        Map<String, PgVectorNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
+        for (Map.Entry<String, PgVectorNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
+            String storeName = entry.getKey();
+            PgVectorNamedStoreBuildTimeConfig storeBuildTimeConfig = entry.getValue();
+            String storeDatasourceName = storeBuildTimeConfig.datasource().orElse(null);
+
+            AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class).add("value", storeName)
+                    .build();
+            AnnotationInstance storeDatasourceQualifier = resolveDatasourceQualifier(storeDatasourceName);
+
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(PG_VECTOR_EMBEDDING_STORE)
+                    .types(ClassType.create(dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore.class),
+                            ClassType.create(EmbeddingStore.class),
+                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .addQualifier(storeNameQualifier)
+                    .createWith(recorder.embeddingStoreFunction(storeDatasourceName, storeName))
+                    .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)),
+                            storeDatasourceQualifier)
+                    .done());
+
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
+                    .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
+                    .setRuntimeInit()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .supplier(recorder.pgVectorAgroalPoolInterceptor(storeName))
+                    .qualifiers(storeDatasourceQualifier)
+                    .done());
+
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+        }
+    }
+
+    private AnnotationInstance resolveDatasourceQualifier(String datasourceName) {
+        if (datasourceName != null && !NamedConfigUtil.isDefault(datasourceName)) {
+            return AnnotationInstance.builder(DataSource.class).add("value", datasourceName).build();
+        }
+        return AnnotationInstance.builder(Default.class).build();
     }
 
     @BuildStep
