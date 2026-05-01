@@ -7,7 +7,7 @@ import java.sql.Statement;
 import com.pgvector.PGvector;
 
 import io.agroal.api.AgroalPoolInterceptor;
-import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
+import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorStoreRuntimeConfig;
 import io.quarkus.runtime.configuration.ConfigUtils;
 
 /**
@@ -15,9 +15,9 @@ import io.quarkus.runtime.configuration.ConfigUtils;
  */
 public class PgVectorAgroalPoolInterceptor implements AgroalPoolInterceptor {
 
-    PgVectorEmbeddingStoreConfig config;
+    PgVectorStoreRuntimeConfig config;
 
-    public PgVectorAgroalPoolInterceptor(PgVectorEmbeddingStoreConfig config) {
+    public PgVectorAgroalPoolInterceptor(PgVectorStoreRuntimeConfig config) {
         this.config = config;
     }
 

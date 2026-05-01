@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.pgvector.DefaultMetadataStorageConfig;
-import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig.MetadataConfig;
+import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorStoreRuntimeConfig.MetadataConfig;
 
 /**
  * Quarkus PGVector EmbeddingStore Implementation
