@@ -112,6 +112,489 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++milvus+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-enabled[`+++quarkus.langchain4j.milvus.devservices.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether Dev Services for Milvus are enabled or not.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-milvus-image-name]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-milvus-image-name[`+++quarkus.langchain4j.milvus.devservices.milvus-image-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.devservices.milvus-image-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Container image for Milvus.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_MILVUS_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_MILVUS_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++docker.io/milvusdb/milvus:v2.3.16+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-port]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-port[`+++quarkus.langchain4j.milvus.devservices.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.devservices.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the Milvus dev service will listen to. If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-shared]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-shared[`+++quarkus.langchain4j.milvus.devservices.shared+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.devservices.shared+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Indicates if the Dev Service containers managed by Quarkus for Milvus are shared.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-devservices-service-name[`+++quarkus.langchain4j.milvus.devservices.service-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.devservices.service-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Service label to apply to created Dev Services containers.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++milvus+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-host]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-host[`+++quarkus.langchain4j.milvus.host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the Milvus server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-port]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-port[`+++quarkus.langchain4j.milvus.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The port of the Milvus server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-token]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-token[`+++quarkus.langchain4j.milvus.token+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.token+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The authentication token for the Milvus server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-username]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-username[`+++quarkus.langchain4j.milvus.username+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.username+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The username for the Milvus server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_USERNAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_USERNAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-password]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-password[`+++quarkus.langchain4j.milvus.password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The password for the Milvus server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-timeout]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-timeout[`+++quarkus.langchain4j.milvus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The timeout duration for the Milvus client. If not specified, 5 seconds will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-milvus_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-db-name]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-db-name[`+++quarkus.langchain4j.milvus.db-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.db-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the database.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DB_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DB_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-create-collection]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-create-collection[`+++quarkus.langchain4j.milvus.create-collection+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.create-collection+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Create the collection if it does not exist yet.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_CREATE_COLLECTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_CREATE_COLLECTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-collection-name]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-collection-name[`+++quarkus.langchain4j.milvus.collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-dimension]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-dimension[`+++quarkus.langchain4j.milvus.dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Dimension of the vectors. Only applicable when the collection yet has to be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-primary-field]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-primary-field[`+++quarkus.langchain4j.milvus.primary-field+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.primary-field+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the field that contains the ID of the vector.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_PRIMARY_FIELD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_PRIMARY_FIELD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++id+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-text-field]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-text-field[`+++quarkus.langchain4j.milvus.text-field+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.text-field+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the field that contains the text from which the vector was calculated.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_TEXT_FIELD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_TEXT_FIELD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metadata-field]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metadata-field[`+++quarkus.langchain4j.milvus.metadata-field+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.metadata-field+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the field that contains JSON metadata associated with the text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_METADATA_FIELD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_METADATA_FIELD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++metadata+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-vector-field]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-vector-field[`+++quarkus.langchain4j.milvus.vector-field+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.vector-field+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the field to store the vector in.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_VECTOR_FIELD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_VECTOR_FIELD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++vector+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-description]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-description[`+++quarkus.langchain4j.milvus.description+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.description+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Description of the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_DESCRIPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_DESCRIPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-index-type]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-index-type[`+++quarkus.langchain4j.milvus.index-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.index-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The index type to use for the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_INDEX_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_INDEX_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `flat`, `ivf-flat`, `ivf-sq8`, `ivf-pq`, `hnsw`, `hnsw-sq`, `hnsw-pq`, `hnsw-prq`, `diskann`, `autoindex`, `scann`, `gpu-ivf-flat`, `gpu-ivf-pq`, `gpu-brute-force`, `gpu-cagra`, `bin-flat`, `bin-ivf-flat`, `trie`, `stl-sort`, `inverted`, `bitmap`, `sparse-inverted-index`, `sparse-wand`
+|`+++flat+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metric-type]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metric-type[`+++quarkus.langchain4j.milvus.metric-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.metric-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The metric type to use for searching.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_METRIC_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_METRIC_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `l2`, `ip`, `cosine`, `hamming`, `jaccard`
+|`+++cosine+++`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-consistency-level]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-consistency-level[`+++quarkus.langchain4j.milvus.consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The consistency level.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`strong`, `session`, `bounded`, `eventually`
+|`+++eventually+++`
+
 a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-host]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-host[`+++quarkus.langchain4j.milvus.host+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.milvus.host+++[]
