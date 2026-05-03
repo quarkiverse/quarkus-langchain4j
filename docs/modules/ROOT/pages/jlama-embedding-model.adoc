@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Jlama provides local embedding models suitable for RAG (Retriever-Augmented Generation), semantic search, and document classification—all without leaving the Java process.
 

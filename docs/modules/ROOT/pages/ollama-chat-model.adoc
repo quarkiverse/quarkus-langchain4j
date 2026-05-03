@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://ollama.com/[Ollama] allows developers to run large language models (LLMs) locally on their machines, with support for both CPU and GPU execution.
 It supports many popular open models such as DeepSeek R1, Llama3, Mistral, and CodeLlama, which can be pulled from the https://ollama.com/library[Ollama model library].

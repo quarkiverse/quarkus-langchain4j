@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: tutorial
 
 This guide shows you how to get started with Quarkus LangChain4j by building a simple CLI application that generates poems using an AI model.
 

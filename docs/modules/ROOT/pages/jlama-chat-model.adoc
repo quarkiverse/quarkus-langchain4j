@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://github.com/tjake/Jlama[Jlama] provides a way to run Large Language Models (LLMs) *locally and in pure Java*, embedded within your Quarkus application.
 It supports a growing set of models available on Hugging Face: https://huggingface.co/tjake[https://huggingface.co/tjake].

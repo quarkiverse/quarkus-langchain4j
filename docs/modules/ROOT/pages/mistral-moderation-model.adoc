@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Mistral provides moderation models to detect harmful or unsafe content in user inputs before processing them.
 

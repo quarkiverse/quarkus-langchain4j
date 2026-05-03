@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Pinecone is a fully managed, scalable vector database optimized for similarity search.
 With Quarkus LangChain4j, you can use Pinecone as a vector store to implement Retrieval-Augmented Generation (RAG) pipelines.

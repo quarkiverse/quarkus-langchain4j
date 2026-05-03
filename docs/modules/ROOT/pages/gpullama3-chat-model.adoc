@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://github.com/beehive-lab/GPULlama3.java[GPULlama3.java] provides a *Java-native implementation* of LLMs that runs entirely in Java and executes automatically on GPUs via https://github.com/beehive-lab/TornadoVM[TornadoVM].
 

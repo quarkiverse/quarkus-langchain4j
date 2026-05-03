@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Azure OpenAI supports the development of Retrieval-Augmented Generation (RAG) applications by offering embedding models that transform text into high-dimensional vector representations. These embeddings enable similarity search, semantic retrieval, and other vector-based operations.
 

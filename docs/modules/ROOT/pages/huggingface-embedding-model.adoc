@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Hugging Face provides several pre-trained embedding models useful for semantic search, document retrieval, and Retrieval-Augmented Generation (RAG) workflows.
 

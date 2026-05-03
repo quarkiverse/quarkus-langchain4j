@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Redis can serve as an efficient document store for Retrieval-Augmented Generation (RAG) applications using Quarkus LangChain4j.
 This guide explains how to configure and use Redis as a vector-capable document store.
