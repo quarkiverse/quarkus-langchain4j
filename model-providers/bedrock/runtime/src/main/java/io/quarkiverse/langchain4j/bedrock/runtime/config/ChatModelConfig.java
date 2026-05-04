@@ -77,6 +77,13 @@ public interface ChatModelConfig extends AwsClientConfig {
     Optional<Boolean> logBody();
 
     /**
+     * Specifies the desired format for the model's output.
+     * <p>
+     * <strong>Allowable values:</strong> <code>[text, json]</code>
+     */
+    Optional<String> responseFormat();
+
+    /**
      * Aws sdk related configurations for chat models
      */
     AwsConfig aws();
