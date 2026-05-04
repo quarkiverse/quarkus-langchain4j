@@ -93,10 +93,19 @@ public class AgenticProcessor {
                             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER))
                     .findFirst();
 
+            String modelName = extractModelName(methods);
+
+            if (chatModelSupplier.isPresent() && modelName != null) {
+                throw new IllegalConfigurationException(
+                        "Agent interface '" + classInfo.name()
+                                + "' cannot use both @ChatModelSupplier and @ModelName. "
+                                + "Use one or the other to specify the ChatModel.");
+            }
+
             List<MethodInfo> mcpToolBoxMethods = methods.stream()
                     .filter(mi -> mi.hasAnnotation(LangChain4jDotNames.MCP_TOOLBOX)).toList();
             DetectedAiAgentBuildItem item = new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null),
-                    mcpToolBoxMethods);
+                    modelName, mcpToolBoxMethods);
             validate(item);
             producer.produce(
                     item);
@@ -412,7 +421,9 @@ public class AgenticProcessor {
 
         Set<String> requestedChatModelNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
-            String chatModelName = NamedConfigUtil.DEFAULT_NAME; // TODO: we need to fix this and provide a way to let the user pick the name of the chat model
+            String chatModelName = detectedAiAgentBuildItem.getModelName() != null
+                    ? detectedAiAgentBuildItem.getModelName()
+                    : NamedConfigUtil.DEFAULT_NAME;
             requestedChatModelNames.add(chatModelName);
 
             AiAgentCreateInfo.ChatModelInfo chatModelInfo = detectedAiAgentBuildItem.getChatModelSupplier() != null
@@ -455,6 +466,22 @@ public class AgenticProcessor {
                             AgenticScopeOwner.class.getName(), ChatMemoryAccess.class.getName(),
                             ChatMessagesAccess.class.getName())));
                 });
+    }
+
+    private static String extractModelName(List<MethodInfo> agenticMethods) {
+        for (MethodInfo method : agenticMethods) {
+            if (!method.hasAnnotation(AgenticLangChain4jDotNames.AGENT)) {
+                continue;
+            }
+            AnnotationInstance modelNameAnnotation = method.annotation(LangChain4jDotNames.MODEL_NAME);
+            if (modelNameAnnotation != null) {
+                AnnotationValue value = modelNameAnnotation.value();
+                if (value != null && !value.asString().isEmpty()) {
+                    return value.asString();
+                }
+            }
+        }
+        return null;
     }
 
     private static void collectAgentsWithMethodAnnotations(IndexView index, DotName annotation,
