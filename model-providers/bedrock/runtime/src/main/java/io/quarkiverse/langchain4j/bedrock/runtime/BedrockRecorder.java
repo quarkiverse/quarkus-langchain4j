@@ -20,11 +20,13 @@ import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
 import dev.langchain4j.model.bedrock.BedrockGuardrailConfiguration;
 import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockTitanEmbeddingModel;
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
@@ -115,10 +117,15 @@ public class BedrockRecorder {
 
             configureClient(clientBuilder, modelConfig, config);
 
+            if (modelConfig.responseFormat().isPresent()) {
+                paramBuilder.responseFormat(toResponseFormat(modelConfig.responseFormat().get()));
+            }
+
             var builder = BedrockChatModel.builder()
                     .modelId(modelConfig.modelId().orElse("us.amazon.nova-lite-v1:0"))
                     .client(clientBuilder.build())
-                    .defaultRequestParameters(paramBuilder.build());
+                    .defaultRequestParameters(paramBuilder.build())
+                    .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
 
             return new Function<>() {
                 @Override
@@ -204,10 +211,15 @@ public class BedrockRecorder {
                 paramsBuilder.guardrailConfiguration(buildGuardrailConfiguration(modelConfig.guardrail()));
             }
 
+            if (modelConfig.responseFormat().isPresent()) {
+                paramsBuilder.responseFormat(toResponseFormat(modelConfig.responseFormat().get()));
+            }
+
             var builder = BedrockStreamingChatModel.builder()
                     .modelId(modelConfig.modelId().orElse("anthropic.claude-v2"))
                     .client(clientBuilder.build())
-                    .defaultRequestParameters(paramsBuilder.build());
+                    .defaultRequestParameters(paramsBuilder.build())
+                    .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
 
             return new Function<>() {
                 @Override
@@ -370,5 +382,14 @@ public class BedrockRecorder {
         if (credentialsProvider.isPresent()) {
             awsClientBuilder.credentialsProvider(getCredentialsProvider(credentialsProvider.get()));
         }
+    }
+
+    private static ResponseFormat toResponseFormat(String format) {
+        return switch (format.toLowerCase()) {
+            case "json" -> ResponseFormat.JSON;
+            case "text" -> ResponseFormat.TEXT;
+            default -> throw new IllegalArgumentException(
+                    String.format("Unknown response format: %s, must be one of: [json, text]", format));
+        };
     }
 }
