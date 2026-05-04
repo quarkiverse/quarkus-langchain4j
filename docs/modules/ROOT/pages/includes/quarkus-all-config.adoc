@@ -2187,6 +2187,29 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-display]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-display[`+++quarkus.langchain4j.anthropic.chat-model.thinking.display+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.display+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls how thinking content is returned by the Anthropic API.
+
+Valid values: `"summarized"` and `"omitted"`. On Claude Opus 4.7 the server default is `"omitted"` (thinking blocks are empty in the response). On earlier Opus/Sonnet models the default is `"summarized"`. Set to `"summarized"` explicitly on Opus 4.7{plus} if your product renders thinking text to users.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_DISPLAY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_DISPLAY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-interleaved]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-interleaved[`+++quarkus.langchain4j.anthropic.chat-model.thinking.interleaved+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.interleaved+++[]
@@ -2832,6 +2855,29 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++true+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-display]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-display[`+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.display+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.display+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls how thinking content is returned by the Anthropic API.
+
+Valid values: `"summarized"` and `"omitted"`. On Claude Opus 4.7 the server default is `"omitted"` (thinking blocks are empty in the response). On earlier Opus/Sonnet models the default is `"summarized"`. Set to `"summarized"` explicitly on Opus 4.7{plus} if your product renders thinking text to users.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_DISPLAY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_DISPLAY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-interleaved]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-interleaved[`+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.interleaved+++`]##
 ifdef::add-copy-button-to-config-props[]
