@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.redis;
 
+import java.util.Map;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
 
@@ -10,8 +12,10 @@ import org.jboss.jandex.ParameterizedType;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreRecorder;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -35,8 +39,17 @@ public class RedisEmbeddingStoreProcessor {
     }
 
     @BuildStep
-    public RequestedRedisClientBuildItem requestRedisClient(RedisEmbeddingStoreBuildTimeConfig config) {
-        return new RequestedRedisClientBuildItem(config.clientName().orElse(RedisConfig.DEFAULT_CLIENT_NAME));
+    public void requestRedisClients(RedisEmbeddingStoreBuildTimeConfig config,
+            BuildProducer<RequestedRedisClientBuildItem> producer) {
+        producer.produce(new RequestedRedisClientBuildItem(
+                config.defaultConfig().clientName().orElse(RedisConfig.DEFAULT_CLIENT_NAME)));
+
+        for (Map.Entry<String, RedisNamedStoreBuildTimeConfig> entry : config.namedConfig().entrySet()) {
+            String clientName = entry.getValue().clientName().orElse(null);
+            if (clientName != null && !NamedConfigUtil.isDefault(clientName)) {
+                producer.produce(new RequestedRedisClientBuildItem(clientName));
+            }
+        }
     }
 
     @BuildStep
@@ -46,28 +59,62 @@ public class RedisEmbeddingStoreProcessor {
             RedisEmbeddingStoreRecorder recorder,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer,
             RedisEmbeddingStoreBuildTimeConfig buildTimeConfig) {
-        String clientName = buildTimeConfig.clientName().orElse(null);
-        AnnotationInstance redisClientQualifier;
-        if (clientName == null) {
-            redisClientQualifier = AnnotationInstance.builder(Default.class).build();
-        } else {
-            redisClientQualifier = AnnotationInstance.builder(RedisClientName.class)
-                    .add("value", clientName)
-                    .build();
+
+        String defaultClientName = buildTimeConfig.defaultConfig().clientName().orElse(null);
+        AnnotationInstance defaultRedisClientQualifier = resolveRedisClientQualifier(defaultClientName);
+
+        if (buildTimeConfig.defaultConfig().defaultStoreEnabled()) {
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(REDIS_EMBEDDING_STORE)
+                    .types(ClassType.create(RedisEmbeddingStore.class),
+                            ClassType.create(EmbeddingStore.class),
+                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
+                            defaultRedisClientQualifier)
+                    .createWith(recorder.embeddingStoreFunction(defaultClientName, NamedConfigUtil.DEFAULT_NAME))
+                    .done());
+
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(REDIS_EMBEDDING_STORE)
-                .types(ClassType.create(EmbeddingStore.class),
-                        ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
-                .setRuntimeInit()
-                .defaultBean()
-                .unremovable()
-                .scope(ApplicationScoped.class)
-                .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
-                        redisClientQualifier)
-                .createWith(recorder.embeddingStoreFunction(clientName))
-                .done());
-        embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+
+        Map<String, RedisNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
+        for (Map.Entry<String, RedisNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
+            String storeName = entry.getKey();
+            RedisNamedStoreBuildTimeConfig storeBuildTimeConfig = entry.getValue();
+            String storeClientName = storeBuildTimeConfig.clientName().orElse(null);
+
+            AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
+                    .add("value", storeName)
+                    .build();
+            AnnotationInstance storeRedisClientQualifier = resolveRedisClientQualifier(storeClientName);
+
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(REDIS_EMBEDDING_STORE)
+                    .types(ClassType.create(RedisEmbeddingStore.class),
+                            ClassType.create(EmbeddingStore.class),
+                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .addQualifier(storeNameQualifier)
+                    .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
+                            storeRedisClientQualifier)
+                    .createWith(recorder.embeddingStoreFunction(storeClientName, storeName))
+                    .done());
+
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+        }
     }
 
+    private AnnotationInstance resolveRedisClientQualifier(String clientName) {
+        if (clientName != null && !NamedConfigUtil.isDefault(clientName)) {
+            return AnnotationInstance.builder(RedisClientName.class).add("value", clientName).build();
+        }
+        return AnnotationInstance.builder(Default.class).build();
+    }
 }
