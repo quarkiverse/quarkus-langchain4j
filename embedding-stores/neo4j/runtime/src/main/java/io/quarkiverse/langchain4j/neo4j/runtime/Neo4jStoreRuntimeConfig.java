@@ -1,21 +1,17 @@
 package io.quarkiverse.langchain4j.neo4j.runtime;
 
-import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
-
 import java.util.Optional;
 
-import io.quarkus.runtime.annotations.ConfigRoot;
-import io.smallrye.config.ConfigMapping;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
-@ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.neo4j")
-public interface Neo4jRuntimeConfig {
+@ConfigGroup
+public interface Neo4jStoreRuntimeConfig {
 
     /**
      * Dimension of the embeddings that will be stored in the Neo4j store.
      */
-    Integer dimension();
+    Optional<Integer> dimension();
 
     /**
      * Label for the created nodes.
@@ -54,6 +50,11 @@ public interface Neo4jRuntimeConfig {
 
     /**
      * Name of the database to connect to.
+     * <p>
+     * Connecting to a database other than the default {@code neo4j} requires Neo4j Enterprise Edition.
+     * On Community Edition only the default {@code neo4j} database exists, so this property must be left
+     * unchanged (or unset) and named stores must be isolated via {@code label}, {@code index-name} and
+     * {@code embedding-property} instead.
      */
     @WithDefault("neo4j")
     String databaseName();
@@ -67,13 +68,10 @@ public interface Neo4jRuntimeConfig {
      * <li>column of the same name as the 'text-property' value</li>
      * <li>column of the same name as the 'embedding-property' value</li>
      * </ul>
+     * <p>
+     * If not set, a default query is automatically derived from the configured
+     * {@code id-property}, {@code text-property}, and {@code embedding-property} values
+     * for this store.
      */
-    @WithDefault("""
-            RETURN properties(node) AS metadata, \
-            node.${quarkus.langchain4j.neo4j.id-property} AS ${quarkus.langchain4j.neo4j.id-property}, \
-            node.${quarkus.langchain4j.neo4j.text-property} AS ${quarkus.langchain4j.neo4j.text-property}, \
-            node.${quarkus.langchain4j.neo4j.embedding-property} AS ${quarkus.langchain4j.neo4j.embedding-property}, \
-            score""")
-    String retrievalQuery();
-
+    Optional<String> retrievalQuery();
 }

@@ -76,6 +76,68 @@ Common settings include:
 * `quarkus.langchain4j.neo4j.dimension` – Required; dimension of your embeddings
 * `quarkus.neo4j.uri`, `quarkus.neo4j.authentication.*` – Standard Neo4j driver settings
 
+== Named Stores
+
+You can configure multiple named Neo4j embedding stores, each with its own dimension, label, index name and other per-store settings.
+This is useful when your application needs to manage embeddings for different domains in separate node labels or indexes within the same Neo4j instance.
+
+[NOTE]
+====
+All named stores share the single `org.neo4j.driver.Driver` provided by the `quarkus-neo4j` extension, so they connect to the same Neo4j instance.
+Use a distinct `label`, `index-name` and `embedding-property` per store to keep their data isolated.
+====
+
+[IMPORTANT]
+.Multiple databases require Neo4j Enterprise
+====
+The `database-name` property maps to a Neo4j database, and Neo4j *Community Edition* only ships with the single default `neo4j` database.
+If you set `quarkus.langchain4j.neo4j.<store-name>.database-name` to anything other than `neo4j` against a Community instance, the driver will fail at runtime when the store tries to open a session.
+
+To physically separate named stores into different databases you need *Neo4j Enterprise Edition* with the additional databases pre-created.
+On Community Edition, isolate named stores via distinct `label`, `index-name` and `embedding-property` values within the default `neo4j` database instead.
+====
+
+To configure a named store:
+
+[NOTE]
+====
+The `database-name` property is required for named store discovery at build time.
+On Community Edition, set it to `neo4j` (the default database).
+On Enterprise Edition, set it to the target database name.
+====
+
+[source,properties]
+----
+quarkus.langchain4j.neo4j.products.database-name=neo4j
+quarkus.langchain4j.neo4j.products.dimension=1536
+quarkus.langchain4j.neo4j.products.label=Product
+quarkus.langchain4j.neo4j.products.index-name=product_vector
+----
+
+To inject a named store, use the `@EmbeddingStoreName` qualifier:
+
+[source,java]
+----
+@Inject
+@EmbeddingStoreName("products")
+EmbeddingStore<TextSegment> productsStore;
+----
+
+The default store and named stores can coexist.
+If you only need named stores, disable the default store:
+
+[source,properties]
+----
+quarkus.langchain4j.neo4j.default-store-enabled=false
+----
+
+A specific named store can also be skipped at build time without removing its configuration:
+
+[source,properties]
+----
+quarkus.langchain4j.neo4j.products.enabled=false
+----
+
 == How It Works
 
 Internally, the extension maps each document into a Neo4j node with:
