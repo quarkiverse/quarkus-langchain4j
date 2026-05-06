@@ -623,6 +623,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             for (ToolExecutionRequest request : requests) {
                 beforeToolExecutionHandler.accept(BeforeToolExecution.builder()
                         .request(request)
+                        .invocationContext(invocationContext)
                         .build());
             }
         }
@@ -732,6 +733,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                 toolExecuteHandler.accept(ToolExecution.builder()
                         .request(request)
                         .result(toolExecutionResult)
+                        .invocationContext(invocationContext)
                         .build());
             }
 
