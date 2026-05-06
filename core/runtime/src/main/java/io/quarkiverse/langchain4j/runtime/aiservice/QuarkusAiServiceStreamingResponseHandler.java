@@ -617,6 +617,15 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         List<ToolExecutionRequest> requests = aiMessage.toolExecutionRequests();
         int n = requests.size();
 
+        // Enforce the per-response tool-call limit before any work is done. Serial mode allows
+        // partial execution then throws on the (limit+1)th iteration; parallel mode rejects the
+        // whole batch up-front because partial fan-out would race with task submission and
+        // leave memory inconsistent.
+        int maxToolCallsPerResponse = resolveMaxToolCallsPerResponse();
+        if (maxToolCallsPerResponse > 0 && n > maxToolCallsPerResponse) {
+            throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, n);
+        }
+
         // Fire BeforeToolExecution events on the carrier thread, in request order, before fan-out.
         // Keeps observability semantics predictable: subscribers always see "before" in request order.
         if (beforeToolExecutionHandler != null) {
@@ -662,22 +671,34 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             });
         }
 
-        // Wait for every task. Capture the first error so we can rethrow after each slot has
-        // either a real result, a cancellation marker, or a synthesized error result.
+        // Drain every future before returning. We deliberately swallow InterruptedException inside
+        // the wait loop and only re-set the carrier's interrupt flag at the end, so an interrupted
+        // carrier still fills every result slot. Re-setting the flag immediately would cause the
+        // remaining future.get() calls to throw straight away, leaving in-flight tasks unattended
+        // and breaking the "one result per request" guarantee.
+        boolean wasInterrupted = false;
         Throwable firstError = null;
         for (Future<?> future : futures) {
-            try {
-                future.get();
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-                if (firstError == null) {
-                    firstError = ie;
+            while (true) {
+                try {
+                    future.get();
+                    break;
+                } catch (InterruptedException ie) {
+                    wasInterrupted = true;
+                    // Flag was cleared by InterruptedException; keep waiting on this future.
+                } catch (ExecutionException ee) {
+                    Throwable cause = ee.getCause() != null ? ee.getCause() : ee;
+                    if (firstError == null) {
+                        firstError = cause;
+                    }
+                    break;
                 }
-            } catch (ExecutionException ee) {
-                Throwable cause = ee.getCause() != null ? ee.getCause() : ee;
-                if (firstError == null) {
-                    firstError = cause;
-                }
+            }
+        }
+        if (wasInterrupted) {
+            Thread.currentThread().interrupt();
+            if (firstError == null) {
+                firstError = new InterruptedException("Carrier interrupted while waiting for parallel tool tasks");
             }
         }
 
@@ -701,6 +722,15 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private static String errorResultText(Throwable t) {
         String message = t.getMessage();
         return "Tool execution failed: " + (message != null ? message : t.getClass().getSimpleName());
+    }
+
+    private int resolveMaxToolCallsPerResponse() {
+        if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
+            return context.maxToolCallsPerResponse;
+        }
+        return ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
+                .orElse(0);
     }
 
     private void runParallelToolTask(ToolExecutionRequest request, int index,
@@ -751,14 +781,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private void runSerialToolBatch(AiMessage aiMessage) {
         addToMemory(aiMessage);
         List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
-        int maxToolCallsPerResponse;
-        if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
-            maxToolCallsPerResponse = context.maxToolCallsPerResponse;
-        } else {
-            maxToolCallsPerResponse = ConfigProvider.getConfig()
-                    .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
-                    .orElse(0);
-        }
+        int maxToolCallsPerResponse = resolveMaxToolCallsPerResponse();
         int toolCallsCount = 0;
         for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
             if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
