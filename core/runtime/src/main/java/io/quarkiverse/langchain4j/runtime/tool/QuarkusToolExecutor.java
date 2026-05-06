@@ -123,14 +123,11 @@ public class QuarkusToolExecutor implements ToolExecutor {
             }
             Object invocationResult = invokerInstance.invoke(context.tool, params);
             String result;
-            if (invocationResult instanceof Uni<?>) { // TODO CS
-                // Uni/CompletionStage results are awaited synchronously here because the
-                // ToolExecutor interface is imperative and must return a String. For slow
-                // tools (long-running HTTP calls, expensive DB queries, etc.) the await
-                // ties up whichever thread reached this point. In this branch, tools
-                // returning Uni/CompletionStage still follow the legacy non-blocking
-                // scheduling model; proper async propagation through the streaming tool
-                // pipeline remains follow-up work.
+            if (invocationResult instanceof Uni<?>) { // TODO CS, async propagation
+                // Awaited synchronously: ToolExecutor is imperative and must return a String.
+                // The await parks the calling thread, so a slow Uni tool ties up a worker
+                // for the duration (the event-loop guard below ensures it is never the
+                // event loop).
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
                     throw new BlockingToolNotAllowedException(
                             "Cannot execute tools returning Uni on event loop thread due to a tool executor limitation");

@@ -194,12 +194,15 @@ If the return type is a `Uni` or a `CompletionStage`, it is treated as non-block
 
 [NOTE]
 ====
-When a `Uni`/`CompletionStage`-returning tool performs slow I/O (for example, a call to
-an image-generation API that takes 60–120 seconds), the tool is still treated as
-non-blocking for scheduling purposes. In this branch, `@RunOnVirtualThread` is not the
-supported way to change that scheduling for tools returning `Uni` or
-`CompletionStage`. Proper async propagation of `Uni`/`CompletionStage` through the
-streaming tool-call pipeline remains follow-up work.
+`@RunOnVirtualThread` cannot be combined with a `Uni` or `CompletionStage` return type —
+the build fails with a validation error pointing at the offending method. Tools returning
+`Uni` or `CompletionStage` are classified as non-blocking, but their result is awaited
+synchronously inside the tool executor, so the await parks whichever thread the executor
+was reached on (a worker thread under streaming dispatch — never the event loop, which is
+guarded). A slow asynchronous tool — for example a 60–120 second image-generation call —
+therefore holds a worker thread until the `Uni` completes. To get virtual-thread
+scheduling for a slow tool, return a synchronous type (such as `String`) and annotate the
+method with `@RunOnVirtualThread`.
 ====
 
 .Blocking example
