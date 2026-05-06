@@ -217,6 +217,216 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-pinecone_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |
 
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-api-key]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-api-key[`+++quarkus.langchain4j.pinecone.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API key to Pinecone.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-environment]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-environment[`+++quarkus.langchain4j.pinecone.environment+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.environment+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Environment name, e.g. gcp-starter or northamerica-northeast1-gcp.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_ENVIRONMENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_ENVIRONMENT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-project-id]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-project-id[`+++quarkus.langchain4j.pinecone.project-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.project-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+ID of the project.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_PROJECT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_PROJECT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-name]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-name[`+++quarkus.langchain4j.pinecone.index-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.index-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the index within the project. If the index doesn't exist, it will be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-dimension]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-dimension[`+++quarkus.langchain4j.pinecone.dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Dimension of the embeddings in the index. This is required only in case that the index doesn't exist yet and needs to be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-pod-type]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-pod-type[`+++quarkus.langchain4j.pinecone.pod-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.pod-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the pod to use. This is only used if the index doesn't exist yet and needs to be created. The format: One of `s1`, `p1`, or `p2` appended with `.` and one of `x1`, `x2`, `x4`, or `x8`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_POD_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_POD_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++s1.x1+++`
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-readiness-timeout]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-readiness-timeout[`+++quarkus.langchain4j.pinecone.index-readiness-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.index-readiness-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The timeout duration for the index to become ready. Only relevant if the index doesn't exist yet and needs to be created. If not specified, 1 minute will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_READINESS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_READINESS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-pinecone_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-namespace]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-namespace[`+++quarkus.langchain4j.pinecone.namespace+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.namespace+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The namespace.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_NAMESPACE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_NAMESPACE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-text-field-name]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-text-field-name[`+++quarkus.langchain4j.pinecone.text-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.text-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the field that contains the text segment.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_TEXT_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_TEXT_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text+++`
+
+a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-timeout]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-timeout[`+++quarkus.langchain4j.pinecone.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The timeout duration for the Pinecone client. If not specified, 5 seconds will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-pinecone_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|
+
 |===
 
 ifndef::no-duration-note[]

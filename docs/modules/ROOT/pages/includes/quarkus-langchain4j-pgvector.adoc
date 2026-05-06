@@ -49,6 +49,280 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-datasource]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-datasource[`+++quarkus.langchain4j.pgvector.datasource+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.datasource+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the configured Postgres datasource to use for this store. If not set, the default datasource from the Agroal extension will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table[`+++quarkus.langchain4j.pgvector.table+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.table+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The table name for storing embeddings
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_TABLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-dimension]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-dimension[`+++quarkus.langchain4j.pgvector.dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384. OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-use-index]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-use-index[`+++quarkus.langchain4j.pgvector.use-index+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.use-index+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Use index or not
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_USE_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_USE_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-index-list-size]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-index-list-size[`+++quarkus.langchain4j.pgvector.index-list-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.index-list-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+index size
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_INDEX_LIST_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_INDEX_LIST_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++0+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-create-table]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-create-table[`+++quarkus.langchain4j.pgvector.create-table+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.create-table+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the table should be created if not already existing.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_CREATE_TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_CREATE_TABLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-drop-table-first]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-drop-table-first[`+++quarkus.langchain4j.pgvector.drop-table-first+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.drop-table-first+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the table should be dropped prior to being created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_DROP_TABLE_FIRST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_DROP_TABLE_FIRST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-register-vector-pg-extension]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-register-vector-pg-extension[`+++quarkus.langchain4j.pgvector.register-vector-pg-extension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.register-vector-pg-extension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the PG extension should be created on Start. By Default, if it's dev or test environment the value is overridden to true
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_REGISTER_VECTOR_PG_EXTENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_REGISTER_VECTOR_PG_EXTENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode[`+++quarkus.langchain4j.pgvector.metadata.storage-mode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.storage-mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metadata type:
+
+ - COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
+ - COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+ - COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
+
+
+
+Default value: COMBINED_JSON
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_STORAGE_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_STORAGE_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`column-per-key`, `combined-json`, `combined-jsonb`
+|`+++combined-json+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions[`+++quarkus.langchain4j.pgvector.metadata.column-definitions+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.column-definitions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metadata Definition: SQL definition of metadata field(s). By default, "metadata JSON NULL" configured. This is only suitable if using the JSON metadata type.
+
+If using JSONB metadata type, this should in most cases be set to `metadata JSONB NULL`.
+
+If using COLUMNS metadata type, this should be a list of columns, one column for each desired metadata field. Example: condominium_id uuid null, user uuid null
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_COLUMN_DEFINITIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_COLUMN_DEFINITIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|`+++metadata JSON NULL+++`
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes[`+++quarkus.langchain4j.pgvector.metadata.indexes+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.indexes+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metadata Indexes, list of fields to use as index.
+
+For instance:
+
+ - JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
+ - JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
+ - COLUMNS: key, name, age
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEXES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEXES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-index-type]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-index-type[`+++quarkus.langchain4j.pgvector.metadata.index-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.index-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Index Type:
+
+ - BTREE (default)
+ - GIN
+ - Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEX_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEX_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++BTREE+++`
+
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table[`+++quarkus.langchain4j.pgvector.table+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.pgvector.table+++[]
