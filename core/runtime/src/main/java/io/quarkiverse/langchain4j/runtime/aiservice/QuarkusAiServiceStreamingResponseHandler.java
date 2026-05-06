@@ -609,6 +609,70 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         return toolExecutionResult;
     }
 
+    private void runSerialToolBatch(AiMessage aiMessage) {
+        addToMemory(aiMessage);
+        List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
+        int maxToolCallsPerResponse;
+        if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
+            maxToolCallsPerResponse = context.maxToolCallsPerResponse;
+        } else {
+            maxToolCallsPerResponse = ConfigProvider.getConfig()
+                    .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
+                    .orElse(0);
+        }
+        int toolCallsCount = 0;
+        for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+            if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
+                        toolExecutionRequests.size());
+            }
+            toolCallsCount++;
+            if (isCancelled()) {
+                // Fill cancelled tools with error results to keep memory consistent:
+                // every tool request must have a matching tool result
+                ToolExecutionResultMessage cancelledResult = ToolExecutionResultMessage.from(
+                        toolExecutionRequest, "Tool execution was cancelled");
+                addToMemory(cancelledResult);
+                continue;
+            }
+            if (beforeToolExecutionHandler != null) {
+                BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
+                        .request(toolExecutionRequest)
+                        .invocationContext(invocationContext)
+                        .build();
+                beforeToolExecutionHandler.accept(beforeToolExecution);
+            }
+
+            String toolName = toolExecutionRequest.name();
+            ToolExecutor toolExecutor = toolExecutors.get(toolName);
+            // Execute the tool with argumentsErrorHandler and executionErrorHandler.
+            // If execution fails, these handlers convert exceptions into error results
+            // that are sent back to the LLM, allowing it to recover from tool failures.
+            ToolExecutionResult toolExecutionResult = executeTool(
+                    toolExecutionRequest,
+                    toolExecutor,
+                    invocationContext,
+                    context.toolService.argumentsErrorHandler(),
+                    context.toolService.executionErrorHandler());
+
+            fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
+
+            ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
+                    toolExecutionRequest,
+                    toolExecutionResult.resultText());
+
+            ToolExecution toolExecution = ToolExecution.builder()
+                    .request(toolExecutionRequest)
+                    .result(toolExecutionResult)
+                    .invocationContext(invocationContext)
+                    .build();
+            if (toolExecuteHandler != null) {
+                toolExecuteHandler.accept(toolExecution);
+            }
+            addToMemory(toolExecutionResultMessage);
+        }
+    }
+
     @Override
     public void onCompleteResponse(ChatResponse completeResponse) {
         if (isCancelled()) {
@@ -634,68 +698,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         shutdown();
                         return;
                     }
-                    addToMemory(aiMessage);
-                    List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
-                    int maxToolCallsPerResponse;
-                    if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
-                        maxToolCallsPerResponse = context.maxToolCallsPerResponse;
-                    } else {
-                        maxToolCallsPerResponse = ConfigProvider.getConfig()
-                                .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
-                                .orElse(0);
-                    }
-                    int toolCallsCount = 0;
-                    for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-                        if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
-                            throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
-                                    toolExecutionRequests.size());
-                        }
-                        toolCallsCount++;
-                        if (isCancelled()) {
-                            // Fill cancelled tools with error results to keep memory consistent:
-                            // every tool request must have a matching tool result
-                            ToolExecutionResultMessage cancelledResult = ToolExecutionResultMessage.from(
-                                    toolExecutionRequest, "Tool execution was cancelled");
-                            QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
-                            continue;
-                        }
-                        // Call before tool execution handler
-                        if (beforeToolExecutionHandler != null) {
-                            BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
-                                    .request(toolExecutionRequest)
-                                    .invocationContext(invocationContext)
-                                    .build();
-                            beforeToolExecutionHandler.accept(beforeToolExecution);
-                        }
-
-                        String toolName = toolExecutionRequest.name();
-                        ToolExecutor toolExecutor = toolExecutors.get(toolName);
-                        // Execute the tool with argumentsErrorHandler and executionErrorHandler.
-                        // If execution fails, these handlers convert exceptions into error results
-                        // that are sent back to the LLM, allowing it to recover from tool failures.
-                        ToolExecutionResult toolExecutionResult = executeTool(
-                                toolExecutionRequest,
-                                toolExecutor,
-                                invocationContext,
-                                context.toolService.argumentsErrorHandler(),
-                                context.toolService.executionErrorHandler());
-
-                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
-
-                        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                                toolExecutionRequest,
-                                toolExecutionResult.resultText());
-
-                        ToolExecution toolExecution = ToolExecution.builder()
-                                .request(toolExecutionRequest)
-                                .result(toolExecutionResult)
-                                .invocationContext(invocationContext)
-                                .build();
-                        if (toolExecuteHandler != null) {
-                            toolExecuteHandler.accept(toolExecution);
-                        }
-                        QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
-                    }
+                    runSerialToolBatch(aiMessage);
 
                     if (isCancelled()) {
                         shutdown();
