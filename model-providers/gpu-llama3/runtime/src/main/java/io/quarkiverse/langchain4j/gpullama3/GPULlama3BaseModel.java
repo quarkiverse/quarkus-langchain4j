@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.IntConsumer;
 
-import org.beehive.gpullama3.auxiliary.LastRunMetrics;
 import org.beehive.gpullama3.inference.sampler.Sampler;
 import org.beehive.gpullama3.model.Model;
 import org.beehive.gpullama3.model.format.ChatFormat;
@@ -92,10 +91,6 @@ abstract class GPULlama3BaseModel {
         }
     }
     // @formatter:on
-
-    public void printLastMetrics() {
-        LastRunMetrics.printMetrics();
-    }
 
     private void processPromptMessages(List<ChatMessage> messageList, List<Integer> promptTokens) {
         for (ChatMessage msg : messageList) {
