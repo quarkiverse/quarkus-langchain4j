@@ -27,6 +27,7 @@ import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
@@ -615,5 +616,9 @@ public class BeansProcessor {
     public void nativeSupport(BuildProducer<RuntimeInitializedClassBuildItem> producer) {
         // RetryUtils initializes a java.lang.Random instance
         producer.produce(new RuntimeInitializedClassBuildItem("dev.langchain4j.internal.RetryUtils"));
+        // done to avoid some flakiness in the GraalVM bytecode processor
+        producer.produce(new RuntimeInitializedClassBuildItem(QuarkusJsonCodecFactory.ObjectMapperHolder.class.getName()));
+        producer.produce(
+                new RuntimeInitializedClassBuildItem(QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.class.getName()));
     }
 }
