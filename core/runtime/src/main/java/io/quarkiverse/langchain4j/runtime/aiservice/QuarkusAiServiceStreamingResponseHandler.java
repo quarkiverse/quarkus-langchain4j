@@ -639,14 +639,30 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             futures[i] = VirtualThreadsRecorder.getCurrent().submit(new Runnable() {
                 @Override
                 public void run() {
-                    runParallelToolTask(request, index, results, semaphore);
+                    try {
+                        runParallelToolTask(request, index, results, semaphore);
+                    } catch (Throwable t) {
+                        // Make sure the slot is filled so memory stays consistent (one result per
+                        // request) regardless of how the failure surfaced — uncaught exceptions
+                        // from tools without a configured error handler, PreventsErrorHandlerExecution
+                        // throws, or Errors that escape executeTool's catch.
+                        if (results[index] == null) {
+                            results[index] = ToolExecutionResultMessage.from(request, errorResultText(t));
+                        }
+                        if (t instanceof RuntimeException re) {
+                            throw re;
+                        }
+                        if (t instanceof Error err) {
+                            throw err;
+                        }
+                        throw new RuntimeException(t);
+                    }
                 }
             });
         }
 
-        // Wait for all tasks. Capture the first error so we can rethrow after every task settles —
-        // half-finished memory state is no worse than the historical serial behaviour on uncaught
-        // throws, but waiting prevents leaving in-flight tools unattended.
+        // Wait for every task. Capture the first error so we can rethrow after each slot has
+        // either a real result, a cancellation marker, or a synthesized error result.
         Throwable firstError = null;
         for (Future<?> future : futures) {
             try {
@@ -664,12 +680,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             }
         }
 
-        // Append whichever results completed, in request order. Tasks that threw leave a null slot;
-        // skip those so the LLM never sees a corrupted result, but propagate the throw below.
+        // Memory now holds one result per request — success, cancellation marker, or synthesized
+        // error result — so the conversation stays consistent even if onError fires below.
         for (ToolExecutionResultMessage message : results) {
-            if (message != null) {
-                addToMemory(message);
-            }
+            addToMemory(message);
         }
 
         if (firstError != null) {
@@ -681,6 +695,11 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             }
             throw new RuntimeException(firstError);
         }
+    }
+
+    private static String errorResultText(Throwable t) {
+        String message = t.getMessage();
+        return "Tool execution failed: " + (message != null ? message : t.getClass().getSimpleName());
     }
 
     private void runParallelToolTask(ToolExecutionRequest request, int index,

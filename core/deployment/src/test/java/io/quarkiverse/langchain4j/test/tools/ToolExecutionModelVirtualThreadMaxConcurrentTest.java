@@ -52,6 +52,7 @@ public class ToolExecutionModelVirtualThreadMaxConcurrentTest {
 
     private static final int MAX_CONCURRENT = 2;
     private static final int CALLERS = 5;
+    private static final int PARALLEL_BATCH_SIZE = 5;
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -106,10 +107,34 @@ public class ToolExecutionModelVirtualThreadMaxConcurrentTest {
         assertThat(SlowVirtualTool.peakInFlight.get()).isGreaterThan(0);
     }
 
+    @Test
+    @EnabledForJreRange(min = JRE.JAVA_21)
+    @ActivateRequestContext
+    void maxConcurrentBoundsInFlightToolsForParallelMultiToolBatch() {
+        SlowVirtualTool.reset();
+        // Single batch with PARALLEL_BATCH_SIZE > MAX_CONCURRENT tools — proves the per-tool
+        // semaphore acquire on the parallel path bounds simultaneous tool invocations.
+        String uuid = UUID.randomUUID().toString();
+        StringBuilder toolsCsv = new StringBuilder();
+        for (int i = 0; i < PARALLEL_BATCH_SIZE; i++) {
+            if (i > 0) {
+                toolsCsv.append(',');
+            }
+            toolsCsv.append("slowVirtualTool");
+        }
+        aiService.parallelSlowBatch("mem-" + uuid, toolsCsv + " - " + uuid)
+                .collect().asList().await().indefinitely();
+        assertThat(SlowVirtualTool.peakInFlight.get()).isLessThanOrEqualTo(MAX_CONCURRENT);
+        assertThat(SlowVirtualTool.peakInFlight.get()).isGreaterThan(0);
+    }
+
     @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
         @ToolBox(SlowVirtualTool.class)
         Multi<String> slowVirtualTool(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
+
+        @ToolBox(SlowVirtualTool.class)
+        Multi<String> parallelSlowBatch(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolIds);
     }
 
     @Singleton
@@ -155,14 +180,19 @@ public class ToolExecutionModelVirtualThreadMaxConcurrentTest {
                 dev.langchain4j.data.message.UserMessage userMessage = (dev.langchain4j.data.message.UserMessage) messages
                         .get(messages.size() - 1);
                 String[] segments = userMessage.singleText().split(" - ", 2);
-                String toolId = segments[0];
+                String[] toolIds = segments[0].split(",");
                 String content = segments[1];
+                List<ToolExecutionRequest> requests = new ArrayList<>();
+                int index = 0;
+                for (String toolId : toolIds) {
+                    requests.add(ToolExecutionRequest.builder()
+                            .id("call-" + toolId.trim() + "-" + (index++))
+                            .name(toolId.trim())
+                            .arguments("{\"m\":\"" + content + "\"}")
+                            .build());
+                }
                 ChatResponse response = ChatResponse.builder()
-                        .aiMessage(new AiMessage("", List.of(ToolExecutionRequest.builder()
-                                .id("call-" + toolId)
-                                .name(toolId)
-                                .arguments("{\"m\":\"" + content + "\"}")
-                                .build())))
+                        .aiMessage(new AiMessage("", requests))
                         .tokenUsage(new TokenUsage(0, 0))
                         .finishReason(FinishReason.TOOL_EXECUTION)
                         .build();

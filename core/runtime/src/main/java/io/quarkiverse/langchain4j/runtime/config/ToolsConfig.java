@@ -58,12 +58,16 @@ public interface ToolsConfig {
     interface VirtualThreadConfig {
 
         /**
-         * Maximum number of tool batches that can be in flight concurrently when using the
-         * batch-level virtual-thread dispatch path. This applies only to full
-         * {@code VIRTUAL_THREAD} batches in {@code auto} mode. The permit is held for the batch
-         * until tool execution finishes and the synchronous handoff to the next model call
-         * returns. When unset, dispatch is unbounded (the default). A value of 0 or a negative
-         * value is treated as unbounded.
+         * Maximum number of concurrent virtual-thread tool tasks across all in-flight batches.
+         * Applies only to full {@code VIRTUAL_THREAD} batches in {@code auto} mode.
+         * <p>
+         * With {@code parallel-virtual-thread-batch=true} (the default) the permit is held per
+         * tool task, so this caps simultaneously running tools. With
+         * {@code parallel-virtual-thread-batch=false} the permit is held per batch, so this caps
+         * in-flight serialized batches — the historical behaviour.
+         * <p>
+         * When unset, dispatch is unbounded (the default). A value of 0 or a negative value is
+         * treated as unbounded.
          */
         OptionalInt maxConcurrent();
     }

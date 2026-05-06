@@ -11,9 +11,11 @@ import io.quarkiverse.langchain4j.runtime.config.ToolsConfig;
 import io.quarkus.arc.Unremovable;
 
 /**
- * Holds the resolved tool-dispatch policy: the global dispatch mode, the log level for
- * mixed-batch warnings, and the (optional) shared semaphore that bounds concurrent
- * batches using the batch-level virtual-thread dispatch path.
+ * Holds the resolved tool-dispatch policy: the global dispatch mode, whether multi-tool
+ * all-virtual-thread batches fan out in parallel, the log level for mixed-batch warnings,
+ * and the (optional) shared semaphore that bounds virtual-thread tool work. The semaphore
+ * is acquired per tool when batches run in parallel, and per batch when the parallel path
+ * is disabled.
  *
  * <p>
  * Exposed as a CDI singleton so the semaphore is shared across every
