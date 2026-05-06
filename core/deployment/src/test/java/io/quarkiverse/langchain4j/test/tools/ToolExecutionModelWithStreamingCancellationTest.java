@@ -79,8 +79,14 @@ public class ToolExecutionModelWithStreamingCancellationTest {
      * 2. First tool starts executing, signals TOOL_STARTED, then blocks on TOOL_MAY_PROCEED
      * 3. Test detects TOOL_STARTED, cancels the subscription (sets cancelled flag)
      * 4. Test signals TOOL_MAY_PROCEED, first tool completes
-     * 5. Handler sees isCancelled() for second tool — fills cancellation result
-     * 6. Handler checks isCancelled() after tool loop — sees true, stops
+     * 5. Handler observes isCancelled() before issuing the next chat() round, so no
+     * subsequent rounds run and the loop terminates.
+     * <p>
+     * In parallel batch mode (default for all-virtual-thread batches with multiple tools)
+     * both tools may be submitted to virtual threads concurrently, so the second tool may
+     * have started executing by the time cancel() fires. The contract this test enforces is
+     * the durable invariants — memory consistency and no further rounds — not the precise
+     * call count.
      */
     @Test
     @ActivateRequestContext
@@ -117,10 +123,12 @@ public class ToolExecutionModelWithStreamingCancellationTest {
         // Give time for any in-flight operations to settle
         Thread.sleep(500);
 
-        // Assert: tool was called exactly once (first tool only, second was cancelled)
+        // Tool calls are bounded by the in-flight batch — at most the two tools in the round
+        // (parallel mode may have submitted both before cancel observed) and never any tool
+        // from a subsequent round.
         assertThat(CountableTool.CALL_COUNT.get())
-                .as("Tool should only be called once (first tool), not for the second tool after cancellation")
-                .isEqualTo(1);
+                .as("Tool calls bounded by the in-flight batch — no further rounds after cancellation")
+                .isBetween(1, 2);
 
         // Assert: model chat() was called at most 2 times (initial + possibly one before cancellation took effect)
         // Without cancellation, it would be called 4 times (initial + 3 tool rounds)

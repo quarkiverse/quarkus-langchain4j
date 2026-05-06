@@ -9,8 +9,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -323,7 +325,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         return streamingHandle;
     }
 
-    private void executeTools(Runnable runnable, List<ToolExecutionRequest> toolExecutionRequests) {
+    private void executeTools(Runnable runnable, boolean dispatchToVirtualThread, boolean parallelBatch,
+            ToolsDispatcher dispatcher) {
         Runnable safeRunnable = new Runnable() {
             @Override
             public void run() {
@@ -335,9 +338,11 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             }
         };
 
-        ToolsDispatcher dispatcher = toolsDispatcher();
-        if (shouldDispatchToVirtualThread(toolExecutionRequests, dispatcher)) {
-            executeWithBatchVirtualThreadDispatch(safeRunnable, dispatcher);
+        if (dispatchToVirtualThread) {
+            // In parallel mode the per-tool tasks acquire their own permits, so the carrier
+            // does not hold a batch permit (otherwise max-concurrent would be double-counted
+            // and admit fewer tools than configured).
+            executeWithBatchVirtualThreadDispatch(safeRunnable, dispatcher, !parallelBatch);
         } else if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
             executeOnWorkerThread(safeRunnable, false);
         } else {
@@ -355,14 +360,12 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    private boolean shouldDispatchToVirtualThread(List<ToolExecutionRequest> toolExecutionRequests,
-            ToolsDispatcher dispatcher) {
+    private boolean shouldDispatchToVirtualThread(BatchDispatchDecision decision, ToolsDispatcher dispatcher) {
         switch (dispatcher.dispatchMode()) {
             case LEGACY:
                 return false;
             case AUTO:
             default:
-                BatchDispatchDecision decision = determineBatchDispatchDecision(toolExecutionRequests);
                 switch (decision.mode()) {
                     case ALL_VIRTUAL_THREAD:
                         return true;
@@ -449,11 +452,12 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         return nestedSeparator >= 0 ? simpleName.substring(nestedSeparator + 1) : simpleName;
     }
 
-    private void executeWithBatchVirtualThreadDispatch(Runnable runnable, ToolsDispatcher dispatcher) {
+    private void executeWithBatchVirtualThreadDispatch(Runnable runnable, ToolsDispatcher dispatcher,
+            boolean acquireBatchPermit) {
         Runnable guardedRunnable = new Runnable() {
             @Override
             public void run() {
-                Semaphore semaphore = dispatcher.semaphore();
+                Semaphore semaphore = acquireBatchPermit ? dispatcher.semaphore() : null;
                 boolean acquired = false;
                 try {
                     if (semaphore != null) {
@@ -609,6 +613,120 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         return toolExecutionResult;
     }
 
+    private void runParallelToolBatch(AiMessage aiMessage, ToolsDispatcher dispatcher) {
+        List<ToolExecutionRequest> requests = aiMessage.toolExecutionRequests();
+        int n = requests.size();
+
+        // Fire BeforeToolExecution events on the carrier thread, in request order, before fan-out.
+        // Keeps observability semantics predictable: subscribers always see "before" in request order.
+        if (beforeToolExecutionHandler != null) {
+            for (ToolExecutionRequest request : requests) {
+                beforeToolExecutionHandler.accept(BeforeToolExecution.builder()
+                        .request(request)
+                        .build());
+            }
+        }
+
+        addToMemory(aiMessage);
+
+        Semaphore semaphore = dispatcher.semaphore();
+        ToolExecutionResultMessage[] results = new ToolExecutionResultMessage[n];
+        Future<?>[] futures = new Future<?>[n];
+
+        for (int i = 0; i < n; i++) {
+            final int index = i;
+            final ToolExecutionRequest request = requests.get(i);
+            futures[i] = VirtualThreadsRecorder.getCurrent().submit(new Runnable() {
+                @Override
+                public void run() {
+                    runParallelToolTask(request, index, results, semaphore);
+                }
+            });
+        }
+
+        // Wait for all tasks. Capture the first error so we can rethrow after every task settles —
+        // half-finished memory state is no worse than the historical serial behaviour on uncaught
+        // throws, but waiting prevents leaving in-flight tools unattended.
+        Throwable firstError = null;
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                if (firstError == null) {
+                    firstError = ie;
+                }
+            } catch (ExecutionException ee) {
+                Throwable cause = ee.getCause() != null ? ee.getCause() : ee;
+                if (firstError == null) {
+                    firstError = cause;
+                }
+            }
+        }
+
+        // Append whichever results completed, in request order. Tasks that threw leave a null slot;
+        // skip those so the LLM never sees a corrupted result, but propagate the throw below.
+        for (ToolExecutionResultMessage message : results) {
+            if (message != null) {
+                addToMemory(message);
+            }
+        }
+
+        if (firstError != null) {
+            if (firstError instanceof RuntimeException re) {
+                throw re;
+            }
+            if (firstError instanceof Error err) {
+                throw err;
+            }
+            throw new RuntimeException(firstError);
+        }
+    }
+
+    private void runParallelToolTask(ToolExecutionRequest request, int index,
+            ToolExecutionResultMessage[] results, Semaphore semaphore) {
+        if (isCancelled()) {
+            results[index] = ToolExecutionResultMessage.from(request, "Tool execution was cancelled");
+            return;
+        }
+        boolean acquired = false;
+        try {
+            if (semaphore != null) {
+                semaphore.acquire();
+                acquired = true;
+            }
+            if (isCancelled()) {
+                results[index] = ToolExecutionResultMessage.from(request, "Tool execution was cancelled");
+                return;
+            }
+            ToolExecutor toolExecutor = toolExecutors.get(request.name());
+            ToolExecutionResult toolExecutionResult = executeTool(
+                    request,
+                    toolExecutor,
+                    invocationContext,
+                    context.toolService.argumentsErrorHandler(),
+                    context.toolService.executionErrorHandler());
+
+            fireToolExecutedEvent(request, toolExecutionResult.resultText());
+
+            if (toolExecuteHandler != null) {
+                toolExecuteHandler.accept(ToolExecution.builder()
+                        .request(request)
+                        .result(toolExecutionResult)
+                        .build());
+            }
+
+            results[index] = ToolExecutionResultMessage.from(request, toolExecutionResult.resultText());
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(ie);
+        } finally {
+            if (acquired) {
+                semaphore.release();
+            }
+        }
+    }
+
     private void runSerialToolBatch(AiMessage aiMessage) {
         addToMemory(aiMessage);
         List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
@@ -689,6 +807,14 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             if (intermediateResponseHandler != null) {
                 intermediateResponseHandler.accept(completeResponse);
             }
+            ToolsDispatcher dispatcher = toolsDispatcher();
+            BatchDispatchDecision decision = determineBatchDispatchDecision(aiMessage.toolExecutionRequests());
+            boolean dispatchToVirtualThread = shouldDispatchToVirtualThread(decision, dispatcher);
+            // A single-tool batch has nothing to parallelize: fan-out would just spawn an extra
+            // virtual thread and block the carrier on Future#get for no concurrency benefit.
+            boolean parallelBatch = dispatchToVirtualThread
+                    && dispatcher.parallelVirtualThreadBatch()
+                    && aiMessage.toolExecutionRequests().size() > 1;
             // Tools execution may block the caller thread. When the caller thread is the event loop thread, and
             // when tools have been detected to be potentially blocking, we need to switch to a worker thread.
             executeTools(new Runnable() {
@@ -698,7 +824,11 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         shutdown();
                         return;
                     }
-                    runSerialToolBatch(aiMessage);
+                    if (parallelBatch) {
+                        runParallelToolBatch(aiMessage, dispatcher);
+                    } else {
+                        runSerialToolBatch(aiMessage);
+                    }
 
                     if (isCancelled()) {
                         shutdown();
@@ -751,7 +881,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     fireRequestIssuedEvent(chatRequest);
                     effectiveStreamingChatModel.chat(chatRequest, handler);
                 }
-            }, aiMessage.toolExecutionRequests());
+            }, dispatchToVirtualThread, parallelBatch, dispatcher);
         } else {
             if (completeResponseHandler != null) {
                 Runnable runnable = new Runnable() {

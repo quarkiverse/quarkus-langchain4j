@@ -26,6 +26,26 @@ public interface ToolsConfig {
     VirtualThreadConfig virtualThread();
 
     /**
+     * When the full-batch virtual-thread optimization applies (every requested tool resolves to
+     * {@code VIRTUAL_THREAD} in {@code auto} dispatch mode), execute the batch's tools in parallel —
+     * each tool runs on its own virtual thread — instead of serializing them on a single virtual
+     * thread. Tool result messages are appended to chat memory in request order regardless of
+     * completion order, so the LLM sees a stable conversation.
+     * <p>
+     * {@code BeforeToolExecution} events are fired in request order before fan-out;
+     * {@code ToolExecutedEvent} fires in completion order, from the per-tool virtual thread.
+     * Cancellation is best-effort: in-flight tools run to completion, tools that have not yet
+     * started fill in a cancellation result.
+     * <p>
+     * Default {@code true}. Set to {@code false} to keep the historical serialized-loop behavior
+     * for tools whose execution was implicitly ordered by the batch sequence. Tool calls within
+     * a batch are expected to be independent; if ordering matters the LLM should issue separate
+     * tool rounds rather than relying on intra-batch sequencing.
+     */
+    @WithDefault("true")
+    boolean parallelVirtualThreadBatch();
+
+    /**
      * Log level at which a warning is emitted when a tool batch contains a mix of
      * virtual-thread-eligible and other tools and the extension skips the
      * full-batch virtual-thread optimization, falling back to the historical per-tool scheduling

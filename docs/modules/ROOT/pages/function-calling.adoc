@@ -253,15 +253,37 @@ Multi<Fraud> detectAmountFraudForCustomerStreamed(long customerId);
 ==== Virtual-thread dispatch for streaming tool batches
 
 When every tool the model requests in a single batch resolves to the
-`VIRTUAL_THREAD` execution model, the streaming handler dispatches the whole serialized
-tool loop onto a virtual thread directly, instead of first switching to a Vert.x worker
-thread and then submitting each tool to a virtual thread (which would tie up both threads
-for the full tool duration). This matters for long-running tools — for example, a tool
-that calls an image-generation API and takes 60–120 seconds no longer keeps a worker
-thread blocked for the duration. Mixed batches, and batches without full virtual-thread
-eligibility, keep the historical per-tool scheduling behavior.
+`VIRTUAL_THREAD` execution model, the streaming handler dispatches the whole tool batch
+onto virtual threads directly, instead of first switching to a Vert.x worker thread and
+then submitting each tool to a virtual thread (which would tie up both threads for the
+full tool duration). This matters for long-running tools — for example, a tool that calls
+an image-generation API and takes 60–120 seconds no longer keeps a worker thread blocked
+for the duration. Mixed batches, and batches without full virtual-thread eligibility,
+keep the historical per-tool scheduling behavior.
 
-Behavior is controlled by three runtime configuration keys:
+When the batch contains more than one tool, the tools are executed *in parallel* — each
+on its own virtual thread — and the carrier waits for all of them before continuing to the
+next round of the conversation. Tool result messages are appended to chat memory in the
+original request order regardless of completion order, so the LLM always sees a stable
+conversation. Single-tool batches stay on a single virtual thread (no fan-out, no
+join overhead).
+
+`BeforeToolExecution` events fire in request order, on the carrier thread, before fan-out.
+`ToolExecutedEvent` and the `toolExecutedHandler` callback fire as each tool finishes,
+from the per-tool virtual thread — so completion-order observability is preserved.
+
+Cancellation is best-effort under parallel execution: tools that have already begun on
+their virtual thread run to completion, while tools that have not yet been scheduled
+record a cancellation result and skip execution. The next conversation round is not
+issued.
+
+Tool calls dispatched in a single batch are expected to be independent. If the model
+needs to sequence tool calls (the result of one feeding the input of another), it should
+issue separate tool rounds rather than relying on intra-batch ordering. Set
+`parallel-virtual-thread-batch=false` to keep the historical serialized-loop behavior
+for legacy code that has not been audited for parallel safety.
+
+Behavior is controlled by these runtime configuration keys:
 
 |===
 | Key | Default | Meaning
@@ -273,15 +295,22 @@ in the batch resolves to the `VIRTUAL_THREAD` execution model; otherwise legacy 
 scheduling is kept. `legacy` disables the batch-level optimization and keeps historical
 per-tool scheduling.
 
+| `quarkus.langchain4j.tools.parallel-virtual-thread-batch`
+| `true`
+| When the full-batch virtual-thread optimization applies, execute the batch's tools in
+parallel — each on its own virtual thread — instead of serializing them on a single
+virtual thread. Results are appended to chat memory in request order. Set to `false` to
+restore the historical serialized-loop behavior.
+
 | `quarkus.langchain4j.tools.virtual-thread.max-concurrent`
 | unbounded
-| Caps the number of in-flight batches using the batch-level virtual-thread path via a
-shared semaphore. The permit is held until the batch finishes tool execution and the
-synchronous handoff to the next model call returns. This applies only when `auto`
-selects the full-batch virtual-thread optimization. Extra batches may still start a
-virtual thread and park while waiting for a permit, so this is not strict admission
-control. Useful when a runaway agent could otherwise trigger thousands of concurrent tool
-calls.
+| Caps the number of concurrently executing virtual-thread tool tasks via a shared
+semaphore. With `parallel-virtual-thread-batch=true` (default) the permit is held per
+tool, capping simultaneously running tools across all in-flight batches. With
+`parallel-virtual-thread-batch=false` the permit is held per batch — the historical
+behavior. Extra tasks may still start a virtual thread and park while waiting for a
+permit, so this is not strict admission control. Useful when a runaway agent could
+otherwise trigger thousands of concurrent tool calls.
 
 | `quarkus.langchain4j.tools.mixed-batch-log-level`
 | `warn`

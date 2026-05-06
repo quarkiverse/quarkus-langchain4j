@@ -36,6 +36,7 @@ public class ToolsDispatcher {
     private ToolsConfig.DispatchMode dispatchMode;
     private ToolsConfig.MixedBatchLogLevel mixedBatchLogLevel;
     private Semaphore semaphore;
+    private boolean parallelVirtualThreadBatch;
 
     @Inject
     public ToolsDispatcher(LangChain4jConfig config) {
@@ -47,6 +48,7 @@ public class ToolsDispatcher {
         this.dispatchMode = ToolsConfig.DispatchMode.AUTO;
         this.mixedBatchLogLevel = ToolsConfig.MixedBatchLogLevel.WARN;
         this.semaphore = null;
+        this.parallelVirtualThreadBatch = true;
     }
 
     @PostConstruct
@@ -59,6 +61,7 @@ public class ToolsDispatcher {
         this.mixedBatchLogLevel = tools.mixedBatchLogLevel();
         int max = tools.virtualThread().maxConcurrent().orElse(-1);
         this.semaphore = max > 0 ? new Semaphore(max) : null;
+        this.parallelVirtualThreadBatch = tools.parallelVirtualThreadBatch();
     }
 
     public ToolsConfig.DispatchMode dispatchMode() {
@@ -71,5 +74,9 @@ public class ToolsDispatcher {
 
     public Semaphore semaphore() {
         return semaphore;
+    }
+
+    public boolean parallelVirtualThreadBatch() {
+        return parallelVirtualThreadBatch;
     }
 }
