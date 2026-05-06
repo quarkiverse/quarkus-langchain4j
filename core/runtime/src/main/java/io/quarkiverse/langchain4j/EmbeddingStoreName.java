@@ -44,6 +44,7 @@ public @interface EmbeddingStoreName {
      */
     String value() default "";
 
+    @SuppressWarnings("ClassExplicitlyAnnotation")
     class Literal extends AnnotationLiteral<EmbeddingStoreName> implements EmbeddingStoreName {
 
         public static Literal of(String value) {
