@@ -178,7 +178,7 @@ public interface MyAssistant {
 }
 ----
 
-with a custom `ChatMemoryProviderSupplier`:
+Implement the custom `ChatMemoryProviderSupplier`:
 
 [source,java]
 ----
