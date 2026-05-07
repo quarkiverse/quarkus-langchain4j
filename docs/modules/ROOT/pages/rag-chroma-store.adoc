@@ -46,6 +46,36 @@ The Chroma extension can be configured using the following options:
 
 include::includes/quarkus-langchain4j-chroma.adoc[leveloffset=+1,opts=optional]
 
+== Named Stores
+
+You can configure multiple named Chroma stores, each using a different collection.
+This is useful when your application needs to manage embeddings for different domains or tenants in separate collections within the same Chroma instance.
+
+To configure a named store:
+
+[source,properties]
+----
+quarkus.langchain4j.chroma.products.collection-name=product_embeddings
+quarkus.langchain4j.chroma.products.url=http://chroma.example.com:8000
+----
+
+To inject a named store, use the `@EmbeddingStoreName` qualifier:
+
+[source,java]
+----
+@Inject
+@EmbeddingStoreName("products")
+EmbeddingStore<TextSegment> productsStore;
+----
+
+The default store and named stores can coexist.
+If you only need named stores, disable the default store:
+
+[source,properties]
+----
+quarkus.langchain4j.chroma.default-store-enabled=false
+----
+
 == Notes
 
 * Chroma supports metadata, but filtering capabilities may depend on the current Chroma version and API behavior.

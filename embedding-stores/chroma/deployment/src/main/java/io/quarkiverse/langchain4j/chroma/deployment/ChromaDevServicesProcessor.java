@@ -2,11 +2,13 @@ package io.quarkiverse.langchain4j.chroma.deployment;
 
 import java.io.Closeable;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
@@ -52,11 +54,13 @@ public class ChromaDevServicesProcessor {
     public DevServicesResultBuildItem startChromaDevService(
             DockerStatusBuildItem dockerStatusBuildItem,
             LaunchModeBuildItem launchMode,
-            ChromaBuildConfig chromaBuildConfig,
+            ChromaEmbeddingStoreBuildTimeConfig chromaBuildConfig,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
+
+        Set<String> namedStoreNames = chromaBuildConfig.namedConfig().keySet();
 
         ChromaDevServiceCfg configuration = getConfiguration(chromaBuildConfig);
 
@@ -75,7 +79,7 @@ public class ChromaDevServicesProcessor {
         try {
             DevServicesResultBuildItem.RunningDevService newDevService = startContainer(dockerStatusBuildItem, configuration,
                     launchMode,
-                    !devServicesSharedNetworkBuildItem.isEmpty(), devServicesConfig.timeout());
+                    !devServicesSharedNetworkBuildItem.isEmpty(), devServicesConfig.timeout(), namedStoreNames);
             if (newDevService != null) {
                 devService = newDevService;
 
@@ -132,7 +136,7 @@ public class ChromaDevServicesProcessor {
 
     private DevServicesResultBuildItem.RunningDevService startContainer(DockerStatusBuildItem dockerStatusBuildItem,
             ChromaDevServiceCfg config, LaunchModeBuildItem launchMode,
-            boolean useSharedNetwork, Optional<Duration> timeout) {
+            boolean useSharedNetwork, Optional<Duration> timeout, Set<String> namedStoreNames) {
         if (!config.devServicesEnabled) {
             // explicitly disabled
             log.debug("Not starting Dev Services for Chroma, as it has been disabled in the config.");
@@ -160,7 +164,8 @@ public class ChromaDevServicesProcessor {
                     container.getContainerId(),
                     container::close,
                     container.getHost(),
-                    container.getPort());
+                    container.getPort(),
+                    namedStoreNames);
         };
 
         return containerLocator
@@ -172,21 +177,24 @@ public class ChromaDevServicesProcessor {
                         containerAddress.getId(),
                         null,
                         containerAddress.getHost(),
-                        containerAddress.getPort()))
+                        containerAddress.getPort(),
+                        namedStoreNames))
                 .orElseGet(defaultChromaSupplier);
     }
 
     private DevServicesResultBuildItem.RunningDevService getRunningDevService(
-            String containerId,
-            Closeable closeable,
-            String host,
-            int port) {
-        Map<String, String> configMap = Map.of("quarkus.langchain4j.chroma.url", "http://" + host + ":" + port);
+            String containerId, Closeable closeable, String host, int port, Set<String> namedStoreNames) {
+        String chromaUrl = "http://" + host + ":" + port;
+        Map<String, String> configMap = new HashMap<>();
+        configMap.put("quarkus.langchain4j.chroma.url", chromaUrl);
+        for (String namedStore : namedStoreNames) {
+            configMap.put("quarkus.langchain4j.chroma." + namedStore + ".url", chromaUrl);
+        }
         return new DevServicesResultBuildItem.RunningDevService(ChromaProcessor.FEATURE,
                 containerId, closeable, configMap);
     }
 
-    private ChromaDevServiceCfg getConfiguration(ChromaBuildConfig cfg) {
+    private ChromaDevServiceCfg getConfiguration(ChromaEmbeddingStoreBuildTimeConfig cfg) {
         return new ChromaDevServiceCfg(cfg.devservices());
     }
 
@@ -200,7 +208,7 @@ public class ChromaDevServicesProcessor {
         private final String serviceName;
         private final Map<String, String> containerEnv;
 
-        public ChromaDevServiceCfg(ChromaBuildConfig.ChromaDevServicesBuildTimeConfig devServicesConfig) {
+        public ChromaDevServiceCfg(ChromaEmbeddingStoreBuildTimeConfig.ChromaDevServicesBuildTimeConfig devServicesConfig) {
             this.devServicesEnabled = devServicesConfig.enabled();
             this.imageName = devServicesConfig.imageName();
             this.fixedExposedPort = devServicesConfig.port();
