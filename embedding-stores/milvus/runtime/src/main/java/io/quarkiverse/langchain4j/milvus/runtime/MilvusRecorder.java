@@ -1,10 +1,13 @@
 package io.quarkiverse.langchain4j.milvus.runtime;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import dev.langchain4j.store.embedding.milvus.MilvusEmbeddingStore;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
+import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class MilvusRecorder {
@@ -14,29 +17,50 @@ public class MilvusRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
-    public Supplier<MilvusEmbeddingStore> milvusStoreSupplier() {
-        return new Supplier<>() {
+    public Function<SyntheticCreationalContext<MilvusEmbeddingStore>, MilvusEmbeddingStore> embeddingStoreFunction(
+            String storeName) {
+        return new Function<>() {
             @Override
-            public MilvusEmbeddingStore get() {
+            public MilvusEmbeddingStore apply(SyntheticCreationalContext<MilvusEmbeddingStore> context) {
+                MilvusStoreRuntimeConfig storeConfig = correspondingStoreConfig(storeName);
+                if (storeConfig.dimension().isEmpty()) {
+                    throw new ConfigValidationException(createDimensionConfigProblems(storeName));
+                }
                 return new MilvusEmbeddingStore.Builder()
-                        .host(runtimeConfig.getValue().host())
-                        .port(runtimeConfig.getValue().port())
-                        .collectionName(runtimeConfig.getValue().collectionName())
-                        .idFieldName(runtimeConfig.getValue().primaryField())
-                        .textFieldName(runtimeConfig.getValue().textField())
-                        .metadataFieldName(runtimeConfig.getValue().metadataField())
-                        .vectorFieldName(runtimeConfig.getValue().vectorField())
-                        .dimension(runtimeConfig.getValue().dimension().orElse(null))
-                        .indexType(runtimeConfig.getValue().indexType())
-                        .metricType(runtimeConfig.getValue().metricType())
-                        .token(runtimeConfig.getValue().token().orElse(null))
-                        .username(runtimeConfig.getValue().username().orElse(null))
-                        .password(runtimeConfig.getValue().password().orElse(null))
-                        .consistencyLevel(runtimeConfig.getValue().consistencyLevel())
+                        .host(storeConfig.host())
+                        .port(storeConfig.port())
+                        .collectionName(storeConfig.collectionName())
+                        .idFieldName(storeConfig.primaryField())
+                        .textFieldName(storeConfig.textField())
+                        .metadataFieldName(storeConfig.metadataField())
+                        .vectorFieldName(storeConfig.vectorField())
+                        .dimension(storeConfig.dimension().get())
+                        .indexType(storeConfig.indexType())
+                        .metricType(storeConfig.metricType())
+                        .token(storeConfig.token().orElse(null))
+                        .username(storeConfig.username().orElse(null))
+                        .password(storeConfig.password().orElse(null))
+                        .consistencyLevel(storeConfig.consistencyLevel())
                         .retrieveEmbeddingsOnSearch(true)
-                        .databaseName(runtimeConfig.getValue().dbName())
+                        .databaseName(storeConfig.dbName())
                         .build();
             }
+        };
+    }
+
+    MilvusStoreRuntimeConfig correspondingStoreConfig(String storeName) {
+        if (NamedConfigUtil.isDefault(storeName)) {
+            return runtimeConfig.getValue().defaultConfig();
+        }
+        return runtimeConfig.getValue().namedConfig().get(storeName);
+    }
+
+    private ConfigValidationException.Problem[] createDimensionConfigProblems(String storeName) {
+        return new ConfigValidationException.Problem[] {
+                new ConfigValidationException.Problem(String.format(
+                        "SRCFG00014: The config property quarkus.langchain4j.milvus%sdimension is required but it could not be found in any config source",
+                        NamedConfigUtil.isDefault(storeName) ? "."
+                                : ("." + storeName + ".")))
         };
     }
 }
