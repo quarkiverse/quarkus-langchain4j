@@ -163,6 +163,8 @@ public interface CityExtractorAgent {
 }
 ----
 
+Reference the helper AI service from the main AI service:
+
 [source, java]
 ----
 @RegisterAiService
@@ -272,6 +274,8 @@ public class MyToolProviderSupplier implements Supplier<ToolProvider> {
     }
 }
 ----
+
+Implement the custom `ToolProvider`:
 
 [source, java]
 ----
@@ -430,6 +434,8 @@ public class EmailTools {
     }
 }
 ----
+
+Implement the input guardrail:
 
 [source,java]
 ----
