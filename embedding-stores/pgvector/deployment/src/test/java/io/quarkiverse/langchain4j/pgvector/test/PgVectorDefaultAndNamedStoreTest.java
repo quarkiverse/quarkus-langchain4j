@@ -4,7 +4,6 @@ import jakarta.inject.Inject;
 
 import org.assertj.core.api.Assertions;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -18,17 +17,15 @@ public class PgVectorDefaultAndNamedStoreTest {
 
     @RegisterExtension
     static final QuarkusUnitTest test = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset(
-                            "quarkus.datasource.db-kind=postgresql\n" +
-                                    "quarkus.datasource.devservices.image-name=pgvector/pgvector:pg16\n" +
-                                    "quarkus.datasource.named-ds.devservices.image-name=pgvector/pgvector:pg16\n" +
-                                    "quarkus.datasource.named-ds.db-kind=postgresql\n" +
-                                    "quarkus.langchain4j.pgvector.dimension=384\n" +
-                                    "quarkus.langchain4j.pgvector.named-store.datasource=named-ds\n" +
-                                    "quarkus.langchain4j.pgvector.named-store.dimension=1536\n" +
-                                    "quarkus.langchain4j.pgvector.named-store.table=named_embeddings\n"),
-                            "application.properties"));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.datasource.db-kind", "postgresql")
+            .overrideConfigKey("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16")
+            .overrideConfigKey("quarkus.datasource.named-ds.devservices.image-name", "pgvector/pgvector:pg16")
+            .overrideConfigKey("quarkus.datasource.named-ds.db-kind", "postgresql")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.pgvector.dimension", "384")
+            .overrideConfigKey("quarkus.langchain4j.pgvector.named-store.datasource", "named-ds")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.pgvector.named-store.dimension", "1536")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.pgvector.named-store.table", "named_embeddings");
 
     @Inject
     EmbeddingStore<TextSegment> defaultEmbeddingStore;
@@ -38,17 +35,17 @@ public class PgVectorDefaultAndNamedStoreTest {
     EmbeddingStore<TextSegment> namedEmbeddingStore;
 
     @Test
-    void should_injectDefaultStore() {
+    void testDefault() {
         Assertions.assertThat(defaultEmbeddingStore).isNotNull();
     }
 
     @Test
-    void should_injectNamedStore() {
+    void testNamed() {
         Assertions.assertThat(namedEmbeddingStore).isNotNull();
     }
 
     @Test
-    void should_injectDifferentStoreInstances() {
+    void testNotSame() {
         Assertions.assertThat(defaultEmbeddingStore).isNotSameAs(namedEmbeddingStore);
     }
 }

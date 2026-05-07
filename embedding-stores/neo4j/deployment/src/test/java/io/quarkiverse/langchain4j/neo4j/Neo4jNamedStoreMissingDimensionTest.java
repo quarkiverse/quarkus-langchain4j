@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.pgvector.test;
+package io.quarkiverse.langchain4j.neo4j;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,16 +15,14 @@ import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.config.ConfigValidationException;
 
-public class PgVectorNamedStoreMissingDimensionTest {
+public class Neo4jNamedStoreMissingDimensionTest {
 
     @RegisterExtension
     static final QuarkusUnitTest test = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideConfigKey("quarkus.datasource.db-kind", "postgresql")
-            .overrideConfigKey("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16")
-            .overrideConfigKey("quarkus.langchain4j.pgvector.default-store-enabled", "false")
-            .overrideConfigKey("quarkus.langchain4j.pgvector.products.datasource", "<default>")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.pgvector.products.table", "product_embeddings");
+            .overrideConfigKey("quarkus.langchain4j.neo4j.default-store-enabled", "false")
+            .overrideConfigKey("quarkus.langchain4j.neo4j.products.database-name", "neo4j")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.neo4j.products.label", "Product");
 
     @Inject
     @EmbeddingStoreName("products")
