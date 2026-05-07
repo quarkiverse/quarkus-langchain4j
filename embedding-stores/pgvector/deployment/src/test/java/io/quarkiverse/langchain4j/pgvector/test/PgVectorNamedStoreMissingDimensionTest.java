@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -20,21 +19,19 @@ public class PgVectorNamedStoreMissingDimensionTest {
 
     @RegisterExtension
     static final QuarkusUnitTest test = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset(
-                            "quarkus.datasource.db-kind=postgresql\n" +
-                                    "quarkus.datasource.devservices.image-name=pgvector/pgvector:pg16\n" +
-                                    "quarkus.langchain4j.pgvector.default-store-enabled=false\n" +
-                                    "quarkus.langchain4j.pgvector.products.datasource=<default>\n" +
-                                    "quarkus.langchain4j.pgvector.products.table=product_embeddings\n"),
-                            "application.properties"));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.datasource.db-kind", "postgresql")
+            .overrideConfigKey("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16")
+            .overrideConfigKey("quarkus.langchain4j.pgvector.default-store-enabled", "false")
+            .overrideConfigKey("quarkus.langchain4j.pgvector.products.datasource", "<default>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.pgvector.products.table", "product_embeddings");
 
     @Inject
     @EmbeddingStoreName("products")
     EmbeddingStore<TextSegment> productsEmbeddingStore;
 
     @Test
-    void should_fail_with_missing_dimension() {
+    void testMissingDimension() {
         assertThatThrownBy(() -> productsEmbeddingStore.toString())
                 .hasCauseInstanceOf(ConfigValidationException.class);
     }
