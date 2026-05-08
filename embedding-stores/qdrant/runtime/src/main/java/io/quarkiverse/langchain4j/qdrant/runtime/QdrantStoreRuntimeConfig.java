@@ -1,21 +1,17 @@
 package io.quarkiverse.langchain4j.qdrant.runtime;
 
-import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
-
 import java.util.Optional;
 
-import io.quarkus.runtime.annotations.ConfigRoot;
-import io.smallrye.config.ConfigMapping;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
-@ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.qdrant")
-public interface QdrantRuntimeConfig {
+@ConfigGroup
+public interface QdrantStoreRuntimeConfig {
 
     /**
      * The URL of the Qdrant server.
      */
-    String host();
+    Optional<String> host();
 
     /**
      * The gRPC port of the Qdrant server. Defaults to 6334
@@ -49,6 +45,7 @@ public interface QdrantRuntimeConfig {
         /**
          * The name of the collection.
          */
+        @WithDefault("default")
         String name();
     }
 }

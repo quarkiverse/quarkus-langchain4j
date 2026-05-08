@@ -4,9 +4,11 @@ import java.io.Closeable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
@@ -41,11 +43,13 @@ public class QdrantDevServicesProcessor {
     public List<DevServicesResultBuildItem> startQdrantDevServices(
             DockerStatusBuildItem dockerStatusBuildItem,
             LaunchModeBuildItem launchMode,
-            QdrantBuildConfig qdrantBuildConfig,
+            QdrantEmbeddingStoreBuildTimeConfig qdrantBuildConfig,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
+
+        Set<String> namedStoreNames = qdrantBuildConfig.namedConfig().keySet();
 
         List<DevServicesResultBuildItem> result = new ArrayList<>();
         QdrantDevServiceCfg configuration = getConfiguration(qdrantBuildConfig);
@@ -81,7 +85,8 @@ public class QdrantDevServicesProcessor {
                     configuration,
                     launchMode,
                     devServicesConfig.timeout(),
-                    !devServicesSharedNetworkBuildItem.isEmpty());
+                    !devServicesSharedNetworkBuildItem.isEmpty(),
+                    namedStoreNames);
 
             if (newDevService != null) {
                 devService = newDevService;
@@ -136,7 +141,8 @@ public class QdrantDevServicesProcessor {
             QdrantDevServiceCfg config,
             LaunchModeBuildItem launchMode,
             Optional<Duration> timeout,
-            boolean useSharedNetwork) {
+            boolean useSharedNetwork,
+            Set<String> namedStoreNames) {
 
         if (!dockerStatusBuildItem.isDockerAvailable()) {
             LOG.warn("Docker isn't working, please configure the Qdrant server location.");
@@ -150,7 +156,6 @@ public class QdrantDevServicesProcessor {
                 useSharedNetwork);
 
         final Supplier<DevServicesResultBuildItem.RunningDevService> defaultQdrantSupplier = () -> {
-
             // Starting Qdrant
             timeout.ifPresent(container::withStartupTimeout);
             container.start();
@@ -175,7 +180,8 @@ public class QdrantDevServicesProcessor {
                     container.getContainerId(),
                     container::close,
                     container.getHost(),
-                    container.getPort());
+                    container.getPort(),
+                    namedStoreNames);
         };
 
         return QdrantDevServices.LOCATOR
@@ -188,7 +194,8 @@ public class QdrantDevServicesProcessor {
                         containerAddress.getId(),
                         null,
                         containerAddress.getHost(),
-                        containerAddress.getPort()))
+                        containerAddress.getPort(),
+                        namedStoreNames))
                 .orElseGet(defaultQdrantSupplier);
     }
 
@@ -197,12 +204,17 @@ public class QdrantDevServicesProcessor {
             String containerId,
             Closeable closeable,
             String host,
-            int port) {
+            int port,
+            Set<String> namedStoreNames) {
 
-        Map<String, String> configMap = Map.of(
-                "quarkus.langchain4j.qdrant.collection.name", serviceName,
-                "quarkus.langchain4j.qdrant.host", host,
-                "quarkus.langchain4j.qdrant.port", String.valueOf(port));
+        Map<String, String> configMap = new HashMap<>();
+        configMap.put("quarkus.langchain4j.qdrant.collection.name", serviceName);
+        configMap.put("quarkus.langchain4j.qdrant.host", host);
+        configMap.put("quarkus.langchain4j.qdrant.port", String.valueOf(port));
+        for (String namedStore : namedStoreNames) {
+            configMap.put("quarkus.langchain4j.qdrant." + namedStore + ".host", host);
+            configMap.put("quarkus.langchain4j.qdrant." + namedStore + ".port", String.valueOf(port));
+        }
 
         return new DevServicesResultBuildItem.RunningDevService(
                 QdrantProcessor.FEATURE,
@@ -211,7 +223,7 @@ public class QdrantDevServicesProcessor {
                 configMap);
     }
 
-    private QdrantDevServiceCfg getConfiguration(QdrantBuildConfig cfg) {
+    private QdrantDevServiceCfg getConfiguration(QdrantEmbeddingStoreBuildTimeConfig cfg) {
         return new QdrantDevServiceCfg(
                 cfg.devservices().enabled(),
                 cfg.devservices().port(),

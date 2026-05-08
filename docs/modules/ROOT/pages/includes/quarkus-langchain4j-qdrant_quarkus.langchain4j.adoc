@@ -7,6 +7,27 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-default-store-enabled[`+++quarkus.langchain4j.qdrant.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Qdrant embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-enabled[`+++quarkus.langchain4j.qdrant.devservices.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.enabled+++[]
@@ -173,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT_HOST+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|required icon:exclamation-circle[title=Configuration property is required]
+|
 
 a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-port]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-port[`+++quarkus.langchain4j.qdrant.port+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -278,7 +299,159 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT_COLLECTION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|required icon:exclamation-circle[title=Configuration property is required]
+|`+++default+++`
+
+h|[[quarkus-langchain4j-qdrant_section_quarkus-langchain4j-qdrant]] [.section-name.section-level0]##link:#quarkus-langchain4j-qdrant_section_quarkus-langchain4j-qdrant[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name[`+++quarkus.langchain4j.qdrant."store-name".collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The collection name for this named store. This property serves as the build-time key that enables named store discovery. If not set, the collection name from the runtime configuration will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-host]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-host[`+++quarkus.langchain4j.qdrant."store-name".host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the Qdrant server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-port]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-port[`+++quarkus.langchain4j.qdrant."store-name".port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The gRPC port of the Qdrant server. Defaults to 6334
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++6334+++`
+
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-api-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-api-key[`+++quarkus.langchain4j.qdrant."store-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Qdrant API key to authenticate with.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-use-tls]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-use-tls[`+++quarkus.langchain4j.qdrant."store-name".use-tls+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".use-tls+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to use TLS(HTTPS). Defaults to false.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__USE_TLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__USE_TLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-payload-text-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-payload-text-key[`+++quarkus.langchain4j.qdrant."store-name".payload-text-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".payload-text-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The field name of the text segment in the payload. Defaults to "text_segment"
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__PAYLOAD_TEXT_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__PAYLOAD_TEXT_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text_segment+++`
+
+a| [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name[`+++quarkus.langchain4j.qdrant."store-name".collection.name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".collection.name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT__STORE_NAME__COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
 
 |===
 
