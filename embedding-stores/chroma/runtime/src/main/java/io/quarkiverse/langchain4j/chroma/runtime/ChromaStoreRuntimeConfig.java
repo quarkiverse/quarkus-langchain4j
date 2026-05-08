@@ -1,24 +1,20 @@
 package io.quarkiverse.langchain4j.chroma.runtime;
 
-import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
-
 import java.time.Duration;
 import java.util.Optional;
 
 import dev.langchain4j.store.embedding.chroma.ChromaApiVersion;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
-import io.quarkus.runtime.annotations.ConfigRoot;
-import io.smallrye.config.ConfigMapping;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
-@ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.chroma")
-public interface ChromaConfig {
+@ConfigGroup
+public interface ChromaStoreRuntimeConfig {
 
     /**
      * URL where the Chroma database is listening for requests
      */
-    String url();
+    Optional<String> url();
 
     /**
      * The collection name.
@@ -52,5 +48,4 @@ public interface ChromaConfig {
      */
     @WithDefault("V2")
     ChromaApiVersion apiVersion();
-
 }
