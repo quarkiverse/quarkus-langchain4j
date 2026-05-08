@@ -5,19 +5,49 @@ import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 import java.util.Map;
 import java.util.OptionalInt;
 
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithDefaults;
+import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = BUILD_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.weaviate")
-public interface WeaviateBuildConfig {
+public interface WeaviateEmbeddingStoreBuildTimeConfig {
+
+    /**
+     * Default store build-time config.
+     */
+    @WithParentName
+    DefaultStoreBuildTimeConfig defaultConfig();
+
+    /**
+     * Named store configurations.
+     */
+    @ConfigDocSection
+    @ConfigDocMapKey("store-name")
+    @WithParentName
+    @WithDefaults
+    Map<String, WeaviateNamedStoreBuildTimeConfig> namedConfig();
 
     /**
      * Configuration for DevServices. DevServices allows Quarkus to automatically start a database in dev and test mode.
      */
     WeaviateDevServicesBuildTimeConfig devservices();
+
+    @ConfigGroup
+    interface DefaultStoreBuildTimeConfig {
+
+        /**
+         * Whether the default (unnamed) Weaviate embedding store should be enabled.
+         * Set to {@code false} when you only want to use named stores.
+         */
+        @WithDefault("true")
+        boolean defaultStoreEnabled();
+    }
 
     @ConfigGroup
     interface WeaviateDevServicesBuildTimeConfig {
@@ -34,8 +64,6 @@ public interface WeaviateBuildConfig {
 
         /**
          * The container image name to use, for container based DevServices providers.
-         * If you want to use Redis Stack modules (bloom, graph, search...), use:
-         * {@code redis/redis-stack:latest}.
          */
         @WithDefault("cr.weaviate.io/semitechnologies/weaviate:1.25.5")
         String imageName();
@@ -48,10 +76,10 @@ public interface WeaviateBuildConfig {
         OptionalInt port();
 
         /**
-         * Indicates if the Redis server managed by Quarkus Dev Services is shared.
+         * Indicates if the Weaviate server managed by Quarkus Dev Services is shared.
          * When shared, Quarkus looks for running containers using label-based service discovery.
          * If a matching container is found, it is used, and so a second one is not started.
-         * Otherwise, Dev Services for Redis starts a new container.
+         * Otherwise, Dev Services for Weaviate starts a new container.
          * <p>
          * The discovery uses the {@code quarkus-dev-service-weaviate} label.
          * The value is configured using the {@code service-name} property.
@@ -64,7 +92,7 @@ public interface WeaviateBuildConfig {
         /**
          * The value of the {@code quarkus-dev-service-weaviate} label attached to the started container.
          * This property is used when {@code shared} is set to {@code true}.
-         * In this case, before starting a container, Dev Services for Redis looks for a container with the
+         * In this case, before starting a container, Dev Services for Weaviate looks for a container with the
          * {@code quarkus-dev-service-weaviate} label
          * set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it
          * starts a new container with the {@code quarkus-dev-service-weaviate} label set to the specified value.

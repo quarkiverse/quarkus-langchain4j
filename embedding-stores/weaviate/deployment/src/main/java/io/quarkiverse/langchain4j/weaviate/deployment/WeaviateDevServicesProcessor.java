@@ -2,11 +2,13 @@ package io.quarkiverse.langchain4j.weaviate.deployment;
 
 import java.io.Closeable;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
@@ -51,11 +53,13 @@ public class WeaviateDevServicesProcessor {
     public DevServicesResultBuildItem startWeaviateDevService(
             DockerStatusBuildItem dockerStatusBuildItem,
             LaunchModeBuildItem launchMode,
-            WeaviateBuildConfig weaviateBuildConfig,
+            WeaviateEmbeddingStoreBuildTimeConfig weaviateBuildConfig,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
+
+        Set<String> namedStoreNames = weaviateBuildConfig.namedConfig().keySet();
 
         WeaviateDevServiceCfg configuration = getConfiguration(weaviateBuildConfig);
 
@@ -74,7 +78,7 @@ public class WeaviateDevServicesProcessor {
         try {
             DevServicesResultBuildItem.RunningDevService newDevService = startContainer(dockerStatusBuildItem, configuration,
                     launchMode,
-                    !devServicesSharedNetworkBuildItem.isEmpty(), devServicesConfig.timeout());
+                    !devServicesSharedNetworkBuildItem.isEmpty(), devServicesConfig.timeout(), namedStoreNames);
             if (newDevService != null) {
                 devService = newDevService;
 
@@ -131,7 +135,7 @@ public class WeaviateDevServicesProcessor {
 
     private DevServicesResultBuildItem.RunningDevService startContainer(DockerStatusBuildItem dockerStatusBuildItem,
             WeaviateDevServiceCfg config, LaunchModeBuildItem launchMode,
-            boolean useSharedNetwork, Optional<Duration> timeout) {
+            boolean useSharedNetwork, Optional<Duration> timeout, Set<String> namedStoreNames) {
         if (!config.devServicesEnabled) {
             // explicitly disabled
             log.debug("Not starting Dev Services for Weaviate, as it has been disabled in the config.");
@@ -158,7 +162,8 @@ public class WeaviateDevServicesProcessor {
                     container.getContainerId(),
                     container::close,
                     container.getHost(),
-                    container.getMappedPort(8080));
+                    container.getMappedPort(8080),
+                    namedStoreNames);
         };
 
         return containerLocator
@@ -170,7 +175,8 @@ public class WeaviateDevServicesProcessor {
                         containerAddress.getId(),
                         null,
                         containerAddress.getHost(),
-                        containerAddress.getPort()))
+                        containerAddress.getPort(),
+                        namedStoreNames))
                 .orElseGet(defaultWeaviateSupplier);
     }
 
@@ -178,18 +184,24 @@ public class WeaviateDevServicesProcessor {
             String containerId,
             Closeable closeable,
             String host,
-            int port) {
+            int port,
+            Set<String> namedStoreNames) {
 
-        Map<String, String> configMap = Map.of(
-                "quarkus.langchain4j.weaviate.scheme", "http",
-                "quarkus.langchain4j.weaviate.host", host,
-                "quarkus.langchain4j.weaviate.port", String.valueOf(port));
+        Map<String, String> configMap = new HashMap<>();
+        configMap.put("quarkus.langchain4j.weaviate.scheme", "http");
+        configMap.put("quarkus.langchain4j.weaviate.host", host);
+        configMap.put("quarkus.langchain4j.weaviate.port", String.valueOf(port));
+        for (String namedStore : namedStoreNames) {
+            configMap.put("quarkus.langchain4j.weaviate." + namedStore + ".scheme", "http");
+            configMap.put("quarkus.langchain4j.weaviate." + namedStore + ".host", host);
+            configMap.put("quarkus.langchain4j.weaviate." + namedStore + ".port", String.valueOf(port));
+        }
 
         return new DevServicesResultBuildItem.RunningDevService(WeaviateProcessor.FEATURE,
                 containerId, closeable, configMap);
     }
 
-    private WeaviateDevServiceCfg getConfiguration(WeaviateBuildConfig cfg) {
+    private WeaviateDevServiceCfg getConfiguration(WeaviateEmbeddingStoreBuildTimeConfig cfg) {
         return new WeaviateDevServiceCfg(cfg.devservices());
     }
 
@@ -203,7 +215,8 @@ public class WeaviateDevServicesProcessor {
         private final String serviceName;
         private final Map<String, String> containerEnv;
 
-        public WeaviateDevServiceCfg(WeaviateBuildConfig.WeaviateDevServicesBuildTimeConfig devServicesConfig) {
+        public WeaviateDevServiceCfg(
+                WeaviateEmbeddingStoreBuildTimeConfig.WeaviateDevServicesBuildTimeConfig devServicesConfig) {
             this.devServicesEnabled = devServicesConfig.enabled();
             this.imageName = devServicesConfig.imageName();
             this.fixedExposedPort = devServicesConfig.port();
