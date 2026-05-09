@@ -20,12 +20,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -449,44 +452,135 @@ public class AiServiceMethodImplementationSupport {
             if (maxToolCallsPerResponse > 0) {
                 log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
             }
-            int toolCallsCount = 0;
-            for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-                if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+            // Phase 1 — parallel tool dispatch when an executor is wired AND there is more than one tool. The
+            // single-tool case stays serial to avoid futures + thread-hop overhead. ZERO behaviour change in
+            // serial mode.
+            Executor parallelExec = context.parallelToolExecutor;
+            boolean parallel = parallelExec != null && toolExecutionRequests.size() > 1;
+
+            if (parallel) {
+                // SUBMISSION PHASE — enforce maxToolCallsPerResponse atomically BEFORE submitting any tool. We
+                // never want to start work in parallel that we'll then have to throw away. Behaviour matches the
+                // existing serial path (which throws on the first request that exceeds the cap).
+                if (maxToolCallsPerResponse > 0 && toolExecutionRequests.size() > maxToolCallsPerResponse) {
                     throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
                 }
-                toolCallsCount++;
-                log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
-                ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-
-                ToolExecutionResult toolExecutionResult = toolExecutor == null
-                        ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
-                        : executeTool(toolExecutionRequest, toolExecutor, invocationContext,
-                                context.toolService.argumentsErrorHandler(), context.toolService.executionErrorHandler());
-
-                // New firing
-                context.eventListenerRegistrar.fireEvent(
-                        dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
-                                .invocationContext(invocationContext)
-                                .request(toolExecutionRequest)
-                                .resultText(toolExecutionResult.resultText())
-                                .build());
-
-                ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(toolExecutionRequest,
-                        toolExecutionResult.resultText());
-
-                ToolExecution toolExecution = ToolExecution.builder()
-                        .request(toolExecutionRequest)
-                        .result(toolExecutionResult)
-                        .invocationContext(invocationContext)
-                        .build();
-                toolExecutions.add(toolExecution);
-                toolResults.add(toolExecutionResultMessage);
-
-                // If any tool does not return immediately, results must be processed by LLM
-                if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
-                    immediateToolReturn = false;
+                LinkedHashMap<ToolExecutionRequest, CompletableFuture<ToolExecutionResult>> futures = new LinkedHashMap<>();
+                for (ToolExecutionRequest req : toolExecutionRequests) {
+                    log.debugv("Attempting to execute tool {0}", req);
+                    ToolExecutor toolExecutor = toolExecutors.get(req.name());
+                    if (toolExecutor == null) {
+                        // Hallucination strategy still runs INLINE — it's fast, synchronous, and avoids spawning a
+                        // task purely to call a Function.
+                        ToolExecutionResult hallucinationResult = context.toolService
+                                .applyToolHallucinationStrategy(req);
+                        futures.put(req, CompletableFuture.completedFuture(hallucinationResult));
+                    } else {
+                        final ToolExecutor capturedExecutor = toolExecutor;
+                        final ToolArgumentsErrorHandler argsErr = context.toolService.argumentsErrorHandler();
+                        final ToolExecutionErrorHandler execErr = context.toolService.executionErrorHandler();
+                        futures.put(req, CompletableFuture.supplyAsync(
+                                () -> executeTool(req, capturedExecutor, invocationContext, argsErr, execErr),
+                                parallelExec));
+                    }
                 }
+                // GATHER PHASE — ordered. Preserves committableChatMemory determinism + IMMEDIATE return ordering
+                // because we iterate the LinkedHashMap in original request order.
+                for (Map.Entry<ToolExecutionRequest, CompletableFuture<ToolExecutionResult>> entry : futures.entrySet()) {
+                    ToolExecutionRequest toolExecutionRequest = entry.getKey();
+                    ToolExecutionResult toolExecutionResult;
+                    try {
+                        toolExecutionResult = entry.getValue().get();
+                    } catch (ExecutionException ee) {
+                        // Cancel any remaining futures so we don't leak side-effects after a thrown error.
+                        for (CompletableFuture<ToolExecutionResult> f : futures.values()) {
+                            f.cancel(true);
+                        }
+                        Throwable cause = ee.getCause();
+                        // Restore the caller-thread exception shape so PreventsErrorHandlerExecution and other
+                        // RuntimeException subtypes propagate unchanged.
+                        if (cause instanceof RuntimeException re) {
+                            throw re;
+                        }
+                        if (cause instanceof Error err) {
+                            throw err;
+                        }
+                        throw new RuntimeException(cause);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        for (CompletableFuture<ToolExecutionResult> f : futures.values()) {
+                            f.cancel(true);
+                        }
+                        throw new RuntimeException("Interrupted while gathering parallel tool results", ie);
+                    }
+                    ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
 
+                    // Fire ToolExecutedEvent on the GATHER thread (not the executor thread) so event ordering and
+                    // listener thread-safety expectations match the serial path exactly.
+                    context.eventListenerRegistrar.fireEvent(
+                            dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
+                                    .invocationContext(invocationContext)
+                                    .request(toolExecutionRequest)
+                                    .resultText(toolExecutionResult.resultText())
+                                    .build());
+
+                    ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage
+                            .from(toolExecutionRequest, toolExecutionResult.resultText());
+
+                    ToolExecution toolExecution = ToolExecution.builder()
+                            .request(toolExecutionRequest)
+                            .result(toolExecutionResult)
+                            .invocationContext(invocationContext)
+                            .build();
+                    toolExecutions.add(toolExecution);
+                    toolResults.add(toolExecutionResultMessage);
+
+                    // If any tool does not return immediately, results must be processed by LLM
+                    if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
+                        immediateToolReturn = false;
+                    }
+                }
+            } else {
+                int toolCallsCount = 0;
+                for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+                    if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                        throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
+                    }
+                    toolCallsCount++;
+                    log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
+                    ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
+
+                    ToolExecutionResult toolExecutionResult = toolExecutor == null
+                            ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
+                            : executeTool(toolExecutionRequest, toolExecutor, invocationContext,
+                                    context.toolService.argumentsErrorHandler(), context.toolService.executionErrorHandler());
+
+                    // New firing
+                    context.eventListenerRegistrar.fireEvent(
+                            dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
+                                    .invocationContext(invocationContext)
+                                    .request(toolExecutionRequest)
+                                    .resultText(toolExecutionResult.resultText())
+                                    .build());
+
+                    ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
+                            toolExecutionRequest,
+                            toolExecutionResult.resultText());
+
+                    ToolExecution toolExecution = ToolExecution.builder()
+                            .request(toolExecutionRequest)
+                            .result(toolExecutionResult)
+                            .invocationContext(invocationContext)
+                            .build();
+                    toolExecutions.add(toolExecution);
+                    toolResults.add(toolExecutionResultMessage);
+
+                    // If any tool does not return immediately, results must be processed by LLM
+                    if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
+                        immediateToolReturn = false;
+                    }
+
+                }
             }
             for (ToolExecutionResultMessage toolResult : toolResults) {
                 committableChatMemory.add(toolResult);

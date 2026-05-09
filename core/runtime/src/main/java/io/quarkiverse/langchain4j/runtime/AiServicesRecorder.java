@@ -8,12 +8,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
+
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.jboss.logging.Logger;
 
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
@@ -32,16 +36,22 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.smallrye.config.SmallRyeConfig;
 
 @Recorder
 public class AiServicesRecorder {
+
+    private static final Logger LOG = Logger.getLogger(AiServicesRecorder.class);
+
     private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
@@ -346,6 +356,20 @@ public class AiServicesRecorder {
 
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
+
+                    try {
+                        LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
+                                .unwrap(SmallRyeConfig.class)
+                                .getConfigMapping(LangChain4jConfig.class);
+                        Executor parallelExecutor = ParallelToolExecutorResolver
+                                .resolve(serviceClass.getName(), langChain4jConfig);
+                        aiServiceContext.parallelToolExecutor = parallelExecutor;
+                    } catch (RuntimeException e) {
+                        LOG.warnf(e,
+                                "Failed to resolve parallel-tool executor for AiService '%s'; falling back to serial dispatch.",
+                                serviceClass.getName());
+                        aiServiceContext.parallelToolExecutor = null;
+                    }
 
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {

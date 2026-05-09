@@ -3,7 +3,11 @@ package io.quarkiverse.langchain4j;
 import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 
 import java.util.Collection;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
+
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
@@ -17,8 +21,11 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
+import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
+import io.smallrye.config.SmallRyeConfig;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
 
@@ -37,6 +44,8 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
     }
 
     public static class QuarkusAiServices<T> extends AiServices<T> {
+
+        private static final Logger LOG = Logger.getLogger(QuarkusAiServices.class);
 
         public QuarkusAiServices(AiServiceContext context) {
             super(context);
@@ -113,6 +122,25 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                                     "Please ensure a valid moderationModel is configured before using the @Moderate "
                                     + "annotation.");
                 }
+            }
+
+            // Phase 1 — resolve the parallel-tool executor for this AiService and wire it into the context BEFORE
+            // the generated impl class is instantiated. Resolver returns null for serial mode (the default), in which
+            // case AiServiceMethodImplementationSupport keeps its existing serial dispatch path.
+            try {
+                LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
+                        .unwrap(SmallRyeConfig.class)
+                        .getConfigMapping(LangChain4jConfig.class);
+                Executor parallelExecutor = ParallelToolExecutorResolver.resolve(aiServiceClass.getName(),
+                        langChain4jConfig);
+                quarkusAiServiceContext().parallelToolExecutor = parallelExecutor;
+            } catch (RuntimeException e) {
+                // Defensive: never let executor resolution prevent AiService construction. Logging here mirrors the
+                // resolver's existing fallback-to-serial philosophy.
+                LOG.warnf(e,
+                        "Failed to resolve parallel-tool executor for AiService '%s'; falling back to serial dispatch.",
+                        aiServiceClass.getName());
+                quarkusAiServiceContext().parallelToolExecutor = null;
             }
 
             try {
