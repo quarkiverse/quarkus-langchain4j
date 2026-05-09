@@ -14,9 +14,6 @@ import jakarta.inject.Qualifier;
  * Marker annotation to select a named embedding store.
  * Configure the {@code value} parameter to select the embedding store instance.
  * <p>
- * Currently, only the pgvector extension supports named embedding stores.
- * Other embedding store providers will need to implement the same capability.
- * <p>
  * For example, when configuring pgvector like so:
  *
  * <pre>
