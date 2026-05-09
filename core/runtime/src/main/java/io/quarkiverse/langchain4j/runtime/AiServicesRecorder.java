@@ -115,7 +115,7 @@ public class AiServicesRecorder {
                                 objectWithTools.add(tool);
                             }
                             ToolsRecorder.populateToolMetadata(objectWithTools, methodCreateInfo.getToolSpecifications(),
-                                    methodCreateInfo.getToolExecutors());
+                                    methodCreateInfo.getToolExecutors(), methodCreateInfo.getToolReturnBehaviors());
                         } catch (ClassNotFoundException e) {
                             throw new IllegalStateException(e);
                         }
@@ -357,19 +357,25 @@ public class AiServicesRecorder {
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
 
+                    Executor parallelExecutor = null;
                     try {
                         LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
                                 .unwrap(SmallRyeConfig.class)
                                 .getConfigMapping(LangChain4jConfig.class);
-                        Executor parallelExecutor = ParallelToolExecutorResolver
+                        parallelExecutor = ParallelToolExecutorResolver
                                 .resolve(serviceClass.getName(), langChain4jConfig);
-                        aiServiceContext.parallelToolExecutor = parallelExecutor;
                     } catch (RuntimeException e) {
                         LOG.warnf(e,
                                 "Failed to resolve parallel-tool executor for AiService '%s'; falling back to serial dispatch.",
                                 serviceClass.getName());
-                        aiServiceContext.parallelToolExecutor = null;
                     }
+                    aiServiceContext.parallelToolExecutor = parallelExecutor;
+                    // Wire the four upstream hooks (executeToolsConcurrently, errorHandlerBypass,
+                    // forceToolChoiceAutoAfterFirstIteration, toolProviderRequestFactory) so the
+                    // delegated tool loop in AiServiceMethodImplementationSupport.doImplement0
+                    // honours Quarkus-specific behaviour. Same wiring as programmatic build().
+                    io.quarkiverse.langchain4j.QuarkusAiServicesFactory
+                            .applyDelegationHooks(quarkusAiServices, aiServiceContext, parallelExecutor);
 
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {

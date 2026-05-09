@@ -22,8 +22,8 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.service.tool.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class MaxToolCallsPerResponseGlobalConfigTest {
@@ -114,7 +114,8 @@ public class MaxToolCallsPerResponseGlobalConfigTest {
                 .hasMessageContaining("3")
                 .hasMessageContaining("7");
 
-        Assertions.assertThat(Tools.invocations).isEqualTo(3);
+        // Atomic reject: no tool runs once the cap is exceeded for the offending response.
+        Assertions.assertThat(Tools.invocations).isEqualTo(0);
     }
 
     @Test
@@ -131,6 +132,7 @@ public class MaxToolCallsPerResponseGlobalConfigTest {
                 .hasMessageContaining("2")
                 .hasMessageContaining("4");
 
-        Assertions.assertThat(Tools.invocations).isEqualTo(2);
+        // Atomic reject: no tool runs once the cap is exceeded for the offending response.
+        Assertions.assertThat(Tools.invocations).isEqualTo(0);
     }
 }

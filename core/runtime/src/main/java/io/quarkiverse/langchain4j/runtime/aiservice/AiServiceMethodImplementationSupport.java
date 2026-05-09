@@ -1,13 +1,10 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
-import static dev.langchain4j.model.output.TokenUsage.sum;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
-import static java.util.Objects.nonNull;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
@@ -20,15 +17,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -39,11 +32,9 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.audio.Audio;
 import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.Content;
@@ -51,15 +42,12 @@ import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.message.VideoContent;
 import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.data.video.Video;
-import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
-import dev.langchain4j.internal.Utils;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.invocation.LangChain4jManaged;
@@ -69,7 +57,6 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
-import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.input.Prompt;
@@ -94,16 +81,14 @@ import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
-import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
-import dev.langchain4j.service.tool.ToolErrorContext;
+import dev.langchain4j.service.tool.AiServiceTool;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
-import dev.langchain4j.service.tool.ToolExecution;
-import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
-import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
+import dev.langchain4j.service.tool.ToolServiceContext;
+import dev.langchain4j.service.tool.ToolServiceResult;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.ImageUrl;
@@ -111,12 +96,9 @@ import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
-import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
-import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
-import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -259,18 +241,36 @@ public class AiServiceMethodImplementationSupport {
                 : context.toolService.toolSpecifications();
         Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
                 : context.toolService.toolExecutors();
-        Set<String> immediateReturnToolNames = Set.of();
+        Map<String, ReturnBehavior> toolReturnBehaviors = hasMethodSpecificTools
+                ? new HashMap<>(methodCreateInfo.getToolReturnBehaviors())
+                : new HashMap<>();
 
         toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
         toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
+        // Eagerly invoke STATIC (non-dynamic) tool providers up-front so they're present on the FIRST
+        // chat request. We collect dynamic providers separately so upstream's
+        // executeInferenceAndToolsLoop can re-evaluate them on each iteration via the
+        // toolProviderRequestFactory we registered in QuarkusAiServicesFactory.applyDelegationHooks
+        // (returns QuarkusToolProviderRequest with the per-method mcpClientNames). The factory is
+        // also used here to keep the request shape consistent across both call sites.
+        List<ToolProvider> dynamicToolProviders = new ArrayList<>();
         for (ToolProvider toolProvider : context.toolService.toolProviders()) {
-            ToolProviderRequest request = new QuarkusToolProviderRequest(invocationContext, userMessage,
-                    methodCreateInfo.getMcpClientNames());
+            if (toolProvider.isDynamic()) {
+                dynamicToolProviders.add(toolProvider);
+                continue;
+            }
+            ToolProviderRequest request = context.toolService.toolProviderRequestFactory()
+                    .apply(ToolProviderRequest.builder()
+                            .invocationContext(invocationContext)
+                            .userMessage(userMessage));
             ToolProviderResult result = toolProvider.provideTools(request);
-            immediateReturnToolNames = Utils.copy(result.immediateReturnToolNames());
-            for (ToolSpecification specification : result.tools().keySet()) {
-                toolSpecifications.add(specification);
-                toolExecutors.put(specification.name(), result.tools().get(specification));
+            if (result == null) {
+                continue;
+            }
+            for (AiServiceTool aiTool : result.aiServiceTools()) {
+                toolSpecifications.add(aiTool.toolSpecification());
+                toolExecutors.put(aiTool.name(), aiTool.toolExecutor());
+                toolReturnBehaviors.put(aiTool.name(), aiTool.returnBehavior());
             }
         }
 
@@ -416,243 +416,83 @@ public class AiServiceMethodImplementationSupport {
                         .response(response)
                         .build());
 
-        TokenUsage tokenUsageAccumulator = response.tokenUsage();
-
         verifyModerationIfNeeded(moderationFuture);
 
-        int maxSequentialToolExecutions = context.maxSequentialToolExecutions != null
-                && context.maxSequentialToolExecutions > 0
-                        ? context.maxSequentialToolExecutions
-                        : getMaxSequentialToolExecutions();
-        int executionsLeft = maxSequentialToolExecutions;
-        List<ChatResponse> intermediateResponses = new ArrayList<>();
-        while (true) {
-            if (executionsLeft-- == 0) {
-                throw runtime("Something is wrong, exceeded %s sequential tool executions",
-                        maxSequentialToolExecutions);
+        // Hand off the LLM↔tools loop to upstream langchain4j. Before this rework the loop lived here,
+        // duplicating roughly 200 lines (parallel + serial branches) of dispatch logic. Upstream's
+        // ToolService.executeInferenceAndToolsLoop is now the single source of truth for: parallel
+        // dispatch (driven by the executor we set via AiServices.executeToolsConcurrently in
+        // applyDelegationHooks), maxToolCallsPerResponse enforcement, ToolChoice.REQUIRED→AUTO
+        // forcing (forceToolChoiceAutoAfterFirstIteration hook), error-handler bypass for
+        // PreventsErrorHandlerExecution (errorHandlerBypass hook), MCP tool-provider scoping
+        // (toolProviderRequestFactory hook), and IMMEDIATE / IMMEDIATE_IF_LAST short-circuit.
+        // Apply per-AiService config overrides on each call (cheap; fields are mutable on ToolService).
+        applyPerCallToolServiceOverrides(context, methodCreateInfo);
+
+        // Build the ToolServiceContext consumed by upstream's loop. Two paths:
+        //   * hasMethodSpecificTools: per-method @Toolbox / per-method tools = override — upstream's
+        //     toolService doesn't know about these, so we hand-roll the context with the method's
+        //     tools + already-applied static provider tools. Dynamic providers are tracked separately
+        //     so upstream can refresh them per iteration via the toolProviderRequestFactory.
+        //   * otherwise: AiService-level tools — upstream toolService.createContext is the right call;
+        //     it merges static provider tools, applies the same factory, and sets up dynamic
+        //     providers for refresh.
+        ToolServiceContext toolServiceContext;
+        if (hasMethodSpecificTools) {
+            toolServiceContext = ToolServiceContext.builder()
+                    .effectiveTools(toolSpecifications)
+                    .availableTools(toolSpecifications)
+                    .toolExecutors(toolExecutors)
+                    .returnBehaviors(toolReturnBehaviors)
+                    .dynamicToolProviders(dynamicToolProviders)
+                    .build();
+        } else {
+            toolServiceContext = context.toolService.createContext(invocationContext, userMessage, messagesToSend);
+        }
+
+        // Upstream's executeInferenceAndToolsLoop expects ChatRequestParameters that drove the FIRST
+        // chat request; it overrides them on follow-up iterations (toolSpecifications + the
+        // REQUIRED→AUTO rewrite when forceToolChoiceAutoAfterFirstIteration is true).
+        ChatRequestParameters firstCallParameters = chatRequest.parameters();
+
+        ToolServiceResult toolServiceResult = context.toolService.executeInferenceAndToolsLoop(
+                context,
+                context.effectiveChatModel(methodCreateInfo, methodArgs),
+                memoryId,
+                response,
+                firstCallParameters,
+                committableChatMemory.messages(),
+                committableChatMemory,
+                invocationContext,
+                toolServiceContext,
+                TypeUtil.isResult(returnType));
+
+        TokenUsage tokenUsageAccumulator = toolServiceResult.aggregateTokenUsage();
+        response = toolServiceResult.finalResponse();
+
+        if (toolServiceResult.immediateToolReturn()) {
+            if (!TypeUtil.isResult(returnType)) {
+                throw IllegalConfigurationException
+                        .illegalConfiguration("@Tool with IMMEDIATE return behavior must return a Result");
             }
+            committableChatMemory.commit();
+            Result<?> result = Result.builder()
+                    .content(null)
+                    .tokenUsage(tokenUsageAccumulator)
+                    .sources(augmentationResult == null ? null : augmentationResult.contents())
+                    .finishReason(FinishReason.TOOL_EXECUTION)
+                    .toolExecutions(toolServiceResult.toolExecutions())
+                    .intermediateResponses(toolServiceResult.intermediateResponses())
+                    .finalResponse(response)
+                    .build();
 
-            AiMessage aiMessage = response.aiMessage();
-            committableChatMemory.add(aiMessage);
-
-            if (!aiMessage.hasToolExecutionRequests()) {
-                break;
-            }
-            intermediateResponses.add(response);
-
-            boolean immediateToolReturn = true;
-            List<ToolExecution> toolExecutions = new ArrayList<>();
-            List<ToolExecutionResultMessage> toolResults = new ArrayList<>();
-            List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
-            int maxToolCallsPerResponse;
-            if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
-                maxToolCallsPerResponse = context.maxToolCallsPerResponse;
-            } else {
-                maxToolCallsPerResponse = getMaxToolCallsPerResponse();
-            }
-            if (maxToolCallsPerResponse > 0) {
-                log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
-            }
-            // Phase 1 — parallel tool dispatch when an executor is wired AND there is more than one tool. The
-            // single-tool case stays serial to avoid futures + thread-hop overhead. ZERO behaviour change in
-            // serial mode.
-            Executor parallelExec = context.parallelToolExecutor;
-            boolean parallel = parallelExec != null && toolExecutionRequests.size() > 1;
-
-            if (parallel) {
-                // SUBMISSION PHASE — enforce maxToolCallsPerResponse atomically BEFORE submitting any tool. We
-                // never want to start work in parallel that we'll then have to throw away. Behaviour matches the
-                // existing serial path (which throws on the first request that exceeds the cap).
-                if (maxToolCallsPerResponse > 0 && toolExecutionRequests.size() > maxToolCallsPerResponse) {
-                    throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
-                }
-                LinkedHashMap<ToolExecutionRequest, CompletableFuture<ToolExecutionResult>> futures = new LinkedHashMap<>();
-                for (ToolExecutionRequest req : toolExecutionRequests) {
-                    log.debugv("Attempting to execute tool {0}", req);
-                    ToolExecutor toolExecutor = toolExecutors.get(req.name());
-                    if (toolExecutor == null) {
-                        // Hallucination strategy still runs INLINE — it's fast, synchronous, and avoids spawning a
-                        // task purely to call a Function.
-                        ToolExecutionResult hallucinationResult = context.toolService
-                                .applyToolHallucinationStrategy(req);
-                        futures.put(req, CompletableFuture.completedFuture(hallucinationResult));
-                    } else {
-                        final ToolExecutor capturedExecutor = toolExecutor;
-                        final ToolArgumentsErrorHandler argsErr = context.toolService.argumentsErrorHandler();
-                        final ToolExecutionErrorHandler execErr = context.toolService.executionErrorHandler();
-                        futures.put(req, CompletableFuture.supplyAsync(
-                                () -> executeTool(req, capturedExecutor, invocationContext, argsErr, execErr),
-                                parallelExec));
-                    }
-                }
-                // GATHER PHASE — ordered. Preserves committableChatMemory determinism + IMMEDIATE return ordering
-                // because we iterate the LinkedHashMap in original request order.
-                for (Map.Entry<ToolExecutionRequest, CompletableFuture<ToolExecutionResult>> entry : futures.entrySet()) {
-                    ToolExecutionRequest toolExecutionRequest = entry.getKey();
-                    ToolExecutionResult toolExecutionResult;
-                    try {
-                        toolExecutionResult = entry.getValue().get();
-                    } catch (ExecutionException ee) {
-                        // Cancel any remaining futures so we don't leak side-effects after a thrown error.
-                        for (CompletableFuture<ToolExecutionResult> f : futures.values()) {
-                            f.cancel(true);
-                        }
-                        Throwable cause = ee.getCause();
-                        // Restore the caller-thread exception shape so PreventsErrorHandlerExecution and other
-                        // RuntimeException subtypes propagate unchanged.
-                        if (cause instanceof RuntimeException re) {
-                            throw re;
-                        }
-                        if (cause instanceof Error err) {
-                            throw err;
-                        }
-                        throw new RuntimeException(cause);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        for (CompletableFuture<ToolExecutionResult> f : futures.values()) {
-                            f.cancel(true);
-                        }
-                        throw new RuntimeException("Interrupted while gathering parallel tool results", ie);
-                    }
-                    ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-
-                    // Fire ToolExecutedEvent on the GATHER thread (not the executor thread) so event ordering and
-                    // listener thread-safety expectations match the serial path exactly.
-                    context.eventListenerRegistrar.fireEvent(
-                            dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
-                                    .invocationContext(invocationContext)
-                                    .request(toolExecutionRequest)
-                                    .resultText(toolExecutionResult.resultText())
-                                    .build());
-
-                    ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage
-                            .from(toolExecutionRequest, toolExecutionResult.resultText());
-
-                    ToolExecution toolExecution = ToolExecution.builder()
-                            .request(toolExecutionRequest)
-                            .result(toolExecutionResult)
-                            .invocationContext(invocationContext)
-                            .build();
-                    toolExecutions.add(toolExecution);
-                    toolResults.add(toolExecutionResultMessage);
-
-                    // If any tool does not return immediately, results must be processed by LLM
-                    if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
-                        immediateToolReturn = false;
-                    }
-                }
-            } else {
-                int toolCallsCount = 0;
-                for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-                    if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
-                        throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
-                    }
-                    toolCallsCount++;
-                    log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
-                    ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-
-                    ToolExecutionResult toolExecutionResult = toolExecutor == null
-                            ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
-                            : executeTool(toolExecutionRequest, toolExecutor, invocationContext,
-                                    context.toolService.argumentsErrorHandler(), context.toolService.executionErrorHandler());
-
-                    // New firing
-                    context.eventListenerRegistrar.fireEvent(
-                            dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
-                                    .invocationContext(invocationContext)
-                                    .request(toolExecutionRequest)
-                                    .resultText(toolExecutionResult.resultText())
-                                    .build());
-
-                    ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                            toolExecutionRequest,
-                            toolExecutionResult.resultText());
-
-                    ToolExecution toolExecution = ToolExecution.builder()
-                            .request(toolExecutionRequest)
-                            .result(toolExecutionResult)
-                            .invocationContext(invocationContext)
-                            .build();
-                    toolExecutions.add(toolExecution);
-                    toolResults.add(toolExecutionResultMessage);
-
-                    // If any tool does not return immediately, results must be processed by LLM
-                    if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
-                        immediateToolReturn = false;
-                    }
-
-                }
-            }
-            for (ToolExecutionResultMessage toolResult : toolResults) {
-                committableChatMemory.add(toolResult);
-            }
-            if (immediateToolReturn) {
-                if (!TypeUtil.isResult(returnType)) {
-                    throw IllegalConfigurationException
-                            .illegalConfiguration("@Tool with IMMEDIATE return behavior must return a Result");
-                }
-                committableChatMemory.commit();
-                ChatResponse finalResponse = intermediateResponses.remove(intermediateResponses.size() - 1);
-                var result = Result.builder()
-                        .content(null)
-                        .tokenUsage(tokenUsageAccumulator)
-                        .sources(augmentationResult == null ? null : augmentationResult.contents())
-                        .finishReason(FinishReason.TOOL_EXECUTION)
-                        .toolExecutions(toolExecutions)
-                        .intermediateResponses(intermediateResponses)
-                        .finalResponse(finalResponse)
-                        .build();
-
-                context.eventListenerRegistrar.fireEvent(
-                        AiServiceCompletedEvent.builder()
-                                .invocationContext(invocationContext)
-                                .result(result)
-                                .build());
-
-                return result;
-            }
-
-            log.debug("Attempting to obtain AI response");
-            ChatModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
-            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(committableChatMemory.messages());
-            DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
-            if (supportsJsonSchema(effectiveChatModel)) {
-                Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
-                if (jsonSchema.isPresent()) {
-                    parametersBuilder = constructStructuredResponseParams(toolSpecifications, jsonSchema.get());
-                } else {
-                    parametersBuilder.toolSpecifications(toolSpecifications);
-                }
-            } else {
-                parametersBuilder.toolSpecifications(toolSpecifications);
-            }
-
-            if (nonNull(context.chatModel.defaultRequestParameters())) {
-                var toolChoice = context.chatModel.defaultRequestParameters().toolChoice();
-                if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)
-                        && !context.allowContinuousForcedToolCalling) {
-                    // This code is needed to avoid a infinite-loop when using the AiService
-                    // in combination with the tool-choice option set to REQUIRED.
-                    // If the tool-choice option is not set to AUTO after calling the tool,
-                    // the model may continuously reselect the same tool in subsequent responses,
-                    // even though the tool has already been invoked.
-                    parametersBuilder.toolChoice(ToolChoice.AUTO);
-                }
-            }
-
-            ChatRequest request = chatRequestBuilder.parameters(parametersBuilder.build()).build();
-            response = effectiveChatModel.chat(request);
-            log.debug("AI response obtained");
-
-            // New firing
             context.eventListenerRegistrar.fireEvent(
-                    AiServiceResponseReceivedEvent.builder()
+                    AiServiceCompletedEvent.builder()
                             .invocationContext(invocationContext)
-                            .request(request)
-                            .response(response)
+                            .result(result)
                             .build());
 
-            tokenUsageAccumulator = sum(tokenUsageAccumulator, response.tokenUsage());
+            return result;
         }
 
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
@@ -723,6 +563,38 @@ public class AiServiceMethodImplementationSupport {
         return augmentedResponse;
     }
 
+    /**
+     * Pushes per-call Quarkus configuration onto the shared upstream {@link dev.langchain4j.service.tool.ToolService}
+     * just before delegating the LLM&#8596;tools loop. These setters were historically duplicated as a
+     * Quarkus-side branch inside {@code doImplement0}; with the loop delegated they have to land
+     * on upstream's state instead.
+     * <ul>
+     * <li>{@code maxSequentialToolsInvocations} — programmatic override, else
+     * {@code quarkus.langchain4j.ai-service.max-tool-executions} (default 10). The
+     * previous in-loop limit threw an explicit exception; upstream throws a different message
+     * string but the cap behaviour is identical.</li>
+     * <li>{@code maxToolCallsPerResponse} — programmatic override, else
+     * {@code quarkus.langchain4j.ai-service.max-tool-calls-per-response} (default 0 / unlimited).
+     * Upstream throws {@code ToolCallsLimitExceededException} BEFORE submitting any tool, the
+     * same atomic-reject semantics the Quarkus parallel branch had.</li>
+     * </ul>
+     */
+    private static void applyPerCallToolServiceOverrides(QuarkusAiServiceContext context,
+            AiServiceMethodCreateInfo methodCreateInfo) {
+        int maxSequentialToolExecutions = (context.maxSequentialToolExecutions != null
+                && context.maxSequentialToolExecutions > 0)
+                        ? context.maxSequentialToolExecutions
+                        : getMaxSequentialToolExecutions();
+        context.toolService.maxSequentialToolsInvocations(maxSequentialToolExecutions);
+        int maxToolCallsPerResponse = (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0)
+                ? context.maxToolCallsPerResponse
+                : getMaxToolCallsPerResponse();
+        context.toolService.maxToolCallsPerResponse(maxToolCallsPerResponse);
+        if (maxToolCallsPerResponse > 0) {
+            log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
+        }
+    }
+
     private static InvocationParameters findInvocationParams(Object[] args) {
         if (args == null) {
             return new InvocationParameters();
@@ -733,55 +605,6 @@ public class AiServiceMethodImplementationSupport {
             }
         }
         return new InvocationParameters();
-    }
-
-    private static ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
-            InvocationContext invocationContext,
-            ToolArgumentsErrorHandler toolArgumentsErrorHandler,
-            ToolExecutionErrorHandler toolExecutionErrorHandler) {
-        ToolExecutionResult toolExecutionResult;
-        try {
-            toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
-        } catch (ToolArgumentsException e) {
-            if (toolArgumentsErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool arguments. Executing  ",
-                        toolArgumentsErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolArgumentsErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        } catch (Exception e) {
-            if (e instanceof PreventsErrorHandlerExecution) {
-                // preserve semantics for existing code
-                throw e;
-            }
-            if (toolExecutionErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool. Executing '",
-                        toolExecutionErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolExecutionErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        }
-        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-
-        return toolExecutionResult;
     }
 
     private static ChatRequest createChatRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
@@ -1331,19 +1154,6 @@ public class AiServiceMethodImplementationSupport {
     private static Executor createExecutor() {
         InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
         return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
-    }
-
-    private static boolean isImmediateReturnTool(String toolName, ToolExecutor toolExecutor,
-            Set<String> immediateReturnToolNames) {
-        // Check if the executor itself declares immediate return behavior
-        if (toolExecutor instanceof QuarkusToolExecutor quarkusExecutor) {
-            if (quarkusExecutor.returnBehavior() == ReturnBehavior.IMMEDIATE) {
-                return true;
-            }
-        }
-
-        // Otherwise, check if the tool name is in the immediate return set
-        return immediateReturnToolNames.contains(toolName);
     }
 
     private static CommittableChatMemory determineCommittableChatMemory(ChatMemory chatMemory,

@@ -3,25 +3,17 @@ package io.quarkiverse.langchain4j.runtime;
 /**
  * Thrown when an LLM response exceeds the configured
  * maximum number of tool calls per response.
+ *
+ * <p>
+ * As of langchain4j 1.14, the canonical exception class is
+ * {@link dev.langchain4j.service.tool.ToolCallsLimitExceededException}; this Quarkus-specific class
+ * remains a subclass for source compatibility with code that catches it explicitly. The streaming
+ * tool-execution path still throws this Quarkus class; the non-streaming path delegates to
+ * upstream and may throw the upstream class directly. Catch the upstream class going forward.
  */
-public class ToolCallsLimitExceededException extends RuntimeException {
-
-    private final int limit;
-    private final int attempted;
+public class ToolCallsLimitExceededException extends dev.langchain4j.service.tool.ToolCallsLimitExceededException {
 
     public ToolCallsLimitExceededException(int limit, int attempted) {
-        super(String.format(
-                "Exceeded maximum tool calls per response: %d (attempted: %d)",
-                limit, attempted));
-        this.limit = limit;
-        this.attempted = attempted;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public int getAttempted() {
-        return attempted;
+        super(limit, attempted);
     }
 }
