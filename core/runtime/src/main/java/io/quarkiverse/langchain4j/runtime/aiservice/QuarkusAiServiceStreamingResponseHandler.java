@@ -5,9 +5,13 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static java.util.Objects.nonNull;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -457,57 +461,156 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                                 .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
                                 .orElse(0);
                     }
-                    int toolCallsCount = 0;
-                    for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-                        if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                    // Phase 3 — parallel TokenStreamMulti tool dispatch when an executor is wired AND there is
+                    // more than one tool. Single-tool case stays serial to avoid futures + thread-hop overhead.
+                    // Zero behaviour change in serial mode (i.e. when context.parallelToolExecutor is null).
+                    Executor parallelExec = context.parallelToolExecutor;
+                    boolean parallel = parallelExec != null && toolExecutionRequests.size() > 1;
+
+                    if (parallel) {
+                        // SUBMISSION PHASE — enforce maxToolCallsPerResponse atomically BEFORE submitting any
+                        // tool. Mirrors Phase 1 semantics — never start work in parallel that we'll throw away.
+                        if (maxToolCallsPerResponse > 0
+                                && toolExecutionRequests.size() > maxToolCallsPerResponse) {
                             throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
                                     toolExecutionRequests.size());
                         }
-                        toolCallsCount++;
-                        if (isCancelled()) {
-                            // Fill cancelled tools with error results to keep memory consistent:
-                            // every tool request must have a matching tool result
-                            ToolExecutionResultMessage cancelledResult = ToolExecutionResultMessage.from(
-                                    toolExecutionRequest, "Tool execution was cancelled");
-                            QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
-                            continue;
+                        LinkedHashMap<ToolExecutionRequest, CompletableFuture<ToolExecutionResult>> futures = new LinkedHashMap<>();
+                        for (ToolExecutionRequest req : toolExecutionRequests) {
+                            if (isCancelled()) {
+                                // Mirror the existing serial cancellation handling at submission top-of-loop:
+                                // if cancelled mid-submission, fill the rest with a cancelled-result that the
+                                // gather phase will write to memory in order. This keeps every tool request
+                                // matched with a tool result (memory consistency invariant) without spawning
+                                // any new tasks for the cancelled portion.
+                                ToolExecutionResult cancelledResult = ToolExecutionResult.builder()
+                                        .isError(true)
+                                        .resultText("Tool execution was cancelled")
+                                        .build();
+                                futures.put(req, CompletableFuture.completedFuture(cancelledResult));
+                                continue;
+                            }
+                            // Fire beforeToolExecutionHandler on the SUBMITTING thread (matches serial timing
+                            // relative to the LLM-driven request order — even though we don't wait for the call
+                            // to complete here).
+                            if (beforeToolExecutionHandler != null) {
+                                BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
+                                        .request(req)
+                                        .invocationContext(invocationContext)
+                                        .build();
+                                beforeToolExecutionHandler.accept(beforeToolExecution);
+                            }
+                            final ToolExecutor toolExecutor = toolExecutors.get(req.name());
+                            final ToolArgumentsErrorHandler argsErr = context.toolService.argumentsErrorHandler();
+                            final ToolExecutionErrorHandler execErr = context.toolService.executionErrorHandler();
+                            // The parallelToolExecutor is already wrapped in VertxContextAwareExecutor — each
+                            // future runs with the captured Vert.x context, no double-wrapping needed here.
+                            futures.put(req, CompletableFuture.supplyAsync(
+                                    () -> executeTool(req, toolExecutor, invocationContext, argsErr, execErr),
+                                    parallelExec));
                         }
-                        // Call before tool execution handler
-                        if (beforeToolExecutionHandler != null) {
-                            BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
+                        // GATHER PHASE — ordered. We're already on the worker thread switched to by
+                        // executeTools(...), so iterate the LinkedHashMap in original request order.
+                        // ToolExecutedEvent + memory commits happen on THIS thread to preserve ordering and
+                        // CommittableChatMemory single-threaded invariant.
+                        for (Map.Entry<ToolExecutionRequest, CompletableFuture<ToolExecutionResult>> entry : futures
+                                .entrySet()) {
+                            ToolExecutionRequest req = entry.getKey();
+                            ToolExecutionResult toolExecutionResult;
+                            try {
+                                toolExecutionResult = entry.getValue().get();
+                            } catch (ExecutionException ee) {
+                                // Cancel siblings BEFORE rethrow — matches Phase 1, preserves Quarkus
+                                // behavior over upstream (which does NOT cancel siblings on failure).
+                                for (CompletableFuture<ToolExecutionResult> f : futures.values()) {
+                                    f.cancel(true);
+                                }
+                                Throwable cause = ee.getCause();
+                                // Restore the caller-thread exception shape so PreventsErrorHandlerExecution
+                                // and other RuntimeException subtypes propagate unchanged.
+                                if (cause instanceof RuntimeException re) {
+                                    throw re;
+                                }
+                                if (cause instanceof Error err) {
+                                    throw err;
+                                }
+                                throw new RuntimeException(cause);
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                for (CompletableFuture<ToolExecutionResult> f : futures.values()) {
+                                    f.cancel(true);
+                                }
+                                throw new RuntimeException(
+                                        "Interrupted while gathering parallel tool results", ie);
+                            }
+
+                            fireToolExecutedEvent(req, toolExecutionResult.resultText());
+
+                            ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage
+                                    .from(req, toolExecutionResult.resultText());
+                            if (toolExecuteHandler != null) {
+                                ToolExecution toolExecution = ToolExecution.builder()
+                                        .request(req)
+                                        .result(toolExecutionResult)
+                                        .invocationContext(invocationContext)
+                                        .build();
+                                toolExecuteHandler.accept(toolExecution);
+                            }
+                            QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
+                        }
+                    } else {
+                        int toolCallsCount = 0;
+                        for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+                            if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
+                                throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
+                                        toolExecutionRequests.size());
+                            }
+                            toolCallsCount++;
+                            if (isCancelled()) {
+                                // Fill cancelled tools with error results to keep memory consistent:
+                                // every tool request must have a matching tool result
+                                ToolExecutionResultMessage cancelledResult = ToolExecutionResultMessage.from(
+                                        toolExecutionRequest, "Tool execution was cancelled");
+                                QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
+                                continue;
+                            }
+                            // Call before tool execution handler
+                            if (beforeToolExecutionHandler != null) {
+                                BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
+                                        .request(toolExecutionRequest)
+                                        .invocationContext(invocationContext)
+                                        .build();
+                                beforeToolExecutionHandler.accept(beforeToolExecution);
+                            }
+
+                            String toolName = toolExecutionRequest.name();
+                            ToolExecutor toolExecutor = toolExecutors.get(toolName);
+                            // Execute the tool with argumentsErrorHandler and executionErrorHandler.
+                            // If execution fails, these handlers convert exceptions into error results
+                            // that are sent back to the LLM, allowing it to recover from tool failures.
+                            ToolExecutionResult toolExecutionResult = executeTool(
+                                    toolExecutionRequest,
+                                    toolExecutor,
+                                    invocationContext,
+                                    context.toolService.argumentsErrorHandler(),
+                                    context.toolService.executionErrorHandler());
+
+                            fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
+
+                            ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
+                                    toolExecutionRequest,
+                                    toolExecutionResult.resultText());
+
+                            ToolExecution toolExecution = ToolExecution.builder()
                                     .request(toolExecutionRequest)
+                                    .result(toolExecutionResult)
                                     .invocationContext(invocationContext)
                                     .build();
-                            beforeToolExecutionHandler.accept(beforeToolExecution);
+                            if (toolExecuteHandler != null) {
+                                toolExecuteHandler.accept(toolExecution);
+                            }
+                            QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
                         }
-
-                        String toolName = toolExecutionRequest.name();
-                        ToolExecutor toolExecutor = toolExecutors.get(toolName);
-                        // Execute the tool with argumentsErrorHandler and executionErrorHandler.
-                        // If execution fails, these handlers convert exceptions into error results
-                        // that are sent back to the LLM, allowing it to recover from tool failures.
-                        ToolExecutionResult toolExecutionResult = executeTool(
-                                toolExecutionRequest,
-                                toolExecutor,
-                                invocationContext,
-                                context.toolService.argumentsErrorHandler(),
-                                context.toolService.executionErrorHandler());
-
-                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
-
-                        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                                toolExecutionRequest,
-                                toolExecutionResult.resultText());
-
-                        ToolExecution toolExecution = ToolExecution.builder()
-                                .request(toolExecutionRequest)
-                                .result(toolExecutionResult)
-                                .invocationContext(invocationContext)
-                                .build();
-                        if (toolExecuteHandler != null) {
-                            toolExecuteHandler.accept(toolExecution);
-                        }
-                        QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
                     }
 
                     if (isCancelled()) {
