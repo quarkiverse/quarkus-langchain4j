@@ -321,6 +321,7 @@ public class AiServiceMethodImplementationSupport {
                     .messages(messagesToSend)
                     .toolSpecifications(toolSpecifications)
                     .toolExecutors(toolExecutors)
+                    .toolExecutor(context.parallelToolExecutor)
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
                     .invocationContext(InvocationContext.builder().chatMemoryId(memoryId).build())
