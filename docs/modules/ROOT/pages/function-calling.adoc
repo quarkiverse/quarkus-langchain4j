@@ -281,13 +281,9 @@ includes more tool execution requests than the cap, ZERO tools from that respons
 exception is thrown. This matches the parallel-mode contract and ensures predictable resource usage when an
 LLM violates the cap.
 
-*Latency tradeoff for streaming:* a strict cap means streaming tool dispatch cannot start until the full
-tool-call section of the LLM response has been received (we have to know the full tool-call count before
-deciding whether to dispatch). For responses that contain only tool calls and no preamble, this is
-imperceptible; for responses where the LLM streams a long preamble before the tool calls, tool dispatch
-waits for the full response to land. If sub-cap latency matters more than strict enforcement, set
-`maxToolCallsPerResponse=0` (the default = unlimited) — tool dispatch then begins as each `onCompleteToolCall`
-callback fires.
+Streaming tool dispatch is batch-oriented: tools are dispatched after the model completes the
+response that contains the tool requests. The cap is checked before dispatch, so exceeded batches
+execute zero tools. A value of 0 disables the cap, but does not restore per-tool early dispatch.
 
 ==== Streaming event timing
 

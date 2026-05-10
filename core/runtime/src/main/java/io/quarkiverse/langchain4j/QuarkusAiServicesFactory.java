@@ -14,6 +14,7 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.invocation.LangChain4jManaged;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServices;
@@ -23,11 +24,13 @@ import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceInvocationData;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusInvocationData;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusStreamingToolDispatchHook;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
@@ -257,31 +260,21 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
     }
 
     /**
-     * Returns the per-method {@code mcpClientNames} list straight from the build-time metadata, or
-     * {@code null} when the method has no {@code @McpToolBox} annotation. Nullability is meaningful:
-     * MCP's filter ({@code QuarkusMcpToolProvider.McpClientKeyFilter}) reads {@code keys == null}
-     * as "no MCP clients selected" (the @McpToolBox-absent default) and an empty list as
-     * "select all MCP clients". Returning an empty list when the metadata is null would silently
-     * widen scope, surfacing every MCP tool to a method that previously saw none.
+     * Returns the per-method {@code mcpClientNames} list straight from the
+     * {@link QuarkusInvocationData} that {@code AiServiceMethodImplementationSupport} stamps onto
+     * the {@link dev.langchain4j.invocation.InvocationContext} via {@code managedParameters()}.
+     * Nullability is meaningful: MCP's filter ({@code QuarkusMcpToolProvider.McpClientKeyFilter})
+     * reads {@code keys == null} as "no MCP clients selected" (the @McpToolBox-absent default) and
+     * an empty list as "select all MCP clients". Returning an empty list when the metadata is
+     * absent would silently widen scope, surfacing every MCP tool to a method that previously saw
+     * none — so we return {@code null} whenever the Quarkus payload is not present.
      */
     private static java.util.List<String> mcpClientNamesFor(dev.langchain4j.invocation.InvocationContext ic) {
-        if (ic == null) {
+        if (ic == null || ic.managedParameters() == null) {
             return null;
         }
-        try {
-            AiServiceClassCreateInfo classInfo = AiServicesRecorder.getMetadata().get(ic.interfaceName());
-            if (classInfo == null) {
-                return null;
-            }
-            for (AiServiceMethodCreateInfo method : classInfo.methodMap().values()) {
-                if (method.getMethodName().equals(ic.methodName())) {
-                    return method.getMcpClientNames();
-                }
-            }
-        } catch (RuntimeException ignored) {
-            // Best-effort: a missing invocation context simply means no MCP-name scoping for this call.
-        }
-        return null;
+        LangChain4jManaged data = ic.managedParameters().get(QuarkusInvocationData.class);
+        return data instanceof AiServiceInvocationData ai ? ai.mcpClientNames() : null;
     }
 
 }

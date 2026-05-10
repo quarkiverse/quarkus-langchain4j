@@ -31,6 +31,7 @@ import io.quarkus.runtime.annotations.RecordableConstructor;
 public final class AiServiceMethodCreateInfo {
     private final String interfaceName;
     private final String methodName;
+    private final String methodId;
     private final List<ParameterInfo> parameterInfo;
     private final Optional<TemplateInfo> systemMessageInfo;
     private final UserMessageInfo userMessageInfo;
@@ -74,6 +75,7 @@ public final class AiServiceMethodCreateInfo {
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName,
             String methodName,
+            String methodId,
             List<ParameterInfo> parameterInfo,
             Optional<TemplateInfo> systemMessageInfo,
             UserMessageInfo userMessageInfo,
@@ -94,6 +96,7 @@ public final class AiServiceMethodCreateInfo {
             OutputGuardrailsLiteral outputGuardrails) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
+        this.methodId = methodId;
         this.parameterInfo = parameterInfo;
         this.systemMessageInfo = systemMessageInfo;
         this.userMessageInfo = userMessageInfo;
@@ -134,6 +137,10 @@ public final class AiServiceMethodCreateInfo {
 
     public String getMethodName() {
         return methodName;
+    }
+
+    public String getMethodId() {
+        return methodId;
     }
 
     public List<ParameterInfo> getParameterInfo() {

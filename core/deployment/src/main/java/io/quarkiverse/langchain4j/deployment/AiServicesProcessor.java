@@ -1678,7 +1678,7 @@ public class AiServicesProcessor {
                                 .stream()
                                 .map(item -> item.getPredicate())
                                 .collect(Collectors.toList());
-                        AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, index,
+                        AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, methodId, index,
                                 addMicrometerMetrics,
                                 addOpenTelemetrySpan,
                                 config.responseSchema(),
@@ -1916,7 +1916,7 @@ public class AiServicesProcessor {
     }
 
     private AiServiceMethodCreateInfo gatherMethodMetadata(
-            MethodInfo method, IndexView index, boolean addMicrometerMetrics,
+            MethodInfo method, String methodId, IndexView index, boolean addMicrometerMetrics,
             boolean addOpenTelemetrySpans, boolean generateResponseSchema,
             Collection<Predicate<AnnotationInstance>> allowedPredicates,
             Collection<Predicate<AnnotationInstance>> ignoredPredicates,
@@ -1990,7 +1990,8 @@ public class AiServicesProcessor {
                             Collectors.toSet())));
         }
 
-        return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), parameterInfoList,
+        return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), methodId,
+                parameterInfoList,
                 systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,

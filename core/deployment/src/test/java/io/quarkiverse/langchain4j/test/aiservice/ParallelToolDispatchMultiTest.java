@@ -44,8 +44,9 @@ import io.smallrye.mutiny.Multi;
  * <p>
  * Multi flows through the upstream {@code AiServiceTokenStream} / {@code ToolBatchDispatcher}, with
  * the executor wired by Quarkus via {@code AiServices.executeToolsConcurrently}. This pins:
- * siblings cancelled on first failure, {@code PreventsErrorHandlerExecution}-marked exceptions
- * propagate unchanged through the upstream {@code errorHandlerBypass}, atomic
+ * best-effort sibling cancellation on first failure (JDK {@code Future#cancel(false)} —
+ * already-running siblings may still complete), {@code PreventsErrorHandlerExecution}-marked
+ * exceptions propagate unchanged through the upstream {@code errorHandlerBypass}, atomic
  * {@code maxToolCallsPerResponse} rejection, and gather-thread memory ordering.
  *
  * <ul>
@@ -55,8 +56,9 @@ import io.smallrye.mutiny.Multi;
  * (serial) configuration.</li>
  * <li>{@code cancellationDuringMultiParallelDispatch} — first tool throws a
  * {@link BespokeParallelDispatchException} (a {@code PreventsErrorHandlerExecution}); the original
- * exception type bubbles out via the Multi error path, and remaining futures are cancelled (no
- * late memory writes).</li>
+ * exception type bubbles out via the Multi error path and the conversation aborts before a second
+ * LLM round. Sibling cancellation is best-effort — already-running tools may still complete, but
+ * no further LLM turn is issued.</li>
  * <li>{@code committableChatMemoryOrderingUnderParallel} — five tools each sleeping a randomised
  * 50–300ms; assert {@code ToolExecutionResultMessage} entries arrive at the model's second turn in
  * original request order (Java 21+ gated).</li>
@@ -148,8 +150,9 @@ public class ParallelToolDispatchMultiTest {
 
     // -------------------------------------------------------------------------------------
     // 3) Cancellation — first tool throws BespokeParallelDispatchException (PreventsErrorHandlerExecution).
-    //    The exception type must propagate unchanged through the Multi error path, and the slow siblings
-    //    must be cancelled — no late memory writes.
+    //    The exception type must propagate unchanged through the Multi error path, and the conversation
+    //    must abort before a second LLM round. Sibling cancellation is best-effort
+    //    (JDK Future#cancel(false)) — already-running tools may still complete; we don't assert on that.
     // -------------------------------------------------------------------------------------
 
     public static class CancellationDuringMultiTest {
@@ -206,11 +209,10 @@ public class ParallelToolDispatchMultiTest {
             assertThat(ThreeFailingToolStreamingModel.callCount.get())
                     .as("exception must abort the conversation; no second LLM round")
                     .isEqualTo(1);
-            // No late memory writes / completed slow tools — siblings were cancelled on failure.
-            assertThat(FailingMultiTools.completedAfterCancel.get())
-                    .as("sibling tools must be cancelled before they complete; saw %d post-cancel completions",
-                            FailingMultiTools.completedAfterCancel.get())
-                    .isEqualTo(0);
+            // Sibling cancellation is best-effort: upstream ToolBatchDispatcher uses
+            // Future#cancel(false), so already-running tools may still complete. We do NOT assert
+            // that completedAfterCancel == 0 — the contractual guarantee is only that no second
+            // LLM turn fires once the failure surfaces.
         }
     }
 

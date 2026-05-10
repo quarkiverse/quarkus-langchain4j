@@ -53,6 +53,7 @@ import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.invocation.LangChain4jManaged;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
@@ -153,6 +154,21 @@ public class AiServiceMethodImplementationSupport {
         AiServiceMethodCreateInfo createInfo = input.createInfo;
         Object[] methodArgs = input.methodArgs;
 
+        // Carry per-method Quarkus metadata (methodId + mcpClientNames) on the InvocationContext via
+        // managedParameters() so downstream sites (notably the toolProviderRequestFactory hook in
+        // QuarkusAiServicesFactory) can recover it without doing a name-based reverse lookup. The
+        // map merges any caller-provided LangChain4jManaged.current() entries so user-managed data
+        // continues to flow through alongside the Quarkus payload.
+        Map<Class<? extends LangChain4jManaged>, LangChain4jManaged> managed = new HashMap<>();
+        Map<Class<? extends LangChain4jManaged>, LangChain4jManaged> existingManaged = LangChain4jManaged.current();
+        if (existingManaged != null) {
+            managed.putAll(existingManaged);
+        }
+        managed.put(QuarkusInvocationData.class,
+                new AiServiceInvocationData(
+                        createInfo.getMethodId(),
+                        createInfo.getMcpClientNames()));
+
         InvocationContext invocationContext = InvocationContext.builder()
                 .invocationId(UUID.randomUUID())
                 .interfaceName(context.aiServiceClass.getName())
@@ -160,7 +176,7 @@ public class AiServiceMethodImplementationSupport {
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
                 .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory(), context.defaultMemoryIdProvider))
                 .invocationParameters(findInvocationParams(methodArgs))
-                .managedParameters(LangChain4jManaged.current())
+                .managedParameters(managed)
                 .timestampNow()
                 .build();
 
@@ -346,13 +362,20 @@ public class AiServiceMethodImplementationSupport {
             // Upstream supports it
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
+                                            // Resolve and wrap the streaming model so per-method @ModelName overrides flow through to
+                                            // upstream's AiServiceTokenStream, and so callbacks delivered on the Vert.x event loop
+                                            // hop to a worker before invoking blocking-friendly downstream code (memory, MDC, etc.).
+                                            // wrapIfNeeded is idempotent — already-wrapped models pass through unchanged.
+            StreamingChatModel streamingModel = context.effectiveStreamingChatModel(methodCreateInfo, methodArgs);
+            streamingModel = WorkerSwitchingStreamingChatModel.wrapIfNeeded(streamingModel);
             var aiServiceTokenStreamParams = AiServiceTokenStreamParameters.builder()
                     .messages(messagesToSend)
                     .toolServiceContext(toolServiceContext)
                     .toolExecutor(context.parallelToolExecutor)
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
-                    .invocationContext(InvocationContext.builder().chatMemoryId(memoryId).build())
+                    .streamingChatModel(streamingModel)
+                    .invocationContext(invocationContext)
                     .methodKey(methodCreateInfo)
                     .toolArgumentsErrorHandler((e, c) -> {
                         throw new RuntimeException(e);
@@ -378,11 +401,15 @@ public class AiServiceMethodImplementationSupport {
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
             var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
-            // Same InvocationContext shape as the TokenStream path above. The Quarkus Multi path
-            // owns its own output-guardrail flow (OutputGuardrailStreamingMapper, see below), so
-            // TokenStreamMulti opts out of upstream's guardrail buffering by passing methodKey=null
-            // — the streamingGuardrailParams here is still needed for the Quarkus mapper.
-            InvocationContext streamingInvocationContext = InvocationContext.builder().chatMemoryId(memoryId).build();
+            // The Quarkus Multi path owns its own output-guardrail flow
+            // (OutputGuardrailStreamingMapper, see below), so TokenStreamMulti opts out of upstream's
+            // guardrail buffering internally (methodKey=null inside TokenStreamMulti). The full
+            // invocationContext flows through unchanged so the toolProviderRequestFactory hook can
+            // recover the per-method MCP scoping via QuarkusInvocationData.
+            // Streaming model resolution mirrors the TokenStream path above; wrapIfNeeded keeps the
+            // wrap idempotent if context.streamingChatModel was already wrapped at build time.
+            StreamingChatModel multiStreamingModel = context.effectiveStreamingChatModel(methodCreateInfo, methodArgs);
+            multiStreamingModel = WorkerSwitchingStreamingChatModel.wrapIfNeeded(multiStreamingModel);
             GuardrailRequestParams streamingGuardrailParams = GuardrailRequestParams.builder()
                     .chatMemory(committableChatMemory)
                     .augmentationResult(augmentationResult)
@@ -392,9 +419,9 @@ public class AiServiceMethodImplementationSupport {
                     .aiServiceListenerRegistrar(context.eventListenerRegistrar)
                     .build();
             Multi<?> stream = new TokenStreamMulti(messagesToSend, toolServiceContext,
-                    (augmentationResult != null ? augmentationResult.contents() : null), context, streamingInvocationContext,
+                    (augmentationResult != null ? augmentationResult.contents() : null), context, invocationContext,
                     methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread,
-                    streamingGuardrailParams);
+                    streamingGuardrailParams, multiStreamingModel);
 
             if (hasUpstreamGuardrails) {
                 stream = stream.filter(o -> o instanceof ChatEvent)

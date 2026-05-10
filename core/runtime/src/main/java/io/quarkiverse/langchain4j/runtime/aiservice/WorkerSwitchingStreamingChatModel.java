@@ -2,7 +2,11 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.jboss.logging.Logger;
+
+import dev.langchain4j.model.chat.ChatRequestOptions;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -37,10 +41,20 @@ import io.vertx.core.Vertx;
  */
 public final class WorkerSwitchingStreamingChatModel implements StreamingChatModel {
 
+    private static final Logger LOG = Logger.getLogger(WorkerSwitchingStreamingChatModel.class);
+
     private final StreamingChatModel delegate;
 
     public WorkerSwitchingStreamingChatModel(StreamingChatModel delegate) {
         this.delegate = delegate;
+    }
+
+    /** Returns {@code model} unchanged if it is already wrapped, otherwise wraps it. */
+    public static StreamingChatModel wrapIfNeeded(StreamingChatModel model) {
+        if (model instanceof WorkerSwitchingStreamingChatModel) {
+            return model;
+        }
+        return new WorkerSwitchingStreamingChatModel(model);
     }
 
     @Override
@@ -63,6 +77,16 @@ public final class WorkerSwitchingStreamingChatModel implements StreamingChatMod
     }
 
     @Override
+    public void chat(ChatRequest request, ChatRequestOptions options, StreamingChatResponseHandler handler) {
+        if (Context.isOnEventLoopThread()) {
+            delegate.chat(request, options, handler);
+            return;
+        }
+        Context vertxContext = Vertx.currentContext();
+        delegate.chat(request, options, new WorkerSwitchingHandler(handler, vertxContext));
+    }
+
+    @Override
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         // The interface's default chat(...) routes through doChat — but we want the wrapping to
         // happen at the public chat(...) entry-point (where the caller's thread context is known).
@@ -79,6 +103,8 @@ public final class WorkerSwitchingStreamingChatModel implements StreamingChatMod
         private final StreamingChatResponseHandler delegate;
         private final Context vertxContext;
         private volatile ExecutorService fallbackExecutor;
+        private final AtomicBoolean fallbackShutdown = new AtomicBoolean(false);
+        private final AtomicBoolean terminalSignalled = new AtomicBoolean(false);
 
         WorkerSwitchingHandler(StreamingChatResponseHandler delegate, Context vertxContext) {
             this.delegate = delegate;
@@ -98,64 +124,105 @@ public final class WorkerSwitchingStreamingChatModel implements StreamingChatMod
             return fallbackExecutor;
         }
 
-        private void runOffEventLoop(Runnable r) {
+        private void shutdownFallback() {
+            if (!fallbackShutdown.compareAndSet(false, true)) {
+                return;
+            }
+            ExecutorService exec;
+            synchronized (this) {
+                exec = fallbackExecutor;
+            }
+            if (exec != null) {
+                exec.shutdown();
+            }
+        }
+
+        private void signalErrorOnce(Throwable t) {
+            if (terminalSignalled.compareAndSet(false, true)) {
+                try {
+                    delegate.onError(t);
+                } catch (Throwable inner) {
+                    LOG.debugf(inner, "Suppressed exception from delegate.onError after callback failure");
+                }
+            } else {
+                LOG.debugf(t, "Suppressed post-terminal callback exception");
+            }
+        }
+
+        private void runOffEventLoop(boolean terminal, Runnable callback) {
+            Runnable wrapped = () -> {
+                try {
+                    callback.run();
+                    if (terminal) {
+                        terminalSignalled.compareAndSet(false, true);
+                    }
+                } catch (Throwable t) {
+                    signalErrorOnce(t);
+                } finally {
+                    if (terminal) {
+                        shutdownFallback();
+                    }
+                }
+            };
             if (!Context.isOnEventLoopThread()) {
-                r.run();
+                wrapped.run();
                 return;
             }
             if (vertxContext != null) {
                 vertxContext.executeBlocking(() -> {
-                    r.run();
+                    wrapped.run();
                     return null;
                 });
             } else {
-                fallbackExecutor().submit(r);
+                fallbackExecutor().submit(wrapped);
             }
         }
 
         @Override
         public void onPartialResponse(String partialResponse) {
-            runOffEventLoop(() -> delegate.onPartialResponse(partialResponse));
+            runOffEventLoop(false, () -> delegate.onPartialResponse(partialResponse));
         }
 
         @Override
         public void onPartialResponse(PartialResponse partialResponse, PartialResponseContext context) {
-            runOffEventLoop(() -> delegate.onPartialResponse(partialResponse, context));
+            runOffEventLoop(false, () -> delegate.onPartialResponse(partialResponse, context));
         }
 
         @Override
         public void onPartialThinking(PartialThinking partialThinking) {
-            runOffEventLoop(() -> delegate.onPartialThinking(partialThinking));
+            runOffEventLoop(false, () -> delegate.onPartialThinking(partialThinking));
         }
 
         @Override
         public void onPartialThinking(PartialThinking partialThinking, PartialThinkingContext context) {
-            runOffEventLoop(() -> delegate.onPartialThinking(partialThinking, context));
+            runOffEventLoop(false, () -> delegate.onPartialThinking(partialThinking, context));
         }
 
         @Override
         public void onPartialToolCall(PartialToolCall partialToolCall) {
-            runOffEventLoop(() -> delegate.onPartialToolCall(partialToolCall));
+            runOffEventLoop(false, () -> delegate.onPartialToolCall(partialToolCall));
         }
 
         @Override
         public void onPartialToolCall(PartialToolCall partialToolCall, PartialToolCallContext context) {
-            runOffEventLoop(() -> delegate.onPartialToolCall(partialToolCall, context));
+            runOffEventLoop(false, () -> delegate.onPartialToolCall(partialToolCall, context));
         }
 
         @Override
         public void onCompleteToolCall(CompleteToolCall completeToolCall) {
-            runOffEventLoop(() -> delegate.onCompleteToolCall(completeToolCall));
+            runOffEventLoop(false, () -> delegate.onCompleteToolCall(completeToolCall));
         }
 
         @Override
         public void onCompleteResponse(ChatResponse completeResponse) {
-            runOffEventLoop(() -> delegate.onCompleteResponse(completeResponse));
+            runOffEventLoop(true, () -> delegate.onCompleteResponse(completeResponse));
         }
 
         @Override
         public void onError(Throwable error) {
-            runOffEventLoop(() -> delegate.onError(error));
+            // Dispatch via runOffEventLoop with terminal=true so the fallback executor is shut down.
+            // signalErrorOnce enforces the at-most-once guarantee for delegate.onError.
+            runOffEventLoop(true, () -> signalErrorOnce(error));
         }
     }
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.AiServiceTokenStream;
@@ -40,11 +41,12 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private final boolean switchToWorkerThreadForToolExecution;
     private final boolean isCallerRunningOnWorkerThread;
     private final GuardrailRequestParams commonGuardrailParams;
+    private final StreamingChatModel streamingChatModel;
 
     TokenStreamMulti(List<ChatMessage> messagesToSend, ToolServiceContext toolServiceContext, List<Content> contents,
             QuarkusAiServiceContext context, InvocationContext invocationContext,
             boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread,
-            GuardrailRequestParams commonGuardrailParams) {
+            GuardrailRequestParams commonGuardrailParams, StreamingChatModel streamingChatModel) {
         // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
         this.messagesToSend = messagesToSend;
         this.toolServiceContext = toolServiceContext;
@@ -54,6 +56,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
         this.isCallerRunningOnWorkerThread = isCallerRunningOnWorkerThread;
         this.commonGuardrailParams = commonGuardrailParams;
+        this.streamingChatModel = streamingChatModel;
     }
 
     @Override
@@ -108,6 +111,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
                 .toolExecutor(context.parallelToolExecutor)
                 .retrievedContents(contents)
                 .context(context)
+                .streamingChatModel(streamingChatModel)
                 .invocationContext(invocationContext)
                 .methodKey(null)
                 .toolArgumentsErrorHandler((e, c) -> {
