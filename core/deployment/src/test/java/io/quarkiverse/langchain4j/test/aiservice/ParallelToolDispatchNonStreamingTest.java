@@ -6,7 +6,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -16,6 +20,7 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,6 +39,8 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ManagedContext;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -312,6 +319,85 @@ public class ParallelToolDispatchNonStreamingTest {
             assertThat(result.content()).isNull();
             assertThat(result.finishReason()).isEqualTo(FinishReason.TOOL_EXECUTION);
             assertThat(result.toolExecutions()).hasSize(3);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // 7) Hung-tool characterization — there is no per-tool or per-batch timeout in parallel
+    //    dispatch. A genuinely hung tool will block the conversation until the tool itself
+    //    yields. Operators must enforce timeouts inside their tool implementations.
+    // -------------------------------------------------------------------------------------
+
+    /**
+     * This test characterizes a known limitation — there is no per-tool or per-batch timeout in parallel dispatch.
+     * A genuinely hung tool will block the conversation until the tool itself yields. Operators must enforce
+     * timeouts inside their tool implementations.
+     *
+     * <p>
+     * The branch deliberately uses {@code Future#cancel(false)} (documented as best-effort) and there is no
+     * operation-level timeout. With one fast tool and one hung tool, {@code aiService.chat("go")} is expected to
+     * stay blocked until the hung tool yields — confirmed here by running the call on a separate thread and
+     * asserting it has not completed within a bounded sleep, then releasing the latch and verifying it completes
+     * promptly thereafter.
+     */
+    public static class HungToolTest {
+
+        @RegisterExtension
+        static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+                .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                        .addClasses(HungTools.class, FastAndHungBatchModelSupplier.class,
+                                FastAndHungBatchModel.class, HungAiService.class))
+                .overrideRuntimeConfigKey("quarkus.langchain4j.tools.execution", "worker-pool");
+
+        @Inject
+        HungAiService aiService;
+
+        @BeforeEach
+        void reset() {
+            ParallelToolExecutorResolver.resetForTesting();
+            HungTools.invocations.set(0);
+            HungTools.releaseLatch = new CountDownLatch(1);
+        }
+
+        @AfterEach
+        void releaseLatchAfterTest() {
+            // Defensive — ensure the hung tool unblocks even if the test failed before reaching its own release.
+            if (HungTools.releaseLatch != null) {
+                HungTools.releaseLatch.countDown();
+            }
+        }
+
+        @Test
+        void hungToolBlocksUntilLatchReleasedAndCallCompletesAfterwards() throws Exception {
+            // Drive aiService.chat on a separate thread so the test JVM does not deadlock if the behaviour ends
+            // up being "hang forever". @ActivateRequestContext only binds the request scope to the test thread —
+            // we have to activate one on the worker ourselves so the @RegisterAiService client proxy resolves.
+            CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+                ManagedContext requestContext = Arc.container().requestContext();
+                requestContext.activate();
+                try {
+                    return aiService.chat("go");
+                } finally {
+                    requestContext.terminate();
+                }
+            });
+
+            // Within ~3s the call must NOT have returned — the hung tool is holding the batch.
+            assertThatThrownBy(() -> future.get(3, TimeUnit.SECONDS))
+                    .as("with one hung tool the call must not complete while the latch is held — no implicit timeout")
+                    .isInstanceOf(TimeoutException.class);
+            assertThat(future.isDone())
+                    .as("future must still be running while the hung tool is blocked")
+                    .isFalse();
+
+            // Release the latch — the hung tool yields, the batch finishes, and the second LLM turn returns "done".
+            HungTools.releaseLatch.countDown();
+            String result = future.get(5, TimeUnit.SECONDS);
+
+            assertThat(result).isEqualTo("done");
+            assertThat(HungTools.invocations.get())
+                    .as("both tools must have executed once the hung tool yields")
+                    .isEqualTo(2);
         }
     }
 
@@ -622,6 +708,69 @@ public class ParallelToolDispatchNonStreamingTest {
             // failed.
             return ChatResponse.builder()
                     .aiMessage(AiMessage.from("UNEXPECTED"))
+                    .finishReason(FinishReason.STOP)
+                    .build();
+        }
+    }
+
+    // --- Hung-tool fixtures ---
+
+    @ApplicationScoped
+    public static class HungTools {
+
+        static final AtomicInteger invocations = new AtomicInteger();
+        static volatile CountDownLatch releaseLatch = new CountDownLatch(1);
+
+        @Tool
+        public String fast() {
+            invocations.incrementAndGet();
+            return "fast-ok";
+        }
+
+        @Tool
+        public String hung() {
+            invocations.incrementAndGet();
+            try {
+                // Bounded await keeps the worker thread from leaking forever even if the test crashes before
+                // releasing the latch — the @AfterEach also forces a release.
+                if (!releaseLatch.await(30, TimeUnit.SECONDS)) {
+                    throw new RuntimeException("hung tool never released — test framework leak");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+            return "hung-ok";
+        }
+    }
+
+    @RegisterAiService(chatLanguageModelSupplier = FastAndHungBatchModelSupplier.class, tools = HungTools.class)
+    public interface HungAiService {
+        String chat(@UserMessage String message);
+    }
+
+    public static class FastAndHungBatchModelSupplier implements Supplier<ChatModel> {
+        @Override
+        public ChatModel get() {
+            return new FastAndHungBatchModel();
+        }
+    }
+
+    public static class FastAndHungBatchModel implements ChatModel {
+        @Override
+        public ChatResponse doChat(ChatRequest request) {
+            List<ChatMessage> messages = request.messages();
+            if (messages.size() == 1) {
+                List<ToolExecutionRequest> reqs = new ArrayList<>();
+                reqs.add(ToolExecutionRequest.builder().id("a").name("fast").arguments("{}").build());
+                reqs.add(ToolExecutionRequest.builder().id("b").name("hung").arguments("{}").build());
+                return ChatResponse.builder()
+                        .aiMessage(AiMessage.from(reqs))
+                        .finishReason(FinishReason.TOOL_EXECUTION)
+                        .build();
+            }
+            return ChatResponse.builder()
+                    .aiMessage(AiMessage.from("done"))
                     .finishReason(FinishReason.STOP)
                     .build();
         }
