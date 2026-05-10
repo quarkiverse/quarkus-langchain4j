@@ -12,7 +12,6 @@ import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
-import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolServiceContext;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
@@ -114,10 +113,12 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
                 .streamingChatModel(streamingChatModel)
                 .invocationContext(invocationContext)
                 .methodKey(null)
-                .toolArgumentsErrorHandler((e, c) -> {
-                    throw new RuntimeException(e);
-                })
-                .toolExecutionErrorHandler((e, c) -> ToolErrorHandlerResult.text(e.getMessage()))
+                // Use the configured tool error handlers (or upstream defaults if none set); mirrors
+                // upstream DefaultAiServices and matches the non-streaming path. The accessors never
+                // return null — they fall back to upstream defaults — so streaming/non-streaming
+                // behavior stays consistent for users who configure custom handlers.
+                .toolArgumentsErrorHandler(context.toolService.argumentsErrorHandler())
+                .toolExecutionErrorHandler(context.toolService.executionErrorHandler())
                 .commonGuardrailParams(commonGuardrailParams)
                 .build();
 

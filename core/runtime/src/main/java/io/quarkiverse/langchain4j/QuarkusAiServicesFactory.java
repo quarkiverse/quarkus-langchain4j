@@ -172,11 +172,16 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                         .unwrap(SmallRyeConfig.class)
                         .getConfigMapping(LangChain4jConfig.class);
                 parallelExecutor = ParallelToolExecutorResolver.resolve(aiServiceName, langChain4jConfig);
-            } catch (RuntimeException e) {
-                // Defensive: never let executor resolution prevent AiService construction. Logging here mirrors the
-                // resolver's existing fallback-to-serial philosophy.
-                LOG.warnf(e,
-                        "Failed to resolve parallel-tool executor for AiService '%s'; falling back to serial dispatch.",
+            } catch (UnsupportedOperationException e) {
+                // Environment-driven fallback only: the conventional Java signal for "feature exists but is not
+                // usable in this JVM/runtime" (e.g. virtual threads when running on Java 17). Log INFO and fall back
+                // to serial dispatch so the application keeps working.
+                //
+                // All other RuntimeExceptions (IllegalArgumentException for invalid concurrency, IllegalStateException
+                // for unknown modes, SmallRye config-mapping failures, etc.) propagate so misconfiguration fails
+                // loudly at startup with a clear error message instead of silently degrading to serial.
+                LOG.infof(e,
+                        "Parallel-tool executor unavailable in this environment for AiService '%s'; falling back to serial dispatch.",
                         aiServiceName);
             }
             quarkusAiServiceContext().parallelToolExecutor = parallelExecutor;

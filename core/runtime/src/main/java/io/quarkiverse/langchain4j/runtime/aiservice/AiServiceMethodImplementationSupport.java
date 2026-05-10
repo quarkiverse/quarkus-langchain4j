@@ -83,11 +83,7 @@ import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.AiServiceTool;
-import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecutor;
-import dev.langchain4j.service.tool.ToolProvider;
-import dev.langchain4j.service.tool.ToolProviderRequest;
-import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.service.tool.ToolServiceContext;
 import dev.langchain4j.service.tool.ToolServiceResult;
 import dev.langchain4j.spi.ServiceHelper;
@@ -296,54 +292,20 @@ public class AiServiceMethodImplementationSupport {
         }
 
         // Resolve effective tools for the FIRST request and dynamic providers for upstream's
-        // per-iteration refresh.
+        // per-iteration refresh. Both branches delegate to upstream ToolService.createContext(...) —
+        // the single source of truth for static-provider invocation (via the configured
+        // toolProviderRequestFactory), dynamic-provider tracking for per-iteration refresh, AND
+        // dynamic-provider invocation on the FIRST request (so dynamic-provider tools are visible
+        // in the iteration-0 chat request, matching the contract enforced by
+        // ToolProviderFirstRequestSemanticsTest).
         //
-        // AiService-level tools (no method-specific @ToolBox): delegate to upstream
-        // ToolService.createContext(...) — single source of truth that invokes static providers via the
-        // configured toolProviderRequestFactory (passing messages+userMessage to providers) and tracks
-        // dynamic providers so executeInferenceAndToolsLoop can refresh them per iteration.
-        //
-        // Method-specific tools: upstream's toolService doesn't know about per-method tools, so we
-        // hand-roll. We still run static providers manually here — using the same request factory and
-        // passing the full builder (invocationContext + userMessage + messages) so MCP/etc see the same
-        // shape they get from upstream.
+        // For method-scoped tools (@ToolBox), we pass the per-method specs/executors/returnBehaviors
+        // as baseTools so upstream merges them into the same context that providers contribute to.
         ToolServiceContext toolServiceContext;
         if (hasMethodSpecificTools) {
-            List<ToolSpecification> toolSpecifications = methodCreateInfo.getToolSpecifications() != null
-                    ? new ArrayList<>(methodCreateInfo.getToolSpecifications())
-                    : new ArrayList<>();
-            Map<String, ToolExecutor> toolExecutors = methodCreateInfo.getToolExecutors() != null
-                    ? new HashMap<>(methodCreateInfo.getToolExecutors())
-                    : new HashMap<>();
-            Map<String, ReturnBehavior> toolReturnBehaviors = new HashMap<>(methodCreateInfo.getToolReturnBehaviors());
-            List<ToolProvider> dynamicToolProviders = new ArrayList<>();
-            for (ToolProvider toolProvider : context.toolService.toolProviders()) {
-                if (toolProvider.isDynamic()) {
-                    dynamicToolProviders.add(toolProvider);
-                    continue;
-                }
-                ToolProviderRequest request = context.toolService.toolProviderRequestFactory()
-                        .apply(ToolProviderRequest.builder()
-                                .invocationContext(invocationContext)
-                                .userMessage(userMessage)
-                                .messages(messagesToSend));
-                ToolProviderResult result = toolProvider.provideTools(request);
-                if (result == null) {
-                    continue;
-                }
-                for (AiServiceTool aiTool : result.aiServiceTools()) {
-                    toolSpecifications.add(aiTool.toolSpecification());
-                    toolExecutors.put(aiTool.name(), aiTool.toolExecutor());
-                    toolReturnBehaviors.put(aiTool.name(), aiTool.returnBehavior());
-                }
-            }
-            toolServiceContext = ToolServiceContext.builder()
-                    .effectiveTools(toolSpecifications)
-                    .availableTools(toolSpecifications)
-                    .toolExecutors(toolExecutors)
-                    .returnBehaviors(toolReturnBehaviors)
-                    .dynamicToolProviders(dynamicToolProviders)
-                    .build();
+            List<AiServiceTool> baseTools = buildMethodScopedBaseTools(methodCreateInfo);
+            toolServiceContext = context.toolService.createContext(
+                    invocationContext, userMessage, messagesToSend, baseTools);
         } else {
             toolServiceContext = context.toolService.createContext(invocationContext, userMessage, messagesToSend);
         }
@@ -377,10 +339,14 @@ public class AiServiceMethodImplementationSupport {
                     .streamingChatModel(streamingModel)
                     .invocationContext(invocationContext)
                     .methodKey(methodCreateInfo)
-                    .toolArgumentsErrorHandler((e, c) -> {
-                        throw new RuntimeException(e);
-                    })
-                    .toolExecutionErrorHandler((e, c) -> ToolErrorHandlerResult.text(e.getMessage()))
+                    // Use the configured tool error handlers (or upstream defaults if none set);
+                    // mirrors upstream DefaultAiServices and matches the non-streaming path which
+                    // delegates to ToolService.executeInferenceAndToolsLoop. argumentsErrorHandler()
+                    // and executionErrorHandler() never return null — they fall back to upstream
+                    // defaults — so passing them through is safe and keeps streaming/non-streaming
+                    // behavior consistent for users who configure custom handlers.
+                    .toolArgumentsErrorHandler(context.toolService.argumentsErrorHandler())
+                    .toolExecutionErrorHandler(context.toolService.executionErrorHandler())
                     .commonGuardrailParams(
                             GuardrailRequestParams.builder()
                                     .chatMemory(committableChatMemory)
@@ -640,6 +606,43 @@ public class AiServiceMethodImplementationSupport {
         if (maxToolCallsPerResponse > 0) {
             log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
         }
+    }
+
+    /**
+     * Builds the list of method-scoped tools (resolved at recording time from {@code @ToolBox})
+     * as {@link AiServiceTool}s, in the form expected by upstream
+     * {@link dev.langchain4j.service.tool.ToolService#createContext(InvocationContext, UserMessage, List, List)}.
+     * <p>
+     * Method-scoped specs/executors/return-behaviors are stored separately on the per-method
+     * {@link AiServiceMethodCreateInfo} (rather than on the AiService-level ToolService) because
+     * they vary per AI-service method. Upstream's overload merges this list into the resolved
+     * context BEFORE static and dynamic providers contribute, so all per-iteration provider
+     * semantics — including dynamic providers being invoked on the FIRST request — apply uniformly
+     * regardless of whether the method also has {@code @ToolBox}.
+     */
+    private static List<AiServiceTool> buildMethodScopedBaseTools(AiServiceMethodCreateInfo methodCreateInfo) {
+        List<ToolSpecification> specs = methodCreateInfo.getToolSpecifications();
+        if (specs == null || specs.isEmpty()) {
+            return List.of();
+        }
+        Map<String, ToolExecutor> executors = methodCreateInfo.getToolExecutors();
+        Map<String, ReturnBehavior> returnBehaviors = methodCreateInfo.getToolReturnBehaviors();
+        List<AiServiceTool> baseTools = new ArrayList<>(specs.size());
+        for (ToolSpecification spec : specs) {
+            ToolExecutor executor = executors != null ? executors.get(spec.name()) : null;
+            if (executor == null) {
+                continue;
+            }
+            ReturnBehavior returnBehavior = returnBehaviors != null
+                    ? returnBehaviors.getOrDefault(spec.name(), ReturnBehavior.TO_LLM)
+                    : ReturnBehavior.TO_LLM;
+            baseTools.add(AiServiceTool.builder()
+                    .toolSpecification(spec)
+                    .toolExecutor(executor)
+                    .returnBehavior(returnBehavior)
+                    .build());
+        }
+        return baseTools;
     }
 
     private static InvocationParameters findInvocationParams(Object[] args) {

@@ -372,9 +372,12 @@ public class AiServicesRecorder {
                                 .getConfigMapping(LangChain4jConfig.class);
                         parallelExecutor = ParallelToolExecutorResolver
                                 .resolve(aiServiceName, langChain4jConfig);
-                    } catch (RuntimeException e) {
-                        LOG.warnf(e,
-                                "Failed to resolve parallel-tool executor for AiService '%s'; falling back to serial dispatch.",
+                    } catch (UnsupportedOperationException e) {
+                        // Environment-driven fallback only — conventional signal for "feature exists but not usable
+                        // here" (e.g. VT on Java 17). All other RuntimeExceptions propagate so misconfiguration
+                        // (invalid concurrency, unknown mode, malformed config mapping) fails loudly at startup.
+                        LOG.infof(e,
+                                "Parallel-tool executor unavailable in this environment for AiService '%s'; falling back to serial dispatch.",
                                 aiServiceName);
                     }
                     aiServiceContext.parallelToolExecutor = parallelExecutor;
