@@ -28,8 +28,10 @@ import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusStreamingToolDispatchHook;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.runtime.aiservice.WorkerSwitchingStreamingChatModel;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.smallrye.config.SmallRyeConfig;
 
@@ -152,18 +154,27 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             // Resolve the parallel-tool executor for this AiService and hand it to upstream
             // ToolService via executeToolsConcurrently(...). Null = serial (default), in which case
             // upstream's tool dispatch stays sequential.
+            //
+            // The resolver is keyed by AiService NAME (the same key used under quarkus.langchain4j.<name>.*),
+            // never the FQCN. The build-time AiServiceClassCreateInfo carries the resolved name (the @Named bean
+            // value when present, otherwise the simple class name). For programmatically built AiServices that
+            // somehow lack the recorded name, we fall back to the simple class name — never the FQCN.
+            String aiServiceName = classCreateInfo.aiServiceName();
+            if (aiServiceName == null) {
+                aiServiceName = aiServiceClass.getSimpleName();
+            }
             Executor parallelExecutor = null;
             try {
                 LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
                         .unwrap(SmallRyeConfig.class)
                         .getConfigMapping(LangChain4jConfig.class);
-                parallelExecutor = ParallelToolExecutorResolver.resolve(aiServiceClass.getName(), langChain4jConfig);
+                parallelExecutor = ParallelToolExecutorResolver.resolve(aiServiceName, langChain4jConfig);
             } catch (RuntimeException e) {
                 // Defensive: never let executor resolution prevent AiService construction. Logging here mirrors the
                 // resolver's existing fallback-to-serial philosophy.
                 LOG.warnf(e,
                         "Failed to resolve parallel-tool executor for AiService '%s'; falling back to serial dispatch.",
-                        aiServiceClass.getName());
+                        aiServiceName);
             }
             quarkusAiServiceContext().parallelToolExecutor = parallelExecutor;
             applyDelegationHooks(this, quarkusAiServiceContext(), parallelExecutor);
@@ -184,13 +195,18 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
     }
 
     /**
-     * Wires the four upstream-{@code 1.14.0+} {@link AiServices} hooks the Quarkus extension uses to
-     * delegate the LLM&#8596;tools loop while preserving Quarkus-specific behaviours:
+     * Wires the upstream {@link AiServices} hooks the Quarkus extension uses to delegate the
+     * LLM&#8596;tools loop while preserving Quarkus-specific behaviours:
      * <ul>
      * <li>{@code executeToolsConcurrently(parallelExecutor)} — when a parallel mode is enabled.
      * The executor is already wrapped in {@code VertxContextAwareExecutor}, so each task
      * re-enters the caller's Vert.x duplicated context (chat memory, request scope, OTel,
      * MDC) before running.</li>
+     * <li>{@code streamingToolDispatchHook(...)} — hops the streaming tool batch dispatch off
+     * the Vert.x event loop when the chat provider delivers {@code onCompleteResponse} on the
+     * EL. Without this, blocking tools (Quarkus' default execution model) would trip
+     * {@code BlockingToolNotAllowedException}. The hook is a no-op when the calling thread is
+     * already off the EL.</li>
      * <li>{@code forceToolChoiceAutoAfterFirstIteration(...)} — preserves the Quarkus-side
      * self-protection that rewrites {@code ToolChoice.REQUIRED} to {@code AUTO} on
      * iteration 2+ unless the user opted out via {@code allowContinuousForcedToolCalling}.</li>
@@ -210,17 +226,33 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
         if (parallelExecutor != null) {
             aiServiceBuilder.executeToolsConcurrently(parallelExecutor);
         }
+        // Wrap context.streamingChatModel so callbacks delivered on the Vert.x event loop are
+        // hopped to a worker when the caller subscribed off the EL. This preserves the
+        // "blocking-friendly emission" guarantee the deleted Quarkus streaming handler had:
+        // upstream's onCompleteResponse calls addToMemory synchronously on the calling thread,
+        // which trips BlockingMemoryStore guards (and request-scoped CDI lookups, MDC, etc.) when
+        // a chat provider delivers via Vert.x's runOnContext. Decorating once at build time means
+        // both the TokenStream return type and the Multi return type benefit; the wrapper is a
+        // no-op when the caller is already on the EL.
+        if (context.streamingChatModel != null
+                && !(context.streamingChatModel instanceof WorkerSwitchingStreamingChatModel)) {
+            context.streamingChatModel = new WorkerSwitchingStreamingChatModel(context.streamingChatModel);
+        }
+        // Route streaming tool batch dispatch off the Vert.x event loop when the chat provider
+        // delivers onCompleteResponse on the EL — otherwise blocking tools (the Quarkus default
+        // execution model) trip BlockingToolNotAllowedException. The hook is a no-op when the
+        // calling thread is already off the EL, so it's free for non-Vert.x callers.
+        aiServiceBuilder.streamingToolDispatchHook(QuarkusStreamingToolDispatchHook.INSTANCE);
         aiServiceBuilder.forceToolChoiceAutoAfterFirstIteration(!context.allowContinuousForcedToolCalling);
         aiServiceBuilder.errorHandlerBypass(t -> t instanceof PreventsErrorHandlerExecution);
         aiServiceBuilder.toolProviderRequestFactory(builder -> {
             // mcpClientNames live on the per-method AiServiceMethodCreateInfo. The upstream ToolService
             // calls this factory both at initial context creation and during dynamic provider refresh,
-            // passing a fully populated builder. We build the upstream request, then look up the
-            // per-method mcpClientNames via the AiServicesRecorder metadata using the
-            // InvocationContext.interfaceName + methodName carried on the request.
+            // passing a fully populated builder (invocationContext + userMessage + messages). We build
+            // the upstream request, then construct a QuarkusToolProviderRequest that COPIES all three
+            // fields (incl. messages) plus the per-method mcpClientNames.
             dev.langchain4j.service.tool.ToolProviderRequest req = builder.build();
-            return new QuarkusToolProviderRequest(req.invocationContext(), req.userMessage(),
-                    mcpClientNamesFor(req.invocationContext()));
+            return new QuarkusToolProviderRequest(req, mcpClientNamesFor(req.invocationContext()));
         });
     }
 

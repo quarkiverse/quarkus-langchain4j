@@ -1816,8 +1816,18 @@ public class AiServicesProcessor {
                         .map(AiServicesProcessor::classOutputGuardrails)
                         .orElse(null);
 
+                // Canonical AiService name used as the per-service config key under
+                // quarkus.langchain4j.<ai-service-name>.*. We prefer an explicit @Named value on the AiService
+                // interface (the same string CDI uses to resolve the bean) so user-facing configuration matches
+                // user-facing bean naming. Otherwise we fall back to the simple class name, which is stable and
+                // collision-resistant under the @WithParentName Map of LangChain4jConfig.namedAiServices().
+                String aiServiceName = aiServiceBuildItem
+                        .flatMap(DeclarativeAiServiceBuildItem::getBeanName)
+                        .orElse(iface.simpleName());
+
                 perClassMetadata.put(ifaceName,
-                        new AiServiceClassCreateInfo(perMethodMetadata, implClassName, inputGuardrails, outputGuardrails));
+                        new AiServiceClassCreateInfo(perMethodMetadata, implClassName, inputGuardrails, outputGuardrails,
+                                aiServiceName));
                 // make the constructor accessible reflectively since that is how we create the instance
                 reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(implClassName).build());
             }

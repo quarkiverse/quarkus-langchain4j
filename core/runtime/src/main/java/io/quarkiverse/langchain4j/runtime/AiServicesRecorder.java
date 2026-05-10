@@ -357,23 +357,32 @@ public class AiServicesRecorder {
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
 
+                    // Resolve by canonical AiService name (same key used under
+                    // quarkus.langchain4j.<ai-service-name>.*) — never the FQCN. The build-time
+                    // AiServiceClassCreateInfo carries the resolved name (the @Named bean value when present,
+                    // otherwise the simple class name).
+                    AiServiceClassCreateInfo classCreateInfo = metadata.get(info.serviceClassName());
+                    String aiServiceName = classCreateInfo != null && classCreateInfo.aiServiceName() != null
+                            ? classCreateInfo.aiServiceName()
+                            : serviceClass.getSimpleName();
                     Executor parallelExecutor = null;
                     try {
                         LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
                                 .unwrap(SmallRyeConfig.class)
                                 .getConfigMapping(LangChain4jConfig.class);
                         parallelExecutor = ParallelToolExecutorResolver
-                                .resolve(serviceClass.getName(), langChain4jConfig);
+                                .resolve(aiServiceName, langChain4jConfig);
                     } catch (RuntimeException e) {
                         LOG.warnf(e,
                                 "Failed to resolve parallel-tool executor for AiService '%s'; falling back to serial dispatch.",
-                                serviceClass.getName());
+                                aiServiceName);
                     }
                     aiServiceContext.parallelToolExecutor = parallelExecutor;
-                    // Wire the four upstream hooks (executeToolsConcurrently, errorHandlerBypass,
-                    // forceToolChoiceAutoAfterFirstIteration, toolProviderRequestFactory) so the
-                    // delegated tool loop in AiServiceMethodImplementationSupport.doImplement0
-                    // honours Quarkus-specific behaviour. Same wiring as programmatic build().
+                    // Wire the upstream integration hooks (executeToolsConcurrently,
+                    // streamingToolDispatchHook, errorHandlerBypass, forceToolChoiceAutoAfterFirstIteration,
+                    // toolProviderRequestFactory) so the delegated tool loop in
+                    // AiServiceMethodImplementationSupport.doImplement0 honours Quarkus-specific
+                    // behaviour. Same wiring as programmatic build().
                     io.quarkiverse.langchain4j.QuarkusAiServicesFactory
                             .applyDelegationHooks(quarkusAiServices, aiServiceContext, parallelExecutor);
 

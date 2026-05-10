@@ -30,6 +30,10 @@ import io.quarkus.test.QuarkusUnitTest;
  * across JVMs).</li>
  * <li>Sibling-name safety: a service called "myAssistant" does not collide with the {@code tools}, {@code ai-service},
  * {@code guardrails}, or {@code tracing} sibling fields under {@code quarkus.langchain4j.*}.</li>
+ * <li>FQCN is <strong>not</strong> a valid lookup key: passing a fully-qualified class name (e.g.
+ * {@code com.example.MyService}) silently misses the per-service override, because SmallRye Config's
+ * {@code @WithParentName} Map cannot key on dotted strings. Callers must pass the canonical AiService name
+ * (the {@code @Named} bean value, or the simple class name).</li>
  * </ol>
  */
 public class ParallelToolExecutorResolverConfigTest {
@@ -97,5 +101,27 @@ public class ParallelToolExecutorResolverConfigTest {
         Executor second = ParallelToolExecutorResolver.resolve("workerSvc", config);
         assertThat(second).as("resolver must cache per-service results to avoid re-allocating wrappers")
                 .isSameAs(first);
+    }
+
+    /**
+     * Regression test for the FQCN lookup bug.
+     * <p>
+     * Prior to this fix, callers passed {@code aiServiceClass.getName()} (e.g.
+     * {@code com.example.MyAssistant}) to the resolver. SmallRye Config's {@code @WithParentName} Map cannot
+     * route a dotted key to a {@code NamedAiServiceConfig} entry, so every per-service override was silently
+     * missed and the resolver returned the global default. The fix is to pass the canonical AiService name
+     * (the {@code @Named} bean value or simple class name); this test pins the new contract by demonstrating
+     * that an FQCN-shaped key does <em>not</em> match the {@code myAssistant} override.
+     */
+    @Test
+    void fqcnKeyDoesNotResolvePerServiceOverride() {
+        // The FQCN of a hypothetical user AiService that happens to have @Named("myAssistant") on it. Even
+        // though the per-service override under "myAssistant" is set to virtual-threads, passing the FQCN
+        // must NOT find it — it falls through to the global default (serial -> null).
+        Executor resolved = ParallelToolExecutorResolver.resolve(
+                "com.example.MyAssistant", config);
+        assertThat(resolved)
+                .as("FQCN must not match a per-service override; expect global default (serial -> null)")
+                .isNull();
     }
 }

@@ -16,8 +16,7 @@ import io.vertx.core.impl.ContextInternal;
  *
  * <h3>Why {@link ContextInternal#dispatch(Runnable)} and not {@code Context.executeBlocking(...)}</h3>
  *
- * The existing extension idiom ({@link io.quarkiverse.langchain4j.runtime.VertxUtil#runOutEventLoop} and
- * {@code QuarkusAiServiceStreamingResponseHandler.executeOnWorkerThread}) calls
+ * The existing extension idiom ({@link io.quarkiverse.langchain4j.runtime.VertxUtil#runOutEventLoop}) calls
  * {@code ctx.executeBlocking(callable)} when it wants to run blocking work off the event loop.
  * <p>
  * That primitive is wrong here. {@code executeBlocking} <em>submits</em> the callable to a Vert.x worker pool and

@@ -28,17 +28,11 @@ public class QuarkusToolProviderRequest extends ToolProviderRequest {
     }
 
     /**
-     * Convenience constructor for the {@code toolProviderRequestFactory} factory: takes a fully
-     * populated upstream {@link ToolProviderRequest.Builder} (which we cannot read field-by-field
-     * because the builder accessors are package-private) and an {@code mcpClientNames} list, builds
-     * the upstream request via {@link ToolProviderRequest.Builder#build()}, and copies the fields
-     * we care about across.
+     * Convenience constructor for the {@code toolProviderRequestFactory} factory: copies all fields
+     * from a fully populated upstream {@link ToolProviderRequest} (invocationContext + userMessage +
+     * messages) and adds the per-method {@code mcpClientNames}.
      */
-    public QuarkusToolProviderRequest(ToolProviderRequest.Builder builder, List<String> mcpClientNames) {
-        this(buildFrom(builder), mcpClientNames);
-    }
-
-    private QuarkusToolProviderRequest(ToolProviderRequest source, List<String> mcpClientNames) {
+    public QuarkusToolProviderRequest(ToolProviderRequest source, List<String> mcpClientNames) {
         super(ToolProviderRequest.builder()
                 .invocationContext(source.invocationContext())
                 .userMessage(source.userMessage())
@@ -46,8 +40,14 @@ public class QuarkusToolProviderRequest extends ToolProviderRequest {
         this.mcpClientNames = mcpClientNames;
     }
 
-    private static ToolProviderRequest buildFrom(ToolProviderRequest.Builder builder) {
-        return builder.build();
+    /**
+     * @deprecated use {@link #QuarkusToolProviderRequest(ToolProviderRequest, List)} which preserves
+     *             the messages list. Prefer building the upstream request from the builder first
+     *             via {@code builder.build()}.
+     */
+    @Deprecated
+    public QuarkusToolProviderRequest(ToolProviderRequest.Builder builder, List<String> mcpClientNames) {
+        this(builder.build(), mcpClientNames);
     }
 
     public List<String> getMcpClientNames() {

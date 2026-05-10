@@ -39,16 +39,14 @@ import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
 /**
- * Phase 3 — Multi (TokenStreamMulti) parallel tool dispatch coverage.
+ * Multi (TokenStreamMulti) parallel tool dispatch coverage.
  *
  * <p>
- * This exercises the parallel branch added inside
- * {@code QuarkusAiServiceStreamingResponseHandler.onCompleteResponse}'s inner tool-execution loop.
- * Path B (Multi) goes through our Quarkus override of {@code AiServiceStreamingResponseHandler}
- * (kept for legitimate Vert.x event-loop / cancellation / CommittableChatMemory / MDC reasons), and
- * Phase 3 adds parallel dispatch INSIDE that override while preserving every Quarkus-specific
- * semantic (siblings cancelled on failure, {@code PreventsErrorHandlerExecution} honoured, atomic
- * {@code maxToolCallsPerResponse} reject, gather-thread memory ordering).
+ * Multi flows through the upstream {@code AiServiceTokenStream} / {@code ToolBatchDispatcher}, with
+ * the executor wired by Quarkus via {@code AiServices.executeToolsConcurrently}. This pins:
+ * siblings cancelled on first failure, {@code PreventsErrorHandlerExecution}-marked exceptions
+ * propagate unchanged through the upstream {@code errorHandlerBypass}, atomic
+ * {@code maxToolCallsPerResponse} rejection, and gather-thread memory ordering.
  *
  * <ul>
  * <li>{@code virtualThreadsModeParallelizesMultiTools} — three 200ms tools complete in &lt; 600ms when

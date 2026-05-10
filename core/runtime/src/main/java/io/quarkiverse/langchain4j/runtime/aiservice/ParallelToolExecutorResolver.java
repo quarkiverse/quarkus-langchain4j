@@ -55,12 +55,16 @@ public final class ParallelToolExecutorResolver {
     /**
      * Resolve the parallel executor for a given AiService.
      *
-     * @param aiServiceName the AiService's declared name (typically the {@code RegisterAiService} value or simple
-     *        class name)
+     * @param aiServiceName the AiService's canonical name — the same key used under
+     *        {@code quarkus.langchain4j.<ai-service-name>.*}. For declarative AiServices this is the
+     *        {@code @Named} bean name when present on the {@code @RegisterAiService} interface, otherwise the
+     *        simple class name. The resolver does <strong>not</strong> accept a fully-qualified class name; passing
+     *        a FQCN will silently miss every per-service override because SmallRye Config's
+     *        {@code @WithParentName} Map cannot key on dotted strings.
      * @param config the runtime LangChain4j config
      * @return the executor to pass to {@code AiServices.executeToolsConcurrently(Executor)} / equivalent, or
-     *         {@code null} if the mode resolves to serial (Phase 1 callers must keep the existing serial dispatch
-     *         path when this returns {@code null}).
+     *         {@code null} if the mode resolves to serial (callers must keep the existing serial dispatch path
+     *         when this returns {@code null}).
      */
     public static Executor resolve(String aiServiceName, LangChain4jConfig config) {
         Executor cached = CACHE.get(aiServiceName);

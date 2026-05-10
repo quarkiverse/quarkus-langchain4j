@@ -237,43 +237,11 @@ public class AiServiceMethodImplementationSupport {
 
         boolean hasMethodSpecificTools = methodCreateInfo.getToolClassInfo() != null
                 && !methodCreateInfo.getToolClassInfo().isEmpty();
-        List<ToolSpecification> toolSpecifications = hasMethodSpecificTools ? methodCreateInfo.getToolSpecifications()
-                : context.toolService.toolSpecifications();
-        Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
-                : context.toolService.toolExecutors();
-        Map<String, ReturnBehavior> toolReturnBehaviors = hasMethodSpecificTools
-                ? new HashMap<>(methodCreateInfo.getToolReturnBehaviors())
-                : new HashMap<>();
 
-        toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
-        toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
-        // Eagerly invoke STATIC (non-dynamic) tool providers up-front so they're present on the FIRST
-        // chat request. We collect dynamic providers separately so upstream's
-        // executeInferenceAndToolsLoop can re-evaluate them on each iteration via the
-        // toolProviderRequestFactory we registered in QuarkusAiServicesFactory.applyDelegationHooks
-        // (returns QuarkusToolProviderRequest with the per-method mcpClientNames). The factory is
-        // also used here to keep the request shape consistent across both call sites.
-        List<ToolProvider> dynamicToolProviders = new ArrayList<>();
-        for (ToolProvider toolProvider : context.toolService.toolProviders()) {
-            if (toolProvider.isDynamic()) {
-                dynamicToolProviders.add(toolProvider);
-                continue;
-            }
-            ToolProviderRequest request = context.toolService.toolProviderRequestFactory()
-                    .apply(ToolProviderRequest.builder()
-                            .invocationContext(invocationContext)
-                            .userMessage(userMessage));
-            ToolProviderResult result = toolProvider.provideTools(request);
-            if (result == null) {
-                continue;
-            }
-            for (AiServiceTool aiTool : result.aiServiceTools()) {
-                toolSpecifications.add(aiTool.toolSpecification());
-                toolExecutors.put(aiTool.name(), aiTool.toolExecutor());
-                toolReturnBehaviors.put(aiTool.name(), aiTool.returnBehavior());
-            }
-        }
-
+        // Run RAG, then input guardrails, then assemble messagesToSend BEFORE invoking tool providers.
+        // Tool providers receive the same UserMessage that will be sent to the LLM AND the full message
+        // list (which becomes ToolProviderRequest.messages()), letting them branch on assistant context
+        // already present in chat memory.
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             Metadata metadata = Metadata.builder()
@@ -311,6 +279,67 @@ public class AiServiceMethodImplementationSupport {
                     methodCreateInfo);
         }
 
+        // Resolve effective tools for the FIRST request and dynamic providers for upstream's
+        // per-iteration refresh.
+        //
+        // AiService-level tools (no method-specific @ToolBox): delegate to upstream
+        // ToolService.createContext(...) — single source of truth that invokes static providers via the
+        // configured toolProviderRequestFactory (passing messages+userMessage to providers) and tracks
+        // dynamic providers so executeInferenceAndToolsLoop can refresh them per iteration.
+        //
+        // Method-specific tools: upstream's toolService doesn't know about per-method tools, so we
+        // hand-roll. We still run static providers manually here — using the same request factory and
+        // passing the full builder (invocationContext + userMessage + messages) so MCP/etc see the same
+        // shape they get from upstream.
+        ToolServiceContext toolServiceContext;
+        if (hasMethodSpecificTools) {
+            List<ToolSpecification> toolSpecifications = methodCreateInfo.getToolSpecifications() != null
+                    ? new ArrayList<>(methodCreateInfo.getToolSpecifications())
+                    : new ArrayList<>();
+            Map<String, ToolExecutor> toolExecutors = methodCreateInfo.getToolExecutors() != null
+                    ? new HashMap<>(methodCreateInfo.getToolExecutors())
+                    : new HashMap<>();
+            Map<String, ReturnBehavior> toolReturnBehaviors = new HashMap<>(methodCreateInfo.getToolReturnBehaviors());
+            List<ToolProvider> dynamicToolProviders = new ArrayList<>();
+            for (ToolProvider toolProvider : context.toolService.toolProviders()) {
+                if (toolProvider.isDynamic()) {
+                    dynamicToolProviders.add(toolProvider);
+                    continue;
+                }
+                ToolProviderRequest request = context.toolService.toolProviderRequestFactory()
+                        .apply(ToolProviderRequest.builder()
+                                .invocationContext(invocationContext)
+                                .userMessage(userMessage)
+                                .messages(messagesToSend));
+                ToolProviderResult result = toolProvider.provideTools(request);
+                if (result == null) {
+                    continue;
+                }
+                for (AiServiceTool aiTool : result.aiServiceTools()) {
+                    toolSpecifications.add(aiTool.toolSpecification());
+                    toolExecutors.put(aiTool.name(), aiTool.toolExecutor());
+                    toolReturnBehaviors.put(aiTool.name(), aiTool.returnBehavior());
+                }
+            }
+            toolServiceContext = ToolServiceContext.builder()
+                    .effectiveTools(toolSpecifications)
+                    .availableTools(toolSpecifications)
+                    .toolExecutors(toolExecutors)
+                    .returnBehaviors(toolReturnBehaviors)
+                    .dynamicToolProviders(dynamicToolProviders)
+                    .build();
+        } else {
+            toolServiceContext = context.toolService.createContext(invocationContext, userMessage, messagesToSend);
+        }
+        List<ToolSpecification> toolSpecifications = toolServiceContext.effectiveTools() != null
+                ? toolServiceContext.effectiveTools()
+                : List.of();
+
+        // Per-call tool options (atomic maxToolCallsPerResponse + maxSequentialToolsInvocations)
+        // must land on context.toolService BEFORE any return path branches: streaming reads them in
+        // the upstream response handler, non-streaming reads them inside executeInferenceAndToolsLoop.
+        applyPerCallToolServiceOverrides(context, methodCreateInfo);
+
         if (TypeUtil.isTokenStream(returnType)) {
             // NOTE - only the quarkus-specific output guardrails aren't implemented using a
             // TokenStream
@@ -319,8 +348,7 @@ public class AiServiceMethodImplementationSupport {
                                             // are worse
             var aiServiceTokenStreamParams = AiServiceTokenStreamParameters.builder()
                     .messages(messagesToSend)
-                    .toolSpecifications(toolSpecifications)
-                    .toolExecutors(toolExecutors)
+                    .toolServiceContext(toolServiceContext)
                     .toolExecutor(context.parallelToolExecutor)
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
@@ -350,10 +378,23 @@ public class AiServiceMethodImplementationSupport {
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
             var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
-            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
-                    (augmentationResult != null ? augmentationResult.contents() : null), context, invocationContext, memoryId,
+            // Same InvocationContext shape as the TokenStream path above. The Quarkus Multi path
+            // owns its own output-guardrail flow (OutputGuardrailStreamingMapper, see below), so
+            // TokenStreamMulti opts out of upstream's guardrail buffering by passing methodKey=null
+            // — the streamingGuardrailParams here is still needed for the Quarkus mapper.
+            InvocationContext streamingInvocationContext = InvocationContext.builder().chatMemoryId(memoryId).build();
+            GuardrailRequestParams streamingGuardrailParams = GuardrailRequestParams.builder()
+                    .chatMemory(committableChatMemory)
+                    .augmentationResult(augmentationResult)
+                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
+                    .variables(templateVariables)
+                    .invocationContext(invocationContext)
+                    .aiServiceListenerRegistrar(context.eventListenerRegistrar)
+                    .build();
+            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolServiceContext,
+                    (augmentationResult != null ? augmentationResult.contents() : null), context, streamingInvocationContext,
                     methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread,
-                    methodCreateInfo, methodArgs);
+                    streamingGuardrailParams);
 
             if (hasUpstreamGuardrails) {
                 stream = stream.filter(o -> o instanceof ChatEvent)
@@ -426,29 +467,8 @@ public class AiServiceMethodImplementationSupport {
         // forcing (forceToolChoiceAutoAfterFirstIteration hook), error-handler bypass for
         // PreventsErrorHandlerExecution (errorHandlerBypass hook), MCP tool-provider scoping
         // (toolProviderRequestFactory hook), and IMMEDIATE / IMMEDIATE_IF_LAST short-circuit.
-        // Apply per-AiService config overrides on each call (cheap; fields are mutable on ToolService).
-        applyPerCallToolServiceOverrides(context, methodCreateInfo);
-
-        // Build the ToolServiceContext consumed by upstream's loop. Two paths:
-        //   * hasMethodSpecificTools: per-method @Toolbox / per-method tools = override — upstream's
-        //     toolService doesn't know about these, so we hand-roll the context with the method's
-        //     tools + already-applied static provider tools. Dynamic providers are tracked separately
-        //     so upstream can refresh them per iteration via the toolProviderRequestFactory.
-        //   * otherwise: AiService-level tools — upstream toolService.createContext is the right call;
-        //     it merges static provider tools, applies the same factory, and sets up dynamic
-        //     providers for refresh.
-        ToolServiceContext toolServiceContext;
-        if (hasMethodSpecificTools) {
-            toolServiceContext = ToolServiceContext.builder()
-                    .effectiveTools(toolSpecifications)
-                    .availableTools(toolSpecifications)
-                    .toolExecutors(toolExecutors)
-                    .returnBehaviors(toolReturnBehaviors)
-                    .dynamicToolProviders(dynamicToolProviders)
-                    .build();
-        } else {
-            toolServiceContext = context.toolService.createContext(invocationContext, userMessage, messagesToSend);
-        }
+        // Per-AiService config overrides were already applied earlier (before the streaming/Multi
+        // return paths branched off).
 
         // Upstream's executeInferenceAndToolsLoop expects ChatRequestParameters that drove the FIRST
         // chat request; it overrides them on follow-up iterations (toolSpecifications + the

@@ -225,6 +225,84 @@ public String getCustomerName(long id) {
 
 More details on virtual thread support in Quarkus can be found in the https://quarkus.io/guides/virtual-threads[Virtual Thread reference guide].
 
+=== Parallel Tool Execution
+
+When the LLM returns multiple tool calls in a single response, Quarkus LangChain4j executes them serially by default.
+You can opt into parallel execution with one of two Quarkus-managed executors:
+
+[source,properties]
+----
+# Global default for every AI service
+quarkus.langchain4j.tools.execution=serial            # serial (default) | virtual-threads | worker-pool
+
+# Bounded concurrency for the virtual-threads mode (Java 21+)
+quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency=64
+
+# Per-AI-service override
+quarkus.langchain4j.<ai-service-name>.tools.execution=virtual-threads
+----
+
+The `<ai-service-name>` segment is the canonical name of the AI service:
+
+* If the `@RegisterAiService` interface carries a `@Named("foo")` annotation, the per-service key is
+  `quarkus.langchain4j.foo.tools.execution`.
+* Otherwise, the per-service key is the simple class name. For an interface
+  `com.example.MyAssistant`, the key is `quarkus.langchain4j.MyAssistant.tools.execution`.
+
+Fully-qualified class names (e.g. `com.example.MyAssistant`) are *not* valid lookup keys: SmallRye Config's
+indexed Map cannot route dotted keys to per-service entries, so an FQCN-shaped key silently misses the
+override and the service falls back to the global default.
+
+`virtual-threads` requires Java 21+. On older JVMs the extension downgrades to `serial` and logs a warning at startup;
+use `worker-pool` to keep parallel execution on Java 17–20.
+
+Custom user-supplied executors are intentionally unsupported in Quarkus.
+Tasks submitted to either managed executor inherit the caller's Vert.x duplicated context (chat memory, request
+scope, OpenTelemetry, MDC).
+
+==== Bounding tool calls per LLM response
+
+In addition to bounding the number of LLM responses that can carry tool calls
+(`@RegisterAiService(maxSequentialToolInvocations = ...)`), you can bound the number of tool execution
+requests within a single LLM response with `maxToolCallsPerResponse`. This is intended for cooperative
+truncation when an LLM returns more tool calls in a single response than you want to spend (for example,
+to bound execution cost or latency).
+
+[source,properties]
+----
+# Per-AI-service override (default: 0 = unlimited)
+quarkus.langchain4j.<ai-service-name>.max-tool-calls-per-response=10
+----
+
+Or via the `@RegisterAiService(maxToolCallsPerResponse = 10)` attribute.
+
+The cap is enforced *atomically* on both non-streaming and streaming return paths: when an LLM response
+includes more tool execution requests than the cap, ZERO tools from that response are executed before the
+exception is thrown. This matches the parallel-mode contract and ensures predictable resource usage when an
+LLM violates the cap.
+
+*Latency tradeoff for streaming:* a strict cap means streaming tool dispatch cannot start until the full
+tool-call section of the LLM response has been received (we have to know the full tool-call count before
+deciding whether to dispatch). For responses that contain only tool calls and no preamble, this is
+imperceptible; for responses where the LLM streams a long preamble before the tool calls, tool dispatch
+waits for the full response to land. If sub-cap latency matters more than strict enforcement, set
+`maxToolCallsPerResponse=0` (the default = unlimited) — tool dispatch then begins as each `onCompleteToolCall`
+callback fires.
+
+==== Streaming event timing
+
+For the `Multi<String>` and `TokenStream` return types, every event (partial response, tool call, complete
+response) fires on whichever thread the underlying chat provider emits it on. Quarkus's chat-model decorator
+automatically hops EL-delivered callbacks to a Vert.x worker thread when the caller subscribed off the event
+loop, so blocking memory stores, request-scoped CDI beans and `BlockingChatMemoryStore` semantics continue
+to work across iterations. Memory writes for tool results happen on the gather thread (preserved by the
+upstream `ToolBatchDispatcher`'s ordered gather), so the second LLM call observes `ToolExecutionResultMessage`
+entries in original request order, not completion order.
+
+Mid-batch cancellation is best-effort on the streaming paths: a `Multi.subscribe()` cancel signals the
+provider to stop emitting tokens, but tool batches already dispatched run to completion. Memory consistency
+(every tool request paired with a tool result) is preserved by the dispatcher's ordered gather.
+
 
 === Streaming Support
 
