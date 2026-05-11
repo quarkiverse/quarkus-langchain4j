@@ -31,5 +31,6 @@ public class DevAgentMonitorHolder {
 
     public static void reset() {
         MONITORS.clear();
+        ROOT_AGENTS.clear();
     }
 }

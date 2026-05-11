@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.agentic.deployment.devui;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,8 +13,6 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Opcodes;
 
 import dev.langchain4j.agentic.observability.MonitoredAgent;
 import io.quarkiverse.langchain4j.agentic.deployment.AgenticLangChain4jDotNames;
@@ -30,8 +27,6 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
-import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
-import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
@@ -107,48 +102,19 @@ public class AgenticDevUIProcessor {
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
-    void addMonitoredAgentInterface(List<DetectedAiAgentBuildItem> agents,
-            BuildProducer<BytecodeTransformerBuildItem> transformers) {
-        List<DetectedAiAgentBuildItem> userAgents = filterUserAgents(agents);
-        Set<String> allSubAgentClassNames = collectAllSubAgentClassNames(userAgents);
-
-        String monitoredAgentInternal = MonitoredAgent.class.getName().replace('.', '/');
-
-        for (DetectedAiAgentBuildItem agent : userAgents) {
-            String className = agent.getIface().name().toString();
-            if (allSubAgentClassNames.contains(className) ||
-                    agent.getIface().interfaceNames().stream()
-                            .anyMatch(dn -> dn.toString().equals(MonitoredAgent.class.getName()))) {
-                continue;
-            }
-
-            transformers.produce(new BytecodeTransformerBuildItem(className,
-                    (name, classVisitor) -> new ClassVisitor(Opcodes.ASM9, classVisitor) {
-                        @Override
-                        public void visit(int version, int access, String name2, String signature,
-                                String superName, String[] interfaces) {
-                            String[] extended = Arrays.copyOf(interfaces, interfaces.length + 1);
-                            extended[interfaces.length] = monitoredAgentInternal;
-                            super.visit(version, access, name2, signature, superName, extended);
-                        }
-                    }));
-        }
-    }
-
-    @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.RUNTIME_INIT)
     @Consume(SyntheticBeansRuntimeInitBuildItem.class)
     void enableDevModeMonitoring(List<DetectedAiAgentBuildItem> agents,
-            CombinedIndexBuildItem indexBuildItem,
             AgenticRecorder recorder) {
-        List<DetectedAiAgentBuildItem> userAgents = filterUserAgents(agents);
-        Set<String> allSubAgentClassNames = collectAllSubAgentClassNames(userAgents);
-        Set<String> rootAgentClassNames = userAgents.stream()
+        DotName monitoredAgentName = DotName.createSimple(MonitoredAgent.class.getName());
+        Set<String> monitoredRootAgentClassNames = filterUserAgents(agents).stream()
+                .filter(a -> a.getIface().interfaceNames().stream().anyMatch(dn -> dn.equals(monitoredAgentName)))
                 .map(a -> a.getIface().name().toString())
-                .filter(name -> !allSubAgentClassNames.contains(name))
                 .collect(Collectors.toSet());
-        recorder.enableDevModeMonitoring(rootAgentClassNames);
-        recorder.eagerlyInitRootAgents(rootAgentClassNames);
+        if (!monitoredRootAgentClassNames.isEmpty()) {
+            recorder.enableDevModeMonitoring(monitoredRootAgentClassNames);
+            recorder.eagerlyInitRootAgents(monitoredRootAgentClassNames);
+        }
     }
 
     private static List<DetectedAiAgentBuildItem> filterUserAgents(List<DetectedAiAgentBuildItem> agents) {
