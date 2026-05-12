@@ -10,39 +10,53 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.HtmlReportGenerator;
+import dev.langchain4j.agentic.planner.AgentInstance;
 import io.quarkus.arc.Arc;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class AgenticJsonRpcService {
 
     private static final Logger log = Logger.getLogger(AgenticJsonRpcService.class);
 
-    public String getTopologyHtml() {
+    public JsonArray getRootAgentEntries() {
+        List<Object> rootAgents = DevAgentMonitorHolder.rootAgents();
+        JsonArray entries = new JsonArray();
+        for (int i = 0; i < rootAgents.size(); i++) {
+            entries.add(new JsonObject()
+                    .put("name", ((AgentInstance) rootAgents.get(i)).name())
+                    .put("index", i));
+        }
+        List<JsonObject> sorted = new java.util.ArrayList<>();
+        for (int i = 0; i < entries.size(); i++) {
+            sorted.add(entries.getJsonObject(i));
+        }
+        sorted.sort(java.util.Comparator.comparing(o -> o.getString("name")));
+        return new JsonArray(sorted);
+    }
+
+    public String getTopologyHtml(int index) {
         List<Object> rootAgents = DevAgentMonitorHolder.rootAgents();
         if (rootAgents.isEmpty()) {
             return "<html><body><p>No root agents detected.</p></body></html>";
         }
-        StringBuilder sb = new StringBuilder();
-        for (Object rootAgent : rootAgents) {
-            try {
-                sb.append(HtmlReportGenerator.generateTopology(rootAgent));
-            } catch (Exception e) {
-                log.warn("Failed to generate topology", e);
-            }
+        int i = (index >= 0 && index < rootAgents.size()) ? index : 0;
+        try {
+            return HtmlReportGenerator.generateTopology(rootAgents.get(i));
+        } catch (Exception e) {
+            log.warn("Failed to generate topology", e);
+            return "<html><body><p>Failed to generate topology.</p></body></html>";
         }
-        return sb.length() > 0 ? sb.toString()
-                : "<html><body><p>Failed to generate topology.</p></body></html>";
     }
 
-    public String getExecutionReportHtml() {
+    public String getExecutionReportHtml(int index) {
         List<AgentMonitor> monitors = DevAgentMonitorHolder.monitors();
         if (monitors.isEmpty()) {
             return "<html><body><p>No execution data available. Invoke an agent first.</p></body></html>";
         }
+        int i = (index >= 0 && index < monitors.size()) ? index : 0;
         try {
-            String html = HtmlReportGenerator.generateReport(monitors.get(0));
-            return html.replace("</head>",
-                    "<style>.container > .section:first-child { display: none !important; }</style></head>");
+            return HtmlReportGenerator.generateExecution(monitors.get(i));
         } catch (Exception e) {
             log.warn("Failed to generate execution report", e);
             return "<html><body><p>Failed to generate execution report.</p></body></html>";

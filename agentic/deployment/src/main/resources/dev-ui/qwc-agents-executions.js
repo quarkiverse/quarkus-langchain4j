@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { JsonRpc } from 'jsonrpc';
 import '@vaadin/button';
+import '@vaadin/select';
 import '@vaadin/progress-bar';
 
 export class QwcAgentsExecutions extends LitElement {
@@ -39,6 +40,8 @@ export class QwcAgentsExecutions extends LitElement {
         _htmlContent: { state: true },
         _loading: { state: true },
         _error: { state: true },
+        _agentEntries: { state: true },
+        _selectedIndex: { state: true },
     };
 
     jsonRpc = new JsonRpc(this);
@@ -48,17 +51,34 @@ export class QwcAgentsExecutions extends LitElement {
         this._htmlContent = null;
         this._loading = true;
         this._error = null;
+        this._agentEntries = [];
+        this._selectedIndex = 0;
     }
 
     connectedCallback() {
         super.connectedCallback();
+        this._loadAgentEntries();
+    }
+
+    _loadAgentEntries() {
+        this.jsonRpc.getRootAgentEntries()
+            .then(response => {
+                this._agentEntries = response.result || [];
+                this._selectedIndex = this._agentEntries.length > 0 ? this._agentEntries[0].index : 0;
+                this._loadReport();
+            })
+            .catch(() => this._loadReport());
+    }
+
+    _onAgentSelected(e) {
+        this._selectedIndex = parseInt(e.target.value, 10);
         this._loadReport();
     }
 
     _loadReport() {
         this._loading = true;
         this._error = null;
-        this.jsonRpc.getExecutionReportHtml()
+        this.jsonRpc.getExecutionReportHtml({ index: this._selectedIndex })
             .then(response => {
                 this._htmlContent = response.result;
                 this._loading = false;
@@ -70,8 +90,21 @@ export class QwcAgentsExecutions extends LitElement {
     }
 
     render() {
+        const agentItems = this._agentEntries.map(e => ({
+            label: e.name,
+            value: String(e.index),
+        }));
+
         return html`
             <div class="toolbar">
+                ${agentItems.length > 1 ? html`
+                    <vaadin-select
+                        label="Root Agent"
+                        .items="${agentItems}"
+                        .value="${String(this._selectedIndex)}"
+                        @value-changed="${this._onAgentSelected}">
+                    </vaadin-select>
+                ` : ''}
                 <vaadin-button theme="small" @click="${() => this._loadReport()}">
                     Refresh
                 </vaadin-button>
