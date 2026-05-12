@@ -1,15 +1,20 @@
 package io.quarkiverse.langchain4j.pinecone;
 
+import java.util.Map;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.pinecone.runtime.PineconeRecorder;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -37,18 +42,44 @@ public class PineconeProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             PineconeRecorder recorder,
+            PineconeEmbeddingStoreBuildTimeConfig buildTimeConfig,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(PINECONE_EMBEDDING_STORE)
-                .types(ClassType.create(EmbeddingStore.class),
-                        ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
-                .defaultBean()
-                .setRuntimeInit()
-                .unremovable()
-                .scope(ApplicationScoped.class)
-                .supplier(recorder.pineconeStoreSupplier())
-                .done());
-        embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+
+        if (buildTimeConfig.defaultConfig().defaultStoreEnabled()) {
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(PINECONE_EMBEDDING_STORE)
+                    .types(ClassType.create(EmbeddingStore.class),
+                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
+                    .defaultBean()
+                    .setRuntimeInit()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .createWith(recorder.embeddingStoreFunction(NamedConfigUtil.DEFAULT_NAME))
+                    .done());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+        }
+
+        Map<String, PineconeNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
+        for (Map.Entry<String, PineconeNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
+            String storeName = entry.getKey();
+
+            AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
+                    .add("value", storeName)
+                    .build();
+
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(PINECONE_EMBEDDING_STORE)
+                    .types(ClassType.create(EmbeddingStore.class),
+                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .addQualifier(storeNameQualifier)
+                    .createWith(recorder.embeddingStoreFunction(storeName))
+                    .done());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+        }
     }
 
     /**
