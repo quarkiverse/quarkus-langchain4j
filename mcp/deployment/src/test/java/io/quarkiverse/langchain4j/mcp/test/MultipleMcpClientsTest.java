@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
@@ -90,7 +91,10 @@ public class MultipleMcpClientsTest {
 
     @Test
     public void providingSelectedTools() {
-        var request = new QuarkusToolProviderRequest("1", new dev.langchain4j.data.message.UserMessage("hi"),
+        var invocationContext = InvocationContext.builder()
+                .chatMemoryId("1")
+                .build();
+        var request = new QuarkusToolProviderRequest(invocationContext, new dev.langchain4j.data.message.UserMessage("hi"),
                 List.of("client1", "client3"));
         ToolProviderResult toolProviderResult = toolProvider.provideTools(request);
 
