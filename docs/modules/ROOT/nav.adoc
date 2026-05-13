@@ -44,6 +44,7 @@
 ** xref:guardrails.adoc[Guardrails]
 ** xref:response-augmenter.adoc[Response Augmenter]
 ** xref:chat-scopes.adoc[Chat Scopes Framework]
+** xref:agentic.adoc[Agentic AI]
 * xref:models.adoc[Models]
 ** Chat Models
 *** xref:anthropic-chat-model.adoc[Anthropic (Claude)]

@@ -1,0 +1,756 @@
+= Agentic AI
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The _Agentic_ module provides abstractions for building AI systems that coordinate multiple agents.
+These systems go beyond simple single-model interactions, enabling complex workflows where multiple specialized agents collaborate to solve problems.
+
+== Overview
+
+Agentic systems are built around the idea of composing multiple specialized agents into higher-level workflows.
+Each agent performs a specific task, like generating content, classifying input, scoring quality, and the agentic system orchestrates their execution.
+
+The module distinguishes between two categories of agentic systems:
+
+* **Workflows**: deterministic orchestration patterns where the execution order is defined at design time (sequence, loop, parallel, conditional).
+* **Pure Agents**: LLM-driven orchestration where the model dynamically decides which agents to invoke (supervisor, planner).
+
+IMPORTANT: You do **not** need to implement agent interfaces. Quarkus LangChain4j automatically detects agent interfaces at build time, validates their configuration, and registers them as CDI beans.
+
+== Getting started
+
+Add the following dependency to your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-agentic</artifactId>
+</dependency>
+----
+
+== Core Concepts
+
+=== Agents
+
+An agent is a Java interface with a method annotated with `@Agent`.
+The method defines the agent's task, typically via an LLM prompt using `@UserMessage`.
+
+[source,java]
+----
+public interface CreativeWriter {
+
+    @UserMessage("""
+            You are a creative writer.
+            Generate a draft of a story long no more than 3 sentence around the given topic.
+            Return only the story and nothing else.
+            The topic is {{topic}}.
+            """)
+    @Agent(description = "Generate a story based on the given topic", outputKey = "story")
+    String generateStory(String topic);
+}
+----
+
+**`@Agent` attributes:**
+
+|===
+|Attribute |Description |Default
+
+|`value` / `description`
+|Describes what the agent does. Essential for supervisor patterns where the LLM picks which agent to invoke.
+|Empty
+
+|`outputKey`
+|The key under which the agent's return value is stored in the `AgenticScope`.
+|Empty
+
+|`name`
+|Unique identifier for the agent within a workflow.
+|The method name
+|===
+
+=== AgenticScope
+
+The `AgenticScope` is essentially a shared state through which agents exchange data.
+Each agent reads its inputs from the scope (matched by the names of the arguments of the agentic method, that can be overwritten through the LangChain4j `@V` annotation) and writes its output under its `outputKey`.
+
+For example, when `CreativeWriter` completes, its return value is stored in the scope under the key `"story"`.
+A subsequent `AudienceEditor` agent can then read that value by declaring a parameter `String story`.
+
+=== Inject and Use
+
+Agent interfaces are automatically registered as `@ApplicationScoped` CDI beans. Simply inject them:
+
+[source,java]
+----
+@Inject
+CreativeWriter writer;
+
+String story = writer.generateStory("dragons and wizards");
+----
+
+== Defining Agents
+
+=== AI Agents
+
+AI Agents are interfaces whose methods are backed by an LLM.
+They combine `@Agent` with prompt annotations like `@UserMessage` and `@SystemMessage`.
+
+[source,java]
+----
+public interface MedicalExpert {
+
+    @UserMessage("""
+            You are a medical expert.
+            Analyze the following user request under a medical point of view
+            and provide the best possible answer.
+            The user request is {{request}}.
+            """)
+    @Agent(description = "A medical expert", outputKey = "response")
+    String medical(String request);
+}
+----
+
+=== Non-AI Agents
+
+Plain Java classes (not backed by an LLM) can participate in agent workflows.
+They are concrete classes with a `static` method annotated with `@Agent`:
+
+[source,java]
+----
+public class PlainProcessListAgent {
+
+    @Agent(description = "Get first item from a list", outputKey = "output")
+    public static String getFirst(List<String> aList) {
+        return aList.get(0);
+    }
+}
+----
+
+== Workflow Patterns
+
+=== Sequential Workflow
+
+The `@SequenceAgent` annotation invokes sub-agents one after another.
+Each agent receives the outputs of all prior agents via the `AgenticScope`.
+
+[source,java]
+----
+public interface StoryCreator {
+
+    @SequenceAgent(
+            outputKey = "story",
+            subAgents = { CreativeWriter.class, AudienceEditor.class, StyleEditor.class })
+    String write(String topic, String style, String audience);
+}
+----
+
+In this example, `CreativeWriter` generates a story and stores it under the key `"story"`.
+Then `AudienceEditor` reads `"story"` and `"audience"` from the scope, rewrites the story, and stores the result back under `"story"`.
+Finally, `StyleEditor` reads the updated `"story"` and `"style"`, and produces the final version.
+
+Inject and use the workflow:
+
+[source,java]
+----
+@Inject
+StoryCreator storyCreator;
+
+String story = storyCreator.write("dragons and wizards", "fantasy", "young adults");
+----
+
+=== Loop Workflow
+
+The `@LoopAgent` annotation repeatedly invokes sub-agents until an exit condition is met or `maxIterations` is reached.
+
+[source,java]
+----
+public interface StyleReviewLoopAgent {
+
+    @LoopAgent(
+            description = "Review the given story to ensure it aligns with the specified style",
+            outputKey = "story",
+            maxIterations = 5,
+            subAgents = { StyleScorer.class, StyleEditor.class })
+    String write(String story);
+
+    @ExitCondition
+    static boolean exit(double score) {
+        return score >= 0.8;
+    }
+}
+----
+
+At each iteration, `StyleScorer` scores the story and stores the result under `"score"`.
+Then `StyleEditor` rewrites the story.
+The loop exits when the `@ExitCondition` method returns `true` (score >= 0.8) or after 5 iterations.
+
+**`@ExitCondition` rules:**
+
+* Must be a `static` method
+* Must return `boolean`
+* Parameters are resolved from the `AgenticScope`
+
+=== Composing Sequence and Loop
+
+Workflows can be composed by nesting them. For example, a sequence that first generates a story, then runs a review loop:
+
+[source,java]
+----
+public interface StoryCreatorWithReview {
+
+    @SequenceAgent(
+            outputKey = "story",
+            subAgents = { CreativeWriter.class, StyleReviewLoopAgent.class })
+    String write(String topic, String style);
+}
+----
+
+[source,java]
+----
+@Inject
+StoryCreatorWithReview storyCreatorWithReview;
+
+String story = storyCreatorWithReview.write("dragons and wizards", "comedy");
+----
+
+=== Parallel Workflow
+
+The `@ParallelAgent` annotation executes multiple independent agents simultaneously.
+
+[source,java]
+----
+public interface FoodExpert {
+
+    @UserMessage("""
+            You are a great evening planner.
+            Propose a list of 3 meals matching the given mood.
+            The mood is {{mood}}.
+            For each meal, just give the name of the meal.
+            Provide a list with the 3 items and nothing else.
+            """)
+    @Agent(outputKey = "meals")
+    List<String> findMeal(String mood);
+}
+
+public interface MovieExpert {
+
+    @UserMessage("""
+            You are a great evening planner.
+            Propose a list of 3 movies matching the given mood.
+            The mood is {{mood}}.
+            Provide a list with the 3 items and nothing else.
+            """)
+    @Agent(outputKey = "movies")
+    List<String> findMovie(String mood);
+}
+
+public record EveningPlan(String movie, String meal) {
+}
+
+public interface EveningPlannerAgent {
+
+    @ParallelAgent(
+            outputKey = "plans",
+            subAgents = { FoodExpert.class, MovieExpert.class })
+    List<EveningPlan> plan(String mood);
+
+    @Output
+    static List<EveningPlan> createPlans(List<String> movies, List<String> meals) {
+        List<EveningPlan> moviesAndMeals = new ArrayList<>();
+        for (int i = 0; i < movies.size(); i++) {
+            if (i >= meals.size()) {
+                break;
+            }
+            moviesAndMeals.add(new EveningPlan(movies.get(i), meals.get(i)));
+        }
+        return moviesAndMeals;
+    }
+}
+----
+
+Both `FoodExpert` and `MovieExpert` run at the same time. Their results are stored under `"meals"` and `"movies"` respectively. Then the `@Output` method `createPlans` combines those results into a list of `EveningPlan`.
+
+=== Parallel Mapper
+
+The `@ParallelMapperAgent` annotation maps a single sub-agent over a collection of items, executing each invocation in parallel:
+
+[source,java]
+----
+public record Person(String name, String sign) {
+}
+
+public interface PersonAstrologyAgent {
+
+    @UserMessage("""
+            Generate the horoscope for {{person}}.
+            The person has a name and a zodiac sign.
+            Use both to create a personalized horoscope.
+            """)
+    @Agent(description = "An astrologist that generates horoscopes for a person", outputKey = "horoscope")
+    String horoscope(Person person);
+}
+
+public interface BatchHoroscopeAgent {
+
+    @ParallelMapperAgent(subAgent = PersonAstrologyAgent.class)
+    List<String> generateHoroscopes(List<Person> persons);
+}
+----
+
+Each `Person` in the list is passed to a separate invocation of `PersonAstrologyAgent`, all running in parallel.
+
+=== Conditional Workflow
+
+The `@ConditionalAgent` annotation routes execution to different sub-agents based on conditions evaluated against the `AgenticScope`.
+
+[source,java]
+----
+public interface ExpertsAgent {
+
+    @ConditionalAgent(
+            outputKey = "response",
+            subAgents = { MedicalExpert.class, TechnicalExpert.class, LegalExpert.class })
+    String askExpert(String request);
+
+    @ActivationCondition(MedicalExpert.class)
+    static boolean activateMedical(RequestCategory category) {
+        return category == RequestCategory.MEDICAL;
+    }
+
+    @ActivationCondition(TechnicalExpert.class)
+    static boolean activateTechnical(RequestCategory category) {
+        return category == RequestCategory.TECHNICAL;
+    }
+
+    @ActivationCondition(LegalExpert.class)
+    static boolean activateLegal(RequestCategory category) {
+        return category == RequestCategory.LEGAL;
+    }
+}
+----
+
+Each sub-agent is guarded by an `@ActivationCondition` method. Only the agent whose condition returns `true` is invoked.
+
+**`@ActivationCondition` rules:**
+
+* Must be a `static` method
+* Must return `boolean`
+* Takes the `Class` of the sub-agent it guards as the annotation value
+* Parameters are resolved from the `AgenticScope`
+
+==== Router Pattern
+
+A common pattern is to compose a classifier agent with a conditional agent in a sequence:
+
+[source,java]
+----
+public interface CategoryRouter {
+
+    @UserMessage("""
+            Analyze the following user request and categorize it as 'legal', 'medical' or 'technical'.
+            In case the request doesn't belong to any of those categories categorize it as 'unknown'.
+            Reply with only one of those words and nothing else.
+            The user request is: '{{request}}'.
+            """)
+    @Agent(description = "Categorize a user request", outputKey = "category")
+    RequestCategory classify(String request);
+}
+
+public interface ExpertRouterAgent {
+
+    @SequenceAgent(
+            outputKey = "response",
+            subAgents = { CategoryRouter.class, ExpertsAgent.class })
+    ResultWithAgenticScope<String> ask(String request);
+}
+----
+
+The `CategoryRouter` classifies the request and writes the `"category"` to the scope.
+The `ExpertsAgent` then conditionally routes to the matching expert based on that category.
+
+[source,java]
+----
+@Inject
+ExpertRouterAgent expertRouterAgent;
+
+ResultWithAgenticScope<String> result = expertRouterAgent.ask("I broke my leg what should I do");
+RequestCategory category = result.agenticScope().readState("category"); // MEDICAL
+String response = result.result();
+----
+
+== Pure Agentic Patterns
+
+=== Supervisor Agent
+
+The `@SupervisorAgent` uses an LLM to dynamically decide which sub-agents to invoke.
+Sub-agents are described to the LLM via their `@Agent(description = "...")`.
+
+[source,java]
+----
+public interface WithdrawAgent {
+
+    @SystemMessage("You are a banker that can only withdraw US dollars (USD) from a user account.")
+    @UserMessage("Withdraw {{amountInUSD}} USD from {{withdrawUser}}'s account and return the new balance.")
+    @Agent("A banker that withdraw USD from an account")
+    String withdraw(String withdrawUser, Double amountInUSD);
+}
+
+public interface CreditAgent {
+
+    @SystemMessage("You are a banker that can only credit US dollars (USD) to a user account.")
+    @UserMessage("Credit {{amountInUSD}} USD to {{creditUser}}'s account and return the new balance.")
+    @Agent("A banker that credit USD to an account")
+    String credit(String creditUser, Double amountInUSD);
+}
+
+public interface ExchangeAgent {
+
+    @UserMessage("""
+            You are an operator exchanging money in different currencies.
+            Use the tool to exchange {{amount}} {{originalCurrency}} into {{targetCurrency}}
+            returning only the final amount provided by the tool as it is and nothing else.
+            """)
+    @Agent(outputKey = "exchange",
+            description = "A money exchanger that converts a given amount of money from the original to the target currency")
+    Double exchange(String originalCurrency, Double amount, String targetCurrency);
+}
+
+public interface SupervisorBanker {
+
+    @SupervisorAgent(
+            responseStrategy = SupervisorResponseStrategy.SUMMARY,
+            subAgents = { WithdrawAgent.class, CreditAgent.class, ExchangeAgent.class })
+    String invoke(String request);
+}
+----
+
+The supervisor LLM reads the descriptions of the sub-agents and decides which ones to call and in what order to fulfill the user request.
+
+**Response strategies:**
+
+|===
+|Strategy |Description
+
+|`LAST`
+|Returns the last sub-agent's output (default).
+
+|`SUMMARY`
+|The supervisor LLM summarizes all sub-agent outputs.
+|===
+
+==== Custom Supervisor Prompt
+
+Use `@SupervisorRequest` to customize the prompt sent to the supervisor LLM:
+
+[source,java]
+----
+public interface SupervisorStoryCreator {
+
+    @SupervisorAgent(
+            outputKey = "story",
+            responseStrategy = SupervisorResponseStrategy.LAST,
+            subAgents = { CreativeWriter.class, StyleReviewLoopAgent.class })
+    ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
+
+    @SupervisorRequest
+    static String request(String topic, String style) {
+        return "Write a story about " + topic + " in " + style + " style";
+    }
+}
+----
+
+=== Planner Agent
+
+The `@PlannerAgent` annotation uses a custom `Planner` implementation for orchestration logic.
+This enables advanced patterns like goal-oriented planning and peer-to-peer agent coordination.
+
+[source,java]
+----
+public interface MyPlannerAgent {
+
+    @PlannerAgent(
+            outputKey = "result",
+            subAgents = { AgentA.class, AgentB.class, AgentC.class })
+    String plan(String input);
+}
+----
+
+== Accessing AgenticScope
+
+=== From the Return Value
+
+Wrap the return type in `ResultWithAgenticScope<T>` to get both the result and the full scope:
+
+[source,java]
+----
+public interface StoryCreatorWithReview {
+
+    @SequenceAgent(
+            outputKey = "story",
+            subAgents = { CreativeWriter.class, StyleReviewLoopAgent.class })
+    ResultWithAgenticScope<String> write(String topic, String style);
+}
+----
+
+[source,java]
+----
+ResultWithAgenticScope<String> result = storyCreator.write("dragons", "comedy");
+String story = result.result();
+AgenticScope scope = result.agenticScope();
+String topic = scope.readState("topic");
+double score = scope.readState("score", 0.0);
+----
+
+=== From the Interface
+
+Extend `AgenticScopeAccess` to get scope access methods directly on the agent interface:
+
+[source,java]
+----
+public interface StyledWriter extends AgenticScopeAccess {
+
+    @Agent
+    ResultWithAgenticScope<String> writeStoryWithStyle(String topic, String style);
+}
+----
+
+=== Memory IDs
+
+Use `@MemoryId` for per-conversation isolation:
+
+[source,java]
+----
+public interface MedicalExpertWithMemory {
+
+    @UserMessage("""
+            You are a medical expert.
+            Analyze the following user request under a medical point of view
+            and provide the best possible answer.
+            The user request is {{request}}.
+            """)
+    @Agent(description = "A medical expert", outputKey = "response")
+    String medical(@MemoryId String memoryId, String request);
+}
+----
+
+== Error Handling
+
+Define error recovery strategies on workflow agents using `@ErrorHandler`:
+
+[source,java]
+----
+public interface StoryCreatorWithErrorRecovery extends StoryCreator {
+
+    @ErrorHandler
+    static ErrorRecoveryResult errorHandler(ErrorContext errorContext) {
+        if (errorContext.agentName().equals("generateStory")
+                && errorContext.exception() instanceof MissingArgumentException mEx
+                && mEx.argumentName().equals("topic")) {
+            errorContext.agenticScope().writeState("topic", "dragons and wizards");
+            return ErrorRecoveryResult.retry();
+        }
+        return ErrorRecoveryResult.throwException();
+    }
+}
+----
+
+**`@ErrorHandler` rules:**
+
+* Must be a `static` method
+* Must take `ErrorContext` as parameter
+* Must return `ErrorRecoveryResult`
+
+**Recovery options:**
+
+|===
+|Method |Description
+
+|`ErrorRecoveryResult.throwException()`
+|Propagates the error (default behavior).
+
+|`ErrorRecoveryResult.retry()`
+|Retries the failed agent after corrective actions (e.g., writing missing values to the scope).
+
+|`ErrorRecoveryResult.result(Object)`
+|Returns a fallback value, skipping the failed agent.
+|===
+
+== Human-in-the-Loop
+
+The `@HumanInTheLoop` annotation pauses workflow execution to wait for human input:
+
+[source,java]
+----
+public interface AudienceRetriever {
+
+    @HumanInTheLoop(
+            description = "Ask for audience preference",
+            outputKey = "audience",
+            async = true)
+    static String humanResponse(AgenticScope scope, String topic) {
+        CompletableFuture<String> futureResult = new CompletableFuture<>();
+        PendingResponses.register(scope.memoryId(), futureResult);
+        try {
+            return futureResult.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+----
+
+The optional `async = true` flag, used in this example, allows running this in a separate thread so the workflow engine is not blocked while waiting for the human response. Another agent or external trigger completes the `CompletableFuture` to resume execution.
+
+This agent can be composed in a sequential workflow with other agents:
+
+[source,java]
+----
+public interface StoryCreatorWithHumanInTheLoop {
+
+    @SequenceAgent(outputKey = "story", subAgents = {
+            AudienceRetriever.class,
+            CreativeWriter.class,
+            AudienceEditor.class })
+    String write(String topic);
+}
+----
+
+== Configuring the Chat Model
+
+=== Default Model
+
+By default, agents use the CDI `ChatModel` bean configured via application properties (e.g., `quarkus.langchain4j.openai.api-key`).
+
+=== Per-Agent Model with @ChatModelSupplier
+
+Use `@ChatModelSupplier` on a `static` method to provide a specific `ChatModel` for an agent:
+
+[source,java]
+----
+public interface CategoryRouter {
+
+    @UserMessage("Categorize as 'legal', 'medical' or 'technical': '{{request}}'")
+    @Agent(description = "Categorize a user request", outputKey = "category")
+    RequestCategory classify(@V("request") String request);
+
+    @ChatModelSupplier
+    static ChatModel chatModel() {
+        return OpenAiChatModel.builder()
+                .apiKey("...")
+                .modelName("gpt-4o")
+                .build();
+    }
+}
+----
+
+=== Named Models with @ModelName
+
+Use `@ModelName` to select a named model configuration, exactly like with xref:ai-services.adoc#_configuring_the_chat_model[AI Services]:
+
+[source,java]
+----
+public interface NamedModelAgent {
+
+    @UserMessage("Answer the following question: {{question}}")
+    @Agent(value = "An agent using a named model", outputKey = "answer")
+    @ModelName("mymodel")
+    String answer(@V("question") String question);
+}
+----
+
+Configure the named model in `application.properties`:
+
+[source,properties]
+----
+quarkus.langchain4j.mymodel.chat-model.provider=openai
+quarkus.langchain4j.openai.mymodel.api-key=sk-...
+----
+
+== Build-Time Validation
+
+Quarkus validates agent configurations at build time, catching errors before the application starts:
+
+* All supplier methods (`@ChatModelSupplier`, `@ToolsSupplier`, etc.) must be `static` with correct return types and no parameters
+* `@ExitCondition` and `@ActivationCondition` methods must return `boolean`
+* `@ErrorHandler` methods must take `ErrorContext` and return `ErrorRecoveryResult`
+* `@ParallelExecutor` methods must return `Executor`
+* `@ModelName` and `@ChatModelSupplier` cannot be used on the same agent
+
+== Annotations Reference
+
+|===
+|Annotation |Target |Purpose
+
+|`@Agent`
+|method
+|Declares a basic AI agent method.
+
+|`@SequenceAgent`
+|method
+|Sequential workflow of sub-agents.
+
+|`@LoopAgent`
+|method
+|Iterative workflow with exit condition.
+
+|`@ParallelAgent`
+|method
+|Parallel execution of sub-agents.
+
+|`@ParallelMapperAgent`
+|method
+|Maps one sub-agent over a collection.
+
+|`@ConditionalAgent`
+|method
+|Conditional routing to sub-agents.
+
+|`@SupervisorAgent`
+|method
+|LLM-driven dynamic orchestration.
+
+|`@PlannerAgent`
+|method
+|Custom planner-driven orchestration.
+
+|`@HumanInTheLoop`
+|method
+|Pauses for human input.
+
+|`@ExitCondition`
+|static method
+|Loop exit predicate (returns `boolean`).
+
+|`@ActivationCondition`
+|static method
+|Conditional routing predicate (returns `boolean`).
+
+|`@ErrorHandler`
+|static method
+|Error recovery (takes `ErrorContext`, returns `ErrorRecoveryResult`).
+
+|`@Output`
+|static method
+|Custom output combiner for parallel workflows.
+
+|`@ChatModelSupplier`
+|static method
+|Provides per-agent `ChatModel`.
+
+|`@SupervisorRequest`
+|static method
+|Custom prompt builder for supervisor.
+
+|`@ParallelExecutor`
+|static method
+|Provides `Executor` for parallel workflows.
+|===
+
+== Related Guides
+
+[.lead]
+* xref:ai-services.adoc[AI Services]
+* xref:function-calling.adoc[Function Calling and Tool Integration]
+* xref:observability.adoc[Observability]
