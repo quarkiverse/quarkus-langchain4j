@@ -72,7 +72,7 @@ public interface CreativeWriter {
 
 === AgenticScope
 
-The `AgenticScope` is a shared state container through which agents exchange data.
+The `AgenticScope` is essentially a shared state through which agents exchange data.
 Each agent reads its inputs from the scope (matched by the names of the arguments of the agentic method, that can be overwritten through the LangChain4j `@V` annotation) and writes its output under its `outputKey`.
 
 For example, when `CreativeWriter` completes, its return value is stored in the scope under the key `"story"`.
