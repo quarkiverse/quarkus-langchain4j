@@ -31,6 +31,23 @@ public interface ChatMemoryConfig {
      */
     TokenWindow tokenWindow();
 
+    /**
+     * Whether to delete chat memory from the underlying
+     * {@link dev.langchain4j.store.memory.chat.ChatMemoryStore} when the owning AI service bean
+     * is destroyed (typically at application shutdown, or at the end of each request for
+     * {@link jakarta.enterprise.context.RequestScoped} AI services).
+     * <p>
+     * When {@code true} (the default), historical behavior is preserved: every known memory id is
+     * removed from the store. This is appropriate for the in-memory default store.
+     * <p>
+     * When {@code false}, the in-memory bookkeeping is still released to avoid leaks, but the
+     * persistent store is left untouched, so conversations backed by a custom
+     * {@link dev.langchain4j.store.memory.chat.ChatMemoryStore} (e.g., Redis, Couchbase, JDBC)
+     * survive pod or application restarts.
+     */
+    @WithDefault("true")
+    boolean clearOnClose();
+
     @ConfigGroup
     interface MemoryWindow {
 

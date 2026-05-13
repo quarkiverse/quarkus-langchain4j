@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -8,6 +9,8 @@ import java.util.Set;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
+
+import org.eclipse.microprofile.config.ConfigProvider;
 
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
@@ -41,10 +44,30 @@ public class QuarkusAiServiceContext extends AiServiceContext {
 
     /**
      * This is called by the {@code close} method of AiServices registered with {@link RegisterAiService}
-     * when the bean's scope is closed
+     * when the bean's scope is closed.
+     * <p>
+     * In-memory references to known memory ids are always released to avoid leaks for long-lived
+     * AI services. The underlying {@link dev.langchain4j.store.memory.chat.ChatMemoryStore} is only
+     * cleared when {@code quarkus.langchain4j.chat-memory.clear-on-close} is {@code true} (the default);
+     * setting it to {@code false} lets persistent stores keep their data across application restarts.
      */
     public void close() {
-        clearChatMemory();
+        if (!hasChatMemory()) {
+            return;
+        }
+        if (shouldClearOnClose()) {
+            chatMemoryService.clearAll();
+        } else {
+            for (Object id : new ArrayList<>(chatMemoryService.getChatMemoryIDs())) {
+                chatMemoryService.evictChatMemory(id);
+            }
+        }
+    }
+
+    private static boolean shouldClearOnClose() {
+        return ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.chat-memory.clear-on-close", Boolean.class)
+                .orElse(Boolean.TRUE);
     }
 
     public void clearChatMemory() {
