@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.listeners;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.logging.Logger;
@@ -45,21 +46,21 @@ public class MetricsChatModelListener implements ChatModelListener {
 
         this.inputTokenUsage = Counter.builder("gen_ai.client.token.usage")
                 .description("Measures number of input tokens used")
-                .tag("gen_ai.operation.name", "completion")
+                .tag("gen_ai.operation.name", "chat")
                 .tag("gen_ai.token.type", "input")
                 .withRegistry(Metrics.globalRegistry);
         this.outputTokenUsage = Counter.builder("gen_ai.client.token.usage")
                 .description("Measures number of output tokens used")
-                .tag("gen_ai.operation.name", "completion")
+                .tag("gen_ai.operation.name", "chat")
                 .tag("gen_ai.token.type", "output")
                 .withRegistry(Metrics.globalRegistry);
         this.duration = Timer.builder("gen_ai.client.operation.duration")
                 .description("GenAI operation duration")
-                .tag("gen_ai.operation.name", "completion")
+                .tag("gen_ai.operation.name", "chat")
                 .withRegistry(Metrics.globalRegistry);
         this.estimatedCost = Counter.builder("gen_ai.client.estimated_cost")
                 .description("Estimated cost of the request")
-                .tag("gen_ai.operation.name", "completion")
+                .tag("gen_ai.operation.name", "chat")
                 .tag("gen_ai.token.type", "output")
                 .withRegistry(Metrics.globalRegistry);
     }
@@ -98,6 +99,7 @@ public class MetricsChatModelListener implements ChatModelListener {
 
         Tags tags = Tags.of("gen_ai.request.model", requestModel)
                 .and("gen_ai.response.model", responseModel)
+                .and("gen_ai.provider.name", responseContext.modelProvider().toString().toLowerCase(Locale.ROOT))
                 .and("ai_service.class_name", aiServiceClassName)
                 .and("ai_service.method_name", aiServiceMethodName)
                 .and("error.type", "none");
