@@ -1584,6 +1584,8 @@ public class AiServicesProcessor {
             ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
             ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
+                validateThinkingHandler(iface);
+
                 List<MethodInfo> allMethods = new ArrayList<>(iface.methods());
                 JandexUtil.getAllSuperinterfaces(iface, index).stream().filter(ci -> !ci.name().equals(
                         CHAT_MEMORY_ACCESS)).forEach(ci -> allMethods.addAll(ci.methods()));
@@ -2632,6 +2634,39 @@ public class AiServicesProcessor {
         }
 
         return Arrays.asList(mcpClientNames);
+    }
+
+    private void validateThinkingHandler(ClassInfo iface) {
+        List<AnnotationInstance> annotations = iface.annotations(LangChain4jDotNames.THINKING);
+        if (annotations.isEmpty()) {
+            return;
+        }
+        if (annotations.size() > 1) {
+            throw new IllegalConfigurationException(
+                    "Only a single @Thinking annotation is allowed per AiService. Offending class is '" + iface.name() + "'");
+        }
+        AnnotationTarget target = annotations.get(0).target();
+        if (target.kind() != AnnotationTarget.Kind.METHOD) {
+            throw new IllegalConfigurationException(
+                    "The @Thinking annotation can only be placed on methods. Offending target is '" + target + "'");
+        }
+        MethodInfo method = target.asMethod();
+        String location = method.declaringClass().name() + "#" + method.name();
+        if (!Modifier.isStatic(method.flags())) {
+            throw new IllegalConfigurationException(
+                    "The @Thinking annotation can only be placed on static methods. Offending method is '" + location + "'");
+        }
+        if (method.returnType().kind() != Type.Kind.VOID) {
+            throw new IllegalConfigurationException(
+                    "The @Thinking annotation can only be placed on methods that return void. Offending method is '"
+                            + location + "'");
+        }
+        if (method.parameterTypes().size() != 1
+                || !LangChain4jDotNames.THINKING_EMITTED.equals(method.parameterTypes().get(0).name())) {
+            throw new IllegalConfigurationException(
+                    "The @Thinking annotation can only be placed on methods that take a single "
+                            + LangChain4jDotNames.THINKING_EMITTED + " parameter. Offending method is '" + location + "'");
+        }
     }
 
     private DotName determineChatMemorySeeder(ClassInfo iface, ClassOutput classOutput) {

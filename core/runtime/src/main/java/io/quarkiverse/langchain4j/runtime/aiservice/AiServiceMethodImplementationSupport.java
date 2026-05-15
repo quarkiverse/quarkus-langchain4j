@@ -9,12 +9,17 @@ import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
 import static java.util.Objects.nonNull;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +31,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -105,6 +112,7 @@ import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.PdfUrl;
+import io.quarkiverse.langchain4j.Thinking;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
@@ -138,6 +146,8 @@ public class AiServiceMethodImplementationSupport {
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this
                                                                                                        // might need to
                                                                                                        // be improved
+
+    private static final ConcurrentMap<Class<?>, Optional<MethodHandle>> THINKING_HANDLER_CACHE = new ConcurrentHashMap<>();
 
     static {
         var defaultMemoryIdProviders = ServiceHelper.loadFactories(
@@ -594,6 +604,8 @@ public class AiServiceMethodImplementationSupport {
 
         response = ChatResponse.builder().aiMessage(response.aiMessage()).metadata(response.metadata()).build();
 
+        emitThinkingIfPresent(response, context, invocationContext);
+
         if (TypeUtil.isResult(returnType)) {
             var parsedResponse = SERVICE_OUTPUT_PARSER.parse(
                     ChatResponse.builder().aiMessage(response.aiMessage()).build(),
@@ -626,6 +638,57 @@ public class AiServiceMethodImplementationSupport {
                         .build());
 
         return augmentedResponse;
+    }
+
+    private static void emitThinkingIfPresent(ChatResponse response,
+            QuarkusAiServiceContext context,
+            InvocationContext invocationContext) {
+        if (response == null || response.aiMessage() == null) {
+            return;
+        }
+        String thinking = response.aiMessage().thinking();
+        if (thinking == null || thinking.isBlank()) {
+            return;
+        }
+        Class<?> serviceClass = context.aiServiceClass;
+        MethodHandle handler = resolveThinkingHandler(serviceClass);
+        if (handler == null) {
+            return;
+        }
+        ThinkingEmitted event = new ThinkingEmitted(thinking,
+                invocationContext.methodName(),
+                serviceClass,
+                invocationContext.chatMemoryId(),
+                Instant.now());
+        try {
+            handler.invoke(event);
+        } catch (Throwable e) {
+            log.debugf(e, "@Thinking handler on %s threw an exception", serviceClass.getName());
+        }
+    }
+
+    private static MethodHandle resolveThinkingHandler(Class<?> serviceClass) {
+        return THINKING_HANDLER_CACHE.computeIfAbsent(serviceClass, AiServiceMethodImplementationSupport::lookupThinkingHandler)
+                .orElse(null);
+    }
+
+    private static Optional<MethodHandle> lookupThinkingHandler(Class<?> serviceClass) {
+        for (Method m : serviceClass.getDeclaredMethods()) {
+            if (!Modifier.isStatic(m.getModifiers())) {
+                continue;
+            }
+            if (!m.isAnnotationPresent(Thinking.class)) {
+                continue;
+            }
+            try {
+                m.setAccessible(true);
+                return Optional.of(MethodHandles.lookup().unreflect(m));
+            } catch (IllegalAccessException e) {
+                throw new IllegalStateException(
+                        "Unable to resolve @Thinking handler '" + serviceClass.getName() + "#" + m.getName() + "'", e);
+            }
+        }
+        return Optional.empty();
     }
 
     private static InvocationParameters findInvocationParams(Object[] args) {
