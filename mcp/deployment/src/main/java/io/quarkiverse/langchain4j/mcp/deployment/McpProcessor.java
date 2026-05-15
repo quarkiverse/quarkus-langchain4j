@@ -72,7 +72,8 @@ public class McpProcessor {
     private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
     private static final DotName MCP_RESOURCE_UPDATED_EVENT = DotName.createSimple(McpResourceUpdatedEvent.class);
     private static final DotName OBSERVES = DotName.createSimple("jakarta.enterprise.event.Observes");
-    private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client", "tracing");
+    private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client", "tracing",
+            "apicurio-registry");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @BuildStep
