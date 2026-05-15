@@ -76,6 +76,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
@@ -175,6 +176,7 @@ public class AiServicesProcessor {
     public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     public static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
     private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
+    private static final DotName CHAT_REQUEST_PARAMETERS = DotName.createSimple(ChatRequestParameters.class);
     public static final String DEFAULT_DELIMITER = "\n";
     public static final Predicate<AnnotationInstance> IS_METHOD_PARAMETER_ANNOTATION = ai -> ai.target()
             .kind() == AnnotationTarget.Kind.METHOD_PARAMETER;
@@ -1930,10 +1932,13 @@ public class AiServicesProcessor {
             }
         }
 
-        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(method, allowedPredicates, ignoredPredicates);
+        Optional<Integer> chatRequestParametersParamPosition = gatherChatRequestParametersParamPosition(method);
+
+        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(method, allowedPredicates, ignoredPredicates,
+                chatRequestParametersParamPosition);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
-                systemMessageInfo, fallbackToDummyUserMessagePredicate);
+                systemMessageInfo, fallbackToDummyUserMessagePredicate, chatRequestParametersParamPosition);
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
                 systemMessageInfo,
@@ -1983,7 +1988,8 @@ public class AiServicesProcessor {
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), parameterInfoList,
                 systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
-                overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
+                overrideChatModelParamPosition, chatRequestParametersParamPosition,
+                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution,
                 accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
                 gatherOutputGuardrails(method, methodReturnTypeSignature));
@@ -2097,15 +2103,21 @@ public class AiServicesProcessor {
         return AsmUtil.getSignature(returnType, typeArgMapper);
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private List<TemplateParameterInfo> gatherTemplateParamInfo(MethodInfo method,
             Collection<Predicate<AnnotationInstance>> allowedPredicates,
-            Collection<Predicate<AnnotationInstance>> ignoredPredicates) {
+            Collection<Predicate<AnnotationInstance>> ignoredPredicates,
+            Optional<Integer> chatRequestParametersParamPosition) {
         if (method.parameters().isEmpty()) {
             return Collections.emptyList();
         }
 
         List<TemplateParameterInfo> templateParams = new ArrayList<>();
         for (MethodParameterInfo param : method.parameters()) {
+            if (chatRequestParametersParamPosition.isPresent()
+                    && param.position() == chatRequestParametersParamPosition.get()) {
+                continue;
+            }
 
             if (isParameterAllowedAsTemplateVariable(param, allowedPredicates, ignoredPredicates)) {
                 templateParams.add(new TemplateParameterInfo(param.position(), param.name()));
@@ -2210,10 +2222,26 @@ public class AiServicesProcessor {
         return result;
     }
 
+    private Optional<Integer> gatherChatRequestParametersParamPosition(MethodInfo method) {
+        Optional<Integer> result = Optional.empty();
+        for (int i = 0; i < method.parametersCount(); i++) {
+            if (method.parameterType(i).name().equals(CHAT_REQUEST_PARAMETERS)) {
+                if (result.isPresent()) {
+                    throw illegalConfigurationForMethod(
+                            "Only one parameter of type ChatRequestParameters is allowed", method);
+                }
+                result = Optional.of(i);
+            }
+        }
+        return result;
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams,
             Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo,
-            Predicate<MethodInfo> fallbackToDummyUserMesage) {
+            Predicate<MethodInfo> fallbackToDummyUserMesage,
+            Optional<Integer> chatRequestParametersParamPosition) {
 
         Optional<Integer> userNameParamPosition = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
@@ -2299,6 +2327,9 @@ public class AiServicesProcessor {
                     } else if (videoParamPosition.isPresent() && i == videoParamPosition.get()) {
                         continue;
                     } else if (parameter.type().name().equals(INVOCATION_PARAMETERS)) {
+                        continue;
+                    } else if (chatRequestParametersParamPosition.isPresent()
+                            && i == chatRequestParametersParamPosition.get()) {
                         continue;
                     } else if (parameter.hasAnnotation(LangChain4jDotNames.MEMORY_ID)) {
                         continue;

@@ -37,6 +37,7 @@ public final class AiServiceMethodCreateInfo {
     private final boolean requiresModeration;
     private final String returnTypeSignature; // transient so bytecode recording ignores it
     private final Optional<Integer> overrideChatModelParamPosition;
+    private final Optional<Integer> chatRequestParametersParamPosition;
     private final transient LazyValue<Type> returnTypeVal; // transient so bytecode recording ignores it
     private final Optional<MetricsTimedInfo> metricsTimedInfo;
     private final Optional<MetricsCountedInfo> metricsCountedInfo;
@@ -76,6 +77,7 @@ public final class AiServiceMethodCreateInfo {
             boolean requiresModeration,
             String returnTypeSignature,
             Optional<Integer> overrideChatModelParamPosition,
+            Optional<Integer> chatRequestParametersParamPosition,
             Optional<MetricsTimedInfo> metricsTimedInfo,
             Optional<MetricsCountedInfo> metricsCountedInfo,
             Optional<SpanInfo> spanInfo,
@@ -96,6 +98,7 @@ public final class AiServiceMethodCreateInfo {
         this.requiresModeration = requiresModeration;
         this.returnTypeSignature = returnTypeSignature;
         this.overrideChatModelParamPosition = overrideChatModelParamPosition;
+        this.chatRequestParametersParamPosition = chatRequestParametersParamPosition;
         this.returnTypeVal = new LazyValue<>(new Supplier<>() {
             @Override
             public Type get() {
@@ -157,6 +160,10 @@ public final class AiServiceMethodCreateInfo {
 
     public Optional<Integer> getOverrideChatModelParamPosition() {
         return overrideChatModelParamPosition;
+    }
+
+    public Optional<Integer> getChatRequestParametersParamPosition() {
+        return chatRequestParametersParamPosition;
     }
 
     public Type getReturnType() {

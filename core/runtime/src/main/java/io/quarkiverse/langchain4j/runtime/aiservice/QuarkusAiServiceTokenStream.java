@@ -175,10 +175,23 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     @Override
     public void start() {
         validateConfiguration();
-        ChatRequest chatRequest = new ChatRequest.Builder()
-                .messages(messages)
-                .toolSpecifications(toolSpecifications)
-                .build();
+        ChatRequest chatRequest;
+        var userParams = AiServiceMethodImplementationSupport
+                .findChatRequestParameters(methodCreateInfo, methodArgs);
+        if (userParams.isPresent()) {
+            var defaultParams = dev.langchain4j.model.chat.request.ChatRequestParameters.builder()
+                    .toolSpecifications(toolSpecifications)
+                    .build();
+            chatRequest = new ChatRequest.Builder()
+                    .messages(messages)
+                    .parameters(userParams.get().defaultedBy(defaultParams))
+                    .build();
+        } else {
+            chatRequest = new ChatRequest.Builder()
+                    .messages(messages)
+                    .toolSpecifications(toolSpecifications)
+                    .build();
+        }
 
         this.handler = new QuarkusAiServiceStreamingResponseHandler(
                 chatRequest,
