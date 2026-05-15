@@ -1,17 +1,13 @@
 package io.quarkiverse.langchain4j.weaviate.runtime;
 
-import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
-
 import java.util.List;
 import java.util.Optional;
 
-import io.quarkus.runtime.annotations.ConfigRoot;
-import io.smallrye.config.ConfigMapping;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
-@ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.weaviate")
-public interface WeaviateRuntimeConfig {
+@ConfigGroup
+public interface WeaviateStoreRuntimeConfig {
 
     /**
      * The Weaviate API key to authenticate with.
@@ -31,13 +27,13 @@ public interface WeaviateRuntimeConfig {
     String host();
 
     /**
-     * The gRPC port of the Weaviate server. Defaults to 8080
+     * The port of the Weaviate server. Defaults to 8080
      */
     @WithDefault("8080")
     Integer port();
 
     /**
-     * The gRPC connection is secured.
+     * gRPC configuration.
      */
     Grpc grpc();
 
@@ -48,13 +44,14 @@ public interface WeaviateRuntimeConfig {
     String objectClass();
 
     /**
-     * The name of the field that contains the text of a {@link TextSegment}. Default is "text"
+     * The name of the field that contains the text of a {@link dev.langchain4j.data.segment.TextSegment}. Default is
+     * "text"
      */
     @WithDefault("text")
     String textFieldName();
 
     /**
-     * If true (default), then <code>WeaviateEmbeddingStore</code> will generate a hashed ID based on
+     * If true (default), then {@code WeaviateEmbeddingStore} will generate a hashed ID based on
      * provided text segment, which avoids duplicated entries in DB.
      * If false, then random ID will be generated.
      */
@@ -68,11 +65,13 @@ public interface WeaviateRuntimeConfig {
     ConsistencyLevel consistencyLevel();
 
     /**
-     * Metadata configuration
+     * Metadata configuration.
      */
     Metadata metadata();
 
+    @ConfigGroup
     interface Grpc {
+
         /**
          * The gRPC port of the Weaviate server. Defaults to 50051
          */
@@ -99,6 +98,7 @@ public interface WeaviateRuntimeConfig {
         ALL
     }
 
+    @ConfigGroup
     interface Metadata {
 
         /**
@@ -110,10 +110,9 @@ public interface WeaviateRuntimeConfig {
         List<String> keys();
 
         /**
-         * The name of the field where {@link Metadata} entries are stored
+         * The name of the field where {@link dev.langchain4j.data.segment.Metadata} entries are stored
          */
         @WithDefault("_metadata")
         String fieldName();
-
     }
 }
