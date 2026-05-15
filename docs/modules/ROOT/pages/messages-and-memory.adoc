@@ -9,6 +9,7 @@ All contextual understanding must come from the current input, which is why **me
 
 This page explains how Quarkus LangChain4j handles _messages_, how it builds and manages memory, and how you can configure, extend, and control these behaviors.
 
+[id="statelessness-and-context-rehydration"]
 == Statelessness and Context Rehydration
 
 Large language models do not retain memory between calls.
@@ -22,6 +23,7 @@ Replaying a large memory consumes CPU and bandwidth.
 
 image:memory.png[width=600,align="center",alt="Context Rehydration"]
 
+[id="messages-the-building-blocks-of-conversation"]
 == Messages: The Building Blocks of Conversation
 
 A #message# is a structured unit of interaction in a conversation.
@@ -55,6 +57,7 @@ Here's a simple multi-turn exchange/conversation:
 
 When the application sends the last message, it includes the entire history of messages to provide context for the model.
 
+[id="memory-and-its-purpose"]
 == Memory and Its Purpose
 
 Memory refers to the accumulation of previous messages in an exchange.
@@ -71,6 +74,7 @@ However, this can lead to performance issues if the memory grows too large, as i
 In general, the memory is limited to the most recent messages, and older messages (except the system message) are evicted or summarized to keep the context manageable.
 This summarization is also known as _context compression_.
 
+[id="memory-configuration-in-ai-services"]
 === Memory Configuration in AI Services
 
 Quarkus Langchain4J automatically manages the memory for your AI service:
@@ -95,8 +99,9 @@ quarkus.langchain4j.chat-memory.memory-window.max-messages=20
 
 These settings apply to each _exchange_.
 
-See <<configure-default-memory,Configuring the Default Memory>> for more details.
+See <<configuring-the-default-memory,Configuring the Default Memory>> for more details.
 
+[id="cdi-scope-and-memory-isolation"]
 == CDI Scope and Memory Isolation
 
 Memory is tied to the CDI scope of the AI service.
@@ -117,6 +122,7 @@ Using `@ApplicationScoped` with memory enabled can result in users sharing conve
 It requires careful management of `@MemoryId` to ensure isolation.
 ====
 
+[id="configuring-the-default-memory"]
 == Configuring the Default Memory
 
 To configure the default memory behavior, you can set properties in `application.properties`:
@@ -138,6 +144,7 @@ Note that using `TOKEN_WINDOW` requires a `TokenCountEstimator` bean to be avail
 These memories are then stored in a `ChatMemoryStore`, which is an abstraction for storing and retrieving chat messages.
 By default, it uses an in-memory store, meaning messages are lost when the application stops or restarts.
 
+[id="custom-memory-implementations"]
 == Custom Memory Implementations
 
 The application can use a custom memory implementation by providing a `ChatMemoryProvider` bean:
@@ -166,7 +173,7 @@ public class CustomChatMemoryProvider implements ChatMemoryProvider {
 
 Every AI service will use this `ChatMemoryProvider` to retrieve the memory instance associated with a specific memory ID.
 
-To customize memory storage, you can implement your own `ChatMemory` and <<_memory_backends_with_chatmemorystore, `ChatMemoryStore`>>.
+To customize memory storage, you can implement your own `ChatMemory` and <<memory-backends-with-chatmemorystore, `ChatMemoryStore`>>.
 
 For advanced use cases where you need multiple memory behavior, you can specify a custom memory implementation in the `@RegisterAiService` annotation with the `chatMemoryProviderSupplier` attribute:
 
@@ -195,7 +202,7 @@ public class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
 }
 ----
 
-[#_memory_backends_with_chatmemorystore]
+[id="memory-backends-with-chatmemorystore"]
 == Memory Backends with `ChatMemoryStore`
 
 The default memory implementation is in-memory, meaning it is lost when the application stops or restarts.
@@ -258,7 +265,7 @@ This is useful for:
 * distributed services (e.g., multiple Quarkus pods/replicas)
 * external control over retention or eviction
 
-[#_chat_memory_flush_strategy]
+[id="chat-memory-flush-strategy"]
 == Chat Memory Flush Strategy
 
 By default, Quarkus Langchain4j accumulates messages in memory and only persists them to the `ChatMemoryStore` after the invocation completes successfully.
@@ -298,6 +305,7 @@ The `ChatMemoryFlushStrategy` enum has two values:
 
 If no strategy is configured, the default `DEFERRED` behavior is used.
 
+[id="memory-compression-and-eviction"]
 == Memory Compression and Eviction
 
 LLMs have a token limit — if the full memory exceeds that limit, the prompt will be rejected or truncated.
@@ -311,6 +319,7 @@ Compression is implemented using a `ChatModel` that summarizes the conversation 
 
 Your custom `ChatMemory` implementation can handle these strategies, or you can use the built-in `MessageWindowChatMemory` or `TokenWindowChatMemory` (eviction based on message count or token count, respectively).
 
+[id="memoryid-multi-session-memory"]
 == `@MemoryId`: Multi-Session Memory
 
 To assign different memory instances to different users or conversations, annotate a method parameter with `@MemoryId`:
@@ -331,6 +340,7 @@ When using `@MemoryId`, the memory ID must be stable across calls to ensure prop
 When using websocket-next, the `@MemoryId` will be automatically set to the session ID, allowing each user to have their own memory instance.
 See xref:websockets.adoc[Websockets] for more details.
 
+[id="summary"]
 == Summary
 
 [cols="1,3",options="header"]
@@ -348,6 +358,7 @@ See xref:websockets.adoc[Websockets] for more details.
 | Compression          | Avoids hitting token limits via summarization or eviction
 |===
 
+[id="related-guides"]
 == Related Guides
 
 * xref:ai-services.adoc[AI Services Reference]
