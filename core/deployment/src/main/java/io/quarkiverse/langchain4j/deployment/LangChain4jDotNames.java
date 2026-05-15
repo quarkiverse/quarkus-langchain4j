@@ -42,6 +42,7 @@ import io.quarkiverse.langchain4j.HandleToolArgumentError;
 import io.quarkiverse.langchain4j.HandleToolExecutionError;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
@@ -52,6 +53,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
+import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingEmitted;
 
 public class LangChain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatModel.class);
@@ -79,6 +81,8 @@ public class LangChain4jDotNames {
     static final DotName PDF_URL = DotName.createSimple(PdfUrl.class);
     static final DotName VIDEO_URL = DotName.createSimple(VideoUrl.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
+    public static final DotName ON_THINKING = DotName.createSimple(OnThinking.class);
+    public static final DotName THINKING_EMITTED = DotName.createSimple(ThinkingEmitted.class);
     static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     static final DotName STRUCTURED_PROMPT = DotName.createSimple(StructuredPrompt.class);

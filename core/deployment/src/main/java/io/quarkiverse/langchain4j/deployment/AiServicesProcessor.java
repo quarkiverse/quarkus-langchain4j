@@ -120,6 +120,8 @@ import io.quarkiverse.langchain4j.runtime.aiservice.MetricsCountedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
+import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingEmitted;
+import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
@@ -569,6 +571,7 @@ public class AiServicesProcessor {
                             moderationModelSupplierClassName,
                             imageModelSupplierClassName(reflectiveClassProducer, unremovableBeanProducer, instance, index),
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
+                            determineThinkingHandler(declarativeAiServiceClassInfo, generatedClassOutput),
                             systemMessageProviderClassDotName,
                             cdiScope(customScopes, declarativeAiServiceClassInfo),
                             chatModelName,
@@ -1003,6 +1006,10 @@ public class AiServicesProcessor {
                     ? bi.getChatMemorySeederClassDotName().toString()
                     : null);
 
+            String thinkingHandlerClassName = (bi.getThinkingHandlerClassDotName() != null
+                    ? bi.getThinkingHandlerClassDotName().toString()
+                    : null);
+
             String systemMessageProviderClassName = (bi.getSystemMessageProviderClassDotName() != null
                     ? bi.getSystemMessageProviderClassDotName().toString()
                     : null);
@@ -1080,6 +1087,7 @@ public class AiServicesProcessor {
                                     moderationModelSupplierClassName,
                                     imageModelSupplierClassName,
                                     chatMemorySeederClassName,
+                                    thinkingHandlerClassName,
                                     systemMessageProviderClassName,
                                     chatModelName,
                                     moderationModelName,
@@ -2632,6 +2640,78 @@ public class AiServicesProcessor {
         }
 
         return Arrays.asList(mcpClientNames);
+    }
+
+    private DotName determineThinkingHandler(ClassInfo iface, ClassOutput classOutput) {
+        List<AnnotationInstance> annotations = iface.annotations(LangChain4jDotNames.ON_THINKING);
+        if (annotations.isEmpty()) {
+            return null;
+        }
+        if (annotations.size() > 1) {
+            throw new IllegalConfigurationException(
+                    "Only a single @OnThinking annotation is allowed per AiService. Offending class is '" + iface.name() + "'");
+        }
+        AnnotationTarget target = annotations.get(0).target();
+        if (target.kind() != AnnotationTarget.Kind.METHOD) {
+            throw new IllegalConfigurationException(
+                    "The @OnThinking annotation can only be placed on methods. Offending target is '" + target + "'");
+        }
+        MethodInfo method = target.asMethod();
+        String location = method.declaringClass().name() + "#" + method.name();
+        if (!Modifier.isStatic(method.flags())) {
+            throw new IllegalConfigurationException(
+                    "The @OnThinking annotation can only be placed on static methods. Offending method is '" + location + "'");
+        }
+        if (method.returnType().kind() != Type.Kind.VOID) {
+            throw new IllegalConfigurationException(
+                    "The @OnThinking annotation can only be placed on methods that return void. Offending method is '"
+                            + location + "'");
+        }
+        if (method.parameterTypes().size() != 1
+                || !LangChain4jDotNames.THINKING_EMITTED.equals(method.parameterTypes().get(0).name())) {
+            throw new IllegalConfigurationException(
+                    "The @OnThinking annotation can only be placed on methods that take a single "
+                            + LangChain4jDotNames.THINKING_EMITTED + " parameter. Offending method is '" + location + "'");
+        }
+        return DotName.createSimple(generateAiServiceThinkingHandler(iface, method, classOutput));
+    }
+
+    /**
+     * Generates a class that looks like the following:
+     *
+     * <pre>
+     * {@code
+     * public class SomeAiService$$QuarkusThinkingHandler implements ThinkingHandler {
+     *
+     *     &#64;Override
+     *     public void emit(ThinkingEmitted event) {
+     *         SomeAiService.onThinking(event);
+     *     }
+     * }
+     * }
+     * </pre>
+     */
+    private String generateAiServiceThinkingHandler(ClassInfo iface, MethodInfo thinkingTargetMethod,
+            ClassOutput classOutput) {
+        String implClassName = iface.name() + "$$QuarkusThinkingHandler";
+
+        ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
+                .classOutput(classOutput)
+                .className(implClassName)
+                .interfaces(ThinkingHandler.class.getName());
+        try (ClassCreator classCreator = classCreatorBuilder.build()) {
+            MethodCreator methodCreator = classCreator.getMethodCreator("emit", void.class, ThinkingEmitted.class);
+            methodCreator.invokeStaticInterfaceMethod(
+                    MethodDescriptor.ofMethod(
+                            thinkingTargetMethod.declaringClass().name().toString(),
+                            thinkingTargetMethod.name(),
+                            void.class,
+                            ThinkingEmitted.class),
+                    methodCreator.getMethodParam(0));
+            methodCreator.returnVoid();
+        }
+
+        return implClassName;
     }
 
     private DotName determineChatMemorySeeder(ClassInfo iface, ClassOutput classOutput) {

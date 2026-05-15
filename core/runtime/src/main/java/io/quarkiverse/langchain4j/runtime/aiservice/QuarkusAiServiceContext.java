@@ -23,6 +23,7 @@ import io.quarkus.arc.InstanceHandle;
 public class QuarkusAiServiceContext extends AiServiceContext {
 
     public ChatMemorySeeder chatMemorySeeder;
+    public ThinkingHandler thinkingHandler;
     public ImageModel imageModel;
     public Integer maxSequentialToolExecutions;
     public Integer maxToolCallsPerResponse;

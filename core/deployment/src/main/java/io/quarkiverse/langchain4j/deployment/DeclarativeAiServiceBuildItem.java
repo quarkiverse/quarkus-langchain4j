@@ -26,6 +26,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName moderationModelSupplierDotName;
     private final DotName imageModelSupplierDotName;
     private final DotName chatMemorySeederClassDotName;
+    private final DotName thinkingHandlerClassDotName;
     private final DotName systemMessageProviderClassDotName;
     private final DotName cdiScope;
     private DotName defaultMemoryIdProviderClassDotName;
@@ -55,6 +56,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName moderationModelSupplierDotName,
             DotName imageModelSupplierDotName,
             DotName chatMemorySeederClassDotName,
+            DotName thinkingHandlerClassDotName,
             DotName systemMessageProviderClassDotName,
             DotName cdiScope,
             String chatModelName,
@@ -82,6 +84,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
         this.imageModelSupplierDotName = imageModelSupplierDotName;
         this.chatMemorySeederClassDotName = chatMemorySeederClassDotName;
+        this.thinkingHandlerClassDotName = thinkingHandlerClassDotName;
         this.systemMessageProviderClassDotName = systemMessageProviderClassDotName;
         this.cdiScope = cdiScope;
         this.chatModelName = chatModelName;
@@ -140,6 +143,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getChatMemorySeederClassDotName() {
         return chatMemorySeederClassDotName;
+    }
+
+    public DotName getThinkingHandlerClassDotName() {
+        return thinkingHandlerClassDotName;
     }
 
     public DotName getSystemMessageProviderClassDotName() {
