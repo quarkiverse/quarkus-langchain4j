@@ -91,6 +91,7 @@ import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Result;
+import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
 import dev.langchain4j.service.tool.ToolErrorContext;
@@ -104,6 +105,7 @@ import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
+import io.quarkiverse.langchain4j.ChatHistoryStore;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.VideoUrl;
@@ -227,6 +229,12 @@ public class AiServiceMethodImplementationSupport {
         boolean supportsJsonSchema = supportsJsonSchema(context, methodCreateInfo, methodArgs);
 
         UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs, supportsJsonSchema);
+
+        ChatHistoryStore chatHistoryStore = context.chatHistoryStore;
+        if (chatHistoryStore != null && userMessage != null) {
+            ChatHistorySupport.recordUserMessage(chatHistoryStore, memoryId, userMessage);
+        }
+
         Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
 
         Type returnType = methodCreateInfo.getReturnType();
@@ -337,7 +345,11 @@ public class AiServiceMethodImplementationSupport {
                                     .aiServiceListenerRegistrar(context.eventListenerRegistrar)
                                     .build())
                     .build();
-            return new AiServiceTokenStream(aiServiceTokenStreamParams);
+            TokenStream tokenStream = new AiServiceTokenStream(aiServiceTokenStreamParams);
+            if (chatHistoryStore != null) {
+                tokenStream = new RecordingTokenStream(tokenStream, chatHistoryStore, memoryId);
+            }
+            return tokenStream;
         }
 
         var actualAugmentationResult = augmentationResult;
@@ -383,9 +395,15 @@ public class AiServiceMethodImplementationSupport {
                         });
             }
 
-            return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
+            stream = stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
                     new ResponseAugmenterParams(actualUserMessage, chatMemory, actualAugmentationResult,
                             methodCreateInfo.getUserMessageTemplate(), templateVariables)));
+
+            if (chatHistoryStore != null) {
+                stream = ChatHistorySupport.attach(stream, chatHistoryStore, memoryId, isStringMulti);
+            }
+
+            return stream;
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
@@ -509,6 +527,10 @@ public class AiServiceMethodImplementationSupport {
                         .finalResponse(finalResponse)
                         .build();
 
+                if (chatHistoryStore != null) {
+                    ChatHistorySupport.recordAgentResponse(chatHistoryStore, memoryId, finalResponse.aiMessage().text());
+                }
+
                 context.eventListenerRegistrar.fireEvent(
                         AiServiceCompletedEvent.builder()
                                 .invocationContext(invocationContext)
@@ -581,6 +603,10 @@ public class AiServiceMethodImplementationSupport {
 
         // everything worked as expected so let's commit the messages
         committableChatMemory.commit();
+
+        if (chatHistoryStore != null) {
+            ChatHistorySupport.recordAgentResponse(chatHistoryStore, memoryId, response.aiMessage().text());
+        }
 
         var responseAugmenterParam = new ResponseAugmenterParams(userMessage, committableChatMemory, augmentationResult,
                 userMessageTemplate, templateVariables);

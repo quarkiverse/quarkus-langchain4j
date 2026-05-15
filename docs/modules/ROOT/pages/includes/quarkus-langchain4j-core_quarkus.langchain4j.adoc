@@ -120,6 +120,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-chat-history-enabled]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-history-enabled[`+++quarkus.langchain4j.chat-history-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.chat-history-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, all AI services will record chat history via the `ChatHistoryStore` CDI bean, without needing the `@RecordChatHistory` annotation. If disabled, only AI services annotated with `@RecordChatHistory` will record chat history.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHAT_HISTORY_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_HISTORY_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages[`+++quarkus.langchain4j.chat-memory.memory-window.max-messages+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.chat-memory.memory-window.max-messages+++[]

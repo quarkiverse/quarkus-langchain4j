@@ -40,6 +40,7 @@
 * xref:ai-services.adoc[AI Services]
 ** xref:prompt-and-template.adoc[Prompt and Template]
 ** xref:messages-and-memory.adoc[Messages and Memory]
+** xref:chat-history-recording.adoc[Chat History Recording]
 ** xref:function-calling.adoc[Function Calling]
 ** xref:guardrails.adoc[Guardrails]
 ** xref:response-augmenter.adoc[Response Augmenter]

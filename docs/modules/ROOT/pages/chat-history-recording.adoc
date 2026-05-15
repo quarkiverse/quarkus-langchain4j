@@ -1,0 +1,135 @@
+= Chat History Recording
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Quarkus LangChain4j can persist the user/agent exchange of every AI service invocation to a sink of your choice — a database, a log, an audit pipeline, a remote API — without coupling the recording logic to the AI service itself.
+
+The integration is built around two pieces:
+
+* `@RecordChatHistory` — a marker annotation placed on a `@RegisterAiService` interface to opt in.
+* `ChatHistoryStore` — an SPI that you implement as a CDI bean. The runtime calls it at each step of the conversation turn.
+
+== Enabling Recording
+
+There are two ways to enable recording for an AI service.
+
+=== Per service
+
+Annotate the AI service with `@RecordChatHistory`:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.RecordChatHistory;
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+@RecordChatHistory
+@RegisterAiService
+public interface SupportAgent {
+    String chat(@MemoryId String conversationId, @UserMessage String message);
+}
+----
+
+When `@RecordChatHistory` is present, a `ChatHistoryStore` CDI bean is required at deployment time. If no implementation is found, the deployment fails.
+
+=== Globally
+
+To enable recording for every AI service in the application without annotating each one, set the build-time property:
+
+[source,properties]
+----
+quarkus.langchain4j.chat-history-enabled=true
+----
+
+This is convenient for applications where every conversation must be recorded — for example, regulated environments. With this flag enabled, a `ChatHistoryStore` bean is required even if no `@RecordChatHistory` annotation is present.
+
+== Implementing the Store
+
+Implement `ChatHistoryStore` as an `@ApplicationScoped` bean:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ChatHistoryStore;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class JpaChatHistoryStore implements ChatHistoryStore {
+
+    @Inject ConversationRepository repository;
+
+    @Override
+    public void onUserMessage(Object memoryId, String userMessage) {
+        repository.append(memoryId, Role.USER, userMessage);
+    }
+
+    @Override
+    public void onAgentMessage(Object memoryId, String agentMessage) {
+        repository.append(memoryId, Role.AGENT, agentMessage);
+    }
+}
+----
+
+This is enough to record every turn for synchronous and streaming responses. The remaining callbacks are optional `default` methods you can override for finer-grained behavior.
+
+== Lifecycle and Callbacks
+
+For each AI service invocation, the runtime calls the following methods, in this order, depending on the outcome:
+
+[cols="1,3,1"]
+|===
+|Callback |When it fires |Required
+
+|`onUserMessage(memoryId, userMessage)` |Before the model is called, with the resolved user message. |yes
+|`onAgentPartial(memoryId, chunk)` |For each chunk of a streaming response. Not called for synchronous responses. |no
+|`onAgentMessage(memoryId, agentMessage)` |When the agent response is fully available — once at the end for streaming. |yes
+|`onCompleted(memoryId)` |After `onAgentMessage`, when the turn completes successfully. |no
+|`onCancelled(memoryId, partial)` |When a streaming response is cancelled by the subscriber before completion. `partial` contains the accumulated text. |no
+|`onError(memoryId, error, partial)` |When a streaming response fails. `partial` contains whatever text was produced before the failure. |no
+|===
+
+The `memoryId` is the resolved `@MemoryId` parameter value, or the default memory id if the method does not declare one.
+
+The runtime catches any `RuntimeException` thrown by store methods and logs a warning — a failing store will never break the conversation.
+
+== Streaming Responses
+
+The store is wired to streaming return types (`Multi<String>`, `Multi<ChatEvent>`, `TokenStream`) the same way as synchronous methods.
+
+* Each chunk emitted by the model invokes `onAgentPartial`.
+* When the stream completes successfully, `onAgentMessage` is called with the accumulated text, then `onCompleted`.
+* If the subscriber cancels the stream before it completes, `onCancelled` is called with whatever was accumulated.
+* If the stream fails, `onError` is called with the failure and the accumulated text.
+
+If you do not override `onAgentPartial`, partial chunks are still buffered internally and the full text is delivered through `onAgentMessage` at the end. Override `onAgentPartial` only when you need to forward each chunk to a separate consumer as it is produced — for example, a real-time audit log, a WebSocket subscriber, or a parallel UI surface.
+
+== Propagating User Identity
+
+The SPI passes `memoryId` but does not pass the authenticated user. If your store needs the current user, inject it directly:
+
+[source,java]
+----
+@ApplicationScoped
+public class AuditingChatHistoryStore implements ChatHistoryStore {
+
+    @Inject SecurityIdentity identity;
+
+    @Override
+    public void onUserMessage(Object memoryId, String userMessage) {
+        repository.append(memoryId, identity.getPrincipal().getName(), Role.USER, userMessage);
+    }
+    // ...
+}
+----
+
+For synchronous methods, the store is invoked on the calling thread, so the active CDI request scope (and any propagated security context) is available. For streaming responses, `onUserMessage` still runs on the calling thread, but the terminal callbacks (`onAgentPartial`, `onAgentMessage`, `onCompleted`, `onCancelled`, `onError`) run on Mutiny worker threads — if your store depends on request-scoped state, capture it at `onUserMessage` or rely on SmallRye Context Propagation.
+
+== Multimodal User Messages
+
+The user message text passed to `onUserMessage` is extracted from all `TextContent` parts of the user message. Image, audio, PDF, and video parts are ignored — only the text representation is recorded. This keeps the SPI signature simple at the cost of dropping the non-text portions of multimodal prompts.
+
+== Limitations
+
+* **Resumption is not supported.** The store records messages but cannot replay an in-flight streaming response to a new subscriber. This is tracked separately and may be added in a future release as a complementary SPI.
+* **Synchronous failures are not signalled.** If a synchronous AI service method throws, `onError` is not invoked because the sync code path does not go through the Mutiny chain that drives streaming callbacks — the exception propagates to the caller and `onUserMessage` has already been recorded. Streaming responses do invoke `onError`.
+* **Programmatic AI services bypass the annotation.** Only services declared with `@RegisterAiService` participate in recording. Services built through the langchain4j `AiServices` builder API are not covered.
