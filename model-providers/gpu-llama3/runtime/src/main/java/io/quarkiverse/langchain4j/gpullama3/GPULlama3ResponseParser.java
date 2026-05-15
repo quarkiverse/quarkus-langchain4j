@@ -1,5 +1,12 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.beehive.gpullama3.model.format.ToolCallExtract;
+import org.beehive.gpullama3.model.format.ToolCallParserUtils;
+
 import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 
@@ -101,10 +108,19 @@ public class GPULlama3ResponseParser {
      * The thinking tags are preserved and streamed as part of the thinking content.
      */
     public static class StreamingParser {
+        private static final String TOOL_CALL_OPEN = "<tool_call>";
+        private static final String TOOL_CALL_CLOSE = "</tool_call>";
+        private static final String PYTHON_TAG = "<|python_tag|>";
+
         private final StreamingChatResponseHandler handler;
         private final org.beehive.gpullama3.model.Model model;
         private final StringBuilder buffer = new StringBuilder();
         private boolean insideThinking = false;
+        private boolean insideToolCall = false;
+        private boolean insidePythonTagCall = false;
+        private final StringBuilder toolCallBuffer = new StringBuilder();
+        private final StringBuilder thinkingAccumulator = new StringBuilder();
+        private final List<ToolCallExtract> detectedToolCalls = new ArrayList<>();
         private int lastProcessedLength = 0;
 
         /**
@@ -125,8 +141,8 @@ public class GPULlama3ResponseParser {
          */
         public void onToken(int tokenId) {
             // Check if this is a stop token and skip it
-            if (model.chatFormat().getStopTokens().contains(tokenId)) {
-                return; // Don't stream stop tokens like <|im_end|>
+            if (model.chatFormat().getToolAwareStopTokens().contains(tokenId)) {
+                return; // Don't stream stop tokens like <|im_end|> or <|eom_id|>
             }
 
             // Decode the token and add to buffer
@@ -140,8 +156,18 @@ public class GPULlama3ResponseParser {
         }
 
         /**
-         * Processes new content in the buffer, detecting thinking state transitions
-         * and routing content to appropriate handler methods.
+         * Processes new content in the buffer, detecting thinking and tool-call state
+         * transitions and routing content to the appropriate handler methods.
+         *
+         * <p>
+         * Tool-call markers handled:
+         * <ul>
+         * <li>{@code <tool_call>} / {@code </tool_call>} — LLaMA 3.2 and Qwen3</li>
+         * <li>{@code <|python_tag|>} — LLaMA 3.1 (no explicit close tag; resolved in
+         * {@link #finish()})</li>
+         * </ul>
+         * Characters inside a tool-call block are buffered rather than forwarded to the
+         * handler, so the client never sees raw tool-call JSON as a partial response.
          */
         private void processNewContent(String currentText) {
             if (currentText.length() <= lastProcessedLength) {
@@ -152,29 +178,67 @@ public class GPULlama3ResponseParser {
 
             // Process each character in the new content
             for (int i = 0; i < newContent.length(); i++) {
-                int currentPosition = lastProcessedLength + i;
+                int pos = lastProcessedLength + i;
 
-                // Check if we're starting thinking
-                if (!insideThinking && isStartOfThinkTag(currentText, currentPosition)) {
+                // Inside <tool_call>…</tool_call>
+                if (insideToolCall) {
+                    if (regionMatches(currentText, pos, TOOL_CALL_CLOSE)) {
+                        ToolCallParserUtils.parseToolCallResponse(
+                                TOOL_CALL_OPEN + toolCallBuffer + TOOL_CALL_CLOSE)
+                                .ifPresent(detectedToolCalls::add);
+                        toolCallBuffer.setLength(0);
+                        insideToolCall = false;
+                        i += TOOL_CALL_CLOSE.length() - 1;
+                    } else {
+                        toolCallBuffer.append(newContent.charAt(i));
+                    }
+                    continue;
+                }
+
+                // Inside <|python_tag|>… (no close tag, resolved in finish())
+                if (insidePythonTagCall) {
+                    toolCallBuffer.append(newContent.charAt(i));
+                    continue;
+                }
+
+                // Thinking open
+                if (!insideThinking && isStartOfThinkTag(currentText, pos)) {
                     insideThinking = true;
                     // Stream the opening tag as thinking
+                    thinkingAccumulator.append("<think>");
                     handler.onPartialThinking(new PartialThinking("<think>"));
                     i += 6; // Skip the rest of "<think>"
                     continue;
                 }
 
-                // Check if we're ending thinking
-                if (insideThinking && isStartOfEndThinkTag(currentText, currentPosition)) {
+                // Thinking close
+                if (insideThinking && isStartOfEndThinkTag(currentText, pos)) {
                     // Stream the closing tag as thinking
+                    thinkingAccumulator.append("</think>");
                     handler.onPartialThinking(new PartialThinking("</think>"));
                     insideThinking = false;
                     i += 7; // Skip the rest of "</think>"
                     continue;
                 }
 
-                // Stream the character to appropriate handler
+                // Tool call open (<tool_call>)
+                if (!insideThinking && regionMatches(currentText, pos, TOOL_CALL_OPEN)) {
+                    insideToolCall = true;
+                    i += TOOL_CALL_OPEN.length() - 1;
+                    continue;
+                }
+
+                // LLaMA 3.1 python tag (<|python_tag|>)
+                if (!insideThinking && regionMatches(currentText, pos, PYTHON_TAG)) {
+                    insidePythonTagCall = true;
+                    i += PYTHON_TAG.length() - 1;
+                    continue;
+                }
+
+                // Route the character to appropriate handler
                 char c = newContent.charAt(i);
                 if (insideThinking) {
+                    thinkingAccumulator.append(c);
                     handler.onPartialThinking(new PartialThinking(String.valueOf(c)));
                 } else {
                     handler.onPartialResponse(String.valueOf(c));
@@ -182,6 +246,36 @@ public class GPULlama3ResponseParser {
             }
 
             lastProcessedLength = currentText.length();
+        }
+
+        /**
+         * Must be called after the model finishes generating tokens.
+         * Parses any buffered {@code <|python_tag|>} tool call (LLaMA 3.1), which has
+         * no explicit close tag and is only complete when generation stops.
+         *
+         * @return unmodifiable list of all tool calls detected during this generation
+         */
+        public List<ToolCallExtract> finish() {
+            if (insidePythonTagCall && !toolCallBuffer.isEmpty()) {
+                ToolCallParserUtils.parseToolCallResponse(PYTHON_TAG + toolCallBuffer)
+                        .ifPresent(detectedToolCalls::add);
+            }
+            return Collections.unmodifiableList(detectedToolCalls);
+        }
+
+        /**
+         * Returns the thinking content accumulated during generation (including
+         * {@code <think>} and {@code </think>} tags), or {@code null} if no
+         * thinking block was emitted.
+         */
+        public String getThinkingContent() {
+            String s = thinkingAccumulator.toString().strip();
+            return s.isEmpty() ? null : s;
+        }
+
+        private static boolean regionMatches(String text, int start, String marker) {
+            return start + marker.length() <= text.length()
+                    && text.regionMatches(start, marker, 0, marker.length());
         }
 
         /**

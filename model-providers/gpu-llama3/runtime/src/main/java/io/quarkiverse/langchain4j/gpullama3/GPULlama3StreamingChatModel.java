@@ -87,37 +87,40 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
      */
     private void coreDoChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         try {
-            // Suppress token streaming on every turn where tools are present: the model may decide
-            // to call a tool on any turn (including after a prior tool result), and tool-call JSON
-            // must never be forwarded as partial responses to the handler.
-            boolean hasTools = chatRequest.toolSpecifications() != null
-                    && !chatRequest.toolSpecifications().isEmpty();
-            boolean hasPriorToolResult = chatRequest.messages().stream()
-                    .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
-            boolean suppressStreaming = hasTools;
+            // The StreamingParser detects and buffers tool-call JSON in real time (<tool_call> and
+            // <|python_tag|> markers), so streaming is never suppressed — plain-text responses
+            // stream token-by-token even when tool specifications are registered.
+            GPULlama3ResponseParser.StreamingParser parser = GPULlama3ResponseParser.createStreamingParser(handler, getModel());
 
-            GPULlama3ResponseParser.StreamingParser parser = suppressStreaming
-                    ? null
-                    : GPULlama3ResponseParser.createStreamingParser(handler, getModel());
+            String rawResponse = modelResponse(chatRequest, parser::onToken);
 
-            // Generate response; null tokenConsumer means no partial-response callbacks
-            String rawResponse = modelResponse(chatRequest, parser != null ? parser::onToken : null);
+            // Finalize parser: resolves any unclosed <|python_tag|> tool call (LLaMA 3.1)
+            List<ToolCallExtract> toolCalls = parser.finish();
 
             // Check for tool calls
-            List<ToolCallExtract> toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
+            // Fallback for models that emit raw JSON without <tool_call> tags (rare)
+            if (toolCalls.isEmpty()) {
+                toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
+            }
             if (!toolCalls.isEmpty()) {
                 LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
+                String thinkingContent = parser.getThinkingContent();
                 List<ToolExecutionRequest> toolReqs = new ArrayList<>();
                 for (ToolCallExtract tc : toolCalls) {
+                    String callId = tc.id().orElseGet(() -> generateCallId());
                     LOG.infof("[Tool call] → %s(%s)", tc.name(),
                             tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
                     toolReqs.add(ToolExecutionRequest.builder()
+                            .id(callId)
                             .name(tc.name())
                             .arguments(tc.argumentsJson())
                             .build());
                 }
                 handler.onCompleteResponse(ChatResponse.builder()
-                        .aiMessage(AiMessage.from(toolReqs))
+                        .aiMessage(AiMessage.builder()
+                                .thinking(thinkingContent)
+                                .toolExecutionRequests(toolReqs)
+                                .build())
                         .finishReason(FinishReason.TOOL_EXECUTION)
                         .build());
                 return;

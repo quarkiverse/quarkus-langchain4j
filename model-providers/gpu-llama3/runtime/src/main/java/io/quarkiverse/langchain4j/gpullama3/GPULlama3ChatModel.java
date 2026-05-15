@@ -53,17 +53,23 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             LOG.debugf("extractAllToolCalls result: %d call(s)", toolCalls.size());
             if (!toolCalls.isEmpty()) {
                 LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
+                GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
                 List<ToolExecutionRequest> toolReqs = new ArrayList<>();
                 for (ToolCallExtract tc : toolCalls) {
+                    String callId = tc.id().orElseGet(() -> generateCallId());
                     LOG.infof("[Tool call]  → %s(%s)", tc.name(),
                             tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
                     toolReqs.add(ToolExecutionRequest.builder()
+                            .id(callId)
                             .name(tc.name())
                             .arguments(tc.argumentsJson())
                             .build());
                 }
                 return ChatResponse.builder()
-                        .aiMessage(AiMessage.from(toolReqs))
+                        .aiMessage(AiMessage.builder()
+                                .thinking(parsed.getThinkingContent())
+                                .toolExecutionRequests(toolReqs)
+                                .build())
                         .finishReason(FinishReason.TOOL_EXECUTION)
                         .build();
             }

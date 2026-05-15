@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
@@ -14,7 +15,6 @@ import org.beehive.gpullama3.model.format.ChatFormat;
 import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -63,6 +63,11 @@ abstract class GPULlama3BaseModel {
         // Build tools JSON if the request carries tool definitions
         List<ToolSpecification> tools = request.toolSpecifications();
         String toolsJson = (tools != null && !tools.isEmpty()) ? buildToolsJson(tools) : null;
+
+        if (toolsJson != null && !holder.chatFormat.supportsToolCalling()) {
+            throw new UnsupportedOperationException(
+                    "Tool calling is not supported for model format: " + holder.chatFormat.getClass().getSimpleName());
+        }
 
         processPromptMessages(request.messages(), promptTokens, toolsJson);
 
@@ -161,14 +166,13 @@ abstract class GPULlama3BaseModel {
     private void processPromptMessages(List<ChatMessage> messageList, List<Integer> promptTokens, String toolsJson) {
         boolean toolsInjected = false;
 
-        // Tool definitions and calling instructions are injected into the first user message
-        // (Llama) or system message (Qwen3) only on the FIRST tool-calling turn.
-        // On subsequent turns the conversation history already contains them; re-injecting
-        // the "respond with a JSON function call" instruction causes the model to call tools
-        // again instead of synthesising the final answer.
+        // Tool definitions are injected on every turn so the model always knows which tools
+        // are available — matching Ollama's behaviour of sending the tools array with every
+        // request. Models correctly decide when to call a tool vs. synthesise a final answer
+        // based on whether they already have enough information from prior tool results.
         boolean hasPriorToolResult = messageList.stream()
                 .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
-        boolean injectTools = toolsJson != null && !hasPriorToolResult;
+        boolean injectTools = toolsJson != null;
         boolean userMessageInjection = injectTools && holder.chatFormat.injectsToolsInUserMessage();
 
         LOG.debug("processPromptMessages: msgs=" + messageList.size()
@@ -210,10 +214,10 @@ abstract class GPULlama3BaseModel {
                 case AI -> {
                     AiMessage aiMessage = (AiMessage) msg;
                     if (aiMessage.hasToolExecutionRequests()) {
-                        for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
-                            promptTokens.addAll(holder.chatFormat.encodeToolCallAssistantTurn(
-                                    new ToolCallExtract(req.name(), req.arguments())));
-                        }
+                        List<ToolCallExtract> toolCalls = aiMessage.toolExecutionRequests().stream()
+                                .map(req -> new ToolCallExtract(req.name(), req.arguments()))
+                                .collect(Collectors.toList());
+                        promptTokens.addAll(holder.chatFormat.encodeToolCallAssistantTurn(toolCalls));
                     } else if (aiMessage.text() != null) {
                         promptTokens.addAll(
                                 holder.chatFormat.encodeMessage(
@@ -242,6 +246,18 @@ abstract class GPULlama3BaseModel {
 
         // Prime the model to start generating an assistant response
         promptTokens.addAll(holder.chatFormat.encodeHeader(new ChatFormat.Message(ChatFormat.Role.ASSISTANT, "")));
+    }
+
+    private static final String CALL_ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    /** Generates an Ollama-style tool call ID: {@code call_} + 8 random alphanumeric chars. */
+    protected static String generateCallId() {
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        StringBuilder sb = new StringBuilder("call_");
+        for (int i = 0; i < 8; i++) {
+            sb.append(CALL_ID_CHARS.charAt(rng.nextInt(CALL_ID_CHARS.length())));
+        }
+        return sb.toString();
     }
 
     /**
