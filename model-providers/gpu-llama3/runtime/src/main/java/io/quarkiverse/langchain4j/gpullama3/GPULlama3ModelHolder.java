@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.beehive.gpullama3.inference.sampler.Sampler;
 import org.beehive.gpullama3.inference.state.State;
@@ -52,14 +53,29 @@ public class GPULlama3ModelHolder {
             Integer seed,
             Integer maxTokens,
             Boolean onGPU) {
+        DefaultConfig defaultConfig = defaultConfigForModel(modelName);
         this.modelCachePath = modelCachePath;
         this.modelName = modelName;
         this.quantization = quantization;
-        this.temperature = getOrDefault(temperature, 0.1);
-        this.topP = getOrDefault(topP, 1.0);
-        this.seed = getOrDefault(seed, 12345);
-        this.maxTokens = getOrDefault(maxTokens, 512);
+        this.temperature = getOrDefault(temperature, defaultConfig.temperature());
+        this.topP = getOrDefault(topP, defaultConfig.topP());
+        this.seed = getOrDefault(seed, ThreadLocalRandom.current().nextInt());
+        this.maxTokens = getOrDefault(maxTokens, defaultConfig.maxTokens());
         this.onGPU = getOrDefault(onGPU, Boolean.TRUE);
+    }
+
+    private static DefaultConfig defaultConfigForModel(String modelName) {
+        String normalizedName = modelName != null ? modelName.toLowerCase() : "";
+        if (normalizedName.contains("qwen")) {
+            return new DefaultConfig(0.8, 0.9, 2048);
+        }
+        if (normalizedName.contains("llama")) {
+            return new DefaultConfig(0.3, 0.95, 2048);
+        }
+        return new DefaultConfig(0.7, 0.9, 2048);
+    }
+
+    private record DefaultConfig(double temperature, double topP, int maxTokens) {
     }
 
     public synchronized void ensureInitialized() {

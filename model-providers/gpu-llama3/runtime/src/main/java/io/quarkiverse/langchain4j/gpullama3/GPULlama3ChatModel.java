@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
