@@ -7,6 +7,7 @@ import static dev.langchain4j.model.output.TokenUsage.sum;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
+import static io.quarkiverse.langchain4j.runtime.aiservice.ChatRequestParametersUtil.effectiveChatRequestParameters;
 import static java.util.Objects.nonNull;
 
 import java.lang.reflect.Array;
@@ -519,7 +520,6 @@ public class AiServiceMethodImplementationSupport {
 
             log.debug("Attempting to obtain AI response");
             ChatModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
-            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(committableChatMemory.messages());
             DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
             if (supportsJsonSchema(effectiveChatModel)) {
                 Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
@@ -545,7 +545,14 @@ public class AiServiceMethodImplementationSupport {
                 }
             }
 
-            ChatRequest request = chatRequestBuilder.parameters(parametersBuilder.build()).build();
+            ChatRequestParameters defaultParams = parametersBuilder.build();
+            Optional<ChatRequestParameters> userParams = findChatRequestParameters(methodCreateInfo, methodArgs);
+            ChatRequestParameters effectiveParams = effectiveChatRequestParameters(defaultParams, userParams);
+
+            ChatRequest request = ChatRequest.builder()
+                    .messages(committableChatMemory.messages())
+                    .parameters(effectiveParams)
+                    .build();
             response = effectiveChatModel.chat(request);
             log.debug("AI response obtained");
 
@@ -640,6 +647,17 @@ public class AiServiceMethodImplementationSupport {
         return new InvocationParameters();
     }
 
+    static Optional<ChatRequestParameters> findChatRequestParameters(AiServiceMethodCreateInfo createInfo,
+            Object[] methodArgs) {
+        if (createInfo.getChatRequestParametersParamPosition().isPresent() && methodArgs != null) {
+            Object arg = methodArgs[createInfo.getChatRequestParametersParamPosition().get()];
+            if (arg instanceof ChatRequestParameters params) {
+                return Optional.of(params);
+            }
+        }
+        return Optional.empty();
+    }
+
     private static ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
             InvocationContext invocationContext,
             ToolArgumentsErrorHandler toolArgumentsErrorHandler,
@@ -689,35 +707,32 @@ public class AiServiceMethodImplementationSupport {
         return toolExecutionResult;
     }
 
-    private static ChatRequest createChatRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
-            ChatModel chatModel,
-            List<ToolSpecification> toolSpecifications) {
-        return ChatRequest.builder()
-                .messages(messagesToSend)
-                .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema).build())
-                .build();
-    }
-
-    static ChatRequest createChatRequest(List<ChatMessage> messagesToSend, ChatModel chatModel,
-            List<ToolSpecification> toolSpecifications) {
-        var chatRequest = ChatRequest.builder()
-                .messages(messagesToSend);
-
-        if (toolSpecifications != null) {
-            chatRequest.toolSpecifications(toolSpecifications);
-        }
-        return chatRequest.build();
-    }
-
     static ChatRequest createChatRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
-            ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
+            ChatModel chatModel, List<ToolSpecification> toolSpecifications,
+            Optional<ChatRequestParameters> userChatRequestParameters) {
+        DefaultChatRequestParameters.Builder<?> parametersBuilder;
         var jsonSchema = supportsJsonSchema(chatModel)
                 ? methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema()
                 : Optional.<JsonSchema> empty();
 
-        return jsonSchema.isPresent()
-                ? createChatRequest(jsonSchema.get(), messagesToSend, chatModel, toolSpecifications)
-                : createChatRequest(messagesToSend, chatModel, toolSpecifications);
+        if (jsonSchema.isPresent()) {
+            parametersBuilder = constructStructuredResponseParams(toolSpecifications, jsonSchema.get());
+        } else {
+            parametersBuilder = ChatRequestParameters.builder();
+            if (toolSpecifications != null) {
+                parametersBuilder.toolSpecifications(toolSpecifications);
+            }
+        }
+
+        ChatRequestParameters defaultParams = parametersBuilder.build();
+        ChatRequestParameters effectiveParams = userChatRequestParameters
+                .map(p -> p.defaultedBy(defaultParams))
+                .orElse(defaultParams);
+
+        return ChatRequest.builder()
+                .messages(messagesToSend)
+                .parameters(effectiveParams)
+                .build();
     }
 
     static ChatRequest createChatRequest(QuarkusAiServiceContext context,
@@ -726,7 +741,8 @@ public class AiServiceMethodImplementationSupport {
 
         return createChatRequest(methodCreateInfo, messagesToSend,
                 context.effectiveChatModel(methodCreateInfo, methodArgs),
-                toolSpecifications);
+                toolSpecifications,
+                findChatRequestParameters(methodCreateInfo, methodArgs));
     }
 
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo,

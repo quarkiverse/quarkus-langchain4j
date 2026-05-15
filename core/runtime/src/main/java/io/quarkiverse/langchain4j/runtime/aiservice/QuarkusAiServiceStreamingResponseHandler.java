@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.internal.Utils.copyIfNotNull;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
+import static io.quarkiverse.langchain4j.runtime.aiservice.ChatRequestParametersUtil.effectiveChatRequestParameters;
 import static java.util.Objects.nonNull;
 
 import java.util.ArrayList;
@@ -532,9 +533,14 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         }
                     }
 
+                    ChatRequestParameters defaultParams = parametersBuilder.build();
+                    var userParams = AiServiceMethodImplementationSupport
+                            .findChatRequestParameters(methodCreateInfo, methodArgs);
+                    ChatRequestParameters effectiveParams = effectiveChatRequestParameters(defaultParams, userParams);
+
                     ChatRequest chatRequest = ChatRequest.builder()
                             .messages(messagesToSend(memoryId))
-                            .parameters(parametersBuilder.build())
+                            .parameters(effectiveParams)
                             .build();
                     QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
                             chatRequest,
