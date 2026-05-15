@@ -13,6 +13,7 @@ import jakarta.enterprise.util.AnnotationLiteral;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
@@ -30,6 +31,7 @@ import io.quarkus.runtime.annotations.RecordableConstructor;
 public final class AiServiceMethodCreateInfo {
     private final String interfaceName;
     private final String methodName;
+    private final String methodId;
     private final List<ParameterInfo> parameterInfo;
     private final Optional<TemplateInfo> systemMessageInfo;
     private final UserMessageInfo userMessageInfo;
@@ -56,6 +58,10 @@ public final class AiServiceMethodCreateInfo {
     // these are populated when the AiService method is first called which can happen on any thread
     private transient final List<ToolSpecification> toolSpecifications = new CopyOnWriteArrayList<>();
     private transient final Map<String, ToolExecutor> toolExecutors = new ConcurrentHashMap<>();
+    // Per-tool ReturnBehavior, populated alongside toolSpecifications/toolExecutors. Read by the
+    // delegated tool loop (we hand this to ToolServiceContext.returnBehaviors when the method has
+    // its own tool override set, so IMMEDIATE / IMMEDIATE_IF_LAST is honoured by upstream).
+    private transient final Map<String, ReturnBehavior> toolReturnBehaviors = new ConcurrentHashMap<>();
 
     // Don't cache the instances, because of scope issues (some will need to be re-queried)
     private transient Class<? extends AiResponseAugmenter<?>> augmenter;
@@ -69,6 +75,7 @@ public final class AiServiceMethodCreateInfo {
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName,
             String methodName,
+            String methodId,
             List<ParameterInfo> parameterInfo,
             Optional<TemplateInfo> systemMessageInfo,
             UserMessageInfo userMessageInfo,
@@ -89,6 +96,7 @@ public final class AiServiceMethodCreateInfo {
             OutputGuardrailsLiteral outputGuardrails) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
+        this.methodId = methodId;
         this.parameterInfo = parameterInfo;
         this.systemMessageInfo = systemMessageInfo;
         this.userMessageInfo = userMessageInfo;
@@ -129,6 +137,10 @@ public final class AiServiceMethodCreateInfo {
 
     public String getMethodName() {
         return methodName;
+    }
+
+    public String getMethodId() {
+        return methodId;
     }
 
     public List<ParameterInfo> getParameterInfo() {
@@ -193,6 +205,10 @@ public final class AiServiceMethodCreateInfo {
 
     public Map<String, ToolExecutor> getToolExecutors() {
         return toolExecutors;
+    }
+
+    public Map<String, ReturnBehavior> getToolReturnBehaviors() {
+        return toolReturnBehaviors;
     }
 
     public InputGuardrailsLiteral getInputGuardrails() {

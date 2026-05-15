@@ -22,8 +22,8 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.service.tool.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
@@ -117,7 +117,8 @@ public class MaxToolCallsPerResponseStreamingTest {
                 .hasMessageContaining("3")
                 .hasMessageContaining("5");
 
-        Assertions.assertThat(Tools.invocations).isEqualTo(3);
+        // Atomic streaming cap: when the response exceeds the limit, NO tool from that response runs.
+        Assertions.assertThat(Tools.invocations).isEqualTo(0);
     }
 
     @Test

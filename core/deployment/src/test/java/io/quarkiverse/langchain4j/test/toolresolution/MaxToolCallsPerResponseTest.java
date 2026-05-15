@@ -22,8 +22,8 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.service.tool.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -132,7 +132,11 @@ public class MaxToolCallsPerResponseTest {
                 .hasMessageContaining("3")
                 .hasMessageContaining("5");
 
-        Assertions.assertThat(Tools.invocations).isEqualTo(3);
+        // Delegated tool loop atomically rejects when the LLM response exceeds the cap, so no tool
+        // is executed for the offending response. (Previously the serial path ran N tools and then
+        // threw on attempt N+1; the parallel path always rejected atomically. The delegated path
+        // unifies this on the parallel/upstream behaviour.)
+        Assertions.assertThat(Tools.invocations).isEqualTo(0);
     }
 
     @Test

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
@@ -29,6 +30,21 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public boolean allowContinuousForcedToolCalling;
     public DefaultMemoryIdProvider defaultMemoryIdProvider;
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
+
+    /**
+     * Resolved parallel-tool executor for this AiService, or {@code null} when the service runs in serial mode
+     * (the default).
+     * <p>
+     * Set by {@link ParallelToolExecutorResolver} during AiService bean construction (Phase 1+); the field is
+     * declared here in Phase 0 so the wiring point exists before parallel dispatch is enabled. When non-null, the
+     * executor is already wrapped in {@link VertxContextAwareExecutor} (and bounded via {@link BoundedExecutor} for
+     * the virtual-threads mode), so callers can pass it directly to
+     * {@code AiServices.executeToolsConcurrently(Executor)} or equivalent.
+     * <p>
+     * Phase 1 will read this field from {@code AiServiceMethodImplementationSupport.doImplement0}; Phase 0 only lays
+     * the plumbing.
+     */
+    public Executor parallelToolExecutor;
 
     // needed by Arc
     public QuarkusAiServiceContext() {

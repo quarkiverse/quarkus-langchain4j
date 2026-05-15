@@ -1,13 +1,10 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
-import static dev.langchain4j.model.output.TokenUsage.sum;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
-import static java.util.Objects.nonNull;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
@@ -23,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -36,11 +32,9 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.audio.Audio;
 import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.Content;
@@ -48,25 +42,22 @@ import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.message.VideoContent;
 import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.data.video.Video;
-import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
-import dev.langchain4j.internal.Utils;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.invocation.LangChain4jManaged;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
-import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.input.Prompt;
@@ -91,16 +82,10 @@ import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
-import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
-import dev.langchain4j.service.tool.ToolErrorContext;
-import dev.langchain4j.service.tool.ToolErrorHandlerResult;
-import dev.langchain4j.service.tool.ToolExecution;
-import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
-import dev.langchain4j.service.tool.ToolExecutionResult;
+import dev.langchain4j.service.tool.AiServiceTool;
 import dev.langchain4j.service.tool.ToolExecutor;
-import dev.langchain4j.service.tool.ToolProvider;
-import dev.langchain4j.service.tool.ToolProviderRequest;
-import dev.langchain4j.service.tool.ToolProviderResult;
+import dev.langchain4j.service.tool.ToolServiceContext;
+import dev.langchain4j.service.tool.ToolServiceResult;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.ImageUrl;
@@ -108,12 +93,9 @@ import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
-import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
-import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
-import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -168,6 +150,21 @@ public class AiServiceMethodImplementationSupport {
         AiServiceMethodCreateInfo createInfo = input.createInfo;
         Object[] methodArgs = input.methodArgs;
 
+        // Carry per-method Quarkus metadata (methodId + mcpClientNames) on the InvocationContext via
+        // managedParameters() so downstream sites (notably the toolProviderRequestFactory hook in
+        // QuarkusAiServicesFactory) can recover it without doing a name-based reverse lookup. The
+        // map merges any caller-provided LangChain4jManaged.current() entries so user-managed data
+        // continues to flow through alongside the Quarkus payload.
+        Map<Class<? extends LangChain4jManaged>, LangChain4jManaged> managed = new HashMap<>();
+        Map<Class<? extends LangChain4jManaged>, LangChain4jManaged> existingManaged = LangChain4jManaged.current();
+        if (existingManaged != null) {
+            managed.putAll(existingManaged);
+        }
+        managed.put(QuarkusInvocationData.class,
+                new AiServiceInvocationData(
+                        createInfo.getMethodId(),
+                        createInfo.getMcpClientNames()));
+
         InvocationContext invocationContext = InvocationContext.builder()
                 .invocationId(UUID.randomUUID())
                 .interfaceName(context.aiServiceClass.getName())
@@ -175,7 +172,7 @@ public class AiServiceMethodImplementationSupport {
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
                 .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory(), context.defaultMemoryIdProvider))
                 .invocationParameters(findInvocationParams(methodArgs))
-                .managedParameters(LangChain4jManaged.current())
+                .managedParameters(managed)
                 .timestampNow()
                 .build();
 
@@ -252,25 +249,11 @@ public class AiServiceMethodImplementationSupport {
 
         boolean hasMethodSpecificTools = methodCreateInfo.getToolClassInfo() != null
                 && !methodCreateInfo.getToolClassInfo().isEmpty();
-        List<ToolSpecification> toolSpecifications = hasMethodSpecificTools ? methodCreateInfo.getToolSpecifications()
-                : context.toolService.toolSpecifications();
-        Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
-                : context.toolService.toolExecutors();
-        Set<String> immediateReturnToolNames = Set.of();
 
-        toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
-        toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
-        for (ToolProvider toolProvider : context.toolService.toolProviders()) {
-            ToolProviderRequest request = new QuarkusToolProviderRequest(invocationContext, userMessage,
-                    methodCreateInfo.getMcpClientNames());
-            ToolProviderResult result = toolProvider.provideTools(request);
-            immediateReturnToolNames = Utils.copy(result.immediateReturnToolNames());
-            for (ToolSpecification specification : result.tools().keySet()) {
-                toolSpecifications.add(specification);
-                toolExecutors.put(specification.name(), result.tools().get(specification));
-            }
-        }
-
+        // Run RAG, then input guardrails, then assemble messagesToSend BEFORE invoking tool providers.
+        // Tool providers receive the same UserMessage that will be sent to the LLM AND the full message
+        // list (which becomes ToolProviderRequest.messages()), letting them branch on assistant context
+        // already present in chat memory.
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             Metadata metadata = Metadata.builder()
@@ -308,24 +291,62 @@ public class AiServiceMethodImplementationSupport {
                     methodCreateInfo);
         }
 
+        // Resolve effective tools for the FIRST request and dynamic providers for upstream's
+        // per-iteration refresh. Both branches delegate to upstream ToolService.createContext(...) —
+        // the single source of truth for static-provider invocation (via the configured
+        // toolProviderRequestFactory), dynamic-provider tracking for per-iteration refresh, AND
+        // dynamic-provider invocation on the FIRST request (so dynamic-provider tools are visible
+        // in the iteration-0 chat request, matching the contract enforced by
+        // ToolProviderFirstRequestSemanticsTest).
+        //
+        // For method-scoped tools (@ToolBox), we pass the per-method specs/executors/returnBehaviors
+        // as baseTools so upstream merges them into the same context that providers contribute to.
+        ToolServiceContext toolServiceContext;
+        if (hasMethodSpecificTools) {
+            List<AiServiceTool> baseTools = buildMethodScopedBaseTools(methodCreateInfo);
+            toolServiceContext = context.toolService.createContext(
+                    invocationContext, userMessage, messagesToSend, baseTools);
+        } else {
+            toolServiceContext = context.toolService.createContext(invocationContext, userMessage, messagesToSend);
+        }
+        List<ToolSpecification> toolSpecifications = toolServiceContext.effectiveTools() != null
+                ? toolServiceContext.effectiveTools()
+                : List.of();
+
+        // Per-call tool options (atomic maxToolCallsPerResponse + maxSequentialToolsInvocations)
+        // must land on context.toolService BEFORE any return path branches: streaming reads them in
+        // the upstream response handler, non-streaming reads them inside executeInferenceAndToolsLoop.
+        applyPerCallToolServiceOverrides(context, methodCreateInfo);
+
         if (TypeUtil.isTokenStream(returnType)) {
             // NOTE - only the quarkus-specific output guardrails aren't implemented using a
             // TokenStream
             // Upstream supports it
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
+                                            // Resolve and wrap the streaming model so per-method @ModelName overrides flow through to
+                                            // upstream's AiServiceTokenStream, and so callbacks delivered on the Vert.x event loop
+                                            // hop to a worker before invoking blocking-friendly downstream code (memory, MDC, etc.).
+                                            // wrapIfNeeded is idempotent — already-wrapped models pass through unchanged.
+            StreamingChatModel streamingModel = context.effectiveStreamingChatModel(methodCreateInfo, methodArgs);
+            streamingModel = WorkerSwitchingStreamingChatModel.wrapIfNeeded(streamingModel);
             var aiServiceTokenStreamParams = AiServiceTokenStreamParameters.builder()
                     .messages(messagesToSend)
-                    .toolSpecifications(toolSpecifications)
-                    .toolExecutors(toolExecutors)
+                    .toolServiceContext(toolServiceContext)
+                    .toolExecutor(context.parallelToolExecutor)
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
-                    .invocationContext(InvocationContext.builder().chatMemoryId(memoryId).build())
+                    .streamingChatModel(streamingModel)
+                    .invocationContext(invocationContext)
                     .methodKey(methodCreateInfo)
-                    .toolArgumentsErrorHandler((e, c) -> {
-                        throw new RuntimeException(e);
-                    })
-                    .toolExecutionErrorHandler((e, c) -> ToolErrorHandlerResult.text(e.getMessage()))
+                    // Use the configured tool error handlers (or upstream defaults if none set);
+                    // mirrors upstream DefaultAiServices and matches the non-streaming path which
+                    // delegates to ToolService.executeInferenceAndToolsLoop. argumentsErrorHandler()
+                    // and executionErrorHandler() never return null — they fall back to upstream
+                    // defaults — so passing them through is safe and keeps streaming/non-streaming
+                    // behavior consistent for users who configure custom handlers.
+                    .toolArgumentsErrorHandler(context.toolService.argumentsErrorHandler())
+                    .toolExecutionErrorHandler(context.toolService.executionErrorHandler())
                     .commonGuardrailParams(
                             GuardrailRequestParams.builder()
                                     .chatMemory(committableChatMemory)
@@ -346,10 +367,27 @@ public class AiServiceMethodImplementationSupport {
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
             var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
-            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
-                    (augmentationResult != null ? augmentationResult.contents() : null), context, invocationContext, memoryId,
+            // The Quarkus Multi path owns its own output-guardrail flow
+            // (OutputGuardrailStreamingMapper, see below), so TokenStreamMulti opts out of upstream's
+            // guardrail buffering internally (methodKey=null inside TokenStreamMulti). The full
+            // invocationContext flows through unchanged so the toolProviderRequestFactory hook can
+            // recover the per-method MCP scoping via QuarkusInvocationData.
+            // Streaming model resolution mirrors the TokenStream path above; wrapIfNeeded keeps the
+            // wrap idempotent if context.streamingChatModel was already wrapped at build time.
+            StreamingChatModel multiStreamingModel = context.effectiveStreamingChatModel(methodCreateInfo, methodArgs);
+            multiStreamingModel = WorkerSwitchingStreamingChatModel.wrapIfNeeded(multiStreamingModel);
+            GuardrailRequestParams streamingGuardrailParams = GuardrailRequestParams.builder()
+                    .chatMemory(committableChatMemory)
+                    .augmentationResult(augmentationResult)
+                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
+                    .variables(templateVariables)
+                    .invocationContext(invocationContext)
+                    .aiServiceListenerRegistrar(context.eventListenerRegistrar)
+                    .build();
+            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolServiceContext,
+                    (augmentationResult != null ? augmentationResult.contents() : null), context, invocationContext,
                     methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread,
-                    methodCreateInfo, methodArgs);
+                    streamingGuardrailParams, multiStreamingModel);
 
             if (hasUpstreamGuardrails) {
                 stream = stream.filter(o -> o instanceof ChatEvent)
@@ -412,152 +450,62 @@ public class AiServiceMethodImplementationSupport {
                         .response(response)
                         .build());
 
-        TokenUsage tokenUsageAccumulator = response.tokenUsage();
-
         verifyModerationIfNeeded(moderationFuture);
 
-        int maxSequentialToolExecutions = context.maxSequentialToolExecutions != null
-                && context.maxSequentialToolExecutions > 0
-                        ? context.maxSequentialToolExecutions
-                        : getMaxSequentialToolExecutions();
-        int executionsLeft = maxSequentialToolExecutions;
-        List<ChatResponse> intermediateResponses = new ArrayList<>();
-        while (true) {
-            if (executionsLeft-- == 0) {
-                throw runtime("Something is wrong, exceeded %s sequential tool executions",
-                        maxSequentialToolExecutions);
+        // Hand off the LLM↔tools loop to upstream langchain4j. Before this rework the loop lived here,
+        // duplicating roughly 200 lines (parallel + serial branches) of dispatch logic. Upstream's
+        // ToolService.executeInferenceAndToolsLoop is now the single source of truth for: parallel
+        // dispatch (driven by the executor we set via AiServices.executeToolsConcurrently in
+        // applyDelegationHooks), maxToolCallsPerResponse enforcement, ToolChoice.REQUIRED→AUTO
+        // forcing (forceToolChoiceAutoAfterFirstIteration hook), error-handler bypass for
+        // PreventsErrorHandlerExecution (errorHandlerBypass hook), MCP tool-provider scoping
+        // (toolProviderRequestFactory hook), and IMMEDIATE / IMMEDIATE_IF_LAST short-circuit.
+        // Per-AiService config overrides were already applied earlier (before the streaming/Multi
+        // return paths branched off).
+
+        // Upstream's executeInferenceAndToolsLoop expects ChatRequestParameters that drove the FIRST
+        // chat request; it overrides them on follow-up iterations (toolSpecifications + the
+        // REQUIRED→AUTO rewrite when forceToolChoiceAutoAfterFirstIteration is true).
+        ChatRequestParameters firstCallParameters = chatRequest.parameters();
+
+        ToolServiceResult toolServiceResult = context.toolService.executeInferenceAndToolsLoop(
+                context,
+                context.effectiveChatModel(methodCreateInfo, methodArgs),
+                memoryId,
+                response,
+                firstCallParameters,
+                committableChatMemory.messages(),
+                committableChatMemory,
+                invocationContext,
+                toolServiceContext,
+                TypeUtil.isResult(returnType));
+
+        TokenUsage tokenUsageAccumulator = toolServiceResult.aggregateTokenUsage();
+        response = toolServiceResult.finalResponse();
+
+        if (toolServiceResult.immediateToolReturn()) {
+            if (!TypeUtil.isResult(returnType)) {
+                throw IllegalConfigurationException
+                        .illegalConfiguration("@Tool with IMMEDIATE return behavior must return a Result");
             }
+            committableChatMemory.commit();
+            Result<?> result = Result.builder()
+                    .content(null)
+                    .tokenUsage(tokenUsageAccumulator)
+                    .sources(augmentationResult == null ? null : augmentationResult.contents())
+                    .finishReason(FinishReason.TOOL_EXECUTION)
+                    .toolExecutions(toolServiceResult.toolExecutions())
+                    .intermediateResponses(toolServiceResult.intermediateResponses())
+                    .finalResponse(response)
+                    .build();
 
-            AiMessage aiMessage = response.aiMessage();
-            committableChatMemory.add(aiMessage);
-
-            if (!aiMessage.hasToolExecutionRequests()) {
-                break;
-            }
-            intermediateResponses.add(response);
-
-            boolean immediateToolReturn = true;
-            List<ToolExecution> toolExecutions = new ArrayList<>();
-            List<ToolExecutionResultMessage> toolResults = new ArrayList<>();
-            List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
-            int maxToolCallsPerResponse;
-            if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
-                maxToolCallsPerResponse = context.maxToolCallsPerResponse;
-            } else {
-                maxToolCallsPerResponse = getMaxToolCallsPerResponse();
-            }
-            if (maxToolCallsPerResponse > 0) {
-                log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
-            }
-            int toolCallsCount = 0;
-            for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-                if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
-                    throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
-                }
-                toolCallsCount++;
-                log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
-                ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-
-                ToolExecutionResult toolExecutionResult = toolExecutor == null
-                        ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
-                        : executeTool(toolExecutionRequest, toolExecutor, invocationContext,
-                                context.toolService.argumentsErrorHandler(), context.toolService.executionErrorHandler());
-
-                // New firing
-                context.eventListenerRegistrar.fireEvent(
-                        dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
-                                .invocationContext(invocationContext)
-                                .request(toolExecutionRequest)
-                                .resultText(toolExecutionResult.resultText())
-                                .build());
-
-                ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(toolExecutionRequest,
-                        toolExecutionResult.resultText());
-
-                ToolExecution toolExecution = ToolExecution.builder()
-                        .request(toolExecutionRequest)
-                        .result(toolExecutionResult)
-                        .invocationContext(invocationContext)
-                        .build();
-                toolExecutions.add(toolExecution);
-                toolResults.add(toolExecutionResultMessage);
-
-                // If any tool does not return immediately, results must be processed by LLM
-                if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
-                    immediateToolReturn = false;
-                }
-
-            }
-            for (ToolExecutionResultMessage toolResult : toolResults) {
-                committableChatMemory.add(toolResult);
-            }
-            if (immediateToolReturn) {
-                if (!TypeUtil.isResult(returnType)) {
-                    throw IllegalConfigurationException
-                            .illegalConfiguration("@Tool with IMMEDIATE return behavior must return a Result");
-                }
-                committableChatMemory.commit();
-                ChatResponse finalResponse = intermediateResponses.remove(intermediateResponses.size() - 1);
-                var result = Result.builder()
-                        .content(null)
-                        .tokenUsage(tokenUsageAccumulator)
-                        .sources(augmentationResult == null ? null : augmentationResult.contents())
-                        .finishReason(FinishReason.TOOL_EXECUTION)
-                        .toolExecutions(toolExecutions)
-                        .intermediateResponses(intermediateResponses)
-                        .finalResponse(finalResponse)
-                        .build();
-
-                context.eventListenerRegistrar.fireEvent(
-                        AiServiceCompletedEvent.builder()
-                                .invocationContext(invocationContext)
-                                .result(result)
-                                .build());
-
-                return result;
-            }
-
-            log.debug("Attempting to obtain AI response");
-            ChatModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
-            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(committableChatMemory.messages());
-            DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
-            if (supportsJsonSchema(effectiveChatModel)) {
-                Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
-                if (jsonSchema.isPresent()) {
-                    parametersBuilder = constructStructuredResponseParams(toolSpecifications, jsonSchema.get());
-                } else {
-                    parametersBuilder.toolSpecifications(toolSpecifications);
-                }
-            } else {
-                parametersBuilder.toolSpecifications(toolSpecifications);
-            }
-
-            if (nonNull(context.chatModel.defaultRequestParameters())) {
-                var toolChoice = context.chatModel.defaultRequestParameters().toolChoice();
-                if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)
-                        && !context.allowContinuousForcedToolCalling) {
-                    // This code is needed to avoid a infinite-loop when using the AiService
-                    // in combination with the tool-choice option set to REQUIRED.
-                    // If the tool-choice option is not set to AUTO after calling the tool,
-                    // the model may continuously reselect the same tool in subsequent responses,
-                    // even though the tool has already been invoked.
-                    parametersBuilder.toolChoice(ToolChoice.AUTO);
-                }
-            }
-
-            ChatRequest request = chatRequestBuilder.parameters(parametersBuilder.build()).build();
-            response = effectiveChatModel.chat(request);
-            log.debug("AI response obtained");
-
-            // New firing
             context.eventListenerRegistrar.fireEvent(
-                    AiServiceResponseReceivedEvent.builder()
+                    AiServiceCompletedEvent.builder()
                             .invocationContext(invocationContext)
-                            .request(request)
-                            .response(response)
+                            .result(result)
                             .build());
 
-            tokenUsageAccumulator = sum(tokenUsageAccumulator, response.tokenUsage());
+            return result;
         }
 
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
@@ -628,6 +576,75 @@ public class AiServiceMethodImplementationSupport {
         return augmentedResponse;
     }
 
+    /**
+     * Pushes per-call Quarkus configuration onto the shared upstream {@link dev.langchain4j.service.tool.ToolService}
+     * just before delegating the LLM&#8596;tools loop. These setters were historically duplicated as a
+     * Quarkus-side branch inside {@code doImplement0}; with the loop delegated they have to land
+     * on upstream's state instead.
+     * <ul>
+     * <li>{@code maxSequentialToolsInvocations} — programmatic override, else
+     * {@code quarkus.langchain4j.ai-service.max-tool-executions} (default 10). The
+     * previous in-loop limit threw an explicit exception; upstream throws a different message
+     * string but the cap behaviour is identical.</li>
+     * <li>{@code maxToolCallsPerResponse} — programmatic override, else
+     * {@code quarkus.langchain4j.ai-service.max-tool-calls-per-response} (default 0 / unlimited).
+     * Upstream throws {@code ToolCallsLimitExceededException} BEFORE submitting any tool, the
+     * same atomic-reject semantics the Quarkus parallel branch had.</li>
+     * </ul>
+     */
+    private static void applyPerCallToolServiceOverrides(QuarkusAiServiceContext context,
+            AiServiceMethodCreateInfo methodCreateInfo) {
+        int maxSequentialToolExecutions = (context.maxSequentialToolExecutions != null
+                && context.maxSequentialToolExecutions > 0)
+                        ? context.maxSequentialToolExecutions
+                        : getMaxSequentialToolExecutions();
+        context.toolService.maxSequentialToolsInvocations(maxSequentialToolExecutions);
+        int maxToolCallsPerResponse = (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0)
+                ? context.maxToolCallsPerResponse
+                : getMaxToolCallsPerResponse();
+        context.toolService.maxToolCallsPerResponse(maxToolCallsPerResponse);
+        if (maxToolCallsPerResponse > 0) {
+            log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
+        }
+    }
+
+    /**
+     * Builds the list of method-scoped tools (resolved at recording time from {@code @ToolBox})
+     * as {@link AiServiceTool}s, in the form expected by upstream
+     * {@link dev.langchain4j.service.tool.ToolService#createContext(InvocationContext, UserMessage, List, List)}.
+     * <p>
+     * Method-scoped specs/executors/return-behaviors are stored separately on the per-method
+     * {@link AiServiceMethodCreateInfo} (rather than on the AiService-level ToolService) because
+     * they vary per AI-service method. Upstream's overload merges this list into the resolved
+     * context BEFORE static and dynamic providers contribute, so all per-iteration provider
+     * semantics — including dynamic providers being invoked on the FIRST request — apply uniformly
+     * regardless of whether the method also has {@code @ToolBox}.
+     */
+    private static List<AiServiceTool> buildMethodScopedBaseTools(AiServiceMethodCreateInfo methodCreateInfo) {
+        List<ToolSpecification> specs = methodCreateInfo.getToolSpecifications();
+        if (specs == null || specs.isEmpty()) {
+            return List.of();
+        }
+        Map<String, ToolExecutor> executors = methodCreateInfo.getToolExecutors();
+        Map<String, ReturnBehavior> returnBehaviors = methodCreateInfo.getToolReturnBehaviors();
+        List<AiServiceTool> baseTools = new ArrayList<>(specs.size());
+        for (ToolSpecification spec : specs) {
+            ToolExecutor executor = executors != null ? executors.get(spec.name()) : null;
+            if (executor == null) {
+                continue;
+            }
+            ReturnBehavior returnBehavior = returnBehaviors != null
+                    ? returnBehaviors.getOrDefault(spec.name(), ReturnBehavior.TO_LLM)
+                    : ReturnBehavior.TO_LLM;
+            baseTools.add(AiServiceTool.builder()
+                    .toolSpecification(spec)
+                    .toolExecutor(executor)
+                    .returnBehavior(returnBehavior)
+                    .build());
+        }
+        return baseTools;
+    }
+
     private static InvocationParameters findInvocationParams(Object[] args) {
         if (args == null) {
             return new InvocationParameters();
@@ -638,55 +655,6 @@ public class AiServiceMethodImplementationSupport {
             }
         }
         return new InvocationParameters();
-    }
-
-    private static ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
-            InvocationContext invocationContext,
-            ToolArgumentsErrorHandler toolArgumentsErrorHandler,
-            ToolExecutionErrorHandler toolExecutionErrorHandler) {
-        ToolExecutionResult toolExecutionResult;
-        try {
-            toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
-        } catch (ToolArgumentsException e) {
-            if (toolArgumentsErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool arguments. Executing  ",
-                        toolArgumentsErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolArgumentsErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        } catch (Exception e) {
-            if (e instanceof PreventsErrorHandlerExecution) {
-                // preserve semantics for existing code
-                throw e;
-            }
-            if (toolExecutionErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool. Executing '",
-                        toolExecutionErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolExecutionErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        }
-        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-
-        return toolExecutionResult;
     }
 
     private static ChatRequest createChatRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
@@ -1236,19 +1204,6 @@ public class AiServiceMethodImplementationSupport {
     private static Executor createExecutor() {
         InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
         return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
-    }
-
-    private static boolean isImmediateReturnTool(String toolName, ToolExecutor toolExecutor,
-            Set<String> immediateReturnToolNames) {
-        // Check if the executor itself declares immediate return behavior
-        if (toolExecutor instanceof QuarkusToolExecutor quarkusExecutor) {
-            if (quarkusExecutor.returnBehavior() == ReturnBehavior.IMMEDIATE) {
-                return true;
-            }
-        }
-
-        // Otherwise, check if the tool name is in the immediate return set
-        return immediateReturnToolNames.contains(toolName);
     }
 
     private static CommittableChatMemory determineCommittableChatMemory(ChatMemory chatMemory,

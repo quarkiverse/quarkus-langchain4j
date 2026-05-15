@@ -8,12 +8,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
+
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.jboss.logging.Logger;
 
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
@@ -32,16 +36,22 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.smallrye.config.SmallRyeConfig;
 
 @Recorder
 public class AiServicesRecorder {
+
+    private static final Logger LOG = Logger.getLogger(AiServicesRecorder.class);
+
     private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
@@ -105,7 +115,7 @@ public class AiServicesRecorder {
                                 objectWithTools.add(tool);
                             }
                             ToolsRecorder.populateToolMetadata(objectWithTools, methodCreateInfo.getToolSpecifications(),
-                                    methodCreateInfo.getToolExecutors());
+                                    methodCreateInfo.getToolExecutors(), methodCreateInfo.getToolReturnBehaviors());
                         } catch (ClassNotFoundException e) {
                             throw new IllegalStateException(e);
                         }
@@ -346,6 +356,38 @@ public class AiServicesRecorder {
 
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
+
+                    // Resolve by canonical AiService name (same key used under
+                    // quarkus.langchain4j.<ai-service-name>.*) — never the FQCN. The build-time
+                    // AiServiceClassCreateInfo carries the resolved name (the @Named bean value when present,
+                    // otherwise the simple class name).
+                    AiServiceClassCreateInfo classCreateInfo = metadata.get(info.serviceClassName());
+                    String aiServiceName = classCreateInfo != null && classCreateInfo.aiServiceName() != null
+                            ? classCreateInfo.aiServiceName()
+                            : serviceClass.getSimpleName();
+                    Executor parallelExecutor = null;
+                    try {
+                        LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
+                                .unwrap(SmallRyeConfig.class)
+                                .getConfigMapping(LangChain4jConfig.class);
+                        parallelExecutor = ParallelToolExecutorResolver
+                                .resolve(aiServiceName, langChain4jConfig);
+                    } catch (UnsupportedOperationException e) {
+                        // Environment-driven fallback only — conventional signal for "feature exists but not usable
+                        // here" (e.g. VT on Java 17). All other RuntimeExceptions propagate so misconfiguration
+                        // (invalid concurrency, unknown mode, malformed config mapping) fails loudly at startup.
+                        LOG.infof(e,
+                                "Parallel-tool executor unavailable in this environment for AiService '%s'; falling back to serial dispatch.",
+                                aiServiceName);
+                    }
+                    aiServiceContext.parallelToolExecutor = parallelExecutor;
+                    // Wire the upstream integration hooks (executeToolsConcurrently,
+                    // streamingToolDispatchHook, errorHandlerBypass, forceToolChoiceAutoAfterFirstIteration,
+                    // toolProviderRequestFactory) so the delegated tool loop in
+                    // AiServiceMethodImplementationSupport.doImplement0 honours Quarkus-specific
+                    // behaviour. Same wiring as programmatic build().
+                    io.quarkiverse.langchain4j.QuarkusAiServicesFactory
+                            .applyDelegationHooks(quarkusAiServices, aiServiceContext, parallelExecutor);
 
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {

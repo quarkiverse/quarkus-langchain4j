@@ -45,15 +45,21 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.Cancellable;
 
 /**
- * Test that cancelling a streaming Multi subscription stops the agent tool execution loop
- * and leaves memory in a consistent state.
+ * Test that cancelling a streaming Multi subscription bridges to the upstream
+ * {@code StreamingHandle.cancel()} and leaves memory in a consistent state.
  * <p>
- * This verifies that after cancellation:
+ * Cancellation semantics with the upstream-delegated streaming loop are best-effort: the
+ * Multi's {@code onCancellation} hook calls {@code StreamingHandle.cancel()} on the underlying
+ * provider, which signals the provider to stop emitting tokens. Tool batches already dispatched
+ * to upstream's {@code ToolBatchDispatcher} run to completion (no mid-batch interrupt), and a
+ * follow-up streaming chat may still be issued before the provider acknowledges the cancel. The
+ * Quarkus-owned mid-batch AtomicBoolean check that previously short-circuited subsequent tools
+ * was dropped in favor of the unified upstream loop architecture.
+ * <p>
+ * What this test still pins:
  * <ul>
- * <li>Tools are NOT called for subsequent rounds</li>
- * <li>No additional chat() calls are made to the model</li>
- * <li>The stream terminates and doesn't hang</li>
- * <li>Memory is consistent: every tool request has a matching tool result</li>
+ * <li>The Multi terminates without hanging.</li>
+ * <li>Memory remains consistent: every tool request has a matching tool result.</li>
  * </ul>
  */
 public class ToolExecutionModelWithStreamingCancellationTest {
@@ -67,24 +73,14 @@ public class ToolExecutionModelWithStreamingCancellationTest {
     MyAiService aiService;
 
     /**
-     * Test that cancelling the Multi subscription prevents subsequent tool rounds
-     * and leaves memory consistent.
-     * <p>
-     * The mock model responds with two tool requests per round. The first tool blocks
-     * while the test cancels the subscription. After cancellation, the second tool should
-     * receive a cancellation result instead of executing, keeping memory consistent.
-     * <p>
-     * Flow:
-     * 1. Model responds with 2 tool requests (on a new thread)
-     * 2. First tool starts executing, signals TOOL_STARTED, then blocks on TOOL_MAY_PROCEED
-     * 3. Test detects TOOL_STARTED, cancels the subscription (sets cancelled flag)
-     * 4. Test signals TOOL_MAY_PROCEED, first tool completes
-     * 5. Handler sees isCancelled() for second tool — fills cancellation result
-     * 6. Handler checks isCancelled() after tool loop — sees true, stops
+     * Cancellation no longer short-circuits the tool loop mid-batch (that was a Quarkus-owned
+     * AtomicBoolean check inside the deleted streaming handler). Cancellation does still
+     * terminate cleanly via {@code StreamingHandle.cancel()} signalling the provider, and the
+     * memory is left in a consistent state with one tool result per tool request.
      */
     @Test
     @ActivateRequestContext
-    void testCancellationStopsToolLoop() throws InterruptedException {
+    void testCancellationLeavesMemoryConsistent() throws InterruptedException {
         // Reset shared state
         CountableTool.CALL_COUNT.set(0);
         CountableTool.TOOL_STARTED = new CountDownLatch(1);
@@ -108,39 +104,20 @@ public class ToolExecutionModelWithStreamingCancellationTest {
                 .as("First tool execution should start within timeout")
                 .isTrue();
 
-        // Cancel the subscription — this sets the AtomicBoolean cancelled flag
         cancellable.cancel();
 
-        // Now let the tool finish — the handler will check isCancelled() for the next tool
+        // Now let the tool finish.
         CountableTool.TOOL_MAY_PROCEED.countDown();
 
-        // Give time for any in-flight operations to settle
+        // Give the loop time to complete — bound by the mock's 3 rounds.
         Thread.sleep(500);
 
-        // Assert: tool was called exactly once (first tool only, second was cancelled)
-        assertThat(CountableTool.CALL_COUNT.get())
-                .as("Tool should only be called once (first tool), not for the second tool after cancellation")
-                .isEqualTo(1);
-
-        // Assert: model chat() was called at most 2 times (initial + possibly one before cancellation took effect)
-        // Without cancellation, it would be called 4 times (initial + 3 tool rounds)
-        assertThat(AsyncMultiRoundChatModel.CHAT_CALL_COUNT.get())
-                .as("Model should not make additional chat() calls after cancellation")
-                .isLessThanOrEqualTo(2);
-
-        // Assert: memory is in a consistent state after cancellation
-        // Every AiMessage with tool requests must have matching ToolExecutionResultMessages
+        // Memory consistency: every tool request must have a matching tool result. This is the
+        // invariant {@code ToolBatchDispatcher} preserves regardless of cancellation timing.
         ChatMemory memory = MyMemoryProviderSupplier.MEMORIES.get("mem1");
         assertThat(memory).as("Memory should exist for memoryId 'mem1'").isNotNull();
 
         List<ChatMessage> messages = memory.messages();
-        // The last message should be a ToolExecutionResultMessage, not an orphaned AiMessage
-        ChatMessage lastMessage = messages.get(messages.size() - 1);
-        assertThat(lastMessage)
-                .as("Last message in memory should be a ToolExecutionResultMessage, not an orphaned AiMessage")
-                .isInstanceOf(ToolExecutionResultMessage.class);
-
-        // Count tool requests vs tool results — they must match
         long toolRequestCount = messages.stream()
                 .filter(m -> m instanceof AiMessage)
                 .map(m -> (AiMessage) m)
@@ -153,15 +130,6 @@ public class ToolExecutionModelWithStreamingCancellationTest {
         assertThat(toolResultCount)
                 .as("Number of tool results must match number of tool requests for memory consistency")
                 .isEqualTo(toolRequestCount);
-
-        // Verify that cancelled tool results contain the cancellation message
-        boolean hasCancelledResult = messages.stream()
-                .filter(m -> m instanceof ToolExecutionResultMessage)
-                .map(m -> (ToolExecutionResultMessage) m)
-                .anyMatch(m -> m.text().equals("Tool execution was cancelled"));
-        assertThat(hasCancelledResult)
-                .as("Memory should contain at least one cancelled tool execution result")
-                .isTrue();
     }
 
     @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
