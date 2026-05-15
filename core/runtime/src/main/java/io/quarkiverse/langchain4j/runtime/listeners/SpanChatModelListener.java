@@ -49,6 +49,8 @@ public class SpanChatModelListener implements ChatModelListener {
     public void onRequest(ChatModelRequestContext requestContext) {
         ChatRequest request = requestContext.chatRequest();
         Span span = tracer.spanBuilder("completion " + request.parameters().modelName())
+                .setAttribute("gen_ai.operation.name", "chat")
+                .setAttribute("gen_ai.provider.name", requestContext.modelProvider().toString().toLowerCase())
                 .setAttribute("gen_ai.request.model", request.parameters().modelName())
                 .setAttribute("gen_ai.request.temperature",
                         request.parameters().temperature() != null ? request.parameters().temperature() : 0D)
