@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.listeners;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.logging.Logger;
@@ -98,6 +99,7 @@ public class MetricsChatModelListener implements ChatModelListener {
 
         Tags tags = Tags.of("gen_ai.request.model", requestModel)
                 .and("gen_ai.response.model", responseModel)
+                .and("gen_ai.provider.name", responseContext.modelProvider().toString().toLowerCase(Locale.ROOT))
                 .and("ai_service.class_name", aiServiceClassName)
                 .and("ai_service.method_name", aiServiceMethodName)
                 .and("error.type", "none");
