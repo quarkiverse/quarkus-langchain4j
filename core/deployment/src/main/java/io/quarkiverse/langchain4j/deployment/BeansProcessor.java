@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.deployment;
 
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.AUDIO_TRANSCRIPTION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
@@ -21,6 +22,7 @@ import org.jboss.jandex.DotName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
@@ -30,6 +32,7 @@ import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
+import io.quarkiverse.langchain4j.deployment.items.AudioTranscriptionModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
@@ -39,6 +42,7 @@ import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ProviderHolder;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedAudioTranscriptionModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
@@ -83,6 +87,7 @@ public class BeansProcessor {
             List<EmbeddingModelProviderCandidateBuildItem> embeddingCandidateItems,
             List<ModerationModelProviderCandidateBuildItem> moderationCandidateItems,
             List<ImageModelProviderCandidateBuildItem> imageCandidateItems,
+            List<AudioTranscriptionModelProviderCandidateBuildItem> audioTranscriptionCandidateItems,
             List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
             List<RequestModerationModelBeanBuildItem> requestModerationModelBeanBuildItems,
             List<RequestImageModelBeanBuildItem> requestImageModelBeanBuildItems,
@@ -94,6 +99,7 @@ public class BeansProcessor {
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
             BuildProducer<SelectedModerationModelProviderBuildItem> selectedModerationProducer,
             BuildProducer<SelectedImageModelProviderBuildItem> selectedImageProducer,
+            BuildProducer<SelectedAudioTranscriptionModelProviderBuildItem> selectedAudioTranscriptionProducer,
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems) {
 
         Set<String> requestedChatModels = new HashSet<>();
@@ -102,6 +108,7 @@ public class BeansProcessor {
         Set<String> requestEmbeddingModels = new HashSet<>();
         Set<String> requestedModerationModels = new HashSet<>();
         Set<String> requestedImageModels = new HashSet<>();
+        Set<String> requestedAudioTranscriptionModels = new HashSet<>();
         Set<String> tokenCountEstimators = new HashSet<>();
 
         // detection of injection points for default models
@@ -110,6 +117,7 @@ public class BeansProcessor {
         boolean defaultEmbeddingModelRequested = false;
         boolean defaultModerationModelRequested = false;
         boolean defaultImageModelRequested = false;
+        boolean defaultAudioTranscriptionModelRequested = false;
 
         // default model names
         final String chatModelConfigNamespace = "chat-model";
@@ -117,6 +125,7 @@ public class BeansProcessor {
         final String scoringModelConfigNamespace = "scoring-model";
         final String moderationModelConfigNamespace = "moderation-model";
         final String imageModelConfigNamespace = "image-model";
+        final String audioTranscriptionModelConfigNamespace = "audio-transcription-model";
 
         // separator symbol for named configs
         final String dot = ".";
@@ -127,6 +136,7 @@ public class BeansProcessor {
         final String scoringModelBeanType = "ScoringModel";
         final String moderationModelBeanType = "ModerationModel";
         final String imageModelBeanType = "ImageModel";
+        final String audioTranscriptionModelBeanType = "AudioTranscriptionModel";
 
         for (InjectionPointInfo ip : beanDiscoveryFinished.getInjectionPoints()) {
             DotName requiredName = ip.getRequiredType().name();
@@ -146,6 +156,8 @@ public class BeansProcessor {
                 requestedModerationModels.add(modelName);
             } else if (IMAGE_MODEL.equals(requiredName)) {
                 requestedImageModels.add(modelName);
+            } else if (AUDIO_TRANSCRIPTION_MODEL.equals(requiredName)) {
+                requestedAudioTranscriptionModels.add(modelName);
             }
         }
         for (var bi : requestChatModelBeanItems) {
@@ -323,6 +335,34 @@ public class BeansProcessor {
             }
         }
 
+        for (String modelName : requestedAudioTranscriptionModels) {
+            Optional<String> userSelectedProvider;
+            String configNamespace;
+            if (NamedConfigUtil.isDefault(modelName)) {
+                userSelectedProvider = buildConfig.defaultConfig().audioTranscriptionModel().provider();
+                configNamespace = audioTranscriptionModelConfigNamespace;
+                defaultAudioTranscriptionModelRequested = true;
+            } else {
+                if (buildConfig.namedConfig().containsKey(modelName)) {
+                    userSelectedProvider = buildConfig.namedConfig().get(modelName).audioTranscriptionModel().provider();
+                } else {
+                    userSelectedProvider = Optional.empty();
+                }
+                configNamespace = modelName + dot + audioTranscriptionModelConfigNamespace;
+            }
+
+            String provider = selectProvider(
+                    audioTranscriptionCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(AudioTranscriptionModel.class),
+                    userSelectedProvider,
+                    audioTranscriptionModelBeanType,
+                    configNamespace);
+            if (provider != null) {
+                selectedAudioTranscriptionProducer
+                        .produce(new SelectedAudioTranscriptionModelProviderBuildItem(provider, modelName));
+            }
+        }
+
         // There can be configured models for which we found no injection points.
         // While we cannot perform full validation of those, we can still add them as beans.
         // This enabled injection such as @Inject @Any Instance<ChatModel>
@@ -392,6 +432,19 @@ public class BeansProcessor {
                     imageModelConfigNamespace);
             if (provider != null) {
                 selectedImageProducer.produce(new SelectedImageModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+        }
+        if (!defaultAudioTranscriptionModelRequested && !defaultConfig.audioTranscriptionModel().provider().isEmpty()) {
+            Optional<String> userSelectedProvider = defaultConfig.audioTranscriptionModel().provider();
+            String provider = selectProvider(
+                    audioTranscriptionCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(AudioTranscriptionModel.class),
+                    userSelectedProvider,
+                    audioTranscriptionModelBeanType,
+                    audioTranscriptionModelConfigNamespace);
+            if (provider != null) {
+                selectedAudioTranscriptionProducer.produce(
+                        new SelectedAudioTranscriptionModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
             }
         }
 
@@ -464,6 +517,21 @@ public class BeansProcessor {
                         configNamespace);
                 if (provider != null) {
                     selectedImageProducer.produce(new SelectedImageModelProviderBuildItem(provider, entry.getKey()));
+                }
+            }
+            if (!requestedAudioTranscriptionModels.contains(entry.getKey())
+                    && !value.audioTranscriptionModel().provider().isEmpty()) {
+                Optional<String> userSelectedProvider = value.audioTranscriptionModel().provider();
+                String configNamespace = entry.getKey() + dot + audioTranscriptionModelConfigNamespace;
+                String provider = selectProvider(
+                        audioTranscriptionCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(AudioTranscriptionModel.class),
+                        userSelectedProvider,
+                        audioTranscriptionModelBeanType,
+                        configNamespace);
+                if (provider != null) {
+                    selectedAudioTranscriptionProducer
+                            .produce(new SelectedAudioTranscriptionModelProviderBuildItem(provider, entry.getKey()));
                 }
             }
         }

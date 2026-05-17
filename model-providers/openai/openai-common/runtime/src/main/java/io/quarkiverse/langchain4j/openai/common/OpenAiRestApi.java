@@ -41,6 +41,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.SseEventFilter;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
+import org.jboss.resteasy.reactive.client.api.ClientMultipartForm;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
 import dev.langchain4j.exception.HttpException;
+import dev.langchain4j.model.openai.internal.audio.transcription.OpenAiAudioTranscriptionResponse;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
@@ -169,6 +171,21 @@ public interface OpenAiRestApi {
     @Path("images/generations")
     @POST
     Uni<GenerateImagesResponse> imagesGenerations(GenerateImagesRequest request, @BeanParam ApiMetadata input);
+
+    /**
+     * Perform a blocking multipart/form-data request for an audio transcription response.
+     * The form is built programmatically so the {@code file} part carries the actual
+     * filename derived from the audio's mime type (Whisper uses it as a format hint).
+     */
+    @Path("audio/transcriptions")
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    OpenAiAudioTranscriptionResponse blockingAudioTranscription(ClientMultipartForm form, @BeanParam ApiMetadata input);
+
+    @Path("audio/transcriptions")
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    Uni<OpenAiAudioTranscriptionResponse> audioTranscription(ClientMultipartForm form, @BeanParam ApiMetadata input);
 
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {

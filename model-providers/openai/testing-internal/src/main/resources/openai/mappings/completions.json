@@ -100,6 +100,27 @@
           "openai-processing-ms": "15000"
         }
       }
+    }  ,
+    {
+      "request": {
+        "urlPath": "/v1/audio/transcriptions",
+        "method": "POST",
+        "headers": {
+          "Content-Type": {
+            "matches": "multipart/form-data.*"
+          },
+          "Authorization": {
+            "matches": "Bearer .+"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"text\":\"Hello, world!\"}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
     }
   ]
 }

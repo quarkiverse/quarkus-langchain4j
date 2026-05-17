@@ -1,0 +1,67 @@
+= OpenAI Audio Transcription Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+OpenAI provides audio transcription models (Whisper) capable of converting spoken audio into text.
+These models are useful for use cases such as building voice assistants, transcribing meetings, or indexing podcast content.
+
+== Prerequisites
+
+include::./openai-chat-model.adoc[tags=openai-prerequisites]
+
+=== OpenAI Quarkus Extension
+
+To use OpenAI audio transcription models in your Quarkus application, add the `quarkus-langchain4j-openai` extension:
+
+:provider-artifact: quarkus-langchain4j-openai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+== Configuration
+
+include::includes/quarkus-langchain4j-openai.adoc[leveloffset=+1,opts=optional]
+
+The minimum configuration to use audio transcription is the OpenAI API key (the model name defaults to `whisper-1`):
+
+[source,properties]
+----
+quarkus.langchain4j.openai.api-key=sk-...
+----
+
+Any OpenAI-compatible transcription endpoint can be used by overriding `quarkus.langchain4j.openai.base-url`.
+
+== Using Audio Transcription Models
+
+Inject the `AudioTranscriptionModel` bean and call `transcribe(...)` with an `AudioTranscriptionRequest`:
+
+[source,java]
+----
+package org.acme;
+
+import dev.langchain4j.data.audio.Audio;
+import dev.langchain4j.model.audio.AudioTranscriptionModel;
+import dev.langchain4j.model.audio.AudioTranscriptionRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class TranscriptionService {
+
+    @Inject
+    AudioTranscriptionModel audioTranscriptionModel;
+
+    public String transcribe(byte[] audioBytes, String mimeType) {
+        AudioTranscriptionRequest request = AudioTranscriptionRequest.builder()
+                .audio(Audio.builder().binaryData(audioBytes).mimeType(mimeType).build())
+                .build();
+        return audioTranscriptionModel.transcribe(request).text();
+    }
+}
+----
+
+Per-request options such as `language`, `prompt`, and `temperature` are passed via the `AudioTranscriptionRequest` builder.
+
+== Additional Resources
+
+[.lead]
+* Explore xref:ai-services.adoc[AI Services] for orchestrating multiple models

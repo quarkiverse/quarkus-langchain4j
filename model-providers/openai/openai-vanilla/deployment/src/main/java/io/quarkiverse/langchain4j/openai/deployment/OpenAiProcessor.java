@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.openai.deployment;
 
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.AUDIO_TRANSCRIPTION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
@@ -19,24 +20,29 @@ import org.jboss.jandex.Type;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
+import dev.langchain4j.model.openai.OpenAiAudioTranscriptionModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.openai.spi.OpenAiAudioTranscriptionModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiChatModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiEmbeddingModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiModerationModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.DotNames;
+import io.quarkiverse.langchain4j.deployment.items.AudioTranscriptionModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedAudioTranscriptionModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiAudioTranscriptionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
@@ -71,6 +77,8 @@ public class OpenAiProcessor {
             .createSimple(OpenAiModerationModel.OpenAiModerationModelBuilder.class);
     private static final DotName OPENAI_IMAGE_MODEL_BUILDER = DotName
             .createSimple(QuarkusOpenAiImageModel.Builder.class);
+    private static final DotName OPENAI_AUDIO_TRANSCRIPTION_MODEL_BUILDER = DotName
+            .createSimple(OpenAiAudioTranscriptionModel.Builder.class);
 
     private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
             Any.class)).build();
@@ -85,6 +93,7 @@ public class OpenAiProcessor {
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
+            BuildProducer<AudioTranscriptionModelProviderCandidateBuildItem> audioTranscriptionProducer,
             LangChain4jOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
@@ -98,6 +107,9 @@ public class OpenAiProcessor {
         if (config.imageModel().enabled().isEmpty() || config.imageModel().enabled().get()) {
             imageProducer.produce(new ImageModelProviderCandidateBuildItem(PROVIDER));
         }
+        if (config.audioTranscriptionModel().enabled().isEmpty() || config.audioTranscriptionModel().enabled().get()) {
+            audioTranscriptionProducer.produce(new AudioTranscriptionModelProviderCandidateBuildItem(PROVIDER));
+        }
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -108,6 +120,7 @@ public class OpenAiProcessor {
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             List<SelectedModerationModelProviderBuildItem> selectedModeration,
             List<SelectedImageModelProviderBuildItem> selectedImage,
+            List<SelectedAudioTranscriptionModelProviderBuildItem> selectedAudioTranscription,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -204,6 +217,25 @@ public class OpenAiProcessor {
                 beanProducer.produce(builder.done());
             }
         }
+
+        for (var selected : selectedAudioTranscription) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String configName = selected.getConfigName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(AUDIO_TRANSCRIPTION_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_AUDIO_TRANSCRIPTION_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.audioTranscriptionModel(configName));
+                addQualifierIfNecessary(builder, configName);
+                beanProducer.produce(builder.done());
+            }
+        }
     }
 
     private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
@@ -233,6 +265,9 @@ public class OpenAiProcessor {
         serviceProviderProducer
                 .produce(new ServiceProviderBuildItem(OpenAiStreamingChatModelBuilderFactory.class.getName(),
                         QuarkusOpenAiStreamingChatModelBuilderFactory.class.getName()));
+        serviceProviderProducer
+                .produce(new ServiceProviderBuildItem(OpenAiAudioTranscriptionModelBuilderFactory.class.getName(),
+                        QuarkusOpenAiAudioTranscriptionModelBuilderFactory.class.getName()));
         reflectiveClassProducer
                 .produce(ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).build());
         reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OPEN_AI_EMBEDDING_DESERIALIZER).build());

@@ -19,6 +19,7 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
@@ -30,12 +31,15 @@ import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
 import dev.langchain4j.model.moderation.ModerationModel;
+import dev.langchain4j.model.openai.OpenAiAudioTranscriptionModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.openai.DisabledAudioTranscriptionModel;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiAudioTranscriptionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
@@ -43,6 +47,7 @@ import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFact
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
+import io.quarkiverse.langchain4j.openai.runtime.config.AudioTranscriptionModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
@@ -73,6 +78,8 @@ public class OpenAiRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiModerationModel.OpenAiModerationModelBuilder>>> MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<QuarkusOpenAiImageModel.Builder>>> IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiAudioTranscriptionModel.Builder>>> AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private static final String DUMMY_KEY = "dummy";
@@ -410,6 +417,60 @@ public class OpenAiRecorder {
             };
         }
 
+    }
+
+    public Function<SyntheticCreationalContext<AudioTranscriptionModel>, AudioTranscriptionModel> audioTranscriptionModel(
+            String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+            }
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
+            }
+            AudioTranscriptionModelConfig audioTranscriptionModelConfig = openAiConfig.audioTranscriptionModel();
+            var builder = (QuarkusOpenAiAudioTranscriptionModelBuilderFactory.Builder) OpenAiAudioTranscriptionModel.builder();
+            builder
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
+                    .configName(configName)
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .maxRetries(openAiConfig.maxRetries())
+                    .logRequests(
+                            firstOrDefault(false, audioTranscriptionModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(
+                            firstOrDefault(false, audioTranscriptionModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(audioTranscriptionModelConfig.modelName());
+
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
+
+            return new Function<>() {
+                @Override
+                public AudioTranscriptionModel apply(SyntheticCreationalContext<AudioTranscriptionModel> context) {
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    Optional<Proxy> audioProxy = resolveProxy(openAiConfig, proxyRegistry);
+                    if (audioProxy.isPresent()) {
+                        builder.proxy(audioProxy.get());
+                    }
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public AudioTranscriptionModel apply(SyntheticCreationalContext<AudioTranscriptionModel> context) {
+                    return new DisabledAudioTranscriptionModel();
+                }
+            };
+        }
     }
 
     @SuppressWarnings({ "removal" })

@@ -17,6 +17,7 @@ import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
 import dev.langchain4j.model.moderation.ModerationModel;
+import io.quarkiverse.langchain4j.openai.DisabledAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig.OpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -76,5 +77,12 @@ class DisabledModelsOpenAiRecorderTest {
         assertThat(recorder.moderationModel(NamedConfigUtil.DEFAULT_NAME).apply(mock))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledModerationModel.class);
+    }
+
+    @Test
+    void disabledAudioTranscriptionModel() {
+        assertThat(recorder.audioTranscriptionModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
+                .isNotNull()
+                .isExactlyInstanceOf(DisabledAudioTranscriptionModel.class);
     }
 }
