@@ -53,6 +53,7 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 
 public class OpenAiProcessor {
 
@@ -117,6 +118,7 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
@@ -132,6 +134,7 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
@@ -153,6 +156,7 @@ public class OpenAiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(OPENAI_EMBEDDING_MODEL_BUILDER) }, null) },
@@ -171,6 +175,7 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(OPENAI_MODERATION_MODEL_BUILDER) }, null) },
@@ -189,6 +194,7 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(OPENAI_IMAGE_MODEL_BUILDER) }, null) },
