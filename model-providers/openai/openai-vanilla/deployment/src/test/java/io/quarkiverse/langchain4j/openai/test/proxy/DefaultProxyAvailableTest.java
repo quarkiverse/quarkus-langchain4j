@@ -45,6 +45,7 @@ public class DefaultProxyAvailableTest extends OpenAiBaseTest {
         // The fact that WireMock received this request proves the proxy was used,
         // since nothing is actually listening on localhost:8282.
         softly.assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("langchain4j-openai");
+        softly.assertThat(loggedRequest.getHeader("Host")).isEqualTo("localhost:8282");
         softly.assertAll();
     }
 
