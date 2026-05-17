@@ -448,12 +448,10 @@ public class AiServicesProcessor {
                     retrievalAugmentorSupplierClassName = null;
                 } else {
                     retrievalAugmentorSupplierClassName = retrievalAugmentorSupplierValue.asClass().name();
-                    // if the supplier is not a CDI bean, make sure can build an instance
-                    BuiltinScope declaredScope = BuiltinScope
-                            .from(index.getClassByName(retrievalAugmentorSupplierClassName));
-                    if (declaredScope != null) {
+                    if (customScopes.isScopeDeclaredOn(index.getClassByName(retrievalAugmentorSupplierClassName))) {
                         customRetrievalAugmentorSupplierClassIsABean = true;
                     } else {
+                        // if the supplier is not a CDI bean, make sure can build an instance
                         validateSupplierAndRegister(retrievalAugmentorSupplierClassName, index,
                                 reflectiveClassProducer, unremovableBeanProducer);
                     }
