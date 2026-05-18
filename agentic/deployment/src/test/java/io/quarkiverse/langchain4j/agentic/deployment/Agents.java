@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
+import java.util.List;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -17,6 +19,7 @@ import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.agentic.supervisor.SupervisorResponseStrategy;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -26,17 +29,32 @@ import dev.langchain4j.service.V;
 
 public class Agents {
 
-    public static class DummyChatModel implements ChatModel {
+    public static class FixedResponseChatModel implements ChatModel {
 
         private final String response;
 
-        public DummyChatModel(String response) {
+        public FixedResponseChatModel(String response) {
             this.response = response;
         }
 
         @Override
         public ChatResponse doChat(ChatRequest request) {
             return ChatResponse.builder().aiMessage(new AiMessage(response)).build();
+        }
+    }
+
+    public static class EchoResponseChatModel implements ChatModel {
+
+        @Override
+        public ChatResponse doChat(ChatRequest request) {
+            List<ChatMessage> messages = request.messages();
+            for (int i = messages.size() - 1; i >= 0; i--) {
+                ChatMessage message = messages.get(i);
+                if (message instanceof dev.langchain4j.data.message.UserMessage userMessage) {
+                    return ChatResponse.builder().aiMessage(new AiMessage(userMessage.singleText())).build();
+                }
+            }
+            throw new IllegalStateException("No user message found");
         }
     }
 
@@ -65,7 +83,7 @@ public class Agents {
 
         @ChatModelSupplier
         static ChatModel chatModel() {
-            return new DummyChatModel("MEDICAL");
+            return new FixedResponseChatModel("MEDICAL");
         }
     }
 
@@ -102,7 +120,7 @@ public class Agents {
 
         @ChatModelSupplier
         static ChatModel chatModel() {
-            return new DummyChatModel("\"I'm sorry to hear that you've broken your leg." +
+            return new FixedResponseChatModel("\"I'm sorry to hear that you've broken your leg." +
                     "Here are the steps you should take: **Seek Medical Attention");
         }
     }
@@ -180,7 +198,7 @@ public class Agents {
 
         @ChatModelSupplier
         static ChatModel chatModel() {
-            return new DummyChatModel("""
+            return new FixedResponseChatModel("""
                     In a realm where dragons soared through the skies, a young wizard named Elara discovered an ancient
                     spell that could bind their fiery hearts to her will. As she summoned the might of a thousand dragons,
                     she realized that true power lay not in control, but in the bond of trust forged between them.
@@ -202,7 +220,7 @@ public class Agents {
 
         @ChatModelSupplier
         static ChatModel chatModel() {
-            return new DummyChatModel("""
+            return new FixedResponseChatModel("""
                     In a world where dragons ruled the skies, a young wizard named Elara stumbled upon a long-lost spell
                     that promised to bend the will of these majestic creatures. Eager to harness their power, she called
                     upon the strength of a thousand dragons. But as she soared through the clouds, she learned a vital
@@ -226,7 +244,7 @@ public class Agents {
 
         @ChatModelSupplier
         static ChatModel chatModel() {
-            return new DummyChatModel("""
+            return new FixedResponseChatModel("""
                     In a realm where dragons soared majestically through the azure skies, a young wizard named Elara
                     unearthed an ancient incantation, whispered of in forgotten tomes, that promised to command the will
                     of these magnificent beasts. With a heart ablaze with ambition, she invoked the strength of a thousand
@@ -258,7 +276,7 @@ public class Agents {
 
         @ChatModelSupplier
         static ChatModel chatModel() {
-            return new DummyChatModel("0.85");
+            return new FixedResponseChatModel("0.85");
         }
     }
 

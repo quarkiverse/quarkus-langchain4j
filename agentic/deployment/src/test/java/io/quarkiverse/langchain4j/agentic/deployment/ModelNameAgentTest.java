@@ -12,10 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agentic.Agent;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.ModelName;
@@ -32,7 +29,8 @@ public class ModelNameAgentTest extends OpenAiBaseTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
-                            .addClasses(NamedModelAgent.class, DefaultModelAgent.class, ChatModelProducers.class))
+                            .addClasses(NamedModelAgent.class, DefaultModelAgent.class, ChatModelProducers.class,
+                                    Agents.FixedResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     WiremockAware.wiremockUrlForConfig("/v1"))
@@ -63,27 +61,13 @@ public class ModelNameAgentTest extends OpenAiBaseTest {
         @ApplicationScoped
         @ModelName("mymodel")
         ChatModel namedModel() {
-            return new FixedResponseChatModel(NAMED_MODEL_RESPONSE);
+            return new Agents.FixedResponseChatModel(NAMED_MODEL_RESPONSE);
         }
 
         @Produces
         @ApplicationScoped
         ChatModel defaultModel() {
-            return new FixedResponseChatModel(DEFAULT_MODEL_RESPONSE);
-        }
-    }
-
-    public static class FixedResponseChatModel implements ChatModel {
-
-        private final String response;
-
-        FixedResponseChatModel(String response) {
-            this.response = response;
-        }
-
-        @Override
-        public ChatResponse doChat(ChatRequest chatRequest) {
-            return ChatResponse.builder().aiMessage(new AiMessage(response)).build();
+            return new Agents.FixedResponseChatModel(DEFAULT_MODEL_RESPONSE);
         }
     }
 

@@ -34,7 +34,7 @@ public class WorkflowTest extends OpenAiBaseTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Agents.class, StoryCreator.class, StoryCreatorWithErrorRecovery.class,
-                            CreativeWriter.class, AudienceEditor.class, StyleEditor.class, DummyChatModel.class,
+                            CreativeWriter.class, AudienceEditor.class, StyleEditor.class, FixedResponseChatModel.class,
                             StyleReviewLoopAgent.class, StoryCreatorWithReview.class, StyleScorer.class,
                             MedicalExpert.class, TechnicalExpert.class, LegalExpert.class, CategoryRouter.class,
                             RequestCategory.class, ExpertsAgent.class, ExpertRouterAgent.class))
