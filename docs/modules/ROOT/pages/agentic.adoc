@@ -668,11 +668,38 @@ quarkus.langchain4j.mymodel.chat-model.provider=openai
 quarkus.langchain4j.openai.mymodel.api-key=sk-...
 ----
 
+=== Dynamic Model Selection with @ChatModelSupplier
+
+The `@ChatModelSupplier` method can also accept parameters, enabling dynamic model selection based on the current agent execution state. Parameters are resolved from the `AgenticScope`, meaning they can receive outputs produced by previously executed agents in the workflow. This allows an agent to pick a different `ChatModel` at runtime depending on the results of earlier steps.
+
+[source,java]
+----
+public interface DynamicModelAgent {
+
+    @UserMessage("Answer the following question: {{text}}")
+    @Agent(value = "An agent using a dynamic model selection", outputKey = "answer")
+    String answer(String text);
+
+    @ChatModelSupplier
+    static ChatModel chatModel(Double threshold) {
+        return threshold > 0.5 ? baseModel() : enhancedModel();
+    }
+}
+----
+
+Here the `threshold` parameter is resolved from the `AgenticScope` and the `ChatModel` to be used for the current invocation is selected based on its value.
+
+This is particularly useful when:
+
+* Different inputs require models with different capabilities or cost profiles (e.g., using a cheaper model for simple requests and a more powerful one for complex ones).
+* The model selection depends on the outcome of a prior classification or routing step.
+
 == Build-Time Validation
 
 Quarkus validates agent configurations at build time, catching errors before the application starts:
 
-* All supplier methods (`@ChatModelSupplier`, `@ToolsSupplier`, etc.) must be `static` with correct return types and no parameters
+* All supplier methods (`@ToolsSupplier`, etc.), except the `@ChatModelSupplier` one, must be `static` with correct return types and no parameters
+* `@ChatModelSupplier` methods must be `static` and return `ChatModel` (parameters are allowed for dynamic model selection)
 * `@ExitCondition` and `@ActivationCondition` methods must return `boolean`
 * `@ErrorHandler` methods must take `ErrorContext` and return `ErrorRecoveryResult`
 * `@ParallelExecutor` methods must return `Executor`
