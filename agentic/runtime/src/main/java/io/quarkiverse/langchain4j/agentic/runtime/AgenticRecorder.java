@@ -75,8 +75,13 @@ public class AgenticRecorder {
                     throw new IllegalStateException("Unknown type: " + info.chatModelInfo().getClass());
                 }
 
-                Object agent = AgenticServices.createAgenticSystem(loadClassSafe(info), chatModel,
+                Class<?> agentClass = loadClassSafe(info);
+                Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
                         new QuarkusAgenticContextConsumer(cdiContext, info));
+
+                if (info.hasInterceptorBindings()) {
+                    agent = cdiContext.getInterceptionProxy().create(agent);
+                }
 
                 if (devModeMonitoringEnabled && agent instanceof MonitoredAgent monitoredAgent) {
                     AgentMonitor monitor = monitoredAgent.agentMonitor();

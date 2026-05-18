@@ -52,6 +52,7 @@ import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -415,9 +416,11 @@ public class AgenticProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
+            InterceptorResolverBuildItem interceptorResolverBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer) {
 
+        Set<DotName> interceptorBindings = interceptorResolverBuildItem.getInterceptorBindings();
         Set<String> requestedChatModelNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
             String chatModelName = detectedAiAgentBuildItem.getModelName() != null
@@ -429,14 +432,20 @@ public class AgenticProcessor {
                     ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
 
+            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings);
+
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
                     .configure(detectedAiAgentBuildItem.getIface().name())
                     .forceApplicationClass()
                     .createWith(recorder
                             .createAiAgent(
-                                    new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo)))
+                                    new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,
+                                            hasInterceptorBindings)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
+            if (hasInterceptorBindings) {
+                beanConfigurator.injectInterceptionProxy();
+            }
             if (chatModelInfo instanceof AiAgentCreateInfo.ChatModelInfo.FromBeanWithName f) {
                 AnnotationInstance qualifier;
                 if (NamedConfigUtil.isDefault(f.name())) {
@@ -452,6 +461,22 @@ public class AgenticProcessor {
             syntheticBeanProducer.produce(beanConfigurator.done());
         }
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
+    }
+
+    private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent, Set<DotName> interceptorBindings) {
+        for (AnnotationInstance ann : agent.getIface().declaredAnnotations()) {
+            if (interceptorBindings.contains(ann.name())) {
+                return true;
+            }
+        }
+        for (MethodInfo method : agent.getAgenticMethods()) {
+            for (AnnotationInstance ann : method.declaredAnnotations()) {
+                if (interceptorBindings.contains(ann.name())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @BuildStep
