@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.MICROMETER_COUNTED;
-import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.MICROMETER_TIMED;
 import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.TransformType;
 import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.WITH_SPAN;
 import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.shouldTransformMethod;
@@ -127,35 +125,6 @@ public class GuardrailObservabilityProcessor {
             }
         }
 
-    }
-
-    /**
-     * @deprecated These metrics are now collected via the GuardrailMetricsObserver bean.
-     */
-    @Deprecated
-    @BuildStep
-    void transformWithMetrics(Optional<MetricsCapabilityBuildItem> metricsCapability,
-            CombinedIndexBuildItem indexBuildItem,
-            BuildProducer<AnnotationsTransformerBuildItem> annotationsTransformer) {
-
-        if (metricsCapability.isPresent() && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER)) {
-            LOG.debug("Transforming guardrail methods with @Timed and @Counted annotations");
-            annotationsTransformer.produce(
-                    new AnnotationsTransformerBuildItem(
-                            transformGuardrailValidateMethod(transformationContext -> transformationContext.addAll(
-                                    AnnotationInstance.builder(MICROMETER_COUNTED)
-                                            .add("value", "guardrail.invoked")
-                                            .add("description",
-                                                    "Measures the number of times this guardrail was invoked (deprecated)")
-                                            .build(),
-                                    AnnotationInstance.builder(MICROMETER_TIMED)
-                                            .add("value", "guardrail.timed")
-                                            .add("description", "Measures the runtime of this guardrail (deprecated)")
-                                            .add("percentiles", new double[] { 0.75, 0.95, 0.99 })
-                                            .add("histogram", true)
-                                            .build()),
-                                    indexBuildItem.getIndex(), 2000, TransformType.METRICS)));
-        }
     }
 
     @BuildStep
