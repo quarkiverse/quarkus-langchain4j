@@ -91,6 +91,32 @@ import jakarta.inject.Inject;
 @Inject @ModelName("some-name") ChatModel chatModel;
 ----
 
+== Default Azure Credential
+
+Quarkus LangChain4j supports Azure OpenAI authentication using Azure AD via https://learn.microsoft.com/en-us/java/api/com.azure.identity.defaultazurecredential?view=azure-java-stable[`DefaultAzureCredential`].
+
+To enable it, add the Azure Identity extension:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.azureservices</groupId>
+    <artifactId>quarkus-azure-identity</artifactId>
+    <version>1.2.2</version>
+</dependency>
+----
+
+Then enable DefaultAzureCredential authentication in your configuration:
+
+[source,properties]
+----
+quarkus.langchain4j.azure-openai.use-azure-credential-model-auth-provider=true
+----
+
+When enabled, the SDK automatically authenticates using `DefaultAzureCredential`.
+
+It supports Azure Managed Identity and local developer credentials (Azure CLI, IDE login).
+
 == Advanced usage
 
 Please refer to https://docs.quarkiverse.io/quarkus-langchain4j/dev/openai-chat-model.html#_advanced_usage[Open AI].
