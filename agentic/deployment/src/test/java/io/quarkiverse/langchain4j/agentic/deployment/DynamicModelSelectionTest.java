@@ -19,6 +19,8 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.Unremovable;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class DynamicModelSelectionTest extends OpenAiBaseTest {
@@ -31,7 +33,7 @@ public class DynamicModelSelectionTest extends OpenAiBaseTest {
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(EchoAgent.class, DynamicSequenceAgent.class, DynamicModelAgent.class,
-                                    EchoAgent.class, ChatModelProducers.class,
+                                    ChatModelProducers.class, DynamicModelSelector.class,
                                     Agents.FixedResponseChatModel.class, Agents.EchoResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
@@ -53,12 +55,8 @@ public class DynamicModelSelectionTest extends OpenAiBaseTest {
 
         @UserMessage("{{text}}")
         @Agent(description = "An agent echoing its input", outputKey = "echo")
+        @ModelName("echoModel")
         String echo(String text);
-
-        @ChatModelSupplier
-        static ChatModel chatModel() {
-            return new Agents.EchoResponseChatModel();
-        }
     }
 
     public interface DynamicModelAgent {
@@ -69,8 +67,7 @@ public class DynamicModelSelectionTest extends OpenAiBaseTest {
 
         @ChatModelSupplier
         static ChatModel chatModel(String echo) {
-            return echo.contains("a") ? new Agents.FixedResponseChatModel(FIRST_MODEL_RESPONSE)
-                    : new Agents.FixedResponseChatModel(SECOND_MODEL_RESPONSE);
+            return Arc.container().select(DynamicModelSelector.class).get().select(echo);
         }
     }
 
@@ -102,6 +99,23 @@ public class DynamicModelSelectionTest extends OpenAiBaseTest {
         @ModelName("echoModel")
         ChatModel echoModel() {
             return new Agents.EchoResponseChatModel();
+        }
+    }
+
+    @ApplicationScoped
+    @Unremovable
+    public static class DynamicModelSelector {
+
+        @Inject
+        @ModelName("firstModel")
+        ChatModel firstModel;
+
+        @Inject
+        @ModelName("secondModel")
+        ChatModel secondModel;
+
+        ChatModel select(String echo) {
+            return echo.contains("a") ? firstModel : secondModel;
         }
     }
 

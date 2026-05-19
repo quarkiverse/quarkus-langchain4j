@@ -398,6 +398,20 @@ public class AgenticProcessor {
 
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
+    void resolveLeafAgents(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder) {
+        Set<String> leafAgentClassNames = new HashSet<>();
+        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
+            boolean hasAgentAnnotation = bi.getAgenticMethods().stream()
+                    .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.AGENT));
+            if (hasAgentAnnotation) {
+                leafAgentClassNames.add(bi.getIface().name().toString());
+            }
+        }
+        recorder.setLeafAgentClassNames(leafAgentClassNames);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
     void mcpToolBoxSupport(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder) {
         Set<String> agentsWithMcpToolBox = new HashSet<>();
         for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
@@ -437,6 +451,7 @@ public class AgenticProcessor {
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
                     .configure(detectedAiAgentBuildItem.getIface().name())
                     .forceApplicationClass()
+                    .unremovable()
                     .createWith(recorder
                             .createAiAgent(
                                     new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,

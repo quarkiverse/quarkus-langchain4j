@@ -1,6 +1,10 @@
 package io.quarkiverse.langchain4j.agentic.runtime;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -11,6 +15,9 @@ import jakarta.enterprise.util.TypeLiteral;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
+import dev.langchain4j.agentic.agent.AgentInvocationHandler;
+import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
 import dev.langchain4j.model.chat.ChatModel;
@@ -20,6 +27,7 @@ import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
+import io.quarkus.arc.InterceptionProxySubclass;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.annotations.RuntimeInit;
@@ -29,13 +37,19 @@ import io.quarkus.runtime.annotations.StaticInit;
 public class AgenticRecorder {
 
     private static final Logger log = Logger.getLogger(AgenticRecorder.class);
-    private static Set<String> agentsWithMcpToolBox = Collections.emptySet();
+    private static volatile Set<String> agentsWithMcpToolBox = Collections.emptySet();
+    private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
     private static Set<String> rootAgentClassNames = Collections.emptySet();
 
     @StaticInit
     public void setAgentsWithMcpToolBox(Set<String> agentsWithMcpToolBox) {
         AgenticRecorder.agentsWithMcpToolBox = Collections.unmodifiableSet(agentsWithMcpToolBox);
+    }
+
+    @StaticInit
+    public void setLeafAgentClassNames(Set<String> leafAgentClassNames) {
+        AgenticRecorder.leafAgentClassNames = Collections.unmodifiableSet(leafAgentClassNames);
     }
 
     @RuntimeInit
@@ -77,7 +91,8 @@ public class AgenticRecorder {
 
                 Class<?> agentClass = loadClassSafe(info);
                 Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
-                        new QuarkusAgenticContextConsumer(cdiContext, info));
+                        new AgentConfigurator(new QuarkusAgenticContextConsumer(cdiContext, info),
+                                QuarkusSubAgentResolver.INSTANCE));
 
                 if (info.hasInterceptorBindings()) {
                     agent = cdiContext.getInterceptionProxy().create(agent);
@@ -93,6 +108,74 @@ public class AgenticRecorder {
                 return agent;
             }
         };
+    }
+
+    private static final class QuarkusSubAgentResolver implements Function<Class<?>, Object> {
+
+        private static final QuarkusSubAgentResolver INSTANCE = new QuarkusSubAgentResolver();
+
+        @Override
+        public Object apply(Class<?> subAgentClass) {
+            if (subAgentClass == null) {
+                return null;
+            }
+
+            if (!leafAgentClassNames.contains(subAgentClass.getName())) {
+                return null;
+            }
+
+            try {
+                return unwrapProxies(Arc.container().select(subAgentClass).orNull());
+            } catch (Exception e) {
+                log.debugf(e,
+                        "Unable to resolve CDI sub-agent '%s'; falling back to LangChain4j internal creation",
+                        subAgentClass.getName());
+                return null;
+            }
+        }
+
+        private static Object unwrapProxies(Object resolved) {
+            if (resolved instanceof ClientProxy) {
+                return unwrapProxies(ClientProxy.unwrap(resolved));
+            }
+            if (resolved instanceof InterceptionProxySubclass) {
+                return new AgentInvocationHandler(resolved, InterceptionProxySubclass.unwrap(resolved)).get();
+            }
+            return resolved;
+        }
+
+        private static class AgentInvocationHandler implements InvocationHandler {
+
+            private final Object wrapper;
+            private final Object delegate;
+
+            private final Set<Class<?>> wrapperInterfaces;
+            private final Set<Class<?>> delegateInterfaces;
+
+            AgentInvocationHandler(Object wrapper, Object delegate) {
+                this.wrapper = wrapper;
+                this.delegate = delegate;
+
+                wrapperInterfaces = Set.of(wrapper.getClass().getInterfaces());
+                delegateInterfaces = Set.of(delegate.getClass().getInterfaces());
+            }
+
+            Object get() {
+                Set<Class<?>> allInterfaces = new HashSet<>(wrapperInterfaces);
+                allInterfaces.addAll(delegateInterfaces);
+                allInterfaces.remove(AgenticScopeOwner.class);
+                Class<?>[] interfaces = allInterfaces.toArray(new Class<?>[0]);
+                return Proxy.newProxyInstance(wrapper.getClass().getClassLoader(), interfaces, this);
+            }
+
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Exception {
+                if (wrapperInterfaces.contains(method.getDeclaringClass())) {
+                    return method.invoke(wrapper, args);
+                }
+                return method.invoke(delegate, args);
+            }
+        }
     }
 
     private static Class<?> loadClassSafe(AiAgentCreateInfo info) {
