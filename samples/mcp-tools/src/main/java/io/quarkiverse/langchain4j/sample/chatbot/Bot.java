@@ -13,6 +13,9 @@ public interface Bot {
     @SystemMessage("""
             You have tools to interact with the local filesystem and the users
             will ask you to perform operations like reading and writing files.
+            Always use the available tools immediately to perform the requested
+            operation. Never describe what you intend to do — execute the tool
+            call right away and return the result.
 
             The only directory allowed to interact with is the 'playground' directory relative
             to the current working directory. If a user specifies a relative path to a file and
