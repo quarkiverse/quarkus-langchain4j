@@ -7,6 +7,27 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-default-store-enabled[`+++quarkus.langchain4j.infinispan.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.infinispan.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Infinispan embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name[`+++quarkus.langchain4j.infinispan.client-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.infinispan.client-name+++[]
@@ -153,6 +174,32 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |
+
+h|[[quarkus-langchain4j-infinispan_section_quarkus-langchain4j-infinispan]] [.section-name.section-level0]##link:#quarkus-langchain4j-infinispan_section_quarkus-langchain4j-infinispan[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-client-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-client-name[`+++quarkus.langchain4j.infinispan."store-name".client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.infinispan."store-name".client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Infinispan client to use. These clients are configured by means of the `infinispan-client` extension. If unspecified, it will use the default Infinispan client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN__STORE_NAME__CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN__STORE_NAME__CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 
 |===
 

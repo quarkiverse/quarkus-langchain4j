@@ -37,9 +37,10 @@ public class InfinispanEmbeddingStoreRecorder {
                 }
                 builder.cacheManager(cacheManager);
                 InfinispanEmbeddingStoreConfig config = runtimeConfig.getValue();
-                builder.schema(new InfinispanSchema(config.cacheName(), config.dimension(),
-                        config.distance(), config.similarity(), config.createCache(),
-                        config.cacheConfig().orElse(null)));
+                builder.schema(new InfinispanSchema(config.defaultConfig().cacheName(), config.defaultConfig().dimension(),
+                        config.defaultConfig().distance(), config.defaultConfig().similarity(),
+                        config.defaultConfig().createCache(),
+                        config.defaultConfig().cacheConfig().orElse(null)));
                 return builder.build();
             }
         };

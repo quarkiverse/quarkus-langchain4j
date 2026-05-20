@@ -57,26 +57,27 @@ public class SchemaAndMarshallerProducer {
             + "}\n";
 
     @Inject
-    private Instance<InfinispanEmbeddingStoreConfig> infinispanEmbeddingStoreConfigHandle;
+    Instance<InfinispanEmbeddingStoreConfig> infinispanEmbeddingStoreConfigHandle;
 
     @Produces
     public FileDescriptorSource bookProtoDefinition() {
         InfinispanEmbeddingStoreConfig config = infinispanEmbeddingStoreConfigHandle.get();
         String protoContent = PROTO
-                .replace("DIMENSION", config.dimension().toString())
-                .replace("SIMILARITY", config.similarity());
-        return FileDescriptorSource.fromString("langchain_dimension_" + config.dimension().toString() + ".proto",
+                .replace("DIMENSION", config.defaultConfig().dimension().toString())
+                .replace("SIMILARITY", config.defaultConfig().similarity());
+        return FileDescriptorSource.fromString(
+                "langchain_dimension_" + config.defaultConfig().dimension().toString() + ".proto",
                 protoContent);
     }
 
     @Produces
     public MessageMarshaller langchainItemMarshaller() {
-        return new LangchainItemMarshaller(infinispanEmbeddingStoreConfigHandle.get().dimension());
+        return new LangchainItemMarshaller(infinispanEmbeddingStoreConfigHandle.get().defaultConfig().dimension());
     }
 
     @Produces
     public MessageMarshaller langchainMetadataMarshaller() {
         return new LangchainMetadataMarshaller(
-                LANGCHAIN_METADATA + infinispanEmbeddingStoreConfigHandle.get().dimension());
+                LANGCHAIN_METADATA + infinispanEmbeddingStoreConfigHandle.get().defaultConfig().dimension());
     }
 }

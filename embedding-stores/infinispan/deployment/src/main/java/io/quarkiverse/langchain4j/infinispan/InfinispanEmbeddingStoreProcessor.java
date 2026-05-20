@@ -13,6 +13,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanEmbeddingStoreRecorder;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -43,7 +44,7 @@ public class InfinispanEmbeddingStoreProcessor {
             BuildProducer<AdditionalBeanBuildItem> additionalBeans,
             io.quarkiverse.langchain4j.infinispan.InfinispanEmbeddingStoreBuildTimeConfig config) {
         additionalBeans.produce(AdditionalBeanBuildItem.unremovableOf(SchemaAndMarshallerProducer.class));
-        return new InfinispanClientNameBuildItem(config.clientName().orElse("<default>"));
+        return new InfinispanClientNameBuildItem(config.defaultConfig().clientName().orElse(NamedConfigUtil.DEFAULT_NAME));
     }
 
     @BuildStep
@@ -53,17 +54,30 @@ public class InfinispanEmbeddingStoreProcessor {
             InfinispanEmbeddingStoreRecorder recorder,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer,
             InfinispanEmbeddingStoreBuildTimeConfig buildTimeConfig) {
-        String clientName = buildTimeConfig.clientName().orElse(null);
-        AnnotationInstance infinispanClientQualifier;
-        if (clientName == null) {
-            infinispanClientQualifier = AnnotationInstance.builder(Default.class).build();
-        } else {
-            infinispanClientQualifier = AnnotationInstance.builder(InfinispanClientName.class)
-                    .add("value", clientName)
-                    .build();
+
+        // produce defaultConfig() first
+        if (buildTimeConfig.defaultConfig().defaultStoreEnabled()) {
+            String clientName = buildTimeConfig.defaultConfig().clientName().orElse(null);
+            beanProducer.produce(buildEmbeddingStoreSyntheticBean(recorder, clientName));
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
 
-        beanProducer.produce(SyntheticBeanBuildItem
+        // early return
+        if (buildTimeConfig.namedStores().isEmpty()) {
+            return;
+        }
+
+        for (String named : buildTimeConfig.namedStores().keySet()) {
+            String clientName = buildTimeConfig.namedStores().get(named).clientName().orElse(null);
+            buildEmbeddingStoreSyntheticBean(recorder, clientName);
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+        }
+    }
+
+    private SyntheticBeanBuildItem buildEmbeddingStoreSyntheticBean(InfinispanEmbeddingStoreRecorder recorder,
+            String clientName) {
+        AnnotationInstance infinispanClientQualifier = resolveClientQualifier(clientName);
+        return SyntheticBeanBuildItem
                 .configure(INFINISPAN_EMBEDDING_STORE)
                 .types(ClassType.create(EmbeddingStore.class),
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
@@ -74,8 +88,14 @@ public class InfinispanEmbeddingStoreProcessor {
                 .addInjectionPoint(ClassType.create(DotName.createSimple(RemoteCacheManager.class)),
                         infinispanClientQualifier)
                 .createWith(recorder.embeddingStoreFunction(clientName))
-                .done());
-        embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+                .done();
+    }
+
+    private AnnotationInstance resolveClientQualifier(String clientName) {
+        return clientName == null ? AnnotationInstance.builder(Default.class).build()
+                : AnnotationInstance.builder(InfinispanClientName.class)
+                        .add("value", clientName)
+                        .build();
     }
 
 }
