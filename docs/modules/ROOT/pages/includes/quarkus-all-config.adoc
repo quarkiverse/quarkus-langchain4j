@@ -13307,7 +13307,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_DIMENSION+++`
 endif::add-copy-button-to-env-var[]
 --
 |long
-|
+|required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name[`+++quarkus.langchain4j.infinispan.cache-name+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -13418,6 +13418,27 @@ h|[[quarkus-langchain4j-infinispan_section_quarkus-langchain4j-infinispan]] [.se
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-dimension]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-dimension[`+++quarkus.langchain4j.infinispan."store-name".dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.infinispan."store-name".dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embedding vectors for this named store.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN__STORE_NAME__DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN__STORE_NAME__DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|long
+|
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-client-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-client-name[`+++quarkus.langchain4j.infinispan."store-name".client-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.infinispan."store-name".client-name+++[]
@@ -13426,7 +13447,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The name of the Infinispan client to use. These clients are configured by means of the `infinispan-client` extension. If unspecified, it will use the default Infinispan client.
+The name of the Infinispan client to use, as configured via the `infinispan-client` extension. If unspecified the default Infinispan client is used.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -13458,7 +13479,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN__STORE_NAME__DIMENSION+
 endif::add-copy-button-to-env-var[]
 --
 |long
-|
+|required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-cache-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-store-name-cache-name[`+++quarkus.langchain4j.infinispan."store-name".cache-name+++`]##
 ifdef::add-copy-button-to-config-props[]

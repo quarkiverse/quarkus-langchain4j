@@ -21,6 +21,7 @@ import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanEmbeddingStoreRecorder;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainItemMarshaller;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainMetadataMarshaller;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -81,8 +82,8 @@ public class InfinispanEmbeddingStoreProcessor {
             String clientName = buildTimeConfig.defaultConfig().clientName().orElse(null);
             beanProducer
                     .produce(buildDefaultEmbeddingStoreSyntheticBean(recorder, clientName));
-            beanProducer.produce(buildMarshallerItemSyntheticBean(recorder, DEFAULT_INFINISPAN_CLIENT_NAME));
-            beanProducer.produce(buildMarshallerMetadataSyntheticBean(recorder, DEFAULT_INFINISPAN_CLIENT_NAME));
+            beanProducer.produce(buildMarshallerItemSyntheticBean(recorder, NamedConfigUtil.DEFAULT_NAME));
+            beanProducer.produce(buildMarshallerMetadataSyntheticBean(recorder, NamedConfigUtil.DEFAULT_NAME));
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
 
@@ -111,7 +112,7 @@ public class InfinispanEmbeddingStoreProcessor {
                 .unremovable()
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(RemoteCacheManager.class)), clientQualifier)
-                .createWith(recorder.embeddingStoreFunction(clientName, DEFAULT_INFINISPAN_CLIENT_NAME))
+                .createWith(recorder.embeddingStoreFunction(clientName, NamedConfigUtil.DEFAULT_NAME))
                 .done();
 
     }
@@ -136,7 +137,7 @@ public class InfinispanEmbeddingStoreProcessor {
             String storeName) {
         return SyntheticBeanBuildItem
                 .configure(LANGCHAIN_ITEM_MARSHALLER)
-                // the InfinispanClientProducer uses BaseMarshaller from BeanManager
+                .identifier("langchain_item_" + storeName)
                 .types(ClassType.create(BaseMarshaller.class))
                 .setRuntimeInit()
                 .unremovable()
@@ -149,7 +150,7 @@ public class InfinispanEmbeddingStoreProcessor {
             String storeName) {
         return SyntheticBeanBuildItem
                 .configure(LANGCHAIN_METADATA_MARSHALLER)
-                // the InfinispanClientProducer uses BaseMarshaller from BeanManager
+                .identifier("langchain_metadata_" + storeName)
                 .types(ClassType.create(BaseMarshaller.class))
                 .setRuntimeInit()
                 .unremovable()

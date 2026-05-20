@@ -33,16 +33,13 @@ public class MultiStoreServiceTest {
         assertThat(multiStoreService.getStore2()).isNotNull();
         assertThat(multiStoreService.getDefaultStore()).isNotNull();
 
-        // Create test embeddings with different dimensions
         float[] embedding1Values = new float[384];
         float[] embedding2Values = new float[384];
         float[] embedding3Values = new float[384];
 
-        for (int i = 0; i < 384; i++) {
-            embedding1Values[i] = 0.1f + (i * 0.001f);
-            embedding2Values[i] = 0.2f + (i * 0.001f);
-            embedding3Values[i] = 0.3f + (i * 0.001f);
-        }
+        embedding1Values[0] = 1.0f;
+        embedding2Values[1] = 1.0f;
+        embedding3Values[2] = 1.0f;
 
         Embedding embedding1 = new Embedding(embedding1Values);
         Embedding embedding2 = new Embedding(embedding2Values);
