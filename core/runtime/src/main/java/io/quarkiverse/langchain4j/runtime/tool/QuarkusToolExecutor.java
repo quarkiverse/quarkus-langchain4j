@@ -124,7 +124,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 invocationResult = ((Uni<?>) invocationResult).await().indefinitely();
             }
             if (invocationResult instanceof ToolExecutionResult ter) {
-                log.debugv("Tool execution result passed through. result: {0} | resultText: {1}", ter.result(), ter.resultText());
+                log.debugv("Tool execution result passed through. result: {0} | resultText: {1}", ter.result(),
+                        ter.resultText());
                 return ter;
             }
             String result = handleResult(invokerInstance, invocationResult);
