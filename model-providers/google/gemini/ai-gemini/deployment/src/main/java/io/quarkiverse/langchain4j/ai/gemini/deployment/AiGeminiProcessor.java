@@ -34,6 +34,8 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveHierarchyBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
 import io.smallrye.config.Priorities;
@@ -170,5 +172,19 @@ public class AiGeminiProcessor {
             writerOverrideProducer.produce(new MessageBodyWriterOverrideBuildItem(
                     "org.jboss.resteasy.reactive.server.jsonb.JsonbMessageBodyWriter", Priorities.APPLICATION + 1, true));
         }
+    }
+
+    @BuildStep
+    IndexDependencyBuildItem indexUpstreamOllamaModule() {
+        return new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-google-ai-gemini");
+    }
+
+    @BuildStep
+    public void nativeSupport(BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer) {
+        reflectiveHierarchyProducer.produce(
+                ReflectiveHierarchyBuildItem.builder("dev.langchain4j.model.googleai.GeminiGenerateContentRequest")
+                        .build());
+        reflectiveHierarchyProducer.produce(
+                ReflectiveHierarchyBuildItem.builder("dev.langchain4j.model.googleai.GeminiGenerateContentResponse").build());
     }
 }
