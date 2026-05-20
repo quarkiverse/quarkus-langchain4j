@@ -116,16 +116,18 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 log.debugv("Attempting to invoke tool {0} with parameters {1}", context.tool, Arrays.toString(params));
             }
             Object invocationResult = invokerInstance.invoke(context.tool, params);
-            String result;
             if (invocationResult instanceof Uni<?>) { // TODO CS
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
                     throw new BlockingToolNotAllowedException(
                             "Cannot execute tools returning Uni on event loop thread due to a tool executor limitation");
                 }
-                result = handleResult(invokerInstance, ((Uni<?>) invocationResult).await().indefinitely());
-            } else {
-                result = handleResult(invokerInstance, invocationResult);
+                invocationResult = ((Uni<?>) invocationResult).await().indefinitely();
             }
+            if (invocationResult instanceof ToolExecutionResult ter) {
+                log.debugv("Tool execution result passed through: {0}", ter.resultText());
+                return ter;
+            }
+            String result = handleResult(invokerInstance, invocationResult);
             log.debugv("Tool execution result: {0}", result);
             return ToolExecutionResult.builder().result(invocationResult).resultText(result).build();
         } catch (Exception e) {
