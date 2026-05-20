@@ -302,6 +302,16 @@ public class ToolExecutionModelTest {
         }
     }
 
+    @Test
+    @ActivateRequestContext
+    void testNormalToolExecutionsSurfacedInResult() {
+        String uuid = UUID.randomUUID().toString();
+        Result<String> r = aiService.helloResult("abc", "hi - " + uuid);
+        assertThat(r.content()).isNotNull();
+        assertThat(r.toolExecutions()).hasSize(1);
+        assertThat(r.toolExecutions().get(0).request().name()).isEqualTo("hi");
+    }
+
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 

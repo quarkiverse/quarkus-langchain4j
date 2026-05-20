@@ -422,6 +422,7 @@ public class AiServiceMethodImplementationSupport {
                         ? context.maxSequentialToolExecutions
                         : getMaxSequentialToolExecutions();
         int executionsLeft = maxSequentialToolExecutions;
+        List<ToolExecution> allToolExecutions = new ArrayList<>();
         List<ChatResponse> intermediateResponses = new ArrayList<>();
         while (true) {
             if (executionsLeft-- == 0) {
@@ -481,6 +482,7 @@ public class AiServiceMethodImplementationSupport {
                         .invocationContext(invocationContext)
                         .build();
                 toolExecutions.add(toolExecution);
+                allToolExecutions.add(toolExecution);
                 toolResults.add(toolExecutionResultMessage);
 
                 // If any tool does not return immediately, results must be processed by LLM
@@ -611,6 +613,7 @@ public class AiServiceMethodImplementationSupport {
                     .tokenUsage(tokenUsageAccumulator)
                     .sources(augmentationResult == null ? null : augmentationResult.contents())
                     .finishReason(response.finishReason())
+                    .toolExecutions(allToolExecutions)
                     .build();
 
             context.eventListenerRegistrar.fireEvent(
