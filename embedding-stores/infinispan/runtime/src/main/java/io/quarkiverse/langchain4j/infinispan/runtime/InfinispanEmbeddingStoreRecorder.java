@@ -1,10 +1,14 @@
 package io.quarkiverse.langchain4j.infinispan.runtime;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.protostream.MessageMarshaller;
 
 import io.quarkiverse.langchain4j.infinispan.InfinispanEmbeddingStore;
+import io.quarkiverse.langchain4j.infinispan.SchemaAndMarshallerProducer;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.infinispan.client.InfinispanClientName;
 import io.quarkus.runtime.RuntimeValue;
@@ -23,7 +27,7 @@ public class InfinispanEmbeddingStoreRecorder {
     }
 
     public Function<SyntheticCreationalContext<InfinispanEmbeddingStore>, InfinispanEmbeddingStore> embeddingStoreFunction(
-            String clientName) {
+            String clientName, String storeName) {
         return new Function<>() {
             @Override
             public InfinispanEmbeddingStore apply(SyntheticCreationalContext<InfinispanEmbeddingStore> context) {
@@ -37,12 +41,48 @@ public class InfinispanEmbeddingStoreRecorder {
                 }
                 builder.cacheManager(cacheManager);
                 InfinispanEmbeddingStoreConfig config = runtimeConfig.getValue();
-                builder.schema(new InfinispanSchema(config.defaultConfig().cacheName(), config.defaultConfig().dimension(),
-                        config.defaultConfig().distance(), config.defaultConfig().similarity(),
-                        config.defaultConfig().createCache(),
-                        config.defaultConfig().cacheConfig().orElse(null)));
+
+                InfinispanStoreRuntimeConfig storeConfig = NamedConfigUtil.isDefault(storeName)
+                        ? config.defaultConfig()
+                        : config.namedConfig().getOrDefault(storeName, config.defaultConfig());
+
+                builder.schema(new InfinispanSchema(
+                        storeConfig.cacheName(),
+                        storeConfig.dimension(),
+                        storeConfig.distance(),
+                        storeConfig.similarity(),
+                        storeConfig.createCache(),
+                        storeConfig.cacheConfig().orElse(null)));
                 return builder.build();
             }
         };
+    }
+
+    public Supplier<MessageMarshaller> itemMarshallerSupplier(String storeName) {
+        return new Supplier<MessageMarshaller>() {
+            @Override
+            public MessageMarshaller get() {
+                InfinispanStoreRuntimeConfig storeConfig = resolveStoreConfig(storeName);
+                return new LangchainItemMarshaller(storeConfig.dimension());
+            }
+        };
+    }
+
+    public Supplier<MessageMarshaller> metadataMarshallerSupplier(String storeName) {
+        return new Supplier<MessageMarshaller>() {
+            @Override
+            public MessageMarshaller get() {
+                InfinispanStoreRuntimeConfig storeConfig = resolveStoreConfig(storeName);
+                String typeName = SchemaAndMarshallerProducer.LANGCHAIN_METADATA + storeConfig.dimension();
+                return new LangchainMetadataMarshaller(typeName);
+            }
+        };
+    }
+
+    private InfinispanStoreRuntimeConfig resolveStoreConfig(String storeName) {
+        InfinispanEmbeddingStoreConfig config = runtimeConfig.getValue();
+        return NamedConfigUtil.isDefault(storeName)
+                ? config.defaultConfig()
+                : config.namedConfig().getOrDefault(storeName, config.defaultConfig());
     }
 }

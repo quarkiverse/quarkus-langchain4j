@@ -28,7 +28,7 @@ public interface InfinispanEmbeddingStoreBuildTimeConfig {
     @ConfigDocMapKey("store-name")
     @WithParentName
     @WithDefaults
-    Map<String, InfinispanNamedStoreBuildTimeConfig> namedStores();
+    Map<String, InfinispanNamedStoreBuildTimeConfig> namedConfig();
 
     @ConfigGroup
     interface DefaultStoreBuildTimeConfig {
