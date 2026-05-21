@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -603,6 +604,8 @@ public class AiServiceMethodImplementationSupport {
 
         response = ChatResponse.builder().aiMessage(response.aiMessage()).metadata(response.metadata()).build();
 
+        emitThinkingIfPresent(response, context, invocationContext);
+
         if (TypeUtil.isResult(returnType)) {
             var parsedResponse = SERVICE_OUTPUT_PARSER.parse(
                     ChatResponse.builder().aiMessage(response.aiMessage()).build(),
@@ -636,6 +639,32 @@ public class AiServiceMethodImplementationSupport {
                         .build());
 
         return augmentedResponse;
+    }
+
+    private static void emitThinkingIfPresent(ChatResponse response,
+            QuarkusAiServiceContext context,
+            InvocationContext invocationContext) {
+        ThinkingHandler handler = context.thinkingHandler;
+        if (handler == null) {
+            return;
+        }
+        if (response == null || response.aiMessage() == null) {
+            return;
+        }
+        String thinking = response.aiMessage().thinking();
+        if (thinking == null || thinking.isBlank()) {
+            return;
+        }
+        ThinkingEmitted event = new DefaultThinkingEmitted(thinking,
+                invocationContext.methodName(),
+                context.aiServiceClass,
+                invocationContext.chatMemoryId(),
+                Instant.now());
+        try {
+            handler.emit(event);
+        } catch (Throwable e) {
+            log.debugf(e, "@OnThinking handler on %s threw an exception", context.aiServiceClass.getName());
+        }
     }
 
     private static InvocationParameters findInvocationParams(Object[] args) {
