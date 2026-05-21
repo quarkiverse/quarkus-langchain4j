@@ -1,6 +1,6 @@
 ---
 # The format of this file is documented here:
 # https://github.com/quarkusio/quarkus-github-bot#triage-issues
-features: [ANALYZE_WORKFLOW_RUN_RESULTS]
+features: [ANALYZE_WORKFLOW_RUN_RESULTS, CHECK_CONTRIBUTION_RULES]
 workflowRunAnalysis:
   workflows: ["Build (on pull request)"]
