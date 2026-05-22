@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import dev.langchain4j.data.message.ChatMessage;
@@ -73,10 +74,13 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         // dispatch finish on its own).
         AtomicReference<StreamingHandle> handleRef = new AtomicReference<>();
 
-        AiServiceTokenStream stream = createTokenStream(processor, handleRef);
+        // Per-subscription flag — flipped on Multi cancellation, polled by upstream's agent loop.
+        AtomicBoolean cancelled = new AtomicBoolean();
 
-        // Bridge Multi cancellation to upstream stream cancellation.
+        AiServiceTokenStream stream = createTokenStream(processor, handleRef, cancelled);
+
         Multi<ChatEvent> cancellableMulti = processor.onCancellation().invoke(() -> {
+            cancelled.set(true);
             StreamingHandle handle = handleRef.get();
             if (handle != null) {
                 handle.cancel();
@@ -97,7 +101,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     }
 
     private AiServiceTokenStream createTokenStream(UnicastProcessor<ChatEvent> processor,
-            AtomicReference<StreamingHandle> handleRef) {
+            AtomicReference<StreamingHandle> handleRef, AtomicBoolean cancelled) {
         // methodKey is intentionally NOT passed to upstream for the Multi path. Upstream's streaming
         // handler buffers partial responses when guardrailService.hasOutputGuardrails(methodKey) is
         // true and replays them only after guardrail validation. Quarkus owns Multi-path output
@@ -120,6 +124,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
                 .toolArgumentsErrorHandler(context.toolService.argumentsErrorHandler())
                 .toolExecutionErrorHandler(context.toolService.executionErrorHandler())
                 .commonGuardrailParams(commonGuardrailParams)
+                .cancellationSupplier(cancelled::get)
                 .build();
 
         AiServiceTokenStream stream = new AiServiceTokenStream(params);
