@@ -242,7 +242,7 @@ h|[[quarkus-langchain4j-pinecone_section_quarkus-langchain4j-pinecone]] [.sectio
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name[`+++quarkus.langchain4j.pinecone."store-name".index-name+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name-bt]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name-bt[`+++quarkus.langchain4j.pinecone."store-name".index-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.pinecone."store-name".index-name+++[]
 endif::add-copy-button-to-config-props[]

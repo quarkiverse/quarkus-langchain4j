@@ -515,7 +515,7 @@ h|[[quarkus-langchain4j-milvus_section_quarkus-langchain4j-milvus]] [.section-na
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host[`+++quarkus.langchain4j.milvus."store-name".host+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host-bt]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host-bt[`+++quarkus.langchain4j.milvus."store-name".host+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.milvus."store-name".host+++[]
 endif::add-copy-button-to-config-props[]

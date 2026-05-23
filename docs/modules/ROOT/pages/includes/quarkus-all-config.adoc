@@ -2887,7 +2887,7 @@ h|[[quarkus-langchain4j-chroma_section_quarkus-langchain4j-chroma]] [.section-na
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-store-name-collection-name[`+++quarkus.langchain4j.chroma."store-name".collection-name+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-store-name-collection-name-bt]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-store-name-collection-name-bt[`+++quarkus.langchain4j.chroma."store-name".collection-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.chroma."store-name".collection-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -5539,7 +5539,7 @@ h|[[quarkus-langchain4j-milvus_section_quarkus-langchain4j-milvus]] [.section-na
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host[`+++quarkus.langchain4j.milvus."store-name".host+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host-bt]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-store-name-host-bt[`+++quarkus.langchain4j.milvus."store-name".host+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.milvus."store-name".host+++[]
 endif::add-copy-button-to-config-props[]
@@ -6932,7 +6932,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name[`+++quarkus.langchain4j.neo4j.database-name+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name-bt]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name-bt[`+++quarkus.langchain4j.neo4j.database-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.neo4j.database-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -7179,7 +7179,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-store-name-database-name]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-store-name-database-name[`+++quarkus.langchain4j.neo4j."store-name".database-name+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-store-name-database-name-bt]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-store-name-database-name-bt[`+++quarkus.langchain4j.neo4j."store-name".database-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.neo4j."store-name".database-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -11811,7 +11811,7 @@ h|[[quarkus-langchain4j-pinecone_section_quarkus-langchain4j-pinecone]] [.sectio
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name[`+++quarkus.langchain4j.pinecone."store-name".index-name+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name-bt]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-store-name-index-name-bt[`+++quarkus.langchain4j.pinecone."store-name".index-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.pinecone."store-name".index-name+++[]
 endif::add-copy-button-to-config-props[]

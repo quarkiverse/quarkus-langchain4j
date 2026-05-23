@@ -441,7 +441,7 @@ h|[[quarkus-langchain4j-weaviate_section_quarkus-langchain4j-weaviate]] [.sectio
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class[`+++quarkus.langchain4j.weaviate."store-name".object-class+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class-bt]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class-bt[`+++quarkus.langchain4j.weaviate."store-name".object-class+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".object-class+++[]
 endif::add-copy-button-to-config-props[]

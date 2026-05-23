@@ -305,7 +305,7 @@ h|[[quarkus-langchain4j-qdrant_section_quarkus-langchain4j-qdrant]] [.section-na
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name[`+++quarkus.langchain4j.qdrant."store-name".collection-name+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name-bt]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-store-name-collection-name-bt[`+++quarkus.langchain4j.qdrant."store-name".collection-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant."store-name".collection-name+++[]
 endif::add-copy-button-to-config-props[]
