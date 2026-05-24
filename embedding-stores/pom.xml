@@ -15,11 +15,12 @@
         <module>infinispan</module>
         <module>milvus</module>
         <module>neo4j</module>
+        <module>oracle</module>
         <module>pgvector</module>
         <module>pinecone</module>
         <module>qdrant</module>
         <module>redis</module>
         <module>weaviate</module>
     </modules>
-    
+
 </project>

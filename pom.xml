@@ -402,10 +402,10 @@
     </profile>
   </profiles>
 
-  <!-- 
+  <!--
 	  This is to allow building against langchain4j snapshots because they depend on snapshots
 	  of langchain4j-embeddings and those are deployed in the Central Portal.
-	  TODO: this can be removed after langchain4j-embeddings are moved into the main langchain4j repo 
+	  TODO: this can be removed after langchain4j-embeddings are moved into the main langchain4j repo
   -->
   <repositories>
     <repository>
