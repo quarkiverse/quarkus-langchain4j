@@ -47,6 +47,7 @@ public class VertexAiChatLanguageModel implements ChatModel {
                 .location(builder.location)
                 .projectId(builder.projectId)
                 .publisher(builder.publisher)
+                .baseUrl(builder.baseUrl.get())
                 .build();
 
         try {

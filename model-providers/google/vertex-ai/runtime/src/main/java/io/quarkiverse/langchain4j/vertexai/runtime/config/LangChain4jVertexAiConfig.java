@@ -55,7 +55,7 @@ public interface LangChain4jVertexAiConfig {
         String publisher();
 
         /**
-         * Meant to be used for testing only in order to override the base URL used by the client
+         * Base URL used by the client, it is not required.
          */
         Optional<String> baseUrl();
 

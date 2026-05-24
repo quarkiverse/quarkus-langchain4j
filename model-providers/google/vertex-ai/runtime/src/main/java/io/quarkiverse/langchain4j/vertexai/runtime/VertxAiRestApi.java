@@ -51,11 +51,15 @@ public interface VertxAiRestApi {
         @RestPath
         public final String publisher;
 
+        @RestPath
+        public final String baseUrl;
+
         private ApiMetadata(Builder builder) {
             this.projectId = builder.projectId;
             this.location = builder.location;
             this.modelId = builder.modelId;
             this.publisher = builder.publisher;
+            this.baseUrl = builder.baseUrl;
         }
 
         public static Builder builder() {
@@ -67,6 +71,7 @@ public interface VertxAiRestApi {
             private String location;
             private String modelId;
             private String publisher;
+            private String baseUrl;
 
             public Builder projectId(String projectId) {
                 this.projectId = projectId;
@@ -85,6 +90,11 @@ public interface VertxAiRestApi {
 
             public Builder publisher(String publisherId) {
                 this.publisher = publisherId;
+                return this;
+            }
+
+            public Builder baseUrl(String baseUrl) {
+                this.baseUrl = baseUrl;
                 return this;
             }
 
