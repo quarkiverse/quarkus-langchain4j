@@ -496,9 +496,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
                         fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
 
-                        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                                toolExecutionRequest,
-                                toolExecutionResult.resultText());
+                        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil
+                                .from(toolExecutionRequest, toolExecutionResult);
 
                         ToolExecution toolExecution = ToolExecution.builder()
                                 .request(toolExecutionRequest)
