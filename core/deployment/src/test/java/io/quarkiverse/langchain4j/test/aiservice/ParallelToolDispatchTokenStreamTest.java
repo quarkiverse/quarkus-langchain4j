@@ -35,7 +35,6 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -86,7 +85,6 @@ public class ParallelToolDispatchTokenStreamTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             SleepyTools.invocations.set(0);
         }
 
@@ -139,7 +137,6 @@ public class ParallelToolDispatchTokenStreamTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             SleepyTools.invocations.set(0);
         }
 

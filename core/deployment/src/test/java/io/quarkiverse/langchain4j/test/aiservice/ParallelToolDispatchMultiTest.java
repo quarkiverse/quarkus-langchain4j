@@ -34,7 +34,6 @@ import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
@@ -86,7 +85,6 @@ public class ParallelToolDispatchMultiTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             SleepyTools.invocations.set(0);
         }
 
@@ -127,7 +125,6 @@ public class ParallelToolDispatchMultiTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             SleepyTools.invocations.set(0);
         }
 
@@ -171,7 +168,6 @@ public class ParallelToolDispatchMultiTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             FailingMultiTools.completedAfterCancel.set(0);
             FailingMultiTools.log.clear();
             ThreeFailingToolStreamingModel.callCount.set(0);
@@ -236,7 +232,6 @@ public class ParallelToolDispatchMultiTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             OrderedTools.invocations.set(0);
             FiveToolStreamingModel.observedSecondTurnTools.clear();
         }

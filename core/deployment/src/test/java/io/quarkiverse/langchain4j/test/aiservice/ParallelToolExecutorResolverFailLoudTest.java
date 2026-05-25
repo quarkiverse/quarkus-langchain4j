@@ -11,13 +11,10 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
-import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -55,20 +52,10 @@ public class ParallelToolExecutorResolverFailLoudTest {
             // -5 is invalid: BoundedExecutor's constructor rejects any maxConcurrency <= 0 with
             // IllegalArgumentException. SmallRye accepts the value at config-load (the field is a plain int);
             // validation happens when the resolver builds the executor.
-            .overrideRuntimeConfigKey("quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency", "-5");
+            .overrideRuntimeConfigKey("quarkus.langchain4j.tools.virtual-threads.max-concurrency", "-5");
 
     @Inject
-    LangChain4jConfig config;
-
-    @BeforeEach
-    void resetCache() {
-        ParallelToolExecutorResolver.resetForTesting();
-    }
-
-    @AfterEach
-    void clearCache() {
-        ParallelToolExecutorResolver.resetForTesting();
-    }
+    ParallelToolExecutorResolver resolver;
 
     /**
      * Invalid {@code virtual-threads.max-concurrency} must fail LOUDLY. Prior to the fix the catch sites swallowed
@@ -84,7 +71,7 @@ public class ParallelToolExecutorResolverFailLoudTest {
         assumeTrue(Runtime.version().feature() >= 21,
                 "This assertion requires Java 21+ — on earlier JVMs the resolver downgrades VT mode to serial "
                         + "before constructing BoundedExecutor, so the invalid concurrency value is never reached.");
-        assertThatThrownBy(() -> ParallelToolExecutorResolver.resolve("vtSvc", config))
+        assertThatThrownBy(() -> resolver.resolve("vtSvc"))
                 .as("invalid virtual-threads.max-concurrency must surface as IllegalArgumentException, not a silent "
                         + "fallback to serial")
                 .isInstanceOf(IllegalArgumentException.class)
@@ -102,7 +89,7 @@ public class ParallelToolExecutorResolverFailLoudTest {
         assumeTrue(Runtime.version().feature() < 21,
                 "This assertion only applies on Java <21 where VT mode downgrades to serial at the resolver level.");
         assertThatCode(() -> {
-            Executor resolved = ParallelToolExecutorResolver.resolve("vtSvc", config);
+            Executor resolved = resolver.resolve("vtSvc");
             assertThat(resolved).as("Java <21 must downgrade VT mode to serial regardless of concurrency value")
                     .isNull();
         }).doesNotThrowAnyException();

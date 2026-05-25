@@ -7,6 +7,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
@@ -16,25 +19,32 @@ import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkiverse.langchain4j.runtime.config.ToolsExecutionConfig;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
+import io.quarkus.arc.Unremovable;
 import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 
 /**
  * Resolves the parallel-tool executor for each AiService at runtime.
  * <p>
- * This is the Phase 0 plumbing surface: it reads the runtime tool-execution config, applies the build-time fallback
- * rules (Java 17-20 + {@code virtual-threads} mode -> serial + warn-once), and returns either a fully-decorated
- * {@link Executor} (already wrapped in {@link VertxContextAwareExecutor}, and bounded for the VT mode) or {@code null}
- * when the resolved mode is {@code serial}.
+ * Reads the runtime tool-execution config, applies the build-time fallback rules (Java 17-20 +
+ * {@code virtual-threads} mode -> serial + warn-once), and returns either a fully-decorated {@link Executor}
+ * (already wrapped in {@link VertxContextAwareExecutor}, and bounded for the VT mode) or {@code null} when the
+ * resolved mode is {@code serial}.
  * <p>
- * Phase 1 will populate {@code QuarkusAiServiceContext.parallelToolExecutor} from this resolver. Phase 0 only lays
- * the plumbing.
+ * This is an Arc-owned {@code @Singleton}, so all cached executor wrappers and warning state are tied to the
+ * current application generation. In dev mode the bean is discarded along with the Arc container when the app
+ * hot-reloads, which prevents a stale virtual-thread executor (whose underlying {@code ThreadPerTaskExecutor}
+ * was shut down by {@code VirtualThreadsRecorder}'s dev-mode shutdown task) from being reused for the next
+ * generation's tool dispatch.
+ * <p>
+ * {@code @Unremovable} is required because the resolver is obtained via programmatic
+ * {@link Arc#container()} lookups from the recorder and the programmatic AiService factory, not through a
+ * regular injection point that Arc can use for removal analysis.
  */
-public final class ParallelToolExecutorResolver {
+@Singleton
+@Unremovable
+public class ParallelToolExecutorResolver {
 
     private static final Logger LOG = Logger.getLogger(ParallelToolExecutorResolver.class);
-
-    /** Cached results per (aiServiceName -> Executor). {@code null} means serial. */
-    private static final Map<String, Executor> CACHE = new ConcurrentHashMap<>();
 
     /** Sentinel used so {@link ConcurrentHashMap} can store the "serial / null executor" decision. */
     private static final Executor NULL_SENTINEL = (Runnable r) -> {
@@ -42,14 +52,20 @@ public final class ParallelToolExecutorResolver {
                 "Sentinel executor must not be invoked. The serial mode skips parallel dispatch entirely.");
     };
 
+    private final LangChain4jConfig config;
+
+    /** Cached results per (aiServiceName -> Executor). {@code null} means serial. */
+    private final Map<String, Executor> cache = new ConcurrentHashMap<>();
+
     /** Tracks AiService names for which we've already emitted the Java-version downgrade warning. */
-    private static final Set<String> WARNED_DOWNGRADES = ConcurrentHashMap.newKeySet();
+    private final Set<String> warnedDowngrades = ConcurrentHashMap.newKeySet();
 
-    /** Lazily-initialised shared VT executor wrapper (one per JVM instance). */
-    private static volatile Executor SHARED_VT_EXECUTOR;
+    /** Lazily-initialised shared VT executor wrapper (one per application generation). */
+    private volatile Executor sharedVirtualThreadExecutor;
 
-    private ParallelToolExecutorResolver() {
-        // utility
+    @Inject
+    public ParallelToolExecutorResolver(LangChain4jConfig config) {
+        this.config = config;
     }
 
     /**
@@ -61,32 +77,22 @@ public final class ParallelToolExecutorResolver {
      *        simple class name. The resolver does <strong>not</strong> accept a fully-qualified class name; passing
      *        a FQCN will silently miss every per-service override because SmallRye Config's
      *        {@code @WithParentName} Map cannot key on dotted strings.
-     * @param config the runtime LangChain4j config
      * @return the executor to pass to {@code AiServices.executeToolsConcurrently(Executor)} / equivalent, or
      *         {@code null} if the mode resolves to serial (callers must keep the existing serial dispatch path
      *         when this returns {@code null}).
      */
-    public static Executor resolve(String aiServiceName, LangChain4jConfig config) {
-        Executor cached = CACHE.get(aiServiceName);
+    public Executor resolve(String aiServiceName) {
+        Executor cached = cache.get(aiServiceName);
         if (cached != null) {
             return cached == NULL_SENTINEL ? null : cached;
         }
-        Executor resolved = doResolve(aiServiceName, config);
-        CACHE.put(aiServiceName, resolved == null ? NULL_SENTINEL : resolved);
+        Executor resolved = doResolve(aiServiceName);
+        cache.put(aiServiceName, resolved == null ? NULL_SENTINEL : resolved);
         return resolved;
     }
 
-    /**
-     * Test helper — clears the per-JVM resolver caches so unit tests can re-resolve under different config.
-     */
-    public static void resetForTesting() {
-        CACHE.clear();
-        WARNED_DOWNGRADES.clear();
-        SHARED_VT_EXECUTOR = null;
-    }
-
-    private static Executor doResolve(String aiServiceName, LangChain4jConfig config) {
-        ToolsExecutionMode requested = effectiveMode(aiServiceName, config);
+    private Executor doResolve(String aiServiceName) {
+        ToolsExecutionMode requested = effectiveMode(aiServiceName);
         ToolsExecutionMode resolved = applyJavaVersionFallback(aiServiceName, requested);
         switch (resolved) {
             case SERIAL:
@@ -100,7 +106,7 @@ public final class ParallelToolExecutorResolver {
         }
     }
 
-    private static ToolsExecutionMode effectiveMode(String aiServiceName, LangChain4jConfig config) {
+    private ToolsExecutionMode effectiveMode(String aiServiceName) {
         ToolsExecutionConfig globalCfg = config.tools().execution();
         Map<String, LangChain4jConfig.NamedAiServiceConfig> named = config.namedAiServices();
         if (named != null && aiServiceName != null) {
@@ -121,9 +127,9 @@ public final class ParallelToolExecutorResolver {
         return globalCfg.mode();
     }
 
-    private static ToolsExecutionMode applyJavaVersionFallback(String aiServiceName, ToolsExecutionMode requested) {
+    private ToolsExecutionMode applyJavaVersionFallback(String aiServiceName, ToolsExecutionMode requested) {
         if (requested == ToolsExecutionMode.VIRTUAL_THREADS && !isJava21OrLater()) {
-            if (WARNED_DOWNGRADES.add(aiServiceName == null ? "" : aiServiceName)) {
+            if (warnedDowngrades.add(aiServiceName == null ? "" : aiServiceName)) {
                 LOG.warnf(
                         "AiService '%s' was configured with tools.execution=virtual-threads but the JVM is Java %d. "
                                 + "Falling back to serial tool dispatch. Run on Java 21+ or set "
@@ -144,26 +150,26 @@ public final class ParallelToolExecutorResolver {
         return Runtime.version().feature() >= 21;
     }
 
-    private static Executor sharedVirtualThreadExecutor(int maxConcurrency) {
-        Executor cached = SHARED_VT_EXECUTOR;
+    private Executor sharedVirtualThreadExecutor(int maxConcurrency) {
+        Executor cached = sharedVirtualThreadExecutor;
         if (cached != null) {
             return cached;
         }
-        synchronized (ParallelToolExecutorResolver.class) {
-            if (SHARED_VT_EXECUTOR != null) {
-                return SHARED_VT_EXECUTOR;
+        synchronized (this) {
+            if (sharedVirtualThreadExecutor != null) {
+                return sharedVirtualThreadExecutor;
             }
             // Quarkus' VirtualThreadsRecorder.getCurrent() returns an unbounded VT-per-task executor on Java 21+.
             // We must still apply max-concurrency as a Semaphore wrapper, then wrap in VertxContextAwareExecutor so
             // the captured caller context is re-installed inside each VT task before downstream code runs.
             Executor vt = VirtualThreadsRecorder.getCurrent();
             Executor bounded = new BoundedExecutor(vt, maxConcurrency);
-            SHARED_VT_EXECUTOR = new VertxContextAwareExecutor(bounded);
-            return SHARED_VT_EXECUTOR;
+            sharedVirtualThreadExecutor = new VertxContextAwareExecutor(bounded);
+            return sharedVirtualThreadExecutor;
         }
     }
 
-    private static Executor workerPoolExecutor() {
+    private Executor workerPoolExecutor() {
         InstanceHandle<ManagedExecutor> handle = Arc.container().instance(ManagedExecutor.class);
         if (!handle.isAvailable()) {
             LOG.warn("ManagedExecutor CDI bean not available; tools.execution=worker-pool falling back to serial. "
@@ -180,13 +186,43 @@ public final class ParallelToolExecutorResolver {
         return new VertxContextAwareExecutor(delegate);
     }
 
-    /** Reset only the warned-downgrades set without flushing the executor cache. Internal helper. */
-    static void clearDowngradeWarnings() {
-        WARNED_DOWNGRADES.clear();
+    /** Snapshot of warned-downgrade keys, for diagnostics in tests. */
+    Set<String> warnedDowngradesSnapshot() {
+        return new HashSet<>(warnedDowngrades);
     }
 
-    /** Used by build-time recorder to expose just the warning logic when scanning at startup. */
-    static Set<String> warnedDowngradesSnapshot() {
-        return new HashSet<>(WARNED_DOWNGRADES);
+    /**
+     * Shared lookup-and-resolve helper used by both AiService construction call sites
+     * ({@code QuarkusAiServicesFactory.QuarkusAiServices.build()} and
+     * {@code AiServicesRecorder.createDeclarativeAiService}).
+     * <p>
+     * Looks the resolver up through Arc so the cache state is tied to the current application generation, and
+     * applies the environment-driven fallback semantics: {@link UnsupportedOperationException} (and only that)
+     * is the conventional Java signal for "feature exists but is not usable in this JVM/runtime" — log INFO and
+     * return {@code null} so the application keeps working on serial dispatch. Every other {@link RuntimeException}
+     * (invalid concurrency, unknown mode, malformed config mapping, etc.) propagates so misconfiguration fails
+     * loudly at startup with a clear message.
+     *
+     * @param aiServiceName the canonical AiService name used as the resolver key
+     * @param log the caller's logger (kept on each call site so the log line identifies which path triggered the fallback)
+     * @return the parallel executor, or {@code null} when serial dispatch should be used
+     */
+    public static Executor resolveFromArc(String aiServiceName, Logger log) {
+        try {
+            InstanceHandle<ParallelToolExecutorResolver> handle = Arc.container()
+                    .instance(ParallelToolExecutorResolver.class);
+            if (!handle.isAvailable()) {
+                log.warnf(
+                        "Parallel-tool executor resolver is not available; AiService '%s' will use serial tool dispatch.",
+                        aiServiceName);
+                return null;
+            }
+            return handle.get().resolve(aiServiceName);
+        } catch (UnsupportedOperationException e) {
+            log.infof(e,
+                    "Parallel-tool executor unavailable in this environment for AiService '%s'; falling back to serial dispatch.",
+                    aiServiceName);
+            return null;
+        }
     }
 }

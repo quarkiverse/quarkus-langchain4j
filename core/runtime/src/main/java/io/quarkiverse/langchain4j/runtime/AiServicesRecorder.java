@@ -16,7 +16,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
 
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -39,13 +38,11 @@ import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateIn
 import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
-import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
-import io.smallrye.config.SmallRyeConfig;
 
 @Recorder
 public class AiServicesRecorder {
@@ -365,21 +362,7 @@ public class AiServicesRecorder {
                     String aiServiceName = classCreateInfo != null && classCreateInfo.aiServiceName() != null
                             ? classCreateInfo.aiServiceName()
                             : serviceClass.getSimpleName();
-                    Executor parallelExecutor = null;
-                    try {
-                        LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
-                                .unwrap(SmallRyeConfig.class)
-                                .getConfigMapping(LangChain4jConfig.class);
-                        parallelExecutor = ParallelToolExecutorResolver
-                                .resolve(aiServiceName, langChain4jConfig);
-                    } catch (UnsupportedOperationException e) {
-                        // Environment-driven fallback only — conventional signal for "feature exists but not usable
-                        // here" (e.g. VT on Java 17). All other RuntimeExceptions propagate so misconfiguration
-                        // (invalid concurrency, unknown mode, malformed config mapping) fails loudly at startup.
-                        LOG.infof(e,
-                                "Parallel-tool executor unavailable in this environment for AiService '%s'; falling back to serial dispatch.",
-                                aiServiceName);
-                    }
+                    Executor parallelExecutor = ParallelToolExecutorResolver.resolveFromArc(aiServiceName, LOG);
                     aiServiceContext.parallelToolExecutor = parallelExecutor;
                     // Wire the upstream integration hooks (executeToolsConcurrently,
                     // streamingToolDispatchHook, errorHandlerBypass, forceToolChoiceAutoAfterFirstIteration,

@@ -8,14 +8,11 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkiverse.langchain4j.runtime.aiservice.VertxContextAwareExecutor;
-import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -50,29 +47,19 @@ public class ParallelToolExecutorResolverConfigTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.workerSvc.tools.execution", "worker-pool");
 
     @Inject
-    LangChain4jConfig config;
-
-    @BeforeEach
-    void resetCache() {
-        ParallelToolExecutorResolver.resetForTesting();
-    }
-
-    @AfterEach
-    void clearCache() {
-        ParallelToolExecutorResolver.resetForTesting();
-    }
+    ParallelToolExecutorResolver resolver;
 
     @Test
     void defaultModeFallthroughReturnsNull() {
         // No override for "unconfiguredSvc" — must fall through to global default (serial -> null executor).
-        Executor resolved = ParallelToolExecutorResolver.resolve("unconfiguredSvc", config);
+        Executor resolved = resolver.resolve("unconfiguredSvc");
         assertThat(resolved).as("serial mode resolves to null so the existing serial dispatch path is preserved")
                 .isNull();
     }
 
     @Test
     void perServiceVirtualThreadsKeyIsRead() {
-        Executor resolved = ParallelToolExecutorResolver.resolve("myAssistant", config);
+        Executor resolved = resolver.resolve("myAssistant");
         // On Java 17-20 we expect downgrade to serial (= null). On Java 21+ we expect a wrapped executor.
         if (Runtime.version().feature() >= 21) {
             assertThat(resolved)
@@ -89,7 +76,7 @@ public class ParallelToolExecutorResolverConfigTest {
     void perServiceWorkerPoolKeyIsRead() {
         // worker-pool resolution requires the ManagedExecutor CDI bean — quarkus-context-propagation is on the test
         // classpath via the Quarkus test stack, so this should yield a real wrapped executor.
-        Executor resolved = ParallelToolExecutorResolver.resolve("workerSvc", config);
+        Executor resolved = resolver.resolve("workerSvc");
         assertThat(resolved)
                 .as("worker-pool mode must produce a VertxContextAwareExecutor wrapper around ManagedExecutor")
                 .isInstanceOf(VertxContextAwareExecutor.class);
@@ -97,8 +84,8 @@ public class ParallelToolExecutorResolverConfigTest {
 
     @Test
     void cacheReturnsSameInstanceOnSecondCall() {
-        Executor first = ParallelToolExecutorResolver.resolve("workerSvc", config);
-        Executor second = ParallelToolExecutorResolver.resolve("workerSvc", config);
+        Executor first = resolver.resolve("workerSvc");
+        Executor second = resolver.resolve("workerSvc");
         assertThat(second).as("resolver must cache per-service results to avoid re-allocating wrappers")
                 .isSameAs(first);
     }
@@ -118,8 +105,7 @@ public class ParallelToolExecutorResolverConfigTest {
         // The FQCN of a hypothetical user AiService that happens to have @Named("myAssistant") on it. Even
         // though the per-service override under "myAssistant" is set to virtual-threads, passing the FQCN
         // must NOT find it — it falls through to the global default (serial -> null).
-        Executor resolved = ParallelToolExecutorResolver.resolve(
-                "com.example.MyAssistant", config);
+        Executor resolved = resolver.resolve("com.example.MyAssistant");
         assertThat(resolved)
                 .as("FQCN must not match a per-service override; expect global default (serial -> null)")
                 .isNull();

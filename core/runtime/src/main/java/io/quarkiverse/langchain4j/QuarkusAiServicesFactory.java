@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -35,8 +34,6 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusStreamingToolDispatch
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.WorkerSwitchingStreamingChatModel;
-import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
-import io.smallrye.config.SmallRyeConfig;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
 
@@ -166,24 +163,7 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             if (aiServiceName == null) {
                 aiServiceName = aiServiceClass.getSimpleName();
             }
-            Executor parallelExecutor = null;
-            try {
-                LangChain4jConfig langChain4jConfig = ConfigProvider.getConfig()
-                        .unwrap(SmallRyeConfig.class)
-                        .getConfigMapping(LangChain4jConfig.class);
-                parallelExecutor = ParallelToolExecutorResolver.resolve(aiServiceName, langChain4jConfig);
-            } catch (UnsupportedOperationException e) {
-                // Environment-driven fallback only: the conventional Java signal for "feature exists but is not
-                // usable in this JVM/runtime" (e.g. virtual threads when running on Java 17). Log INFO and fall back
-                // to serial dispatch so the application keeps working.
-                //
-                // All other RuntimeExceptions (IllegalArgumentException for invalid concurrency, IllegalStateException
-                // for unknown modes, SmallRye config-mapping failures, etc.) propagate so misconfiguration fails
-                // loudly at startup with a clear error message instead of silently degrading to serial.
-                LOG.infof(e,
-                        "Parallel-tool executor unavailable in this environment for AiService '%s'; falling back to serial dispatch.",
-                        aiServiceName);
-            }
+            Executor parallelExecutor = ParallelToolExecutorResolver.resolveFromArc(aiServiceName, LOG);
             quarkusAiServiceContext().parallelToolExecutor = parallelExecutor;
             applyDelegationHooks(this, quarkusAiServiceContext(), parallelExecutor);
 

@@ -38,7 +38,6 @@ import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
-import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ManagedContext;
 import io.quarkus.test.QuarkusUnitTest;
@@ -93,7 +92,6 @@ public class ParallelToolDispatchNonStreamingTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             SleepyTools.invocations.set(0);
         }
 
@@ -134,7 +132,6 @@ public class ParallelToolDispatchNonStreamingTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             SleepyTools.invocations.set(0);
         }
 
@@ -175,7 +172,6 @@ public class ParallelToolDispatchNonStreamingTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             SleepyTools.invocations.set(0);
         }
 
@@ -219,7 +215,6 @@ public class ParallelToolDispatchNonStreamingTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             FailingTools.completedAfterCancel.set(0);
         }
 
@@ -264,11 +259,6 @@ public class ParallelToolDispatchNonStreamingTest {
         @Inject
         BlockingFailureAiService aiService;
 
-        @BeforeEach
-        void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
-        }
-
         @Test
         @ActivateRequestContext
         void preventsErrorHandlerExceptionBubblesUpInParallelMode() {
@@ -300,7 +290,6 @@ public class ParallelToolDispatchNonStreamingTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             ImmediateMixTools.calls.set(0);
             ThreeMixedImmediateModel.callCount.set(0);
         }
@@ -354,7 +343,6 @@ public class ParallelToolDispatchNonStreamingTest {
 
         @BeforeEach
         void reset() {
-            ParallelToolExecutorResolver.resetForTesting();
             HungTools.invocations.set(0);
             HungTools.releaseLatch = new CountDownLatch(1);
         }

@@ -34,7 +34,6 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.aiservice.ParallelToolExecutorResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -61,7 +60,6 @@ public class TokenStreamErrorHandlerBypassTest {
 
     @BeforeEach
     void reset() {
-        ParallelToolExecutorResolver.resetForTesting();
         FailingTools.invocations.set(0);
         FailingStreamingModel.callCount.set(0);
     }
