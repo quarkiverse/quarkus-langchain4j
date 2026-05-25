@@ -92,7 +92,7 @@ public final class ParallelToolExecutorResolver {
             case SERIAL:
                 return null;
             case VIRTUAL_THREADS:
-                return sharedVirtualThreadExecutor(config.tools().execution().virtualThreadsMaxConcurrency());
+                return sharedVirtualThreadExecutor(config.tools().virtualThreadsMaxConcurrency());
             case WORKER_POOL:
                 return workerPoolExecutor();
             default:

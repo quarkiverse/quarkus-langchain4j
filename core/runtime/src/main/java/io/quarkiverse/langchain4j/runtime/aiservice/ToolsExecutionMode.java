@@ -19,7 +19,7 @@ public enum ToolsExecutionMode {
     /**
      * Tool calls are executed concurrently on a virtual-thread executor.
      * Requires Java 21+ at runtime; on earlier JVMs the extension falls back to {@link #SERIAL} with a startup warning.
-     * Concurrency is bounded by {@code quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency}.
+     * Concurrency is bounded by {@code quarkus.langchain4j.tools.virtual-threads.max-concurrency}.
      */
     VIRTUAL_THREADS,
 

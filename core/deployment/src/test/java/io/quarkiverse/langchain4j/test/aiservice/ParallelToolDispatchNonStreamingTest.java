@@ -168,7 +168,7 @@ public class ParallelToolDispatchNonStreamingTest {
                                 FiveToolBatchModel.class, BoundedAiService.class))
                 .overrideRuntimeConfigKey("quarkus.langchain4j.tools.execution", "virtual-threads")
                 .overrideRuntimeConfigKey(
-                        "quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency", "2");
+                        "quarkus.langchain4j.tools.virtual-threads.max-concurrency", "2");
 
         @Inject
         BoundedAiService aiService;

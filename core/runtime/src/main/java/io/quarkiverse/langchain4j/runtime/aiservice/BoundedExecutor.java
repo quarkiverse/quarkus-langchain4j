@@ -6,7 +6,7 @@ import java.util.concurrent.Semaphore;
 /**
  * Decorator that bounds the concurrency of a delegate {@link Executor} using a {@link Semaphore}.
  * <p>
- * Used to apply {@code quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency} to the underlying
+ * Used to apply {@code quarkus.langchain4j.tools.virtual-threads.max-concurrency} to the underlying
  * virtual-thread pool exposed by {@code VirtualThreadsRecorder.getCurrent()}, which is itself unbounded
  * (one virtual thread per task).
  * <p>

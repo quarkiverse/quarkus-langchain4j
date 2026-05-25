@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.runtime.config;
 import io.quarkiverse.langchain4j.runtime.aiservice.ToolsExecutionMode;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
-import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 /**
@@ -17,7 +16,7 @@ import io.smallrye.config.WithParentName;
  * quarkus.langchain4j.tools.execution=serial            # serial | virtual-threads | worker-pool
  *
  * # Bounded concurrency for the virtual-threads mode (global only)
- * quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency=64
+ * quarkus.langchain4j.tools.virtual-threads.max-concurrency=64
  *
  * # Per-AiService override (e.g. for an AiService whose declared name is "myAiService")
  * quarkus.langchain4j.myAiService.tools.execution=virtual-threads
@@ -25,8 +24,6 @@ import io.smallrye.config.WithParentName;
  */
 @ConfigGroup
 public interface ToolsExecutionConfig {
-
-    int DEFAULT_VT_MAX_CONCURRENCY = 64;
 
     /**
      * The global execution mode for tool calls returned by the LLM.
@@ -42,14 +39,4 @@ public interface ToolsExecutionConfig {
     @WithParentName
     @WithDefault("serial")
     ToolsExecutionMode mode();
-
-    /**
-     * Maximum concurrent tool executions when {@link #mode()} is {@code virtual-threads}.
-     * <p>
-     * Has no effect on {@code serial} or {@code worker-pool}. The {@code worker-pool} mode is bounded by
-     * {@code quarkus.thread-pool.*} configuration instead.
-     */
-    @WithName("virtual-threads.max-concurrency")
-    @WithDefault("" + DEFAULT_VT_MAX_CONCURRENCY)
-    int virtualThreadsMaxConcurrency();
 }
