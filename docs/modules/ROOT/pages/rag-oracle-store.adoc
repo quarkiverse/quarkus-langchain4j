@@ -1,0 +1,166 @@
+= Oracle Database Document Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The Oracle extension allows you to use Oracle Database as a vector database for Retrieval-Augmented Generation (RAG) with Quarkus LangChain4j.
+It leverages https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-vectors.html[Oracle AI Vector Search], available in Oracle Database 23ai, to store and search vector embeddings using the native `VECTOR` data type.
+
+== Prerequisites
+
+To use Oracle Database as a document store:
+
+* An Oracle Database 23ai (or later) instance is required, since AI Vector Search is only available from that version.
+* A Quarkus datasource must be configured.
+
+[NOTE]
+====
+Oracle AI Vector Search is built into the database engine and stores embeddings in a native `VECTOR` column.
+Unlike some other stores, the embedding dimension does not need to be configured: it is inferred from the embedding model and the data inserted at runtime.
+====
+
+NOTE: In dev mode and test mode, the `quarkus-langchain4j-oracle` extension automatically starts an Oracle Database Free container (`gvenzl/oracle-free:23-slim`) via Dev Services. Oracle Express Edition (XE) is not supported, as it does not include AI Vector Search.
+
+== Dependency
+
+To enable Oracle integration in your Quarkus project, add the following Maven dependency:
+
+:provider-artifact: quarkus-langchain4j-oracle
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+This extension requires a configured Quarkus datasource.
+For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide].
+
+== Embedding Table
+
+The extension manages an embedding table whose creation is controlled by the `create-option` property:
+
+[source,properties]
+----
+quarkus.langchain4j.oracle.table=embeddings
+quarkus.langchain4j.oracle.create-option=CREATE_IF_NOT_EXISTS
+----
+
+`create-option` accepts:
+
+* `CREATE_NONE`: the table must already exist.
+* `CREATE_IF_NOT_EXISTS`: create the table only if it is missing (default).
+* `CREATE_OR_REPLACE`: drop and recreate the table.
+
+The column names can be customized if you need to map to an existing schema:
+
+[source,properties]
+----
+quarkus.langchain4j.oracle.id-column=id
+quarkus.langchain4j.oracle.embedding-column=embedding
+quarkus.langchain4j.oracle.text-column=text
+quarkus.langchain4j.oracle.metadata-column=metadata
+----
+
+== Vector Index
+
+By default, searches run as an exact (brute-force) nearest neighbor scan, which is appropriate for small tables.
+For larger datasets, you can create an IVF (Inverted File) index to enable approximate nearest neighbor search:
+
+[source,properties]
+----
+quarkus.langchain4j.oracle.vector-index.create-option=CREATE_IF_NOT_EXISTS
+quarkus.langchain4j.oracle.vector-index.target-accuracy=95
+----
+
+The remaining IVF parameters (`degree-of-parallelism`, `neighbor-partitions`, `sample-per-partition`, `min-vectors-per-partition`) are optional and fall back to the database defaults when not set.
+
+[NOTE]
+====
+The vector index is only created when `vector-index.create-option` is not `CREATE_NONE` (the default). Leaving it unset keeps exact search enabled, which is usually what you want during development.
+====
+
+To force exact search even when an index exists:
+
+[source,properties]
+----
+quarkus.langchain4j.oracle.exact-search=true
+----
+
+== Metadata Indexes
+
+Independently of the vector index, you can create JSON indexes on metadata keys to speed up filtering during search:
+
+[source,properties]
+----
+quarkus.langchain4j.oracle.metadata-indexes[0].create-option=CREATE_IF_NOT_EXISTS
+quarkus.langchain4j.oracle.metadata-indexes[0].keys[0].key=category
+quarkus.langchain4j.oracle.metadata-indexes[0].keys[0].type=STRING
+quarkus.langchain4j.oracle.metadata-indexes[0].keys[0].order=ASC
+----
+
+This is useful for small tables where exact search is sufficient but metadata filtering still needs to be fast.
+
+== Usage Example
+
+Once the extension is installed and configured, you can ingest documents into Oracle using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithOracle.java[]
+----
+
+This example shows how to embed and persist documents using the Oracle store, enabling similarity search during RAG queries.
+
+== Configuration
+
+Customize the behavior of the extension using the following configuration options:
+
+include::includes/quarkus-langchain4j-oracle.adoc[leveloffset=+1,opts=optional]
+
+== How It Works
+
+The Oracle extension maps each ingested document to a row in an Oracle table. Each row contains:
+
+* The original text content
+* Optional metadata, stored as JSON
+* The vector embedding, stored in a native `VECTOR(*, FLOAT32)` column
+
+During retrieval, a similarity search is performed using the native `VECTOR_DISTANCE` function, optionally accelerated by the IVF index and filtered by metadata when a filter is provided.
+
+The extension manages schema and index creation automatically according to the configured `create-option` values.
+
+== Named Stores
+
+You can configure multiple named Oracle stores, each backed by a different datasource.
+This is useful when your application needs to manage embeddings for different domains or tenants in separate databases.
+
+To configure a named store, set its `datasource` and enable it at build time:
+
+[source,properties]
+----
+quarkus.langchain4j.oracle.products.datasource=products-ds
+quarkus.langchain4j.oracle.products.table=product_embeddings
+----
+
+To inject a named store, use the `@EmbeddingStoreName` qualifier:
+
+[source,java]
+----
+@Inject
+@EmbeddingStoreName("products")
+EmbeddingStore<TextSegment> productsStore;
+----
+
+The default store and named stores can coexist.
+If you only need named stores, disable the default store:
+
+[source,properties]
+----
+quarkus.langchain4j.oracle.default-store-enabled=false
+----
+
+== Summary
+
+To use Oracle Database as a document store with Quarkus LangChain4j:
+
+* Use an Oracle Database 23ai instance, which provides AI Vector Search.
+* Add the extension dependency.
+* Configure a datasource.
+* Optionally tune the embedding table, vector index, and metadata indexes.
+* Use `QuarkusOracleEmbeddingStore` (or inject `EmbeddingStore<TextSegment>`) to ingest and retrieve embedded documents.
