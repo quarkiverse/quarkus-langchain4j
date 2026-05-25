@@ -77,6 +77,7 @@ public class OllamaRecorder {
                     .httpClientBuilder(httpClientBuilder)
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .maxRetries(1)
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))
                     .modelName(ollamaFixedConfig.chatModel().modelId())
