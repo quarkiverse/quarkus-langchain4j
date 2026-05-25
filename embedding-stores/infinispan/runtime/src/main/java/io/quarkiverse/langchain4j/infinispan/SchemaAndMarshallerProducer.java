@@ -1,22 +1,27 @@
 package io.quarkiverse.langchain4j.infinispan;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 
 import org.infinispan.protostream.FileDescriptorSource;
-import org.infinispan.protostream.MessageMarshaller;
 
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanEmbeddingStoreConfig;
-import io.quarkiverse.langchain4j.infinispan.runtime.LangchainItemMarshaller;
-import io.quarkiverse.langchain4j.infinispan.runtime.LangchainMetadataMarshaller;
+import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanStoreRuntimeConfig;
 
 /**
- * Produces the Protobuf schema and marshallers needed by the Infinispan client
+ * Produces the Protobuf schema needed by the Infinispan client
  * to store and retrieve embeddings. The schema defines the structure of the
  * embedding item and its metadata, including the vector field with configurable
  * dimension and similarity metric.
+ * <p>
+ * One proto file is generated per unique (dimension, similarity) pair discovered
+ * across the default store and all named stores. Marshallers are produced as
+ * CDI synthetic beans by the deployment processor (one per store).
  */
 @ApplicationScoped
 public class SchemaAndMarshallerProducer {
@@ -57,26 +62,36 @@ public class SchemaAndMarshallerProducer {
             + "}\n";
 
     @Inject
-    private Instance<InfinispanEmbeddingStoreConfig> infinispanEmbeddingStoreConfigHandle;
+    Instance<InfinispanEmbeddingStoreConfig> infinispanEmbeddingStoreConfigHandle;
 
+    /**
+     * Produces a single {@link FileDescriptorSource} that contains one Protobuf schema
+     * per unique (dimension, similarity) pair across the default store and all named stores.
+     * This ensures that every configured embedding store has its vector type registered
+     * in the Infinispan serialization context regardless of the number of stores or
+     * how many distinct dimensions are in use.
+     */
     @Produces
     public FileDescriptorSource bookProtoDefinition() {
         InfinispanEmbeddingStoreConfig config = infinispanEmbeddingStoreConfigHandle.get();
-        String protoContent = PROTO
-                .replace("DIMENSION", config.dimension().toString())
-                .replace("SIMILARITY", config.similarity());
-        return FileDescriptorSource.fromString("langchain_dimension_" + config.dimension().toString() + ".proto",
-                protoContent);
-    }
 
-    @Produces
-    public MessageMarshaller langchainItemMarshaller() {
-        return new LangchainItemMarshaller(infinispanEmbeddingStoreConfigHandle.get().dimension());
-    }
+        Map<Long, String> dimensionToSimilarity = new LinkedHashMap<>();
+        InfinispanStoreRuntimeConfig def = config.defaultConfig();
+        dimensionToSimilarity.put(def.dimension(), def.similarity());
 
-    @Produces
-    public MessageMarshaller langchainMetadataMarshaller() {
-        return new LangchainMetadataMarshaller(
-                LANGCHAIN_METADATA + infinispanEmbeddingStoreConfigHandle.get().dimension());
+        for (InfinispanStoreRuntimeConfig named : config.namedConfig().values()) {
+            dimensionToSimilarity.putIfAbsent(named.dimension(), named.similarity());
+        }
+
+        FileDescriptorSource source = new FileDescriptorSource();
+        for (Map.Entry<Long, String> entry : dimensionToSimilarity.entrySet()) {
+            Long dimension = entry.getKey();
+            String similarity = entry.getValue();
+            String protoContent = PROTO
+                    .replace("DIMENSION", dimension.toString())
+                    .replace("SIMILARITY", similarity);
+            source.addProtoFile("langchain_dimension_" + dimension + ".proto", protoContent);
+        }
+        return source;
     }
 }

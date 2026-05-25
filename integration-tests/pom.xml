@@ -38,6 +38,7 @@
     <module>mcp-conformance</module>
     <module>mcp-native</module>
     <module>secure-mcp</module>
+    <module>infinispan-multiple-stores</module>
   </modules>
 
 
