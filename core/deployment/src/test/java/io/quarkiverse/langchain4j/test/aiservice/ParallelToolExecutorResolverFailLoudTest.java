@@ -27,7 +27,7 @@ import io.quarkus.test.QuarkusUnitTest;
  * {@code catch (RuntimeException e) { warn-and-continue; }}. That catch was intended as an environment-driven
  * safety net (Java 17 cannot construct virtual threads) but also swallowed real misconfiguration:
  * <ul>
- * <li>{@code quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency=-5} — invalid concurrency value.</li>
+ * <li>{@code quarkus.langchain4j.tools.virtual-threads.max-concurrency=-5} — invalid concurrency value.</li>
  * <li>An unknown executor mode name (already rejected by SmallRye Config at config-load time, but the broad catch
  * would also have swallowed any future {@code IllegalStateException} thrown by the resolver itself).</li>
  * </ul>

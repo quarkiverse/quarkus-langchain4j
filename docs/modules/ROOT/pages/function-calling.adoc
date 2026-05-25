@@ -236,7 +236,7 @@ You can opt into parallel execution with one of two Quarkus-managed executors:
 quarkus.langchain4j.tools.execution=serial            # serial (default) | virtual-threads | worker-pool
 
 # Bounded concurrency for the virtual-threads mode (Java 21+)
-quarkus.langchain4j.tools.execution.virtual-threads.max-concurrency=64
+quarkus.langchain4j.tools.virtual-threads.max-concurrency=64
 
 # Per-AI-service override
 quarkus.langchain4j.<ai-service-name>.tools.execution=virtual-threads
