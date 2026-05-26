@@ -1,6 +1,6 @@
-package io.quarkiverse.langchain4j.bedrock.runtime.jaxrsclient;
+package io.quarkiverse.langchain4j.bedrock.runtime.client;
 
-import static io.quarkiverse.langchain4j.bedrock.runtime.jaxrsclient.JaxRsSdkHttpClientHelper.getResponseHeaders;
+import static io.quarkiverse.langchain4j.bedrock.runtime.client.JaxRsSdkHttpClientHelper.getResponseHeaders;
 
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicMarkableReference;
@@ -20,12 +20,12 @@ import software.amazon.awssdk.http.SdkHttpFullResponse;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-public class JaxRsSdkHttpClientExecutable implements ExecutableHttpRequest {
+class JaxRsSdkHttpClientExecutable implements ExecutableHttpRequest {
     private final Invocation.Builder invocationBuilder;
     private final HttpExecuteRequest executeRequest;
     private final AtomicMarkableReference<Response> cancellableRef = new AtomicMarkableReference<>(null, false);
 
-    public JaxRsSdkHttpClientExecutable(final Invocation.Builder invocationBuilder,
+    JaxRsSdkHttpClientExecutable(final Invocation.Builder invocationBuilder,
             final HttpExecuteRequest executeRequest) {
         this.invocationBuilder = invocationBuilder;
         this.executeRequest = executeRequest;

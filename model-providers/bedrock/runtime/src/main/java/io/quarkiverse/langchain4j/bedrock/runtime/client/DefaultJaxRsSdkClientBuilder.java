@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.bedrock.runtime.jaxrsclient;
+package io.quarkiverse.langchain4j.bedrock.runtime.client;
 
 import static software.amazon.awssdk.http.SdkHttpConfigurationOption.CONNECTION_TIMEOUT;
 import static software.amazon.awssdk.http.SdkHttpConfigurationOption.READ_TIMEOUT;
@@ -36,7 +36,7 @@ import software.amazon.awssdk.http.SdkHttpConfigurationOption;
 import software.amazon.awssdk.utils.AttributeMap;
 import software.amazon.awssdk.utils.Validate;
 
-public class DefaultJaxRsSdkClientBuilder implements JaxRsSdkClientBuilder {
+class DefaultJaxRsSdkClientBuilder implements JaxRsSdkClientBuilder {
     private static final String NONE = "none";
 
     private final AttributeMap.Builder standardOptions = AttributeMap.builder();

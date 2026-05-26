@@ -1,6 +1,6 @@
-package io.quarkiverse.langchain4j.bedrock.runtime.jaxrsclient;
+package io.quarkiverse.langchain4j.bedrock.runtime.client;
 
-import static io.quarkiverse.langchain4j.bedrock.runtime.jaxrsclient.JaxRsSdkHttpClientHelper.createAndPrepareInvocationBuilder;
+import static io.quarkiverse.langchain4j.bedrock.runtime.client.JaxRsSdkHttpClientHelper.createAndPrepareInvocationBuilder;
 
 import java.time.Duration;
 
@@ -16,7 +16,7 @@ import software.amazon.awssdk.utils.AttributeMap;
 
 public class JaxRsSdkHttpClient implements SdkHttpClient {
 
-    private static final String CLIENT_NAME = "RestEasy";
+    private static final String CLIENT_NAME = "Quarkus LangChain4j";
 
     private final Client delegate;
 
@@ -89,7 +89,7 @@ public class JaxRsSdkHttpClient implements SdkHttpClient {
 
     }
 
-    private static final class DefaultBuilder extends DefaultJaxRsSdkClientBuilder implements Builder {
+    private static class DefaultBuilder extends DefaultJaxRsSdkClientBuilder implements Builder {
 
         @Override
         public Builder connectionTimeout(Duration timeout) {
@@ -98,25 +98,25 @@ public class JaxRsSdkHttpClient implements SdkHttpClient {
         }
 
         @Override
-        public Builder readTimeout(final Duration readTimeout) {
+        public Builder readTimeout(Duration readTimeout) {
             super.readTimeout(readTimeout);
             return this;
         }
 
         @Override
-        public Builder proxyAddress(final String proxyAddress) {
+        public Builder proxyAddress(String proxyAddress) {
             super.proxyAddress(proxyAddress);
             return this;
         }
 
         @Override
-        public Builder proxyUser(final String proxyUser) {
+        public Builder proxyUser(String proxyUser) {
             super.proxyUser(proxyUser);
             return this;
         }
 
         @Override
-        public Builder proxyPassword(final String proxyPassword) {
+        public Builder proxyPassword(String proxyPassword) {
             super.proxyPassword(proxyPassword);
             return this;
         }
@@ -128,31 +128,31 @@ public class JaxRsSdkHttpClient implements SdkHttpClient {
         }
 
         @Override
-        public Builder disableContextualErrorMessages(final Boolean disableContextualErrorMessages) {
+        public Builder disableContextualErrorMessages(Boolean disableContextualErrorMessages) {
             super.disableContextualErrorMessages(disableContextualErrorMessages);
             return this;
         }
 
         @Override
-        public Builder connectionTTL(final int connectionTTL) {
+        public Builder connectionTTL(int connectionTTL) {
             super.connectionTTL(connectionTTL);
             return this;
         }
 
         @Override
-        public Builder connectionPoolSize(final int connectionPoolSize) {
+        public Builder connectionPoolSize(int connectionPoolSize) {
             super.connectionPoolSize(connectionPoolSize);
             return this;
         }
 
         @Override
-        public Builder keepAliveEnabled(final boolean keepAliveEnabled) {
+        public Builder keepAliveEnabled(boolean keepAliveEnabled) {
             super.keepAliveEnabled(keepAliveEnabled);
             return this;
         }
 
         @Override
-        public Builder hostnameVerifier(final String hostnameVerifier) {
+        public Builder hostnameVerifier(String hostnameVerifier) {
             super.hostnameVerifier(hostnameVerifier);
             return this;
         }
@@ -164,49 +164,49 @@ public class JaxRsSdkHttpClient implements SdkHttpClient {
         }
 
         @Override
-        public Builder trustStore(final String trustStore) {
+        public Builder trustStore(String trustStore) {
             super.trustStore(trustStore);
             return this;
         }
 
         @Override
-        public Builder trustStorePassword(final String trustStorePassword) {
+        public Builder trustStorePassword(String trustStorePassword) {
             super.trustStorePassword(trustStorePassword);
             return this;
         }
 
         @Override
-        public Builder trustStoreType(final String trustStoreType) {
+        public Builder trustStoreType(String trustStoreType) {
             super.trustStoreType(trustStoreType);
             return this;
         }
 
         @Override
-        public Builder keyStore(final String keyStore) {
+        public Builder keyStore(String keyStore) {
             super.keyStore(keyStore);
             return this;
         }
 
         @Override
-        public Builder keyStorePassword(final String keyStorePassword) {
+        public Builder keyStorePassword(String keyStorePassword) {
             super.keyStorePassword(keyStorePassword);
             return this;
         }
 
         @Override
-        public Builder keyStoreType(final String keyStoreType) {
+        public Builder keyStoreType(String keyStoreType) {
             super.keyStoreType(keyStoreType);
             return this;
         }
 
         @Override
-        public Builder tlsConfig(final TlsConfiguration tlsConfig) {
+        public Builder tlsConfig(TlsConfiguration tlsConfig) {
             super.tlsConfig(tlsConfig);
             return this;
         }
 
         @Override
-        public SdkHttpClient buildWithDefaults(final AttributeMap serviceDefaults) {
+        public SdkHttpClient buildWithDefaults(AttributeMap serviceDefaults) {
             return new JaxRsSdkHttpClient(this.buildClientWithDefaults(serviceDefaults));
         }
     }

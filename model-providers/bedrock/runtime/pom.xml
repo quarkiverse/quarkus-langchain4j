@@ -66,6 +66,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>mutiny-zero-flow-adapters</artifactId>
+            <version>1.2.0</version>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
             <groupId>io.quarkus</groupId>

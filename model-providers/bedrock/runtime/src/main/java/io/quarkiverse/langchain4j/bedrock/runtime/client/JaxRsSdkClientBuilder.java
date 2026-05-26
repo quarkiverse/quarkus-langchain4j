@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.bedrock.runtime.jaxrsclient;
+package io.quarkiverse.langchain4j.bedrock.runtime.client;
 
 import java.time.Duration;
 

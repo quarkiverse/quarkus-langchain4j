@@ -38,6 +38,7 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
+import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
 import io.smallrye.config.ConfigSourceInterceptor;
 import io.smallrye.config.Priorities;
 
@@ -85,6 +86,7 @@ public class BedrockProcessor {
     void generateBeans(BedrockRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            CoreVertxBuildItem vertxBuildItem,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -108,7 +110,7 @@ public class BedrockProcessor {
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
-                var streamingChatModel = recorder.streamingChatModel(configName);
+                var streamingChatModel = recorder.streamingChatModel(configName, vertxBuildItem.getVertx());
                 var streamingBuilder = SyntheticBeanBuildItem
                         .configure(STREAMING_CHAT_MODEL)
                         .setRuntimeInit()

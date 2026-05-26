@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.Any;
@@ -39,6 +40,7 @@ import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
+import io.vertx.core.Vertx;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -165,7 +167,7 @@ public class BedrockRecorder {
     }
 
     public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
-            final String configName) {
+            final String configName, final Supplier<Vertx> vertx) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
@@ -174,11 +176,10 @@ public class BedrockRecorder {
             var clientBuilder = BedrockRuntimeAsyncClient.builder();
 
             clientBuilder.httpClient(
-                    JaxRsSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(), rootRuntimeConfig.getValue()));
+                    JaxRsSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(),
+                            rootRuntimeConfig.getValue(), vertx));
 
             configureClient(clientBuilder, modelConfig, config);
-
-            var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
             var paramsBuilder = BedrockChatRequestParameters.builder()
                     .maxOutputTokens(modelConfig.maxTokens());

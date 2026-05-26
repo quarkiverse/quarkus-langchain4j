@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.bedrock.runtime.jaxrsclient;
+package io.quarkiverse.langchain4j.bedrock.runtime.client;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,9 +14,9 @@ import jakarta.ws.rs.core.Response;
 
 import software.amazon.awssdk.http.SdkHttpRequest;
 
-public class JaxRsSdkHttpClientHelper {
+class JaxRsSdkHttpClientHelper {
 
-    public static Invocation.Builder createAndPrepareInvocationBuilder(final Client delegate, final SdkHttpRequest request) {
+    static Invocation.Builder createAndPrepareInvocationBuilder(final Client delegate, final SdkHttpRequest request) {
         WebTarget target = delegate.target(request.getUri());
         Invocation.Builder invocationBuilder = target.request();
 
@@ -34,7 +34,7 @@ public class JaxRsSdkHttpClientHelper {
         return invocationBuilder;
     }
 
-    public static Map<String, List<String>> getResponseHeaders(final Response response) {
+    static Map<String, List<String>> getResponseHeaders(final Response response) {
         final MultivaluedMap<String, Object> headers = response.getHeaders();
 
         final Map<String, List<String>> result = new HashMap<>();
