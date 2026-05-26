@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,6 @@ import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
-import io.smallrye.mutiny.Context;
 
 /**
  * Use to have streaming feature on models used trough Ollama.
@@ -38,10 +38,6 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
     private static final Logger log = Logger.getLogger(OllamaStreamingChatLanguageModel.class);
 
-    private static final String TOOLS_CONTEXT = "TOOLS";
-    private static final String TOKEN_USAGE_CONTEXT = "TOKEN_USAGE";
-    private static final String RESPONSE_CONTEXT = "RESPONSE";
-    private static final String MODEL_ID = "MODEL_ID";
     private final OllamaClient client;
     private final String model;
     private final String format;
@@ -77,10 +73,10 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                 .stream(true)
                 .build();
 
-        Context context = Context.empty();
-        context.put(MODEL_ID, "");
-        context.put(RESPONSE_CONTEXT, new ArrayList<ChatResponse>());
-        context.put(TOOLS_CONTEXT, new ArrayList<ToolExecutionRequest>());
+        List<ChatResponse> chatResponses = new ArrayList<>();
+        List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>();
+        AtomicReference<String> modelId = new AtomicReference<>("");
+        AtomicReference<TokenUsage> tokenUsageRef = new AtomicReference<>();
 
         dev.langchain4j.model.chat.request.ChatRequest modelListenerRequest = createModelListenerRequest(request, messages,
                 toolSpecifications);
@@ -97,10 +93,9 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
         client.streamingChat(request)
                 .subscribe()
-                .with(context,
+                .with(
                         new Consumer<>() {
                             @Override
-                            @SuppressWarnings("unchecked")
                             public void accept(ChatResponse response) {
                                 try {
                                     if ((response == null) || (response.message() == null)) {
@@ -108,29 +103,27 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                                     }
 
                                     if (response.message().toolCalls() != null) {
-                                        List<ToolExecutionRequest> toolContext = context.get(TOOLS_CONTEXT);
                                         List<ToolCall> toolCalls = response.message().toolCalls();
                                         toolCalls.stream()
                                                 .map(ToolCall::toToolExecutionRequest)
-                                                .forEach(toolContext::add);
+                                                .forEach(toolExecutionRequests::add);
                                     }
 
                                     if (!response.message().content().isEmpty()) {
-                                        ((List<ChatResponse>) context.get(RESPONSE_CONTEXT)).add(response);
+                                        chatResponses.add(response);
                                         handler.onPartialResponse(response.message().content());
                                     }
 
                                     if (response.done()) {
                                         if (response.model() != null) {
-                                            context.put(MODEL_ID, response.model());
+                                            modelId.set(response.model());
                                         }
 
                                         if (response.evalCount() != null && response.promptEvalCount() != null) {
-                                            TokenUsage tokenUsage = new TokenUsage(
+                                            tokenUsageRef.set(new TokenUsage(
                                                     response.promptEvalCount(),
                                                     response.evalCount(),
-                                                    response.evalCount() + response.promptEvalCount());
-                                            context.put(TOKEN_USAGE_CONTEXT, tokenUsage);
+                                                    response.evalCount() + response.promptEvalCount()));
                                         }
                                     }
 
@@ -163,10 +156,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                             @Override
                             public void run() {
 
-                                TokenUsage tokenUsage = context.contains(TOKEN_USAGE_CONTEXT) ? context.get(TOKEN_USAGE_CONTEXT)
-                                        : null;
-                                List<ChatResponse> chatResponses = context.get(RESPONSE_CONTEXT);
-                                List<ToolExecutionRequest> toolExecutionRequests = context.get(TOOLS_CONTEXT);
+                                TokenUsage tokenUsage = tokenUsageRef.get();
 
                                 if (!toolExecutionRequests.isEmpty()) {
                                     handler.onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse.builder()
@@ -186,7 +176,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
                                 dev.langchain4j.model.chat.response.ChatResponse modelListenerResponse = createModelListenerResponse(
                                         null,
-                                        context.get(MODEL_ID),
+                                        modelId.get(),
                                         aiMessageResponse);
                                 ChatModelResponseContext responseContext = new ChatModelResponseContext(
                                         modelListenerResponse,
