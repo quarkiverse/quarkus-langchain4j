@@ -11,3 +11,15 @@ $ mvn quarkus:dev
 Once the application has started, hit `w` to open the freshly generated site in browser.
 
 See https://docs.quarkiverse.io/quarkus-antora/dev/index.html[Quarkus Antora] documentation for more details.
+
+== Regenerating diagrams
+
+Mermaid source files live in `diagrams/` and render to SVG in `modules/ROOT/assets/images/`. After editing a `.mmd` file, regenerate the SVG:
+
+[source,shell]
+----
+$ cd docs
+$ npx mmdc -i diagrams/rag-flow.mmd -o modules/ROOT/assets/images/rag-flow.svg
+----
+
+Commit both the updated `.mmd` source and `.svg` output.

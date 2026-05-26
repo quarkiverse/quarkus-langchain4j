@@ -32,21 +32,8 @@ At a high level, a RAG system follows this two-phase process:
 
 == End-to-End Flow
 
-[mermaid, RAG flow, svg]
-----
-flowchart TB
-  A[Documents] --> B[Text Splitter]
-  B --> C[Text Segments]
-  C --> D[Embedding Computation]
-  D --> E[Embeddings]
-  E --> F[Vector Store]
-
-  G[Query] --> H[Query Embedding]
-  H --> I[Find Relevant Segments]
-  I --> J[Relevant Chunks]
-  J --> K[Append to Prompt]
-  K --> L[LLM Response]
-----
+// Generated from diagrams/rag-flow.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::rag-flow.svg[RAG flow]
 
 == Key Concepts
 
