@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.deployment;
 
+import static dev.langchain4j.agent.tool.P.NO_DEFAULT;
 import static io.quarkiverse.langchain4j.deployment.DotNames.BLOCKING;
 import static io.quarkiverse.langchain4j.deployment.DotNames.COMPLETION_STAGE;
 import static io.quarkiverse.langchain4j.deployment.DotNames.MULTI;
@@ -65,6 +66,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
+import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanWrapper;
@@ -113,7 +115,8 @@ public class ToolProcessor {
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
     private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
-            .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class, Integer.class);
+            .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class, Integer.class,
+                    Map.class);
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
@@ -358,6 +361,7 @@ public class ToolProcessor {
 
                     var properties = new LinkedHashMap<String, JsonSchemaElement>(toolMethod.parametersCount());
                     var required = new ArrayList<String>(toolMethod.parametersCount());
+                    var defaultValues = new LinkedHashMap<String, String>();
 
                     MethodParameterInfo memoryIdParameter = null;
                     MethodParameterInfo invocationParamsParameter = null;
@@ -375,8 +379,32 @@ public class ToolProcessor {
                         var jsonSchemaElement = toJsonSchemaElement(parameter, index);
                         properties.put(parameter.name(), jsonSchemaElement);
 
-                        if ((pInstance == null)
-                                || ((pInstance.value("required") != null) && pInstance.value("required").asBoolean())) {
+                        AnnotationValue defaultValue = pInstance != null ? pInstance.value("defaultValue") : null;
+                        boolean hasDefaultValue = defaultValue != null && !NO_DEFAULT.equals(defaultValue.asString());
+
+                        if (hasDefaultValue) {
+                            String defaultValueStr = defaultValue.asString();
+                            defaultValues.put(parameter.name(), defaultValueStr);
+                            try {
+                                Class<?> paramClass = JandexUtil.load(parameter.type(),
+                                        Thread.currentThread().getContextClassLoader());
+                                QuarkusToolExecutor.parseDefaultValue(defaultValueStr, parameter.name(), paramClass);
+                            } catch (Exception e) {
+                                validationErrors.produce(
+                                        new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                                                new IllegalStateException(
+                                                        "Invalid @P(defaultValue = \"" + defaultValueStr
+                                                                + "\") for parameter '"
+                                                                + parameter.name() + "' of tool '"
+                                                                + className + "." + toolMethod.name()
+                                                                + "': " + e.getMessage(),
+                                                        e)));
+                            }
+                        }
+
+                        boolean isRequired = (pInstance == null)
+                                || ((pInstance.value("required") != null) && pInstance.value("required").asBoolean());
+                        if (!hasDefaultValue && isRequired) {
                             required.add(parameter.name());
                         }
                     }
@@ -409,7 +437,7 @@ public class ToolProcessor {
                     String invokerClassName = generateInvoker(toolMethod, classOutput, nameToParamPosition,
                             memoryIdParameter != null ? memoryIdParameter.position() : null,
                             invocationParamsParameter != null ? invocationParamsParameter.position() : null,
-                            methodSignature);
+                            methodSignature, defaultValues);
                     generatedInvokerClasses.add(invokerClassName);
                     String argumentMapperClassName = generateArgumentMapper(toolMethod, classOutput,
                             methodSignature);
@@ -775,7 +803,7 @@ public class ToolProcessor {
 
     private static String generateInvoker(MethodInfo methodInfo, ClassOutput classOutput,
             Map<String, Integer> nameToParamPosition, Short memoryIdParamPosition, Short invocationParamsParamPosition,
-            String methodSignature) {
+            String methodSignature, Map<String, String> defaultValues) {
         String implClassName = methodInfo.declaringClass().name() + "$$QuarkusInvoker$" + methodInfo.name() + "_"
                 + HashUtil.sha1(methodSignature);
         try (ClassCreator classCreator = ClassCreator.builder()
@@ -822,6 +850,13 @@ public class ToolProcessor {
                         methodMetadataMc.load(entry.getValue()));
             }
 
+            ResultHandle defaultValuesHandle = methodMetadataMc.newInstance(HASHMAP_CTOR);
+            for (var entry : defaultValues.entrySet()) {
+                methodMetadataMc.invokeInterfaceMethod(MAP_PUT, defaultValuesHandle,
+                        methodMetadataMc.load(entry.getKey()),
+                        methodMetadataMc.load(entry.getValue()));
+            }
+
             ResultHandle resultHandle = methodMetadataMc.newInstance(METHOD_METADATA_CTOR,
                     methodMetadataMc.load(toolReturnsVoid),
                     nameToParamPositionHandle,
@@ -829,7 +864,8 @@ public class ToolProcessor {
                             : methodMetadataMc.loadNull(),
                     invocationParamsParamPosition != null
                             ? methodMetadataMc.load(Integer.valueOf(invocationParamsParamPosition))
-                            : methodMetadataMc.loadNull());
+                            : methodMetadataMc.loadNull(),
+                    defaultValuesHandle);
             methodMetadataMc.returnValue(resultHandle);
         }
         return implClassName;
@@ -1012,7 +1048,7 @@ public class ToolProcessor {
 
     private static String descriptionFrom(MethodParameterInfo parameter) {
         return Optional.ofNullable(parameter.annotation(P))
-                .map(p -> p.value().asString())
+                .map(p -> p.value() != null ? p.value().asString() : null)
                 .orElse(null);
     }
 
