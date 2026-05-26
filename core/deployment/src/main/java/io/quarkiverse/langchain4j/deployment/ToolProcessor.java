@@ -794,7 +794,7 @@ public class ToolProcessor {
         return annotationValue;
     }
 
-    private String getToolDescription(AnnotationValue descriptionValue) {
+    private static String getToolDescription(AnnotationValue descriptionValue) {
         if (descriptionValue == null) {
             return "";
         }

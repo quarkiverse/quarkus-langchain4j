@@ -66,26 +66,16 @@ class JandexUtil {
     static Class<?> load(Type type, ClassLoader classLoader) {
         if (type.kind() == Type.Kind.PRIMITIVE) {
             PrimitiveType prim = type.asPrimitiveType();
-            switch (prim.primitive()) {
-                case INT:
-                    return int.class;
-                case BYTE:
-                    return byte.class;
-                case CHAR:
-                    return char.class;
-                case LONG:
-                    return long.class;
-                case FLOAT:
-                    return float.class;
-                case SHORT:
-                    return short.class;
-                case DOUBLE:
-                    return double.class;
-                case BOOLEAN:
-                    return boolean.class;
-                default:
-                    throw new RuntimeException("Unknown type " + prim.primitive());
-            }
+            return switch (prim.primitive()) {
+                case INT -> int.class;
+                case BYTE -> byte.class;
+                case CHAR -> char.class;
+                case LONG -> long.class;
+                case FLOAT -> float.class;
+                case SHORT -> short.class;
+                case DOUBLE -> double.class;
+                case BOOLEAN -> boolean.class;
+            };
         } else {
             try {
                 return Class.forName(type.name().toString(), false, classLoader);
