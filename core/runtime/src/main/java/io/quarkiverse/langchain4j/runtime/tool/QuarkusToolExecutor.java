@@ -4,12 +4,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
 
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -165,24 +167,32 @@ public class QuarkusToolExecutor implements ToolExecutor {
         return invokerInstance;
     }
 
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
+    };
+
     private Object[] prepareArguments(ToolExecutionRequest toolExecutionRequest,
             ToolInvoker.MethodMetadata methodMetadata, InvocationContext invocationContext) {
         String argumentsJsonStr = toolExecutionRequest.arguments();
         Map<String, Object> argumentsFromRequest;
+        Set<String> presentKeys;
         try {
             log.debugv("Attempting to convert {0} JSON string into args map", argumentsJsonStr);
             argumentsFromRequest = convertJsonToArguments(argumentsJsonStr);
+            presentKeys = parseRawJsonKeys(argumentsJsonStr);
             log.debugv("Converted {0} JSON string into args map {1}", argumentsJsonStr, argumentsFromRequest);
         } catch (JsonProcessingException e) {
             log.error(e);
             invalidMethodParams(argumentsJsonStr);
             return null; //keep the compiler happy
         }
-        if (argumentsFromRequest.size() != methodMetadata.getNameToParamPosition().size()) {
+
+        Map<String, String> defaultValues = methodMetadata.getParameterDefaultValues();
+        int expectedSize = methodMetadata.getNameToParamPosition().size();
+        if (argumentsFromRequest.size() != expectedSize && defaultValues.isEmpty()) {
             invalidMethodParams(argumentsJsonStr);
         }
 
-        Object[] finalArgs = new Object[argumentsFromRequest.size()];
+        Object[] finalArgs = new Object[expectedSize];
 
         for (var entry : argumentsFromRequest.entrySet()) {
             Integer pos = methodMetadata.getNameToParamPosition().get(entry.getKey());
@@ -192,6 +202,26 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 finalArgs[pos] = entry.getValue();
             }
         }
+
+        if (!defaultValues.isEmpty()) {
+            Class<? extends Mappable> mapperClass = loadMapperClass();
+            for (var entry : defaultValues.entrySet()) {
+                String paramName = entry.getKey();
+                if (!presentKeys.contains(paramName)) {
+                    Integer pos = methodMetadata.getNameToParamPosition().get(paramName);
+                    if (pos != null) {
+                        try {
+                            Class<?> fieldType = mapperClass.getField(paramName).getType();
+                            finalArgs[pos] = parseDefaultValue(entry.getValue(), paramName, fieldType);
+                        } catch (NoSuchFieldException e) {
+                            log.warnv("Could not find field {0} in mapper class for default value substitution",
+                                    paramName);
+                        }
+                    }
+                }
+            }
+        }
+
         Object memoryId = invocationContext.chatMemoryId();
         if (memoryId != null && methodMetadata.getMemoryIdParamPosition() != null) {
             finalArgs[methodMetadata.getMemoryIdParamPosition()] = memoryId;
@@ -201,6 +231,52 @@ public class QuarkusToolExecutor implements ToolExecutor {
             finalArgs[methodMetadata.getInvocationParamsParamPosition()] = invocationParams;
         }
         return finalArgs;
+    }
+
+    private Set<String> parseRawJsonKeys(String argumentsJsonStr) throws JsonProcessingException {
+        if (argumentsJsonStr == null || argumentsJsonStr.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Map<String, Object> raw = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(argumentsJsonStr, MAP_TYPE_REF);
+        return raw.keySet();
+    }
+
+    public static Object parseDefaultValue(String defaultValue, String parameterName, Class<?> parameterClass) {
+        if (parameterClass == String.class) {
+            return defaultValue;
+        }
+        if (parameterClass.isEnum()) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Object enumValue = Enum.valueOf((Class<Enum>) parameterClass, defaultValue);
+            return enumValue;
+        }
+        if (parameterClass == int.class || parameterClass == Integer.class) {
+            return Integer.parseInt(defaultValue);
+        }
+        if (parameterClass == long.class || parameterClass == Long.class) {
+            return Long.parseLong(defaultValue);
+        }
+        if (parameterClass == double.class || parameterClass == Double.class) {
+            return Double.parseDouble(defaultValue);
+        }
+        if (parameterClass == float.class || parameterClass == Float.class) {
+            return Float.parseFloat(defaultValue);
+        }
+        if (parameterClass == boolean.class || parameterClass == Boolean.class) {
+            if ("true".equalsIgnoreCase(defaultValue) || "false".equalsIgnoreCase(defaultValue)) {
+                return Boolean.parseBoolean(defaultValue);
+            }
+            throw new IllegalArgumentException(
+                    String.format("Cannot parse @P(defaultValue = \"%s\") as boolean for parameter \"%s\"",
+                            defaultValue, parameterName));
+        }
+        if (parameterClass == short.class || parameterClass == Short.class) {
+            return Short.parseShort(defaultValue);
+        }
+        if (parameterClass == byte.class || parameterClass == Byte.class) {
+            return Byte.parseByte(defaultValue);
+        }
+        return Json.fromJson(defaultValue, parameterClass);
     }
 
     private Map<String, Object> convertJsonToArguments(String argumentsJsonStr) throws JsonProcessingException {

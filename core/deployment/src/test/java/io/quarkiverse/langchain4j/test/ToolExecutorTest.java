@@ -16,10 +16,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.exception.ToolArgumentsException;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
@@ -33,6 +35,41 @@ class ToolExecutorTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     TestTool testTool = new TestTool();
+    DefaultValueTool defaultValueTool = new DefaultValueTool();
+
+    public enum SortBy {
+        RELEVANCE,
+        DATE,
+        RATING
+    }
+
+    private static class DefaultValueTool {
+
+        @Tool
+        String withDefaultInt(String query, @P(defaultValue = "10") int limit) {
+            return query + ":" + limit;
+        }
+
+        @Tool
+        String withDefaultString(String query, @P(defaultValue = "USD") String currency) {
+            return query + ":" + currency;
+        }
+
+        @Tool
+        String withDefaultEnum(String query, @P(defaultValue = "RELEVANCE") SortBy sortBy) {
+            return query + ":" + sortBy;
+        }
+
+        @Tool
+        String withDefaultBoolean(String query, @P(defaultValue = "true") boolean verbose) {
+            return query + ":" + verbose;
+        }
+
+        @Tool
+        String withMultipleDefaults(@P(defaultValue = "5") int limit, @P(defaultValue = "DESC") String order) {
+            return limit + ":" + order;
+        }
+    }
 
     private static class TestTool {
 
@@ -252,6 +289,99 @@ class ToolExecutorTest {
         assertThat(result).isEqualTo("1");
     }
 
+    @Test
+    void should_use_default_value_for_omitted_int_parameter() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .arguments("{\"query\": \"test\"}")
+                .build();
+
+        ToolExecutor toolExecutor = getToolExecutor("withDefaultInt", DefaultValueTool.class, defaultValueTool);
+
+        String result = toolExecutor.execute(request, null);
+
+        assertThat(result).isEqualTo("\"test:10\"");
+    }
+
+    @Test
+    void should_use_provided_value_over_default_for_int_parameter() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .arguments("{\"query\": \"test\", \"limit\": 25}")
+                .build();
+
+        ToolExecutor toolExecutor = getToolExecutor("withDefaultInt", DefaultValueTool.class, defaultValueTool);
+
+        String result = toolExecutor.execute(request, null);
+
+        assertThat(result).isEqualTo("\"test:25\"");
+    }
+
+    @Test
+    void should_use_default_value_for_omitted_string_parameter() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .arguments("{\"query\": \"test\"}")
+                .build();
+
+        ToolExecutor toolExecutor = getToolExecutor("withDefaultString", DefaultValueTool.class, defaultValueTool);
+
+        String result = toolExecutor.execute(request, null);
+
+        assertThat(result).isEqualTo("\"test:USD\"");
+    }
+
+    @Test
+    void should_use_default_value_for_omitted_enum_parameter() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .arguments("{\"query\": \"test\"}")
+                .build();
+
+        ToolExecutor toolExecutor = getToolExecutor("withDefaultEnum", DefaultValueTool.class, defaultValueTool);
+
+        String result = toolExecutor.execute(request, null);
+
+        assertThat(result).isEqualTo("\"test:RELEVANCE\"");
+    }
+
+    @Test
+    void should_use_default_value_for_omitted_boolean_parameter() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .arguments("{\"query\": \"test\"}")
+                .build();
+
+        ToolExecutor toolExecutor = getToolExecutor("withDefaultBoolean", DefaultValueTool.class, defaultValueTool);
+
+        String result = toolExecutor.execute(request, null);
+
+        assertThat(result).isEqualTo("\"test:true\"");
+    }
+
+    @Test
+    void should_use_default_values_when_all_parameters_have_defaults_and_all_omitted() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .arguments("{}")
+                .build();
+
+        ToolExecutor toolExecutor = getToolExecutor("withMultipleDefaults", DefaultValueTool.class, defaultValueTool);
+
+        String result = toolExecutor.execute(request, null);
+
+        assertThat(result).isEqualTo("\"5:DESC\"");
+    }
+
+    @Test
+    void should_mark_parameter_with_default_as_not_required_in_tool_specification() {
+        List<ToolMethodCreateInfo> methodCreateInfos = ToolsRecorder.getMetadata()
+                .get(DefaultValueTool.class.getName());
+        assertThat(methodCreateInfos).isNotNull();
+
+        ToolMethodCreateInfo withDefaultInt = methodCreateInfos.stream()
+                .filter(m -> m.toolSpecification().name().equals("withDefaultInt"))
+                .findFirst().orElseThrow();
+
+        JsonObjectSchema schema = withDefaultInt.toolSpecification().parameters();
+        assertThat(schema.required()).containsExactly("query");
+        assertThat(schema.properties().keySet()).containsExactlyInAnyOrder("query", "limit");
+    }
+
     private void executeAndAssert(String arguments, String methodName,
             String expectedResult) {
         ToolExecutionRequest request = ToolExecutionRequest.builder()
@@ -277,10 +407,14 @@ class ToolExecutorTest {
     }
 
     private ToolExecutor getToolExecutor(String methodName) {
+        return getToolExecutor(methodName, TestTool.class, testTool);
+    }
 
-        List<ToolMethodCreateInfo> methodCreateInfos = ToolsRecorder.getMetadata().get(TestTool.class.getName());
+    private ToolExecutor getToolExecutor(String methodName, Class<?> toolClass, Object toolInstance) {
+
+        List<ToolMethodCreateInfo> methodCreateInfos = ToolsRecorder.getMetadata().get(toolClass.getName());
         if (methodCreateInfos == null) {
-            fail("Unable to find necessary metadata for class: " + TestTool.class.getSimpleName());
+            fail("Unable to find necessary metadata for class: " + toolClass.getSimpleName());
             return null; // keep the compiler happy
         }
 
@@ -288,10 +422,9 @@ class ToolExecutorTest {
         for (ToolMethodCreateInfo methodCreateInfo : methodCreateInfos) {
             String invokerClassName = methodCreateInfo.invokerClassName();
             ToolSpecification toolSpecification = methodCreateInfo.toolSpecification();
-            if (methodName.equals(
-                    toolSpecification.name())) { // this only works because TestTool does not contain overloaded methods
+            if (methodName.equals(toolSpecification.name())) {
                 toolExecutor = new QuarkusToolExecutor(
-                        new QuarkusToolExecutor.Context(testTool, invokerClassName, methodCreateInfo.methodName(),
+                        new QuarkusToolExecutor.Context(toolInstance, invokerClassName, methodCreateInfo.methodName(),
                                 methodCreateInfo.argumentMapperClassName(), methodCreateInfo.executionModel(),
                                 methodCreateInfo.returnBehavior(), false, methodCreateInfo));
                 break;
