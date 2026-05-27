@@ -26,15 +26,8 @@ TIP: Looking for how to use this at query time? See xref:rag-query.adoc[Query-Ti
 |Vector Store | A synonym for an embedding store; optimized for similarity search
 |===
 
-[mermaid,svg]
-----
-flowchart TD
-    A[Document] --> B[Splitter]
-    B --> C[Segments]
-    C --> D[Embedding Model]
-    D --> E[Vector Embedding]
-    E --> F[Vector Store]
-----
+// Generated from diagrams/rag-ingestion-flow.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::rag-ingestion-flow.svg[RAG ingestion flow]
 
 == Chunking Strategies
 

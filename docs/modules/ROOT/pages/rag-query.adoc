@@ -133,19 +133,8 @@ Each step is optional but recommended for production use cases.
 
 === Advanced Architecture Flow
 
-[mermaid, svg]
-----
-flowchart TD
-A[User Query] --> B[Query Transformer]
-B --> C[Query Router]
-C --> D1[Retriever A]
-C --> D2[Retriever B]
-D1 --> E[Content Aggregator]
-D2 --> E
-E --> F[Content Injector]
-F --> G[Augmented Prompt]
-G --> H[LLM Response]
-----
+// Generated from diagrams/rag-query-advanced-flow.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::rag-query-advanced-flow.svg[Advanced RAG architecture]
 
 === Component Glossary
 

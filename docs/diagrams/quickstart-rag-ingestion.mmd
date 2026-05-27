@@ -1,0 +1,12 @@
+%% Source for modules/ROOT/assets/images/quickstart-rag-ingestion.svg.
+%% See "Regenerating diagrams" in docs/README.adoc.
+graph LR
+    A[Documents] e1@--> B[DocumentLoader reads content]
+    B e2@--> C[Splitter cuts documents into segments]
+    C e3@--> D[EmbeddingModel generates embeddings for each segment]
+    D e4@-->|Stores embeddings| E[(Embedding Store)]
+
+    class A,B,C,D,E,F node;
+    class e1,e2,e3,e4 edge
+    classDef node fill:#4A93E9,stroke:white,color:white
+    classDef edge stroke-width:3px,stroke:#DF1862
