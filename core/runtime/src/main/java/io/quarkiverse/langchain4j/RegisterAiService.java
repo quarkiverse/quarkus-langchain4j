@@ -90,8 +90,21 @@ public @interface RegisterAiService {
      * If not specified (left to zero) for a specific AI service,
      * the AI service will use the value of the common {@code quarkus.langchain4j.ai-service.max-tool-executions} property.
      * If that property is unset too, the default is 10 invocations.
+     *
+     * @deprecated Use {@link #maxToolCallingRoundTrips()} instead.
      */
-    int maxSequentialToolInvocations() default 0;
+    @Deprecated(forRemoval = true, since = "1.11.0")
+    int maxSequentialToolInvocations() default 10;
+
+    /**
+     * Defines the maximum number of LLM request/response round trips while handling a single chat request.
+     * If this number is exceeded, the chat request will fail.
+     * If not specified (left to zero) for a specific AI service,
+     * the AI service will use the value of the common {@code quarkus.langchain4j.ai-service.max-tool-calling-round-trips}
+     * property.
+     * If that property is unset too, the default is 10 round trips.
+     */
+    int maxToolCallingRoundTrips() default 0;
 
     /**
      * Defines the maximum number of tool calls allowed per single LLM response.

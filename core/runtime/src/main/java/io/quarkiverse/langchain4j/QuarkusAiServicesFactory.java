@@ -76,9 +76,17 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
+        /**
+         * @deprecated Use {@link #maxToolCallingRoundTrips(int)} instead.
+         */
+        @Deprecated(forRemoval = true)
         @Override
         public AiServices<T> maxSequentialToolsInvocations(int maxSequentialToolsInvocations) {
-            quarkusAiServiceContext().maxSequentialToolExecutions = maxSequentialToolsInvocations;
+            return maxToolCallingRoundTrips(maxSequentialToolsInvocations);
+        }
+
+        public AiServices<T> maxToolCallingRoundTrips(int maxToolCallingRoundTrips) {
+            quarkusAiServiceContext().maxToolCallingRoundTrips = maxToolCallingRoundTrips;
             return this;
         }
 

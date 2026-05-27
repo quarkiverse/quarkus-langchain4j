@@ -335,8 +335,8 @@ public class AiServicesRecorder {
                                 .getConstructor().newInstance());
                     }
 
-                    if (info.maxSequentialToolInvocations() != null && info.maxSequentialToolInvocations() > 0) {
-                        quarkusAiServices.maxSequentialToolsInvocations(info.maxSequentialToolInvocations());
+                    if (info.maxToolCallingRoundTrips() != null && info.maxToolCallingRoundTrips() > 0) {
+                        quarkusAiServices.maxToolCallingRoundTrips(info.maxToolCallingRoundTrips());
                     }
 
                     if (info.maxToolCallsPerResponse() != null && info.maxToolCallsPerResponse() != 0) {

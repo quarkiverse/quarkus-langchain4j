@@ -25,7 +25,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public ChatMemorySeeder chatMemorySeeder;
     public ThinkingHandler thinkingHandler;
     public ImageModel imageModel;
-    public Integer maxSequentialToolExecutions;
+    public Integer maxToolCallingRoundTrips;
     public Integer maxToolCallsPerResponse;
     public boolean allowContinuousForcedToolCalling;
     public DefaultMemoryIdProvider defaultMemoryIdProvider;

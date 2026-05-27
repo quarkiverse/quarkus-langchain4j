@@ -517,9 +517,16 @@ public class AiServicesProcessor {
                 throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
                         + declarativeAiServiceClassInfo.name() + "'");
             }
-            Integer maxSequentialToolInvocations = instance.value("maxSequentialToolInvocations") != null
-                    ? instance.value("maxSequentialToolInvocations").asInt()
-                    : 0;
+            Integer maxToolCallingRoundTrips = 0;
+            AnnotationValue newAnnoValue = instance.value("maxToolCallingRoundTrips");
+            AnnotationValue legacyAnnoValue = instance.value("maxSequentialToolInvocations");
+
+            if (newAnnoValue != null) {
+                maxToolCallingRoundTrips = newAnnoValue.asInt();
+            } else if (legacyAnnoValue != null) {
+                // Fallback to deprecated property
+                maxToolCallingRoundTrips = legacyAnnoValue.asInt();
+            }
 
             Integer maxToolCallsPerResponse = instance.value("maxToolCallsPerResponse") != null
                     ? instance.value("maxToolCallsPerResponse").asInt()
@@ -584,7 +591,7 @@ public class AiServicesProcessor {
                             classOutputGuardrails(declarativeAiServiceClassInfo, index),
                             toolArgumentsErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
                             toolExecutionErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
-                            maxSequentialToolInvocations,
+                            maxToolCallingRoundTrips,
                             maxToolCallsPerResponse,
                             allowContinuousForcedToolCalling,
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
@@ -943,7 +950,7 @@ public class AiServicesProcessor {
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
             ClassInfo declarativeAiServiceClassInfo = bi.getServiceClassInfo();
             String serviceClassName = declarativeAiServiceClassInfo.name().toString();
-            Integer maxSequentialToolInvocations = bi.getMaxSequentialToolInvocations();
+            Integer maxToolCallingRoundTrips = bi.getMaxToolCallingRoundTrips();
             boolean allowContinuousForcedToolCalling = bi.isAllowContinuousForcedToolCalling();
 
             String chatLanguageModelSupplierClassName = (bi.getChatLanguageModelSupplierClassDotName() != null
@@ -1100,7 +1107,7 @@ public class AiServicesProcessor {
                                     toolExecutionErrorHandlerDotName,
                                     classInputGuardrails(bi),
                                     classOutputGuardrails(bi),
-                                    maxSequentialToolInvocations,
+                                    maxToolCallingRoundTrips,
                                     bi.getMaxToolCallsPerResponse(),
                                     allowContinuousForcedToolCalling,
                                     bi.isShouldThrowExceptionOnEventError(),
