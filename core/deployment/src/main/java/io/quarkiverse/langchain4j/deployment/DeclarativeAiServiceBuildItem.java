@@ -38,7 +38,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DeclarativeAiServiceOutputGuardrails outputGuardrails;
     private final DotName toolArgumentsErrorHandlerDotName;
     private final DotName toolExecutionErrorHandlerDotName;
-    private final Integer maxSequentialToolInvocations;
+    private final Integer maxToolCallingRoundTrips;
     private final Integer maxToolCallsPerResponse;
     private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
@@ -69,7 +69,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DeclarativeAiServiceOutputGuardrails outputGuardrails,
             DotName toolArgumentsErrorHandlerDotName,
             DotName toolExecutionErrorHandlerDotName,
-            Integer maxSequentialToolInvocations,
+            Integer maxToolCallingRoundTrips,
             Integer maxToolCallsPerResponse,
             boolean allowContinuousForcedToolCalling,
             boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
@@ -97,7 +97,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.outputGuardrails = outputGuardrails;
         this.toolArgumentsErrorHandlerDotName = toolArgumentsErrorHandlerDotName;
         this.toolExecutionErrorHandlerDotName = toolExecutionErrorHandlerDotName;
-        this.maxSequentialToolInvocations = maxSequentialToolInvocations;
+        this.maxToolCallingRoundTrips = maxToolCallingRoundTrips;
         this.maxToolCallsPerResponse = maxToolCallsPerResponse;
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
@@ -226,8 +226,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         }
     }
 
-    public Integer getMaxSequentialToolInvocations() {
-        return maxSequentialToolInvocations;
+    public Integer getMaxToolCallingRoundTrips() {
+        return maxToolCallingRoundTrips;
     }
 
     public Integer getMaxToolCallsPerResponse() {

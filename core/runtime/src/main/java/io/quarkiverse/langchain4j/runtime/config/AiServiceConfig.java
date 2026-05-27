@@ -16,9 +16,19 @@ public interface AiServiceConfig {
     int maxToolCallsPerResponse();
 
     /**
-     * Maximum number of sequential tool executions while handling a single chat request.
+     * Maximum number of tool executions while handling a single chat request.
+     * If this number is exceeded, the chat request will fail.
+     *
+     * @deprecated Use {@link #maxToolCallingRoundTrips()} instead.
+     */
+    @Deprecated(forRemoval = true, since = "1.11.0")
+    @WithDefault("10")
+    int maxToolExecutions();
+
+    /**
+     * Maximum number of LLM request/response round trips while handling a single chat request.
      * If this number is exceeded, the chat request will fail.
      */
     @WithDefault("10")
-    int maxToolExecutions();
+    int maxToolCallingRoundTrips();
 }
