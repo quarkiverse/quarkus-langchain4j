@@ -1,9 +1,6 @@
-package io.quarkiverse.langchain4j.bedrock.runtime.client.async;
+package io.quarkiverse.langchain4j.bedrock.runtime.client;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.reactivestreams.Publisher;
@@ -16,9 +13,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
-import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.http.async.AsyncExecuteRequest;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
@@ -38,17 +33,7 @@ public class VertxSdkAsyncHttpClient implements SdkAsyncHttpClient {
     public CompletableFuture<Void> execute(AsyncExecuteRequest executeRequest) {
         CompletableFuture<Void> executeFuture = new CompletableFuture<>();
         SdkAsyncHttpResponseHandler responseHandler = executeRequest.responseHandler();
-        SdkHttpRequest sdkRequest = executeRequest.request();
-
-        RequestOptions requestOptions = new RequestOptions()
-                .setAbsoluteURI(sdkRequest.getUri().toString())
-                .setMethod(HttpMethod.valueOf(sdkRequest.method().name()));
-
-        for (Map.Entry<String, List<String>> entry : sdkRequest.headers().entrySet()) {
-            for (String value : entry.getValue()) {
-                requestOptions.addHeader(entry.getKey(), value);
-            }
-        }
+        RequestOptions requestOptions = VertxSdkHttpClientHelper.buildRequestOptions(executeRequest.request());
 
         executeRequest.requestContentPublisher().subscribe(new RequestBodyCollector(requestOptions, responseHandler,
                 executeFuture));
@@ -60,14 +45,6 @@ public class VertxSdkAsyncHttpClient implements SdkAsyncHttpClient {
             SdkAsyncHttpResponseHandler responseHandler, CompletableFuture<Void> executeFuture) {
         vertxHttpClient.request(requestOptions)
                 .onComplete(new RequestResultHandler(body, responseHandler, executeFuture));
-    }
-
-    private static Map<String, List<String>> convertHeaders(HttpClientResponse response) {
-        Map<String, List<String>> headers = new HashMap<>();
-        for (String name : response.headers().names()) {
-            headers.put(name, response.headers().getAll(name));
-        }
-        return headers;
     }
 
     @Override
@@ -164,7 +141,7 @@ public class VertxSdkAsyncHttpClient implements SdkAsyncHttpClient {
             responseHandler.onHeaders(SdkHttpResponse.builder()
                     .statusCode(response.statusCode())
                     .statusText(response.statusMessage())
-                    .headers(convertHeaders(response))
+                    .headers(VertxSdkHttpClientHelper.convertHeaders(response))
                     .build());
 
             response.pause();

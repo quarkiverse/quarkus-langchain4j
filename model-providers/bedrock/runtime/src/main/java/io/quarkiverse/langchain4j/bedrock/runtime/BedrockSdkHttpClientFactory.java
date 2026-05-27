@@ -17,11 +17,10 @@ import jakarta.enterprise.inject.spi.CDI;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.langchain4j.bedrock.runtime.client.JaxRsSdkHttpClient;
-import io.quarkiverse.langchain4j.bedrock.runtime.client.async.VertxSdkAsyncHttpClient;
+import io.quarkiverse.langchain4j.bedrock.runtime.client.VertxSdkAsyncHttpClient;
+import io.quarkiverse.langchain4j.bedrock.runtime.client.VertxSdkHttpClient;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.HttpClientConfig;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
-import io.quarkus.rest.client.reactive.runtime.ProxyAddressUtil;
 import io.quarkus.tls.TlsConfiguration;
 import io.quarkus.tls.TlsConfigurationRegistry;
 import io.quarkus.tls.runtime.config.TlsConfigUtils;
@@ -35,76 +34,32 @@ import io.vertx.core.net.ProxyType;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 
-public class JaxRsSdkHttpClientFactory {
+final class BedrockSdkHttpClientFactory {
 
-    private static final Logger LOG = Logger.getLogger(JaxRsSdkHttpClientFactory.class);
+    private static final Logger LOG = Logger.getLogger(BedrockSdkHttpClientFactory.class);
 
-    private JaxRsSdkHttpClientFactory() {
-        // hide constructor
+    private BedrockSdkHttpClientFactory() {
     }
 
-    public static SdkHttpClient createSync(final HttpClientConfig modelConfig, final HttpClientConfig bedrockConfig,
-            final LangChain4jConfig rootConfig) {
-        final JaxRsSdkHttpClient.Builder builder = JaxRsSdkHttpClient.builder();
-
-        builder.connectionTimeout(
-                firstOrDefault(Duration.ofSeconds(3), modelConfig.connectTimeout(), bedrockConfig.connectTimeout()));
-        builder.readTimeout(
-                firstOrDefault(Duration.ofSeconds(10), modelConfig.timeout(), bedrockConfig.timeout(), rootConfig.timeout()));
-        builder.proxyAddress(firstOrDefault(null, modelConfig.proxyAddress(), bedrockConfig.proxyAddress()));
-        builder.proxyUser(firstOrDefault(null, modelConfig.proxyUser(), bedrockConfig.proxyUser()));
-        builder.proxyPassword(firstOrDefault(null, modelConfig.proxyPassword(), bedrockConfig.proxyPassword()));
-        builder.nonProxyHosts(firstOrDefault(null, modelConfig.nonProxyHosts(), bedrockConfig.nonProxyHosts()));
-        builder.disableContextualErrorMessages(firstOrDefault(false, modelConfig.disableContextualErrorMessages(),
-                bedrockConfig.disableContextualErrorMessages()));
-
-        final Integer connectionTtl = firstOrDefault(null, modelConfig.connectionTTL(), bedrockConfig.connectionTTL());
-        if (connectionTtl != null) {
-            builder.connectionTTL(connectionTtl);
-        }
-
-        final Integer connectionPoolSize = firstOrDefault(null, modelConfig.connectionPoolSize(),
-                bedrockConfig.connectionPoolSize());
-        if (connectionPoolSize != null) {
-            builder.connectionPoolSize(connectionPoolSize);
-        }
-
-        builder.keepAliveEnabled(firstOrDefault(true, modelConfig.keepAliveEnabled(), bedrockConfig.keepAliveEnabled()));
-        builder.hostnameVerifier(firstOrDefault(null, modelConfig.hostnameVerifier(), bedrockConfig.hostnameVerifier()));
-
-        final Boolean verifyHost = firstOrDefault(null, modelConfig.verifyHost(), bedrockConfig.verifyHost());
-        if (verifyHost != null) {
-            builder.verifyHost(verifyHost);
-        }
-
-        builder.trustStore(firstOrDefault(null, modelConfig.trustStore(), bedrockConfig.trustStore()));
-        builder.trustStorePassword(firstOrDefault(null, modelConfig.trustStorePassword(), bedrockConfig.trustStorePassword()));
-        builder.trustStoreType(firstOrDefault(null, modelConfig.trustStoreType(), bedrockConfig.trustStoreType()));
-        builder.keyStore(firstOrDefault(null, modelConfig.keyStore(), bedrockConfig.keyStore()));
-        builder.keyStorePassword(firstOrDefault(null, modelConfig.keyStorePassword(), bedrockConfig.keyStorePassword()));
-        builder.keyStoreType(firstOrDefault(null, modelConfig.keyStoreType(), bedrockConfig.keyStoreType()));
-
-        final String tlsConfigName = firstOrDefault(null, modelConfig.tlsConfigurationName(),
-                bedrockConfig.tlsConfigurationName());
-
-        if (tlsConfigName != null) {
-            final Instance<TlsConfigurationRegistry> tlsConfigurationRegistries = CDI.current()
-                    .select(TlsConfigurationRegistry.class);
-            if (tlsConfigurationRegistries.isResolvable()) {
-                final Optional<TlsConfiguration> tlsConfig = TlsConfiguration.from(tlsConfigurationRegistries.get(),
-                        Optional.ofNullable(tlsConfigName));
-
-                if (tlsConfig.isPresent()) {
-                    builder.tlsConfig(tlsConfig.get());
-                }
-            }
-        }
-
-        return builder.build();
-    }
-
-    public static SdkAsyncHttpClient createAsync(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
+    static SdkHttpClient createSync(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
             LangChain4jConfig rootConfig, Supplier<Vertx> vertx) {
+        HttpClientOptions options = buildHttpClientOptions(modelConfig, bedrockConfig, rootConfig);
+
+        Duration readTimeout = firstOrDefault(Duration.ofSeconds(10),
+                modelConfig.timeout(), bedrockConfig.timeout(), rootConfig.timeout());
+
+        return new VertxSdkHttpClient(vertx.get().createHttpClient(options), readTimeout);
+    }
+
+    static SdkAsyncHttpClient createAsync(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
+            LangChain4jConfig rootConfig, Supplier<Vertx> vertx) {
+        HttpClientOptions options = buildHttpClientOptions(modelConfig, bedrockConfig, rootConfig);
+
+        return new VertxSdkAsyncHttpClient(vertx.get().createHttpClient(options));
+    }
+
+    private static HttpClientOptions buildHttpClientOptions(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
+            LangChain4jConfig rootConfig) {
         HttpClientOptions options = new HttpClientOptions();
 
         Duration connectTimeout = firstOrDefault(Duration.ofSeconds(3),
@@ -136,14 +91,14 @@ public class JaxRsSdkHttpClientFactory {
 
         String hostnameVerifier = firstOrDefault(null, modelConfig.hostnameVerifier(), bedrockConfig.hostnameVerifier());
         if (hostnameVerifier != null) {
-            LOG.warn("Custom hostname verifier is not supported with the Vert.x async HTTP client. " +
+            LOG.warn("Custom hostname verifier is not supported with the Vert.x HTTP client. " +
                     "Use 'verify-host' instead.");
         }
 
         configureTls(options, modelConfig, bedrockConfig);
         configureProxy(options, modelConfig, bedrockConfig);
 
-        return new VertxSdkAsyncHttpClient(vertx.get().createHttpClient(options));
+        return options;
     }
 
     private static void configureProxy(HttpClientOptions options, HttpClientConfig modelConfig,
@@ -153,11 +108,23 @@ public class JaxRsSdkHttpClientFactory {
             return;
         }
 
-        ProxyAddressUtil.HostAndPort hostAndPort = ProxyAddressUtil.parseAddress(proxyAddress);
+        int lastColonIndex = proxyAddress.lastIndexOf(':');
+        if (lastColonIndex <= 0 || lastColonIndex == proxyAddress.length() - 1) {
+            throw new RuntimeException("Invalid proxy string. Expected <hostname>:<port>, found '" + proxyAddress + "'");
+        }
+
+        String host = proxyAddress.substring(0, lastColonIndex);
+        int port;
+        try {
+            port = Integer.parseInt(proxyAddress.substring(lastColonIndex + 1));
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid proxy setting. The port is not a number in '" + proxyAddress + "'", e);
+        }
+
         ProxyOptions proxyOptions = new ProxyOptions()
                 .setType(ProxyType.HTTP)
-                .setHost(hostAndPort.host)
-                .setPort(hostAndPort.port);
+                .setHost(host)
+                .setPort(port);
 
         String proxyUser = firstOrDefault(null, modelConfig.proxyUser(), bedrockConfig.proxyUser());
         if (proxyUser != null) {
@@ -242,7 +209,7 @@ public class JaxRsSdkHttpClientFactory {
             String resource = path.substring("classpath:".length());
             InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
             if (stream == null) {
-                stream = JaxRsSdkHttpClientFactory.class.getResourceAsStream(resource);
+                stream = BedrockSdkHttpClientFactory.class.getResourceAsStream(resource);
             }
             if (stream == null) {
                 throw new IllegalArgumentException("Classpath resource " + resource + " not found");

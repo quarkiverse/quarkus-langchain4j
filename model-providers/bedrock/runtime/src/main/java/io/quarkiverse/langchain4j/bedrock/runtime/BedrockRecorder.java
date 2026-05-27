@@ -72,7 +72,7 @@ public class BedrockRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName, Supplier<Vertx> vertx) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
@@ -115,7 +115,8 @@ public class BedrockRecorder {
             var clientBuilder = BedrockRuntimeClient.builder();
 
             clientBuilder.httpClient(
-                    JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootRuntimeConfig.getValue()));
+                    BedrockSdkHttpClientFactory.createSync(modelConfig.client(), config.client(),
+                            rootRuntimeConfig.getValue(), vertx));
 
             configureClient(clientBuilder, modelConfig, config);
 
@@ -176,7 +177,7 @@ public class BedrockRecorder {
             var clientBuilder = BedrockRuntimeAsyncClient.builder();
 
             clientBuilder.httpClient(
-                    JaxRsSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(),
+                    BedrockSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(),
                             rootRuntimeConfig.getValue(), vertx));
 
             configureClient(clientBuilder, modelConfig, config);
@@ -243,7 +244,8 @@ public class BedrockRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(final String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName,
+            Supplier<Vertx> vertx) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
@@ -252,7 +254,8 @@ public class BedrockRecorder {
             var clientBuilder = BedrockRuntimeClient.builder(); //NOSONAR creds can be specified later
 
             clientBuilder.httpClient(
-                    JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootRuntimeConfig.getValue()));
+                    BedrockSdkHttpClientFactory.createSync(modelConfig.client(), config.client(),
+                            rootRuntimeConfig.getValue(), vertx));
 
             configureClient(clientBuilder, modelConfig, config);
 
