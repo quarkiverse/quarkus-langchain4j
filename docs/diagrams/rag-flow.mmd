@@ -1,0 +1,14 @@
+%% Source for modules/ROOT/assets/images/rag-flow.svg.
+%% See "Regenerating diagrams" in docs/README.adoc.
+flowchart TB
+  A[Documents] --> B[Text Splitter]
+  B --> C[Text Segments]
+  C --> D[Embedding Computation]
+  D --> E[Embeddings]
+  E --> F[Vector Store]
+
+  G[Query] --> H[Query Embedding]
+  H --> I[Find Relevant Segments]
+  I --> J[Relevant Chunks]
+  J --> K[Append to Prompt]
+  K --> L[LLM Response]
