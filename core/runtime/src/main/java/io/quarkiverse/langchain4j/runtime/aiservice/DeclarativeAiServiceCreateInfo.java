@@ -32,7 +32,7 @@ public record DeclarativeAiServiceCreateInfo(
         String toolExecutionErrorHandlerClassName,
         InputGuardrailsLiteral inputGuardrails,
         OutputGuardrailsLiteral outputGuardrails,
-        Integer maxSequentialToolInvocations,
+        Integer maxToolCallingRoundTrips,
         Integer maxToolCallsPerResponse,
         boolean allowContinuousForcedToolCalling,
         boolean shouldThrowExceptionOnEventError,

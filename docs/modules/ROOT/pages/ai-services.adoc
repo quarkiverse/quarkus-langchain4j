@@ -95,10 +95,10 @@ Marks an interface as an AI Service managed by CDI, creating a bean for interact
 |Unset
 | If not set, it uses the streaming support of the configured model.
 
-|`maxSequentialToolInvocations`
-|Maximum number of sequential tool invocations allowed per request.
+|`maxToolCallingRoundTrips`
+|Maximum number of LLM request/response round trips allowed per request.
 |10, but see the note
-|If not set, the value of the `quarkus.langchain4j.ai-service.max-tool-executions` property will be used. The default value of that property is 10.
+|If not set, the value of the `quarkus.langchain4j.ai-service.max-tool-calling-round-trips` property will be used. The default value of that property is 10.
 
 |===
 

@@ -393,7 +393,28 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++0+++`
 
-a| [[quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions[`+++quarkus.langchain4j.ai-service.max-tool-executions+++`]##
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-calling-round-trips]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-calling-round-trips[`+++quarkus.langchain4j.ai-service.max-tool-calling-round-trips+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai-service.max-tool-calling-round-trips+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of LLM request/response round trips while handling a single chat request. If this number is exceeded, the chat request will fail.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_SERVICE_MAX_TOOL_CALLING_ROUND_TRIPS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_SERVICE_MAX_TOOL_CALLING_ROUND_TRIPS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions[[.line-through]#`+++quarkus.langchain4j.ai-service.max-tool-executions+++`#]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ai-service.max-tool-executions+++[]
 endif::add-copy-button-to-config-props[]
@@ -401,6 +422,8 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
+_This property is deprecated since `999-SNAPSHOT`: Use `max-tool-calling-round-trips()` instead._
+
 Maximum number of sequential tool executions while handling a single chat request. If this number is exceeded, the chat request will fail.
 
 
@@ -412,7 +435,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_SERVICE_MAX_TOOL_EXECUTIONS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`+++10+++`
+|
 
 h|[[quarkus-langchain4j-core_section_quarkus-langchain4j]] [.section-name.section-level0]##link:#quarkus-langchain4j-core_section_quarkus-langchain4j[Default model config]##
 h|Type

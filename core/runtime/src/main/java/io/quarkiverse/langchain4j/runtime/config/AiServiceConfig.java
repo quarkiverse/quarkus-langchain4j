@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.config;
 
+import java.util.Optional;
+
 import io.smallrye.config.WithDefault;
 
 public interface AiServiceConfig {
@@ -18,7 +20,15 @@ public interface AiServiceConfig {
     /**
      * Maximum number of sequential tool executions while handling a single chat request.
      * If this number is exceeded, the chat request will fail.
+     *
+     * @deprecated Use {@link #maxToolCallingRoundTrips()} instead.
      */
-    @WithDefault("10")
-    int maxToolExecutions();
+    @Deprecated(forRemoval = true, since = "999-SNAPSHOT")
+    Optional<Integer> maxToolExecutions();
+
+    /**
+     * Maximum number of LLM request/response round trips while handling a single chat request.
+     * If this number is exceeded, the chat request will fail.
+     */
+    Optional<Integer> maxToolCallingRoundTrips();
 }
