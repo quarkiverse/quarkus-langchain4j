@@ -1277,6 +1277,23 @@ full AiService method call (the chat request) is complete.
 Another tool method call within a chat request might need to make sure that chat memory is never wiped, so it can call `abortWipe()` to ensure
 that no wipe ever happens within the chat request.
 
+== Chat Scope CDI Lifecyle events
+
+Chat scopes will synchronously fire off lifecycle events
+
+|==
+|Event Type|Description
+
+|ChatScopeStarted|Beginning of a scope or a subscope (via a push)
+|ChatScopeEnded|End of a scope (popped)
+|ChatScopeActivated|When the scope is activated (not begun!).  Happens every request.
+|ChatScopeDeactivated|When the scope is deactived (but not ended!).  Happens at end of every request.
+|==
+
+Each event class has access to the `ChatScope` in question.  From that object you can get the
+chat id, current route, and parent scope.
+
+
 == Example Patterns for using Chat Scopes
 
 === Main Menu pattern
