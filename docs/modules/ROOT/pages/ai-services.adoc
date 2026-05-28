@@ -307,6 +307,35 @@ quarkus.langchain4j.openai.m3.embedding-model.model-name=text-emb...
 ----
 
 
+== Per-request Chat Parameters
+
+The model configuration described above applies to all requests made by the AI Service.
+If you need to override chat parameters (such as `temperature` or `topP`) on a per-request basis, you can add a `ChatRequestParameters` parameter to any AI Service method.
+
+[source,java]
+----
+@RegisterAiService
+public interface MyAiService {
+    String chat(@UserMessage String message, ChatRequestParameters params);
+}
+----
+
+Then, at call time, build the parameters you want to override:
+
+[source,java]
+----
+ChatRequestParameters params = ChatRequestParameters.builder()
+    .temperature(0.42)
+    .topP(0.9)
+    .build();
+
+String response = myAiService.chat("Hello!", params);
+----
+
+Only the fields you set on the `ChatRequestParameters` object override the defaults — all other parameters keep their configured values.
+Passing `null` is also safe and behaves the same as calling the method without the parameter.
+----
+
 == Tools Integration
 
 Integrate function calling (methods) callable by the LLM:
