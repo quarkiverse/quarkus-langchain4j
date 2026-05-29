@@ -3923,6 +3923,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-audio-transcription-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-audio-transcription-model-provider[`+++quarkus.langchain4j.audio-transcription-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.audio-transcription-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider[`+++quarkus.langchain4j."model-name".chat-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j."model-name".chat-model.provider+++[]
@@ -4023,6 +4044,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAM
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__IMAGE_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-audio-transcription-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-audio-transcription-model-provider[`+++quarkus.langchain4j."model-name".audio-transcription-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j."model-name".audio-transcription-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -9069,6 +9111,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-enabled]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-enabled[`+++quarkus.langchain4j.openai.audio-transcription-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.audio-transcription-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-base-url]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-base-url[`+++quarkus.langchain4j.openai.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai.base-url+++[]
@@ -9977,6 +10040,69 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMA
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-model-name[`+++quarkus.langchain4j.openai.audio-transcription-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.audio-transcription-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++whisper-1+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-log-requests[`+++quarkus.langchain4j.openai.audio-transcription-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.audio-transcription-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-audio-transcription-model-log-responses[`+++quarkus.langchain4j.openai.audio-transcription-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.audio-transcription-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
@@ -10990,6 +11116,1005 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-audio-transcription-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-audio-transcription-model-model-name[`+++quarkus.langchain4j.openai."model-name".audio-transcription-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".audio-transcription-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++whisper-1+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-audio-transcription-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-audio-transcription-model-log-requests[`+++quarkus.langchain4j.openai."model-name".audio-transcription-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".audio-transcription-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-audio-transcription-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-audio-transcription-model-log-responses[`+++quarkus.langchain4j.openai."model-name".audio-transcription-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".audio-transcription-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+
+
+h|[.extension-name]##Quarkus LangChain4j - Oracle##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-default-store-enabled[`+++quarkus.langchain4j.oracle.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Oracle embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-datasource]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-datasource[`+++quarkus.langchain4j.oracle.datasource+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.datasource+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the configured Oracle datasource to use for the default store. If not set, the default datasource from the Agroal extension will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-table]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-table[`+++quarkus.langchain4j.oracle.table+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.table+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The table name for storing embeddings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_TABLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-create-option]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-create-option[`+++quarkus.langchain4j.oracle.create-option+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.create-option+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create the embedding table if it does not already exist, replace it, or do nothing.
+
+ - `CREATE_NONE`: the table must already exist
+ - `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
+ - `CREATE_OR_REPLACE`: drop and recreate the table
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_CREATE_OPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_CREATE_OPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`create-none`, `create-if-not-exists`, `create-or-replace`
+|`+++create-if-not-exists+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-id-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-id-column[`+++quarkus.langchain4j.oracle.id-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.id-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the id column. Defaults to `id`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_ID_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_ID_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-embedding-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-embedding-column[`+++quarkus.langchain4j.oracle.embedding-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.embedding-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the embedding column. Defaults to `embedding`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_EMBEDDING_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_EMBEDDING_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-text-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-text-column[`+++quarkus.langchain4j.oracle.text-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.text-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the text column. Defaults to `text`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_TEXT_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_TEXT_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-column[`+++quarkus.langchain4j.oracle.metadata-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.metadata-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the metadata column. Defaults to `metadata`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-exact-search]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-exact-search[`+++quarkus.langchain4j.oracle.exact-search+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.exact-search+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to use exact search (brute force) instead of approximate nearest neighbor search.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_EXACT_SEARCH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_EXACT_SEARCH+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+h|[[quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle]] [.section-name.section-level0]##link:#quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-enabled]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-enabled[`+++quarkus.langchain4j.oracle."store-name".enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether this named Oracle embedding store should be enabled. Set to `false` to skip bean creation for this named store while keeping its configuration.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-datasource]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-datasource[`+++quarkus.langchain4j.oracle."store-name".datasource+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".datasource+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the configured Oracle datasource to use for this named store. If not set, the default datasource from the Agroal extension will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-table]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-table[`+++quarkus.langchain4j.oracle."store-name".table+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".table+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The table name for storing embeddings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__TABLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-create-option]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-create-option[`+++quarkus.langchain4j.oracle."store-name".create-option+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".create-option+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create the embedding table if it does not already exist, replace it, or do nothing.
+
+ - `CREATE_NONE`: the table must already exist
+ - `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
+ - `CREATE_OR_REPLACE`: drop and recreate the table
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__CREATE_OPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__CREATE_OPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`create-none`, `create-if-not-exists`, `create-or-replace`
+|`+++create-if-not-exists+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-id-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-id-column[`+++quarkus.langchain4j.oracle."store-name".id-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".id-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the id column. Defaults to `id`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__ID_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__ID_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-embedding-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-embedding-column[`+++quarkus.langchain4j.oracle."store-name".embedding-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".embedding-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the embedding column. Defaults to `embedding`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__EMBEDDING_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__EMBEDDING_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-text-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-text-column[`+++quarkus.langchain4j.oracle."store-name".text-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".text-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the text column. Defaults to `text`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__TEXT_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__TEXT_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-column]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-column[`+++quarkus.langchain4j.oracle."store-name".metadata-column+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".metadata-column+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom name for the metadata column. Defaults to `metadata`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_COLUMN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_COLUMN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-exact-search]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-exact-search[`+++quarkus.langchain4j.oracle."store-name".exact-search+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".exact-search+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to use exact search (brute force) instead of approximate nearest neighbor search.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__EXACT_SEARCH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__EXACT_SEARCH+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+h|[[quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-store-name-vector-index]] [.section-name.section-level1]##link:#quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-store-name-vector-index[Configuration for the IVF vector index used for approximate nearest neighbor search]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-create-option]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-create-option[`+++quarkus.langchain4j.oracle."store-name".vector-index.create-option+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".vector-index.create-option+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create the IVF vector index.
+
+ - `CREATE_NONE`: do not create an index
+ - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ - `CREATE_OR_REPLACE`: drop and recreate the index
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_CREATE_OPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_CREATE_OPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`create-none`, `create-if-not-exists`, `create-or-replace`
+|`+++create-none+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-target-accuracy]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-target-accuracy[`+++quarkus.langchain4j.oracle."store-name".vector-index.target-accuracy+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".vector-index.target-accuracy+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The target accuracy percentage (0-100) for the IVF vector index. Higher values improve recall at the cost of search latency.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_TARGET_ACCURACY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_TARGET_ACCURACY+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-degree-of-parallelism]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-degree-of-parallelism[`+++quarkus.langchain4j.oracle."store-name".vector-index.degree-of-parallelism+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".vector-index.degree-of-parallelism+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The degree of parallelism for IVF vector index creation. Higher values speed up index creation on multi-core systems.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_DEGREE_OF_PARALLELISM+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_DEGREE_OF_PARALLELISM+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-neighbor-partitions]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-neighbor-partitions[`+++quarkus.langchain4j.oracle."store-name".vector-index.neighbor-partitions+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".vector-index.neighbor-partitions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of neighbor partitions in the IVF index. This controls how the vector space is divided during index creation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_NEIGHBOR_PARTITIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_NEIGHBOR_PARTITIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-sample-per-partition]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-sample-per-partition[`+++quarkus.langchain4j.oracle."store-name".vector-index.sample-per-partition+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".vector-index.sample-per-partition+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of samples per partition used when building the IVF index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_SAMPLE_PER_PARTITION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_SAMPLE_PER_PARTITION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-min-vectors-per-partition]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-vector-index-min-vectors-per-partition[`+++quarkus.langchain4j.oracle."store-name".vector-index.min-vectors-per-partition+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".vector-index.min-vectors-per-partition+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The minimum number of vectors per partition in the IVF index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_MIN_VECTORS_PER_PARTITION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__VECTOR_INDEX_MIN_VECTORS_PER_PARTITION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+
+h|[[quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-store-name-metadata-indexes]] [.section-name.section-level1]##link:#quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-store-name-metadata-indexes[JSON metadata index configurations]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-unique]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-unique[`+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].unique+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].unique+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether this is a unique index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__UNIQUE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__UNIQUE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-bitmap]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-bitmap[`+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].bitmap+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].bitmap+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create a bitmap index instead of a B-tree index. Bitmap indexes are more efficient for low-cardinality columns.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__BITMAP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__BITMAP+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-create-option]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-create-option[`+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].create-option+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].create-option+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create the metadata index.
+
+ - `CREATE_NONE`: do not create the index
+ - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ - `CREATE_OR_REPLACE`: drop and recreate the index
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__CREATE_OPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__CREATE_OPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`create-none`, `create-if-not-exists`, `create-or-replace`
+|`+++create-if-not-exists+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-keys-i-key]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-keys-i-key[`+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].keys[i].key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].keys[i].key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The JSON metadata key name to index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__KEYS_I__KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__KEYS_I__KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-keys-i-type]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-keys-i-type[`+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].keys[i].type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].keys[i].type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The SQL type of the indexed metadata key. Allowed values: `STRING`, `INTEGER`, `LONG`, `FLOAT`, `DOUBLE`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__KEYS_I__TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__KEYS_I__TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++STRING+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-keys-i-order]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-store-name-metadata-indexes-i-keys-i-order[`+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].keys[i].order+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle."store-name".metadata-indexes[i].keys[i].order+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The sort order for this key in the index. Allowed values: `ASC`, `DESC`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__KEYS_I__ORDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE__STORE_NAME__METADATA_INDEXES_I__KEYS_I__ORDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++ASC+++`
+
+
+
+h|[[quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-vector-index]] [.section-name.section-level0]##link:#quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-vector-index[Configuration for the IVF vector index used for approximate nearest neighbor search]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-create-option]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-create-option[`+++quarkus.langchain4j.oracle.vector-index.create-option+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.vector-index.create-option+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create the IVF vector index.
+
+ - `CREATE_NONE`: do not create an index
+ - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ - `CREATE_OR_REPLACE`: drop and recreate the index
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_CREATE_OPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_CREATE_OPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`create-none`, `create-if-not-exists`, `create-or-replace`
+|`+++create-none+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-target-accuracy]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-target-accuracy[`+++quarkus.langchain4j.oracle.vector-index.target-accuracy+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.vector-index.target-accuracy+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The target accuracy percentage (0-100) for the IVF vector index. Higher values improve recall at the cost of search latency.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_TARGET_ACCURACY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_TARGET_ACCURACY+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-degree-of-parallelism]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-degree-of-parallelism[`+++quarkus.langchain4j.oracle.vector-index.degree-of-parallelism+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.vector-index.degree-of-parallelism+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The degree of parallelism for IVF vector index creation. Higher values speed up index creation on multi-core systems.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_DEGREE_OF_PARALLELISM+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_DEGREE_OF_PARALLELISM+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-neighbor-partitions]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-neighbor-partitions[`+++quarkus.langchain4j.oracle.vector-index.neighbor-partitions+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.vector-index.neighbor-partitions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of neighbor partitions in the IVF index. This controls how the vector space is divided during index creation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_NEIGHBOR_PARTITIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_NEIGHBOR_PARTITIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-sample-per-partition]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-sample-per-partition[`+++quarkus.langchain4j.oracle.vector-index.sample-per-partition+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.vector-index.sample-per-partition+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of samples per partition used when building the IVF index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_SAMPLE_PER_PARTITION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_SAMPLE_PER_PARTITION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-min-vectors-per-partition]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-vector-index-min-vectors-per-partition[`+++quarkus.langchain4j.oracle.vector-index.min-vectors-per-partition+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.vector-index.min-vectors-per-partition+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The minimum number of vectors per partition in the IVF index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_MIN_VECTORS_PER_PARTITION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_VECTOR_INDEX_MIN_VECTORS_PER_PARTITION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++-1+++`
+
+
+h|[[quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-metadata-indexes]] [.section-name.section-level0]##link:#quarkus-langchain4j-oracle_section_quarkus-langchain4j-oracle-metadata-indexes[JSON metadata index configurations]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-unique]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-unique[`+++quarkus.langchain4j.oracle.metadata-indexes[i].unique+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.metadata-indexes[i].unique+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether this is a unique index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__UNIQUE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__UNIQUE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-bitmap]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-bitmap[`+++quarkus.langchain4j.oracle.metadata-indexes[i].bitmap+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.metadata-indexes[i].bitmap+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create a bitmap index instead of a B-tree index. Bitmap indexes are more efficient for low-cardinality columns.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__BITMAP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__BITMAP+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-create-option]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-create-option[`+++quarkus.langchain4j.oracle.metadata-indexes[i].create-option+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.metadata-indexes[i].create-option+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create the metadata index.
+
+ - `CREATE_NONE`: do not create the index
+ - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ - `CREATE_OR_REPLACE`: drop and recreate the index
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__CREATE_OPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__CREATE_OPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`create-none`, `create-if-not-exists`, `create-or-replace`
+|`+++create-if-not-exists+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-keys-i-key]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-keys-i-key[`+++quarkus.langchain4j.oracle.metadata-indexes[i].keys[i].key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.metadata-indexes[i].keys[i].key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The JSON metadata key name to index.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__KEYS_I__KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__KEYS_I__KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-keys-i-type]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-keys-i-type[`+++quarkus.langchain4j.oracle.metadata-indexes[i].keys[i].type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.metadata-indexes[i].keys[i].type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The SQL type of the indexed metadata key. Allowed values: `STRING`, `INTEGER`, `LONG`, `FLOAT`, `DOUBLE`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__KEYS_I__TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__KEYS_I__TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++STRING+++`
+
+a| [[quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-keys-i-order]] [.property-path]##link:#quarkus-langchain4j-oracle_quarkus-langchain4j-oracle-metadata-indexes-i-keys-i-order[`+++quarkus.langchain4j.oracle.metadata-indexes[i].keys[i].order+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oracle.metadata-indexes[i].keys[i].order+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The sort order for this key in the index. Allowed values: `ASC`, `DESC`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__KEYS_I__ORDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ORACLE_METADATA_INDEXES_I__KEYS_I__ORDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++ASC+++`
 
 
 
@@ -15805,6 +16930,27 @@ h|[.extension-name]##Quarkus LangChain4j - Weaviate##
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-default-store-enabled[`+++quarkus.langchain4j.weaviate.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Weaviate embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-enabled[`+++quarkus.langchain4j.weaviate.devservices.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.weaviate.devservices.enabled+++[]
@@ -15836,7 +16982,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The container image name to use, for container based DevServices providers. If you want to use Redis Stack modules (bloom, graph, search...), use: `redis/redis-stack:latest`.
+The container image name to use, for container based DevServices providers.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -15880,7 +17026,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Indicates if the Redis server managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Redis starts a new container.
+Indicates if the Weaviate server managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Weaviate starts a new container.
 
 The discovery uses the `quarkus-dev-service-weaviate` label. The value is configured using the `service-name` property.
 
@@ -15905,7 +17051,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The value of the `quarkus-dev-service-weaviate` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Redis looks for a container with the `quarkus-dev-service-weaviate` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-weaviate` label set to the specified value.
+The value of the `quarkus-dev-service-weaviate` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Weaviate looks for a container with the `quarkus-dev-service-weaviate` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-weaviate` label set to the specified value.
 
 This property is used when you need multiple shared Weaviate servers.
 
@@ -16012,7 +17158,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The gRPC port of the Weaviate server. Defaults to 8080
+The port of the Weaviate server. Defaults to 8080
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -16117,7 +17263,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The name of the field that contains the text of a `TextSegment`. Default is "text"
+The name of the field that contains the text of a `dev.langchain4j.data.segment.TextSegment`. Default is "text"
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -16201,7 +17347,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The name of the field where `Metadata` entries are stored
+The name of the field where `dev.langchain4j.data.segment.Metadata` entries are stored
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -16213,6 +17359,305 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`+++_metadata+++`
+
+h|[[quarkus-langchain4j-weaviate_section_quarkus-langchain4j-weaviate]] [.section-name.section-level0]##link:#quarkus-langchain4j-weaviate_section_quarkus-langchain4j-weaviate[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class[`+++quarkus.langchain4j.weaviate."store-name".object-class+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".object-class+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The object class used as the build-time discovery key for this named store. Each named store is identified by its object class within the same Weaviate server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__OBJECT_CLASS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__OBJECT_CLASS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-api-key]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-api-key[`+++quarkus.langchain4j.weaviate."store-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Weaviate API key to authenticate with.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-scheme]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-scheme[`+++quarkus.langchain4j.weaviate."store-name".scheme+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".scheme+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The scheme, e.g. "https" of cluster URL. Find it under Details of your Weaviate cluster.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__SCHEME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__SCHEME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++http+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-host]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-host[`+++quarkus.langchain4j.weaviate."store-name".host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the Weaviate server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++localhost+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-port[`+++quarkus.langchain4j.weaviate."store-name".port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The port of the Weaviate server. Defaults to 8080
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++8080+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-grpc-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-grpc-port[`+++quarkus.langchain4j.weaviate."store-name".grpc.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".grpc.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The gRPC port of the Weaviate server. Defaults to 50051
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__GRPC_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__GRPC_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++50051+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-grpc-secure]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-grpc-secure[`+++quarkus.langchain4j.weaviate."store-name".grpc.secure+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".grpc.secure+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The gRPC connection is secured.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__GRPC_SECURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__GRPC_SECURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-grpc-use-for-inserts]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-grpc-use-for-inserts[`+++quarkus.langchain4j.weaviate."store-name".grpc.use-for-inserts+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".grpc.use-for-inserts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Use gRPC instead of http for batch inserts only. Will still be used for search.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__GRPC_USE_FOR_INSERTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__GRPC_USE_FOR_INSERTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-object-class[`+++quarkus.langchain4j.weaviate."store-name".object-class+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".object-class+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The object class you want to store, e.g. "MyGreatClass". Must start from an uppercase letter.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__OBJECT_CLASS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__OBJECT_CLASS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++Default+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-text-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-text-field-name[`+++quarkus.langchain4j.weaviate."store-name".text-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".text-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the field that contains the text of a `dev.langchain4j.data.segment.TextSegment`. Default is "text"
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__TEXT_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__TEXT_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-avoid-dups]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-avoid-dups[`+++quarkus.langchain4j.weaviate."store-name".avoid-dups+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".avoid-dups+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true (default), then `WeaviateEmbeddingStore` will generate a hashed ID based on provided text segment, which avoids duplicated entries in DB. If false, then random ID will be generated.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__AVOID_DUPS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__AVOID_DUPS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-consistency-level]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-consistency-level[`+++quarkus.langchain4j.weaviate."store-name".consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Consistency level: ONE, QUORUM (default) or ALL.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`one`, `quorum`, `all`
+|`+++quorum+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-metadata-keys]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-metadata-keys[`+++quarkus.langchain4j.weaviate."store-name".metadata.keys+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".metadata.keys+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metadata keys that should be persisted. The default in Weaviate ++[]++, however it is required to specify at least one for the EmbeddingStore to work. Thus, we use "tags" as default
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__METADATA_KEYS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__METADATA_KEYS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|`+++tags+++`
+
+a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-metadata-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-store-name-metadata-field-name[`+++quarkus.langchain4j.weaviate."store-name".metadata.field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.weaviate."store-name".metadata.field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the field where `dev.langchain4j.data.segment.Metadata` entries are stored
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__METADATA_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE__STORE_NAME__METADATA_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++_metadata+++`
+
 
 |===
 
