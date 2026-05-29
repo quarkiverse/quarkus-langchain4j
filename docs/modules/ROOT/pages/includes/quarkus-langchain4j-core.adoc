@@ -523,6 +523,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-audio-transcription-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-audio-transcription-model-provider[`+++quarkus.langchain4j.audio-transcription-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.audio-transcription-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-chat-model-provider[`+++quarkus.langchain4j."model-name".chat-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j."model-name".chat-model.provider+++[]
@@ -623,6 +644,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAM
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__IMAGE_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-audio-transcription-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-audio-transcription-model-provider[`+++quarkus.langchain4j."model-name".audio-transcription-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j."model-name".audio-transcription-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++`
 endif::add-copy-button-to-env-var[]
 --
 |string

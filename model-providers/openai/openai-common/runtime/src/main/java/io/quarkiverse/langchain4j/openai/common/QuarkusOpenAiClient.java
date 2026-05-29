@@ -19,10 +19,12 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
+import org.jboss.resteasy.reactive.client.api.ClientMultipartForm;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.model.chat.response.StreamingHandle;
@@ -35,6 +37,8 @@ import dev.langchain4j.model.openai.internal.StreamingCompletionHandling;
 import dev.langchain4j.model.openai.internal.StreamingResponseHandling;
 import dev.langchain4j.model.openai.internal.SyncOrAsync;
 import dev.langchain4j.model.openai.internal.SyncOrAsyncOrStreaming;
+import dev.langchain4j.model.openai.internal.audio.transcription.OpenAiAudioTranscriptionRequest;
+import dev.langchain4j.model.openai.internal.audio.transcription.OpenAiAudioTranscriptionResponse;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
@@ -46,6 +50,7 @@ import dev.langchain4j.model.openai.internal.image.GenerateImagesResponse;
 import dev.langchain4j.model.openai.internal.moderation.ModerationRequest;
 import dev.langchain4j.model.openai.internal.moderation.ModerationResponse;
 import dev.langchain4j.model.openai.internal.spi.OpenAiClientBuilderFactory;
+import io.netty.buffer.Unpooled;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -54,6 +59,7 @@ import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.Cancellable;
+import io.vertx.core.buffer.Buffer;
 
 /**
  * Implements feature set of {@link OpenAiClient} using Quarkus functionality
@@ -378,6 +384,72 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         responseHandler);
             }
         };
+    }
+
+    @Override
+    public SyncOrAsync<OpenAiAudioTranscriptionResponse> audioTranscription(OpenAiAudioTranscriptionRequest request) {
+        return new SyncOrAsync<>() {
+            @Override
+            public OpenAiAudioTranscriptionResponse execute() {
+                return restApi.blockingAudioTranscription(
+                        buildAudioTranscriptionForm(request),
+                        OpenAiRestApi.ApiMetadata.builder()
+                                .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
+                                .openAiApiKey(openaiApiKey)
+                                .apiVersion(apiVersion)
+                                .organizationId(organizationId)
+                                .build());
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<OpenAiAudioTranscriptionResponse> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<OpenAiAudioTranscriptionResponse> get() {
+                                return restApi.audioTranscription(
+                                        buildAudioTranscriptionForm(request),
+                                        OpenAiRestApi.ApiMetadata.builder()
+                                                .azureApiKey(azureApiKey)
+                                                .azureAdToken(azureAdToken)
+                                                .openAiApiKey(openaiApiKey)
+                                                .apiVersion(apiVersion)
+                                                .organizationId(organizationId)
+                                                .build());
+                            }
+                        },
+                        responseHandler);
+            }
+        };
+    }
+
+    /**
+     * Wraps the in-memory {@code byte[]} instead of copying it ({@code Buffer.buffer(byte[])} would copy). The
+     * {@code Buffer.buffer(ByteBuf)} overload is deprecated, removed in Vert.x 5 — migrate to {@code BufferInternal} when
+     * needed.
+     */
+    @SuppressWarnings("deprecation")
+    private static ClientMultipartForm buildAudioTranscriptionForm(OpenAiAudioTranscriptionRequest request) {
+        String fileName = request.file().fileName();
+        String mimeType = request.file().mimeType();
+        if (mimeType == null || mimeType.isBlank()) {
+            mimeType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+        ClientMultipartForm form = ClientMultipartForm.create()
+                .binaryFileUpload("file", fileName, Buffer.buffer(Unpooled.wrappedBuffer(request.file().content())),
+                        mimeType)
+                .attribute("model", request.model(), null);
+        if (request.language() != null) {
+            form.attribute("language", request.language(), null);
+        }
+        if (request.prompt() != null) {
+            form.attribute("prompt", request.prompt(), null);
+        }
+        if (request.temperature() != null) {
+            form.attribute("temperature", String.valueOf(request.temperature()), null);
+        }
+        return form;
     }
 
     public static class QuarkusOpenAiClientBuilderFactory implements OpenAiClientBuilderFactory {

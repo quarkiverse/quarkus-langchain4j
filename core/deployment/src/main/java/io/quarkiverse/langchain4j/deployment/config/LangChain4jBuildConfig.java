@@ -68,6 +68,11 @@ public interface LangChain4jBuildConfig {
          * Image model
          */
         ImageModelConfig imageModel();
+
+        /**
+         * Audio transcription model
+         */
+        AudioTranscriptionModelConfig audioTranscriptionModel();
     }
 
     @ConfigGroup

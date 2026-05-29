@@ -167,5 +167,10 @@ public interface LangChain4jOpenAiConfig {
          * Image model related settings
          */
         ImageModelConfig imageModel();
+
+        /**
+         * Audio transcription model related settings
+         */
+        AudioTranscriptionModelConfig audioTranscriptionModel();
     }
 }
