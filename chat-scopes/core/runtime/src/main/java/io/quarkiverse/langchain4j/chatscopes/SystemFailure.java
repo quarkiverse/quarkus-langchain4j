@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.chatscopes;
 
 /**
- * Thrown when a system failure occurs. This results in a failed event being sent back to the client.
+ * Thrown when a system failure occurs within the runtime. This results in a failed event being sent back to the client.
  */
 public class SystemFailure extends RuntimeException {
 
@@ -11,5 +11,9 @@ public class SystemFailure extends RuntimeException {
 
     public SystemFailure(Throwable cause) {
         super(cause);
+    }
+
+    public SystemFailure(String message, Throwable cause) {
+        super(message, cause);
     }
 }

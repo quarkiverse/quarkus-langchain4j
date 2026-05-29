@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.chatscopes.internal;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,16 +19,36 @@ public class ChatRouteRecorder {
     public static volatile BeanContainer CONTAINER = null;
     public static String defaultRoute = null;
 
+    public record ExceptionHandlerHolder(Class<? extends Throwable> exceptionType, ExceptionMapper.Handler handler) {
+
+    }
+
+    public static Map<String, List<ExceptionHandlerHolder>> exceptionHandlers = new ConcurrentHashMap<>();
+    public static List<ExceptionHandlerHolder> defaultExceptionHandlers = new ArrayList<>();
+
+    public void registerExceptionHandler(List<String> routes, Class<?> targetClass, String methodName) {
+        ReflectiveExceptionHandler exceptionHandler = new ReflectiveExceptionHandler(targetClass,
+                resolveMethod(targetClass, methodName));
+        if (routes == null || routes.isEmpty()) {
+            defaultExceptionHandlers.add(new ExceptionHandlerHolder(exceptionHandler.exceptionType(), exceptionHandler));
+            return;
+        }
+        for (String route : routes) {
+            exceptionHandlers.computeIfAbsent(route, k -> new ArrayList<>())
+                    .add(new ExceptionHandlerHolder(exceptionHandler.exceptionType(), exceptionHandler));
+        }
+    }
+
     public void setContainer(BeanContainer container) {
         CONTAINER = container;
     }
 
-    public void registerRoute(String frameName, Class<?> targetClass, String methodName, boolean isDefault) {
-        ChatRouteExecution chatFrameExecution = new ReflectiveChatRouteExecution(targetClass,
+    public void registerRoute(String routeName, Class<?> targetClass, String methodName, boolean isDefault) {
+        ChatRouteExecution execution = new ReflectiveChatRouteExecution(targetClass,
                 resolveMethod(targetClass, methodName));
-        routes.put(frameName, chatFrameExecution);
+        routes.put(routeName, execution);
         if (isDefault) {
-            defaultRoute = frameName;
+            defaultRoute = routeName;
         }
     }
 

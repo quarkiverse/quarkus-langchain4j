@@ -4,20 +4,20 @@ import io.quarkus.builder.item.MultiBuildItem;
 
 public final class ChatRouteBuildItem extends MultiBuildItem {
 
-    private final String frameName;
+    private final String routeName;
     protected String className;
     private final String methodName;
-    private final boolean defaultFrame;
+    private final boolean defaultRoute;
 
-    public ChatRouteBuildItem(String frameName, String className, String methodName, boolean defaultFrame) {
-        this.frameName = frameName;
+    public ChatRouteBuildItem(String routeName, String className, String methodName, boolean defaultRoute) {
+        this.routeName = routeName;
         this.className = className;
         this.methodName = methodName;
-        this.defaultFrame = defaultFrame;
+        this.defaultRoute = defaultRoute;
     }
 
-    public String getFrameName() {
-        return frameName;
+    public String getRouteName() {
+        return routeName;
     }
 
     public String getClassName() {
@@ -28,7 +28,7 @@ public final class ChatRouteBuildItem extends MultiBuildItem {
         return methodName;
     }
 
-    public boolean isDefaultFrame() {
-        return defaultFrame;
+    public boolean isDefaultRoute() {
+        return defaultRoute;
     }
 }

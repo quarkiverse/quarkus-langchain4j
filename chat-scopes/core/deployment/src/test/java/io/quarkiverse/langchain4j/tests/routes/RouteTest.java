@@ -23,13 +23,13 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
-import io.quarkiverse.langchain4j.chatscopes.ChatRouteApplicationException;
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteConstants;
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
 import io.quarkiverse.langchain4j.chatscopes.DefaultChatRoute;
 import io.quarkiverse.langchain4j.chatscopes.EventType;
+import io.quarkiverse.langchain4j.chatscopes.HandledApplicationException;
 import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes;
 import io.quarkiverse.langchain4j.chatscopes.RouteNotFound;
 import io.quarkiverse.langchain4j.chatscopes.SystemFailure;
@@ -149,12 +149,12 @@ public class RouteTest {
 
         @ChatRoute("application-exception")
         public void applicationException() {
-            throw new ChatRouteApplicationException("test application exception");
+            throw new HandledApplicationException("test application exception");
         }
 
         @ChatRoute("two")
         public void chatTwo(@MemoryId String memoryId, @UserMessage String userMessage, ChatRouteContext ctx) {
-            Assertions.assertNull(memoryId); // There is no handler for @MemoryId. @FrameInject is the default behavior
+            Assertions.assertNull(memoryId);
             Assertions.assertNotNull(userMessage);
             Assertions.assertNotNull(ctx);
             ctx.response().message("two:" + userMessage);
