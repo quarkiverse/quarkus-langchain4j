@@ -17,6 +17,7 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.agent.AgentInvocationHandler;
+import dev.langchain4j.agentic.declarative.DeclarativeUtil;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
@@ -50,6 +51,11 @@ public class AgenticRecorder {
     @StaticInit
     public void setLeafAgentClassNames(Set<String> leafAgentClassNames) {
         AgenticRecorder.leafAgentClassNames = Collections.unmodifiableSet(leafAgentClassNames);
+    }
+
+    @RuntimeInit
+    public void registerChatSupplierParameterResolver() {
+        DeclarativeUtil.addChatSupplierParameterResolver(new CdiChatSupplierParameterResolver());
     }
 
     @RuntimeInit

@@ -54,6 +54,7 @@ import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -425,6 +426,29 @@ public class AgenticProcessor {
             }
         }
         recorder.setAgentsWithMcpToolBox(agentsWithMcpToolBox);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerChatSupplierParameterResolver(AgenticRecorder recorder) {
+        recorder.registerChatSupplierParameterResolver();
+    }
+
+    @BuildStep
+    void markCdiBeanParametersAsUnremovable(
+            List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        for (DetectedAiAgentBuildItem item : detectedAiAgentBuildItems) {
+            MethodInfo chatModelSupplier = item.getChatModelSupplier();
+            if (chatModelSupplier == null) {
+                continue;
+            }
+            for (MethodParameterInfo param : chatModelSupplier.parameters()) {
+                if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
+                    unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+                }
+            }
+        }
     }
 
     @BuildStep
