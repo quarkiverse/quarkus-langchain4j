@@ -9,11 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.enterprise.context.ContextException;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.Contextual;
+import jakarta.enterprise.event.Event;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.langchain4j.chatscopes.ChatScope;
-import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
+import io.quarkiverse.langchain4j.chatscopes.*;
 import io.quarkiverse.langchain4j.chatscopes.internal.CustomInjectableContext.CustomContextState;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ContextInstanceHandle;
@@ -28,6 +28,10 @@ public class ChatScopeManagedContext implements ContextState {
 
     static CurrentContext<ChatScopeImpl> currentScope = Arc.container().getCurrentContextFactory()
             .create(ChatScoped.class);
+
+    static void fireEvent(ChatScopeCDIEvent event) {
+        Arc.container().instance(Event.class).get().select(event.getClass()).fire(event);
+    }
 
     @Override
     public Map<InjectableBean<?>, Object> getContextualInstances() {
@@ -145,6 +149,11 @@ public class ChatScopeManagedContext implements ContextState {
             return parent == null;
         }
 
+        @Override
+        public ChatScope parent() {
+            return parent;
+        }
+
         public void destroy() {
             if (destroyed) {
                 return;
@@ -158,6 +167,7 @@ public class ChatScopeManagedContext implements ContextState {
                 destroyed = true;
             } finally {
                 lock.unlock();
+                fireEvent(new ChatScopeEnded(this));
             }
         }
     }
@@ -172,11 +182,21 @@ public class ChatScopeManagedContext implements ContextState {
             throw new ContextNotActiveException();
         }
         currentScope.set(context);
+        fireEvent(new ChatScopeActivated(context));
         return context;
     }
 
     public void deactivate() {
+        ChatScope current = currentContext();
+        if (current == null) {
+            return;
+        }
+        deactivate(current);
+    }
+
+    public void deactivate(ChatScope current) {
         currentScope.remove();
+        fireEvent(new ChatScopeDeactivated(current));
     }
 
     public boolean isActive() {
@@ -193,6 +213,7 @@ public class ChatScopeManagedContext implements ContextState {
 
     public String createTopScope(String route) {
         ChatScopeImpl context = new ChatScopeImpl(route);
+        fireEvent(new ChatScopeStarted(context));
         return context.id;
     }
 
@@ -202,6 +223,8 @@ public class ChatScopeManagedContext implements ContextState {
         }
         ChatScopeImpl context = new ChatScopeImpl(route);
         currentScope.set(context);
+        fireEvent(new ChatScopeStarted(context));
+        fireEvent(new ChatScopeActivated(context));
         return context;
     }
 
@@ -215,9 +238,12 @@ public class ChatScopeManagedContext implements ContextState {
         if (current == null) {
             context = new ChatScopeImpl();
         } else {
+            deactivate(current);
             context = current.nest();
         }
         currentScope.set(context);
+        fireEvent(new ChatScopeStarted(context));
+        fireEvent(new ChatScopeActivated(context));
         return context;
     }
 
@@ -227,9 +253,12 @@ public class ChatScopeManagedContext implements ContextState {
         if (current == null) {
             context = new ChatScopeImpl(route);
         } else {
+            deactivate(current);
             context = current.nest(route);
         }
         currentScope.set(context);
+        fireEvent(new ChatScopeStarted(context));
+        fireEvent(new ChatScopeActivated(context));
         return context;
     }
 
@@ -247,13 +276,16 @@ public class ChatScopeManagedContext implements ContextState {
             throw new ContextNotActiveException();
         }
         if (current.isTop()) {
+            fireEvent(new ChatScopeDeactivated(current));
             current.destroy();
             currentScope.set(null);
             return;
         }
         ChatScopeImpl parent = current.parent;
+        fireEvent(new ChatScopeDeactivated(current));
         parent.destroyChild(current);
         currentScope.set(parent);
+        fireEvent(new ChatScopeActivated(parent));
     }
 
     public void destroyAll() {

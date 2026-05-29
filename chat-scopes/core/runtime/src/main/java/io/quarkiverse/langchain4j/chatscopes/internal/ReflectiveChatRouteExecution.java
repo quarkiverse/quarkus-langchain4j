@@ -34,7 +34,6 @@ public class ReflectiveChatRouteExecution implements ChatRouteExecution {
     static EventResolver objectReturnValueResolver = (context, obj) -> context.response().objectMessage(obj);
 
     EventResolver mapper;
-    Class<?> resultMapperClass;
     boolean isMulti = false;
 
     interface ParameterResolver {
@@ -177,17 +176,10 @@ public class ReflectiveChatRouteExecution implements ChatRouteExecution {
                 }
             }
         } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof RuntimeException) {
-                throw (RuntimeException) e.getCause();
-            } else {
-                throw new RuntimeException(e.getCause());
-            }
+
+            throw new UnhandledApplicationException(e.getCause());
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
-            } else {
-                throw new RuntimeException(e);
-            }
+            throw new InvocationFailure(e);
         }
         return null;
     }

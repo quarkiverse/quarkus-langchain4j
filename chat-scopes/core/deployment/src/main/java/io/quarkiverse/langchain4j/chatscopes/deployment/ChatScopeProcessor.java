@@ -4,10 +4,7 @@ import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTransformation;
@@ -18,11 +15,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
-import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
-import io.quarkiverse.langchain4j.chatscopes.DefaultChatRoute;
-import io.quarkiverse.langchain4j.chatscopes.InvocationScoped;
-import io.quarkiverse.langchain4j.chatscopes.PerChatScoped;
+import io.quarkiverse.langchain4j.chatscopes.*;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatRouteEventBus;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatRouteRecorder;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatScopeDefaultMemoryIdProvider;
@@ -133,6 +126,36 @@ public class ChatScopeProcessor {
     }
 
     @BuildStep
+    public void collectExceptionHandlers(BuildProducer<ExceptionHandlerBuildItem> handlers,
+            CombinedIndexBuildItem combinedIndexBuildItem) {
+        IndexView index = combinedIndexBuildItem.getIndex();
+        Collection<AnnotationInstance> funqs = index.getAnnotations(ChatRouteExceptionHandler.class);
+        for (AnnotationInstance funqMethod : funqs) {
+            MethodInfo method = funqMethod.target().asMethod();
+            ClassInfo declaringClass = method.declaringClass();
+            String className = declaringClass.name().toString();
+            String methodName = method.name();
+            if (Modifier.isAbstract(method.flags()) && !Modifier.isInterface(declaringClass.flags())) {
+                throw new RuntimeException(
+                        String.format(
+                                "Method '%s' annotated with '@ChatRouteExceptionHandler' declared in the class '%s' is abstract.",
+                                methodName, className));
+            }
+            if (!Modifier.isPublic(method.flags())) {
+                throw new RuntimeException(
+                        String.format(
+                                "Method '%s' annotated with '@ChatRouteExceptionHandler' declared in the class '%s' is not public.",
+                                methodName, className));
+            }
+            List<String> routes = new ArrayList<>();
+            if (funqMethod.value() != null) {
+                routes.addAll(Arrays.asList(funqMethod.value().asStringArray()));
+            }
+            handlers.produce(new ExceptionHandlerBuildItem(routes, className, methodName));
+        }
+    }
+
+    @BuildStep
     public void collectChatRoutes(BuildProducer<ChatRouteBuildItem> chatRouteProducer,
             CombinedIndexBuildItem combinedIndexBuildItem,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
@@ -141,7 +164,7 @@ public class ChatScopeProcessor {
         IndexView index = combinedIndexBuildItem.getIndex();
         Collection<AnnotationInstance> funqs = index.getAnnotations(CHAT_ROUTE);
         Set<String> beans = new HashSet<>();
-        boolean defaultFrameFound = false;
+        boolean defaultRouteFound = false;
         log.debugf("Found %d chat routes", funqs.size());
         for (AnnotationInstance funqMethod : funqs) {
             MethodInfo method = funqMethod.target().asMethod();
@@ -150,21 +173,21 @@ public class ChatScopeProcessor {
             String methodName = method.name();
             if (Modifier.isAbstract(method.flags()) && !Modifier.isInterface(declaringClass.flags())) {
                 throw new RuntimeException(
-                        String.format("Method '%s' annotated with '@ChatFrame' declared in the class '%s' is abstract.",
+                        String.format("Method '%s' annotated with '@ChatRoute' declared in the class '%s' is abstract.",
                                 methodName, className));
             }
 
             if (Modifier.isAbstract(declaringClass.flags()) && !Modifier.isInterface(declaringClass.flags())) {
                 throw new RuntimeException(
                         String.format(
-                                "@ChatFrame is not allowed within abstract classes. Method '%s' annotated with '@ChatFrame' is declared within the class '%s'.",
+                                "@ChatRoute is not allowed within abstract classes. Method '%s' annotated with '@ChatRoute' is declared within the class '%s'.",
                                 methodName, className));
             }
 
             if (!Modifier.isPublic(method.flags())) {
                 throw new RuntimeException(
                         String.format(
-                                "Method '%s' annotated with '@ChatFrame' declared in the class '%s' is not public.",
+                                "Method '%s' annotated with '@ChatRoute' declared in the class '%s' is not public.",
                                 methodName, className));
             }
             reflectiveClass.produce(ReflectiveClassBuildItem.builder(className).methods().build());
@@ -179,7 +202,7 @@ public class ChatScopeProcessor {
                     if (beanClass != null) {
                         throw new RuntimeException(
                                 String.format(
-                                        "Multiple bean classes implementing interface &s that has a @ChatFrame. Only one bean class is allowed per interface.",
+                                        "Multiple bean classes implementing interface &s that has a @ChatRoute. Only one bean class is allowed per interface.",
                                         declaringClass.name().toString()));
                     }
                     beanClass = classInfo;
@@ -193,23 +216,23 @@ public class ChatScopeProcessor {
                         .produce(UnremovableBeanBuildItem.beanTypes(declaringClass.name()));
             }
 
-            String frameName = className + "::" + methodName;
+            String routeName = className + "::" + methodName;
             if (funqMethod.value() != null) {
-                frameName = funqMethod.value().asString();
+                routeName = funqMethod.value().asString();
             }
 
-            boolean defaultFrame = method.hasAnnotation(DEFAULT_CHAT_ROUTE);
-            if (defaultFrame) {
-                if (defaultFrameFound) {
+            boolean defaultRoute = method.hasAnnotation(DEFAULT_CHAT_ROUTE);
+            if (defaultRoute) {
+                if (defaultRouteFound) {
                     throw new RuntimeException(
                             String.format(
-                                    "Multiple default chat frames found. Only one @DefaultChatFrame chat frame is allowed per deployment.",
+                                    "Multiple default routes frames found. Only one @DefaultChatRoute is allowed per deployment.",
                                     methodName, className));
                 }
-                defaultFrameFound = true;
+                defaultRouteFound = true;
             }
             log.debugf("Create build item for chat route: %s::%s", className, methodName);
-            chatRouteProducer.produce(new ChatRouteBuildItem(frameName, className, methodName, defaultFrame));
+            chatRouteProducer.produce(new ChatRouteBuildItem(routeName, className, methodName, defaultRoute));
         }
         if (!beans.isEmpty()) {
             additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClasses(beans)
@@ -230,22 +253,32 @@ public class ChatScopeProcessor {
 
     @BuildStep
     @Record(STATIC_INIT)
+    public void registerExceptionHandlers(ChatRouteRecorder recorder, RecorderContext context,
+            List<ExceptionHandlerBuildItem> handlers) {
+        for (ExceptionHandlerBuildItem handler : handlers) {
+            recorder.registerExceptionHandler(handler.getRoutes(), context.classProxy(handler.getClassName()),
+                    handler.getMethodName());
+        }
+    }
+
+    @BuildStep
+    @Record(STATIC_INIT)
     public void registerChatRoutes(ChatRouteRecorder recorder, RecorderContext context,
-            List<ChatRouteBuildItem> chatFrameBuildItems) {
-        if (chatFrameBuildItems.size() == 1) {
-            Log.debugf("There is only one chat frame so setting default chat frame to %s",
-                    chatFrameBuildItems.get(0).getFrameName());
-            ChatRouteBuildItem chatFrame = chatFrameBuildItems.get(0);
-            recorder.registerRoute(chatFrame.getFrameName(), context.classProxy(chatFrame.getClassName()),
-                    chatFrame.getMethodName(), true);
+            List<ChatRouteBuildItem> routes) {
+        if (routes.size() == 1) {
+            Log.debugf("There is only one chat route so setting default chat route to %s",
+                    routes.get(0).getRouteName());
+            ChatRouteBuildItem chatRoute = routes.get(0);
+            recorder.registerRoute(chatRoute.getRouteName(), context.classProxy(chatRoute.getClassName()),
+                    chatRoute.getMethodName(), true);
         } else {
-            for (ChatRouteBuildItem chatFrame : chatFrameBuildItems) {
-                Log.debugv("Registering chat frame: {0}", chatFrame.getFrameName());
-                if (chatFrame.isDefaultFrame()) {
-                    Log.debugv("Default chat frame: {0}", chatFrame.getFrameName());
+            for (ChatRouteBuildItem chatRoute : routes) {
+                Log.debugv("Registering chat route: {0}", chatRoute.getRouteName());
+                if (chatRoute.isDefaultRoute()) {
+                    Log.debugv("Default chat route: {0}", chatRoute.getRouteName());
                 }
-                recorder.registerRoute(chatFrame.getFrameName(), context.classProxy(chatFrame.getClassName()),
-                        chatFrame.getMethodName(), chatFrame.isDefaultFrame());
+                recorder.registerRoute(chatRoute.getRouteName(), context.classProxy(chatRoute.getClassName()),
+                        chatRoute.getMethodName(), chatRoute.isDefaultRoute());
             }
         }
     }

@@ -1228,6 +1228,74 @@ If using websockets, secure using link:https://quarkus.io/guides/websockets-next
 
 Place security annotations like `@RolesAllowed` on your `@ChatRoute` methods as needed.
 
+=== Route exception handling
+
+If an exception is thrown from chat route code, the default behavior is that a `failure` event is sent
+back to the client and the client will abort with a failure exception.
+
+If you do not want an exception to cause a `failure` event, then the throw exception must be wrapped by
+or extended from `HandledApplicationException`  Sometimes you can handle an error condition by sending back an event to the client yourself.  At the same time
+you might be too far down the call stack.  In this case, use `HandledApplicationException`.time
+
+==== Exception Handlers
+
+You can set up exception handlers to catch exceptions thrown by your chat route methods by applying
+the `@ChatRouteExceptionHandler` annotation on a method.  This method must be a public method
+with 2 parameters.  The first parameter is the exception type you want to map to.  It can be a superclass
+(i.e. `RuntimeException`).  The second parameter must be a `ChatRouteContext`.  The method can
+be `static` or a member method.  If it is a member method, the class must be a CDI bean.
+
+The `@ChatRouteExceptionHandler` has a `value()` attribute.  If left unset, then the
+handler defined is a default handler for the entire application.  Otherwise, the values
+specified pertain to a chat route.  When the current chat route is set to one of the values on the
+annotation, that exception mapper will be triggered.
+
+Here's an example of some default handlers:
+[source,java]
+----
+import io.quarkiverse.langchain4j.chatscopes.ChatRouteExceptionHandler;
+import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
+
+@ApplicationScoped
+public class MyDefaultHandlers {
+    @ChatRouteExceptionHandler
+    public void handleException(Exception ex, ChatRouteContext ctx) {
+        ctx.response().error(ex.getMessage());
+    }
+}
+
+public class NonBeanDefaultHandlers {
+    @ChatRouteExceptionHandler
+    public static void handleException(IllegalStateException ex, ChatRouteContext ctx) {
+        ctx.response().error("Weird state of things");
+    }
+}
+----
+
+Notice that `MyDefaultHandlers.handleException` is within a bean.  It also handles any
+exception type.  Notice that `NonBeanDefaultHandlers.handleException` is not a bean and has
+a static method for a handler.  If an `IllegalStateException` is thrown, then `NonBeanDefaultHandlers.handleException`
+will be called because it exactly matches the thrown exception type.
+
+Here's another example:
+[source,java]
+----
+import io.quarkiverse.langchain4j.chatscopes.ChatRouteExceptionHandler;
+import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
+
+@ApplicationScoped
+public class SpecificChatRouteHandler {
+    @ChatRouteExceptionHandler("my-route-1", "my-route-2")
+    public void handleException(SecurityException ex, ChatRouteContext ctx) {
+        ctx.response().error(ex.getMessage());
+    }
+}
+
+----
+
+For the above example, if `SecurityException` is thrown, `SpecificChatRouteHandler.handleException`
+will be called if and only if the current route is `my-route-1` or `my-route-2`.
+
 == New APIs for managing chat memory
 
 There's some new APIs for managing chat memory for your `@ChatScoped` and `@PerChatScoped` AiServices.
@@ -1276,6 +1344,23 @@ full AiService method call (the chat request) is complete.
 
 Another tool method call within a chat request might need to make sure that chat memory is never wiped, so it can call `abortWipe()` to ensure
 that no wipe ever happens within the chat request.
+
+== Chat Scope CDI Lifecyle events
+
+Chat scopes will synchronously fire off lifecycle events
+
+|==
+|Event Type|Description
+
+|ChatScopeStarted|Beginning of a scope or a subscope (via a push)
+|ChatScopeEnded|End of a scope (popped)
+|ChatScopeActivated|When the scope is activated (not begun!).  Happens every request.
+|ChatScopeDeactivated|When the scope is deactived (but not ended!).  Happens at end of every request.
+|==
+
+Each event class has access to the `ChatScope` in question.  From that object you can get the
+chat id, current route, and parent scope.
+
 
 == Example Patterns for using Chat Scopes
 

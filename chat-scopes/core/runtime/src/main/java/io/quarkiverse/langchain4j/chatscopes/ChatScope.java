@@ -14,6 +14,13 @@ public interface ChatScope {
     void setRoute(String route);
 
     /**
+     * the parent chat scope, if any
+     *
+     * @return null if no parent
+     */
+    ChatScope parent();
+
+    /**
      * Check if the current thread has a chat scope active.
      *
      * @return
@@ -110,4 +117,5 @@ public interface ChatScope {
         }
         ChatScopeManagedContext.INSTANCE.end();
     }
+
 }

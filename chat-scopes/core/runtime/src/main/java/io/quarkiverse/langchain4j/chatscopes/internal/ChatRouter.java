@@ -4,8 +4,8 @@ import jakarta.enterprise.context.ContextNotActiveException;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.langchain4j.chatscopes.ChatRouteApplicationException;
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
+import io.quarkiverse.langchain4j.chatscopes.HandledApplicationException;
 import io.quarkiverse.langchain4j.chatscopes.RouteNotFound;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatScopeManagedContext.ChatScopeImpl;
 import io.smallrye.mutiny.Uni;
@@ -63,14 +63,38 @@ public class ChatRouter {
             log.debugv("Returning from router");
             wipeMemoryIfScheduled();
             ctx.response().completed(ChatScope.id());
-        } catch (ChatRouteApplicationException e) {
-            log.error("Application exception", e);
+        } catch (HandledApplicationException e) {
             wipeMemoryIfScheduled();
             ctx.response().completed(ChatScope.id());
         } catch (ContextNotActiveException e) {
             log.error("Session not active", e);
             wipeMemoryIfScheduled();
             ctx.response().sessionNotActive();
+        } catch (UnhandledApplicationException unhandled) {
+            ExceptionMapper.Handler handler = null;
+            try {
+                handler = ExceptionMapper.handle(unhandled);
+                if (handler != null) {
+                    try {
+                        handler.handle(unhandled.getCause(), ctx);
+                        wipeMemoryIfScheduled();
+                        ctx.response().completed(ChatScope.id());
+                        return;
+                    } catch (Exception e) {
+                        log.error("Error handling exception", e);
+                    }
+                } else if (unhandled.getCause() instanceof HandledApplicationException) {
+                    wipeMemoryIfScheduled();
+                    ctx.response().completed(ChatScope.id());
+                    return;
+                }
+            } catch (Exception e) {
+                log.error("Error mapping exception", e);
+            }
+
+            log.error("Unhandled application exception", unhandled.getCause());
+            wipeMemoryIfScheduled();
+            ctx.response().serverError();
         } catch (Exception e) {
             log.error("Error executing chat route", e);
             wipeMemoryIfScheduled();
