@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.AudioTranscriptionModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ImageModelConfig;
@@ -434,6 +435,61 @@ class AzureOpenAiRecorderEndpointTests {
                 @Override
                 public Optional<String> user() {
                     return Optional.empty();
+                }
+
+                @Override
+                public Optional<Boolean> logRequests() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<Boolean> logResponses() {
+                    return Optional.empty();
+                }
+            };
+        }
+
+        @Override
+        public AudioTranscriptionModelConfig audioTranscriptionModel() {
+            return new AudioTranscriptionModelConfig() {
+                @Override
+                public Optional<String> resourceName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> domainName() {
+                    return Optional.of("domainName");
+                }
+
+                @Override
+                public Optional<String> deploymentName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> endpoint() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> adToken() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> apiVersion() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> apiKey() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public String modelName() {
+                    return null;
                 }
 
                 @Override

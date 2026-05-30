@@ -91,6 +91,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-enabled]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-enabled[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-resource-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-resource-name[`+++quarkus.langchain4j.azure-openai.resource-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.azure-openai.resource-name+++[]
@@ -1351,6 +1372,216 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPEN
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-resource-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-resource-name[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.resource-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.resource-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.resource-name` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_RESOURCE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_RESOURCE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-domain-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-domain-name[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.domain-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.domain-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.domain-name` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_DOMAIN_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_DOMAIN_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-deployment-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-deployment-name[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.deployment-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.deployment-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.deployment-name` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_DEPLOYMENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_DEPLOYMENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-endpoint]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-endpoint[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.endpoint+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.endpoint+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.endpoint` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_ENDPOINT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-ad-token[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.ad-token+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.ad-token+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.audio-transcription-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-api-version[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.api-version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.api-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-api-key[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-model-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-model-name[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++whisper-1+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-log-requests[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-audio-transcription-model-log-responses[`+++quarkus.langchain4j.azure-openai.audio-transcription-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.audio-transcription-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
@@ -2620,6 +2851,216 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPEN
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-resource-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-resource-name[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.resource-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.resource-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.resource-name` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_RESOURCE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_RESOURCE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-domain-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-domain-name[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.domain-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.domain-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.domain-name` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_DOMAIN_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_DOMAIN_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-deployment-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-deployment-name[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.deployment-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.deployment-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.deployment-name` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_DEPLOYMENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_DEPLOYMENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-endpoint]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-endpoint[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.endpoint+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.endpoint+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+This property will override the `quarkus.langchain4j.azure-openai.endpoint` specifically for audio transcription models if it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_ENDPOINT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-ad-token[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.ad-token+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.ad-token+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.audio-transcription-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-api-version[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.api-version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.api-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-api-key[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-model-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-model-name[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++whisper-1+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-log-requests[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-audio-transcription-model-log-responses[`+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".audio-transcription-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether audio transcription model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

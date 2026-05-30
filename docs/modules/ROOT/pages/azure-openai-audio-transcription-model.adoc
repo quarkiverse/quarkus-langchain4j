@@ -1,0 +1,82 @@
+= Azure OpenAI Audio Transcription Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Azure OpenAI provides audio transcription models (Whisper) that convert spoken audio into text. These models are useful for use cases such as building voice assistants, transcribing meetings, or indexing podcast content.
+
+== Prerequisites
+
+include::./azure-openai-chat-model.adoc[tags=azure-openai-prerequisites]
+
+=== Azure OpenAI Quarkus Extension
+
+To use Azure OpenAI audio transcription models in your Quarkus application, add the following extension:
+
+:provider-artifact: quarkus-langchain4j-azure-openai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+[NOTE]
+====
+This extension also supports Azure OpenAI chat, embedding and image models. Moderation models are not currently supported by Azure OpenAI.
+====
+
+== Configuration
+
+include::includes/quarkus-langchain4j-azure-openai.adoc[leveloffset=+1,opts=optional]
+
+The transcription model is reached through your Azure OpenAI Whisper deployment, named by `deployment-name`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.azure-openai.api-key=...
+quarkus.langchain4j.azure-openai.resource-name=...
+quarkus.langchain4j.azure-openai.deployment-name=...
+----
+
+Use the per-model `quarkus.langchain4j.azure-openai.audio-transcription-model.deployment-name` only when you run several model types on different deployments and need to point transcription at a specific one.
+
+== Using Audio Transcription Models
+
+Inject the `AudioTranscriptionModel` bean and call `transcribeToText(...)` with an `Audio`:
+
+[source,java]
+----
+package org.acme;
+
+import dev.langchain4j.data.audio.Audio;
+import dev.langchain4j.model.audio.AudioTranscriptionModel;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class TranscriptionService {
+
+    @Inject
+    AudioTranscriptionModel audioTranscriptionModel;
+
+    public String transcribe(byte[] audioBytes, String mimeType) {
+        Audio audio = Audio.builder().binaryData(audioBytes).mimeType(mimeType).build();
+        return audioTranscriptionModel.transcribeToText(audio);
+    }
+}
+----
+
+For per-request options such as `language`, `prompt`, and `temperature`, build an `AudioTranscriptionRequest` and call `transcribe(request).text()` instead.
+
+You can configure multiple Azure OpenAI audio transcription models using named configurations, and select one with the `@ModelName` annotation:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ModelName;
+import dev.langchain4j.model.audio.AudioTranscriptionModel;
+import jakarta.inject.Inject;
+
+@Inject AudioTranscriptionModel defaultModel;
+@Inject @ModelName("my-transcription") AudioTranscriptionModel namedModel;
+----
+
+[NOTE]
+====
+Unlike chat, embedding or image models, the audio transcription model is not part of the xref:ai-services.adoc[AI Services] abstraction. It is a specialized single-shot model (audio in, text out, with no messages, tools or guardrails), so it is injected and called directly as shown above rather than driven through a `@RegisterAiService` interface.
+====
