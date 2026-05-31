@@ -177,11 +177,17 @@ public interface LangChain4jAzureOpenAiConfig {
          */
         ImageModelConfig imageModel();
 
+        /**
+         * Audio transcription model related settings
+         */
+        AudioTranscriptionModelConfig audioTranscriptionModel();
+
         default Optional<String> domainNameFor(EndpointType type) {
             var deepDomainName = switch (type) {
                 case CHAT -> chatModel().domainName();
                 case EMBEDDING -> embeddingModel().domainName();
                 case IMAGE -> imageModel().domainName();
+                case AUDIO_TRANSCRIPTION -> audioTranscriptionModel().domainName();
             };
             return deepDomainName
                     .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
@@ -198,6 +204,7 @@ public interface LangChain4jAzureOpenAiConfig {
                 case CHAT -> chatModel().endpoint();
                 case EMBEDDING -> embeddingModel().endpoint();
                 case IMAGE -> imageModel().endpoint();
+                case AUDIO_TRANSCRIPTION -> audioTranscriptionModel().endpoint();
             };
             return deepEndpoint
                     .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
@@ -214,6 +221,7 @@ public interface LangChain4jAzureOpenAiConfig {
                 case CHAT -> chatModel().resourceName();
                 case EMBEDDING -> embeddingModel().resourceName();
                 case IMAGE -> imageModel().resourceName();
+                case AUDIO_TRANSCRIPTION -> audioTranscriptionModel().resourceName();
             };
             return deepResourceName
                     .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
@@ -230,6 +238,7 @@ public interface LangChain4jAzureOpenAiConfig {
                 case CHAT -> chatModel().deploymentName();
                 case EMBEDDING -> embeddingModel().deploymentName();
                 case IMAGE -> imageModel().deploymentName();
+                case AUDIO_TRANSCRIPTION -> audioTranscriptionModel().deploymentName();
             };
             return deepDeploymentName
                     .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
@@ -244,7 +253,8 @@ public interface LangChain4jAzureOpenAiConfig {
         enum EndpointType {
             CHAT,
             EMBEDDING,
-            IMAGE
+            IMAGE,
+            AUDIO_TRANSCRIPTION
         }
     }
 }

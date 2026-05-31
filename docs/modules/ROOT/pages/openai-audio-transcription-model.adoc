@@ -32,7 +32,7 @@ Any OpenAI-compatible transcription endpoint can be used by overriding `quarkus.
 
 == Using Audio Transcription Models
 
-Inject the `AudioTranscriptionModel` bean and call `transcribe(...)` with an `AudioTranscriptionRequest`:
+Inject the `AudioTranscriptionModel` bean and call `transcribeToText(...)` with an `Audio`:
 
 [source,java]
 ----
@@ -40,7 +40,6 @@ package org.acme;
 
 import dev.langchain4j.data.audio.Audio;
 import dev.langchain4j.model.audio.AudioTranscriptionModel;
-import dev.langchain4j.model.audio.AudioTranscriptionRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -51,17 +50,15 @@ public class TranscriptionService {
     AudioTranscriptionModel audioTranscriptionModel;
 
     public String transcribe(byte[] audioBytes, String mimeType) {
-        AudioTranscriptionRequest request = AudioTranscriptionRequest.builder()
-                .audio(Audio.builder().binaryData(audioBytes).mimeType(mimeType).build())
-                .build();
-        return audioTranscriptionModel.transcribe(request).text();
+        Audio audio = Audio.builder().binaryData(audioBytes).mimeType(mimeType).build();
+        return audioTranscriptionModel.transcribeToText(audio);
     }
 }
 ----
 
-Per-request options such as `language`, `prompt`, and `temperature` are passed via the `AudioTranscriptionRequest` builder.
+For per-request options such as `language`, `prompt`, and `temperature`, build an `AudioTranscriptionRequest` and call `transcribe(request).text()` instead.
 
-== Additional Resources
-
-[.lead]
-* Explore xref:ai-services.adoc[AI Services] for orchestrating multiple models
+[NOTE]
+====
+Unlike chat, embedding or image models, the audio transcription model is not part of the xref:ai-services.adoc[AI Services] abstraction. It is a specialized single-shot model (audio in, text out, with no messages, tools or guardrails), so it is injected and called directly as shown above rather than driven through a `@RegisterAiService` interface.
+====

@@ -19,6 +19,7 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
@@ -30,10 +31,12 @@ import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.image.ImageModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
+import io.quarkiverse.langchain4j.azure.openai.DisabledAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType;
@@ -64,6 +67,8 @@ public class AzureOpenAiRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<AzureOpenAiEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<AzureOpenAiImageModel.Builder>>> IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<AzureOpenAiAudioTranscriptionModel.Builder>>> AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private final RuntimeValue<LangChain4jAzureOpenAiConfig> runtimeConfig;
@@ -302,6 +307,52 @@ public class AzureOpenAiRecorder {
                 @Override
                 public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
                     return new DisabledImageModel();
+                }
+            };
+        }
+    }
+
+    public Function<SyntheticCreationalContext<AudioTranscriptionModel>, AudioTranscriptionModel> audioTranscriptionModel(
+            String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig.getValue(),
+                configName);
+
+        if (azureAiConfig.enableIntegration()) {
+            var audioTranscriptionModelConfig = azureAiConfig.audioTranscriptionModel();
+            var apiKey = firstOrDefault(null, audioTranscriptionModelConfig.apiKey(), azureAiConfig.apiKey());
+            var adToken = firstOrDefault(null, audioTranscriptionModelConfig.adToken(), azureAiConfig.adToken());
+            var builder = AzureOpenAiAudioTranscriptionModel.builder()
+                    .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.AUDIO_TRANSCRIPTION))
+                    .apiKey(apiKey)
+                    .adToken(adToken)
+                    .apiVersion(audioTranscriptionModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
+                    .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .maxRetries(azureAiConfig.maxRetries())
+                    .logRequests(
+                            firstOrDefault(false, audioTranscriptionModelConfig.logRequests(), azureAiConfig.logRequests()))
+                    .logResponses(
+                            firstOrDefault(false, audioTranscriptionModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
+                    .modelName(audioTranscriptionModelConfig.modelName())
+                    .configName(NamedConfigUtil.isDefault(configName) ? null : configName);
+
+            return new Function<>() {
+                @Override
+                public AudioTranscriptionModel apply(SyntheticCreationalContext<AudioTranscriptionModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
+                            configName);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public AudioTranscriptionModel apply(SyntheticCreationalContext<AudioTranscriptionModel> context) {
+                    return new DisabledAudioTranscriptionModel();
                 }
             };
         }

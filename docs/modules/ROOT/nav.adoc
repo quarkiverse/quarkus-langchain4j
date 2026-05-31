@@ -76,6 +76,7 @@
 *** xref:mistral-moderation-model.adoc[Mistral AI]
 *** xref:openai-moderation-model.adoc[OpenAI]
 ** Audio Transcription Models
+*** xref:azure-openai-audio-transcription-model.adoc[Azure OpenAI]
 *** xref:openai-audio-transcription-model.adoc[OpenAI]
 ** xref:enable-disable-integrations.adoc[Enabling and Disabling Integrations]
 * xref:testing.adoc[Testing & Evaluation]

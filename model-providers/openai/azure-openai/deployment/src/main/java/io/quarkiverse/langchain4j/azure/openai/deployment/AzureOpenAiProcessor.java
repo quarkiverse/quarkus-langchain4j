@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.azure.openai.deployment;
 
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.AUDIO_TRANSCRIPTION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
@@ -17,16 +18,19 @@ import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
+import io.quarkiverse.langchain4j.deployment.items.AudioTranscriptionModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedAudioTranscriptionModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
@@ -52,6 +56,8 @@ public class AzureOpenAiProcessor {
             .createSimple(AzureOpenAiEmbeddingModel.Builder.class);
     private static final DotName AZURE_OPENAI_IMAGE_MODEL_BUILDER = DotName
             .createSimple(AzureOpenAiImageModel.Builder.class);
+    private static final DotName AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_BUILDER = DotName
+            .createSimple(AzureOpenAiAudioTranscriptionModel.Builder.class);
 
     private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
             Any.class)).build();
@@ -66,6 +72,7 @@ public class AzureOpenAiProcessor {
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
+            BuildProducer<AudioTranscriptionModelProviderCandidateBuildItem> audioTranscriptionProducer,
             LangChain4jAzureOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
@@ -76,6 +83,9 @@ public class AzureOpenAiProcessor {
         if (config.imageModel().enabled().isEmpty() || config.imageModel().enabled().get()) {
             imageProducer.produce(new ImageModelProviderCandidateBuildItem(PROVIDER));
         }
+        if (config.audioTranscriptionModel().enabled().isEmpty() || config.audioTranscriptionModel().enabled().get()) {
+            audioTranscriptionProducer.produce(new AudioTranscriptionModelProviderCandidateBuildItem(PROVIDER));
+        }
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -85,6 +95,7 @@ public class AzureOpenAiProcessor {
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             List<SelectedImageModelProviderBuildItem> selectedImage,
+            List<SelectedAudioTranscriptionModelProviderBuildItem> selectedAudioTranscription,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
@@ -169,6 +180,29 @@ public class AzureOpenAiProcessor {
                                         new Type[] { ClassType.create(AZURE_OPENAI_IMAGE_MODEL_BUILDER) }, null) },
                                 null), ANY)
                         .createWith(imageModel);
+                addQualifierIfNecessary(builder, configName);
+                beanProducer.produce(builder.done());
+            }
+        }
+
+        for (var selected : selectedAudioTranscription) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String configName = selected.getConfigName();
+
+                var audioTranscriptionModel = recorder.audioTranscriptionModel(configName);
+                var builder = SyntheticBeanBuildItem
+                        .configure(AUDIO_TRANSCRIPTION_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(AZURE_OPENAI_AUDIO_TRANSCRIPTION_MODEL_BUILDER) },
+                                        null) },
+                                null), ANY)
+                        .createWith(audioTranscriptionModel);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
