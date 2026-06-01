@@ -4,7 +4,12 @@ import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTransformation;
@@ -15,7 +20,12 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.chatscopes.*;
+import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
+import io.quarkiverse.langchain4j.chatscopes.ChatRouteExceptionHandler;
+import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
+import io.quarkiverse.langchain4j.chatscopes.DefaultChatRoute;
+import io.quarkiverse.langchain4j.chatscopes.InvocationScoped;
+import io.quarkiverse.langchain4j.chatscopes.PerChatScoped;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatRouteEventBus;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatRouteRecorder;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatScopeDefaultMemoryIdProvider;

@@ -13,7 +13,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.langchain4j.chatscopes.*;
+import io.quarkiverse.langchain4j.chatscopes.ChatScope;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeActivated;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeCDIEvent;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeDeactivated;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeEnded;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeStarted;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class CdiEventTest {

@@ -19,7 +19,9 @@ import io.quarkiverse.langchain4j.chatscopes.RouteNotFound;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatRouter;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatScopeManagedContext;
 import io.quarkiverse.langchain4j.chatscopes.internal.ServerChatRouteContext;
-import io.quarkus.websockets.next.*;
+import io.quarkus.websockets.next.OnTextMessage;
+import io.quarkus.websockets.next.WebSocket;
+import io.quarkus.websockets.next.WebSocketConnection;
 
 @SessionScoped
 @WebSocket(path = "/_chat/routes")
