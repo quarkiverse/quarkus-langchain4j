@@ -12,7 +12,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.langchain4j.chatscopes.*;
+import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
+import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
+import io.quarkiverse.langchain4j.chatscopes.ChatRouteExceptionHandler;
+import io.quarkiverse.langchain4j.chatscopes.ChatRoutes;
+import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class ExceptionMapperTest {

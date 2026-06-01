@@ -13,7 +13,13 @@ import jakarta.enterprise.event.Event;
 
 import org.jboss.logging.Logger;
 
-import io.quarkiverse.langchain4j.chatscopes.*;
+import io.quarkiverse.langchain4j.chatscopes.ChatScope;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeActivated;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeCDIEvent;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeDeactivated;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeEnded;
+import io.quarkiverse.langchain4j.chatscopes.ChatScopeStarted;
+import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
 import io.quarkiverse.langchain4j.chatscopes.internal.CustomInjectableContext.CustomContextState;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ContextInstanceHandle;
