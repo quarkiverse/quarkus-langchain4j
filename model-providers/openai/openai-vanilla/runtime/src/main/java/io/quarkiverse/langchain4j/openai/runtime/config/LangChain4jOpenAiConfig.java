@@ -56,7 +56,7 @@ public interface LangChain4jOpenAiConfig {
         String apiKey();
 
         /**
-         * OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
+         * <a href="https://platform.openai.com/docs/api-reference">OpenAI Organization ID</a>
          */
         Optional<String> organizationId();
 

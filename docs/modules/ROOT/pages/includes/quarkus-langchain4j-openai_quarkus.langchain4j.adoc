@@ -183,7 +183,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
+link:https://platform.openai.com/docs/api-reference[OpenAI Organization ID]
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1255,7 +1255,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
+link:https://platform.openai.com/docs/api-reference[OpenAI Organization ID]
 
 
 ifdef::add-copy-button-to-env-var[]
