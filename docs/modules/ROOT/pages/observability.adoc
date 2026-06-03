@@ -139,13 +139,11 @@ public class CustomSpanDataContributor implements ChatModelSpanContributor {
 
 === Langfuse
 
-Here is an example on sending traces to https://langfuse.com/[Langfuse's] OpenTelemetry endpoint.
+The https://docs.quarkiverse.io/quarkus-langfuse/dev[Quarkus Langfuse] extension provides seamless integration with https://langfuse.com/[Langfuse] for tracing AI operations. When both `quarkus-opentelemetry` and `quarkus-langfuse` are present, all of the necessary OpenTelemetry configuration is handled automatically.
 
-==== Step 1: Enable OpenTelemetry in Quarkus LangChain4j
+==== Step 1: Add Dependencies
 
-*Add Quarkus OpenTelemetry Dependency* (Maven):
-
-For Maven, add the following to your `pom.xml` (Gradle users can include equivalent coordinates in Gradle):
+Add the `quarkus-opentelemetry` and `quarkus-langfuse` dependencies to your `pom.xml` (Gradle users can include equivalent coordinates in Gradle):
 
 [source,xml]
 ----
@@ -153,67 +151,47 @@ For Maven, add the following to your `pom.xml` (Gradle users can include equival
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-opentelemetry</artifactId>
 </dependency>
+<dependency>
+    <groupId>io.quarkiverse.langfuse</groupId>
+    <artifactId>quarkus-langfuse</artifactId>
+</dependency>
 ----
 
-*Configure OpenTelemetry exporter* (`application.properties`):
+==== Step 2: Configure Langfuse Connection
+
+Sign up for https://cloud.langfuse.com/[Langfuse Cloud] or https://langfuse.com/self-hosting[self-host Langfuse], then configure the connection in `application.properties`:
 
 [source,properties]
 ----
-quarkus.otel.exporter.otlp.traces.protocol=http/protobuf
+quarkus.langfuse.base-url=https://cloud.langfuse.com
+quarkus.langfuse.username=<your public key>
+quarkus.langfuse.password=<your secret key>
 ----
 
-With these configurations and dependencies in place, your Quarkus application is ready to produce OpenTelemetry traces. Quarkus LangChain4j internal calls (e.g. when you invoke a chat model) will be recorded as spans.
+That's it. The `quarkus-langfuse` extension automatically configures:
 
-Each span will carry attributes like `gen_ai.operation.name`, `gen_ai.system` (the provider, e.g. "openai"), model names, token usage, etc.
-In order to enable events for the prompt and response content you need to activate the langchain4j prompt tracing.
+* The OTLP trace exporter endpoint (derived from `base-url`)
+* Authorization headers (Basic auth from `username`/`password`)
+* Span filtering — by default only `gen_ai` spans and their ancestors are exported (`AI_ONLY` mode)
+* Prompt and completion tracing (`include-prompt`, `include-completion`, `include-tool-arguments`, `include-tool-result` all set to `true`)
+* Automatically set Langfuse's specific `input` and `output` span attributes for better trace visualization in Langfuse
+* Dual exporting to both a standard LGTM stack AND langfuse
 
-*Configure Langchain4j prompt tracing* (`application.properties`):
-
-[source,properties]
-----
-quarkus.langchain4j.tracing.include-prompt=true
-quarkus.langchain4j.tracing.include-completion=true
-quarkus.langchain4j.tracing.include-tool-arguments=true
-quarkus.langchain4j.tracing.include-tool-result=true
-----
-
-==== Step 2: Configure Langfuse
-
-Now that your Quarkus application is emitting OpenTelemetry trace data, the next step is to direct that data to Langfuse.
-
-Langfuse will act as the "backend" for OpenTelemetry in this setup. You can also use other OpenTelemetry backends such as Jaeger/Zipkin/OTel-Collector.
-
-*Langfuse Setup*
-
-* Sign up for https://cloud.langfuse.com/[Langfuse Cloud] or https://langfuse.com/self-hosting[self-hosted Langfuse].
-* Set the OTLP endpoint (e.g. `https://cloud.langfuse.com/api/public/otel`) and API keys.
-
-Configure these via environment variables:
-
-[source,bash]
-----
-QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: set this to the Langfuse OTLP URL (e.g. https://cloud.langfuse.com/api/public/otel).
-QUARKUS_OTEL_EXPORTER_OTLP_HEADERS: set this to Authorization=Basic <base64 public:secret>.
-----
-
-Alternatively, making the following configuration in `application.properties`:
-
-[source,properties]
-----
-quarkus.otel.exporter.otlp.headers=Authorization=Basic <base64 of public:key>
-quarkus.otel.exporter.otlp.endpoint=https://cloud.langfuse.com/api/public/otel
-----
+[TIP]
+====
+In dev and test mode, https://docs.quarkiverse.io/quarkus-langfuse/dev/#devservices[Langfuse DevServices] automatically starts a local Langfuse instance and configures the connection properties for you — no manual configuration needed.
+====
 
 [NOTE]
 ====
-You can find more on authentication via Basic Auth https://langfuse.com/docs/opentelemetry/get-started[here].
+See the https://docs.quarkiverse.io/quarkus-langfuse/dev/all-config.html[Quarkus Langfuse documentation] for additional configuration options, such as changing the span filter mode or customizing timeouts.
 ====
 
 ==== Step 3: Run a Test AI Operation
 
-Start your Quarkus application. Trigger an AI operation that Quarkus LangChain4j handles – for example, call a service or controller that uses a `ChatModel` to generate a completion.
+Start your Quarkus application. Trigger an AI operation that Quarkus LangChain4j handles — for example, call a service or controller that uses a `ChatModel` to generate a completion.
 
-*Note*: A complete example can be found https://github.com/langfuse/langfuse-examples/tree/main/applications/quarkus-langchain4j-demo[here]
+A complete example can be found https://github.com/langfuse/langfuse-examples/tree/main/applications/quarkus-langchain4j-demo[here].
 
 [source,java]
 ----
@@ -251,6 +229,29 @@ public class Startup {
 
 * Check the logs of the application for potential clues
 * Check https://langfuse.com/self-hosting/troubleshooting#missing-events-after-post-apipublicingestion[Troubleshooting] page
+
+==== Manual Configuration (without quarkus-langfuse)
+
+If you prefer not to use the `quarkus-langfuse` extension, you can configure the OpenTelemetry exporter manually to point to Langfuse's OTLP endpoint:
+
+[source,properties]
+----
+quarkus.otel.exporter.otlp.traces.protocol=http/protobuf
+quarkus.otel.exporter.otlp.endpoint=https://cloud.langfuse.com/api/public/otel
+quarkus.otel.exporter.otlp.headers=Authorization=Basic <base64 of public_key:secret_key>
+----
+
+You will also need to manually enable prompt tracing:
+
+[source,properties]
+----
+quarkus.langchain4j.tracing.include-prompt=true
+quarkus.langchain4j.tracing.include-completion=true
+quarkus.langchain4j.tracing.include-tool-arguments=true
+quarkus.langchain4j.tracing.include-tool-result=true
+----
+
+See the https://langfuse.com/docs/opentelemetry/get-started[Langfuse OpenTelemetry documentation] for more details on authentication and manual setup.
 
 === Comet Opik
 
