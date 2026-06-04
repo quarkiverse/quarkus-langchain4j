@@ -83,8 +83,9 @@ public class AgenticProcessor {
     // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
     );
 
-    private static final DotName INTERCEPTOR_BINDING =
-            DotName.createSimple("jakarta.interceptor.InterceptorBinding");
+    private static final DotName FALLBACK = DotName.createSimple("org.eclipse.microprofile.faulttolerance.Fallback");
+
+    private static final DotName INTERCEPTOR_BINDING = DotName.createSimple("jakarta.interceptor.InterceptorBinding");
 
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
@@ -141,6 +142,7 @@ public class AgenticProcessor {
         validateContentRetrieverSupplier(iface);
         validateErrorHandler(iface);
         validateExitCondition(iface);
+        validateFallback(iface);
         validateHumanInTheLoop(iface);
         validateOutput(iface);
         validateParallelExecutor(iface);
@@ -270,6 +272,24 @@ public class AgenticProcessor {
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.PRIMITIVE_BOOLEAN), annotationToValidate);
+        }
+    }
+
+    private static void validateFallback(ClassInfo iface) {
+        for (AnnotationInstance fallback : iface.annotations(FALLBACK)) {
+            AnnotationValue fallbackMethod = fallback.value("fallbackMethod");
+            if (fallbackMethod != null && !fallbackMethod.asString().isEmpty()) {
+                AnnotationTarget target = fallback.target();
+                String location = target.kind() == AnnotationTarget.Kind.CLASS
+                        ? "class '" + iface.name() + "'"
+                        : "method '" + target.asMethod().name() + "' of class '" + iface.name() + "'";
+                throw new IllegalConfigurationException(
+                        "Agent " + location + " uses @Fallback(fallbackMethod=\""
+                                + fallbackMethod.asString() + "\"). "
+                                + "Agent interfaces are dynamic proxies — fallback method name resolution "
+                                + "always fails at runtime with FaultToleranceDefinitionException. "
+                                + "Use FallbackHandler<T> instead: @Fallback(YourFallbackHandler.class)");
+            }
         }
     }
 
