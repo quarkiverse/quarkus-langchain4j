@@ -69,6 +69,18 @@ public class AgenticProcessor {
 
     private static final Logger log = Logger.getLogger(AgenticProcessor.class);
 
+    private static final List<DotName> ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS = List.of(
+            AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
+            AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER,
+            AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER,
+            AgenticLangChain4jDotNames.CONTENT_RETRIEVER_SUPPLIER,
+            AgenticLangChain4jDotNames.RETRIEVAL_AUGMENTER_SUPPLIER,
+            AgenticLangChain4jDotNames.TOOL_SUPPLIER,
+            AgenticLangChain4jDotNames.TOOL_PROVIDER_SUPPLIER,
+            AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER
+    // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
+    );
+
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-agentic"));
@@ -437,15 +449,22 @@ public class AgenticProcessor {
     @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
+            CombinedIndexBuildItem indexBuildItem,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        IndexView index = indexBuildItem.getIndex();
         for (DetectedAiAgentBuildItem item : detectedAiAgentBuildItems) {
-            MethodInfo chatModelSupplier = item.getChatModelSupplier();
-            if (chatModelSupplier == null) {
-                continue;
-            }
-            for (MethodParameterInfo param : chatModelSupplier.parameters()) {
-                if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
-                    unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+            for (ClassInfo classInfo : ValidationUtil.transitiveInterfaces(item.getIface(), index)) {
+                for (MethodInfo method : classInfo.methods()) {
+                    boolean isSupplierMethod = ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS.stream()
+                            .anyMatch(method::hasAnnotation);
+                    if (!isSupplierMethod) {
+                        continue;
+                    }
+                    for (MethodParameterInfo param : method.parameters()) {
+                        if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
+                            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+                        }
+                    }
                 }
             }
         }
