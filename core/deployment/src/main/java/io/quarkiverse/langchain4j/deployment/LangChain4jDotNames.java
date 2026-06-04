@@ -35,6 +35,7 @@ import dev.langchain4j.service.guardrail.OutputGuardrails;
 import dev.langchain4j.service.tool.ToolErrorContext;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.AudioUrl;
@@ -131,6 +132,12 @@ public class LangChain4jDotNames {
     static final DotName NO_TOOL_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoToolProviderSupplier.class);
 
+    static final DotName BEAN_IF_EXISTS_TOOL_SEARCH_STRATEGY_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanIfExistsToolSearchStrategySupplier.class);
+
+    static final DotName NO_TOOL_SEARCH_STRATEGY_SUPPLIER = DotName.createSimple(
+            RegisterAiService.NoToolSearchStrategySupplier.class);
+
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);
 
@@ -156,6 +163,8 @@ public class LangChain4jDotNames {
     static final DotName VIDEO = DotName.createSimple(dev.langchain4j.data.video.Video.class);
     static final DotName RESULT = DotName.createSimple(Result.class);
     public static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
+    public static final DotName TOOL_SEARCH_STRATEGY = DotName
+            .createSimple(ToolSearchStrategy.class);
     // Using the class name to keep the McpToolBox annotation in the mcp module
     public static final DotName MCP_TOOLBOX = DotName.createSimple("io.quarkiverse.langchain4j.mcp.runtime.McpToolBox");
     public static final DotName CHAT_EVENT = DotName.createSimple(ChatEvent.class);

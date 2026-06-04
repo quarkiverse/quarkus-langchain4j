@@ -18,6 +18,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName streamingChatLanguageModelSupplierClassDotName;
     private final List<ClassInfo> toolClassInfos;
     private final DotName toolProviderClassDotName;
+    private final DotName toolSearchStrategyClassDotName;
     private final DotName toolHallucinationStrategyClassDotName;
 
     private final DotName chatMemoryProviderSupplierClassDotName;
@@ -63,6 +64,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             String moderationModelName,
             String imageModelName,
             DotName toolProviderClassDotName,
+            DotName toolSearchStrategyClassDotName,
             Optional<String> beanName,
             DotName toolHallucinationStrategyClassDotName,
             DeclarativeAiServiceInputGuardrails inputGuardrails,
@@ -91,6 +93,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.moderationModelName = moderationModelName;
         this.imageModelName = imageModelName;
         this.toolProviderClassDotName = toolProviderClassDotName;
+        this.toolSearchStrategyClassDotName = toolSearchStrategyClassDotName;
         this.beanName = beanName;
         this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
         this.inputGuardrails = inputGuardrails;
@@ -171,6 +174,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getToolProviderClassDotName() {
         return toolProviderClassDotName;
+    }
+
+    public DotName getToolSearchStrategyClassDotName() {
+        return toolSearchStrategyClassDotName;
     }
 
     public Optional<String> getBeanName() {

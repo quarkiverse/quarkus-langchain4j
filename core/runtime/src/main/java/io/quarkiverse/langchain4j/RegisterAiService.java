@@ -25,6 +25,7 @@ import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.query.Query;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
@@ -192,6 +193,16 @@ public @interface RegisterAiService {
      * Configures a toolProviderSupplier. It is possible to use together toolProviderSupplier and "normal" tools.
      */
     Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
+
+    /**
+     * Configures the {@link ToolSearchStrategy} used to let the model discover tools dynamically at inference time
+     * instead of exposing the whole tool catalog upfront.
+     * <p>
+     * By default, Quarkus will use a CDI bean that implements {@link ToolSearchStrategy} if exactly one exists, and no
+     * tool search strategy otherwise. To use a specific instance, provide a custom {@link Supplier<ToolSearchStrategy>}.
+     * Use {@link NoToolSearchStrategySupplier} to explicitly opt out even when such a bean is present.
+     */
+    Class<? extends Supplier<ToolSearchStrategy>> toolSearchStrategySupplier() default BeanIfExistsToolSearchStrategySupplier.class;
 
     /**
      * By default, after first tool call execution, in subsequent prompts the {@code toolChoice} of
@@ -365,6 +376,30 @@ public @interface RegisterAiService {
 
         @Override
         public ToolProvider get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link ToolSearchStrategy} that the user has configured as a CDI
+     * bean. If no such bean exists, then no tool search strategy will be used.
+     */
+    final class BeanIfExistsToolSearchStrategySupplier implements Supplier<ToolSearchStrategy> {
+
+        @Override
+        public ToolSearchStrategy get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used when the user does not want any tool search strategy, even if a CDI bean implementing
+     * {@link ToolSearchStrategy} exists.
+     */
+    final class NoToolSearchStrategySupplier implements Supplier<ToolSearchStrategy> {
+
+        @Override
+        public ToolSearchStrategy get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }

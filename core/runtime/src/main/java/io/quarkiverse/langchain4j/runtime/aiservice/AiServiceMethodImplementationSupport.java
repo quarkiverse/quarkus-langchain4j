@@ -104,6 +104,8 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
+import dev.langchain4j.service.tool.ToolServiceContext;
+import dev.langchain4j.service.tool.search.ToolSearchService;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.ImageUrl;
@@ -392,6 +394,22 @@ public class AiServiceMethodImplementationSupport {
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
 
+        // adjust() narrows the upfront catalog to the search tools; the full catalog survives in the returned
+        // context so tools the model later finds can be re-added each round (see addFoundTools below).
+        ToolSearchService toolSearchService = context.toolSearchService;
+        ToolServiceContext toolSearchContext = null;
+        if (toolSearchService != null) {
+            toolSearchContext = toolSearchService.adjust(
+                    new ToolServiceContext.Builder()
+                            .effectiveTools(toolSpecifications)
+                            .availableTools(toolSpecifications)
+                            .toolExecutors(toolExecutors)
+                            .build(),
+                    messagesToSend, invocationContext);
+            toolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
+            toolExecutors = new HashMap<>(toolSearchContext.toolExecutors());
+        }
+
         log.debug("Attempting to obtain AI response");
 
         ChatRequest chatRequest = context.chatRequestTransformer
@@ -442,6 +460,7 @@ public class AiServiceMethodImplementationSupport {
 
             List<ToolExecution> toolExecutions = new ArrayList<>();
             List<ToolExecutionResultMessage> toolResults = new ArrayList<>();
+            List<ToolExecutionResult> rawToolResults = new ArrayList<>();
             List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
             int maxToolCallsPerResponse;
             if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
@@ -487,6 +506,8 @@ public class AiServiceMethodImplementationSupport {
                 toolExecutions.add(toolExecution);
                 allToolExecutions.add(toolExecution);
                 toolResults.add(toolExecutionResultMessage);
+                rawToolResults.add(toolExecutionResult);
+
                 anyToolErrored = anyToolErrored || toolExecutionResult.isError();
                 if (toolExecutor instanceof QuarkusToolExecutor quarkusExecutor) {
                     returnBehaviors.add(quarkusExecutor.returnBehavior());
@@ -554,6 +575,11 @@ public class AiServiceMethodImplementationSupport {
                                 .build());
 
                 return result;
+            }
+
+            if (toolSearchService != null) {
+                toolSearchContext = ToolSearchService.addFoundTools(toolSearchContext, rawToolResults);
+                toolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
             }
 
             log.debug("Attempting to obtain AI response");

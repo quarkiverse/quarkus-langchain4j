@@ -6,6 +6,7 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,6 +31,7 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolServiceContext;
 import io.vertx.core.Context;
 
 /**
@@ -175,12 +177,30 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     @Override
     public void start() {
         validateConfiguration();
+
+        // adjust() narrows the upfront catalog to the search tools; the full catalog survives in the returned
+        // context so tools the model later finds can be re-added each round (see addFoundTools in the handler).
+        List<ToolSpecification> effectiveToolSpecifications = toolSpecifications;
+        Map<String, ToolExecutor> effectiveToolExecutors = toolExecutors;
+        ToolServiceContext toolSearchContext = null;
+        if (context.toolSearchService != null) {
+            toolSearchContext = context.toolSearchService.adjust(
+                    new ToolServiceContext.Builder()
+                            .effectiveTools(toolSpecifications)
+                            .availableTools(toolSpecifications)
+                            .toolExecutors(toolExecutors)
+                            .build(),
+                    messages, invocationContext);
+            effectiveToolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
+            effectiveToolExecutors = new HashMap<>(toolSearchContext.toolExecutors());
+        }
+
         ChatRequest chatRequest;
         var userParams = AiServiceMethodImplementationSupport
                 .findChatRequestParameters(methodCreateInfo, methodArgs);
         if (userParams.isPresent()) {
             var defaultParams = dev.langchain4j.model.chat.request.ChatRequestParameters.builder()
-                    .toolSpecifications(toolSpecifications)
+                    .toolSpecifications(effectiveToolSpecifications)
                     .build();
             chatRequest = new ChatRequest.Builder()
                     .messages(messages)
@@ -189,7 +209,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         } else {
             chatRequest = new ChatRequest.Builder()
                     .messages(messages)
-                    .toolSpecifications(toolSpecifications)
+                    .toolSpecifications(effectiveToolSpecifications)
                     .build();
         }
 
@@ -209,8 +229,9 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 errorHandler,
                 initTemporaryMemory(context, messages),
                 new TokenUsage(),
-                toolSpecifications,
-                toolExecutors,
+                effectiveToolSpecifications,
+                effectiveToolExecutors,
+                toolSearchContext,
                 switchToWorkerThreadForToolExecution,
                 switchToWorkerForEmission,
                 cxtx, methodCreateInfo, methodArgs,

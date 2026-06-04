@@ -297,6 +297,42 @@ public class MyCustomToolProvider implements ToolProvider {
 
 If you prefer more control, you can work directly with `ToolSpecification` and `ToolExecutor` to provide tools.
 
+== Searching Tools Dynamically
+
+When an AI service registers many tools, exposing the full catalog on every request increases token usage and can degrade the model's tool selection. *Tool Search* lets the model discover the relevant tools at inference time through a dedicated search tool, instead of receiving the whole catalog upfront.
+
+Unlike `ToolProvider` (where the application decides which tools to expose before the call), Tool Search is driven by the model itself during the call. The two are complementary.
+
+Configure it with the `toolSearchStrategySupplier` attribute:
+
+[source,java]
+----
+@RegisterAiService(tools = MyTools.class, toolSearchStrategySupplier = MyToolSearchStrategySupplier.class)
+public interface MyAiService {
+// ...
+}
+----
+
+The supplier must be marked as `@ApplicationScoped` and return a LangChain4j `ToolSearchStrategy`:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyToolSearchStrategySupplier implements Supplier<ToolSearchStrategy> {
+
+    @Inject EmbeddingModel embeddingModel;
+
+    public ToolSearchStrategy get() {
+        return new VectorToolSearchStrategy(embeddingModel);
+    }
+}
+----
+
+LangChain4j ships two built-in strategies: `SimpleToolSearchStrategy` (keyword based) and `VectorToolSearchStrategy` (semantic search, requires an `EmbeddingModel`).
+
+Alternatively, if a single `ToolSearchStrategy` CDI bean exists, it is used automatically without setting `toolSearchStrategySupplier` (the default is `BeanIfExistsToolSearchStrategySupplier`). To opt out even when such a bean is present, use `NoToolSearchStrategySupplier`.
+
+The tools the model surfaces through the search tool are added to the conversation and remain available in the following tool-calling rounds. Tool Search works for both blocking and streaming AI service methods.
 
 == How Function Calling Works Internally
 
@@ -501,6 +537,7 @@ Function calling enables the model to take actions and retrieve external informa
 |`@Blocking`, `@NonBlocking`, `@RunOnVirtualThread` | Control how tool execution is scheduled
 |`@UserMessage`, `@SystemMessage` | Provide instructions to guide tool use, depending on the model, the prompt should provide hints.
 |`toolProviderSupplier` | Allows dynamic tool provisioning via ToolProvider
+|`toolSearchStrategySupplier` | Lets the model discover tools dynamically via a search tool (Tool Search)
 |`@ToolInputGuardrails` | Validates tool parameters before execution
 |`@ToolOutputGuardrails` | Validates or transforms tool results after execution
 |===

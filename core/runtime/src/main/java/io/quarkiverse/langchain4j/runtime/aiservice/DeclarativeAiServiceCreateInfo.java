@@ -13,6 +13,7 @@ public record DeclarativeAiServiceCreateInfo(
         String streamingChatLanguageModelSupplierClassName,
         Map<String, AnnotationLiteral<?>> toolsClassInfo,
         String toolProviderSupplier,
+        String toolSearchStrategySupplier,
         String chatMemoryProviderSupplierClassName,
         String chatMemoryFlushStrategySupplierClassName,
         String retrievalAugmentorSupplierClassName,
