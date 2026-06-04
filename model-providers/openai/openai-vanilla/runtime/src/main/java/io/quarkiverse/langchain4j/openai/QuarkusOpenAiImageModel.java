@@ -32,7 +32,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
     private final String modelName;
     private final String size;
     private final String quality;
-    private final String style;
     private final Optional<String> user;
     private final String responseFormat;
     private final Integer maxRetries;
@@ -44,7 +43,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         this.modelName = builder.modelName;
         this.size = builder.size;
         this.quality = builder.quality;
-        this.style = builder.style;
         this.user = builder.user;
         this.responseFormat = builder.responseFormat;
         this.maxRetries = builder.maxRetries;
@@ -124,7 +122,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
                 .model(modelName)
                 .size(size)
                 .quality(quality)
-                .style(style)
                 .responseFormat(responseFormat);
 
         if (user.isPresent()) {
@@ -147,7 +144,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         private String modelName;
         private String size;
         private String quality;
-        private String style;
         private Optional<String> user;
         private String responseFormat;
         private Duration timeout;
@@ -220,11 +216,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         public Builder quality(String quality) {
             this.quality = quality;
-            return this;
-        }
-
-        public Builder style(String style) {
-            this.style = style;
             return this;
         }
 

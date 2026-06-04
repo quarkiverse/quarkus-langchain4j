@@ -70,17 +70,6 @@ public interface ImageModelConfig {
     int number();
 
     /**
-     * The style of the generated images.
-     * <p>
-     * Must be one of {@code vivid} or {@code natural}. Vivid causes the model to lean towards generating hyper-real and
-     * dramatic images. Natural causes the model to produce more natural, less hyper-real looking images.
-     * <p>
-     * This param is only supported for when the model is {@code dall-e-3}.
-     */
-    @WithDefault("vivid")
-    String style();
-
-    /**
      * A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
      */
     Optional<String> user();

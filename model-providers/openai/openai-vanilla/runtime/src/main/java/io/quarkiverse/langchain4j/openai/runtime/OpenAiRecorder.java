@@ -368,7 +368,6 @@ public class OpenAiRecorder {
                     .modelName(imageModelConfig.modelName())
                     .size(imageModelConfig.size())
                     .quality(imageModelConfig.quality())
-                    .style(imageModelConfig.style())
                     .responseFormat(imageModelConfig.responseFormat())
                     .user(imageModelConfig.user());
 
