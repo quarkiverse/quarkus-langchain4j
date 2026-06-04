@@ -23,6 +23,7 @@ import jakarta.enterprise.inject.Default;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationTransformation;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
@@ -51,6 +52,7 @@ import io.quarkiverse.langchain4j.deployment.PreventToolValidationErrorBuildItem
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -80,6 +82,9 @@ public class AgenticProcessor {
             AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER
     // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
     );
+
+    private static final DotName INTERCEPTOR_BINDING =
+            DotName.createSimple("jakarta.interceptor.InterceptorBinding");
 
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
@@ -470,10 +475,54 @@ public class AgenticProcessor {
         }
     }
 
+    /**
+     * Propagates interceptor binding annotations from parent interfaces to agent interfaces so that
+     * Arc can apply matching interceptors to the synthetic CDI bean. Without this, class-level
+     * interceptor bindings declared on a parent interface (e.g., {@code @Timeout} on a base interface)
+     * are invisible to Arc's interceptor resolver when it processes the agent interface.
+     */
+    @BuildStep
+    void propagateParentInterceptorBindingsToAgents(
+            List<DetectedAiAgentBuildItem> agents,
+            CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<AnnotationsTransformerBuildItem> transformerProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        for (DetectedAiAgentBuildItem agent : agents) {
+            ClassInfo agentIface = agent.getIface();
+            Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(agentIface, index);
+            List<AnnotationInstance> toPropagate = new ArrayList<>();
+            for (ClassInfo parentIface : hierarchy) {
+                if (parentIface.name().equals(agentIface.name())) {
+                    continue;
+                }
+                for (AnnotationInstance ann : parentIface.declaredAnnotations()) {
+                    if (agentIface.hasAnnotation(ann.name())) {
+                        continue; // already present on the agent itself
+                    }
+                    // Only propagate interceptor binding annotations
+                    ClassInfo annClass = index.getClassByName(ann.name());
+                    if (annClass != null && annClass.hasAnnotation(INTERCEPTOR_BINDING)) {
+                        toPropagate.add(ann);
+                    }
+                }
+            }
+            if (toPropagate.isEmpty()) {
+                continue;
+            }
+            DotName agentName = agentIface.name();
+            List<AnnotationInstance> annotationsToAdd = List.copyOf(toPropagate);
+            transformerProducer.produce(new AnnotationsTransformerBuildItem(
+                    AnnotationTransformation.forClasses()
+                            .whenClass(agentName)
+                            .transform(ctx -> ctx.addAll(annotationsToAdd))));
+        }
+    }
+
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
             InterceptorResolverBuildItem interceptorResolverBuildItem,
+            CombinedIndexBuildItem indexBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer) {
 
@@ -489,7 +538,8 @@ public class AgenticProcessor {
                     ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
 
-            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings);
+            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings,
+                    indexBuildItem.getIndex());
 
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
                     .configure(detectedAiAgentBuildItem.getIface().name())
@@ -521,15 +571,35 @@ public class AgenticProcessor {
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
     }
 
-    private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent, Set<DotName> interceptorBindings) {
-        for (AnnotationInstance ann : agent.getIface().declaredAnnotations()) {
-            if (interceptorBindings.contains(ann.name())) {
+    private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent,
+            Set<DotName> interceptorBindings, IndexView index) {
+        Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(agent.getIface(), index);
+
+        // Class-level check: walk the full interface hierarchy for class-level interceptor bindings
+        for (ClassInfo classInfo : hierarchy) {
+            if (ValidationUtil.hasAnnotation(classInfo.declaredAnnotations(), interceptorBindings)) {
                 return true;
             }
         }
+
+        // Method-level check: check each agentic method, then look up the same method signature
+        // on parent interfaces (handles case where @Agent is redeclared on child interface and
+        // the interceptor binding is only on the parent interface's version of the method)
         for (MethodInfo method : agent.getAgenticMethods()) {
-            for (AnnotationInstance ann : method.declaredAnnotations()) {
-                if (interceptorBindings.contains(ann.name())) {
+            if (ValidationUtil.hasAnnotation(method.annotations(), interceptorBindings)) {
+                return true;
+            }
+            for (ClassInfo classInfo : hierarchy) {
+                if (classInfo.name().equals(agent.getIface().name())) {
+                    continue; // already covered by method.annotations() above
+                }
+                // Look up matching method on this parent interface by name + parameter types.
+                // Returns null if the parent doesn't declare that method — safe to ignore.
+                org.jboss.jandex.Type[] paramTypes = method.parameterTypes()
+                        .toArray(new org.jboss.jandex.Type[0]);
+                MethodInfo parentMethod = classInfo.method(method.name(), paramTypes);
+                if (parentMethod != null
+                        && ValidationUtil.hasAnnotation(parentMethod.annotations(), interceptorBindings)) {
                     return true;
                 }
             }
