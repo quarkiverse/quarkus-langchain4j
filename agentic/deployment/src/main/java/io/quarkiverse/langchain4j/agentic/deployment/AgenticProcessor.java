@@ -38,6 +38,7 @@ import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
+import dev.langchain4j.observability.api.listener.AiServiceResponseReceivedListener;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
@@ -527,7 +528,7 @@ public class AgenticProcessor {
                     // we need to declare the list of interfaces in the exact order that `dev.langchain4j.agentic.agent.AgentBuilder#build` declares them in the `Proxy#newProxyInstance` call
                     proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(List.of(c, InternalAgent.class.getName(),
                             AgenticScopeOwner.class.getName(), ChatMemoryAccess.class.getName(),
-                            ChatMessagesAccess.class.getName())));
+                            ChatMessagesAccess.class.getName(), AiServiceResponseReceivedListener.class.getName())));
                 });
     }
 
