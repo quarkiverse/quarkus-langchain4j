@@ -937,31 +937,6 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++1+++`
 
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-image-model-style]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-image-model-style[`+++quarkus.langchain4j.openai.image-model.style+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai.image-model.style+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-The style of the generated images.
-
-Must be one of `vivid` or `natural`. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images.
-
-This param is only supported for when the model is `dall-e-3`.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_STYLE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_STYLE+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|`+++vivid+++`
-
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-image-model-user]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-image-model-user[`+++quarkus.langchain4j.openai.image-model.user+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai.image-model.user+++[]
@@ -2008,31 +1983,6 @@ endif::add-copy-button-to-env-var[]
 --
 |int
 |`+++1+++`
-
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-image-model-style]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-image-model-style[`+++quarkus.langchain4j.openai."model-name".image-model.style+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai."model-name".image-model.style+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-The style of the generated images.
-
-Must be one of `vivid` or `natural`. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images.
-
-This param is only supported for when the model is `dall-e-3`.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__IMAGE_MODEL_STYLE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__IMAGE_MODEL_STYLE+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|`+++vivid+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-image-model-user]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-image-model-user[`+++quarkus.langchain4j.openai."model-name".image-model.user+++`]##
 ifdef::add-copy-button-to-config-props[]
