@@ -175,7 +175,8 @@ public class AiServiceMethodImplementationSupport {
                 .interfaceName(context.aiServiceClass.getName())
                 .methodName(createInfo.getMethodName())
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
-                .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory(), context.defaultMemoryIdProvider))
+                .chatMemoryId(
+                        memoryId(createInfo, methodArgs, context.hasChatMemoryProvider(), context.defaultMemoryIdProvider))
                 .invocationParameters(findInvocationParams(methodArgs))
                 .managedParameters(LangChain4jManaged.current())
                 .timestampNow()

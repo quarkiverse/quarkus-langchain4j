@@ -10,6 +10,7 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 
 import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
@@ -31,6 +32,8 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public DefaultMemoryIdProvider defaultMemoryIdProvider;
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
 
+    private boolean hasChatMemoryProvider;
+
     // needed by Arc
     public QuarkusAiServiceContext() {
         super(null);
@@ -38,6 +41,29 @@ public class QuarkusAiServiceContext extends AiServiceContext {
 
     public QuarkusAiServiceContext(Class<?> aiServiceClass) {
         super(aiServiceClass);
+    }
+
+    /**
+     * Tracks whether a {@link ChatMemoryProvider} (as opposed to a single shared {@link ChatMemory}) backs this
+     * context. The {@link DefaultMemoryIdProvider} chain must only be consulted when a provider is configured;
+     * consulting it for a single shared memory yields a non-default memory id that the single-memory
+     * {@code ChatMemoryService} cannot resolve, leading to a {@link NullPointerException} when the service is
+     * invoked inside an active request scope.
+     */
+    public boolean hasChatMemoryProvider() {
+        return hasChatMemoryProvider;
+    }
+
+    @Override
+    public void initChatMemories(ChatMemory chatMemory) {
+        super.initChatMemories(chatMemory);
+        this.hasChatMemoryProvider = false;
+    }
+
+    @Override
+    public void initChatMemories(ChatMemoryProvider chatMemoryProvider) {
+        super.initChatMemories(chatMemoryProvider);
+        this.hasChatMemoryProvider = true;
     }
 
     /**
