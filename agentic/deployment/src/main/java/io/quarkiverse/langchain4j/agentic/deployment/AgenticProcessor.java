@@ -87,6 +87,16 @@ public class AgenticProcessor {
 
     private static final DotName INTERCEPTOR_BINDING = DotName.createSimple("jakarta.interceptor.InterceptorBinding");
 
+    private static final DotName RETRY = DotName.createSimple("org.eclipse.microprofile.faulttolerance.Retry");
+
+    private static final DotName TRANSACTIONAL = DotName.createSimple("jakarta.transaction.Transactional");
+
+    private static final Set<DotName> RETRY_SUPERTYPES = Set.of(
+            DotName.createSimple("java.lang.RuntimeException"),
+            DotName.createSimple("java.lang.Exception"),
+            DotName.createSimple("java.lang.Throwable"),
+            DotName.createSimple("dev.langchain4j.agentic.agent.AgentInvocationException"));
+
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-agentic"));
@@ -814,6 +824,56 @@ public class AgenticProcessor {
             }
         }
         return type.name();
+    }
+
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    void validateFaultToleranceInteractions(List<DetectedAiAgentBuildItem> agents) {
+        for (DetectedAiAgentBuildItem agent : agents) {
+            ClassInfo iface = agent.getIface();
+            boolean classLevelRetry = iface.classAnnotation(RETRY) != null;
+            boolean classLevelTransactional = iface.classAnnotation(TRANSACTIONAL) != null;
+
+            for (MethodInfo method : agent.getAgenticMethods()) {
+                // F-4: @Retry(retryOn=...) where none of the retryOn types match the agent wrapper
+                AnnotationInstance effectiveRetry = method.annotation(RETRY);
+                if (effectiveRetry == null && classLevelRetry) {
+                    effectiveRetry = iface.classAnnotation(RETRY);
+                }
+                if (effectiveRetry != null) {
+                    AnnotationValue retryOn = effectiveRetry.value("retryOn");
+                    if (retryOn != null) {
+                        boolean hasSupertype = false;
+                        for (Type t : retryOn.asClassArray()) {
+                            if (RETRY_SUPERTYPES.contains(t.name())) {
+                                hasSupertype = true;
+                                break;
+                            }
+                        }
+                        if (!hasSupertype) {
+                            log.warnf(
+                                    "Agent method '%s#%s' uses @Retry(retryOn=...) but agent exceptions are "
+                                            + "wrapped in AgentInvocationException. The retryOn types will not match "
+                                            + "the thrown exception. Add AgentInvocationException to retryOn, or "
+                                            + "remove retryOn to retry on all exceptions.",
+                                    iface.name(), method.name());
+                        }
+                    }
+                }
+
+                // F-5: @Transactional + @Retry — partial commits + stale scope on retry
+                boolean methodHasRetry = method.hasAnnotation(RETRY) || classLevelRetry;
+                boolean methodHasTransactional = method.hasAnnotation(TRANSACTIONAL) || classLevelTransactional;
+                if (methodHasRetry && methodHasTransactional) {
+                    log.warnf(
+                            "Agent method '%s#%s' combines @Transactional and @Retry. "
+                                    + "AgenticScope is not a JTA resource — on retry, the second attempt re-enters "
+                                    + "after the first transaction has already closed, leaving partial scope state "
+                                    + "unrolled. Ensure this combination is intentional.",
+                            iface.name(), method.name());
+                }
+            }
+        }
     }
 
     /**
