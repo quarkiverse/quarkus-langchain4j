@@ -828,17 +828,32 @@ public class AgenticProcessor {
 
     @BuildStep
     @Produce(ServiceStartBuildItem.class)
-    void validateFaultToleranceInteractions(List<DetectedAiAgentBuildItem> agents) {
+    void validateFaultToleranceInteractions(List<DetectedAiAgentBuildItem> agents,
+            CombinedIndexBuildItem indexBuildItem) {
+        IndexView index = indexBuildItem.getIndex();
         for (DetectedAiAgentBuildItem agent : agents) {
             ClassInfo iface = agent.getIface();
-            boolean classLevelRetry = iface.classAnnotation(RETRY) != null;
-            boolean classLevelTransactional = iface.classAnnotation(TRANSACTIONAL) != null;
+            // Walk the full interface hierarchy so that class-level @Retry or @Transactional
+            // on a parent interface is detected for agents that extend it.
+            Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(iface, index);
+            AnnotationInstance classLevelRetryAnn = hierarchy.stream()
+                    .map(ci -> ci.declaredAnnotation(RETRY))
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            AnnotationInstance classLevelTransactionalAnn = hierarchy.stream()
+                    .map(ci -> ci.declaredAnnotation(TRANSACTIONAL))
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            boolean classLevelRetry = classLevelRetryAnn != null;
+            boolean classLevelTransactional = classLevelTransactionalAnn != null;
 
             for (MethodInfo method : agent.getAgenticMethods()) {
                 // F-4: @Retry(retryOn=...) where none of the retryOn types match the agent wrapper
                 AnnotationInstance effectiveRetry = method.annotation(RETRY);
                 if (effectiveRetry == null && classLevelRetry) {
-                    effectiveRetry = iface.classAnnotation(RETRY);
+                    effectiveRetry = classLevelRetryAnn;
                 }
                 if (effectiveRetry != null) {
                     AnnotationValue retryOn = effectiveRetry.value("retryOn");
