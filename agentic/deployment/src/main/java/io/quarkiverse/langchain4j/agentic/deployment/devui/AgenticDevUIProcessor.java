@@ -88,7 +88,7 @@ public class AgenticDevUIProcessor {
         return card;
     }
 
-    @BuildStep
+    @BuildStep(onlyIf = IsDevelopment.class)
     void jsonRpcProvider(BuildProducer<JsonRPCProvidersBuildItem> producers) {
         producers.produce(new JsonRPCProvidersBuildItem(AgenticJsonRpcService.class));
     }
