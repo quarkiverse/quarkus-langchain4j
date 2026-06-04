@@ -30,6 +30,7 @@ import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.arc.InterceptionProxySubclass;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.annotations.RuntimeInit;
 import io.quarkus.runtime.annotations.StaticInit;
@@ -42,6 +43,12 @@ public class AgenticRecorder {
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
     private static Set<String> rootAgentClassNames = Collections.emptySet();
+
+    final RuntimeValue<AgenticRuntimeConfig> runtimeConfig;
+
+    public AgenticRecorder(RuntimeValue<AgenticRuntimeConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
 
     @StaticInit
     public void setAgentsWithMcpToolBox(Set<String> agentsWithMcpToolBox) {
@@ -63,6 +70,13 @@ public class AgenticRecorder {
         DevAgentMonitorHolder.reset();
         AgenticRecorder.devModeMonitoringEnabled = true;
         AgenticRecorder.rootAgentClassNames = Collections.unmodifiableSet(rootAgentClassNames);
+    }
+
+    @RuntimeInit
+    public void conditionallyEagerInitRootAgents(Set<String> rootAgentClassNames) {
+        if (runtimeConfig.getValue().devUi().eagerInit()) {
+            eagerlyInitRootAgents(rootAgentClassNames);
+        }
     }
 
     @RuntimeInit
@@ -96,7 +110,7 @@ public class AgenticRecorder {
                     throw new IllegalStateException("Unknown type: " + info.chatModelInfo().getClass());
                 }
 
-                Class<?> agentClass = loadClassSafe(info);
+                Class<?> agentClass = loadClassSafe(info, cdiContext.getClass().getClassLoader());
                 Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
                         new AgentConfigurator(new QuarkusAgenticContextConsumer(cdiContext, info),
                                 QuarkusSubAgentResolver.INSTANCE));
@@ -185,17 +199,39 @@ public class AgenticRecorder {
         }
     }
 
-    private static Class<?> loadClassSafe(AiAgentCreateInfo info) {
+    private static Class<?> loadClassSafe(AiAgentCreateInfo info, ClassLoader contextCl) {
+        // Classloader resolution strategy (tried in order):
+        // 1. contextCl — the classloader of the SyntheticCreationalContext generated class.
+        //    This is the Quarkus augmentation CL and knows about ALL application and test classes
+        //    including @QuarkusTest inner classes.  This is the most reliable source.
+        // 2. TCCL — may work on normal threads but is unreliable on Vert.x I/O threads and
+        //    virtual threads spawned by Executors.newVirtualThreadPerTaskExecutor().
+        // 3. Recorder's own classloader — runtime module CL; correct for production/dev mode
+        //    worker threads where TCCL may be the system CL.
         try {
-            // Do not use Thread.currentThread().getContextClassLoader() here — TCCL is not
-            // guaranteed to be the deployment classloader on Vert.x I/O threads or virtual
-            // threads spawned by Executors.newVirtualThreadPerTaskExecutor(). The recorder's
-            // own classloader is always the deployment classloader.
-            return Class.forName(info.agentClassName(), true, AgenticRecorder.class.getClassLoader());
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to load agent class '" + info.agentClassName() + "'", e);
-            throw new RuntimeException(e);
+            return Class.forName(info.agentClassName(), true, contextCl);
+        } catch (ClassNotFoundException ignored) {
+            // fall through
         }
+        ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+        if (tccl != contextCl) {
+            try {
+                return Class.forName(info.agentClassName(), true, tccl);
+            } catch (ClassNotFoundException ignored) {
+                // fall through
+            }
+        }
+        ClassLoader recorderCl = AgenticRecorder.class.getClassLoader();
+        if (recorderCl != contextCl && recorderCl != tccl) {
+            try {
+                return Class.forName(info.agentClassName(), true, recorderCl);
+            } catch (ClassNotFoundException ignored) {
+                // fall through
+            }
+        }
+        log.error("Unable to load agent class '" + info.agentClassName()
+                + "' from any classloader (context, TCCL, or recorder)");
+        throw new RuntimeException(new ClassNotFoundException(info.agentClassName()));
     }
 
     private record QuarkusAgenticContextConsumer(SyntheticCreationalContext<Object> cdiContext,
