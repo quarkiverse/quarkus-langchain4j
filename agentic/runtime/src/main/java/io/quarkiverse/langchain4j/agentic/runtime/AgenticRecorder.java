@@ -69,7 +69,8 @@ public class AgenticRecorder {
     public void eagerlyInitRootAgents(Set<String> rootAgentClassNames) {
         for (String className : rootAgentClassNames) {
             try {
-                Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+                // TCCL not reliable in dev-mode startup on virtual threads; use recorder classloader.
+                Class<?> clazz = Class.forName(className, true, AgenticRecorder.class.getClassLoader());
                 ClientProxy.unwrap(Arc.container().select(clazz).get());
             } catch (Exception e) {
                 log.warn("Failed to eagerly initialize root agent for dev mode topology: " + className, e);
@@ -186,7 +187,11 @@ public class AgenticRecorder {
 
     private static Class<?> loadClassSafe(AiAgentCreateInfo info) {
         try {
-            return Class.forName(info.agentClassName(), true, Thread.currentThread().getContextClassLoader());
+            // Do not use Thread.currentThread().getContextClassLoader() here — TCCL is not
+            // guaranteed to be the deployment classloader on Vert.x I/O threads or virtual
+            // threads spawned by Executors.newVirtualThreadPerTaskExecutor(). The recorder's
+            // own classloader is always the deployment classloader.
+            return Class.forName(info.agentClassName(), true, AgenticRecorder.class.getClassLoader());
         } catch (ClassNotFoundException e) {
             log.error("Unable to load agent class '" + info.agentClassName() + "'", e);
             throw new RuntimeException(e);
