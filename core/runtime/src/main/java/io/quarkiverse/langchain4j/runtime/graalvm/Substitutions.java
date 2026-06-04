@@ -15,13 +15,13 @@ import dev.langchain4j.spi.prompt.PromptTemplateFactory;
 import dev.langchain4j.spi.prompt.structured.StructuredPromptFactory;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStoreJsonCodec;
+import io.quarkiverse.langchain4j.QuarkusAiServiceContextFactory;
 import io.quarkiverse.langchain4j.QuarkusAiServicesFactory;
 import io.quarkiverse.langchain4j.QuarkusChatMessageJsonCodecFactory;
 import io.quarkiverse.langchain4j.QuarkusInMemoryEmbeddingJsonCodecFactory;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.QuarkusPromptTemplateFactory;
 import io.quarkiverse.langchain4j.QuarkusStructuredPromptFactory;
-import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import opennlp.tools.util.ext.ExtensionNotLoadedException;
 
 public class Substitutions {
@@ -49,7 +49,7 @@ public class Substitutions {
 
         @Substitute
         public static <T> AiServices<T> builder(Class<T> aiService) {
-            return new QuarkusAiServicesFactory.QuarkusAiServices<>(new QuarkusAiServiceContext(aiService));
+            return new QuarkusAiServicesFactory.QuarkusAiServices<>(new QuarkusAiServiceContextFactory().create(aiService));
         }
     }
 
