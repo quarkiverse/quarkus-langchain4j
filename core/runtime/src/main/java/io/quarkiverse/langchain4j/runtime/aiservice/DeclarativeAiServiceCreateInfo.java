@@ -36,5 +36,6 @@ public record DeclarativeAiServiceCreateInfo(
         Integer maxToolCallsPerResponse,
         boolean allowContinuousForcedToolCalling,
         boolean shouldThrowExceptionOnEventError,
-        String defaultMemoryIdProviderClassName) {
+        String defaultMemoryIdProviderClassName,
+        boolean recordChatHistory) {
 }

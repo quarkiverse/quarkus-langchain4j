@@ -38,6 +38,7 @@ import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.AudioUrl;
+import io.quarkiverse.langchain4j.ChatHistoryStore;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.HandleToolArgumentError;
 import io.quarkiverse.langchain4j.HandleToolExecutionError;
@@ -45,6 +46,7 @@ import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.PdfUrl;
+import io.quarkiverse.langchain4j.RecordChatHistory;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
 import io.quarkiverse.langchain4j.VideoUrl;
@@ -164,4 +166,7 @@ public class LangChain4jDotNames {
     public static final DotName TOOL_ARGUMENTS_EXCEPTION = DotName.createSimple(ToolArgumentsException.class);
     public static final DotName TOOL_EXECUTION_EXCEPTION = DotName.createSimple(ToolExecutionException.class);
     public static final DotName TOOL_ERROR_CONTEXT = DotName.createSimple(ToolErrorContext.class);
+
+    public static final DotName RECORD_CHAT_HISTORY = DotName.createSimple(RecordChatHistory.class);
+    public static final DotName CHAT_HISTORY_STORE = DotName.createSimple(ChatHistoryStore.class);
 }

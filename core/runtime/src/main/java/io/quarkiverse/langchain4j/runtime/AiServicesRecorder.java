@@ -24,6 +24,7 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.quarkiverse.langchain4j.ChatHistoryStore;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceEvents;
@@ -353,6 +354,11 @@ public class AiServicesRecorder {
 
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
+
+                    if (info.recordChatHistory()) {
+                        aiServiceContext.chatHistoryStore = creationalContext
+                                .getInjectedReference(ChatHistoryStore.class);
+                    }
 
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {

@@ -43,6 +43,14 @@ public interface LangChain4jBuildConfig {
     @WithDefault("true")
     boolean responseSchema();
 
+    /**
+     * If enabled, all AI services will record chat history via the {@code ChatHistoryStore} CDI bean,
+     * without needing the {@code @RecordChatHistory} annotation.
+     * If disabled, only AI services annotated with {@code @RecordChatHistory} will record chat history.
+     */
+    @WithDefault("false")
+    boolean chatHistoryEnabled();
+
     interface BaseConfig {
         /**
          * Chat model
