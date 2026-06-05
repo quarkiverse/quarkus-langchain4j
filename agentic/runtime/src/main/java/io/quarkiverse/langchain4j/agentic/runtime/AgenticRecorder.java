@@ -19,9 +19,14 @@ import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.agent.AgentInvocationHandler;
 import dev.langchain4j.agentic.declarative.DeclarativeUtil;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
@@ -39,7 +44,6 @@ import io.quarkus.runtime.annotations.StaticInit;
 public class AgenticRecorder {
 
     private static final Logger log = Logger.getLogger(AgenticRecorder.class);
-    private static volatile Set<String> agentsWithMcpToolBox = Collections.emptySet();
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
     private static Set<String> rootAgentClassNames = Collections.emptySet();
@@ -48,11 +52,6 @@ public class AgenticRecorder {
 
     public AgenticRecorder(RuntimeValue<AgenticRuntimeConfig> runtimeConfig) {
         this.runtimeConfig = runtimeConfig;
-    }
-
-    @StaticInit
-    public void setAgentsWithMcpToolBox(Set<String> agentsWithMcpToolBox) {
-        AgenticRecorder.agentsWithMcpToolBox = Collections.unmodifiableSet(agentsWithMcpToolBox);
     }
 
     @StaticInit
@@ -239,16 +238,67 @@ public class AgenticRecorder {
             implements
                 Consumer<AgenticServices.DeclarativeAgentCreationContext<?>> {
 
-        private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+        private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_INSTANCE = new TypeLiteral<>() {
+        };
+        private static final TypeLiteral<Instance<ContentRetriever>> CONTENT_RETRIEVER_INSTANCE = new TypeLiteral<>() {
+        };
+        private static final TypeLiteral<Instance<ChatMemory>> CHAT_MEMORY_INSTANCE = new TypeLiteral<>() {
+        };
+        private static final TypeLiteral<Instance<ChatMemoryProvider>> CHAT_MEMORY_PROVIDER_INSTANCE = new TypeLiteral<>() {
+        };
+        private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_INSTANCE = new TypeLiteral<>() {
+        };
+        private static final TypeLiteral<Instance<AgentListener>> AGENT_LISTENER_INSTANCE = new TypeLiteral<>() {
         };
 
         @Override
         public void accept(AgenticServices.DeclarativeAgentCreationContext agenticContext) {
-            if (AgenticRecorder.agentsWithMcpToolBox.contains(agenticContext.agentServiceClass().getName())) {
-                Instance<ToolProvider> injectedReference = cdiContext.getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
-                if (injectedReference.isResolvable()) {
-                    agenticContext.agentBuilder().toolProvider(injectedReference.get());
+            var agentBuilder = agenticContext.agentBuilder();
+
+            // Wire CDI-resolved supplier types (detected at build time)
+            for (CdiSupplierType supplierType : aiAgentCreateInfo.cdiResolvedSuppliers()) {
+                switch (supplierType) {
+                    case CONTENT_RETRIEVER -> {
+                        Instance<ContentRetriever> instance = cdiContext.getInjectedReference(CONTENT_RETRIEVER_INSTANCE);
+                        if (instance.isResolvable()) {
+                            agentBuilder.contentRetriever(instance.get());
+                        }
+                    }
+                    case CHAT_MEMORY -> {
+                        Instance<ChatMemory> instance = cdiContext.getInjectedReference(CHAT_MEMORY_INSTANCE);
+                        if (instance.isResolvable()) {
+                            agentBuilder.chatMemory(instance.get());
+                        }
+                    }
+                    case CHAT_MEMORY_PROVIDER -> {
+                        Instance<ChatMemoryProvider> instance = cdiContext
+                                .getInjectedReference(CHAT_MEMORY_PROVIDER_INSTANCE);
+                        if (instance.isResolvable()) {
+                            agentBuilder.chatMemoryProvider(instance.get());
+                        }
+                    }
+                    case RETRIEVAL_AUGMENTOR -> {
+                        Instance<RetrievalAugmentor> instance = cdiContext
+                                .getInjectedReference(RETRIEVAL_AUGMENTOR_INSTANCE);
+                        if (instance.isResolvable()) {
+                            agentBuilder.retrievalAugmentor(instance.get());
+                        }
+                    }
                 }
+            }
+
+            // MCP ToolProvider support (uses build-time flag from AiAgentCreateInfo)
+            if (aiAgentCreateInfo.hasMcpToolBox()) {
+                Instance<ToolProvider> toolProviderInstance = cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE);
+                if (toolProviderInstance.isResolvable()) {
+                    agentBuilder.toolProvider(toolProviderInstance.get());
+                }
+            }
+
+            // AgentListener support (unconditional — build-time always adds the injection point)
+            Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
+            for (AgentListener listener : listeners) {
+                agentBuilder.listener(listener);
             }
         }
     }

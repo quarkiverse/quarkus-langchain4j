@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +45,7 @@ import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
+import io.quarkiverse.langchain4j.agentic.runtime.CdiSupplierType;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.FallbackToDummyUserMessageBuildItem;
@@ -83,6 +85,9 @@ public class AgenticProcessor {
     // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
     );
 
+    private static final DotName CHAT_MEMORY_PROVIDER = DotName
+            .createSimple(dev.langchain4j.memory.chat.ChatMemoryProvider.class);
+
     private static final DotName FALLBACK = DotName.createSimple("org.eclipse.microprofile.faulttolerance.Fallback");
 
     private static final DotName INTERCEPTOR_BINDING = DotName.createSimple("jakarta.interceptor.InterceptorBinding");
@@ -90,6 +95,10 @@ public class AgenticProcessor {
     private static final DotName RETRY = DotName.createSimple("org.eclipse.microprofile.faulttolerance.Retry");
 
     private static final DotName TRANSACTIONAL = DotName.createSimple("jakarta.transaction.Transactional");
+
+    private static final DotName REQUEST_SCOPED = DotName.createSimple("jakarta.enterprise.context.RequestScoped");
+
+    private static final DotName SESSION_SCOPED = DotName.createSimple("jakarta.enterprise.context.SessionScoped");
 
     private static final Set<DotName> RETRY_SUPERTYPES = Set.of(
             DotName.createSimple("java.lang.RuntimeException"),
@@ -154,6 +163,7 @@ public class AgenticProcessor {
         validateExitCondition(iface);
         validateFallback(iface);
         validateHumanInTheLoop(iface);
+        validateMcpToolBox(item);
         validateOutput(iface);
         validateParallelExecutor(iface);
         validateRetrievalAugmentorSupplier(iface);
@@ -317,6 +327,16 @@ public class AgenticProcessor {
         }
     }
 
+    private void validateMcpToolBox(DetectedAiAgentBuildItem item) {
+        if (!item.getMcpToolBoxMethods().isEmpty()) {
+            if ((item.getMcpToolBoxMethods().size() != 1) && (item.getAgenticMethods().size() > 1)) {
+                throw new IllegalConfigurationException(
+                        "Currently, @McpToolBox can only be used on an Agent if the agent has a single method. This restriction will be lifted in the future. Offending class is '"
+                                + item.getIface().name() + "'");
+            }
+        }
+    }
+
     private void validateOutput(ClassInfo iface) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.OUTPUT;
         List<AnnotationInstance> instances = iface
@@ -459,23 +479,6 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
-    void mcpToolBoxSupport(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder) {
-        Set<String> agentsWithMcpToolBox = new HashSet<>();
-        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
-            if (!bi.getMcpToolBoxMethods().isEmpty()) {
-                if ((bi.getMcpToolBoxMethods().size() != 1) && (bi.getAgenticMethods().size() > 1)) {
-                    throw new IllegalConfigurationException(
-                            "Currently, @McpToolBox can only be used on an Agent if the agent has a single method. This restriction will be lifted in the future. Offending class is '"
-                                    + bi.getIface().name() + "'");
-                }
-                agentsWithMcpToolBox.add(bi.getIface().name().toString());
-            }
-        }
-        recorder.setAgentsWithMcpToolBox(agentsWithMcpToolBox);
-    }
-
-    @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void registerChatSupplierParameterResolver(AgenticRecorder recorder) {
         recorder.registerChatSupplierParameterResolver();
@@ -552,11 +555,14 @@ public class AgenticProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
             InterceptorResolverBuildItem interceptorResolverBuildItem,
+            BeanDiscoveryFinishedBuildItem beanDiscovery,
             CombinedIndexBuildItem indexBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
-            BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer) {
+            BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
 
         Set<DotName> interceptorBindings = interceptorResolverBuildItem.getInterceptorBindings();
+        IndexView index = indexBuildItem.getIndex();
         Set<String> requestedChatModelNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
             String chatModelName = detectedAiAgentBuildItem.getModelName() != null
@@ -568,8 +574,12 @@ public class AgenticProcessor {
                     ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
 
-            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings,
-                    indexBuildItem.getIndex());
+            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings, index);
+
+            // Detect CDI beans for supplier types not declared via static supplier methods
+            Set<CdiSupplierType> cdiResolvedSuppliers = detectCdiSuppliers(detectedAiAgentBuildItem, beanDiscovery, index);
+
+            boolean hasMcpToolBox = !detectedAiAgentBuildItem.getMcpToolBoxMethods().isEmpty();
 
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
                     .configure(detectedAiAgentBuildItem.getIface().name())
@@ -578,7 +588,7 @@ public class AgenticProcessor {
                     .createWith(recorder
                             .createAiAgent(
                                     new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,
-                                            hasInterceptorBindings)))
+                                            hasInterceptorBindings, cdiResolvedSuppliers, hasMcpToolBox)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
             if (hasInterceptorBindings) {
@@ -596,9 +606,120 @@ public class AgenticProcessor {
             }
             beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                     new Type[] { ClassType.create(LangChain4jDotNames.TOOL_PROVIDER) }, null));
+
+            // Add injection points for CDI-resolved supplier types
+            for (CdiSupplierType supplierType : cdiResolvedSuppliers) {
+                DotName beanTypeName = cdiSupplierTypeToDotName(supplierType);
+                beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                        new Type[] { ClassType.create(beanTypeName) }, null));
+                unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(beanTypeName));
+            }
+
+            // Unconditionally add Instance<AgentListener> injection point (for Task 4)
+            beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                    new Type[] { ClassType.create(AgenticLangChain4jDotNames.AGENT_LISTENER) }, null));
+
             syntheticBeanProducer.produce(beanConfigurator.done());
         }
+
+        // Mark AgentListener beans as unremovable (global check, outside per-agent loop)
+        if (!beanDiscovery.beanStream().withBeanType(AgenticLangChain4jDotNames.AGENT_LISTENER).isEmpty()) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(AgenticLangChain4jDotNames.AGENT_LISTENER));
+        }
+
+        // Validate AgentListener bean scopes
+        beanDiscovery.beanStream()
+                .withBeanType(AgenticLangChain4jDotNames.AGENT_LISTENER)
+                .forEach(bean -> {
+                    DotName scope = bean.getScope().getDotName();
+                    if (scope.equals(REQUEST_SCOPED) || scope.equals(SESSION_SCOPED)) {
+                        throw new IllegalConfigurationException(
+                                "CDI bean of type 'AgentListener' is @" + scope.withoutPackagePrefix()
+                                        + " and cannot be auto-wired into agents. "
+                                        + "Agent synthetic beans are created at application startup "
+                                        + "when no request context is active. Use @ApplicationScoped "
+                                        + "or provide the listener via a static supplier method.");
+                    }
+                });
+
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
+    }
+
+    /**
+     * Detects which CDI supplier types should be auto-wired for the given agent.
+     * For each {@link CdiSupplierType}, checks if the agent (or its transitive interfaces)
+     * declares a static supplier method. If not, queries CDI for a default bean of that type.
+     * If exactly one bean is found, the type is included in the result set.
+     */
+    private Set<CdiSupplierType> detectCdiSuppliers(DetectedAiAgentBuildItem agent,
+            BeanDiscoveryFinishedBuildItem beanDiscovery, IndexView index) {
+        Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(agent.getIface(), index);
+        Set<CdiSupplierType> result = EnumSet.noneOf(CdiSupplierType.class);
+
+        checkCdiSupplier(CdiSupplierType.CONTENT_RETRIEVER,
+                AgenticLangChain4jDotNames.CONTENT_RETRIEVER_SUPPLIER, LangChain4jDotNames.RETRIEVER,
+                hierarchy, beanDiscovery, agent, result);
+        checkCdiSupplier(CdiSupplierType.CHAT_MEMORY,
+                AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER, LangChain4jDotNames.CHAT_MEMORY,
+                hierarchy, beanDiscovery, agent, result);
+        checkCdiSupplier(CdiSupplierType.CHAT_MEMORY_PROVIDER,
+                AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER, CHAT_MEMORY_PROVIDER,
+                hierarchy, beanDiscovery, agent, result);
+        checkCdiSupplier(CdiSupplierType.RETRIEVAL_AUGMENTOR,
+                AgenticLangChain4jDotNames.RETRIEVAL_AUGMENTER_SUPPLIER, LangChain4jDotNames.RETRIEVAL_AUGMENTOR,
+                hierarchy, beanDiscovery, agent, result);
+
+        return result.isEmpty() ? Set.of() : Collections.unmodifiableSet(result);
+    }
+
+    private void checkCdiSupplier(CdiSupplierType supplierType, DotName supplierAnnotation, DotName beanTypeDotName,
+            Set<ClassInfo> hierarchy, BeanDiscoveryFinishedBuildItem beanDiscovery,
+            DetectedAiAgentBuildItem agent, Set<CdiSupplierType> result) {
+        // Check if any interface in the hierarchy declares a static method with the supplier annotation
+        boolean hasStaticSupplier = hierarchy.stream()
+                .flatMap(ci -> ci.methods().stream())
+                .anyMatch(m -> Modifier.isStatic(m.flags()) && m.hasAnnotation(supplierAnnotation));
+        if (hasStaticSupplier) {
+            log.debugf("Agent '%s': skipping CDI auto-wiring for %s — has static supplier", agent.getIface().name(),
+                    supplierType);
+            return;
+        }
+
+        // Query CDI for @Default-qualified beans of this type
+        List<io.quarkus.arc.processor.BeanInfo> beans = beanDiscovery.beanStream()
+                .withBeanType(beanTypeDotName)
+                .withQualifier(Default.class)
+                .collect();
+
+        if (beans.size() == 1) {
+            io.quarkus.arc.processor.BeanInfo bean = beans.get(0);
+            DotName scope = bean.getScope().getDotName();
+            if (scope.equals(REQUEST_SCOPED) || scope.equals(SESSION_SCOPED)) {
+                throw new IllegalConfigurationException(
+                        "CDI bean of type '" + beanTypeDotName.withoutPackagePrefix()
+                                + "' is @" + scope.withoutPackagePrefix()
+                                + " and cannot be auto-wired into agent '"
+                                + agent.getIface().name().withoutPackagePrefix()
+                                + "'. Agent synthetic beans are created at application startup "
+                                + "when no request context is active. Use @ApplicationScoped "
+                                + "or provide the bean via a static supplier method.");
+            }
+            result.add(supplierType);
+            log.debugf("Agent '%s': auto-wiring CDI bean for %s", agent.getIface().name(), supplierType);
+        } else if (beans.size() > 1) {
+            log.infof("Multiple %s CDI beans found but agent '%s' declares no static supplier "
+                    + "— auto-wiring skipped. Use a static supplier method to select explicitly.",
+                    supplierType, agent.getIface().name());
+        }
+    }
+
+    private static DotName cdiSupplierTypeToDotName(CdiSupplierType type) {
+        return switch (type) {
+            case CONTENT_RETRIEVER -> LangChain4jDotNames.RETRIEVER;
+            case CHAT_MEMORY -> LangChain4jDotNames.CHAT_MEMORY;
+            case CHAT_MEMORY_PROVIDER -> CHAT_MEMORY_PROVIDER;
+            case RETRIEVAL_AUGMENTOR -> LangChain4jDotNames.RETRIEVAL_AUGMENTOR;
+        };
     }
 
     private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent,
