@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -290,16 +291,47 @@ public class ToolExecutionModelTest {
 
     @Test
     @ActivateRequestContext
+    void testImmediateNotResultOk() {
+        // This tests @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        // When return type is not a Result and matches type or all null tool results.
+        String uuid = UUID.randomUUID().toString();
+        String r = aiService.hello("abc", "hiImmediate - " + uuid);
+        assertThat(r).isEqualTo("hiImmediate");
+        r = aiService.hello("abc", "hiImmediateIntegerNull - " + uuid);
+        assertThat(r).isNull();
+    }
+
+    @Test
+    @ActivateRequestContext
     void testImmediateNotResult() {
         // This tests @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
         // Tests failure when AiService does not return a Result
         String uuid = UUID.randomUUID().toString();
         try {
-            var r = aiService.hello("abc", "hiImmediate - " + uuid);
+            aiService.hello("abc", "hiImmediateInteger - " + uuid);
             fail("Should have thrown an exception");
         } catch (IllegalConfigurationException e) {
             // good!
         }
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testImmediateIfLast() {
+        // This tests @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        // When return type is not a Result and matches type or all null tool results.
+        String uuid = UUID.randomUUID().toString();
+        String r = aiService.hello("abc", "hiImmediateIfLast - " + uuid);
+        assertThat(r).isEqualTo("hiImmediateIfLast");
+        try {
+            r = aiService.hello("abc", "hi,hiImmediateIfLast - " + uuid);
+            fail("Should have thrown an exception");
+        } catch (IllegalConfigurationException e) {
+            // good!
+        }
+        Result<String> r2 = aiService.helloResult("abc", "hi,hiImmediateIfLast - " + uuid);
+        assertThat(r2.finishReason()).isEqualTo(FinishReason.TOOL_EXECUTION);
+        assertThat(r2.toolExecutions()).hasSize(2);
     }
 
     @Test
@@ -320,6 +352,7 @@ public class ToolExecutionModelTest {
 
         @ToolBox(MyTool.class)
         Result<String> helloResult(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
+
     }
 
     @Singleton
@@ -329,8 +362,23 @@ public class ToolExecutionModelTest {
             return "hiImmediate";
         }
 
+        @Tool(returnBehavior = ReturnBehavior.IMMEDIATE_IF_LAST)
+        public String hiImmediateIfLast(String m) {
+            return "hiImmediateIfLast";
+        }
+
         @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
         public void hiImmediateVoid(String m) {
+        }
+
+        @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        public Integer hiImmediateInteger(String m) {
+            return 1;
+        }
+
+        @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        public Integer hiImmediateIntegerNull(String m) {
+            return null;
         }
 
         @Tool
@@ -381,11 +429,8 @@ public class ToolExecutionModelTest {
                 var toolId = segments[0];
                 var content = segments[1];
                 // Only the user message
-                return ChatResponse.builder().aiMessage(new AiMessage("cannot be blank", List.of(ToolExecutionRequest.builder()
-                        .id("my-tool-" + toolId)
-                        .name(toolId)
-                        .arguments("{\"m\":\"" + content + "\"}")
-                        .build()))).tokenUsage(new TokenUsage(0, 0)).finishReason(FinishReason.TOOL_EXECUTION).build();
+                return ChatResponse.builder().aiMessage(new AiMessage("cannot be blank", toolRequests(toolId, content)))
+                        .tokenUsage(new TokenUsage(0, 0)).finishReason(FinishReason.TOOL_EXECUTION).build();
             } else if (messages.size() == 3) {
                 // user -> tool request -> tool response
                 ToolExecutionResultMessage last = (ToolExecutionResultMessage) Lists.last(messages);
@@ -393,6 +438,22 @@ public class ToolExecutionModelTest {
 
             }
             return ChatResponse.builder().aiMessage(new AiMessage("Unexpected")).build();
+        }
+
+        private static List<ToolExecutionRequest> toolRequests(String toolId, String content) {
+            List<ToolExecutionRequest> requests = new ArrayList<>();
+            for (String toolName : toolId.split(",")) {
+                requests.add(toolRequest(toolName, content));
+            }
+            return requests;
+        }
+
+        private static ToolExecutionRequest toolRequest(String toolId, String content) {
+            return ToolExecutionRequest.builder()
+                    .id("my-tool-" + toolId)
+                    .name(toolId)
+                    .arguments("{\"m\":\"" + content + "\"}")
+                    .build();
         }
     }
 

@@ -1,11 +1,14 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
+import static dev.langchain4j.agent.tool.ReturnBehavior.IMMEDIATE;
+import static dev.langchain4j.agent.tool.ReturnBehavior.IMMEDIATE_IF_LAST;
 import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
 import static dev.langchain4j.model.output.TokenUsage.sum;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
+import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
 import static io.quarkiverse.langchain4j.runtime.aiservice.ChatRequestParametersUtil.effectiveChatRequestParameters;
 import static java.util.Objects.nonNull;
@@ -58,7 +61,6 @@ import dev.langchain4j.data.video.Video;
 import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
-import dev.langchain4j.internal.Utils;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.invocation.LangChain4jManaged;
@@ -90,7 +92,6 @@ import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
-import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
@@ -258,7 +259,7 @@ public class AiServiceMethodImplementationSupport {
                 : context.toolService.toolSpecifications();
         Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
                 : context.toolService.toolExecutors();
-        Set<String> immediateReturnToolNames = Set.of();
+        Map<String, ReturnBehavior> toolReturnBehaviors = new HashMap<>();
 
         toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
         toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
@@ -266,7 +267,7 @@ public class AiServiceMethodImplementationSupport {
             ToolProviderRequest request = new QuarkusToolProviderRequest(invocationContext, userMessage,
                     methodCreateInfo.getMcpClientNames());
             ToolProviderResult result = toolProvider.provideTools(request);
-            immediateReturnToolNames = Utils.copy(result.immediateReturnToolNames());
+            result.aiServiceTools().stream().forEach(tool -> toolReturnBehaviors.put(tool.name(), tool.returnBehavior()));
             for (ToolSpecification specification : result.tools().keySet()) {
                 toolSpecifications.add(specification);
                 toolExecutors.put(specification.name(), result.tools().get(specification));
@@ -439,7 +440,6 @@ public class AiServiceMethodImplementationSupport {
             }
             intermediateResponses.add(response);
 
-            boolean immediateToolReturn = true;
             List<ToolExecution> toolExecutions = new ArrayList<>();
             List<ToolExecutionResultMessage> toolResults = new ArrayList<>();
             List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
@@ -453,6 +453,8 @@ public class AiServiceMethodImplementationSupport {
                 log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
             }
             int toolCallsCount = 0;
+            List<ReturnBehavior> returnBehaviors = new ArrayList<>(toolExecutionRequests.size());
+            boolean anyToolErrored = false;
             for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
                 if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
                     throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
@@ -485,20 +487,53 @@ public class AiServiceMethodImplementationSupport {
                 toolExecutions.add(toolExecution);
                 allToolExecutions.add(toolExecution);
                 toolResults.add(toolExecutionResultMessage);
-
-                // If any tool does not return immediately, results must be processed by LLM
-                if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
-                    immediateToolReturn = false;
+                anyToolErrored = anyToolErrored || toolExecutionResult.isError();
+                if (toolExecutor instanceof QuarkusToolExecutor quarkusExecutor) {
+                    returnBehaviors.add(quarkusExecutor.returnBehavior());
+                } else {
+                    returnBehaviors.add(toolReturnBehaviors.getOrDefault(toolExecutionRequest.name(), ReturnBehavior.TO_LLM));
                 }
-
             }
             for (ToolExecutionResultMessage toolResult : toolResults) {
                 committableChatMemory.add(toolResult);
             }
-            if (immediateToolReturn) {
+            if (shouldReturnImmediately(anyToolErrored, returnBehaviors)) {
                 if (!TypeUtil.isResult(returnType)) {
-                    throw IllegalConfigurationException
-                            .illegalConfiguration("@Tool with IMMEDIATE return behavior must return a Result");
+                    if (returnType.equals(void.class) || returnType.equals(Void.class)) {
+                        // return type is void, so just return.
+                        log.debug("return type is void so just return null");
+                        return null;
+                    }
+
+                    // can't automatically return if there are any TO_LLM behaviors
+                    if (returnBehaviors.stream().allMatch(rb -> rb == IMMEDIATE || rb == IMMEDIATE_IF_LAST)) {
+                        int numNullResults = 0;
+                        ToolExecution lastNonNullResult = null;
+                        for (ToolExecution execution : toolExecutions) {
+                            if (execution.resultObject() != null) {
+                                lastNonNullResult = execution;
+                            } else {
+                                numNullResults++;
+                            }
+                        }
+                        boolean returnTypeNullable = !(returnType instanceof Class) || !((Class) returnType).isPrimitive()
+                                || ((Class) returnType).equals(void.class);
+
+                        if (returnTypeNullable && numNullResults == toolExecutions.size()) {
+                            // if all results are null, we can return null
+                            return null;
+                        } else if (numNullResults + 1 == toolExecutions.size()) {
+                            Object o = lastNonNullResult.resultObject();
+                            if (resolvesToType(o, returnType)) {
+                                // if only one tool result returns non-null, we can return it
+                                return lastNonNullResult.resultObject();
+                            }
+                        }
+                        // Cannot resolve return type.  Need to barf.
+                    }
+                    throw illegalConfiguration(
+                            "AI Service method '%s' call cannot resolve return type from tool executions with ReturnBehavior.%s/%s.  Use %s as your return type.",
+                            methodCreateInfo.getMethodName(), IMMEDIATE, IMMEDIATE_IF_LAST, Result.class.getName());
                 }
                 committableChatMemory.commit();
                 ChatResponse finalResponse = intermediateResponses.remove(intermediateResponses.size() - 1);
@@ -639,6 +674,24 @@ public class AiServiceMethodImplementationSupport {
                         .build());
 
         return augmentedResponse;
+    }
+
+    private static boolean resolvesToType(Object o, Type returnType) {
+        return o != null && returnType instanceof Class
+                && ((Class) returnType).isAssignableFrom(o.getClass());
+    }
+
+    public static boolean shouldReturnImmediately(boolean anyToolErrored, List<ReturnBehavior> returnBehaviors) {
+        if (anyToolErrored) {
+            return false; // if any tool call failed, LLM should receive an error so that it can attempt to fix it
+        }
+        if (returnBehaviors.isEmpty()) {
+            return false;
+        }
+        if (returnBehaviors.get(returnBehaviors.size() - 1) == IMMEDIATE_IF_LAST) {
+            return true;
+        }
+        return returnBehaviors.stream().allMatch(rb -> rb == IMMEDIATE || rb == IMMEDIATE_IF_LAST);
     }
 
     private static void emitThinkingIfPresent(ChatResponse response,
