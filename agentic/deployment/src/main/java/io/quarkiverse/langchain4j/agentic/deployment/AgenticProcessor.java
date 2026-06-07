@@ -64,6 +64,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
@@ -364,6 +365,8 @@ public class AgenticProcessor {
             validateStaticMethod(method, annotationToValidate);
             validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.EXECUTOR), annotationToValidate);
+            log.infof("Agent '%s' declares @ParallelExecutor — automatic CDI/OTel/Security context propagation is bypassed. "
+                    + "Ensure your executor propagates contexts if needed.", iface.name());
         }
     }
 
@@ -482,6 +485,18 @@ public class AgenticProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void registerChatSupplierParameterResolver(AgenticRecorder recorder) {
         recorder.registerChatSupplierParameterResolver();
+    }
+
+    @BuildStep
+    BytecodeTransformerBuildItem addDefaultExecutorProviderOverride() {
+        return new BytecodeTransformerBuildItem("dev.langchain4j.internal.DefaultExecutorProvider",
+                (name, visitor) -> new DefaultExecutorProviderTransformer(visitor));
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDefaultExecutorProvider(AgenticRecorder recorder) {
+        recorder.registerDefaultExecutorProvider();
     }
 
     @BuildStep
