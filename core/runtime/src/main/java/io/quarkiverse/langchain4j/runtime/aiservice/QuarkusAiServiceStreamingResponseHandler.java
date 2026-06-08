@@ -55,6 +55,8 @@ import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolServiceContext;
+import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.vertx.core.Context;
@@ -88,6 +90,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolExecutors;
+    private final ToolServiceContext toolSearchContext;
     private final Context executionContext;
     private final boolean mustSwitchToWorkerThread;
     private final boolean switchToWorkerForEmission;
@@ -113,6 +116,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             TokenUsage tokenUsage,
             List<ToolSpecification> toolSpecifications,
             Map<String, ToolExecutor> toolExecutors,
+            ToolServiceContext toolSearchContext,
             boolean mustSwitchToWorkerThread,
             boolean switchToWorkerForEmission,
             Context cxtx,
@@ -139,6 +143,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
+        this.toolSearchContext = toolSearchContext;
 
         this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.executionContext = cxtx;
@@ -166,6 +171,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Consumer<Response<AiMessage>> completionHandler,
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
             List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
+            ToolServiceContext toolSearchContext,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
             ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             AtomicBoolean cancelled) {
@@ -186,6 +192,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.tokenUsage = sum;
         this.toolSpecifications = toolSpecifications;
         this.toolExecutors = toolExecutors;
+        this.toolSearchContext = toolSearchContext;
         this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.switchToWorkerForEmission = switchToWorkerForEmission;
         this.executionContext = executionContext;
@@ -450,6 +457,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     }
                     addToMemory(aiMessage);
                     List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
+                    List<ToolExecutionResult> rawToolResults = new ArrayList<>();
                     int maxToolCallsPerResponse;
                     if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
                         maxToolCallsPerResponse = context.maxToolCallsPerResponse;
@@ -495,6 +503,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                                 context.toolService.executionErrorHandler());
 
                         fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
+                        rawToolResults.add(toolExecutionResult);
 
                         ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil
                                 .from(toolExecutionRequest, toolExecutionResult);
@@ -515,8 +524,15 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         return;
                     }
 
+                    List<ToolSpecification> nextToolSpecifications = toolSpecifications;
+                    ToolServiceContext nextToolSearchContext = toolSearchContext;
+                    if (context.toolSearchService != null && toolSearchContext != null) {
+                        nextToolSearchContext = ToolSearchService.addFoundTools(toolSearchContext, rawToolResults);
+                        nextToolSpecifications = new ArrayList<>(nextToolSearchContext.effectiveTools());
+                    }
+
                     DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
-                    parametersBuilder.toolSpecifications(toolSpecifications);
+                    parametersBuilder.toolSpecifications(nextToolSpecifications);
 
                     StreamingChatModel effectiveStreamingChatModel = context.effectiveStreamingChatModel(methodCreateInfo,
                             methodArgs);
@@ -557,8 +573,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             errorHandler,
                             temporaryMemory,
                             TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
-                            toolSpecifications,
+                            nextToolSpecifications,
                             toolExecutors,
+                            nextToolSearchContext,
                             mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
                             methodArgs,
                             cancelled);

@@ -14,6 +14,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
+import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -30,6 +31,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public boolean allowContinuousForcedToolCalling;
     public DefaultMemoryIdProvider defaultMemoryIdProvider;
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
+    public ToolSearchService toolSearchService;
 
     // needed by Arc
     public QuarkusAiServiceContext() {

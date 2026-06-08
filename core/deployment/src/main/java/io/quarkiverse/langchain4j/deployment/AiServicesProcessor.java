@@ -482,6 +482,18 @@ public class AiServicesProcessor {
                 }
             }
 
+            DotName toolSearchStrategyClassName = LangChain4jDotNames.BEAN_IF_EXISTS_TOOL_SEARCH_STRATEGY_SUPPLIER;
+            AnnotationValue toolSearchStrategyValue = instance.value("toolSearchStrategySupplier");
+            if (toolSearchStrategyValue != null) {
+                if (LangChain4jDotNames.NO_TOOL_SEARCH_STRATEGY_SUPPLIER.equals(toolSearchStrategyValue.asClass().name())) {
+                    toolSearchStrategyClassName = null;
+                } else {
+                    toolSearchStrategyClassName = toolSearchStrategyValue.asClass().name();
+                    validateSupplierAndRegister(toolSearchStrategyClassName, index, reflectiveClassProducer,
+                            unremovableBeanProducer);
+                }
+            }
+
             // determine if the AiService returns an image
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
                 Type returnType = method.returnType();
@@ -585,6 +597,7 @@ public class AiServicesProcessor {
                             moderationModelName,
                             imageModelName,
                             toolProviderClassName,
+                            toolSearchStrategyClassName,
                             beanName(declarativeAiServiceClassInfo),
                             toolHallucinationStrategy(instance),
                             classInputGuardrails(declarativeAiServiceClassInfo, index),
@@ -943,8 +956,10 @@ public class AiServicesProcessor {
         boolean needsModerationModelBean = false;
         boolean needsImageModelBean = false;
         boolean needsToolProviderBean = false;
+        boolean needsToolSearchStrategyBean = false;
         Set<DotName> allToolNames = new HashSet<>();
         Set<DotName> allToolProviders = new HashSet<>();
+        Set<DotName> allToolSearchStrategies = new HashSet<>();
         Set<DotName> allToolHallucinationStrategies = new HashSet<>();
 
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
@@ -977,6 +992,10 @@ public class AiServicesProcessor {
 
             String toolProviderSupplierClassName = (bi.getToolProviderClassDotName() != null
                     ? bi.getToolProviderClassDotName().toString()
+                    : null);
+
+            String toolSearchStrategySupplierClassName = (bi.getToolSearchStrategyClassDotName() != null
+                    ? bi.getToolSearchStrategyClassDotName().toString()
                     : null);
 
             String toolHallucinationStrategyClassName = null;
@@ -1088,6 +1107,7 @@ public class AiServicesProcessor {
                                     streamingChatLanguageModelSupplierClassName,
                                     toolToQualifierMap,
                                     toolProviderSupplierClassName,
+                                    toolSearchStrategySupplierClassName,
                                     chatMemoryProviderSupplierClassName,
                                     chatMemoryFlushStrategySupplierClassName,
                                     retrievalAugmentorSupplierClassName,
@@ -1227,6 +1247,18 @@ public class AiServicesProcessor {
                 allToolProviders.add(toolProvider);
             }
 
+            if (RegisterAiService.BeanIfExistsToolSearchStrategySupplier.class.getName()
+                    .equals(toolSearchStrategySupplierClassName)) {
+                configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                        new Type[] { ClassType.create(LangChain4jDotNames.TOOL_SEARCH_STRATEGY) }, null));
+                needsToolSearchStrategyBean = true;
+            } else if (!RegisterAiService.NoToolSearchStrategySupplier.class.getName()
+                    .equals(toolSearchStrategySupplierClassName) && toolSearchStrategySupplierClassName != null) {
+                DotName toolSearchStrategy = DotName.createSimple(toolSearchStrategySupplierClassName);
+                configurator.addInjectionPoint(ClassType.create(toolSearchStrategy));
+                allToolSearchStrategies.add(toolSearchStrategy);
+            }
+
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(OutputGuardrail.class) }, null))
@@ -1261,6 +1293,12 @@ public class AiServicesProcessor {
         }
         if (!allToolProviders.isEmpty()) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolProviders));
+        }
+        if (needsToolSearchStrategyBean) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.TOOL_SEARCH_STRATEGY));
+        }
+        if (!allToolSearchStrategies.isEmpty()) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolSearchStrategies));
         }
         if (!allToolNames.isEmpty()) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));

@@ -24,6 +24,8 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.service.tool.search.ToolSearchService;
+import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceEvents;
@@ -47,6 +49,9 @@ public class AiServicesRecorder {
     };
 
     private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
+    private static final TypeLiteral<Instance<ToolSearchStrategy>> TOOL_SEARCH_STRATEGY_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     // the key is the interface's class name
@@ -242,6 +247,26 @@ public class AiServicesRecorder {
                             if (instance.isResolvable() && !hasExplicitTools) {
                                 quarkusAiServices.toolProvider(instance.get());
                             }
+                        }
+                    }
+
+                    if (info.toolSearchStrategySupplier() != null) {
+                        ToolSearchStrategy toolSearchStrategy = null;
+                        if (RegisterAiService.BeanIfExistsToolSearchStrategySupplier.class.getName()
+                                .equals(info.toolSearchStrategySupplier())) {
+                            Instance<ToolSearchStrategy> instance = creationalContext
+                                    .getInjectedReference(TOOL_SEARCH_STRATEGY_TYPE_LITERAL);
+                            if (instance.isResolvable()) {
+                                toolSearchStrategy = instance.get();
+                            }
+                        } else {
+                            Class<?> supplierClass = loadClass(info.toolSearchStrategySupplier());
+                            Supplier<? extends ToolSearchStrategy> supplier = (Supplier<? extends ToolSearchStrategy>) creationalContext
+                                    .getInjectedReference(supplierClass);
+                            toolSearchStrategy = supplier.get();
+                        }
+                        if (toolSearchStrategy != null) {
+                            aiServiceContext.toolSearchService = new ToolSearchService(toolSearchStrategy);
                         }
                     }
 
