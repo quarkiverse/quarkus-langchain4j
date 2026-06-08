@@ -7,6 +7,7 @@ import static java.util.stream.StreamSupport.stream;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -86,11 +87,14 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                 MistralAiChatCompletionChoice choice = response.getChoices().get(0);
                 String chunk = null;
                 // TODO: this may be a MistralAiThinkingContent, add proper handling for it?
-                for (MistralAiMessageContent content : choice.getDelta().getContent()) {
-                    if (content instanceof MistralAiTextContent) {
-                        chunk = ((MistralAiTextContent) content).getText();
-                        contentBuilder.get().append(chunk);
-                        break;
+                List<MistralAiMessageContent> contents = choice.getDelta().getContent();
+                if (contents != null) {
+                    for (MistralAiMessageContent content : contents) {
+                        if (content instanceof MistralAiTextContent) {
+                            chunk = ((MistralAiTextContent) content).getText();
+                            contentBuilder.get().append(chunk);
+                            break;
+                        }
                     }
                 }
 
