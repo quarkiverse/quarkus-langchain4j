@@ -81,9 +81,6 @@
           },
           {
             "matchesJsonPath": "$[?(@.quality == 'standard')]"
-          },
-          {
-            "matchesJsonPath": "$[?(@.response_format == 'url')]"
           }
         ]
       },

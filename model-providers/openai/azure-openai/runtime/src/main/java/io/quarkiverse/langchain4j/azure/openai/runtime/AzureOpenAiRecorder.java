@@ -267,8 +267,6 @@ public class AzureOpenAiRecorder {
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .size(imageModelConfig.size())
                     .quality(imageModelConfig.quality())
-                    .style(imageModelConfig.style())
-                    .responseFormat(imageModelConfig.responseFormat())
                     .user(imageModelConfig.user());
 
             // we persist if the directory was set explicitly and the boolean flag was not set to false

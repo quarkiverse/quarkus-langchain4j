@@ -33,7 +33,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
     private final String size;
     private final String quality;
     private final Optional<String> user;
-    private final String responseFormat;
     private final Integer maxRetries;
     private final Optional<Path> persistDirectory;
 
@@ -44,7 +43,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         this.size = builder.size;
         this.quality = builder.quality;
         this.user = builder.user;
-        this.responseFormat = builder.responseFormat;
         this.maxRetries = builder.maxRetries;
         if (this.maxRetries < 1) {
             throw new IllegalArgumentException("max-retries must be at least 1");
@@ -121,8 +119,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
                 .prompt(prompt)
                 .model(modelName)
                 .size(size)
-                .quality(quality)
-                .responseFormat(responseFormat);
+                .quality(quality);
 
         if (user.isPresent()) {
             builder.user(user.get());
@@ -145,7 +142,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         private String size;
         private String quality;
         private Optional<String> user;
-        private String responseFormat;
         private Duration timeout;
         private Integer maxRetries;
         private Boolean logRequests;
@@ -221,11 +217,6 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         public Builder user(Optional<String> user) {
             this.user = user;
-            return this;
-        }
-
-        public Builder responseFormat(String responseFormat) {
-            this.responseFormat = responseFormat;
             return this;
         }
 

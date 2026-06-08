@@ -274,9 +274,11 @@ public class ToolProcessor {
                 if (classInfo.isInterface()) {
                     if (preventToolValidationError.test(classInfo)) {
                         // we allow tools on method of these interfaces because we know they will be beans
-                    } else {
+                    } else if (Modifier.isAbstract(methodInfo.flags())) {
+                        // abstract interface methods cannot be tools
                         causeValidationError = true;
                     }
+                    // default and static interface methods are valid tools
                 } else if (Modifier.isAbstract(classInfo.flags())) {
                     causeValidationError = true;
                 }
@@ -463,6 +465,8 @@ public class ToolProcessor {
 
                 }
             }
+
+            propagateInheritedTools(index, methodsPerClass, metadata, toolMethodBuildItemProducer);
         }
 
         if (!generatedInvokerClasses.isEmpty()) {
@@ -480,6 +484,70 @@ public class ToolProcessor {
         }
 
         toolsMetadataProducer.produce(new ToolsMetadataBeforeRemovalBuildItem(metadata));
+    }
+
+    private static void propagateInheritedTools(IndexView index, Map<DotName, List<MethodInfo>> methodsPerClass,
+            Map<String, List<ToolMethodCreateInfo>> metadata, BuildProducer<ToolMethodBuildItem> toolMethodBuildItemProducer) {
+        for (var entry : methodsPerClass.entrySet()) {
+            DotName parentName = entry.getKey();
+            List<ToolMethodCreateInfo> parentToolInfos = metadata.get(parentName.toString());
+            if (parentToolInfos == null || parentToolInfos.isEmpty()) {
+                continue;
+            }
+
+            ClassInfo parentClassInfo = index.getClassByName(parentName);
+            Collection<ClassInfo> children;
+            if (parentClassInfo != null && parentClassInfo.isInterface()) {
+                children = index.getAllKnownImplementors(parentName);
+            } else {
+                children = index.getAllKnownSubclasses(parentName);
+            }
+
+            for (ClassInfo child : children) {
+                if (child.isInterface() || Modifier.isAbstract(child.flags())) {
+                    continue;
+                }
+
+                String childKey = child.name().toString();
+
+                for (MethodInfo parentMethod : entry.getValue()) {
+                    if (!Modifier.isStatic(parentMethod.flags())
+                            && isMethodOverriddenInHierarchy(child, parentName, parentMethod, index)) {
+                        continue;
+                    }
+
+                    ToolMethodCreateInfo parentInfo = findToolCreateInfoByMethodName(parentToolInfos, parentMethod.name());
+                    if (parentInfo != null) {
+                        metadata.computeIfAbsent(childKey, c -> new ArrayList<>()).add(parentInfo);
+                        toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(parentMethod, parentInfo));
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean isMethodOverriddenInHierarchy(ClassInfo subclass, DotName parentClassName,
+            MethodInfo parentMethod, IndexView index) {
+        ClassInfo current = subclass;
+        while (current != null && !current.name().equals(parentClassName)) {
+            MethodInfo override = current.method(parentMethod.name(),
+                    parentMethod.parameterTypes().toArray(new Type[0]));
+            if (override != null) {
+                return true;
+            }
+            DotName superName = current.superName();
+            current = superName != null ? index.getClassByName(superName) : null;
+        }
+        return false;
+    }
+
+    private static ToolMethodCreateInfo findToolCreateInfoByMethodName(List<ToolMethodCreateInfo> infos, String methodName) {
+        for (ToolMethodCreateInfo info : infos) {
+            if (info.methodName().equals(methodName)) {
+                return info;
+            }
+        }
+        return null;
     }
 
     @BuildStep
@@ -825,7 +893,11 @@ public class ToolProcessor {
                 targetMethodHandles = argumentHandles.toArray(EMPTY_RESULT_HANDLE_ARRAY);
             }
 
-            if (methodInfo.declaringClass().isInterface()) {
+            if (Modifier.isStatic(methodInfo.flags()) && methodInfo.declaringClass().isInterface()) {
+                result = invokeMc.invokeStaticInterfaceMethod(MethodDescriptor.of(methodInfo), targetMethodHandles);
+            } else if (Modifier.isStatic(methodInfo.flags())) {
+                result = invokeMc.invokeStaticMethod(MethodDescriptor.of(methodInfo), targetMethodHandles);
+            } else if (methodInfo.declaringClass().isInterface()) {
                 result = invokeMc.invokeInterfaceMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0),
                         targetMethodHandles);
             } else {

@@ -35,25 +35,20 @@ public class AzureOpenAiImageModel implements ImageModel {
     private final String modelName;
     private final String size;
     private final String quality;
-    private final String style;
     private final Optional<String> user;
-    private final String responseFormat;
     private final Integer maxRetries;
     private final Optional<Path> persistDirectory;
 
     private final QuarkusOpenAiClient client;
 
     public AzureOpenAiImageModel(String endpoint, String apiKey, String adToken, String apiVersion, String modelName,
-            String size,
-            String quality, String style, Optional<String> user, String responseFormat, Duration timeout,
+            String size, String quality, Optional<String> user, Duration timeout,
             Integer maxRetries, Boolean logRequests, Boolean logResponses, Boolean logCurl,
             Optional<Path> persistDirectory, String configName) {
         this.modelName = modelName;
         this.size = size;
         this.quality = quality;
-        this.style = style;
         this.user = user;
-        this.responseFormat = responseFormat;
         this.maxRetries = maxRetries;
         this.persistDirectory = persistDirectory;
 
@@ -127,9 +122,7 @@ public class AzureOpenAiImageModel implements ImageModel {
         var builder = GenerateImagesRequest.builder()
                 .prompt(prompt)
                 .size(size)
-                .quality(quality)
-                .style(style)
-                .responseFormat(responseFormat);
+                .quality(quality);
 
         if (user.isPresent()) {
             builder.user(user.get());
@@ -150,9 +143,7 @@ public class AzureOpenAiImageModel implements ImageModel {
         private String modelName;
         private String size;
         private String quality;
-        private String style;
         private Optional<String> user;
-        private String responseFormat;
         private Duration timeout;
         private Integer maxRetries;
         private Boolean logRequests;
@@ -221,18 +212,8 @@ public class AzureOpenAiImageModel implements ImageModel {
             return this;
         }
 
-        public Builder style(String style) {
-            this.style = style;
-            return this;
-        }
-
         public Builder user(Optional<String> user) {
             this.user = user;
-            return this;
-        }
-
-        public Builder responseFormat(String responseFormat) {
-            this.responseFormat = responseFormat;
             return this;
         }
 
@@ -247,8 +228,8 @@ public class AzureOpenAiImageModel implements ImageModel {
         }
 
         public AzureOpenAiImageModel build() {
-            return new AzureOpenAiImageModel(endpoint, apiKey, adToken, apiVersion, modelName, size, quality, style, user,
-                    responseFormat, timeout, maxRetries, logRequests, logResponses, logCurl,
+            return new AzureOpenAiImageModel(endpoint, apiKey, adToken, apiVersion, modelName, size, quality, user,
+                    timeout, maxRetries, logRequests, logResponses, logCurl,
                     persistDirectory, configName);
         }
     }

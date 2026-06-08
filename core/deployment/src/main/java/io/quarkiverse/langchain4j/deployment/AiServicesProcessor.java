@@ -302,7 +302,7 @@ public class AiServicesProcessor {
                 }
                 tools.add(toolClass);
                 visited.add(toolClass.name().toString());
-                Set<String> currentToolNames = gatherToolNames(toolClass);
+                Set<String> currentToolNames = gatherToolNames(toolClass, index);
                 for (String toolName : currentToolNames) {
                     if (toolNames.contains(toolName)) {
                         validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
@@ -324,7 +324,7 @@ public class AiServicesProcessor {
                             continue;
                         }
                         visited.add(methodToolClassName);
-                        Set<String> currentToolNames = gatherToolNames(index.getClassByName(methodToolClassName));
+                        Set<String> currentToolNames = gatherToolNames(index.getClassByName(methodToolClassName), index);
                         for (String toolName : currentToolNames) {
                             if (toolNames.contains(toolName)) {
                                 validation.produce(
@@ -366,16 +366,36 @@ public class AiServicesProcessor {
         }
     }
 
-    private static Set<String> gatherToolNames(ClassInfo toolClass) {
+    private static Set<String> gatherToolNames(ClassInfo toolClass, IndexView index) {
         Set<String> toolNames = new HashSet<>();
-        for (MethodInfo method : toolClass.methods()) {
+        Set<String> seenMethodSignatures = new HashSet<>();
+        ClassInfo current = toolClass;
+        while (current != null && !DotNames.OBJECT.equals(current.name())) {
+            collectToolNames(current, seenMethodSignatures, toolNames);
+            for (DotName ifaceName : current.interfaceNames()) {
+                ClassInfo iface = index.getClassByName(ifaceName);
+                if (iface != null) {
+                    collectToolNames(iface, seenMethodSignatures, toolNames);
+                }
+            }
+            DotName superName = current.superName();
+            current = superName != null ? index.getClassByName(superName) : null;
+        }
+        return toolNames;
+    }
+
+    private static void collectToolNames(ClassInfo classInfo, Set<String> seenMethodSignatures, Set<String> toolNames) {
+        for (MethodInfo method : classInfo.methods()) {
+            String sig = method.name() + method.parameterTypes();
+            if (!seenMethodSignatures.add(sig)) {
+                continue;
+            }
             String toolName = ToolProcessor.resolveToolName(method);
             if (toolName == null) {
                 continue;
             }
             toolNames.add(toolName);
         }
-        return toolNames;
     }
 
     @BuildStep
@@ -1367,7 +1387,8 @@ public class AiServicesProcessor {
             List<String> associatedTools,
             List<ToolMethodBuildItem> tools,
             DotName toolProviderClassDotName,
-            List<String> mcpClientNames) {
+            List<String> mcpClientNames,
+            IndexView index) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
                 || method.returnType().name().equals(DotNames.MULTI);
@@ -1400,10 +1421,10 @@ public class AiServicesProcessor {
 
         // We need to find if any of the tools that could be used by the method is requiring a blocking execution
         for (String classname : associatedTools) {
-            // Look for the tool in the list of tools
+            // Look for the tool in the list of tools (check class hierarchy for inherited tools)
             boolean found = false;
             for (ToolMethodBuildItem tool : tools) {
-                if (tool.getDeclaringClassName().equals(classname)) {
+                if (isToolDeclaredInHierarchy(tool.getDeclaringClassName(), classname, index)) {
                     found = true;
                     if (tool.requiresSwitchToWorkerThread()) {
                         requireSwitchToWorkerThread = true;
@@ -1416,6 +1437,24 @@ public class AiServicesProcessor {
             }
         }
         return requireSwitchToWorkerThread;
+    }
+
+    private static boolean isToolDeclaredInHierarchy(String declaringClassName, String toolClassName, IndexView index) {
+        if (declaringClassName.equals(toolClassName)) {
+            return true;
+        }
+        DotName declaringDotName = DotName.createSimple(declaringClassName);
+        ClassInfo declaringClass = index.getClassByName(declaringDotName);
+        if (declaringClass == null) {
+            return false;
+        }
+        Collection<ClassInfo> descendants;
+        if (declaringClass.isInterface()) {
+            descendants = index.getAllKnownImplementors(declaringDotName);
+        } else {
+            descendants = index.getAllKnownSubclasses(declaringDotName);
+        }
+        return descendants.stream().anyMatch(ci -> ci.name().toString().equals(toolClassName));
     }
 
     @BuildStep
@@ -2023,7 +2062,7 @@ public class AiServicesProcessor {
 
         //  Detect if tools execution may block the caller thread.
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
-                methodToolClassInfo.keySet(), methodMcpClientNames);
+                methodToolClassInfo.keySet(), methodMcpClientNames, index);
 
         TypeArgMapper typeArgMapper = new TypeArgMapper(method.declaringClass(), index);
         var methodReturnTypeSignature = typeSignature(method.returnType(), typeArgMapper);
@@ -2102,7 +2141,7 @@ public class AiServicesProcessor {
     }
 
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
-            Collection<String> methodToolClassNames, List<String> mcpClientNames) {
+            Collection<String> methodToolClassNames, List<String> mcpClientNames, IndexView index) {
         List<String> allTools = new ArrayList<>(methodToolClassNames);
         DotName toolProviderClassDotName = null;
         // We need to combine it with the tools that are registered globally - unfortunately, we don't have access to the AI service here, so, re-parsing.
@@ -2119,7 +2158,7 @@ public class AiServicesProcessor {
             }
         }
         return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools, toolProviderClassDotName,
-                mcpClientNames);
+                mcpClientNames, index);
     }
 
     private void validateReturnType(MethodInfo method) {
