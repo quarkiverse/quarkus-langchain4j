@@ -2677,9 +2677,9 @@ public class AiServicesProcessor {
 
     private List<String> defaultMetricsTags(MethodInfo method) {
         List<String> tags = new ArrayList<>(4);
-        tags.add("aiservice");
+        tags.add("ai_service.class_name");
         tags.add(method.declaringClass().name().withoutPackagePrefix());
-        tags.add("method");
+        tags.add("ai_service.method_name");
         tags.add(method.name());
         return tags;
     }

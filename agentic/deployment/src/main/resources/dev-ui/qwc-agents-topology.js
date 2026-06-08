@@ -2,6 +2,8 @@ import { LitElement, html, css } from 'lit';
 import { JsonRpc } from 'jsonrpc';
 import '@vaadin/button';
 import '@vaadin/select';
+import '@vaadin/grid';
+import '@vaadin/grid/vaadin-grid-tree-column.js';
 import '@vaadin/progress-bar';
 
 export class QwcAgentsTopology extends LitElement {
@@ -18,16 +20,12 @@ export class QwcAgentsTopology extends LitElement {
             align-items: center;
             gap: 10px;
         }
-        .iframe-container {
+        .grid-container {
             flex: 1;
             padding: 0 15px 15px 15px;
         }
-        iframe {
-            width: 100%;
+        vaadin-grid {
             height: 100%;
-            border: 1px solid var(--lumo-contrast-20pct);
-            border-radius: 4px;
-            background: var(--lumo-base-color);
         }
         .placeholder {
             padding: 20px;
@@ -37,7 +35,8 @@ export class QwcAgentsTopology extends LitElement {
     `;
 
     static properties = {
-        _htmlContent: { state: true },
+        _topology: { state: true },
+        _flatNodes: { state: true },
         _loading: { state: true },
         _error: { state: true },
         _agentEntries: { state: true },
@@ -48,7 +47,8 @@ export class QwcAgentsTopology extends LitElement {
 
     constructor() {
         super();
-        this._htmlContent = null;
+        this._topology = null;
+        this._flatNodes = [];
         this._loading = true;
         this._error = null;
         this._agentEntries = [];
@@ -78,15 +78,27 @@ export class QwcAgentsTopology extends LitElement {
     _loadTopology() {
         this._loading = true;
         this._error = null;
-        this.jsonRpc.getTopologyHtml({ index: this._selectedIndex })
+        this.jsonRpc.getTopologyJson({ index: this._selectedIndex })
             .then(response => {
-                this._htmlContent = response.result;
+                this._topology = response.result;
+                this._flatNodes = this._flatten(this._topology, 0);
                 this._loading = false;
             })
             .catch(error => {
                 this._error = String(error);
                 this._loading = false;
             });
+    }
+
+    _flatten(node, level) {
+        if (!node) return [];
+        const result = [{ ...node, level, hasChildren: !!(node.subAgents && node.subAgents.length) }];
+        if (node.subAgents) {
+            for (const child of node.subAgents) {
+                result.push(...this._flatten(child, level + 1));
+            }
+        }
+        return result;
     }
 
     render() {
@@ -108,15 +120,19 @@ export class QwcAgentsTopology extends LitElement {
                 <vaadin-button theme="small" @click="${() => this._loadTopology()}">
                     Refresh
                 </vaadin-button>
-                ${this._loading ? html`<span>Loading topology...</span>` : ''}
             </div>
             ${this._loading ? html`
                 <vaadin-progress-bar indeterminate></vaadin-progress-bar>
             ` : this._error ? html`
                 <div class="placeholder">${this._error}</div>
             ` : html`
-                <div class="iframe-container">
-                    <iframe .srcdoc="${this._htmlContent}" sandbox="allow-scripts"></iframe>
+                <div class="grid-container">
+                    <vaadin-grid .items="${this._flatNodes}" theme="compact row-stripes">
+                        <vaadin-grid-column header="Name" path="name"></vaadin-grid-column>
+                        <vaadin-grid-column header="Type" path="type" width="120px" flex-grow="0"></vaadin-grid-column>
+                        <vaadin-grid-column header="Description" path="description"></vaadin-grid-column>
+                        <vaadin-grid-column header="Level" path="level" width="80px" flex-grow="0"></vaadin-grid-column>
+                    </vaadin-grid>
                 </div>
             `}
         `;
