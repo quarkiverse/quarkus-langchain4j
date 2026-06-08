@@ -408,11 +408,6 @@ class AzureOpenAiRecorderEndpointTests {
                 }
 
                 @Override
-                public String responseFormat() {
-                    return null;
-                }
-
-                @Override
                 public String size() {
                     return null;
                 }
@@ -425,11 +420,6 @@ class AzureOpenAiRecorderEndpointTests {
                 @Override
                 public int number() {
                     return 0;
-                }
-
-                @Override
-                public String style() {
-                    return null;
                 }
 
                 @Override

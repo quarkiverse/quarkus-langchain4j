@@ -32,14 +32,6 @@ public interface ImageModelConfig {
     Optional<Path> persistDirectory();
 
     /**
-     * The format in which the generated images are returned.
-     * <p>
-     * Must be one of {@code url} or {@code b64_json}
-     */
-    @WithDefault("url")
-    String responseFormat();
-
-    /**
      * The size of the generated images.
      * <p>
      * Must be one of {@code 1024x1024}, {@code 1792x1024}, or {@code 1024x1792} when the model is {@code dall-e-3}.

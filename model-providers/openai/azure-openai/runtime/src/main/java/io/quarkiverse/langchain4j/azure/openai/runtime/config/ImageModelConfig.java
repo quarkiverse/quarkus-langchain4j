@@ -72,14 +72,6 @@ public interface ImageModelConfig {
     Optional<Path> persistDirectory();
 
     /**
-     * The format in which the generated images are returned.
-     * <p>
-     * Must be one of {@code url} or {@code b64_json}
-     */
-    @WithDefault("url")
-    String responseFormat();
-
-    /**
      * The size of the generated images.
      * <p>
      * Must be one of {@code 1024x1024}, {@code 1792x1024}, or {@code 1024x1792} when the model is {@code dall-e-3}.
@@ -108,17 +100,6 @@ public interface ImageModelConfig {
      */
     @WithDefault("1")
     int number();
-
-    /**
-     * The style of the generated images.
-     * <p>
-     * Must be one of {@code vivid} or {@code natural}. Vivid causes the model to lean towards generating hyper-real and
-     * dramatic images. Natural causes the model to produce more natural, less hyper-real looking images.
-     * <p>
-     * This param is only supported for when the model is {@code dall-e-3}.
-     */
-    @WithDefault("vivid")
-    String style();
 
     /**
      * A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.

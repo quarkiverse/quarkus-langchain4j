@@ -368,7 +368,6 @@ public class OpenAiRecorder {
                     .modelName(imageModelConfig.modelName())
                     .size(imageModelConfig.size())
                     .quality(imageModelConfig.quality())
-                    .responseFormat(imageModelConfig.responseFormat())
                     .user(imageModelConfig.user());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
