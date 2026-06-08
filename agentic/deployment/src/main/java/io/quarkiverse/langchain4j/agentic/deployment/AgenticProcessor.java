@@ -23,6 +23,7 @@ import jakarta.enterprise.inject.Default;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationTransformation;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
@@ -52,6 +53,7 @@ import io.quarkiverse.langchain4j.deployment.PreventToolValidationErrorBuildItem
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -61,6 +63,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
@@ -69,6 +72,39 @@ import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBui
 public class AgenticProcessor {
 
     private static final Logger log = Logger.getLogger(AgenticProcessor.class);
+
+    private static final List<DotName> ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS = List.of(
+            AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
+            AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER,
+            AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER,
+            AgenticLangChain4jDotNames.CONTENT_RETRIEVER_SUPPLIER,
+            AgenticLangChain4jDotNames.RETRIEVAL_AUGMENTER_SUPPLIER,
+            AgenticLangChain4jDotNames.TOOL_SUPPLIER,
+            AgenticLangChain4jDotNames.TOOL_PROVIDER_SUPPLIER,
+            AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER
+    // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
+    );
+
+    private static final DotName CHAT_MEMORY_PROVIDER = DotName
+            .createSimple(dev.langchain4j.memory.chat.ChatMemoryProvider.class);
+
+    private static final DotName FALLBACK = DotName.createSimple("org.eclipse.microprofile.faulttolerance.Fallback");
+
+    private static final DotName INTERCEPTOR_BINDING = DotName.createSimple("jakarta.interceptor.InterceptorBinding");
+
+    private static final DotName RETRY = DotName.createSimple("org.eclipse.microprofile.faulttolerance.Retry");
+
+    private static final DotName TRANSACTIONAL = DotName.createSimple("jakarta.transaction.Transactional");
+
+    private static final DotName REQUEST_SCOPED = DotName.createSimple("jakarta.enterprise.context.RequestScoped");
+
+    private static final DotName SESSION_SCOPED = DotName.createSimple("jakarta.enterprise.context.SessionScoped");
+
+    private static final Set<DotName> RETRY_SUPERTYPES = Set.of(
+            DotName.createSimple("java.lang.RuntimeException"),
+            DotName.createSimple("java.lang.Exception"),
+            DotName.createSimple("java.lang.Throwable"),
+            DotName.createSimple("dev.langchain4j.agentic.agent.AgentInvocationException"));
 
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
@@ -125,7 +161,9 @@ public class AgenticProcessor {
         validateContentRetrieverSupplier(iface);
         validateErrorHandler(iface);
         validateExitCondition(iface);
+        validateFallback(iface);
         validateHumanInTheLoop(iface);
+        validateMcpToolBox(item);
         validateOutput(iface);
         validateParallelExecutor(iface);
         validateRetrievalAugmentorSupplier(iface);
@@ -257,6 +295,24 @@ public class AgenticProcessor {
         }
     }
 
+    private static void validateFallback(ClassInfo iface) {
+        for (AnnotationInstance fallback : iface.annotations(FALLBACK)) {
+            AnnotationValue fallbackMethod = fallback.value("fallbackMethod");
+            if (fallbackMethod != null && !fallbackMethod.asString().isEmpty()) {
+                AnnotationTarget target = fallback.target();
+                String location = target.kind() == AnnotationTarget.Kind.CLASS
+                        ? "class '" + iface.name() + "'"
+                        : "method '" + target.asMethod().name() + "' of class '" + iface.name() + "'";
+                throw new IllegalConfigurationException(
+                        "Agent " + location + " uses @Fallback(fallbackMethod=\""
+                                + fallbackMethod.asString() + "\"). "
+                                + "Agent interfaces are dynamic proxies — fallback method name resolution "
+                                + "always fails at runtime with FaultToleranceDefinitionException. "
+                                + "Use FallbackHandler<T> instead: @Fallback(YourFallbackHandler.class)");
+            }
+        }
+    }
+
     private void validateHumanInTheLoop(ClassInfo iface) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.HUMAN_IN_THE_LOOP;
         List<AnnotationInstance> instances = iface
@@ -268,6 +324,16 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
+        }
+    }
+
+    private void validateMcpToolBox(DetectedAiAgentBuildItem item) {
+        if (!item.getMcpToolBoxMethods().isEmpty()) {
+            if ((item.getMcpToolBoxMethods().size() != 1) && (item.getAgenticMethods().size() > 1)) {
+                throw new IllegalConfigurationException(
+                        "Currently, @McpToolBox can only be used on an Agent if the agent has a single method. This restriction will be lifted in the future. Offending class is '"
+                                + item.getIface().name() + "'");
+            }
         }
     }
 
@@ -298,6 +364,8 @@ public class AgenticProcessor {
             validateStaticMethod(method, annotationToValidate);
             validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.EXECUTOR), annotationToValidate);
+            log.infof("Agent '%s' declares @ParallelExecutor — automatic CDI/OTel/Security context propagation is bypassed. "
+                    + "Ensure your executor propagates contexts if needed.", iface.name());
         }
     }
 
@@ -413,42 +481,87 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
-    void mcpToolBoxSupport(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder) {
-        Set<String> agentsWithMcpToolBox = new HashSet<>();
-        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
-            if (!bi.getMcpToolBoxMethods().isEmpty()) {
-                if ((bi.getMcpToolBoxMethods().size() != 1) && (bi.getAgenticMethods().size() > 1)) {
-                    throw new IllegalConfigurationException(
-                            "Currently, @McpToolBox can only be used on an Agent if the agent has a single method. This restriction will be lifted in the future. Offending class is '"
-                                    + bi.getIface().name() + "'");
-                }
-                agentsWithMcpToolBox.add(bi.getIface().name().toString());
-            }
-        }
-        recorder.setAgentsWithMcpToolBox(agentsWithMcpToolBox);
-    }
-
-    @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void registerChatSupplierParameterResolver(AgenticRecorder recorder) {
         recorder.registerChatSupplierParameterResolver();
     }
 
     @BuildStep
+    BytecodeTransformerBuildItem addDefaultExecutorProviderOverride() {
+        return new BytecodeTransformerBuildItem("dev.langchain4j.internal.DefaultExecutorProvider",
+                (name, visitor) -> new DefaultExecutorProviderTransformer(visitor));
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDefaultExecutorProvider(AgenticRecorder recorder) {
+        recorder.registerDefaultExecutorProvider();
+    }
+
+    @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
+            CombinedIndexBuildItem indexBuildItem,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        IndexView index = indexBuildItem.getIndex();
         for (DetectedAiAgentBuildItem item : detectedAiAgentBuildItems) {
-            MethodInfo chatModelSupplier = item.getChatModelSupplier();
-            if (chatModelSupplier == null) {
-                continue;
-            }
-            for (MethodParameterInfo param : chatModelSupplier.parameters()) {
-                if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
-                    unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+            for (ClassInfo classInfo : ValidationUtil.transitiveInterfaces(item.getIface(), index)) {
+                for (MethodInfo method : classInfo.methods()) {
+                    boolean isSupplierMethod = ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS.stream()
+                            .anyMatch(method::hasAnnotation);
+                    if (!isSupplierMethod) {
+                        continue;
+                    }
+                    for (MethodParameterInfo param : method.parameters()) {
+                        if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
+                            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    /**
+     * Propagates interceptor binding annotations from parent interfaces to agent interfaces so that
+     * Arc can apply matching interceptors to the synthetic CDI bean. Without this, class-level
+     * interceptor bindings declared on a parent interface (e.g., {@code @Timeout} on a base interface)
+     * are invisible to Arc's interceptor resolver when it processes the agent interface.
+     */
+    @BuildStep
+    void propagateParentInterceptorBindingsToAgents(
+            List<DetectedAiAgentBuildItem> agents,
+            CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<AnnotationsTransformerBuildItem> transformerProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        for (DetectedAiAgentBuildItem agent : agents) {
+            ClassInfo agentIface = agent.getIface();
+            Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(agentIface, index);
+            List<AnnotationInstance> toPropagate = new ArrayList<>();
+            for (ClassInfo parentIface : hierarchy) {
+                if (parentIface.name().equals(agentIface.name())) {
+                    continue;
+                }
+                for (AnnotationInstance ann : parentIface.declaredAnnotations()) {
+                    if (agentIface.hasAnnotation(ann.name())) {
+                        continue; // already present on the agent itself
+                    }
+                    // Only propagate interceptor binding annotations
+                    ClassInfo annClass = index.getClassByName(ann.name());
+                    if (annClass != null && annClass.hasAnnotation(INTERCEPTOR_BINDING)) {
+                        toPropagate.add(ann);
+                    }
+                }
+            }
+            if (toPropagate.isEmpty()) {
+                continue;
+            }
+            DotName agentName = agentIface.name();
+            List<AnnotationInstance> annotationsToAdd = List.copyOf(toPropagate);
+            transformerProducer.produce(new AnnotationsTransformerBuildItem(
+                    AnnotationTransformation.forClasses()
+                            .whenClass(agentName)
+                            .transform(ctx -> ctx.addAll(annotationsToAdd))));
         }
     }
 
@@ -456,10 +569,14 @@ public class AgenticProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
             InterceptorResolverBuildItem interceptorResolverBuildItem,
+            BeanDiscoveryFinishedBuildItem beanDiscovery,
+            CombinedIndexBuildItem indexBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
-            BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer) {
+            BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
 
         Set<DotName> interceptorBindings = interceptorResolverBuildItem.getInterceptorBindings();
+        IndexView index = indexBuildItem.getIndex();
         Set<String> requestedChatModelNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
             String chatModelName = detectedAiAgentBuildItem.getModelName() != null
@@ -471,7 +588,9 @@ public class AgenticProcessor {
                     ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
 
-            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings);
+            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings, index);
+
+            boolean hasMcpToolBox = !detectedAiAgentBuildItem.getMcpToolBoxMethods().isEmpty();
 
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
                     .configure(detectedAiAgentBuildItem.getIface().name())
@@ -480,7 +599,7 @@ public class AgenticProcessor {
                     .createWith(recorder
                             .createAiAgent(
                                     new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,
-                                            hasInterceptorBindings)))
+                                            hasInterceptorBindings, hasMcpToolBox)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
             if (hasInterceptorBindings) {
@@ -498,20 +617,66 @@ public class AgenticProcessor {
             }
             beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                     new Type[] { ClassType.create(LangChain4jDotNames.TOOL_PROVIDER) }, null));
+
+            // AgentListener CDI beans are additive — wired into all agents
+            beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                    new Type[] { ClassType.create(AgenticLangChain4jDotNames.AGENT_LISTENER) }, null));
+
             syntheticBeanProducer.produce(beanConfigurator.done());
         }
+
+        // Mark AgentListener beans as unremovable (global check, outside per-agent loop)
+        if (!beanDiscovery.beanStream().withBeanType(AgenticLangChain4jDotNames.AGENT_LISTENER).isEmpty()) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(AgenticLangChain4jDotNames.AGENT_LISTENER));
+        }
+
+        // Validate AgentListener bean scopes
+        beanDiscovery.beanStream()
+                .withBeanType(AgenticLangChain4jDotNames.AGENT_LISTENER)
+                .forEach(bean -> {
+                    DotName scope = bean.getScope().getDotName();
+                    if (scope.equals(REQUEST_SCOPED) || scope.equals(SESSION_SCOPED)) {
+                        throw new IllegalConfigurationException(
+                                "CDI bean of type 'AgentListener' is @" + scope.withoutPackagePrefix()
+                                        + " and cannot be auto-wired into agents. "
+                                        + "Agent synthetic beans are created at application startup "
+                                        + "when no request context is active. Use @ApplicationScoped "
+                                        + "or provide the listener via a static supplier method.");
+                    }
+                });
+
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
     }
 
-    private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent, Set<DotName> interceptorBindings) {
-        for (AnnotationInstance ann : agent.getIface().declaredAnnotations()) {
-            if (interceptorBindings.contains(ann.name())) {
+    private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent,
+            Set<DotName> interceptorBindings, IndexView index) {
+        Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(agent.getIface(), index);
+
+        // Class-level check: walk the full interface hierarchy for class-level interceptor bindings
+        for (ClassInfo classInfo : hierarchy) {
+            if (ValidationUtil.hasAnnotation(classInfo.declaredAnnotations(), interceptorBindings)) {
                 return true;
             }
         }
+
+        // Method-level check: check each agentic method, then look up the same method signature
+        // on parent interfaces (handles case where @Agent is redeclared on child interface and
+        // the interceptor binding is only on the parent interface's version of the method)
         for (MethodInfo method : agent.getAgenticMethods()) {
-            for (AnnotationInstance ann : method.declaredAnnotations()) {
-                if (interceptorBindings.contains(ann.name())) {
+            if (ValidationUtil.hasAnnotation(method.annotations(), interceptorBindings)) {
+                return true;
+            }
+            for (ClassInfo classInfo : hierarchy) {
+                if (classInfo.name().equals(agent.getIface().name())) {
+                    continue; // already covered by method.annotations() above
+                }
+                // Look up matching method on this parent interface by name + parameter types.
+                // Returns null if the parent doesn't declare that method — safe to ignore.
+                org.jboss.jandex.Type[] paramTypes = method.parameterTypes()
+                        .toArray(new org.jboss.jandex.Type[0]);
+                MethodInfo parentMethod = classInfo.method(method.name(), paramTypes);
+                if (parentMethod != null
+                        && ValidationUtil.hasAnnotation(parentMethod.annotations(), interceptorBindings)) {
                     return true;
                 }
             }
@@ -706,6 +871,71 @@ public class AgenticProcessor {
             }
         }
         return type.name();
+    }
+
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    void validateFaultToleranceInteractions(List<DetectedAiAgentBuildItem> agents,
+            CombinedIndexBuildItem indexBuildItem) {
+        IndexView index = indexBuildItem.getIndex();
+        for (DetectedAiAgentBuildItem agent : agents) {
+            ClassInfo iface = agent.getIface();
+            // Walk the full interface hierarchy so that class-level @Retry or @Transactional
+            // on a parent interface is detected for agents that extend it.
+            Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(iface, index);
+            AnnotationInstance classLevelRetryAnn = hierarchy.stream()
+                    .map(ci -> ci.declaredAnnotation(RETRY))
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            AnnotationInstance classLevelTransactionalAnn = hierarchy.stream()
+                    .map(ci -> ci.declaredAnnotation(TRANSACTIONAL))
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            boolean classLevelRetry = classLevelRetryAnn != null;
+            boolean classLevelTransactional = classLevelTransactionalAnn != null;
+
+            for (MethodInfo method : agent.getAgenticMethods()) {
+                // F-4: @Retry(retryOn=...) where none of the retryOn types match the agent wrapper
+                AnnotationInstance effectiveRetry = method.annotation(RETRY);
+                if (effectiveRetry == null && classLevelRetry) {
+                    effectiveRetry = classLevelRetryAnn;
+                }
+                if (effectiveRetry != null) {
+                    AnnotationValue retryOn = effectiveRetry.value("retryOn");
+                    if (retryOn != null) {
+                        boolean hasSupertype = false;
+                        for (Type t : retryOn.asClassArray()) {
+                            if (RETRY_SUPERTYPES.contains(t.name())) {
+                                hasSupertype = true;
+                                break;
+                            }
+                        }
+                        if (!hasSupertype) {
+                            log.warnf(
+                                    "Agent method '%s#%s' uses @Retry(retryOn=...) but agent exceptions are "
+                                            + "wrapped in AgentInvocationException. The retryOn types will not match "
+                                            + "the thrown exception. Add AgentInvocationException to retryOn, or "
+                                            + "remove retryOn to retry on all exceptions.",
+                                    iface.name(), method.name());
+                        }
+                    }
+                }
+
+                // F-5: @Transactional + @Retry — partial commits + stale scope on retry
+                boolean methodHasRetry = method.hasAnnotation(RETRY) || classLevelRetry;
+                boolean methodHasTransactional = method.hasAnnotation(TRANSACTIONAL) || classLevelTransactional;
+                if (methodHasRetry && methodHasTransactional) {
+                    log.warnf(
+                            "Agent method '%s#%s' combines @Transactional and @Retry. "
+                                    + "AgenticScope is not a JTA resource — on retry, the second attempt re-enters "
+                                    + "after the first transaction has already closed, leaving partial scope state "
+                                    + "unrolled. Ensure this combination is intentional.",
+                            iface.name(), method.name());
+                }
+            }
+        }
     }
 
     /**
