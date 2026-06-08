@@ -35,6 +35,10 @@ public class QuarkusOpenAiImageModel implements ImageModel {
     private final Optional<String> user;
     private final Integer maxRetries;
     private final Optional<Path> persistDirectory;
+    private final String outputFormat;
+    private final String background;
+    private final Integer outputCompression;
+    private final String moderation;
 
     private final QuarkusOpenAiClient client;
 
@@ -48,6 +52,10 @@ public class QuarkusOpenAiImageModel implements ImageModel {
             throw new IllegalArgumentException("max-retries must be at least 1");
         }
         this.persistDirectory = builder.persistDirectory;
+        this.outputFormat = builder.outputFormat;
+        this.background = builder.background;
+        this.outputCompression = builder.outputCompression;
+        this.moderation = builder.moderation;
 
         this.client = QuarkusOpenAiClient.builder()
                 .baseUrl(builder.baseUrl)
@@ -68,7 +76,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
     @Override
     public Response<Image> generate(String prompt) {
-        GenerateImagesRequest request = requestBuilder(prompt).build();
+        var request = buildRequest(prompt);
 
         GenerateImagesResponse response = withRetry(() -> client.imagesGeneration(request), maxRetries).execute();
         persistIfNecessary(response);
@@ -78,7 +86,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
     @Override
     public Response<List<Image>> generate(String prompt, int n) {
-        GenerateImagesRequest request = requestBuilder(prompt).n(n).build();
+        var request = buildRequest(prompt, n);
 
         GenerateImagesResponse response = withRetry(() -> client.imagesGeneration(request), maxRetries).execute();
         persistIfNecessary(response);
@@ -113,19 +121,35 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         return Image.builder().url(data.url()).base64Data(data.b64Json()).revisedPrompt(data.revisedPrompt()).build();
     }
 
-    private GenerateImagesRequest.Builder requestBuilder(String prompt) {
-        var builder = GenerateImagesRequest
-                .builder()
+    private GenerateImagesRequest buildRequest(String prompt) {
+        return buildRequest(prompt, 1);
+    }
+
+    private GenerateImagesRequest buildRequest(String prompt, int n) {
+        var builder = GenerateImagesRequest.builder()
                 .prompt(prompt)
                 .model(modelName)
+                .n(n)
                 .size(size)
                 .quality(quality);
 
         if (user.isPresent()) {
             builder.user(user.get());
         }
+        if (outputFormat != null) {
+            builder.outputFormat(outputFormat);
+        }
+        if (background != null) {
+            builder.background(background);
+        }
+        if (outputCompression != null) {
+            builder.outputCompression(outputCompression);
+        }
+        if (moderation != null) {
+            builder.moderation(moderation);
+        }
 
-        return builder;
+        return builder.build();
     }
 
     public static Builder builder() {
@@ -149,6 +173,10 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         private Boolean logCurl;
         private Optional<Path> persistDirectory;
         private Proxy proxy;
+        private String outputFormat;
+        private String background;
+        private Integer outputCompression;
+        private String moderation;
 
         public Builder baseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
@@ -227,6 +255,26 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         public Builder proxy(Proxy proxy) {
             this.proxy = proxy;
+            return this;
+        }
+
+        public Builder outputFormat(String outputFormat) {
+            this.outputFormat = outputFormat;
+            return this;
+        }
+
+        public Builder background(String background) {
+            this.background = background;
+            return this;
+        }
+
+        public Builder outputCompression(Integer outputCompression) {
+            this.outputCompression = outputCompression;
+            return this;
+        }
+
+        public Builder moderation(String moderation) {
+            this.moderation = moderation;
             return this;
         }
 

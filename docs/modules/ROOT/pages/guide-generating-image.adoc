@@ -10,12 +10,12 @@ With Quarkus LangChain4j’s Image model support, you can declare a service meth
 
 * A Quarkus project with the `quarkus-langchain4j-openai` extension on the classpath (or another model provider that supports image models)
 * OpenAI (or another provider) API Key configured in `application.properties` or via `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY`
-* An **Image Model** enabled (e.g. `dall-e-3` or `GPT-Image-1`) in your config:
+* An **Image Model** enabled (e.g. `gpt-image-1`) in your config:
 +
 [source,properties]
 ----
 quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
-quarkus.langchain4j.openai.image-model.model-name=dall-e-3 # This is the default model, but you can specify another one if needed
+quarkus.langchain4j.openai.image-model.model-name=gpt-image-1 # This is the default model, but you can specify another one if needed
 ----
 +
 * Extended timeout for image generation, which can take longer than text completions. For example:
@@ -46,9 +46,9 @@ Quarkus LangChain4j will call the configured image model and wrap the response i
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/images/ImageGenerationAiService.java[tags=head;generation]
 ----
 
-When invoked, Quarkus will substitute the subject into the prompt, send it to the AI model provider, and return the generated image (URL or Base64).
+When invoked, Quarkus will substitute the subject into the prompt, send it to the AI model provider, and return the generated image.
 
-NOTE: When using OpenAI image model, the returned `Image` object contains a URL to the generated image, which you can use to display or download the image.
+NOTE: When using OpenAI image model, the returned `Image` object contains base64-encoded image data.
 
 
 == Step 3. Expose an HTTP Endpoint
