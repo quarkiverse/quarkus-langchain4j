@@ -32,12 +32,14 @@ import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
+import io.quarkiverse.langchain4j.agentic.runtime.observability.AgentHealthCheck;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.arc.InterceptionProxySubclass;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
+import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.annotations.RuntimeInit;
 import io.quarkus.runtime.annotations.StaticInit;
@@ -84,10 +86,16 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
-    public void enableDevModeMonitoring(Set<String> rootAgentClassNames) {
+    public void enableDevModeMonitoring(Set<String> rootAgentClassNames, ShutdownContext shutdownContext) {
         DevAgentMonitorHolder.reset();
         AgenticRecorder.devModeMonitoringEnabled = true;
         AgenticRecorder.rootAgentClassNames = Collections.unmodifiableSet(rootAgentClassNames);
+        shutdownContext.addShutdownTask(DevAgentMonitorHolder::reset);
+    }
+
+    @RuntimeInit
+    public void setHealthCheckAgentClassNames(Set<String> agentClassNames) {
+        AgentHealthCheck.setRootAgentClassNames(agentClassNames);
     }
 
     @RuntimeInit

@@ -8,8 +8,6 @@ import io.micrometer.core.instrument.Metrics;
 
 public class MetricsCountedWrapper implements AiServiceMethodImplementationSupport.Wrapper {
 
-    private static final String RESULT_TAG_FAILURE_VALUE = "failure";
-    private static final String RESULT_TAG_SUCCESS_VALUE = "success";
     private static final String DEFAULT_EXCEPTION_TAG_VALUE = "none";
 
     @Override
@@ -36,8 +34,7 @@ public class MetricsCountedWrapper implements AiServiceMethodImplementationSuppo
     private void record(AiServiceMethodCreateInfo.MetricsCountedInfo metricsCountedInfo, Throwable throwable) {
         Counter.Builder builder = Counter.builder(metricsCountedInfo.name())
                 .tags(metricsCountedInfo.extraTags())
-                .tag("exception", getExceptionTag(throwable))
-                .tag("result", throwable == null ? RESULT_TAG_SUCCESS_VALUE : RESULT_TAG_FAILURE_VALUE);
+                .tag("error.type", getExceptionTag(throwable));
         String description = metricsCountedInfo.description();
         if (!description.isEmpty()) {
             builder.description(description);
