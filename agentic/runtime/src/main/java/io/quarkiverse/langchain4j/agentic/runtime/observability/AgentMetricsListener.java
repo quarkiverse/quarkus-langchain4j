@@ -3,8 +3,6 @@ package io.quarkiverse.langchain4j.agentic.runtime.observability;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import dev.langchain4j.agentic.observability.AfterAgentToolExecution;
 import dev.langchain4j.agentic.observability.AgentInvocationError;
 import dev.langchain4j.agentic.observability.AgentListener;
@@ -16,7 +14,6 @@ import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 
-@ApplicationScoped
 public class AgentMetricsListener implements AgentListener {
 
     private final ConcurrentHashMap<String, Long> startTimes = new ConcurrentHashMap<>();

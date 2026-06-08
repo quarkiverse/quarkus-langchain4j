@@ -45,16 +45,15 @@ class AssistantResourceWithMetricsTest {
 
         waitForMeters(
                 registry.find("langchain4j.aiservices.timed")
-                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant1")
-                        .tag("method", "chat")
+                        .tag("ai_service.class_name", "AssistantResourceWithMetrics$Assistant1")
+                        .tag("ai_service.method_name", "chat")
                         .timers(),
                 1);
         waitForMeters(
                 registry.find("langchain4j.aiservices.counted")
-                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant1")
-                        .tag("method", "chat")
-                        .tag("result", "success")
-                        .tag("exception", "none")
+                        .tag("ai_service.class_name", "AssistantResourceWithMetrics$Assistant1")
+                        .tag("ai_service.method_name", "chat")
+                        .tag("error.type", "none")
                         .counters(),
                 1);
     }
@@ -70,17 +69,16 @@ class AssistantResourceWithMetricsTest {
 
         waitForMeters(
                 registry.find("langchain4j.aiservices.timed")
-                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant2")
-                        .tag("method", "chat")
+                        .tag("ai_service.class_name", "AssistantResourceWithMetrics$Assistant2")
+                        .tag("ai_service.method_name", "chat")
                         .tag("key", "value")
                         .timers(),
                 1);
         waitForMeters(
                 registry.find("langchain4j.aiservices.counted")
-                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant2")
-                        .tag("method", "chat")
-                        .tag("result", "success")
-                        .tag("exception", "none")
+                        .tag("ai_service.class_name", "AssistantResourceWithMetrics$Assistant2")
+                        .tag("ai_service.method_name", "chat")
+                        .tag("error.type", "none")
                         .counters(),
                 1);
     }
@@ -96,8 +94,7 @@ class AssistantResourceWithMetricsTest {
 
         waitForMeters(registry.find("a2c2-timed").timers(), 1);
         waitForMeters(registry.find("a2c2-counted")
-                .tag("result", "success")
-                .tag("exception", "none").counters(), 1);
+                .tag("error.type", "none").counters(), 1);
     }
 
     @Test
@@ -109,10 +106,9 @@ class AssistantResourceWithMetricsTest {
                 .statusCode(500);
 
         waitForMeters(
-                registry.find("langchain4j.aiservices.counted").tag("aiservice", "AssistantResourceWithMetrics$Assistant3")
-                        .tag("method", "chat")
-                        .tag("result", "failure")
-                        .tag("exception", "TemplateException").counters(),
+                registry.find("langchain4j.aiservices.counted").tag("ai_service.class_name", "AssistantResourceWithMetrics$Assistant3")
+                        .tag("ai_service.method_name", "chat")
+                        .tag("error.type", "TemplateException").counters(),
                 1);
     }
 

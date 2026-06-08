@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
+import org.jboss.jandex.DotName;
+
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.observability.AgentCdiEventListener;
 import io.quarkiverse.langchain4j.agentic.runtime.observability.AgentHealthCheck;
@@ -30,11 +34,14 @@ public class AgenticObservabilityProcessor {
             Optional<MetricsCapabilityBuildItem> metricsCapability,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
 
+        DotName applicationScoped = DotName.createSimple(ApplicationScoped.class);
+
         // OTel spans — conditional on OpenTelemetry tracer
         if (capabilities.isPresent(Capability.OPENTELEMETRY_TRACER)) {
             additionalBeanProducer.produce(
                     AdditionalBeanBuildItem.builder()
                             .addBeanClass(AgentSpanListener.class)
+                            .setDefaultScope(applicationScoped)
                             .setUnremovable()
                             .build());
         }
@@ -45,6 +52,7 @@ public class AgenticObservabilityProcessor {
             additionalBeanProducer.produce(
                     AdditionalBeanBuildItem.builder()
                             .addBeanClass(AgentMetricsListener.class)
+                            .setDefaultScope(applicationScoped)
                             .setUnremovable()
                             .build());
         }

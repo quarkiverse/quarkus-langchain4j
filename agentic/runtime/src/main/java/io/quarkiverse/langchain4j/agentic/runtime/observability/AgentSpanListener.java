@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.agentic.runtime.observability;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import dev.langchain4j.agentic.observability.AgentInvocationError;
@@ -18,7 +17,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 
-@ApplicationScoped
 public class AgentSpanListener implements AgentListener {
 
     private static final AttributeKey<String> OPERATION_NAME = AttributeKey.stringKey("gen_ai.operation.name");
