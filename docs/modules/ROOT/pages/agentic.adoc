@@ -535,6 +535,21 @@ public interface MedicalExpertWithMemory {
 }
 ----
 
+=== Serialization
+
+An `AgenticScope` can be serialized to JSON through the application's managed `ObjectMapper`. This is what lets a persistence layer (for example a workflow engine) store and restore agentic state:
+
+[source,java]
+----
+@Inject
+ObjectMapper objectMapper;
+
+String json = objectMapper.writeValueAsString(scope);
+AgenticScope restored = objectMapper.readValue(json, AgenticScope.class);
+----
+
+The extension registers the Jackson support required to (de)serialize the scope, including in native mode; no manual configuration is needed.
+
 == Error Handling
 
 Define error recovery strategies on workflow agents using `@ErrorHandler`:

@@ -65,6 +65,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 public class AgenticProcessor {
 
@@ -73,6 +74,34 @@ public class AgenticProcessor {
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-agentic"));
+    }
+
+    /**
+     * Registers the classes that langchain4j's {@code AgenticScopeSerializer} marshals via reflection so the
+     * managed ObjectMapper can (de)serialize an {@code AgenticScope} in native mode.
+     * The serializer uses Jackson default typing, which embeds concrete container class names that must also
+     * be reflectively instantiable on read.
+     */
+    @BuildStep
+    void registerAgenticScopeSerialization(BuildProducer<ReflectiveClassBuildItem> reflectiveClasses) {
+        reflectiveClasses.produce(ReflectiveClassBuildItem.builder(
+                "dev.langchain4j.agentic.scope.DefaultAgenticScope",
+                "dev.langchain4j.agentic.scope.DefaultAgenticScope$Kind",
+                "dev.langchain4j.agentic.scope.DefaultAgenticScope$AgentMessage",
+                "dev.langchain4j.agentic.scope.AgentInvocation",
+                "dev.langchain4j.agentic.scope.AgenticScopeJsonCodec",
+                "dev.langchain4j.agentic.scope.JacksonAgenticScopeJsonCodec",
+                "dev.langchain4j.agentic.scope.JacksonAgenticScopeJsonCodec$AgenticScopeMixin",
+                "dev.langchain4j.agentic.scope.JacksonAgenticScopeJsonCodec$AgentMessageMixin",
+                "dev.langchain4j.agentic.scope.JacksonAgenticScopeJsonCodec$AgentInvocationMixin")
+                .methods().fields().constructors().build());
+
+        reflectiveClasses.produce(ReflectiveClassBuildItem.builder(
+                "java.util.concurrent.ConcurrentHashMap",
+                "java.util.Collections$SynchronizedList",
+                "java.util.Collections$SynchronizedRandomAccessList",
+                "java.util.Collections$SynchronizedCollection")
+                .constructors().build());
     }
 
     @BuildStep
