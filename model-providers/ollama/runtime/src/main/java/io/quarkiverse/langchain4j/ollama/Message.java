@@ -6,8 +6,9 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record Message(Role role, String content, List<ToolCall> toolCalls, List<String> images,
+public record Message(Role role, String content, @JsonProperty("tool_calls") List<ToolCall> toolCalls, List<String> images,
         @JsonIgnore Map<String, Object> additionalFields) {
 
     @JsonAnyGetter
