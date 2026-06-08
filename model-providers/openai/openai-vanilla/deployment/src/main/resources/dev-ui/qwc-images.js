@@ -61,25 +61,22 @@ export class QwcImages extends LitElement {
     `;
 
     supportedModels = [
-        { label: "dall-e-2",  value: "dall-e-2"},
-        { label: "dall-e-3",  value: "dall-e-3"}]
+        { label: "gpt-image-1",  value: "gpt-image-1"},
+        { label: "gpt-image-1.5",  value: "gpt-image-1.5"},
+        { label: "gpt-image-1-mini",  value: "gpt-image-1-mini"},
+        { label: "gpt-image-2",  value: "gpt-image-2"}]
 
     supportedSizes = [
-        { label: "256x256",  value: "256x256", supportedModels: ["dall-e-2"]},
-        { label: "512x512",  value: "512x512", supportedModels: ["dall-e-2"]},
-        { label: "1024x1024",  value: "1024x1024", supportedModels: ["dall-e-2", "dall-e-3"]},
-        { label: "1792x1024",  value: "1792x1024", supportedModels: ["dall-e-3"]},
-        { label: "1024x1792",  value: "1024x1792", supportedModels: ["dall-e-3"]},
-        { label: "1792x1024",  value: "1792x1024", supportedModels: ["dall-e-3"]}
+        { label: "1024x1024",  value: "1024x1024", supportedModels: ["gpt-image-1", "gpt-image-1.5", "gpt-image-1-mini", "gpt-image-2"]},
+        { label: "1536x1024",  value: "1536x1024", supportedModels: ["gpt-image-1", "gpt-image-1.5", "gpt-image-1-mini", "gpt-image-2"]},
+        { label: "1024x1536",  value: "1024x1536", supportedModels: ["gpt-image-1", "gpt-image-1.5", "gpt-image-1-mini", "gpt-image-2"]}
     ]
 
     supportedQualities = [
-        { label: "standard",  value: "standard", supportedModels: ["dall-e-2", "dall-e-3"]},
-        { label: "hd",  value: "hd", supportedModels: ["dall-e-3"]}]
-
-    supportedStyles = [
-        { label: "vivid",  value: "vivid", supportedModels: ["dall-e-2", "dall-e-3"]},
-        { label: "natural",  value: "natural", supportedModels: ["dall-e-3"]}]
+        { label: "auto",  value: "auto", supportedModels: ["gpt-image-1", "gpt-image-1.5", "gpt-image-1-mini", "gpt-image-2"]},
+        { label: "low",  value: "low", supportedModels: ["gpt-image-1", "gpt-image-1.5", "gpt-image-1-mini", "gpt-image-2"]},
+        { label: "medium",  value: "medium", supportedModels: ["gpt-image-1", "gpt-image-1.5", "gpt-image-1-mini", "gpt-image-2"]},
+        { label: "high",  value: "high", supportedModels: ["gpt-image-1", "gpt-image-1.5", "gpt-image-1-mini", "gpt-image-2"]}]
 
     static properties = {
         _progressBarClass: {state: true},
@@ -113,23 +110,17 @@ export class QwcImages extends LitElement {
 
         const availableSizes = this._getSupportedSizesForModel(this.selectedModel);
         const availableQualities = this._getSupportedQualitiesForModel(this.selectedModel);
-        const availableStyles = this._getSupportedStylesForModel(this.selectedModel);
-        
+
         this.selectedSize = this._getSupportedSizesForModel(this.selectedModel)[0].value;
         this.selectedQuality = this._getSupportedQualitiesForModel(this.selectedModel)[0].value;
-        this.selectedStyle = this._getSupportedStylesForModel(this.selectedModel)[0].value;
-       
+
         // Reset the values if the selected model does not support the current value
         if (!availableSizes.map(s => s.value).includes(this.shadowRoot.getElementById('size').value)) {
           this.shadowRoot.getElementById('size').value = availableSizes[0].value;
         }
-        
+
         if (!availableQualities.map(s => s.value).includes(this.shadowRoot.getElementById('quality').value)) {
           this.shadowRoot.getElementById('quality').value = availableQualities[0].value;
-        }
-        
-        if (!availableStyles.map(s => s.value).includes(this.shadowRoot.getElementById('style').value)) {
-          this.shadowRoot.getElementById('style').value = availableStyles[0].value;
         }
     }
      
@@ -139,10 +130,6 @@ export class QwcImages extends LitElement {
 
     _getSupportedQualitiesForModel(model) {
         return this.supportedQualities.filter(quality => quality.supportedModels.includes(model));
-    }
-    
-    _getSupportedStylesForModel(model) {
-        return this.supportedStyles.filter(style => style.supportedModels.includes(model));
     }
 
     _renderConfig() {
@@ -169,8 +156,7 @@ export class QwcImages extends LitElement {
                             id="size"
                             .items="${this._getSupportedSizesForModel(this.selectedModel) }"
                             .value="${this._getSupportedSizesForModel(this.selectedModel)[0].value}">
-                            <vaadin-tooltip slot="tooltip" text="Must be one of 1024x1024, 1792x1024, or 1024x1792 when the model is dall-e-3. 
-                                Must be one of 256x256, 512x512, or 1024x1024 when the model is dall-e-2." position="bottom"></vaadin-tooltip>
+                            <vaadin-tooltip slot="tooltip" text="Supported sizes: 1024x1024, 1536x1024, 1024x1536, or auto." position="bottom"></vaadin-tooltip>
                     </vaadin-select>
                     <vaadin-select
                             label="Quality"
@@ -178,17 +164,7 @@ export class QwcImages extends LitElement {
                             .items="${this._getSupportedQualitiesForModel(this.selectedModel) }"
                             .value="${this._getSupportedQualitiesForModel(this.selectedModel)[0].value}">
                             <vaadin-tooltip slot="tooltip" text="The quality of the image that will be generated.
-                                'hd' creates images with finer details and greater consistency across the image.
-                                This param is only supported for when the model is dall-e-3." position="bottom"></vaadin-tooltip>
-                    </vaadin-select>
-                    <vaadin-select
-                            label="Style"
-                            id="style"
-                            .items="${this._getSupportedStylesForModel(this.selectedModel) }"
-                            .value="${this._getSupportedStylesForModel(this.selectedModel)[0].value}">
-                            <vaadin-tooltip slot="tooltip" text="Vivid causes the model to lean towards generating hyper-real and dramatic images.
-                                Natural causes the model to produce more natural, less hyper-real looking images. 
-                                This param is only supported for when the model is dall-e-3." position="bottom"></vaadin-tooltip>
+                                Supported values: auto, low, medium, or high." position="bottom"></vaadin-tooltip>
                     </vaadin-select>
                 </vaadin-vertical-layout>
             </div>
@@ -206,8 +182,7 @@ export class QwcImages extends LitElement {
                             this.shadowRoot.getElementById('model-name').value,
                             this.shadowRoot.getElementById('image-prompt').value,
                             this.shadowRoot.getElementById('size').value,
-                            this.shadowRoot.getElementById('quality').value,
-                            this.shadowRoot.getElementById('style').value
+                            this.shadowRoot.getElementById('quality').value
                         )}>Generate image
                     </vaadin-button>
                     <vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>
@@ -220,10 +195,10 @@ export class QwcImages extends LitElement {
         `;
     }
 
-    _doGenerate(configuration, modelName, prompt, size, quality, style) {
+    _doGenerate(configuration, modelName, prompt, size, quality) {
         this._showProgressBar();
         this.jsonRpc.generate({configuration: configuration, modelName: modelName,
-                prompt: prompt, size: size, quality: quality, style: style}).then((jsonRpcResponse) => {
+                prompt: prompt, size: size, quality: quality}).then((jsonRpcResponse) => {
                     this._hideProgressBar();
                     this._generatedImages = [jsonRpcResponse.result].concat(this._generatedImages)
         }).catch((error) => {

@@ -33,7 +33,7 @@ public class ImageModelTest extends OpenAiBaseTest {
     public void test() {
         Response<Image> response = imageModel.generate("whatever");
         assertNotNull(response);
-        assertNotNull(response.content().url());
+        assertNotNull(response.content().base64Data());
 
         assertThat(wiremock().getServeEvents()).hasSize(1);
     }

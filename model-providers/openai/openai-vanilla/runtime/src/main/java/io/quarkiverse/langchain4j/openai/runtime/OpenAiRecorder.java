@@ -370,6 +370,11 @@ public class OpenAiRecorder {
                     .quality(imageModelConfig.quality())
                     .user(imageModelConfig.user());
 
+            imageModelConfig.outputFormat().ifPresent(builder::outputFormat);
+            imageModelConfig.background().ifPresent(builder::background);
+            imageModelConfig.outputCompression().ifPresent(builder::outputCompression);
+            imageModelConfig.moderation().ifPresent(builder::moderation);
+
             openAiConfig.organizationId().ifPresent(builder::organizationId);
 
             // we persist if the directory was set explicitly and the boolean flag was not set to false
@@ -380,7 +385,7 @@ public class OpenAiRecorder {
                     persistDirectory = imageModelConfig.persistDirectory().or(new Supplier<>() {
                         @Override
                         public Optional<? extends Path> get() {
-                            return Optional.of(Paths.get(System.getProperty("java.io.tmpdir"), "dall-e-images"));
+                            return Optional.of(Paths.get(System.getProperty("java.io.tmpdir"), "openai-images"));
                         }
                     });
                 }

@@ -44,7 +44,7 @@ public class ProxyImageModelTest extends OpenAiBaseTest {
         Response<Image> response = imageModel.generate("whatever");
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(response).isNotNull();
-        softly.assertThat(response.content().url().getHost()).isEqualTo("somewhere.com");
+        softly.assertThat(response.content().base64Data()).isNotNull();
 
         LoggedRequest loggedRequest = singleLoggedRequest();
         softly.assertThat(loggedRequest.getHost()).isEqualTo("localhost");

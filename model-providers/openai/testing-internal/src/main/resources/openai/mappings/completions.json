@@ -80,13 +80,13 @@
             "matchesJsonPath": "$[?(@.size == '1024x1024')]"
           },
           {
-            "matchesJsonPath": "$[?(@.quality == 'standard')]"
+            "matchesJsonPath": "$[?(@.quality == 'auto')]"
           }
         ]
       },
       "response": {
         "status": 200,
-        "body": "{\n  \"created\": 1708633271,\n  \"data\": [\n    {\n      \"revised_prompt\": \"Some revised prompt.\",\n      \"url\": \"https://somewhere.com/someImage.png\"\n    }\n   ]\n  }\n",
+        "body": "{\n  \"created\": 1708633271,\n  \"data\": [\n    {\n      \"b64_json\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"\n    }\n   ]\n  }\n",
         "headers": {
           "Content-Type": "application/json",
           "openai-organization": "my-org-1234",

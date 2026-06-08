@@ -13,7 +13,7 @@ public interface ImageModelConfig {
     /**
      * Model name to use
      */
-    @WithDefault("dall-e-3")
+    @WithDefault("gpt-image-1")
     String modelName();
 
     /**
@@ -28,15 +28,13 @@ public interface ImageModelConfig {
      * The path where the generated images will be persisted to disk.
      * This only applies of {@code quarkus.langchain4j.openai.image-mode.persist} is not set to {@code false}.
      */
-    @ConfigDocDefault("${java.io.tmpdir}/dall-e-images")
+    @ConfigDocDefault("${java.io.tmpdir}/openai-images")
     Optional<Path> persistDirectory();
 
     /**
      * The size of the generated images.
      * <p>
-     * Must be one of {@code 1024x1024}, {@code 1792x1024}, or {@code 1024x1792} when the model is {@code dall-e-3}.
-     * <p>
-     * Must be one of {@code 256x256}, {@code 512x512}, or {@code 1024x1024} when the model is {@code dall-e-2}.
+     * Supported values: {@code 1024x1024}, {@code 1536x1024}, {@code 1024x1536}, or {@code auto}.
      */
     @WithDefault("1024x1024")
     String size();
@@ -44,19 +42,15 @@ public interface ImageModelConfig {
     /**
      * The quality of the image that will be generated.
      * <p>
-     * {@code hd} creates images with finer details and greater consistency across the image.
-     * <p>
-     * This param is only supported for when the model is {@code dall-e-3}.
+     * Supported values: {@code auto}, {@code low}, {@code medium}, or {@code high}.
      */
-    @WithDefault("standard")
+    @WithDefault("auto")
     String quality();
 
     /**
      * The number of images to generate.
      * <p>
      * Must be between 1 and 10.
-     * <p>
-     * When the model is dall-e-3, only n=1 is supported.
      */
     @WithDefault("1")
     int number();
@@ -65,6 +59,41 @@ public interface ImageModelConfig {
      * A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
      */
     Optional<String> user();
+
+    /**
+     * The output format of the generated image.
+     * <p>
+     * Supported values: {@code png}, {@code jpeg}, {@code webp}.
+     * <p>
+     * Only supported for {@code gpt-image-1} and newer models.
+     */
+    Optional<String> outputFormat();
+
+    /**
+     * The background type for the generated image.
+     * <p>
+     * Supported values: {@code transparent}, {@code opaque}, {@code auto}.
+     * <p>
+     * Only supported for {@code gpt-image-1} and newer models.
+     * Transparent backgrounds require {@code output-format} set to {@code png} or {@code webp}.
+     */
+    Optional<String> background();
+
+    /**
+     * The compression level for the generated image (0-100).
+     * <p>
+     * Only supported for {@code gpt-image-1} and newer models with {@code jpeg} or {@code webp} output formats.
+     */
+    Optional<Integer> outputCompression();
+
+    /**
+     * The moderation level for the image generation request.
+     * <p>
+     * Supported values: {@code low}, {@code auto}.
+     * <p>
+     * Only supported for {@code gpt-image-1} and newer models.
+     */
+    Optional<String> moderation();
 
     /**
      * Whether image model requests should be logged
