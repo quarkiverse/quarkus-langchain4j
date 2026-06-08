@@ -27,6 +27,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
@@ -88,7 +89,7 @@ public class AgenticDevUIProcessor {
         return card;
     }
 
-    @BuildStep
+    @BuildStep(onlyIf = IsDevelopment.class)
     void jsonRpcProvider(BuildProducer<JsonRPCProvidersBuildItem> producers) {
         producers.produce(new JsonRPCProvidersBuildItem(AgenticJsonRpcService.class));
     }
@@ -103,17 +104,27 @@ public class AgenticDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDevUIAllowedAgentClassNames(List<DetectedAiAgentBuildItem> agents, AgenticRecorder recorder) {
+        Set<String> classNames = filterUserAgents(agents).stream()
+                .map(a -> a.getIface().name().toString())
+                .collect(Collectors.toSet());
+        recorder.setDevUIAllowedAgentClassNames(classNames);
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    @Record(ExecutionTime.RUNTIME_INIT)
     @Consume(SyntheticBeansRuntimeInitBuildItem.class)
     void enableDevModeMonitoring(List<DetectedAiAgentBuildItem> agents,
-            AgenticRecorder recorder) {
+            AgenticRecorder recorder,
+            ShutdownContextBuildItem shutdown) {
         DotName monitoredAgentName = DotName.createSimple(MonitoredAgent.class.getName());
         Set<String> monitoredRootAgentClassNames = filterUserAgents(agents).stream()
                 .filter(a -> a.getIface().interfaceNames().stream().anyMatch(dn -> dn.equals(monitoredAgentName)))
                 .map(a -> a.getIface().name().toString())
                 .collect(Collectors.toSet());
         if (!monitoredRootAgentClassNames.isEmpty()) {
-            recorder.enableDevModeMonitoring(monitoredRootAgentClassNames);
-            recorder.eagerlyInitRootAgents(monitoredRootAgentClassNames);
+            recorder.enableDevModeMonitoring(monitoredRootAgentClassNames, shutdown);
+            recorder.conditionallyEagerInitRootAgents(monitoredRootAgentClassNames);
         }
     }
 
