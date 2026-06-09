@@ -13,11 +13,11 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.EmbeddingStoreWithoutMetadataIT;
-import dev.langchain4j.store.embedding.qdrant.QdrantEmbeddingStore;
+import dev.langchain4j.store.embedding.EmbeddingStoreIT;
+import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class QdrantEmbeddingStoreTest extends EmbeddingStoreWithoutMetadataIT {
+public class QdrantEmbeddingStoreTest extends EmbeddingStoreIT {
 
     public static final String COLLECTION_NAME = "qdrant_test_embeddings";
 
@@ -43,7 +43,7 @@ public class QdrantEmbeddingStoreTest extends EmbeddingStoreWithoutMetadataIT {
 
     @Override
     protected void clearStore() {
-        embeddingStore.clearStore();
+        embeddingStore.removeAll();
     }
 
     @Override
@@ -58,10 +58,10 @@ public class QdrantEmbeddingStoreTest extends EmbeddingStoreWithoutMetadataIT {
 
     private static JavaArchive archive() {
         Asset properties = new StringAsset(String.join("\n",
-                "quarkus.langchain4j.qdrant.devservices.service-name=" + COLLECTION_NAME,
-                "quarkus.langchain4j.qdrant.devservices.port=6334",
-                "quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance=Cosine",
-                "quarkus.langchain4j.qdrant.devservices.collection.vector-params.size=384"));
+                "quarkus.langchain4j.qdrant.collection-name=" + COLLECTION_NAME,
+                "quarkus.langchain4j.qdrant.payload-text-key=custom_text_field",
+                "quarkus.qdrant.devservices.collections." + COLLECTION_NAME + ".vector-size=384",
+                "quarkus.qdrant.devservices.collections." + COLLECTION_NAME + ".distance=Cosine"));
 
         return ShrinkWrap.create(JavaArchive.class).addAsResource(properties, "application.properties");
     }
