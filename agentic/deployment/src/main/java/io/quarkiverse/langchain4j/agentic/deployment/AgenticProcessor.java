@@ -106,6 +106,8 @@ public class AgenticProcessor {
             DotName.createSimple("java.lang.Throwable"),
             DotName.createSimple("dev.langchain4j.agentic.agent.AgentInvocationException"));
 
+    private static final Set<String> RESERVED_CONFIG_KEYS = Set.of("dev-ui");
+
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-agentic"));
@@ -464,6 +466,115 @@ public class AgenticProcessor {
                 return false;
             }
         });
+    }
+
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    void extractAgentConfigKeys(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
+            BuildProducer<AgentConfigKeyBuildItem> producer) {
+        // configKey -> agentClassName for duplicate detection of explicit names
+        Map<String, String> explicitKeys = new HashMap<>();
+
+        for (DetectedAiAgentBuildItem item : detectedAiAgentBuildItems) {
+            String agentClassName = item.getIface().name().toString();
+
+            // Find the config key from the root agentic method's annotation
+            ConfigKeyResult result = null;
+            for (MethodInfo method : item.getAgenticMethods()) {
+                result = resolveConfigKey(method, item.getIface());
+                if (result != null) {
+                    break;
+                }
+            }
+            if (result == null) {
+                continue; // no agentic annotation found — should not happen
+            }
+
+            String configKey = result.key();
+
+            // Validate against reserved names (applies to both explicit and auto-derived)
+            if (RESERVED_CONFIG_KEYS.contains(configKey)) {
+                throw new IllegalConfigurationException(
+                        "Agent '" + agentClassName + "' uses reserved config key '" + configKey
+                                + "'. Reserved keys: " + RESERVED_CONFIG_KEYS);
+            }
+
+            // Validate uniqueness only for explicitly named agents
+            if (result.explicit()) {
+                String existing = explicitKeys.get(configKey);
+                if (existing != null) {
+                    throw new IllegalConfigurationException(
+                            "Duplicate agent config key '" + configKey + "' found on agents '"
+                                    + existing + "' and '" + agentClassName
+                                    + "'. Each agent must have a unique config key. "
+                                    + "Use the 'name' attribute on the agent annotation to disambiguate.");
+                }
+                explicitKeys.put(configKey, agentClassName);
+            }
+
+            producer.produce(new AgentConfigKeyBuildItem(agentClassName, configKey));
+        }
+    }
+
+    /**
+     * Result of resolving an agent's config key.
+     *
+     * @param key the config key
+     * @param explicit whether the key was explicitly set via the {@code name} annotation attribute
+     */
+    record ConfigKeyResult(String key, boolean explicit) {
+    }
+
+    /**
+     * Resolves the config key for an agentic method by checking the {@code name} attribute
+     * on its agent annotation. If the name is empty/default, derives from the interface
+     * simple name using kebab-case.
+     */
+    static ConfigKeyResult resolveConfigKey(MethodInfo method, ClassInfo iface) {
+        for (DotName annotation : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
+            AnnotationInstance instance = method.annotation(annotation);
+            if (instance != null) {
+                AnnotationValue nameValue = instance.value("name");
+                if (nameValue != null && !nameValue.asString().isEmpty()) {
+                    return new ConfigKeyResult(nameValue.asString(), true);
+                }
+                return new ConfigKeyResult(kebabCase(simpleClassName(iface)), false);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the simple class name, stripping any enclosing class prefix for inner classes.
+     * {@code com.example.Agents$LegalExpert} → {@code LegalExpert}.
+     */
+    static String simpleClassName(ClassInfo classInfo) {
+        String local = classInfo.name().withoutPackagePrefix();
+        int dollar = local.lastIndexOf('$');
+        return dollar >= 0 ? local.substring(dollar + 1) : local;
+    }
+
+    /**
+     * Converts a PascalCase or camelCase name to kebab-case.
+     * <p>
+     * Examples: {@code LegalExpert} → {@code legal-expert},
+     * {@code generateStory} → {@code generate-story},
+     * {@code process} → {@code process}
+     */
+    static String kebabCase(String name) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isUpperCase(c)) {
+                if (sb.length() > 0) {
+                    sb.append('-');
+                }
+                sb.append(Character.toLowerCase(c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     @BuildStep
