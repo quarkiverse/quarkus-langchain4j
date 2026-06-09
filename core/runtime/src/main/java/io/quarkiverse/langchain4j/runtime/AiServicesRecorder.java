@@ -26,6 +26,7 @@ import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import dev.langchain4j.service.tool.search.ToolSearchStrategy;
+import io.quarkiverse.langchain4j.DefaultToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceEvents;
@@ -37,6 +38,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateIn
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
+import io.quarkiverse.langchain4j.runtime.tool.LoggingToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
@@ -227,6 +229,14 @@ public class AiServicesRecorder {
                                 .getInjectedReference(
                                         loadClass(info.toolExecutionErrorHandlerClassName()));
                         quarkusAiServices.toolExecutionErrorHandler(toolArgumentsErrorHandler);
+                    } else {
+                        InstanceHandle<ToolExecutionErrorHandler> instance = Arc.container()
+                                .instance(ToolExecutionErrorHandler.class, DefaultToolExecutionErrorHandler.Literal.INSTANCE);
+                        if (instance.isAvailable()) {
+                            quarkusAiServices.toolExecutionErrorHandler(instance.get());
+                        } else {
+                            quarkusAiServices.toolExecutionErrorHandler(new LoggingToolExecutionErrorHandler());
+                        }
                     }
 
                     // if no explicit tools are provided, check if we should use a tool provider
