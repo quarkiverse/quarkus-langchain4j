@@ -34,6 +34,12 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>org.a2aproject.sdk</groupId>
+      <artifactId>a2a-java-sdk-http-client</artifactId>
+      <version>1.0.0.CR1</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>

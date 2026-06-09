@@ -68,6 +68,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 
 public class AgenticProcessor {
 
@@ -816,6 +817,14 @@ public class AgenticProcessor {
             }
         }
         return false;
+    }
+
+    @BuildStep
+    void registerA2AHttpClientProviderForNativeImage(
+            BuildProducer<ServiceProviderBuildItem> serviceProvider) {
+        serviceProvider.produce(new ServiceProviderBuildItem(
+                "org.a2aproject.sdk.client.http.A2AHttpClientProvider",
+                "io.quarkiverse.langchain4j.agentic.runtime.a2a.VertxA2AHttpClientProvider"));
     }
 
     @BuildStep

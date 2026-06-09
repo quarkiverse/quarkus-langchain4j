@@ -42,15 +42,16 @@ public class A2AConfigExpressionTest {
         // trying to fetch the agent card from that URL. The A2A SDK does not
         // include the resolved URL in its error messages, so we verify that
         // the expression was resolved by confirming the error is a network-level
-        // failure (UnresolvedAddressException — the SDK tried to connect) rather
-        // than a URI syntax error (which would mean the raw ${...} was passed).
+        // failure rather than a URI syntax error (which would mean the raw
+        // ${...} was passed through unresolved).
         CreationException ex = assertThrows(CreationException.class,
                 () -> orchestrator.run("test"));
         // If the expression were NOT resolved, the error would be URISyntaxException
         // with "${remote.agent.url}" in the message. After resolution, the SDK
         // attempts an actual HTTP connection to "resolved-from-config:9999" and
-        // fails with UnresolvedAddressException (no such host).
-        assertThat(ex).hasStackTraceContaining("UnresolvedAddressException");
+        // fails with a DNS resolution error — UnresolvedAddressException (JDK client)
+        // or UnknownHostException (Vert.x/Netty client).
+        assertThat(ex).hasStackTraceContaining("Failed to obtain agent card");
         // Confirm the raw expression is NOT in the stack trace — proves resolution happened
         assertThat(ex.getMessage()).doesNotContain("${remote.agent.url}");
         Throwable cause = ex;
