@@ -621,6 +621,18 @@ public class AgenticProcessor {
     }
 
     @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerConfigAwareA2AService(
+            AgenticRecorder recorder,
+            List<AgentConfigKeyBuildItem> configKeys) {
+        Map<String, String> classNameToConfigKey = new HashMap<>();
+        for (AgentConfigKeyBuildItem item : configKeys) {
+            classNameToConfigKey.put(item.getAgentClassName(), item.getConfigKey());
+        }
+        recorder.registerConfigAwareA2AService(classNameToConfigKey);
+    }
+
+    @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
             CombinedIndexBuildItem indexBuildItem,

@@ -20,6 +20,7 @@ import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.agent.AgentInvocationHandler;
 import dev.langchain4j.agentic.declarative.DeclarativeUtil;
+import dev.langchain4j.agentic.internal.A2AService;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
@@ -28,6 +29,7 @@ import dev.langchain4j.internal.DefaultExecutorProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.agentic.runtime.config.ConfigAwareA2AService;
 import io.quarkiverse.langchain4j.agentic.runtime.config.ConfigAwareWorkflowAgentsBuilder;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
 import io.quarkiverse.langchain4j.agentic.runtime.observability.AgentHealthCheck;
@@ -90,6 +92,20 @@ public class AgenticRecorder {
                         dev.langchain4j.agentic.workflow.impl.WorkflowAgentsBuilderImpl.INSTANCE,
                         runtimeConfig.getValue(),
                         classNameToConfigKey));
+    }
+
+    @RuntimeInit
+    public void registerConfigAwareA2AService(Map<String, String> classNameToConfigKey) {
+        try {
+            A2AService current = A2AService.get();
+            ConfigAwareA2AService wrapper = new ConfigAwareA2AService(
+                    current, runtimeConfig.getValue(), classNameToConfigKey);
+            java.lang.reflect.Field field = A2AService.Provider.class.getDeclaredField("a2aService");
+            field.setAccessible(true);
+            field.set(null, wrapper);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            log.warn("Failed to register ConfigAwareA2AService — A2A URL config overrides will not work", e);
+        }
     }
 
     @RuntimeInit
