@@ -469,7 +469,6 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    @Produce(ServiceStartBuildItem.class)
     void extractAgentConfigKeys(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
             BuildProducer<AgentConfigKeyBuildItem> producer) {
         // configKey -> agentClassName for duplicate detection of explicit names
@@ -607,6 +606,18 @@ public class AgenticProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void registerDefaultExecutorProvider(AgenticRecorder recorder) {
         recorder.registerDefaultExecutorProvider();
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerConfigAwareWorkflowAgentsBuilder(
+            AgenticRecorder recorder,
+            List<AgentConfigKeyBuildItem> configKeys) {
+        Map<String, String> classNameToConfigKey = new HashMap<>();
+        for (AgentConfigKeyBuildItem item : configKeys) {
+            classNameToConfigKey.put(item.getAgentClassName(), item.getConfigKey());
+        }
+        recorder.registerConfigAwareWorkflowAgentsBuilder(classNameToConfigKey);
     }
 
     @BuildStep

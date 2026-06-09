@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -27,6 +28,7 @@ import dev.langchain4j.internal.DefaultExecutorProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.agentic.runtime.config.ConfigAwareWorkflowAgentsBuilder;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
 import io.quarkiverse.langchain4j.agentic.runtime.observability.AgentHealthCheck;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -79,6 +81,15 @@ public class AgenticRecorder {
         } catch (Exception e) {
             throw new RuntimeException("Failed to register ManagedExecutor as default executor provider", e);
         }
+    }
+
+    @RuntimeInit
+    public void registerConfigAwareWorkflowAgentsBuilder(Map<String, String> classNameToConfigKey) {
+        AgenticServices.setWorkflowAgentsBuilder(
+                new ConfigAwareWorkflowAgentsBuilder(
+                        dev.langchain4j.agentic.workflow.impl.WorkflowAgentsBuilderImpl.INSTANCE,
+                        runtimeConfig.getValue(),
+                        classNameToConfigKey));
     }
 
     @RuntimeInit
