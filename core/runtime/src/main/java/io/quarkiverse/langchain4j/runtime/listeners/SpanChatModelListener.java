@@ -79,8 +79,8 @@ public class SpanChatModelListener implements ChatModelListener {
             }
             TokenUsage tokenUsage = response.tokenUsage();
             if (tokenUsage != null) {
-                span.setAttribute("gen_ai.usage.completion_tokens", tokenUsage.outputTokenCount())
-                        .setAttribute("gen_ai.usage.prompt_tokens", tokenUsage.inputTokenCount());
+                span.setAttribute("gen_ai.usage.output_tokens", tokenUsage.outputTokenCount())
+                        .setAttribute("gen_ai.usage.input_tokens", tokenUsage.inputTokenCount());
 
                 Cost costEstimate = costEstimatorService.estimate(responseContext);
                 if (costEstimate != null) {
