@@ -24,10 +24,13 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
+import io.quarkiverse.langchain4j.agentic.runtime.observability.AgentHealthCheck;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
+import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.annotations.RuntimeInit;
 import io.quarkus.runtime.annotations.StaticInit;
@@ -40,6 +43,7 @@ public class AgenticRecorder {
     private static volatile Map<String, List<String>> agentsWithToolBox = Map.of();
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
+    private static volatile Set<String> rootAgentClassNames = Collections.emptySet();
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
 
     private static final Function<InternalAgent, Object> AGENT_INSTANCE_FACTORY = internalAgent -> {
@@ -56,6 +60,12 @@ public class AgenticRecorder {
             throw new RuntimeException("Unable to create agent class '" + info.implClassName() + "'", e);
         }
     };
+
+    final RuntimeValue<AgenticRuntimeConfig> runtimeConfig;
+
+    public AgenticRecorder(RuntimeValue<AgenticRuntimeConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
 
     @StaticInit
     public void setAgentsWithMcpToolBox(Set<String> agentsWithMcpToolBox) {
@@ -88,9 +98,27 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
-    public void enableDevModeMonitoring(Set<String> rootAgentClassNames) {
+    public void enableDevModeMonitoring(Set<String> rootAgentClassNames, ShutdownContext shutdownContext) {
         DevAgentMonitorHolder.reset();
         AgenticRecorder.devModeMonitoringEnabled = true;
+        AgenticRecorder.rootAgentClassNames = Collections.unmodifiableSet(rootAgentClassNames);
+        shutdownContext.addShutdownTask(DevAgentMonitorHolder::reset);
+    }
+
+    @RuntimeInit
+    public void setHealthCheckAgentClassNames(Set<String> agentClassNames) {
+        AgentHealthCheck.setRootAgentClassNames(agentClassNames);
+    }
+
+    @RuntimeInit
+    public void conditionallyEagerInitRootAgents(Set<String> rootAgentClassNames) {
+        if (runtimeConfig.getValue().devUi().eagerInit()) {
+            eagerlyInitRootAgents(rootAgentClassNames);
+        }
+    }
+
+    @RuntimeInit
+    public void eagerlyInitRootAgents(Set<String> rootAgentClassNames) {
         for (String className : rootAgentClassNames) {
             try {
                 // TCCL not reliable in dev-mode startup on virtual threads; use recorder classloader.

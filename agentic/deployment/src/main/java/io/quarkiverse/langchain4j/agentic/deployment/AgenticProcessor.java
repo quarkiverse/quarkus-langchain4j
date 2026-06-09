@@ -105,6 +105,9 @@ public class AgenticProcessor {
     // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
     );
 
+    private static final DotName CHAT_MEMORY_PROVIDER = DotName
+            .createSimple(dev.langchain4j.memory.chat.ChatMemoryProvider.class);
+
     private static final DotName INTERCEPTOR_BINDING = DotName.createSimple(jakarta.interceptor.InterceptorBinding.class);
 
     @BuildStep
