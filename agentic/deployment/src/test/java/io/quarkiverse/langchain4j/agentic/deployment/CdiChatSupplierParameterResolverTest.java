@@ -33,6 +33,7 @@ public class CdiChatSupplierParameterResolverTest extends OpenAiBaseTest {
                                     ModelSelector.class,
                                     EchoAgent.class, ModelSelectingAgent.class, SequenceWrapper.class,
                                     MixedParamsAgent.class, MixedParamsSequenceWrapper.class,
+                                    QualifiedModelAgent.class, QualifiedSequenceWrapper.class,
                                     Agents.FixedResponseChatModel.class, Agents.EchoResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.echo.api-key", "echo")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.fixed.api-key", "fixed")
@@ -122,11 +123,32 @@ public class CdiChatSupplierParameterResolverTest extends OpenAiBaseTest {
         String run(String text);
     }
 
+    public interface QualifiedModelAgent {
+
+        @UserMessage("Answer: {{text}}")
+        @Agent(description = "An agent using a qualified CDI model", outputKey = "answer")
+        String answer(String text);
+
+        @ChatModelSupplier
+        static ChatModel chatModel(@CdiBean @ModelName("fixed") ChatModel model) {
+            return model;
+        }
+    }
+
+    public interface QualifiedSequenceWrapper {
+
+        @SequenceAgent(outputKey = "answer", subAgents = { EchoAgent.class, QualifiedModelAgent.class })
+        String run(String text);
+    }
+
     @Inject
     SequenceWrapper sequenceWrapper;
 
     @Inject
     MixedParamsSequenceWrapper mixedParamsSequenceWrapper;
+
+    @Inject
+    QualifiedSequenceWrapper qualifiedSequenceWrapper;
 
     @Test
     void cdiResolvedBeanIsUsedInChatModelSupplier() {
@@ -143,6 +165,12 @@ public class CdiChatSupplierParameterResolverTest extends OpenAiBaseTest {
     @Test
     void mixedScopeAndCdiParamsWork() {
         String result = mixedParamsSequenceWrapper.run("cat");
+        assertThat(result).isEqualTo(SELECTED_RESPONSE);
+    }
+
+    @Test
+    void qualifierAnnotationSelectsCorrectBean() {
+        String result = qualifiedSequenceWrapper.run("dog");
         assertThat(result).isEqualTo(SELECTED_RESPONSE);
     }
 }

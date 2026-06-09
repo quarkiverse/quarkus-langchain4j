@@ -297,11 +297,6 @@ public class AgenticProcessor {
         }
     }
 
-    /**
-     * Rejects @Fallback(fallbackMethod="...") on agent interfaces at build time.
-     * Agent interfaces are dynamic proxies — fallback method name resolution always fails
-     * at runtime with FaultToleranceDefinitionException. Use FallbackHandler instead.
-     */
     private void validateHumanInTheLoop(ClassInfo iface) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.HUMAN_IN_THE_LOOP;
         List<AnnotationInstance> instances = iface
@@ -540,11 +535,6 @@ public class AgenticProcessor {
         recorder.registerChatSupplierParameterResolver();
     }
 
-    /**
-     * Marks @CdiBean-annotated parameters on supplier methods as unremovable, walking
-     * the full transitive interface hierarchy so that parameters declared on parent
-     * interfaces are not removed by Arc's unused-bean pruning.
-     */
     @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
