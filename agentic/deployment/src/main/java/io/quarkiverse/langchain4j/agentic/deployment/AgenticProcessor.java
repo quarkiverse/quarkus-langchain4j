@@ -5,6 +5,8 @@ import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.valid
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateRequiredParameterTypes;
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateStaticMethod;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,17 +33,20 @@ import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
-import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
+import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.observability.api.listener.AiServiceResponseReceivedListener;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusAgent;
+import io.quarkiverse.langchain4j.agentic.runtime.AgentClassCreateInfo;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
@@ -53,6 +58,8 @@ import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
@@ -64,11 +71,22 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.gizmo.CatchBlockCreator;
+import io.quarkus.gizmo.ClassCreator;
+import io.quarkus.gizmo.ClassOutput;
+import io.quarkus.gizmo.FieldDescriptor;
+import io.quarkus.gizmo.MethodCreator;
+import io.quarkus.gizmo.MethodDescriptor;
+import io.quarkus.gizmo.ResultHandle;
+import io.quarkus.gizmo.TryBlock;
 
 public class AgenticProcessor {
 
     private static final Logger log = Logger.getLogger(AgenticProcessor.class);
+
+    private static final MethodDescriptor HANDLER_INVOKE = MethodDescriptor.ofMethod(
+            InvocationHandler.class, "invoke", Object.class, Object.class, Method.class, Object[].class);
 
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
@@ -472,9 +490,19 @@ public class AgenticProcessor {
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
 
             boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings);
+            String ifaceName = detectedAiAgentBuildItem.getIface().name().toString();
+            String implClassName = ifaceName + "$$QuarkusAgentImpl";
 
-            SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
-                    .configure(detectedAiAgentBuildItem.getIface().name())
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator;
+            if (hasInterceptorBindings) {
+                beanConfigurator = SyntheticBeanBuildItem
+                        .configure(DotName.createSimple(implClassName))
+                        .addType(ClassType.create(detectedAiAgentBuildItem.getIface().name()));
+            } else {
+                beanConfigurator = SyntheticBeanBuildItem
+                        .configure(detectedAiAgentBuildItem.getIface().name());
+            }
+            beanConfigurator
                     .forceApplicationClass()
                     .unremovable()
                     .createWith(recorder
@@ -503,6 +531,22 @@ public class AgenticProcessor {
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
     }
 
+    private static final DotName INTERCEPTOR_BINDING = DotName.createSimple("jakarta.interceptor.InterceptorBinding");
+
+    private static boolean isInterceptorBindingAnnotation(AnnotationInstance ann, IndexView index) {
+        ClassInfo annClass = index.getClassByName(ann.name());
+        if (annClass != null) {
+            return annClass.hasAnnotation(INTERCEPTOR_BINDING);
+        }
+        try {
+            Class<?> annClazz = Class.forName(ann.name().toString(), false,
+                    Thread.currentThread().getContextClassLoader());
+            return annClazz.isAnnotationPresent(jakarta.interceptor.InterceptorBinding.class);
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent, Set<DotName> interceptorBindings) {
         for (AnnotationInstance ann : agent.getIface().declaredAnnotations()) {
             if (interceptorBindings.contains(ann.name())) {
@@ -520,16 +564,268 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    void nativeSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
-            BuildProducer<NativeImageProxyDefinitionBuildItem> proxyProducer) {
+    @Record(ExecutionTime.STATIC_INIT)
+    void generateAgentImplementations(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
+            CombinedIndexBuildItem indexBuildItem,
+            AgenticRecorder recorder,
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
 
-        detectedAiAgentBuildItems.stream().map(bi -> bi.getIface().name().toString())
-                .forEach(c -> {
-                    // we need to declare the list of interfaces in the exact order that `dev.langchain4j.agentic.agent.AgentBuilder#build` declares them in the `Proxy#newProxyInstance` call
-                    proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(List.of(c, InternalAgent.class.getName(),
-                            AgenticScopeOwner.class.getName(), ChatMemoryAccess.class.getName(),
-                            ChatMessagesAccess.class.getName(), AiServiceResponseReceivedListener.class.getName())));
-                });
+        ClassOutput classOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
+        IndexView index = indexBuildItem.getIndex();
+        Map<String, AgentClassCreateInfo> metadata = new HashMap<>();
+
+        for (DetectedAiAgentBuildItem bi : detectedAiAgentBuildItems) {
+            String ifaceName = bi.getIface().name().toString();
+            String implClassName = ifaceName + "$$QuarkusAgentImpl";
+            boolean isLeaf = bi.getAgenticMethods().stream()
+                    .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.AGENT));
+
+            generateAgentClass(classOutput, bi.getIface(), implClassName, isLeaf, index);
+
+            metadata.put(ifaceName, new AgentClassCreateInfo(implClassName));
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(implClassName).build());
+        }
+
+        recorder.setAgentClassMetadata(metadata);
+    }
+
+    /**
+     * Generates a Quarkus agent implementation class for the given agent interface, with a cade like the following:
+     *
+     * <pre>
+     * {@code
+     * public class CarConditionFeedbackAgent$$QuarkusAgentImpl
+     *         extends AbstractQuarkusAgent
+     *         implements CarConditionFeedbackAgent,
+     *         ChatMemoryAccess,
+     *         ChatMessagesAccess,
+     *         AiServiceResponseReceivedListener {
+     *     private static Method METHOD_agent_analyzeForCondition_1;
+     *
+     *     public CarConditionFeedbackAgent$$QuarkusAgentImpl() {
+     *     }
+     *
+     *     public CarConditionFeedbackAgent$$QuarkusAgentImpl(InternalAgent var1) {
+     *         super(var1);
+     *     }
+     *
+     *     static {
+     *         try {
+     *             Class[] var0 = new Class[] { CarInfo.class, Integer.class, FeedbackAnalysisResults.class, String.class };
+     *             METHOD_agent_analyzeForCondition_1 = CarConditionFeedbackAgent.class.getMethod("analyzeForCondition", var0);
+     *         } catch (Exception var2) {
+     *             throw (Throwable) (new RuntimeException("Failed to initialize agent method references", var2));
+     *         }
+     *     }
+     *
+     *     public CarConditions analyzeForCondition(CarInfo var1, Integer var2, FeedbackAnalysisResults var3, String var4) {
+     *         InvocationHandler var10 = (InvocationHandler) this.agent;
+     *         Method var11 = METHOD_agent_analyzeForCondition_1;
+     *         Object[] var5 = new Object[4];
+     *         CarInfo var6 = var1;
+     *         var5[0] = var6;
+     *         Integer var7 = var2;
+     *         var5[1] = var7;
+     *         FeedbackAnalysisResults var8 = var3;
+     *         var5[2] = var8;
+     *         String var9 = var4;
+     *         var5[3] = var9;
+     *         return (CarConditions) var10.invoke(this, var11, var5);
+     *     }
+     * }
+     * }
+     * </pre>
+     */
+    private void generateAgentClass(ClassOutput classOutput, ClassInfo agentIface, String implClassName,
+            boolean isLeaf, IndexView index) {
+        String ifaceName = agentIface.name().toString();
+
+        List<String> interfaces = new ArrayList<>();
+        interfaces.add(ifaceName);
+        if (isLeaf) {
+            interfaces.add(ChatMemoryAccess.class.getName());
+            interfaces.add(ChatMessagesAccess.class.getName());
+            interfaces.add(AiServiceResponseReceivedListener.class.getName());
+        } else {
+            interfaces.add(AgenticScopeAccess.class.getName());
+        }
+
+        try (ClassCreator cc = ClassCreator.builder()
+                .classOutput(classOutput)
+                .className(implClassName)
+                .superClass(AbstractQuarkusAgent.class.getName())
+                .interfaces(interfaces.toArray(new String[0]))
+                .build()) {
+
+            try (MethodCreator ctor = cc.getMethodCreator(MethodDescriptor.INIT, "V")) {
+                ctor.setModifiers(Modifier.PUBLIC);
+                ctor.invokeSpecialMethod(MethodDescriptor.ofConstructor(AbstractQuarkusAgent.class), ctor.getThis());
+                ctor.returnVoid();
+            }
+
+            try (MethodCreator ctor = cc.getMethodCreator(MethodDescriptor.INIT, "V",
+                    InternalAgent.class.getName())) {
+                ctor.setModifiers(Modifier.PUBLIC);
+                ctor.invokeSpecialMethod(
+                        MethodDescriptor.ofConstructor(AbstractQuarkusAgent.class, InternalAgent.class),
+                        ctor.getThis(), ctor.getMethodParam(0));
+                ctor.returnVoid();
+            }
+
+            FieldDescriptor handlerField = FieldDescriptor.of(implClassName, "agent",
+                    InternalAgent.class.getName());
+
+            List<MethodToDelegate> methodsToDelegate = collectMethodsToDelegate(agentIface, index);
+
+            Map<String, FieldDescriptor> methodFields = new HashMap<>();
+            for (MethodToDelegate m : methodsToDelegate) {
+                FieldDescriptor fd = cc.getFieldCreator(m.fieldName, Method.class)
+                        .setModifiers(Modifier.PRIVATE | Modifier.STATIC)
+                        .getFieldDescriptor();
+                methodFields.put(m.fieldName, fd);
+            }
+
+            generateStaticInitializer(cc, methodsToDelegate, methodFields);
+
+            for (MethodToDelegate m : methodsToDelegate) {
+                generateHandlerDelegation(cc, handlerField, methodFields.get(m.fieldName), m);
+            }
+        }
+    }
+
+    private record MethodToDelegate(
+            String fieldName,
+            String declaringClassName,
+            String methodName,
+            String returnTypeName,
+            String returnWrapperTypeName,
+            String[] paramTypeNames,
+            List<AnnotationInstance> annotations) {
+    }
+
+    private static List<MethodToDelegate> collectMethodsToDelegate(ClassInfo agentIface, IndexView index) {
+        List<MethodToDelegate> methods = new ArrayList<>();
+        collectInterfaceMethods(agentIface, methods, index, new HashSet<>());
+        return methods;
+    }
+
+    private static void collectInterfaceMethods(ClassInfo iface, List<MethodToDelegate> methods,
+            IndexView index, Set<String> seen) {
+        String declaringClassName = iface.name().toString();
+        for (MethodInfo mi : iface.methods()) {
+            if (Modifier.isStatic(mi.flags()) || !Modifier.isAbstract(mi.flags())) {
+                continue;
+            }
+            String methodSig = mi.name() + mi.descriptor();
+            if (!seen.add(methodSig)) {
+                continue;
+            }
+            String fieldName = "METHOD_agent_" + mi.name() + "_" + seen.size();
+            String returnTypeName = mi.returnType().name().toString();
+            String returnWrapperTypeName = null;
+            if (mi.returnType().kind() == Type.Kind.VOID) {
+                returnTypeName = void.class.getName();
+            } else if (mi.returnType().kind() == Type.Kind.PRIMITIVE) {
+                returnTypeName = mi.returnType().asPrimitiveType().primitive().name().toLowerCase();
+                returnWrapperTypeName = PrimitiveType.box(mi.returnType().asPrimitiveType()).name().toString();
+            }
+
+            String[] paramTypeNames = new String[mi.parametersCount()];
+            for (int i = 0; i < mi.parametersCount(); i++) {
+                Type pt = mi.parameterType(i);
+                if (pt.kind() == Type.Kind.PRIMITIVE) {
+                    paramTypeNames[i] = pt.asPrimitiveType().primitive().name().toLowerCase();
+                } else {
+                    paramTypeNames[i] = pt.name().toString();
+                }
+            }
+
+            List<AnnotationInstance> interceptorBindingAnnotations = mi.declaredAnnotations().stream()
+                    .filter(ann -> isInterceptorBindingAnnotation(ann, index))
+                    .toList();
+            methods.add(new MethodToDelegate(fieldName, declaringClassName, mi.name(), returnTypeName,
+                    returnWrapperTypeName, paramTypeNames, interceptorBindingAnnotations));
+        }
+
+        for (DotName superIface : iface.interfaceNames()) {
+            ClassInfo superIfaceInfo = index.getClassByName(superIface);
+            if (superIfaceInfo != null) {
+                collectInterfaceMethods(superIfaceInfo, methods, index, seen);
+            }
+        }
+    }
+
+    private static void generateStaticInitializer(ClassCreator cc, List<MethodToDelegate> methods,
+            Map<String, FieldDescriptor> methodFields) {
+        if (methods.isEmpty()) {
+            return;
+        }
+
+        try (MethodCreator clinit = cc.getMethodCreator(MethodDescriptor.ofMethod(
+                cc.getClassName(), "<clinit>", void.class))) {
+            clinit.setModifiers(Modifier.STATIC);
+
+            TryBlock tryBlock = clinit.tryBlock();
+
+            for (MethodToDelegate m : methods) {
+                FieldDescriptor fd = methodFields.get(m.fieldName);
+                ResultHandle declaringClass = tryBlock.loadClass(m.declaringClassName);
+                ResultHandle paramTypesArray = tryBlock.newArray(Class.class, m.paramTypeNames.length);
+                for (int i = 0; i < m.paramTypeNames.length; i++) {
+                    tryBlock.writeArrayValue(paramTypesArray, i, tryBlock.loadClass(m.paramTypeNames[i]));
+                }
+                ResultHandle method = tryBlock.invokeVirtualMethod(
+                        MethodDescriptor.ofMethod(Class.class, "getMethod", Method.class, String.class, Class[].class),
+                        declaringClass, tryBlock.load(m.methodName), paramTypesArray);
+                tryBlock.writeStaticField(fd, method);
+            }
+
+            CatchBlockCreator catchBlock = tryBlock.addCatch(Exception.class);
+            ResultHandle rte = catchBlock.newInstance(
+                    MethodDescriptor.ofConstructor(RuntimeException.class, String.class, Throwable.class),
+                    catchBlock.load("Failed to initialize agent method references"), catchBlock.getCaughtException());
+            catchBlock.throwException(rte);
+
+            clinit.returnVoid();
+        }
+    }
+
+    private static void generateHandlerDelegation(ClassCreator cc, FieldDescriptor handlerField,
+            FieldDescriptor methodField, MethodToDelegate m) {
+        String[] paramTypes = m.paramTypeNames;
+        try (MethodCreator mc = cc.getMethodCreator(m.methodName, m.returnTypeName, paramTypes)) {
+            mc.setModifiers(Modifier.PUBLIC);
+
+            for (AnnotationInstance ann : m.annotations) {
+                mc.addAnnotation(ann);
+            }
+
+            ResultHandle handler = mc.readInstanceField(handlerField, mc.getThis());
+            ResultHandle invocationHandler = mc.checkCast(handler, InvocationHandler.class);
+            ResultHandle methodHandle = mc.readStaticField(methodField);
+
+            ResultHandle argsArray;
+            if (paramTypes.length == 0) {
+                argsArray = mc.loadNull();
+            } else {
+                argsArray = mc.newArray(Object.class, paramTypes.length);
+                for (int i = 0; i < paramTypes.length; i++) {
+                    mc.writeArrayValue(argsArray, i, mc.smartCast(mc.getMethodParam(i), Object.class));
+                }
+            }
+
+            ResultHandle result = mc.invokeInterfaceMethod(HANDLER_INVOKE,
+                    invocationHandler, mc.getThis(), methodHandle, argsArray);
+
+            if ("void".equals(m.returnTypeName)) {
+                mc.returnVoid();
+            } else if (m.returnWrapperTypeName != null) {
+                mc.returnValue(mc.smartCast(mc.checkCast(result, m.returnWrapperTypeName), m.returnTypeName));
+            } else {
+                mc.returnValue(mc.checkCast(result, m.returnTypeName));
+            }
+        }
     }
 
     private static String extractModelName(List<MethodInfo> agenticMethods) {

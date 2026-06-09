@@ -113,7 +113,6 @@ public class AgenticDevUIProcessor {
                 .collect(Collectors.toSet());
         if (!monitoredRootAgentClassNames.isEmpty()) {
             recorder.enableDevModeMonitoring(monitoredRootAgentClassNames);
-            recorder.eagerlyInitRootAgents(monitoredRootAgentClassNames);
         }
     }
 

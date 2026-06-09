@@ -1950,7 +1950,7 @@ public class AiServicesProcessor {
         ResultHandle instanceHandle = mc.invokeInterfaceMethod(
                 MethodDescriptor.ofMethod(ArcContainer.class, "instance", InstanceHandle.class, Class.class,
                         Annotation[].class),
-                containerHandle, mc.loadClassFromTCCL(className),
+                containerHandle, mc.loadClass(className),
                 mc.newArray(Annotation.class, 0));
         return mc.invokeInterfaceMethod(MethodDescriptor.ofMethod(InstanceHandle.class, "get", Object.class), instanceHandle);
     }
