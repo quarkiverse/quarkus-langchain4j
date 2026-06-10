@@ -21,6 +21,7 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
 import io.smallrye.config.Priorities;
@@ -33,8 +34,18 @@ public class OpenAiCommonProcessor {
     }
 
     @BuildStep
-    void nativeImageSupport(BuildProducer<NativeImageResourceBuildItem> resourcesProducer) {
+    void nativeImageSupport(BuildProducer<NativeImageResourceBuildItem> resourcesProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         registerJtokkitResources(resourcesProducer);
+
+        // Workaround for https://github.com/langchain4j/langchain4j/pull/5409
+        // ImageUsage and its inner classes are missing from langchain4j-open-ai's reflect-config.json
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(
+                "dev.langchain4j.model.openai.internal.image.ImageUsage",
+                "dev.langchain4j.model.openai.internal.image.ImageUsage$Builder",
+                "dev.langchain4j.model.openai.internal.image.ImageUsage$TokensDetails",
+                "dev.langchain4j.model.openai.internal.image.ImageUsage$TokensDetails$TokensDetailsBuilder")
+                .methods().fields().constructors().build());
     }
 
     private void registerJtokkitResources(BuildProducer<NativeImageResourceBuildItem> resourcesProducer) {
