@@ -18,6 +18,7 @@ import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVar
 import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
 import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMulti;
 import static io.quarkus.arc.processor.DotNames.NAMED;
+import static io.quarkus.arc.processor.DotNames.SINGLETON;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -1516,6 +1517,23 @@ public class AiServicesProcessor {
                 }
             }
         }
+    }
+
+    @BuildStep
+    public void defaultToolExecutionErrorHandler(CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        List<AnnotationInstance> instances = new ArrayList<>();
+        instances.addAll(index.getAnnotations(LangChain4jDotNames.DEFAULT_TOOL_EXECUTION_ERROR_HANDLER));
+        if (instances.isEmpty()) {
+            return;
+        } else if (instances.size() > 1) {
+            throw new IllegalStateException(
+                    "Multiple @DefaultToolExecutionErrorHandler annotations found.  Only one is allowed.");
+        }
+        String className = instances.get(0).target().asClass().name().toString();
+        additionalBeanProducer.produce(
+                AdditionalBeanBuildItem.builder().addBeanClass(className).setDefaultScope(SINGLETON).setUnremovable().build());
     }
 
     @BuildStep

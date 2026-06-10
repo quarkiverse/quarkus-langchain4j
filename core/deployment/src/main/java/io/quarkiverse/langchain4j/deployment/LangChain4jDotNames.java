@@ -40,6 +40,7 @@ import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.CreatedAware;
+import io.quarkiverse.langchain4j.DefaultToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.HandleToolArgumentError;
 import io.quarkiverse.langchain4j.HandleToolExecutionError;
 import io.quarkiverse.langchain4j.ImageUrl;
@@ -90,6 +91,7 @@ public class LangChain4jDotNames {
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     static final DotName STRUCTURED_PROMPT = DotName.createSimple(StructuredPrompt.class);
     static final DotName STRUCTURED_PROMPT_PROCESSOR = DotName.createSimple(StructuredPromptProcessor.class);
+    static final DotName DEFAULT_TOOL_EXECUTION_ERROR_HANDLER = DotName.createSimple(DefaultToolExecutionErrorHandler.class);
     public static final DotName V = DotName.createSimple(dev.langchain4j.service.V.class);
 
     public static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
