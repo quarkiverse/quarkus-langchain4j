@@ -129,6 +129,29 @@ The system message can be set on the AI Service interface itself or on individua
 - `delimiter`: line delimiter for multi-line templates (`"\n"` by default).
 - `fromResource`: load message from a resource file.
 
+When the system message needs to be computed at runtime, implement a provider and reference it from `@RegisterAiService(systemMessageProviderSupplier = ...)`.
+Implement `SystemMessageProvider` when the message only depends on the memory ID, or `SystemMessageProviderWithContext` when it needs to inspect the model in use (provider and model name).
+
+To customize the system message for a specific model while keeping a default for all others, return the model-specific message in the matching branch and the default at the end (the fallback):
+
+[source,java]
+----
+public class ModelAwareSystemMessageProvider implements SystemMessageProviderWithContext {
+
+    @Override
+    public Optional<String> getSystemMessage(InvocationContext context) {
+        if (context.modelProvider() == ModelProvider.OPEN_AI) {
+            return Optional.of("You are a helpful assistant. Be concise.");
+        }
+        return Optional.of("You are a helpful assistant."); // fallback for every other model
+    }
+}
+----
+
+`InvocationContext` also exposes `chatMemoryId()`, so `SystemMessageProviderWithContext` can combine the model with the memory ID; `SystemMessageProvider` is the simpler option when only the memory ID matters.
+
+An explicit `@SystemMessage` on the method takes precedence over the provider.
+
 === @UserMessage
 
 The `@UserMessage` annotation defines user instructions or prompts sent to the LLM.

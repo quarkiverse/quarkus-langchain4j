@@ -28,8 +28,10 @@ import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+import io.quarkiverse.langchain4j.runtime.aiservice.BaseSystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
 
 /**
  * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by
@@ -218,9 +220,9 @@ public @interface RegisterAiService {
     boolean allowContinuousForcedToolCalling() default false;
 
     /**
-     * Configures a {@link SystemMessageProvider} to dynamically supply a system message based on the memory ID.
-     * This is useful when the system message needs to be determined at runtime, for example based on user context
-     * or other dynamic factors.
+     * Configures a system message provider to dynamically supply a system message at runtime.
+     * Provide either a {@link SystemMessageProvider} (based on the memory ID) or a
+     * {@link SystemMessageProviderWithContext} (based on the invocation context, so the system message can vary by model).
      * <p>
      * If not configured (left at the default), no dynamic system message provider is used. In that case,
      * the system message can still be provided via the {@link dev.langchain4j.service.SystemMessage} annotation
@@ -229,7 +231,7 @@ public @interface RegisterAiService {
      * @see <a href="https://docs.langchain4j.dev/tutorials/ai-services#system-message-provider">LangChain4j System Message
      *      Provider</a>
      */
-    Class<? extends SystemMessageProvider> systemMessageProviderSupplier() default NoSystemMessageProviderSupplier.class;
+    Class<? extends BaseSystemMessageProvider> systemMessageProviderSupplier() default NoSystemMessageProviderSupplier.class;
 
     /**
      * Indicates whether exceptions thrown during

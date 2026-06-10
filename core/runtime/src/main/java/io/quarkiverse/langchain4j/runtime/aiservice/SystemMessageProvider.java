@@ -7,12 +7,14 @@ import java.util.Optional;
  * This is useful when the system message needs to be determined at runtime, for example based on user context
  * or other dynamic factors.
  * <p>
+ * If the system message needs to vary by the model in use, implement {@link SystemMessageProviderWithContext} instead.
+ * <p>
  * This corresponds to LangChain4j's {@code systemMessageProvider} functionality.
  *
  * @see <a href="https://docs.langchain4j.dev/tutorials/ai-services#system-message-provider">LangChain4j System Message
  *      Provider</a>
  */
-public interface SystemMessageProvider {
+public interface SystemMessageProvider extends BaseSystemMessageProvider {
 
     /**
      * Provides a system message for the given memory ID.
