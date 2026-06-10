@@ -36,10 +36,12 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     // needed by Arc
     public QuarkusAiServiceContext() {
         super(null);
+        this.toolService = new QuarkusToolService();
     }
 
     public QuarkusAiServiceContext(Class<?> aiServiceClass) {
         super(aiServiceClass);
+        this.toolService = new QuarkusToolService();
     }
 
     /**
