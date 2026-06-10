@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.mistralai;
 
+import static dev.langchain4j.internal.Utils.isNotNullOrBlank;
 import static dev.langchain4j.model.mistralai.internal.mapper.MistralAiMapper.finishReasonFrom;
 import static dev.langchain4j.model.mistralai.internal.mapper.MistralAiMapper.tokenUsageFrom;
 import static java.util.stream.Collectors.joining;
@@ -18,7 +19,9 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.internal.ToolCallBuilder;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -33,6 +36,7 @@ import dev.langchain4j.model.mistralai.internal.api.MistralAiModelResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiTextContent;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiToolCall;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiUsage;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClient;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClientBuilderFactory;
@@ -81,6 +85,9 @@ public class QuarkusMistralAiClient extends MistralAiClient {
         AtomicReference<StringBuffer> contentBuilder = new AtomicReference<>(new StringBuffer());
         AtomicReference<TokenUsage> tokenUsage = new AtomicReference<>();
         AtomicReference<FinishReason> finishReason = new AtomicReference<>();
+
+        ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
+
         restApi.streamingChatCompletion(request, apiKey).subscribe().with(new Consumer<>() {
             @Override
             public void accept(MistralAiChatCompletionResponse response) {
@@ -102,6 +109,21 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                     handler.onPartialResponse(chunk);
                 }
 
+                List<MistralAiToolCall> toolCalls = choice.getDelta().getToolCalls();
+                if (toolCalls != null) {
+                    for (MistralAiToolCall toolCall : toolCalls) {
+                        if (isNotNullOrBlank(toolCall.getId())) {
+                            if (toolCallBuilder.name() != null) {
+                                toolCallBuilder.buildAndReset();
+                            }
+                            toolCallBuilder.updateIndex(toolCallBuilder.index() + 1);
+                            toolCallBuilder.updateId(toolCall.getId());
+                            toolCallBuilder.updateName(toolCall.getFunction().getName());
+                        }
+                        toolCallBuilder.appendArguments(toolCall.getFunction().getArguments());
+                    }
+                }
+
                 MistralAiUsage usageInfo = response.getUsage();
                 if (usageInfo != null) {
                     tokenUsage.set(tokenUsageFrom(usageInfo));
@@ -120,8 +142,20 @@ public class QuarkusMistralAiClient extends MistralAiClient {
         }, new Runnable() {
             @Override
             public void run() {
+                if (toolCallBuilder.name() != null) {
+                    toolCallBuilder.buildAndReset();
+                }
+                List<ToolExecutionRequest> toolExecutionRequests = List.of();
+                if (toolCallBuilder.hasRequests()) {
+                    toolExecutionRequests = toolCallBuilder.allRequests();
+                }
+
+                AiMessage aiMessage = AiMessage.builder()
+                        .text(contentBuilder.get().toString())
+                        .toolExecutionRequests(toolExecutionRequests)
+                        .build();
                 ChatResponse response = ChatResponse.builder()
-                        .aiMessage(AiMessage.from(contentBuilder.get().toString()))
+                        .aiMessage(aiMessage)
                         .tokenUsage(tokenUsage.get())
                         .finishReason(finishReason.get())
                         .build();
@@ -190,7 +224,8 @@ public class QuarkusMistralAiClient extends MistralAiClient {
     }
 
     /**
-     * Introduce a custom logger as the stock one logs at the DEBUG level by default...
+     * Introduce a custom logger as the stock one logs at the DEBUG level by
+     * default...
      */
     static class MistralAiClientLogger implements ClientLogger {
         private static final Logger log = Logger.getLogger(MistralAiClientLogger.class);
