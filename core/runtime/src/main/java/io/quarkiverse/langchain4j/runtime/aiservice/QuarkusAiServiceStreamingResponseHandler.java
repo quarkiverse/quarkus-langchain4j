@@ -363,24 +363,37 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    /**
-     * Executes a tool and handles any exceptions using the configured error handlers.
-     * <p>
-     * If a {@link ToolArgumentsException} occurs and {@code toolArgumentsErrorHandler} is configured,
-     * the handler is invoked and an error result is returned to the LLM instead of propagating the exception.
-     * <p>
-     * For other exceptions, if {@code toolExecutionErrorHandler} is configured (and the exception does not
-     * implement {@link PreventsErrorHandlerExecution}), the handler is invoked and an error result is returned.
-     * <p>
-     * This allows the LLM to recover from tool failures by receiving error feedback and potentially retrying.
-     *
-     * @param toolExecutionRequest the tool execution request from the LLM
-     * @param toolExecutor the executor for the tool
-     * @param invocationContext the current invocation context
-     * @param toolArgumentsErrorHandler optional handler for argument parsing errors
-     * @param toolExecutionErrorHandler optional handler for execution errors
-     * @return the tool execution result, which may indicate an error if handled by an error handler
-     */
+    private void fireBeforeToolExecution(ToolExecutionRequest toolExecutionRequest,
+            InvocationContext invocationContext,
+            Consumer<BeforeToolExecution> externalBeforeHandler) {
+        BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
+                .request(toolExecutionRequest)
+                .invocationContext(invocationContext)
+                .build();
+        if (context.toolService instanceof QuarkusToolService qts && qts.getBeforeToolExecution() != null) {
+            qts.getBeforeToolExecution().accept(beforeToolExecution);
+        }
+        if (externalBeforeHandler != null) {
+            externalBeforeHandler.accept(beforeToolExecution);
+        }
+    }
+
+    private void fireAfterToolExecution(ToolExecutionRequest toolExecutionRequest,
+            ToolExecutionResult toolExecutionResult, InvocationContext invocationContext,
+            Consumer<ToolExecution> externalAfterHandler) {
+        ToolExecution toolExecution = ToolExecution.builder()
+                .request(toolExecutionRequest)
+                .result(toolExecutionResult)
+                .invocationContext(invocationContext)
+                .build();
+        if (context.toolService instanceof QuarkusToolService qts && qts.getAfterToolExecution() != null) {
+            qts.getAfterToolExecution().accept(toolExecution);
+        }
+        if (externalAfterHandler != null) {
+            externalAfterHandler.accept(toolExecution);
+        }
+    }
+
     private ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
             InvocationContext invocationContext,
             ToolArgumentsErrorHandler toolArgumentsErrorHandler,
@@ -406,7 +419,6 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             }
         } catch (Exception e) {
             if (e instanceof PreventsErrorHandlerExecution) {
-                // preserve semantics for existing code
                 throw e;
             }
             if (toolExecutionErrorHandler != null) {
@@ -481,26 +493,24 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
                             continue;
                         }
-                        // Call before tool execution handler
-                        if (beforeToolExecutionHandler != null) {
-                            BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
-                                    .request(toolExecutionRequest)
-                                    .invocationContext(invocationContext)
-                                    .build();
-                            beforeToolExecutionHandler.accept(beforeToolExecution);
-                        }
+                        // Fire before tool execution handlers (stored AgentListener callbacks + external)
+                        fireBeforeToolExecution(toolExecutionRequest, invocationContext,
+                                beforeToolExecutionHandler);
 
                         String toolName = toolExecutionRequest.name();
                         ToolExecutor toolExecutor = toolExecutors.get(toolName);
-                        // Execute the tool with argumentsErrorHandler and executionErrorHandler.
-                        // If execution fails, these handlers convert exceptions into error results
-                        // that are sent back to the LLM, allowing it to recover from tool failures.
-                        ToolExecutionResult toolExecutionResult = executeTool(
-                                toolExecutionRequest,
-                                toolExecutor,
-                                invocationContext,
-                                context.toolService.argumentsErrorHandler(),
-                                context.toolService.executionErrorHandler());
+                        ToolExecutionResult toolExecutionResult = toolExecutor == null
+                                ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
+                                : executeTool(
+                                        toolExecutionRequest,
+                                        toolExecutor,
+                                        invocationContext,
+                                        context.toolService.argumentsErrorHandler(),
+                                        context.toolService.executionErrorHandler());
+
+                        // Fire after tool execution handlers (stored AgentListener callbacks + external)
+                        fireAfterToolExecution(toolExecutionRequest, toolExecutionResult, invocationContext,
+                                toolExecuteHandler);
 
                         fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
                         rawToolResults.add(toolExecutionResult);
@@ -508,14 +518,6 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil
                                 .from(toolExecutionRequest, toolExecutionResult);
 
-                        ToolExecution toolExecution = ToolExecution.builder()
-                                .request(toolExecutionRequest)
-                                .result(toolExecutionResult)
-                                .invocationContext(invocationContext)
-                                .build();
-                        if (toolExecuteHandler != null) {
-                            toolExecuteHandler.accept(toolExecution);
-                        }
                         QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
                     }
 

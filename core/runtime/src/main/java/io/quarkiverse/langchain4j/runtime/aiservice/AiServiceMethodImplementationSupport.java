@@ -94,6 +94,7 @@ import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
+import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
 import dev.langchain4j.service.tool.ToolErrorContext;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
@@ -482,10 +483,14 @@ public class AiServiceMethodImplementationSupport {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
 
+                fireBeforeToolExecution(context, toolExecutionRequest, invocationContext);
+
                 ToolExecutionResult toolExecutionResult = toolExecutor == null
                         ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
                         : executeTool(toolExecutionRequest, toolExecutor, invocationContext,
                                 context.toolService.argumentsErrorHandler(), context.toolService.executionErrorHandler());
+
+                fireAfterToolExecution(context, toolExecutionRequest, toolExecutionResult, invocationContext);
 
                 // New firing
                 context.eventListenerRegistrar.fireEvent(
@@ -769,6 +774,28 @@ public class AiServiceMethodImplementationSupport {
         return Optional.empty();
     }
 
+    private static void fireBeforeToolExecution(AiServiceContext context,
+            ToolExecutionRequest toolExecutionRequest, InvocationContext invocationContext) {
+        if (context.toolService instanceof QuarkusToolService qts && qts.getBeforeToolExecution() != null) {
+            qts.getBeforeToolExecution().accept(BeforeToolExecution.builder()
+                    .request(toolExecutionRequest)
+                    .invocationContext(invocationContext)
+                    .build());
+        }
+    }
+
+    private static void fireAfterToolExecution(AiServiceContext context,
+            ToolExecutionRequest toolExecutionRequest, ToolExecutionResult toolExecutionResult,
+            InvocationContext invocationContext) {
+        if (context.toolService instanceof QuarkusToolService qts && qts.getAfterToolExecution() != null) {
+            qts.getAfterToolExecution().accept(ToolExecution.builder()
+                    .request(toolExecutionRequest)
+                    .result(toolExecutionResult)
+                    .invocationContext(invocationContext)
+                    .build());
+        }
+    }
+
     private static ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
             InvocationContext invocationContext,
             ToolArgumentsErrorHandler toolArgumentsErrorHandler,
@@ -794,7 +821,6 @@ public class AiServiceMethodImplementationSupport {
             }
         } catch (Exception e) {
             if (e instanceof PreventsErrorHandlerExecution) {
-                // preserve semantics for existing code
                 throw e;
             }
             if (toolExecutionErrorHandler != null) {
