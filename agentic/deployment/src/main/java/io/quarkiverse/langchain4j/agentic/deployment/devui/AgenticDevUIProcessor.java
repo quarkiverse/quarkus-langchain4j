@@ -103,6 +103,15 @@ public class AgenticDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDevUIAllowedAgentClassNames(List<DetectedAiAgentBuildItem> agents, AgenticRecorder recorder) {
+        Set<String> classNames = filterUserAgents(agents).stream()
+                .map(a -> a.getIface().name().toString())
+                .collect(Collectors.toSet());
+        recorder.setDevUIAllowedAgentClassNames(classNames);
+    }
+
+    @BuildStep(onlyIf = IsDevelopment.class)
+    @Record(ExecutionTime.RUNTIME_INIT)
     @Consume(SyntheticBeansRuntimeInitBuildItem.class)
     void enableDevModeMonitoring(List<DetectedAiAgentBuildItem> agents,
             AgenticRecorder recorder) {

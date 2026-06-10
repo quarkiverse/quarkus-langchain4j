@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-agentic-parent</artifactId>
+    <version>999-SNAPSHOT</version>
+  </parent>
+  <artifactId>quarkus-langchain4j-agentic-dev</artifactId>
+  <name>Quarkus LangChain4j - Agentic - Dev</name>
+
+  <description>
+    Dev-mode-only classes for the agentic module. This module is included in the deployment
+    classpath (which is on the runtime classpath in dev mode) but is excluded from production
+    binaries. JSON-RPC services for Dev UI live here.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.quarkiverse.langchain4j</groupId>
+      <artifactId>quarkus-langchain4j-agentic</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,11 +1,15 @@
 package io.quarkiverse.langchain4j.agentic.runtime.devui;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import dev.langchain4j.agentic.observability.AgentMonitor;
 
 public class DevAgentMonitorHolder {
+
+    public static volatile Set<String> allowedAgentClassNames = Collections.emptySet();
 
     private static final List<AgentMonitor> MONITORS = new CopyOnWriteArrayList<>();
     private static final List<Object> ROOT_AGENTS = new CopyOnWriteArrayList<>();

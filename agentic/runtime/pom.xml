@@ -39,6 +39,9 @@
             </goals>
             <configuration>
               <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
+              <conditionalDevDependencies>
+                <artifact>${project.groupId}:quarkus-langchain4j-agentic-dev:${project.version}</artifact>
+              </conditionalDevDependencies>
             </configuration>
           </execution>
         </executions>

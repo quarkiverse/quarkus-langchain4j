@@ -59,6 +59,11 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
+    public void setDevUIAllowedAgentClassNames(Set<String> classNames) {
+        DevAgentMonitorHolder.allowedAgentClassNames = Collections.unmodifiableSet(classNames);
+    }
+
+    @RuntimeInit
     public void enableDevModeMonitoring(Set<String> rootAgentClassNames) {
         DevAgentMonitorHolder.reset();
         AgenticRecorder.devModeMonitoringEnabled = true;
