@@ -25,9 +25,21 @@ public interface CostEstimator {
         Integer inputTokens();
 
         Integer outputTokens();
+
+        default Integer cacheWriteInputTokens() {
+            return 0;
+        }
+
+        default Integer cacheReadInputTokens() {
+            return 0;
+        }
     }
 
-    record CostResult(BigDecimal inputTokensCost, BigDecimal outputTokensCost, String currency) {
+    record CostResult(BigDecimal inputTokensCost, BigDecimal outputTokensCost,
+            BigDecimal cacheWriteTokensCost, BigDecimal cacheReadTokensCost, String currency) {
 
+        public CostResult(BigDecimal inputTokensCost, BigDecimal outputTokensCost, String currency) {
+            this(inputTokensCost, outputTokensCost, BigDecimal.ZERO, BigDecimal.ZERO, currency);
+        }
     }
 }

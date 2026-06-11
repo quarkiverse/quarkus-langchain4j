@@ -8,6 +8,7 @@ import jakarta.inject.Singleton;
 
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.runtime.bedrock.BedrockTokenUsageReflection;
 import io.quarkus.arc.All;
 import io.smallrye.common.annotation.Experimental;
 
@@ -33,7 +34,10 @@ public class CostEstimatorService {
             if (costEstimator.supports(costContext)) {
                 CostEstimator.CostResult costResult = costEstimator.estimate(costContext);
                 if (costResult != null) {
-                    BigDecimal totalCost = costResult.inputTokensCost().add(costResult.outputTokensCost());
+                    BigDecimal totalCost = costResult.inputTokensCost()
+                            .add(costResult.outputTokensCost())
+                            .add(costResult.cacheWriteTokensCost())
+                            .add(costResult.cacheReadTokensCost());
                     return new Cost(totalCost, costResult.currency());
                 }
             }
@@ -53,6 +57,18 @@ public class CostEstimatorService {
         @Override
         public Integer outputTokens() {
             return tokenUsage != null ? tokenUsage.outputTokenCount() : 0;
+        }
+
+        @Override
+        public Integer cacheWriteInputTokens() {
+            Integer value = BedrockTokenUsageReflection.getCacheWriteInputTokens(tokenUsage);
+            return value != null ? value : 0;
+        }
+
+        @Override
+        public Integer cacheReadInputTokens() {
+            Integer value = BedrockTokenUsageReflection.getCacheReadInputTokens(tokenUsage);
+            return value != null ? value : 0;
         }
 
         @Override

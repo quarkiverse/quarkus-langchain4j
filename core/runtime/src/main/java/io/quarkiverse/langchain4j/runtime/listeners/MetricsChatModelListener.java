@@ -22,6 +22,7 @@ import io.quarkiverse.langchain4j.cost.Cost;
 import io.quarkiverse.langchain4j.cost.CostEstimatorService;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceConstants;
+import io.quarkiverse.langchain4j.runtime.bedrock.BedrockTokenUsageReflection;
 
 /**
  * Creates metrics that follow the
@@ -38,6 +39,8 @@ public class MetricsChatModelListener implements ChatModelListener {
 
     private final Meter.MeterProvider<Counter> inputTokenUsage;
     private final Meter.MeterProvider<Counter> outputTokenUsage;
+    private final Meter.MeterProvider<Counter> cacheWriteInputTokenUsage;
+    private final Meter.MeterProvider<Counter> cacheReadInputTokenUsage;
     private final Meter.MeterProvider<Timer> duration;
     private final Meter.MeterProvider<Counter> estimatedCost;
 
@@ -53,6 +56,16 @@ public class MetricsChatModelListener implements ChatModelListener {
                 .description("Measures number of output tokens used")
                 .tag("gen_ai.operation.name", "chat")
                 .tag("gen_ai.token.type", "output")
+                .withRegistry(Metrics.globalRegistry);
+        this.cacheWriteInputTokenUsage = Counter.builder("gen_ai.client.token.usage")
+                .description("Measures number of cache write input tokens used")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "cache_write")
+                .withRegistry(Metrics.globalRegistry);
+        this.cacheReadInputTokenUsage = Counter.builder("gen_ai.client.token.usage")
+                .description("Measures number of cache read input tokens used")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "cache_read")
                 .withRegistry(Metrics.globalRegistry);
         this.duration = Timer.builder("gen_ai.client.operation.duration")
                 .description("GenAI operation duration")
@@ -114,7 +127,6 @@ public class MetricsChatModelListener implements ChatModelListener {
 
         Long startTime = (Long) errorContext.attributes().get(START_TIME_KEY_NAME);
         if (startTime == null) {
-            // should never happen
             log.warn("No start time found in response");
             return;
         }
@@ -153,6 +165,12 @@ public class MetricsChatModelListener implements ChatModelListener {
                     .withTags(tags)
                     .increment(outputTokenCount);
         }
+
+        recordCounter(tags, tokenUsage, BedrockTokenUsageReflection::getCacheWriteInputTokens,
+                cacheWriteInputTokenUsage);
+        recordCounter(tags, tokenUsage, BedrockTokenUsageReflection::getCacheReadInputTokens,
+                cacheReadInputTokenUsage);
+
         if (inputTokenCount != null && outputTokenCount != null) {
             Cost costEstimate = costEstimatorService.estimate(responseContext);
             if (costEstimate != null) {
@@ -162,10 +180,22 @@ public class MetricsChatModelListener implements ChatModelListener {
         }
     }
 
+    private static void recordCounter(Tags tags, TokenUsage tokenUsage,
+            CacheTokenValueProvider valueProvider, Meter.MeterProvider<Counter> counter) {
+        Integer value = valueProvider.get(tokenUsage);
+        if (value != null) {
+            counter.withTags(tags).increment(value);
+        }
+    }
+
+    @FunctionalInterface
+    private interface CacheTokenValueProvider {
+        Integer get(TokenUsage tokenUsage);
+    }
+
     private void recordDuration(ChatModelResponseContext responseContext, long endTime, Tags tags) {
         Long startTime = (Long) responseContext.attributes().get(START_TIME_KEY_NAME);
         if (startTime == null) {
-            // should never happen
             log.warn("No start time found in response");
             return;
         }
