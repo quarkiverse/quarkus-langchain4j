@@ -2,6 +2,7 @@ name: Build (on pull request)
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
       - '.gitignore'
       - 'CODEOWNERS'
@@ -25,6 +26,13 @@ jobs:
   quick-build:
     name: Quick Build
     runs-on: ubuntu-latest
+    # Skip draft PRs, rerun as soon as its removed
+    if: >-
+      github.event_name != 'pull_request' || (
+        github.event.pull_request.draft == false &&
+        github.event.pull_request.state != 'closed' &&
+        github.event.action != 'edited'
+      )
     outputs:
       all_modules: ${{ steps.matrices.outputs.all_modules }}
       it_modules: ${{ steps.matrices.outputs.it_modules }}
