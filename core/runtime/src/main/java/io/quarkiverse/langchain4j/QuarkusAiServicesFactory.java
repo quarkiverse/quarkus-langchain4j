@@ -19,6 +19,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
@@ -68,6 +69,12 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
         public AiServices<T> systemMessageProvider(SystemMessageProvider systemMessageProvider) {
             context.systemMessageProvider = memoryId -> systemMessageProvider.getSystemMessage(memoryId);
+            return this;
+        }
+
+        public AiServices<T> systemMessageProvider(SystemMessageProviderWithContext systemMessageProvider) {
+            context.systemMessageProviderWithContext = invocationContext -> systemMessageProvider
+                    .getSystemMessage(invocationContext).orElse(null);
             return this;
         }
 

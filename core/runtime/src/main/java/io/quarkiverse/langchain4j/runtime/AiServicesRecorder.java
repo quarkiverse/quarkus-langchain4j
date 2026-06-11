@@ -37,6 +37,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
 import io.quarkiverse.langchain4j.runtime.tool.LoggingToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -365,9 +366,13 @@ public class AiServicesRecorder {
                     }
 
                     if (info.systemMessageProviderClassName() != null) {
-                        quarkusAiServices.systemMessageProvider((SystemMessageProvider) loadClass(
-                                info.systemMessageProviderClassName())
-                                .getConstructor().newInstance());
+                        Object provider = loadClass(info.systemMessageProviderClassName())
+                                .getConstructor().newInstance();
+                        if (provider instanceof SystemMessageProviderWithContext withContext) {
+                            quarkusAiServices.systemMessageProvider(withContext);
+                        } else if (provider instanceof SystemMessageProvider memoryIdProvider) {
+                            quarkusAiServices.systemMessageProvider(memoryIdProvider);
+                        }
                     }
 
                     if (info.maxToolCallingRoundTrips() != null && info.maxToolCallingRoundTrips() > 0) {

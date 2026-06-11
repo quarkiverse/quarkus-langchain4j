@@ -65,6 +65,7 @@ import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.invocation.LangChain4jManaged;
 import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -173,15 +174,29 @@ public class AiServiceMethodImplementationSupport {
         QuarkusAiServiceContext context = input.context;
         AiServiceMethodCreateInfo createInfo = input.createInfo;
         Object[] methodArgs = input.methodArgs;
+        ModelProvider modelProvider;
+        ChatRequestParameters defaultRequestParameters;
+
+        if (context.chatModel != null) {
+            var chatModel = context.effectiveChatModel(createInfo, methodArgs);
+            modelProvider = chatModel.provider();
+            defaultRequestParameters = chatModel.defaultRequestParameters();
+        } else {
+            var streamingChatModel = context.effectiveStreamingChatModel(createInfo, methodArgs);
+            modelProvider = streamingChatModel.provider();
+            defaultRequestParameters = streamingChatModel.defaultRequestParameters();
+        }
 
         InvocationContext invocationContext = InvocationContext.builder()
                 .invocationId(UUID.randomUUID())
                 .interfaceName(context.aiServiceClass.getName())
                 .methodName(createInfo.getMethodName())
+                .modelProvider(modelProvider)
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
                 .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory(), context.defaultMemoryIdProvider))
                 .invocationParameters(findInvocationParams(methodArgs))
                 .managedParameters(LangChain4jManaged.current())
+                .defaultRequestParameters(defaultRequestParameters)
                 .timestampNow()
                 .build();
 
@@ -227,7 +242,7 @@ public class AiServiceMethodImplementationSupport {
                 context.chatMemoryFlushStrategy);
 
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs, context, memoryId,
-                committableChatMemory);
+                committableChatMemory, invocationContext);
 
         boolean supportsJsonSchema = supportsJsonSchema(context, methodCreateInfo, methodArgs);
 
@@ -1052,10 +1067,15 @@ public class AiServiceMethodImplementationSupport {
             Object[] methodArgs,
             QuarkusAiServiceContext context,
             Object memoryId,
-            CommittableChatMemory committableChatMemory) {
+            CommittableChatMemory committableChatMemory,
+            InvocationContext invocationContext) {
         List<ChatMessage> previousChatMessages = committableChatMemory.messages();
 
         if (createInfo.getSystemMessageInfo().isEmpty()) {
+            if (context.systemMessageProviderWithContext != null) {
+                return Optional.ofNullable(context.systemMessageProviderWithContext.apply(invocationContext))
+                        .map(SystemMessage::new);
+            }
             return context.systemMessageProvider.apply(memoryId).map(SystemMessage::new);
         }
         AiServiceMethodCreateInfo.TemplateInfo systemMessageInfo = createInfo.getSystemMessageInfo().get();
