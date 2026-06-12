@@ -764,6 +764,12 @@ public class AgenticProcessor {
      * interfaces are not removed by Arc's unused-bean pruning.
      */
     @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDefaultExecutorProvider(AgenticRecorder recorder) {
+        recorder.registerDefaultExecutorProvider();
+    }
+
+    @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
             CombinedIndexBuildItem indexBuildItem,
