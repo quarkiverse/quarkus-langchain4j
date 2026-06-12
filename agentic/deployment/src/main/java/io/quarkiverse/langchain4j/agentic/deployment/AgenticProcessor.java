@@ -47,6 +47,7 @@ import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.observability.api.listener.AiServiceResponseReceivedListener;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
+import dev.langchain4j.spi.ExecutorProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.AgentClassCreateInfo;
@@ -77,9 +78,11 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
+import io.quarkus.deployment.builditem.GeneratedServiceProviderBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.gizmo.CatchBlockCreator;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -756,6 +759,31 @@ public class AgenticProcessor {
             }
         }
         recorder.registerSupplierParameterResolver(qualifierNames);
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem registerExecutorProviders() {
+        return ServiceProviderBuildItem.allProvidersFromClassPath(ExecutorProvider.class.getName());
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDefaultExecutorProvider(AgenticRecorder recorder, List<ServiceProviderBuildItem> serviceProviders,
+            List<GeneratedServiceProviderBuildItem> generatedServiceProviders) {
+        String serviceName = ExecutorProvider.class.getName();
+        String serviceDescriptor = ServiceProviderBuildItem.SPI_ROOT + serviceName;
+        for (ServiceProviderBuildItem serviceProvider : serviceProviders) {
+            if (serviceDescriptor.equals(serviceProvider.serviceDescriptorFile()) && !serviceProvider.providers().isEmpty()) {
+                return;
+            }
+        }
+        // Generated service descriptors are not visible to the classpath scan.
+        for (GeneratedServiceProviderBuildItem serviceProvider : generatedServiceProviders) {
+            if (serviceName.equals(serviceProvider.getServiceInterfaceName())) {
+                return;
+            }
+        }
+        recorder.registerDefaultExecutorProvider();
     }
 
     /**
