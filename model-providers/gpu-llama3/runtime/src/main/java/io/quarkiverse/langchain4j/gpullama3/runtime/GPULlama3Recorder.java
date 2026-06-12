@@ -70,7 +70,9 @@ public class GPULlama3Recorder {
                     chatModelConfig.topP().isPresent() ? chatModelConfig.topP().getAsDouble() : null,
                     chatModelConfig.seed().isPresent() ? chatModelConfig.seed().getAsInt() : null,
                     chatModelConfig.maxTokens().isPresent() ? chatModelConfig.maxTokens().getAsInt() : null,
-                    Boolean.TRUE);
+                    Boolean.TRUE,
+                    chatModelConfig.prefillDecode(),
+                    chatModelConfig.prefillBatchSize());
         });
     }
 

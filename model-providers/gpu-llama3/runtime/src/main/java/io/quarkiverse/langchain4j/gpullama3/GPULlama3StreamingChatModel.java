@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
@@ -157,6 +158,8 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
         private Integer seed;
         private Integer maxTokens;
         private Boolean onGPU;
+        private Boolean withPrefillDecode;
+        private Integer prefillBatchSize;
 
         public Builder() {
             // This is public so it can be extended
@@ -207,11 +210,21 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
             return this;
         }
 
+        public Builder withPrefillDecode(Boolean withPrefillDecode) {
+            this.withPrefillDecode = withPrefillDecode;
+            return this;
+        }
+
+        public Builder prefillBatchSize(Integer prefillBatchSize) {
+            this.prefillBatchSize = prefillBatchSize;
+            return this;
+        }
+
         public GPULlama3StreamingChatModel build() {
             GPULlama3ModelHolder h = modelHolder != null
                     ? modelHolder
                     : new GPULlama3ModelHolder(modelCachePath, modelName, quantization,
-                            temperature, topP, seed, maxTokens, onGPU);
+                            temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize);
             return new GPULlama3StreamingChatModel(h);
         }
     }

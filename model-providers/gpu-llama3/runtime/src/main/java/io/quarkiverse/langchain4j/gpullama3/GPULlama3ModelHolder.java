@@ -34,6 +34,8 @@ public class GPULlama3ModelHolder {
     private final int seed;
     final int maxTokens;
     final boolean onGPU;
+    private final boolean withPrefillDecode;
+    private final int prefillBatchSize;
 
     // force happens-before relationship between initialization and usage
     private volatile boolean initialized = false;
@@ -52,7 +54,9 @@ public class GPULlama3ModelHolder {
             Double topP,
             Integer seed,
             Integer maxTokens,
-            Boolean onGPU) {
+            Boolean onGPU,
+            Boolean withPrefillDecode,
+            Integer prefillBatchSize) {
         DefaultConfig defaultConfig = defaultConfigForModel(modelName);
         this.modelCachePath = modelCachePath;
         this.modelName = modelName;
@@ -62,6 +66,8 @@ public class GPULlama3ModelHolder {
         this.seed = getOrDefault(seed, ThreadLocalRandom.current().nextInt());
         this.maxTokens = getOrDefault(maxTokens, defaultConfig.maxTokens());
         this.onGPU = getOrDefault(onGPU, Boolean.TRUE);
+        this.withPrefillDecode = getOrDefault(withPrefillDecode, Boolean.TRUE);
+        this.prefillBatchSize = getOrDefault(prefillBatchSize, 32);
     }
 
     private static DefaultConfig defaultConfigForModel(String modelName) {
@@ -86,12 +92,19 @@ public class GPULlama3ModelHolder {
         try {
             Path modelPath = registry.downloadModel(modelName, quantization, Optional.empty(), Optional.empty());
 
+            // The engine reads these JVM-global flags during class loading, so set them
+            // before ModelLoader initializes the model and TornadoVM plan.
+            System.setProperty("llama.withPrefillDecode", Boolean.toString(withPrefillDecode));
+            System.setProperty("llama.prefillBatchSize", Integer.toString(prefillBatchSize));
+
             LOG.info("GPULlama3 model initialization {modelPath=" + modelPath
                     + ", temperature=" + temperature
                     + ", topP=" + topP
                     + ", seed=" + seed
                     + ", maxTokens=" + maxTokens
-                    + ", onGPU=" + onGPU + "}...");
+                    + ", onGPU=" + onGPU
+                    + ", withPrefillDecode=" + withPrefillDecode
+                    + ", prefillBatchSize=" + prefillBatchSize + "}...");
 
             this.model = ModelLoader.loadModel(modelPath, maxTokens, true, onGPU);
             this.state = model.createNewState();
