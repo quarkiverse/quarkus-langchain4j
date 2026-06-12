@@ -246,6 +246,11 @@ abstract class GPULlama3BaseModel {
 
         // Prime the model to start generating an assistant response
         promptTokens.addAll(holder.chatFormat.encodeHeader(new ChatFormat.Message(ChatFormat.Role.ASSISTANT, "")));
+
+        // Control the reasoning phase: when thinking is disabled, formats that support it
+        // (e.g. Qwen3) prime a pre-closed thinking block so the model skips reasoning. No-op
+        // for formats without a thinking mode.
+        promptTokens.addAll(holder.chatFormat.encodeThinkingControl(holder.enableThinking));
     }
 
     private static final String CALL_ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";

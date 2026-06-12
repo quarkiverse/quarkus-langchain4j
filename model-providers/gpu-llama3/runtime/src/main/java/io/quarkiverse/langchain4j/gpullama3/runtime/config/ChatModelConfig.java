@@ -59,4 +59,15 @@ public interface ChatModelConfig {
      */
     @WithDefault("32")
     int prefillBatchSize();
+
+    /**
+     * Whether to enable the model's thinking/reasoning phase. Only models with a thinking mode
+     * (e.g. Qwen3) honor this; for other models it has no effect.
+     * <p>
+     * When {@code true} (the upstream Qwen3 default), the model reasons inside
+     * {@code <think>…</think>} before answering, which tends to improve tool-calling decisions.
+     * Set to {@code false} for faster responses by skipping the reasoning phase.
+     */
+    @WithDefault("true")
+    boolean enableThinking();
 }

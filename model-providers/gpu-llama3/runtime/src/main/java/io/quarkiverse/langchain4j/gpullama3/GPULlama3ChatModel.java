@@ -107,6 +107,7 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
         private Boolean onGPU;
         private Boolean withPrefillDecode;
         private Integer prefillBatchSize;
+        private Boolean enableThinking;
 
         public Builder() {
             // This is public so it can be extended
@@ -167,11 +168,16 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             return this;
         }
 
+        public Builder enableThinking(Boolean enableThinking) {
+            this.enableThinking = enableThinking;
+            return this;
+        }
+
         public GPULlama3ChatModel build() {
             GPULlama3ModelHolder h = modelHolder != null
                     ? modelHolder
                     : new GPULlama3ModelHolder(modelCachePath, modelName, quantization,
-                            temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize);
+                            temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize, enableThinking);
             return new GPULlama3ChatModel(h);
         }
     }

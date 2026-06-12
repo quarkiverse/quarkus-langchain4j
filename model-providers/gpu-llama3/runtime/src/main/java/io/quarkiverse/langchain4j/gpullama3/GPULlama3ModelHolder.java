@@ -36,6 +36,7 @@ public class GPULlama3ModelHolder {
     final boolean onGPU;
     private final boolean withPrefillDecode;
     private final int prefillBatchSize;
+    final boolean enableThinking;
 
     // force happens-before relationship between initialization and usage
     private volatile boolean initialized = false;
@@ -56,7 +57,8 @@ public class GPULlama3ModelHolder {
             Integer maxTokens,
             Boolean onGPU,
             Boolean withPrefillDecode,
-            Integer prefillBatchSize) {
+            Integer prefillBatchSize,
+            Boolean enableThinking) {
         DefaultConfig defaultConfig = defaultConfigForModel(modelName);
         this.modelCachePath = modelCachePath;
         this.modelName = modelName;
@@ -68,6 +70,7 @@ public class GPULlama3ModelHolder {
         this.onGPU = getOrDefault(onGPU, Boolean.TRUE);
         this.withPrefillDecode = getOrDefault(withPrefillDecode, Boolean.TRUE);
         this.prefillBatchSize = getOrDefault(prefillBatchSize, 32);
+        this.enableThinking = getOrDefault(enableThinking, Boolean.TRUE);
     }
 
     private static DefaultConfig defaultConfigForModel(String modelName) {
@@ -104,7 +107,8 @@ public class GPULlama3ModelHolder {
                     + ", maxTokens=" + maxTokens
                     + ", onGPU=" + onGPU
                     + ", withPrefillDecode=" + withPrefillDecode
-                    + ", prefillBatchSize=" + prefillBatchSize + "}...");
+                    + ", prefillBatchSize=" + prefillBatchSize
+                    + ", enableThinking=" + enableThinking + "}...");
 
             this.model = ModelLoader.loadModel(modelPath, maxTokens, true, onGPU);
             this.state = model.createNewState();
@@ -114,6 +118,10 @@ public class GPULlama3ModelHolder {
                     (float) topP,
                     seed);
             this.chatFormat = model.chatFormat();
+            if (!chatFormat.supportsThinking()) {
+                LOG.debugf("Thinking control not applicable for %s; enable-thinking=%s has no effect.",
+                        chatFormat.getClass().getSimpleName(), enableThinking);
+            }
             if (onGPU) {
                 this.tornadoVMPlan = TornadoVMMasterPlan.initializeTornadoVMPlan(state, model);
             }
