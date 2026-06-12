@@ -5,12 +5,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.AgenticServices;
@@ -20,6 +22,7 @@ import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
+import dev.langchain4j.internal.DefaultExecutorProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
@@ -80,6 +83,23 @@ public class AgenticRecorder {
     @RuntimeInit
     public void registerChatSupplierParameterResolver() {
         DeclarativeUtil.addChatSupplierParameterResolver(new CdiChatSupplierParameterResolver());
+    }
+
+    @RuntimeInit
+    public void registerDefaultExecutorProvider() {
+        ManagedExecutor managedExecutor = Arc.container().instance(ManagedExecutor.class).get();
+        if (managedExecutor == null) {
+            log.warn("ManagedExecutor not available — parallel agents will use raw virtual threads "
+                    + "without CDI/OTel/Security context propagation");
+            return;
+        }
+        try {
+            java.lang.reflect.Method setter = DefaultExecutorProvider.class
+                    .getMethod("setDefaultExecutorService", ExecutorService.class);
+            setter.invoke(null, managedExecutor);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to register ManagedExecutor as default executor provider", e);
+        }
     }
 
     @RuntimeInit

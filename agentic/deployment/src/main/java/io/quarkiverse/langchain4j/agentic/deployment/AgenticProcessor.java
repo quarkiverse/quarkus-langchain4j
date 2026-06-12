@@ -73,6 +73,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
@@ -545,6 +546,18 @@ public class AgenticProcessor {
      * the full transitive interface hierarchy so that parameters declared on parent
      * interfaces are not removed by Arc's unused-bean pruning.
      */
+    @BuildStep
+    BytecodeTransformerBuildItem addDefaultExecutorProviderOverride() {
+        return new BytecodeTransformerBuildItem("dev.langchain4j.internal.DefaultExecutorProvider",
+                (name, visitor) -> new DefaultExecutorProviderTransformer(visitor));
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDefaultExecutorProvider(AgenticRecorder recorder) {
+        recorder.registerDefaultExecutorProvider();
+    }
+
     @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
