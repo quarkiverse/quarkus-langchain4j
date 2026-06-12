@@ -32,6 +32,7 @@ public class SpanChatModelListener implements ChatModelListener {
 
     private static final String OTEL_SCOPE_KEY_NAME = "OTelScope";
     private static final String OTEL_SPAN_KEY_NAME = "OTelSpan";
+    public static final String OTEL_PARENT_SPAN_KEY_NAME = "OTelParentSpan";
 
     private final Tracer tracer;
     private final CostEstimatorService costEstimatorService;
@@ -48,6 +49,9 @@ public class SpanChatModelListener implements ChatModelListener {
     @Override
     public void onRequest(ChatModelRequestContext requestContext) {
         ChatRequest request = requestContext.chatRequest();
+        var attributes = requestContext.attributes();
+        var parentSpan = Span.current();
+
         Span span = tracer.spanBuilder("completion " + request.parameters().modelName())
                 .setAttribute("gen_ai.operation.name", "chat")
                 .setAttribute("gen_ai.provider.name", requestContext.modelProvider().toString().toLowerCase())
@@ -58,7 +62,7 @@ public class SpanChatModelListener implements ChatModelListener {
                 .startSpan();
         Scope scope = span.makeCurrent();
 
-        var attributes = requestContext.attributes();
+        attributes.put(OTEL_PARENT_SPAN_KEY_NAME, parentSpan.getSpanContext().isValid() ? parentSpan : span);
         attributes.put(OTEL_SCOPE_KEY_NAME, scope);
         attributes.put(OTEL_SPAN_KEY_NAME, span);
         notifyContributorsOnRequest(requestContext, span);
