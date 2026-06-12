@@ -26,6 +26,7 @@ import jakarta.enterprise.inject.Default;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationTransformation;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
@@ -59,12 +60,14 @@ import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipToolBoxProcessingBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.arc.processor.BuiltinScope;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -89,6 +92,20 @@ public class AgenticProcessor {
 
     private static final MethodDescriptor HANDLER_INVOKE = MethodDescriptor.ofMethod(
             InvocationHandler.class, "invoke", Object.class, Object.class, Method.class, Object[].class);
+
+    private static final List<DotName> ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS = List.of(
+            AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
+            AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER,
+            AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER,
+            AgenticLangChain4jDotNames.CONTENT_RETRIEVER_SUPPLIER,
+            AgenticLangChain4jDotNames.RETRIEVAL_AUGMENTER_SUPPLIER,
+            AgenticLangChain4jDotNames.TOOL_SUPPLIER,
+            AgenticLangChain4jDotNames.TOOL_PROVIDER_SUPPLIER,
+            AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER
+    // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
+    );
+
+    private static final DotName INTERCEPTOR_BINDING = DotName.createSimple(jakarta.interceptor.InterceptorBinding.class);
 
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
@@ -148,6 +165,7 @@ public class AgenticProcessor {
         validateErrorHandler(iface);
         validateExitCondition(iface);
         validateHumanInTheLoop(iface);
+        validateMcpToolBox(item);
         validateOutput(iface);
         validateParallelExecutor(iface);
         validateRetrievalAugmentorSupplier(iface);
@@ -279,6 +297,11 @@ public class AgenticProcessor {
         }
     }
 
+    /**
+     * Rejects @Fallback(fallbackMethod="...") on agent interfaces at build time.
+     * Agent interfaces are dynamic proxies — fallback method name resolution always fails
+     * at runtime with FaultToleranceDefinitionException. Use FallbackHandler instead.
+     */
     private void validateHumanInTheLoop(ClassInfo iface) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.HUMAN_IN_THE_LOOP;
         List<AnnotationInstance> instances = iface
@@ -290,6 +313,16 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
+        }
+    }
+
+    private void validateMcpToolBox(DetectedAiAgentBuildItem item) {
+        if (!item.getMcpToolBoxMethods().isEmpty()) {
+            if ((item.getMcpToolBoxMethods().size() != 1) && (item.getAgenticMethods().size() > 1)) {
+                throw new IllegalConfigurationException(
+                        "Currently, @McpToolBox can only be used on an Agent if the agent has a single method. This restriction will be lifted in the future. Offending class is '"
+                                + item.getIface().name() + "'");
+            }
         }
     }
 
@@ -507,20 +540,75 @@ public class AgenticProcessor {
         recorder.registerChatSupplierParameterResolver();
     }
 
+    /**
+     * Marks @CdiBean-annotated parameters on supplier methods as unremovable, walking
+     * the full transitive interface hierarchy so that parameters declared on parent
+     * interfaces are not removed by Arc's unused-bean pruning.
+     */
     @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
+            CombinedIndexBuildItem indexBuildItem,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        IndexView index = indexBuildItem.getIndex();
         for (DetectedAiAgentBuildItem item : detectedAiAgentBuildItems) {
-            MethodInfo chatModelSupplier = item.getChatModelSupplier();
-            if (chatModelSupplier == null) {
-                continue;
-            }
-            for (MethodParameterInfo param : chatModelSupplier.parameters()) {
-                if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
-                    unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+            for (ClassInfo classInfo : ValidationUtil.transitiveInterfaces(item.getIface(), index)) {
+                for (MethodInfo method : classInfo.methods()) {
+                    boolean isSupplierMethod = ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS.stream()
+                            .anyMatch(method::hasAnnotation);
+                    if (!isSupplierMethod) {
+                        continue;
+                    }
+                    for (MethodParameterInfo param : method.parameters()) {
+                        if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
+                            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    /**
+     * Propagates interceptor binding annotations from parent interfaces to agent interfaces so that
+     * Arc can apply matching interceptors to the synthetic CDI bean. Without this, class-level
+     * interceptor bindings declared on a parent interface (e.g., {@code @Timeout} on a base interface)
+     * are invisible to Arc's interceptor resolver when it processes the agent interface.
+     */
+    @BuildStep
+    void propagateParentInterceptorBindingsToAgents(
+            List<DetectedAiAgentBuildItem> agents,
+            CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<AnnotationsTransformerBuildItem> transformerProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        for (DetectedAiAgentBuildItem agent : agents) {
+            ClassInfo agentIface = agent.getIface();
+            Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(agentIface, index);
+            List<AnnotationInstance> toPropagate = new ArrayList<>();
+            for (ClassInfo parentIface : hierarchy) {
+                if (parentIface.name().equals(agentIface.name())) {
+                    continue;
+                }
+                for (AnnotationInstance ann : parentIface.declaredAnnotations()) {
+                    if (agentIface.hasAnnotation(ann.name())) {
+                        continue; // already present on the agent itself
+                    }
+                    // Only propagate interceptor binding annotations
+                    ClassInfo annClass = index.getClassByName(ann.name());
+                    if (annClass != null && annClass.hasAnnotation(INTERCEPTOR_BINDING)) {
+                        toPropagate.add(ann);
+                    }
+                }
+            }
+            if (toPropagate.isEmpty()) {
+                continue;
+            }
+            DotName agentName = agentIface.name();
+            List<AnnotationInstance> annotationsToAdd = List.copyOf(toPropagate);
+            transformerProducer.produce(new AnnotationsTransformerBuildItem(
+                    AnnotationTransformation.forClasses()
+                            .whenClass(agentName)
+                            .transform(ctx -> ctx.addAll(annotationsToAdd))));
         }
     }
 
@@ -528,10 +616,14 @@ public class AgenticProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
             InterceptorResolverBuildItem interceptorResolverBuildItem,
+            BeanDiscoveryFinishedBuildItem beanDiscovery,
+            CombinedIndexBuildItem indexBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
-            BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer) {
+            BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
 
         Set<DotName> interceptorBindings = interceptorResolverBuildItem.getInterceptorBindings();
+        IndexView index = indexBuildItem.getIndex();
         Set<String> requestedChatModelNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
             String chatModelName = detectedAiAgentBuildItem.getModelName() != null
@@ -543,9 +635,11 @@ public class AgenticProcessor {
                     ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
 
-            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings);
+            boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings, index);
             String ifaceName = detectedAiAgentBuildItem.getIface().name().toString();
             String implClassName = ifaceName + "$$QuarkusAgentImpl";
+
+            boolean hasMcpToolBox = !detectedAiAgentBuildItem.getMcpToolBoxMethods().isEmpty();
 
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator;
             if (hasInterceptorBindings) {
@@ -562,7 +656,7 @@ public class AgenticProcessor {
                     .createWith(recorder
                             .createAiAgent(
                                     new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,
-                                            hasInterceptorBindings)))
+                                            hasInterceptorBindings, hasMcpToolBox)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
             if (hasInterceptorBindings) {
@@ -580,12 +674,35 @@ public class AgenticProcessor {
             }
             beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                     new Type[] { ClassType.create(LangChain4jDotNames.TOOL_PROVIDER) }, null));
+
+            // AgentListener CDI beans are additive — wired into all agents
+            beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                    new Type[] { ClassType.create(AgenticLangChain4jDotNames.AGENT_LISTENER) }, null));
+
             syntheticBeanProducer.produce(beanConfigurator.done());
         }
+
+        // Mark AgentListener beans as unremovable (global check, outside per-agent loop)
+        if (!beanDiscovery.beanStream().withBeanType(AgenticLangChain4jDotNames.AGENT_LISTENER).isEmpty()) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(AgenticLangChain4jDotNames.AGENT_LISTENER));
+        }
+
+        beanDiscovery.beanStream()
+                .withBeanType(AgenticLangChain4jDotNames.AGENT_LISTENER)
+                .forEach(bean -> {
+                    DotName scope = bean.getScope().getDotName();
+                    if (!scope.equals(BuiltinScope.APPLICATION.getInfo().getDotName())
+                            && !scope.equals(BuiltinScope.SINGLETON.getInfo().getDotName())) {
+                        throw new IllegalConfigurationException(
+                                "CDI bean of type 'AgentListener' is @" + scope.withoutPackagePrefix()
+                                        + " but must be @ApplicationScoped or @Singleton. "
+                                        + "Agent synthetic beans are created at application startup "
+                                        + "when no request context is active.");
+                    }
+                });
+
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
     }
-
-    private static final DotName INTERCEPTOR_BINDING = DotName.createSimple("jakarta.interceptor.InterceptorBinding");
 
     private static boolean isInterceptorBindingAnnotation(AnnotationInstance ann, IndexView index) {
         ClassInfo annClass = index.getClassByName(ann.name());
@@ -601,15 +718,35 @@ public class AgenticProcessor {
         }
     }
 
-    private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent, Set<DotName> interceptorBindings) {
-        for (AnnotationInstance ann : agent.getIface().declaredAnnotations()) {
-            if (interceptorBindings.contains(ann.name())) {
+    private static boolean hasAnyInterceptorBindings(DetectedAiAgentBuildItem agent,
+            Set<DotName> interceptorBindings, IndexView index) {
+        Set<ClassInfo> hierarchy = ValidationUtil.transitiveInterfaces(agent.getIface(), index);
+
+        // Class-level check: walk the full interface hierarchy for class-level interceptor bindings
+        for (ClassInfo classInfo : hierarchy) {
+            if (ValidationUtil.hasAnnotation(classInfo.declaredAnnotations(), interceptorBindings)) {
                 return true;
             }
         }
+
+        // Method-level check: check each agentic method, then look up the same method signature
+        // on parent interfaces (handles case where @Agent is redeclared on child interface and
+        // the interceptor binding is only on the parent interface's version of the method)
         for (MethodInfo method : agent.getAgenticMethods()) {
-            for (AnnotationInstance ann : method.declaredAnnotations()) {
-                if (interceptorBindings.contains(ann.name())) {
+            if (ValidationUtil.hasAnnotation(method.annotations(), interceptorBindings)) {
+                return true;
+            }
+            for (ClassInfo classInfo : hierarchy) {
+                if (classInfo.name().equals(agent.getIface().name())) {
+                    continue; // already covered by method.annotations() above
+                }
+                // Look up matching method on this parent interface by name + parameter types.
+                // Returns null if the parent doesn't declare that method — safe to ignore.
+                Type[] paramTypes = method.parameterTypes()
+                        .toArray(new Type[0]);
+                MethodInfo parentMethod = classInfo.method(method.name(), paramTypes);
+                if (parentMethod != null
+                        && ValidationUtil.hasAnnotation(parentMethod.annotations(), interceptorBindings)) {
                     return true;
                 }
             }
