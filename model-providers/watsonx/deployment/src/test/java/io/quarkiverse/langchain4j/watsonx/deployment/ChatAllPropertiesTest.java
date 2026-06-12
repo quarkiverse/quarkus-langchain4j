@@ -77,8 +77,10 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.repetition-penalty", "1.1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.length-penalty", "1.2")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.enabled", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.think", "think")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.response", "response")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.opening", "<think>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.closing", "</think>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.opening", "<response>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.closing", "</response>")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.effort", "low")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.include-reasoning", "true")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
@@ -182,8 +184,10 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         assertTrue(thinking.enabled().orElse(false));
         assertTrue(thinking.includeReasoning().orElse(false));
         assertNotNull(thinking.tags().orElse(null));
-        assertEquals("think", thinking.tags().get().think());
-        assertEquals("response", thinking.tags().get().response().orElse(null));
+        assertEquals("<think>", thinking.tags().get().think().opening());
+        assertEquals("</think>", thinking.tags().get().think().closing());
+        assertEquals("<response>", thinking.tags().get().response().map(r -> r.opening()).orElse(null));
+        assertEquals("</response>", thinking.tags().get().response().map(r -> r.closing()).orElse(null));
         assertEquals(1.1, runtimeConfig.chatModel().repetitionPenalty().orElse(null));
         assertEquals(1.2, runtimeConfig.chatModel().lengthPenalty().orElse(null));
         assertEquals(new TreeSet<>(Set.of("1")), runtimeConfig.chatModel().guidedChoice().orElse(null));

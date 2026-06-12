@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import static io.quarkiverse.langchain4j.watsonx.runtime.AuthenticatorCache.getOrCreateTokenGenerator;
+import static java.util.Objects.nonNull;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
 import com.ibm.watsonx.ai.chat.model.ExtractionTags;
+import com.ibm.watsonx.ai.chat.model.ExtractionTags.Response;
+import com.ibm.watsonx.ai.chat.model.ExtractionTags.Think;
 import com.ibm.watsonx.ai.chat.model.Thinking;
 import com.ibm.watsonx.ai.detection.detector.BaseDetector;
 import com.ibm.watsonx.ai.detection.detector.GraniteGuardian;
@@ -103,10 +106,21 @@ public class WatsonxRecorder {
                     .map(URI::create)
                     .orElseThrow();
 
+            String deploymentId = chatModelConfig.deploymentId().orElse(null);
+            String modelName = specificConfig.chatModel().modelName();
+            String projectId = firstOrDefault(defaultConfig.projectId().orElse(null), specificConfig.projectId());
+            String spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), specificConfig.spaceId());
+
+            if (nonNull(deploymentId)) {
+                modelName = null;
+                projectId = null;
+                spaceId = null;
+            }
+
             WatsonxChatModel.Builder builder = WatsonxChatModel.builder()
                     .baseUrl(url)
                     .version(specificConfig.version().orElse(null))
-                    .modelName(specificConfig.chatModel().modelName())
+                    .modelName(modelName)
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .logprobs(chatModelConfig.logprobs())
                     .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
@@ -121,7 +135,8 @@ public class WatsonxRecorder {
                     .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
                     .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
                     .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
-                    .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null));
+                    .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
+                    .deploymentId(deploymentId);
 
             if (chatModelConfig.guidedChoice().isPresent())
                 builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
@@ -143,8 +158,11 @@ public class WatsonxRecorder {
                         .map(new Function<ExtractionTagsConfig, ExtractionTags>() {
                             @Override
                             public ExtractionTags apply(ExtractionTagsConfig extractionTagsConfig) {
-                                return new ExtractionTags(extractionTagsConfig.think(),
-                                        extractionTagsConfig.response().orElse(null));
+                                Think think = new Think(extractionTagsConfig.think().opening(),
+                                        extractionTagsConfig.think().closing());
+                                Response response = extractionTagsConfig.response()
+                                        .map(r -> new Response(r.opening(), r.closing())).orElse(null);
+                                return new ExtractionTags(think, response);
                             }
                         }).orElse(null);
 
@@ -176,15 +194,8 @@ public class WatsonxRecorder {
                             chatModelConfig.logResponses(),
                             specificConfig.logResponses()));
 
-            builder.spaceId(
-                    firstOrDefault(
-                            defaultConfig.spaceId().orElse(null),
-                            specificConfig.spaceId()));
-
-            builder.projectId(
-                    firstOrDefault(
-                            defaultConfig.projectId().orElse(null),
-                            specificConfig.projectId()));
+            builder.spaceId(spaceId);
+            builder.projectId(projectId);
 
             String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
                     watsonxConfig.apiKey());
@@ -238,10 +249,21 @@ public class WatsonxRecorder {
                     .map(URI::create)
                     .orElseThrow();
 
+            String deploymentId = chatModelConfig.deploymentId().orElse(null);
+            String modelName = specificConfig.chatModel().modelName();
+            String projectId = firstOrDefault(defaultConfig.projectId().orElse(null), specificConfig.projectId());
+            String spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), specificConfig.spaceId());
+
+            if (nonNull(deploymentId)) {
+                modelName = null;
+                projectId = null;
+                spaceId = null;
+            }
+
             WatsonxStreamingChatModel.Builder builder = WatsonxStreamingChatModel.builder()
                     .baseUrl(url)
                     .version(specificConfig.version().orElse(null))
-                    .modelName(specificConfig.chatModel().modelName())
+                    .modelName(modelName)
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .logprobs(chatModelConfig.logprobs())
                     .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
@@ -256,7 +278,8 @@ public class WatsonxRecorder {
                     .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
                     .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
                     .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
-                    .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null));
+                    .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
+                    .deploymentId(deploymentId);
 
             if (chatModelConfig.guidedChoice().isPresent())
                 builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
@@ -278,8 +301,11 @@ public class WatsonxRecorder {
                         .map(new Function<ExtractionTagsConfig, ExtractionTags>() {
                             @Override
                             public ExtractionTags apply(ExtractionTagsConfig extractionTagsConfig) {
-                                return new ExtractionTags(extractionTagsConfig.think(),
-                                        extractionTagsConfig.response().orElse(null));
+                                Think think = new Think(extractionTagsConfig.think().opening(),
+                                        extractionTagsConfig.think().closing());
+                                Response response = extractionTagsConfig.response()
+                                        .map(r -> new Response(r.opening(), r.closing())).orElse(null);
+                                return new ExtractionTags(think, response);
                             }
                         }).orElse(null);
 
@@ -311,15 +337,8 @@ public class WatsonxRecorder {
                             chatModelConfig.logResponses(),
                             specificConfig.logResponses()));
 
-            builder.spaceId(
-                    firstOrDefault(
-                            defaultConfig.spaceId().orElse(null),
-                            specificConfig.spaceId()));
-
-            builder.projectId(
-                    firstOrDefault(
-                            defaultConfig.projectId().orElse(null),
-                            specificConfig.projectId()));
+            builder.spaceId(spaceId);
+            builder.projectId(projectId);
 
             String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
                     watsonxConfig.apiKey());

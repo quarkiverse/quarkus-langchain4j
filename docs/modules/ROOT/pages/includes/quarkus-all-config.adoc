@@ -27733,6 +27733,29 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-4-h-small+++`
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-deployment-id[`+++quarkus.langchain4j.watsonx.chat-model.deployment-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.deployment-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The deployment ID of a model deployed in watsonx.ai.
+
+Use this when targeting a custom model deployment instead of a foundation model. When set, it takes precedence over `modelName`, and neither `projectId` nor `spaceId` is required.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_DEPLOYMENT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_DEPLOYMENT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx.chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.tool-choice+++[]
@@ -28217,51 +28240,89 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think-opening[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.opening+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.opening+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The XML-like tag enclosing the model’s internal reasoning.
-
-Example: `<think> ... </think>`
+The opening delimiter for the model's internal reasoning section.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_THINK+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_THINK+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-think-closing[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.closing+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.closing+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The XML-like tag enclosing the model’s final response.
-
-Optional — if not defined, all text outside the reasoning tag is treated as the response.
+The closing delimiter for the model's internal reasoning section.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_RESPONSE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_RESPONSE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response-opening[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.opening+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.opening+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The opening delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-tags-response-closing[`+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.closing+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.closing+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The closing delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-effort[`+++quarkus.langchain4j.watsonx.chat-model.thinking.effort+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -29428,6 +29489,29 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-4-h-small+++`
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-deployment-id[`+++quarkus.langchain4j.watsonx."model-name".chat-model.deployment-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.deployment-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The deployment ID of a model deployed in watsonx.ai.
+
+Use this when targeting a custom model deployment instead of a foundation model. When set, it takes precedence over `modelName`, and neither `projectId` nor `spaceId` is required.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_DEPLOYMENT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_DEPLOYMENT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice+++[]
@@ -29912,51 +29996,89 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think-opening[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think.opening+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think.opening+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The XML-like tag enclosing the model’s internal reasoning.
-
-Example: `<think> ... </think>`
+The opening delimiter for the model's internal reasoning section.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_THINK+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_THINK+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-think-closing[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think.closing+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.think.closing+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The XML-like tag enclosing the model’s final response.
-
-Optional — if not defined, all text outside the reasoning tag is treated as the response.
+The closing delimiter for the model's internal reasoning section.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_RESPONSE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_RESPONSE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response-opening[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response.opening+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response.opening+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The opening delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-tags-response-closing[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response.closing+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.tags.response.closing+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The closing delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-effort[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.effort+++`]##
 ifdef::add-copy-button-to-config-props[]
