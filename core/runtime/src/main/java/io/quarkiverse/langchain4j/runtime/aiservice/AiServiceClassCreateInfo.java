@@ -10,4 +10,9 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
  */
 public record AiServiceClassCreateInfo(Map<String, AiServiceMethodCreateInfo> methodMap, String implClassName,
         InputGuardrailsLiteral inputGuardrails, OutputGuardrailsLiteral outputGuardrails) {
+
+    @Override
+    public String toString() {
+        return implClassName;
+    }
 }
