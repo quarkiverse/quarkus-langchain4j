@@ -1,6 +1,8 @@
 package io.quarkiverse.langchain4j.agentic.runtime;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -34,6 +36,7 @@ public class AgenticRecorder {
 
     private static final Logger log = Logger.getLogger(AgenticRecorder.class);
     private static volatile Set<String> agentsWithMcpToolBox = Collections.emptySet();
+    private static volatile Map<String, List<String>> agentsWithToolBox = Map.of();
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
@@ -56,6 +59,11 @@ public class AgenticRecorder {
     @StaticInit
     public void setAgentsWithMcpToolBox(Set<String> agentsWithMcpToolBox) {
         AgenticRecorder.agentsWithMcpToolBox = Collections.unmodifiableSet(agentsWithMcpToolBox);
+    }
+
+    @StaticInit
+    public void setAgentsWithToolBox(Map<String, List<String>> agentsWithToolBox) {
+        AgenticRecorder.agentsWithToolBox = Map.copyOf(agentsWithToolBox);
     }
 
     @StaticInit
@@ -189,11 +197,26 @@ public class AgenticRecorder {
 
         @Override
         public void accept(AgenticServices.DeclarativeAgentCreationContext agenticContext) {
-            if (AgenticRecorder.agentsWithMcpToolBox.contains(agenticContext.agentServiceClass().getName())) {
+            String agentClassName = agenticContext.agentServiceClass().getName();
+            if (AgenticRecorder.agentsWithMcpToolBox.contains(agentClassName)) {
                 Instance<ToolProvider> injectedReference = cdiContext.getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
                 if (injectedReference.isResolvable()) {
                     agenticContext.agentBuilder().toolProvider(injectedReference.get());
                 }
+            }
+            List<String> toolClassNames = AgenticRecorder.agentsWithToolBox.get(agentClassName);
+            if (toolClassNames != null) {
+                List<Object> tools = new ArrayList<>(toolClassNames.size());
+                for (String toolClassName : toolClassNames) {
+                    try {
+                        Class<?> toolClass = Class.forName(toolClassName, true,
+                                Thread.currentThread().getContextClassLoader());
+                        tools.add(Arc.container().select(toolClass).get());
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException("Unable to load @ToolBox class: " + toolClassName, e);
+                    }
+                }
+                agenticContext.agentBuilder().tools(tools.toArray());
             }
         }
     }
