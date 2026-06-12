@@ -43,8 +43,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.tools.Tool;
-
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.DeploymentException;
@@ -174,8 +172,7 @@ public class AiServicesProcessor {
 
     private static final Logger log = Logger.getLogger(AiServicesProcessor.class);
 
-    private static final DotName TOOL = DotName.createSimple(Tool.class);
-    private static final DotName TOOLBOX = DotName.createSimple(ToolBox.class);
+    public static final DotName TOOLBOX = DotName.createSimple(ToolBox.class);
     public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     public static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
     private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
@@ -1608,7 +1605,8 @@ public class AiServicesProcessor {
             List<ToolQualifierProvider.BuildItem> toolQualifierProviderItems,
             List<AnnotationsImpliesAiServiceBuildItem> annotationsImpliesAiServiceItems,
             List<SkipOutputFormatInstructionsBuildItem> skipOutputFormatInstructionsItems,
-            List<FallbackToDummyUserMessageBuildItem> fallbackToDummyUserMessageItems) {
+            List<FallbackToDummyUserMessageBuildItem> fallbackToDummyUserMessageItems,
+            List<SkipToolBoxProcessingBuildItem> skipToolBoxProcessingItems) {
 
         IndexView index = indexBuildItem.getIndex();
 
@@ -1688,6 +1686,10 @@ public class AiServicesProcessor {
         if (addOpenTelemetrySpan) {
             additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(SpanWrapper.class).build());
         }
+
+        Predicate<MethodInfo> skipToolBoxPredicate = skipToolBoxProcessingItems.stream()
+                .map(SkipToolBoxProcessingBuildItem::getPredicate)
+                .reduce(mi -> false, Predicate::or);
 
         Map<String, AiServiceClassCreateInfo> perClassMetadata = new HashMap<>();
         if (!ifacesForCreate.isEmpty()) {
@@ -1800,7 +1802,8 @@ public class AiServicesProcessor {
                                         .reduce(mi -> false, Predicate::or),
                                 fallbackToDummyUserMessageItems.stream().map(
                                         FallbackToDummyUserMessageBuildItem::getPredicate)
-                                        .reduce(mi -> false, Predicate::or));
+                                        .reduce(mi -> false, Predicate::or),
+                                skipToolBoxPredicate);
                         if (!methodCreateInfo.getToolClassInfo().isEmpty()) {
                             if ((matchingBI != null)
                                     && matchingBI.getChatMemoryProviderSupplierClassDotName() == null) {
@@ -2023,7 +2026,8 @@ public class AiServicesProcessor {
             List<ToolMethodBuildItem> tools,
             List<ToolQualifierProvider.BuildItem> toolQualifierProviders,
             Predicate<MethodInfo> skipOutputFormatInstructionsPredicate,
-            Predicate<MethodInfo> fallbackToDummyUserMessagePredicate) {
+            Predicate<MethodInfo> fallbackToDummyUserMessagePredicate,
+            Predicate<MethodInfo> skipToolBoxPredicate) {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
@@ -2070,9 +2074,11 @@ public class AiServicesProcessor {
         Optional<AiServiceMethodCreateInfo.MetricsCountedInfo> metricsCountedInfo = gatherMetricsCountedInfo(method,
                 addMicrometerMetrics);
         Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
-        Map<String, AnnotationLiteral<?>> methodToolClassInfo = gatherMethodToolInfo(method, index,
-                toolQualifierProviders.stream().map(
-                        ToolQualifierProvider.BuildItem::getProvider).toList());
+        Map<String, AnnotationLiteral<?>> methodToolClassInfo = skipToolBoxPredicate.test(method)
+                ? Collections.emptyMap()
+                : gatherMethodToolInfo(method, index,
+                        toolQualifierProviders.stream().map(
+                                ToolQualifierProvider.BuildItem::getProvider).toList());
 
         List<String> methodMcpClientNames = gatherMethodMcpClientNames(method);
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
