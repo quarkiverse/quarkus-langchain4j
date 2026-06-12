@@ -272,6 +272,19 @@ public interface EveningPlannerAgent {
 
 Both `FoodExpert` and `MovieExpert` run at the same time. Their results are stored under `"meals"` and `"movies"` respectively. Then the `@Output` method `createPlans` combines those results into a list of `EveningPlan`.
 
+==== Default executor and context propagation
+
+At runtime initialization, the agentic extension configures Quarkus `ManagedExecutor` as the global
+LangChain4j default executor if no programmatic `ExecutorProvider` or ServiceLoader provider is configured.
+This propagates the contexts supported by the installed Quarkus extensions to parallel agent workers.
+The setting applies to all LangChain4j operations that use its default executor, not only parallel agents.
+
+An explicit `@ParallelExecutor` takes precedence for its workflow. A programmatic provider registered
+with `ExecutorProvider.set(...)` takes precedence over a ServiceLoader provider; both take precedence
+over the Quarkus default. Calling `ExecutorProvider.set(...)` after initialization replaces the default
+according to the LangChain4j API. When supplying a custom executor, the application is responsible
+for its context propagation and lifecycle.
+
 === Parallel Mapper
 
 The `@ParallelMapperAgent` annotation maps a single sub-agent over a collection of items, executing each invocation in parallel:
