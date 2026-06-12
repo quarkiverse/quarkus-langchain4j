@@ -75,13 +75,12 @@ public class GPULlama3ResponseParser {
             // Extract thinking content INCLUDING the tags
             thinking = rawResponse.substring(thinkStart, thinkEnd + 8).trim(); // Include </think>
 
-            // Remove the entire thinking block from response
+            // Remove the entire thinking block from response, preserving the answer's own
+            // formatting (newlines, indentation) — never collapse internal whitespace, or code
+            // and multi-line answers would be flattened to a single line.
             String beforeThink = rawResponse.substring(0, thinkStart);
             String afterThink = rawResponse.substring(thinkEnd + 8); // Skip </think>
             actualResponse = (beforeThink + afterThink).trim();
-
-            // Clean up any extra whitespace
-            actualResponse = actualResponse.replaceAll("\\s+", " ").trim();
         }
 
         return new ParsedResponse(thinking, actualResponse);
