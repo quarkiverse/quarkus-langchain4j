@@ -122,6 +122,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingEmitted;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
+import io.quarkiverse.langchain4j.runtime.rag.RagPipelineCreateInfo;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -903,8 +904,14 @@ public class AiServicesProcessor {
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<SelectedChatModelProviderBuildItem> selectedChatModelProvider,
             List<ToolQualifierProvider.BuildItem> toolQualifierProviderItems,
+            List<RagPipelineBuildItem> ragPipelines,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+
+        Map<String, RagPipelineCreateInfo> ragPipelineMap = new HashMap<>();
+        for (RagPipelineBuildItem rp : ragPipelines) {
+            ragPipelineMap.put(rp.getAiServiceClassName(), rp.getCreateInfo());
+        }
 
         boolean needsChatModelBean = false;
         boolean needsStreamingChatModelBean = false;
@@ -1050,6 +1057,8 @@ public class AiServicesProcessor {
             }
             boolean injectChatModel = needsBlockingModel || !selectedChatModelProvider.isEmpty();
 
+            RagPipelineCreateInfo ragPipelineCreateInfo = ragPipelineMap.get(serviceClassName);
+
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
                     .unremovable()
@@ -1061,6 +1070,7 @@ public class AiServicesProcessor {
                                     chatMemoryProviderEntry,
                                     chatMemoryFlushStrategyEntry,
                                     retrievalAugmentorEntry,
+                                    ragPipelineCreateInfo,
                                     moderationModelEntry,
                                     imageModelEntry,
                                     toolProviderEntry,
@@ -1179,6 +1189,11 @@ public class AiServicesProcessor {
                 }
                 case SKIP -> {
                 }
+            }
+
+            // RAG pipeline injection points (companion mode)
+            if (ragPipelineCreateInfo != null) {
+                RagPipelineProcessor.addRagInjectionPoints(configurator, ragPipelineCreateInfo);
             }
 
             // Moderation model injection

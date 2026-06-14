@@ -37,6 +37,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
+import io.quarkiverse.langchain4j.runtime.rag.RagPipelineSupport;
 import io.quarkiverse.langchain4j.runtime.tool.LoggingToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
@@ -318,6 +319,13 @@ public class AiServicesRecorder {
                         }
                         case SKIP -> {
                         }
+                    }
+
+                    // RAG pipeline (companion mode)
+                    if (info.ragPipelineCreateInfo() != null) {
+                        RetrievalAugmentor augmentor = RagPipelineSupport
+                                .buildAugmentor(creationalContext, info.ragPipelineCreateInfo());
+                        quarkusAiServices.retrievalAugmentor(augmentor);
                     }
 
                     // Moderation model

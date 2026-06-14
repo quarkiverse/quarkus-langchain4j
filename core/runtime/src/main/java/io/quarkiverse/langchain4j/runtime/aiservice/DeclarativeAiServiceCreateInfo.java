@@ -6,6 +6,7 @@ import jakarta.enterprise.util.AnnotationLiteral;
 
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
+import io.quarkiverse.langchain4j.runtime.rag.RagPipelineCreateInfo;
 
 public record DeclarativeAiServiceCreateInfo(
         String serviceClassName,
@@ -13,6 +14,7 @@ public record DeclarativeAiServiceCreateInfo(
         ComponentEntry chatMemoryProvider,
         ComponentEntry chatMemoryFlushStrategy,
         ComponentEntry retrievalAugmentor,
+        RagPipelineCreateInfo ragPipelineCreateInfo,
         ComponentEntry moderationModel,
         ComponentEntry imageModel,
         ComponentEntry toolProvider,

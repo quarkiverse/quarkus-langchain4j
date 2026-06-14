@@ -47,6 +47,7 @@ import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.PdfUrl;
+import io.quarkiverse.langchain4j.RagPipeline;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
 import io.quarkiverse.langchain4j.VideoUrl;
@@ -104,6 +105,8 @@ public class LangChain4jDotNames {
     public static final DotName RETRIEVER = DotName.createSimple(ContentRetriever.class);
 
     public static final DotName RETRIEVAL_AUGMENTOR = DotName.createSimple(RetrievalAugmentor.class);
+
+    public static final DotName RAG_PIPELINE = DotName.createSimple(RagPipeline.class);
 
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);
