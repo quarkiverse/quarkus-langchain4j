@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
@@ -28,7 +27,6 @@ import dev.langchain4j.service.tool.search.ToolSearchService;
 import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import io.quarkiverse.langchain4j.DefaultToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceEvents;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
@@ -150,41 +148,30 @@ public class AiServicesRecorder {
                             .map(event -> event.createListener(serviceClass))
                             .forEach(quarkusAiServices::registerListener);
 
-                    if (info.languageModelSupplierClassName() != null
-                            || info.streamingChatLanguageModelSupplierClassName() != null) {
-                        if (info.languageModelSupplierClassName() != null) {
-                            Supplier<? extends ChatModel> supplier = createSupplier(
-                                    info.languageModelSupplierClassName());
-                            quarkusAiServices.chatModel(supplier.get());
-                        }
-                        if (info.streamingChatLanguageModelSupplierClassName() != null) {
-                            Supplier<? extends StreamingChatModel> supplier = createSupplier(
-                                    info.streamingChatLanguageModelSupplierClassName());
-                            quarkusAiServices.streamingChatModel(supplier.get());
-                        }
-                    } else {
-                        if (NamedConfigUtil.isDefault(info.chatModelName())) {
+                    // Chat model — via CDI
+                    if (NamedConfigUtil.isDefault(info.chatModelName())) {
+                        if (info.needsChatModel()) {
                             quarkusAiServices
                                     .chatModel(creationalContext.getInjectedReference(ChatModel.class));
-                            if (info.needsStreamingChatModel()) {
-                                quarkusAiServices
-                                        .streamingChatModel(
-                                                creationalContext.getInjectedReference(StreamingChatModel.class));
-                            }
-
-                        } else {
-
+                        }
+                        if (info.needsStreamingChatModel()) {
+                            quarkusAiServices
+                                    .streamingChatModel(
+                                            creationalContext.getInjectedReference(StreamingChatModel.class));
+                        }
+                    } else {
+                        if (info.needsChatModel()) {
                             quarkusAiServices.chatModel(creationalContext.getInjectedReference(ChatModel.class,
                                     ModelName.Literal.of(info.chatModelName())));
-
-                            if (info.needsStreamingChatModel()) {
-                                quarkusAiServices.streamingChatModel(
-                                        creationalContext.getInjectedReference(StreamingChatModel.class,
-                                                ModelName.Literal.of(info.chatModelName())));
-                            }
+                        }
+                        if (info.needsStreamingChatModel()) {
+                            quarkusAiServices.streamingChatModel(
+                                    creationalContext.getInjectedReference(StreamingChatModel.class,
+                                            ModelName.Literal.of(info.chatModelName())));
                         }
                     }
 
+                    // Tools
                     Map<String, AnnotationLiteral<?>> toolsClasses = info.toolsClassInfo();
                     boolean hasExplicitTools = (toolsClasses != null) && !toolsClasses.isEmpty();
                     if (hasExplicitTools) {
@@ -208,14 +195,20 @@ public class AiServicesRecorder {
                         quarkusAiServices.tools(tools);
                     }
 
-                    if (info.toolHallucinationStrategyClassName() != null) {
-                        Object toolHallucinationStrategy = creationalContext.getInjectedReference(
-                                loadClass(info.toolHallucinationStrategyClassName()));
-                        if (toolHallucinationStrategy == null) {
-                            throw new IllegalStateException(
-                                    "Unknown tool hallucination strategy: " + info.toolHallucinationStrategyClassName());
+                    // Tool hallucination strategy
+                    DeclarativeAiServiceCreateInfo.ComponentEntry toolHallucinationEntry = info.toolHallucinationStrategy();
+                    switch (toolHallucinationEntry.mode()) {
+                        case EXPLICIT -> {
+                            Object toolHallucinationStrategy = creationalContext.getInjectedReference(
+                                    loadClass(toolHallucinationEntry.className()));
+                            if (toolHallucinationStrategy == null) {
+                                throw new IllegalStateException(
+                                        "Unknown tool hallucination strategy: " + toolHallucinationEntry.className());
+                            }
+                            quarkusAiServices.toolHallucinationStrategy(toolHallucinationStrategy);
                         }
-                        quarkusAiServices.toolHallucinationStrategy(toolHallucinationStrategy);
+                        case AUTO_DISCOVER, SKIP -> {
+                        }
                     }
 
                     if (info.toolArgumentsErrorHandlerClassName() != null) {
@@ -226,10 +219,10 @@ public class AiServicesRecorder {
                     }
 
                     if (info.toolExecutionErrorHandlerClassName() != null) {
-                        ToolExecutionErrorHandler toolArgumentsErrorHandler = (ToolExecutionErrorHandler) creationalContext
+                        ToolExecutionErrorHandler toolExecutionErrorHandler = (ToolExecutionErrorHandler) creationalContext
                                 .getInjectedReference(
                                         loadClass(info.toolExecutionErrorHandlerClassName()));
-                        quarkusAiServices.toolExecutionErrorHandler(toolArgumentsErrorHandler);
+                        quarkusAiServices.toolExecutionErrorHandler(toolExecutionErrorHandler);
                     } else {
                         InstanceHandle<ToolExecutionErrorHandler> instance = Arc.container()
                                 .instance(ToolExecutionErrorHandler.class, DefaultToolExecutionErrorHandler.Literal.INSTANCE);
@@ -240,116 +233,116 @@ public class AiServicesRecorder {
                         }
                     }
 
-                    // if no explicit tools are provided, check if we should use a tool provider
-                    if (info.toolProviderSupplier() != null) {
-                        if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
-                                .equals(info.toolProviderSupplier())) {
-                            // specific provider
-                            Class<?> toolProviderClass = loadClass(info.toolProviderSupplier());
-                            Supplier<? extends ToolProvider> toolProvider = (Supplier<? extends ToolProvider>) creationalContext
-                                    .getInjectedReference(toolProviderClass);
-                            quarkusAiServices.toolProvider(toolProvider.get());
-                        } else {
-                            // if-exists provider
+                    // Tool provider
+                    DeclarativeAiServiceCreateInfo.ComponentEntry toolProviderEntry = info.toolProvider();
+                    switch (toolProviderEntry.mode()) {
+                        case AUTO_DISCOVER -> {
                             Instance<ToolProvider> instance = creationalContext
                                     .getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
-                            // if the service has explicit tools and a BeanIfExistsToolProviderSupplier,
-                            // just give priority to the explicit tools, don't throw an error
+                            // if the service has explicit tools and auto-discover,
+                            // give priority to the explicit tools, don't throw an error
                             if (instance.isResolvable() && !hasExplicitTools) {
                                 quarkusAiServices.toolProvider(instance.get());
                             }
                         }
+                        case EXPLICIT -> {
+                            ToolProvider toolProvider = (ToolProvider) creationalContext
+                                    .getInjectedReference(loadClass(toolProviderEntry.className()));
+                            quarkusAiServices.toolProvider(toolProvider);
+                        }
+                        case SKIP -> {
+                        }
                     }
 
-                    if (info.toolSearchStrategySupplier() != null) {
-                        ToolSearchStrategy toolSearchStrategy = null;
-                        if (RegisterAiService.BeanIfExistsToolSearchStrategySupplier.class.getName()
-                                .equals(info.toolSearchStrategySupplier())) {
+                    // Tool search strategy
+                    DeclarativeAiServiceCreateInfo.ComponentEntry toolSearchStrategyEntry = info.toolSearchStrategy();
+                    switch (toolSearchStrategyEntry.mode()) {
+                        case AUTO_DISCOVER -> {
                             Instance<ToolSearchStrategy> instance = creationalContext
                                     .getInjectedReference(TOOL_SEARCH_STRATEGY_TYPE_LITERAL);
                             if (instance.isResolvable()) {
-                                toolSearchStrategy = instance.get();
+                                aiServiceContext.toolSearchService = new ToolSearchService(instance.get());
                             }
-                        } else {
-                            Class<?> supplierClass = loadClass(info.toolSearchStrategySupplier());
-                            Supplier<? extends ToolSearchStrategy> supplier = (Supplier<? extends ToolSearchStrategy>) creationalContext
-                                    .getInjectedReference(supplierClass);
-                            toolSearchStrategy = supplier.get();
                         }
-                        if (toolSearchStrategy != null) {
+                        case EXPLICIT -> {
+                            ToolSearchStrategy toolSearchStrategy = (ToolSearchStrategy) creationalContext
+                                    .getInjectedReference(loadClass(toolSearchStrategyEntry.className()));
                             aiServiceContext.toolSearchService = new ToolSearchService(toolSearchStrategy);
                         }
-                    }
-
-                    if (info.chatMemoryProviderSupplierClassName() != null) {
-                        if (RegisterAiService.BeanChatMemoryProviderSupplier.class.getName()
-                                .equals(info.chatMemoryProviderSupplierClassName())) {
-                            quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
-                                    ChatMemoryProvider.class));
-                        } else {
-                            Supplier<? extends ChatMemoryProvider> supplier = createSupplier(
-                                    info.chatMemoryProviderSupplierClassName());
-                            quarkusAiServices.chatMemoryProvider(supplier.get());
+                        case SKIP -> {
                         }
                     }
 
-                    if (info.retrievalAugmentorSupplierClassName() != null) {
-                        if (RegisterAiService.BeanIfExistsRetrievalAugmentorSupplier.class.getName()
-                                .equals(info.retrievalAugmentorSupplierClassName())) {
+                    // Chat memory provider
+                    DeclarativeAiServiceCreateInfo.ComponentEntry chatMemoryProviderEntry = info.chatMemoryProvider();
+                    switch (chatMemoryProviderEntry.mode()) {
+                        case AUTO_DISCOVER -> {
+                            quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
+                                    ChatMemoryProvider.class));
+                        }
+                        case EXPLICIT -> {
+                            ChatMemoryProvider chatMemoryProvider = (ChatMemoryProvider) creationalContext
+                                    .getInjectedReference(loadClass(chatMemoryProviderEntry.className()));
+                            quarkusAiServices.chatMemoryProvider(chatMemoryProvider);
+                        }
+                        case SKIP -> {
+                        }
+                    }
+
+                    // Chat memory flush strategy
+                    DeclarativeAiServiceCreateInfo.ComponentEntry chatMemoryFlushStrategyEntry = info.chatMemoryFlushStrategy();
+                    switch (chatMemoryFlushStrategyEntry.mode()) {
+                        case EXPLICIT -> {
+                            ChatMemoryFlushStrategy flushStrategy = (ChatMemoryFlushStrategy) creationalContext
+                                    .getInjectedReference(loadClass(chatMemoryFlushStrategyEntry.className()));
+                            quarkusAiServices.chatMemoryFlushStrategy(flushStrategy);
+                        }
+                        case AUTO_DISCOVER, SKIP -> {
+                        }
+                    }
+
+                    // Retrieval augmentor
+                    DeclarativeAiServiceCreateInfo.ComponentEntry retrievalAugmentorEntry = info.retrievalAugmentor();
+                    switch (retrievalAugmentorEntry.mode()) {
+                        case AUTO_DISCOVER -> {
                             Instance<RetrievalAugmentor> instance = creationalContext
                                     .getInjectedReference(RETRIEVAL_AUGMENTOR_TYPE_LITERAL);
                             if (instance.isResolvable()) {
                                 quarkusAiServices.retrievalAugmentor(instance.get());
                             }
-                        } else {
-                            try {
-                                Supplier<RetrievalAugmentor> instance = (Supplier<RetrievalAugmentor>) creationalContext
-                                        .getInjectedReference(loadClass(info.retrievalAugmentorSupplierClassName()));
-                                quarkusAiServices.retrievalAugmentor(instance.get());
-                            } catch (IllegalArgumentException e) {
-                                // the provided Supplier is not a CDI bean, build it manually
-                                Supplier<? extends RetrievalAugmentor> supplier = (Supplier<? extends RetrievalAugmentor>) loadClass(
-                                        info.retrievalAugmentorSupplierClassName())
-                                        .getConstructor().newInstance();
-                                quarkusAiServices.retrievalAugmentor(supplier.get());
-                            }
+                        }
+                        case EXPLICIT -> {
+                            RetrievalAugmentor augmentor = (RetrievalAugmentor) creationalContext
+                                    .getInjectedReference(loadClass(retrievalAugmentorEntry.className()));
+                            quarkusAiServices.retrievalAugmentor(augmentor);
+                        }
+                        case SKIP -> {
                         }
                     }
 
-                    if (info.moderationModelSupplierClassName() != null && info.needsModerationModel()) {
-                        if (RegisterAiService.BeanIfExistsModerationModelSupplier.class.getName()
-                                .equals(info.moderationModelSupplierClassName())) {
-
-                            if (NamedConfigUtil.isDefault(info.moderationModelName())) {
-                                quarkusAiServices
-                                        .moderationModel(creationalContext.getInjectedReference(ModerationModel.class));
-
-                            } else {
-                                quarkusAiServices.moderationModel(creationalContext.getInjectedReference(ModerationModel.class,
-                                        ModelName.Literal.of(info.moderationModelName())));
-                            }
+                    // Moderation model
+                    DeclarativeAiServiceCreateInfo.ComponentEntry moderationModelEntry = info.moderationModel();
+                    if (moderationModelEntry.mode() != DeclarativeAiServiceCreateInfo.ComponentEntry.SKIP.mode()
+                            && info.needsModerationModel()) {
+                        if (NamedConfigUtil.isDefault(info.moderationModelName())) {
+                            quarkusAiServices
+                                    .moderationModel(creationalContext.getInjectedReference(ModerationModel.class));
                         } else {
-                            Supplier<? extends ModerationModel> supplier = createSupplier(
-                                    info.moderationModelSupplierClassName());
-                            quarkusAiServices.moderationModel(supplier.get());
+                            quarkusAiServices.moderationModel(creationalContext.getInjectedReference(ModerationModel.class,
+                                    ModelName.Literal.of(info.moderationModelName())));
                         }
                     }
 
-                    if (info.imageModelSupplierClassName() != null && info.needsImageModel()) {
-                        if (RegisterAiService.BeanIfExistsImageModelSupplier.class.getName()
-                                .equals(info.imageModelSupplierClassName())) {
-                            if (NamedConfigUtil.isDefault(info.chatModelName())) {
-                                quarkusAiServices
-                                        .imageModel(creationalContext.getInjectedReference(ImageModel.class));
-
-                            } else {
-                                quarkusAiServices.imageModel(creationalContext.getInjectedReference(ImageModel.class,
-                                        ModelName.Literal.of(info.chatModelName())));
-                            }
-
+                    // Image model
+                    DeclarativeAiServiceCreateInfo.ComponentEntry imageModelEntry = info.imageModel();
+                    if (imageModelEntry.mode() != DeclarativeAiServiceCreateInfo.ComponentEntry.SKIP.mode()
+                            && info.needsImageModel()) {
+                        if (NamedConfigUtil.isDefault(info.chatModelName())) {
+                            quarkusAiServices
+                                    .imageModel(creationalContext.getInjectedReference(ImageModel.class));
                         } else {
-                            Supplier<? extends ImageModel> supplier = createSupplier(info.imageModelSupplierClassName());
-                            quarkusAiServices.imageModel(supplier.get());
+                            quarkusAiServices.imageModel(creationalContext.getInjectedReference(ImageModel.class,
+                                    ModelName.Literal.of(info.chatModelName())));
                         }
                     }
 
@@ -365,13 +358,19 @@ public class AiServicesRecorder {
                                 .getConstructor().newInstance());
                     }
 
-                    if (info.systemMessageProviderClassName() != null) {
-                        Object provider = loadClass(info.systemMessageProviderClassName())
-                                .getConstructor().newInstance();
-                        if (provider instanceof SystemMessageProviderWithContext withContext) {
-                            quarkusAiServices.systemMessageProvider(withContext);
-                        } else if (provider instanceof SystemMessageProvider memoryIdProvider) {
-                            quarkusAiServices.systemMessageProvider(memoryIdProvider);
+                    // System message provider
+                    DeclarativeAiServiceCreateInfo.ComponentEntry systemMessageProviderEntry = info.systemMessageProvider();
+                    switch (systemMessageProviderEntry.mode()) {
+                        case EXPLICIT -> {
+                            Object provider = creationalContext
+                                    .getInjectedReference(loadClass(systemMessageProviderEntry.className()));
+                            if (provider instanceof SystemMessageProviderWithContext withContext) {
+                                quarkusAiServices.systemMessageProvider(withContext);
+                            } else if (provider instanceof SystemMessageProvider memoryIdProvider) {
+                                quarkusAiServices.systemMessageProvider(memoryIdProvider);
+                            }
+                        }
+                        case AUTO_DISCOVER, SKIP -> {
                         }
                     }
 
@@ -384,12 +383,6 @@ public class AiServicesRecorder {
                     }
 
                     quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());
-
-                    if (info.chatMemoryFlushStrategySupplierClassName() != null) {
-                        Supplier<? extends ChatMemoryFlushStrategy> supplier = createSupplier(
-                                info.chatMemoryFlushStrategySupplierClassName());
-                        quarkusAiServices.chatMemoryFlushStrategy(supplier.get());
-                    }
 
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
@@ -408,19 +401,5 @@ public class AiServicesRecorder {
                         .loadClass(info);
             }
         };
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Supplier<T> createSupplier(String className) throws InstantiationException, IllegalAccessException,
-            InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
-        Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-        InstanceHandle<?> instance = Arc.container().instance(clazz);
-        if (instance.isAvailable()) {
-            return (Supplier<T>) instance.get();
-        } else {
-            return (Supplier<T>) clazz
-                    .getConstructor().newInstance();
-        }
-
     }
 }

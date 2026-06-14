@@ -8,8 +8,7 @@ import dev.langchain4j.service.guardrail.OutputGuardrails;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-@RegisterAiService(chatMemoryProviderSupplier = // disable chat memory
-        RegisterAiService.NoChatMemoryProviderSupplier.class)
+@RegisterAiService(chatMemoryProvider = void.class)
 public interface ImageToPlantUMLService {
 
     @SystemMessage("You are a PlantUML expert. You reverse engineer images into PlantUML code")

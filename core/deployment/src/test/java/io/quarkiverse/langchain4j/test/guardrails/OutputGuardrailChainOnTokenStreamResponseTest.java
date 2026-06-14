@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -77,7 +77,7 @@ public class OutputGuardrailChainOnTokenStreamResponseTest extends TokenStreamEx
         assertThat(firstGuardrail.lastAccess()).isLessThan(secondGuardrail.lastAccess());
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
         @OutputGuardrails({ FirstGuardrail.class, SecondGuardrail.class })
         TokenStream firstOneTwo(@MemoryId String mem, @UserMessage String message);
@@ -161,14 +161,7 @@ public class OutputGuardrailChainOnTokenStreamResponseTest extends TokenStreamEx
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new MyStreamedChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyStreamedChatModel implements StreamingChatModel {
 
         @Override
@@ -180,15 +173,11 @@ public class OutputGuardrailChainOnTokenStreamResponseTest extends TokenStreamEx
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProviderSupplier implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return MessageWindowChatMemory.withMaxMessages(10);
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
         }
     }
 }

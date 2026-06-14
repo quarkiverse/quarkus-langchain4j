@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -41,7 +41,7 @@ public class InputAndDeclarativeAiServiceOutputGuardrailsTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class,
+                            MyChatModel.class, MyChatMemoryProvider.class,
                             ValidationException.class));
 
     @Inject
@@ -117,7 +117,7 @@ public class InputAndDeclarativeAiServiceOutputGuardrailsTest {
         assertThat(koOutWithReprompt.getSpy()).isEqualTo(2);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @InputGuardrails(MyOkInputGuardrail.class)
@@ -242,14 +242,7 @@ public class InputAndDeclarativeAiServiceOutputGuardrailsTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -258,15 +251,11 @@ public class InputAndDeclarativeAiServiceOutputGuardrailsTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new MessageWindowChatMemory.Builder().maxMessages(5).build();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new MessageWindowChatMemory.Builder().maxMessages(5).build();
         }
     }
 }

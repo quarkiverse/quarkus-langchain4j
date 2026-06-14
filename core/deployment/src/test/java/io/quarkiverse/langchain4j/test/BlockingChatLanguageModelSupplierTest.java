@@ -3,8 +3,7 @@ package io.quarkiverse.langchain4j.test;
 import static io.restassured.RestAssured.get;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.util.function.Supplier;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
@@ -36,20 +35,15 @@ public class BlockingChatLanguageModelSupplierTest {
         }
     }
 
-    public static class MyModelSupplier implements Supplier<ChatModel> {
-
+    @ApplicationScoped
+    public static class MyChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest chatRequest) {
-                    return ChatResponse.builder().aiMessage(new AiMessage("42")).build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            return ChatResponse.builder().aiMessage(new AiMessage("42")).build();
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface MyService {
         String chat(String msg);
     }
@@ -57,7 +51,7 @@ public class BlockingChatLanguageModelSupplierTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MyResource.class, MyService.class, MyModelSupplier.class));
+                    .addClasses(MyResource.class, MyService.class, MyChatModel.class));
 
     @Test
     public void testCall() {

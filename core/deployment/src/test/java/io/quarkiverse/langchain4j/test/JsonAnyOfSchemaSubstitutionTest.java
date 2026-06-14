@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.test;
 
-import java.util.function.Supplier;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
@@ -56,23 +55,19 @@ public class JsonAnyOfSchemaSubstitutionTest {
     public record NumberBlock(int value) implements Block {
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
         @UserMessage("Dummy")
         MyResponse chat(String msg);
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class MyChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest request) {
-                    return ChatResponse.builder()
-                            .aiMessage(new AiMessage("{\"blocks\":[]}"))
-                            .build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest request) {
+            return ChatResponse.builder()
+                    .aiMessage(new AiMessage("{\"blocks\":[]}"))
+                    .build();
         }
     }
 }

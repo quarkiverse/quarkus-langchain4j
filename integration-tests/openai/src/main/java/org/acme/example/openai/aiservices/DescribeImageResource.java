@@ -22,7 +22,7 @@ public class DescribeImageResource {
         return imageDescriber.describe(url);
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     @ApplicationScoped
     public interface ImageDescriber {
 

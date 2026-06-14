@@ -24,13 +24,12 @@ public class ExplicitToolsAndNoBeanToolProviderTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(TestAiSupplier.class,
-                            TestAiModel.class,
+                    .addClasses(TestAiModel.class,
                             ServiceWithExplicitToolsAndNoToolProviderSupplier.class,
                             MyCustomToolProvider.class,
                             ToolsClass.class));
 
-    @RegisterAiService(chatLanguageModelSupplier = TestAiSupplier.class, tools = ToolsClass.class, toolProviderSupplier = RegisterAiService.NoToolProviderSupplier.class)
+    @RegisterAiService(tools = ToolsClass.class)
     interface ServiceWithExplicitToolsAndNoToolProviderSupplier {
         String chat(@UserMessage String msg, @MemoryId Object id);
     }

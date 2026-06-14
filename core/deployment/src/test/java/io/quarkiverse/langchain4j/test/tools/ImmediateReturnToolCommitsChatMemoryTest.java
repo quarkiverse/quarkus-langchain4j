@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -24,6 +23,7 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
@@ -54,8 +54,8 @@ public class ImmediateReturnToolCommitsChatMemoryTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTool.class,
                             TrackingChatMemoryStore.class,
-                            TrackingChatMemoryStoreSupplier.class,
-                            FakeChatModelSupplier.class, FakeChatModel.class));
+                            TrackingChatMemoryStoreProvider.class,
+                            FakeChatModel.class));
 
     @Inject
     MyAiService aiService;
@@ -91,7 +91,7 @@ public class ImmediateReturnToolCommitsChatMemoryTest {
         assertThat(stored).hasSize(3);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = FakeChatModelSupplier.class, chatMemoryProviderSupplier = TrackingChatMemoryStoreSupplier.class, tools = MyTool.class)
+    @RegisterAiService(chatMemoryProvider = TrackingChatMemoryStoreProvider.class, tools = MyTool.class)
     public interface MyAiService {
         Result<String> chat(@MemoryId String memoryId, @UserMessage String message);
     }
@@ -144,21 +144,15 @@ public class ImmediateReturnToolCommitsChatMemoryTest {
         }
     }
 
-    public static class TrackingChatMemoryStoreSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class TrackingChatMemoryStoreProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> MessageWindowChatMemory.builder()
+        public ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.builder()
                     .id(memoryId)
                     .maxMessages(20)
                     .chatMemoryStore(TrackingChatMemoryStore.INSTANCE)
                     .build();
-        }
-    }
-
-    public static class FakeChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new FakeChatModel();
         }
     }
 
@@ -168,6 +162,7 @@ public class ImmediateReturnToolCommitsChatMemoryTest {
      * for the "immediateAction" tool, extracting the tool name from the user message.
      * </pre>
      */
+    @ApplicationScoped
     public static class FakeChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest chatRequest) {

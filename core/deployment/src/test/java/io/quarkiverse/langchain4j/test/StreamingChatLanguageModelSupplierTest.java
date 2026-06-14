@@ -3,8 +3,7 @@ package io.quarkiverse.langchain4j.test;
 import static io.restassured.RestAssured.get;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.util.function.Supplier;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
@@ -38,21 +37,17 @@ public class StreamingChatLanguageModelSupplierTest {
         }
     }
 
-    public static class MyModelSupplier implements Supplier<StreamingChatModel> {
+    @ApplicationScoped
+    public static class MyStreamingChatModel implements StreamingChatModel {
         @Override
-        public StreamingChatModel get() {
-            return new StreamingChatModel() {
-                @Override
-                public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-                    handler.onPartialResponse("4");
-                    handler.onPartialResponse("2");
-                    handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
-                }
-            };
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+            handler.onPartialResponse("4");
+            handler.onPartialResponse("2");
+            handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
         }
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface MyService {
         Multi<String> chat(String msg);
     }
@@ -60,7 +55,7 @@ public class StreamingChatLanguageModelSupplierTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MyResource.class, MyService.class, MyModelSupplier.class));
+                    .addClasses(MyResource.class, MyService.class, MyStreamingChatModel.class));
 
     @Test
     public void testCall() {

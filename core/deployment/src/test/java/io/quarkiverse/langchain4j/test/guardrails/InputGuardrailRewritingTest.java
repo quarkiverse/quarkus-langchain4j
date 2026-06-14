@@ -2,8 +2,7 @@ package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.function.Supplier;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -33,7 +32,7 @@ public class InputGuardrailRewritingTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MessageTruncatingGuardrail.class, EchoChatModel.class,
-                            MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatMemoryProvider.class));
 
     @Inject
     MyAiService aiService;
@@ -44,7 +43,7 @@ public class InputGuardrailRewritingTest {
         assertEquals(MessageTruncatingGuardrail.MAX_LENGTH, aiService.test("first prompt", "second prompt").length());
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Given {first} and {second} do something")
@@ -65,14 +64,7 @@ public class InputGuardrailRewritingTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new EchoChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class EchoChatModel implements ChatModel {
 
         @Override
@@ -84,15 +76,11 @@ public class InputGuardrailRewritingTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

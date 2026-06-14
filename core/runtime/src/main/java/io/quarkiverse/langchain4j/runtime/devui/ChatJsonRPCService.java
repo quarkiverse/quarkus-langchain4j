@@ -252,7 +252,7 @@ public class ChatJsonRPCService {
             } else {
                 executeWithTools(memory);
             }
-            // Remove toolProviderSupplier tools again
+            // Remove toolProvider tools again
             if (hasToolProvider) {
                 toolSpecifications.clear();
                 toolExecutors.clear();
@@ -337,7 +337,7 @@ public class ChatJsonRPCService {
                         }
                         executeWithToolsAndStreaming(memory, em, finalToolExecutionsLeft);
                     }
-                    // Remove toolProviderSupplier tools again
+                    // Remove toolProvider tools again
                     if (toolProvider != null) {
                         toolSpecifications.clear();
                         toolExecutors.clear();

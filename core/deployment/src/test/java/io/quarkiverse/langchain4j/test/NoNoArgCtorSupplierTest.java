@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.test;
 
-import java.util.function.Supplier;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -40,7 +38,7 @@ public class NoNoArgCtorSupplierTest {
     }
 
     @ApplicationScoped
-    @RegisterAiService(chatMemoryProviderSupplier = NoNoArgSupplier.class, chatLanguageModelSupplier = MyModelSupplier.class)
+    @RegisterAiService(chatMemoryProvider = NoNoArgChatMemoryProvider.class)
     public interface TestAgent {
 
         // Basic chat method
@@ -51,14 +49,14 @@ public class NoNoArgCtorSupplierTest {
     }
 
     @ApplicationScoped
-    public static class NoNoArgSupplier implements Supplier<ChatMemoryProvider> {
+    public static class NoNoArgChatMemoryProvider implements ChatMemoryProvider {
 
-        public NoNoArgSupplier(SomeBean something) { // no no-arg ctor
+        public NoNoArgChatMemoryProvider(SomeBean something) { // no no-arg ctor
         }
 
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> MessageWindowChatMemory.withMaxMessages(10);
+        public dev.langchain4j.memory.ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
         }
     }
 
@@ -76,15 +74,11 @@ public class NoNoArgCtorSupplierTest {
         }
     }
 
-    public static class MyModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class MyChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest request) {
-                    return ChatResponse.builder().aiMessage(new AiMessage("hello")).build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest request) {
+            return ChatResponse.builder().aiMessage(new AiMessage("hello")).build();
         }
     }
 }

@@ -21,10 +21,10 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
  * Usage:
  *
  *   &#64;RegisterAiService(
- *       chatMemoryFlushStrategySupplier = MyFlushStrategySupplier.class
+ *       chatMemoryFlushStrategy = MyChatMemoryFlushStrategy.class
  *   )
  *
- * Where MyFlushStrategySupplier implements Supplier&lt;ChatMemoryFlushStrategy&gt;.
+ * Where MyChatMemoryFlushStrategy is a CDI bean.
  * </pre>
  */
 public enum ChatMemoryFlushStrategy {

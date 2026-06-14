@@ -4,7 +4,6 @@ import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.valid
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateNoMethodParameters;
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateRequiredParameterTypes;
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateStaticMethod;
-import static io.quarkiverse.langchain4j.deployment.AiServicesProcessor.TOOLBOX;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -57,7 +56,6 @@ import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.PreventToolValidationErrorBuildItem;
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
-import io.quarkiverse.langchain4j.deployment.SkipToolBoxProcessingBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
@@ -127,10 +125,8 @@ public class AgenticProcessor {
 
             List<MethodInfo> mcpToolBoxMethods = methods.stream()
                     .filter(mi -> mi.hasAnnotation(LangChain4jDotNames.MCP_TOOLBOX)).toList();
-            List<MethodInfo> toolBoxMethods = methods.stream()
-                    .filter(mi -> mi.hasAnnotation(TOOLBOX)).toList();
             DetectedAiAgentBuildItem item = new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null),
-                    modelName, mcpToolBoxMethods, toolBoxMethods);
+                    modelName, mcpToolBoxMethods);
             validate(item);
             producer.produce(
                     item);
@@ -387,18 +383,6 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    SkipToolBoxProcessingBuildItem skipToolBoxForAgents() {
-        return new SkipToolBoxProcessingBuildItem(methodInfo -> {
-            for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
-                if (methodInfo.hasAnnotation(dotName)) {
-                    return true;
-                }
-            }
-            return false;
-        });
-    }
-
-    @BuildStep
     AnnotationsImpliesAiServiceBuildItem implyAiService() {
         return new AnnotationsImpliesAiServiceBuildItem(AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS);
     }
@@ -461,44 +445,6 @@ public class AgenticProcessor {
             }
         }
         recorder.setAgentsWithMcpToolBox(agentsWithMcpToolBox);
-    }
-
-    @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
-    void toolBoxSupport(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder,
-            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer) {
-        Map<String, List<String>> agentsWithToolBox = new HashMap<>();
-        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
-            if (!bi.getToolBoxMethods().isEmpty()) {
-                boolean hasToolsSupplier = bi.getIface().methods().stream()
-                        .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.TOOL_SUPPLIER));
-                if (hasToolsSupplier) {
-                    throw new IllegalConfigurationException(
-                            "Agent interface '" + bi.getIface().name()
-                                    + "' cannot use both @ToolsSupplier and @ToolBox. "
-                                    + "Use one or the other to specify tools.");
-                }
-
-                List<String> toolClassNames = new ArrayList<>();
-                for (MethodInfo method : bi.getToolBoxMethods()) {
-                    AnnotationInstance toolBoxAnnotation = method.declaredAnnotation(TOOLBOX);
-                    if (toolBoxAnnotation != null && toolBoxAnnotation.value() != null) {
-                        for (Type toolClass : toolBoxAnnotation.value().asClassArray()) {
-                            String className = toolClass.name().toString();
-                            if (!toolClassNames.contains(className)) {
-                                toolClassNames.add(className);
-                                unremovableBeanProducer.produce(
-                                        UnremovableBeanBuildItem.beanTypes(toolClass.name()));
-                            }
-                        }
-                    }
-                }
-                if (!toolClassNames.isEmpty()) {
-                    agentsWithToolBox.put(bi.getIface().name().toString(), toolClassNames);
-                }
-            }
-        }
-        recorder.setAgentsWithToolBox(agentsWithToolBox);
     }
 
     @BuildStep

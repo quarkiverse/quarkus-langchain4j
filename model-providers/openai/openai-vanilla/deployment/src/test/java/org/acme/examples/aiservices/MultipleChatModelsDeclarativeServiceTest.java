@@ -63,7 +63,7 @@ public class MultipleChatModelsDeclarativeServiceTest extends OpenAiBaseTest {
         String chat(String userMessage);
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface ChatWithRuntimeSelection {
 
         String chat(@UserMessage String userMessage, @ModelName String model);

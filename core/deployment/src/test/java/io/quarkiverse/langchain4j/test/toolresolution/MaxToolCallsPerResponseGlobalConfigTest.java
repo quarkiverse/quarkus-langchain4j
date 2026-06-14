@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -31,13 +30,14 @@ public class MaxToolCallsPerResponseGlobalConfigTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Tools.class, ModelSupplier.class))
+                    .addClasses(Tools.class, TestChatModel.class))
             .overrideConfigKey("quarkus.langchain4j.ai-service.max-tool-calls-per-response", "3");
 
     static List<Integer> toolCallsCounts = new ArrayList<>();
     static int responseCount = 0;
 
-    static ChatModel chatModel = new ChatModel() {
+    @ApplicationScoped
+    public static class TestChatModel implements ChatModel {
         @Override
         public ChatResponse chat(ChatRequest chatRequest) {
             responseCount++;
@@ -64,23 +64,16 @@ public class MaxToolCallsPerResponseGlobalConfigTest {
                     .finishReason(FinishReason.TOOL_EXECUTION)
                     .build();
         }
-    };
+    }
 
-    @RegisterAiService(tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(tools = Tools.class)
     public interface AiServiceWithGlobalConfig {
         String chat(String message);
     }
 
-    @RegisterAiService(maxToolCallsPerResponse = 2, tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = 2, tools = Tools.class)
     public interface AiServiceWithAnnotationOverride {
         String chat(String message);
-    }
-
-    public static class ModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return chatModel;
-        }
     }
 
     @ApplicationScoped

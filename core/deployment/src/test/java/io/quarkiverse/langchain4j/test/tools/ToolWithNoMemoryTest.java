@@ -25,7 +25,7 @@ public class ToolWithNoMemoryTest {
         fail("should never be called");
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class, tools = Tools.class)
+    @RegisterAiService(chatMemoryProvider = void.class, tools = Tools.class)
     public interface MyAiService {
 
         String chat(String userMessage);

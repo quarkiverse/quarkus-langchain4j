@@ -22,10 +22,8 @@ public class ResponseAugmenterOnClassTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
-                            ResponseAugmenterTestUtils.FakeChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeChatModel.class,
                             ResponseAugmenterTestUtils.FakeStreamedChatModel.class,
-                            ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class,
                             ResponseAugmenterTestUtils.UppercaseAugmenter.class,
                             ResponseAugmenterTestUtils.AppenderAugmenter.class));
 
@@ -51,7 +49,7 @@ public class ResponseAugmenterOnClassTest {
                 .containsExactly("Hi!", " ", "World!", " WONDERFUL!");
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class, chatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeChatModelSupplier.class)
+    @RegisterAiService
     @ResponseAugmenter(ResponseAugmenterTestUtils.AppenderAugmenter.class)
     public interface MyAiService {
 

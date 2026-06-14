@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.guardrails;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -35,7 +34,7 @@ public class InputGuardrailOnClassAndMethodTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class, MyChatMemoryProvider.class));
 
     @Inject
     MyAiService aiService;
@@ -58,7 +57,7 @@ public class InputGuardrailOnClassAndMethodTest {
         assertThat(koGuardrail.spy()).isEqualTo(0);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     @InputGuardrails(KOGuardrail.class)
     public interface MyAiService {
 
@@ -100,14 +99,7 @@ public class InputGuardrailOnClassAndMethodTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -116,15 +108,11 @@ public class InputGuardrailOnClassAndMethodTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

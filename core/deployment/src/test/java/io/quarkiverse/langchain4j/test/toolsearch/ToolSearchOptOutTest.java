@@ -13,12 +13,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.RegisterAiService.NoToolSearchStrategySupplier;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Even when a {@code ToolSearchStrategy} CDI bean exists, a service that opts out with
- * {@link NoToolSearchStrategySupplier} must keep the full tool catalog visible upfront.
+ * Even when a {@code ToolSearchStrategy} CDI bean exists, a service that does not set
+ * {@code toolSearchStrategy} (default {@code void.class} = SKIP) must keep the full tool catalog visible upfront.
  */
 public class ToolSearchOptOutTest {
 
@@ -26,12 +25,11 @@ public class ToolSearchOptOutTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ToolSearchModel.class,
-                            ToolSearchModelSupplier.class,
                             FakeToolSearchStrategy.class,
                             BookingTools.class,
                             ServiceOptingOut.class));
 
-    @RegisterAiService(tools = BookingTools.class, chatLanguageModelSupplier = ToolSearchModelSupplier.class, toolSearchStrategySupplier = NoToolSearchStrategySupplier.class)
+    @RegisterAiService(tools = BookingTools.class)
     interface ServiceOptingOut {
 
         String chat(@UserMessage String msg, @MemoryId Object id);

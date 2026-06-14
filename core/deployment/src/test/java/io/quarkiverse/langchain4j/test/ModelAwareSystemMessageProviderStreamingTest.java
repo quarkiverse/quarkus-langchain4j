@@ -3,13 +3,10 @@ package io.quarkiverse.langchain4j.test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -45,7 +42,6 @@ public class ModelAwareSystemMessageProviderStreamingTest {
                     .addClasses(
                             Assistant.class,
                             ModelAwareProvider.class,
-                            ClaudeStreamingModelSupplier.class,
                             FakeClaudeStreamingModel.class));
 
     @Inject
@@ -59,7 +55,7 @@ public class ModelAwareSystemMessageProviderStreamingTest {
         assertThat(response).isEqualTo("provider=ANTHROPIC model=claude-opus-4-8");
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = ClaudeStreamingModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class, systemMessageProviderSupplier = ModelAwareProvider.class)
+    @RegisterAiService(chatMemoryProvider = void.class, systemMessageProvider = ModelAwareProvider.class)
     public interface Assistant {
         Multi<String> chat(@MemoryId String memoryId, @UserMessage String userMessage);
     }
@@ -74,22 +70,7 @@ public class ModelAwareSystemMessageProviderStreamingTest {
         }
     }
 
-    @Singleton
-    public static class ClaudeStreamingModelSupplier implements Supplier<StreamingChatModel> {
-
-        private FakeClaudeStreamingModel model;
-
-        @PostConstruct
-        public void init() {
-            model = new FakeClaudeStreamingModel();
-        }
-
-        @Override
-        public StreamingChatModel get() {
-            return model;
-        }
-    }
-
+    @ApplicationScoped
     public static class FakeClaudeStreamingModel implements StreamingChatModel {
 
         @Override

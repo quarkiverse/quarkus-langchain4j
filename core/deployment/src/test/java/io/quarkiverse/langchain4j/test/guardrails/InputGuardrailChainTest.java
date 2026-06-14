@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -38,7 +38,7 @@ public class InputGuardrailChainTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class,
+                            MyChatModel.class, MyChatMemoryProvider.class,
                             ValidationException.class));
 
     @Inject
@@ -82,7 +82,7 @@ public class InputGuardrailChainTest {
         assertThat(failingGuardrail.spy()).isEqualTo(1);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @InputGuardrails({ FirstGuardrail.class, SecondGuardrail.class })
@@ -168,14 +168,7 @@ public class InputGuardrailChainTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -184,15 +177,11 @@ public class InputGuardrailChainTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

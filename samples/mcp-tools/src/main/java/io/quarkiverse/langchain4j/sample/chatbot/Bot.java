@@ -6,7 +6,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import jakarta.enterprise.context.SessionScoped;
 
-@RegisterAiService//(toolProviderSupplier = FilesystemToolProvider.class)
+@RegisterAiService//(toolProvider = FilesystemToolProvider.class)
 @SessionScoped
 public interface Bot {
 

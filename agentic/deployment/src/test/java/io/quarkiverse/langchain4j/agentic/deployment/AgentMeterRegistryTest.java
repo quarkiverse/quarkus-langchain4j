@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -56,12 +56,13 @@ public class AgentMeterRegistryTest extends OpenAiBaseTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(SimpleAgent.class, SimpleAiService.class, TestChatModelSupplier.class))
+                    .addClasses(SimpleAgent.class, SimpleAiService.class, TestChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     WiremockAware.wiremockUrlForConfig("/v1"));
 
-    private static final ChatModel testChatModel = new ChatModel() {
+    @ApplicationScoped
+    public static class TestChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest request) {
             return ChatResponse.builder()
@@ -75,7 +76,7 @@ public class AgentMeterRegistryTest extends OpenAiBaseTest {
             return Arc.container().select(ChatModelListener.class)
                     .stream().collect(Collectors.toList());
         }
-    };
+    }
 
     public interface SimpleAgent {
 
@@ -84,18 +85,11 @@ public class AgentMeterRegistryTest extends OpenAiBaseTest {
 
         @ChatModelSupplier
         static ChatModel chatModel() {
-            return testChatModel;
+            return Arc.container().instance(TestChatModel.class).get();
         }
     }
 
-    public static class TestChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return testChatModel;
-        }
-    }
-
-    @RegisterAiService(chatLanguageModelSupplier = TestChatModelSupplier.class)
+    @RegisterAiService
     public interface SimpleAiService {
 
         String chat(String message);

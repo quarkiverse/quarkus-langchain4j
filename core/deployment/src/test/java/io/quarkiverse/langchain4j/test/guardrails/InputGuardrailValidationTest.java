@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
@@ -45,8 +44,8 @@ public class InputGuardrailValidationTest extends TokenStreamExecutor {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class,
-                            MyChatModel.class, MyStreamingChatModel.class, MyChatModelSupplier.class,
-                            MyMemoryProviderSupplier.class, ValidationException.class));
+                            MyChatModel.class, MyStreamingChatModel.class,
+                            MyChatMemoryProvider.class, ValidationException.class));
 
     @Inject
     MyAiService aiService;
@@ -117,7 +116,7 @@ public class InputGuardrailValidationTest extends TokenStreamExecutor {
         aiService.test("1", "bar");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, streamingChatLanguageModelSupplier = MyStreamingChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hi!")
@@ -225,22 +224,7 @@ public class InputGuardrailValidationTest extends TokenStreamExecutor {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
-    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new MyStreamingChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -249,6 +233,7 @@ public class InputGuardrailValidationTest extends TokenStreamExecutor {
         }
     }
 
+    @ApplicationScoped
     public static class MyStreamingChatModel implements StreamingChatModel {
 
         @Override
@@ -259,15 +244,11 @@ public class InputGuardrailValidationTest extends TokenStreamExecutor {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new MessageWindowChatMemory.Builder().maxMessages(5).build();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new MessageWindowChatMemory.Builder().maxMessages(5).build();
         }
     }
 }

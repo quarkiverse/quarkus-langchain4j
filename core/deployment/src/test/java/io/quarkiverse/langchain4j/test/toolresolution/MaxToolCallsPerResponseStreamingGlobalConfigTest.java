@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -35,13 +34,14 @@ public class MaxToolCallsPerResponseStreamingGlobalConfigTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Tools.class, StreamingModelSupplier.class))
+                    .addClasses(Tools.class, TestStreamingChatModel.class))
             .overrideConfigKey("quarkus.langchain4j.ai-service.max-tool-calls-per-response", "3");
 
     static List<Integer> toolCallsCounts = new ArrayList<>();
     static int responseCount = 0;
 
-    static StreamingChatModel streamingChatModel = new StreamingChatModel() {
+    @ApplicationScoped
+    public static class TestStreamingChatModel implements StreamingChatModel {
         @Override
         public void chat(ChatRequest chatRequest, dev.langchain4j.model.chat.response.StreamingChatResponseHandler handler) {
             responseCount++;
@@ -71,23 +71,16 @@ public class MaxToolCallsPerResponseStreamingGlobalConfigTest {
                 handler.onCompleteResponse(response);
             }
         }
-    };
+    }
 
-    @RegisterAiService(tools = Tools.class, streamingChatLanguageModelSupplier = StreamingModelSupplier.class)
+    @RegisterAiService(tools = Tools.class)
     public interface StreamingAiServiceWithGlobalConfig {
         Multi<String> chat(String message);
     }
 
-    @RegisterAiService(maxToolCallsPerResponse = 2, tools = Tools.class, streamingChatLanguageModelSupplier = StreamingModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = 2, tools = Tools.class)
     public interface StreamingAiServiceWithAnnotationOverride {
         Multi<String> chat(String message);
-    }
-
-    public static class StreamingModelSupplier implements Supplier<StreamingChatModel> {
-        @Override
-        public StreamingChatModel get() {
-            return streamingChatModel;
-        }
     }
 
     @ApplicationScoped

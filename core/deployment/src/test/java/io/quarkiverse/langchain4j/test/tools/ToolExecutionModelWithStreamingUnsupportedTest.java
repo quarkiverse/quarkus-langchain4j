@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -331,7 +331,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         assertThat(result.get()).isNull();
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
     public interface MyAiService {
 
         @ToolBox(BlockingTool.class)
@@ -385,14 +385,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements StreamingChatModel {
 
         @Override
@@ -404,15 +397,11 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
 
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return MessageWindowChatMemory.withMaxMessages(10);
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
         }
     }
 }

@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -19,7 +19,6 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.guardrail.OutputGuardrailRequest;
 import dev.langchain4j.guardrail.OutputGuardrailResult;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -27,7 +26,6 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class OutputGuardrailPromptTemplateTest {
@@ -36,7 +34,7 @@ public class OutputGuardrailPromptTemplateTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyAiService.class, GuardrailValidation.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class));
     @Inject
     MyAiService aiService;
 
@@ -143,7 +141,7 @@ public class OutputGuardrailPromptTemplateTest {
         assertThat(guardrailValidation.spyVariables()).isEmpty();
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     public interface MyAiService {
 
         @OutputGuardrails(GuardrailValidation.class)
@@ -202,26 +200,12 @@ public class OutputGuardrailPromptTemplateTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
         public ChatResponse doChat(ChatRequest request) {
             return ChatResponse.builder().aiMessage(new AiMessage("Hi!")).build();
-        }
-    }
-
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-        @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> new NoopChatMemory();
         }
     }
 }

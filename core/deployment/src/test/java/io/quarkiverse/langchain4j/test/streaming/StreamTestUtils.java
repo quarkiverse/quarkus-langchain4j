@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Supplier;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -26,30 +27,19 @@ import io.vertx.core.Vertx;
  */
 public class StreamTestUtils {
 
-    public static class FakeMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class FakeMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new MessageWindowChatMemory.Builder()
-                            .id(memoryId)
-                            .maxMessages(10)
-                            .chatMemoryStore(new FakeMemoryStore())
-                            .build();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new MessageWindowChatMemory.Builder()
+                    .id(memoryId)
+                    .maxMessages(10)
+                    .chatMemoryStore(new FakeMemoryStore())
+                    .build();
         }
     }
 
-    public static class FakeStreamedChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new FakeStreamedChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class FakeStreamedChatModel implements StreamingChatModel {
 
         @Override

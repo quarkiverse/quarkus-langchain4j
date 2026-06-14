@@ -2,8 +2,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.function.Supplier;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -33,10 +31,8 @@ public class InvocationParametersToolProviderTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(TestAiSupplier.class,
-                            TestAiModel.class,
+                    .addClasses(TestAiModel.class,
                             RoleBasedToolProvider.class,
-                            RoleBasedToolProviderSupplier.class,
                             ServiceWithRoleBasedTools.class));
 
     @ApplicationScoped
@@ -69,19 +65,7 @@ public class InvocationParametersToolProviderTest {
         }
     }
 
-    @ApplicationScoped
-    public static class RoleBasedToolProviderSupplier implements Supplier<ToolProvider> {
-
-        @Inject
-        RoleBasedToolProvider provider;
-
-        @Override
-        public ToolProvider get() {
-            return provider;
-        }
-    }
-
-    @RegisterAiService(toolProviderSupplier = RoleBasedToolProviderSupplier.class, chatLanguageModelSupplier = TestAiSupplier.class)
+    @RegisterAiService(toolProvider = RoleBasedToolProvider.class)
     interface ServiceWithRoleBasedTools {
 
         String chat(@UserMessage String msg, @MemoryId Object id, InvocationParameters params);

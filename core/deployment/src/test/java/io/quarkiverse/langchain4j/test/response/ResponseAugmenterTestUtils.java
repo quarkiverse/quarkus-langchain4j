@@ -1,12 +1,8 @@
 package io.quarkiverse.langchain4j.test.response;
 
-import java.util.function.Supplier;
-
 import jakarta.enterprise.context.ApplicationScoped;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -14,19 +10,11 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
-import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.smallrye.mutiny.Multi;
 
 public class ResponseAugmenterTestUtils {
 
-    public static class FakeChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new FakeChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class FakeChatModel implements ChatModel {
 
         @Override
@@ -35,26 +23,7 @@ public class ResponseAugmenterTestUtils {
         }
     }
 
-    public static class FakeMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-        @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
-        }
-    }
-
-    public static class FakeStreamedChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new FakeStreamedChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class FakeStreamedChatModel implements StreamingChatModel {
 
         @Override

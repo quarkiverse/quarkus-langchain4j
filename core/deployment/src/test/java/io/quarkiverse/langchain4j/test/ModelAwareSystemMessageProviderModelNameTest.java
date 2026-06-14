@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -41,7 +40,7 @@ public class ModelAwareSystemMessageProviderModelNameTest {
                     .addClasses(
                             Assistant.class,
                             ModelAwareProvider.class,
-                            DefaultModelSupplier.class,
+                            DefaultModel.class,
                             NamedModelProducer.class,
                             EchoModel.class));
 
@@ -55,7 +54,7 @@ public class ModelAwareSystemMessageProviderModelNameTest {
         assertThat(assistant.chat("Hello", "gpt")).isEqualTo("provider=OPEN_AI model=gpt-4o");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = DefaultModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class, systemMessageProviderSupplier = ModelAwareProvider.class)
+    @RegisterAiService(chatMemoryProvider = void.class, systemMessageProvider = ModelAwareProvider.class)
     public interface Assistant {
         String chat(@UserMessage String userMessage, @ModelName String model);
     }
@@ -70,11 +69,10 @@ public class ModelAwareSystemMessageProviderModelNameTest {
         }
     }
 
-    @Singleton
-    public static class DefaultModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new EchoModel(ModelProvider.MISTRAL_AI, "default-model");
+    @ApplicationScoped
+    public static class DefaultModel extends EchoModel {
+        public DefaultModel() {
+            super(ModelProvider.MISTRAL_AI, "default-model");
         }
     }
 

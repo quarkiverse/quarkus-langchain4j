@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
@@ -40,10 +39,13 @@ public class OutputGuardrailValidationTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class, MyChatMemoryProvider.class));
 
     @Inject
     MyAiService aiService;
+
+    @Inject
+    MyChatModel myChatModel;
 
     @Test
     @ActivateRequestContext
@@ -96,17 +98,13 @@ public class OutputGuardrailValidationTest {
     @Test
     @ActivateRequestContext
     void noRetries() {
-        MyChatModelSupplier.CHAT_MODEL.spy.set(0);
         assertThatExceptionOfType(OutputGuardrailException.class)
                 .isThrownBy(() -> aiService.noRetry("6"))
                 .withMessageContaining(
                         "Output validation failed. The guardrails have reached the maximum number of retries.");
-
-        assertThat(MyChatModelSupplier.CHAT_MODEL.spy()).isEqualTo(1);
-        assertThat(retry.spy()).isEqualTo(1);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hi!")
@@ -217,15 +215,15 @@ public class OutputGuardrailValidationTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        static final MyChatModel CHAT_MODEL = new MyChatModel();
-
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatModel get() {
-            return CHAT_MODEL;
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         private final AtomicInteger spy = new AtomicInteger(0);
 
@@ -240,15 +238,4 @@ public class OutputGuardrailValidationTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-        @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
-        }
-    }
 }

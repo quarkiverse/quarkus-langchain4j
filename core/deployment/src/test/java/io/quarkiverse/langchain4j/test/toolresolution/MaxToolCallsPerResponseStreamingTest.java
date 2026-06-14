@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -32,12 +31,13 @@ public class MaxToolCallsPerResponseStreamingTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Tools.class, StreamingModelSupplier.class));
+                    .addClasses(Tools.class, TestStreamingChatModel.class));
 
     static List<Integer> toolCallsCounts = new ArrayList<>();
     static int responseCount = 0;
 
-    static StreamingChatModel streamingChatModel = new StreamingChatModel() {
+    @ApplicationScoped
+    public static class TestStreamingChatModel implements StreamingChatModel {
         @Override
         public void chat(ChatRequest chatRequest, dev.langchain4j.model.chat.response.StreamingChatResponseHandler handler) {
             responseCount++;
@@ -67,23 +67,16 @@ public class MaxToolCallsPerResponseStreamingTest {
                 handler.onCompleteResponse(response);
             }
         }
-    };
+    }
 
-    @RegisterAiService(maxToolCallsPerResponse = 3, tools = Tools.class, streamingChatLanguageModelSupplier = StreamingModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = 3, tools = Tools.class)
     public interface StreamingAiServiceWithLimit3 {
         Multi<String> chat(String message);
     }
 
-    @RegisterAiService(maxToolCallsPerResponse = 5, tools = Tools.class, streamingChatLanguageModelSupplier = StreamingModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = 5, tools = Tools.class)
     public interface StreamingAiServiceWithLimit5 {
         Multi<String> chat(String message);
-    }
-
-    public static class StreamingModelSupplier implements Supplier<StreamingChatModel> {
-        @Override
-        public StreamingChatModel get() {
-            return streamingChatModel;
-        }
     }
 
     @ApplicationScoped

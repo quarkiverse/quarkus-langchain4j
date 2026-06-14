@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
@@ -102,7 +101,7 @@ public class OutputGuardrailOnTokenStreamedResponseValidationTest extends TokenS
         assertThat(rewriting.spy()).isEqualTo(1);
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hi!")
@@ -229,14 +228,7 @@ public class OutputGuardrailOnTokenStreamedResponseValidationTest extends TokenS
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new MyStreamedChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyStreamedChatModel implements StreamingChatModel {
 
         @Override
@@ -248,15 +240,11 @@ public class OutputGuardrailOnTokenStreamedResponseValidationTest extends TokenS
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProviderSupplier implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return MessageWindowChatMemory.withMaxMessages(10);
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
         }
     }
 }

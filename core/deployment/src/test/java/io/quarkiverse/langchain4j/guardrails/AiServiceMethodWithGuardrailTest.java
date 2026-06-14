@@ -19,7 +19,6 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.test.guardrails.InputGuardrailTest;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiServiceMethodWithGuardrailTest {
@@ -48,7 +47,7 @@ public class AiServiceMethodWithGuardrailTest {
 
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = InputGuardrailTest.MyChatModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     public interface AiServiceMethodWithGuardrail {
 
         @ToolInputGuardrails(value = {
@@ -77,6 +76,7 @@ public class AiServiceMethodWithGuardrailTest {
         }
     }
 
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override

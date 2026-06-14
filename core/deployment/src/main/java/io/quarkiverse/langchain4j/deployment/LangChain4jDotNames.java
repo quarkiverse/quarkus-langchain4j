@@ -97,62 +97,18 @@ public class LangChain4jDotNames {
     public static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
     public static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
 
-    static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanChatLanguageModelSupplier.class);
-
-    static final DotName BEAN_STREAMING_CHAT_MODEL_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanStreamingChatLanguageModelSupplier.class);
+    static final DotName VOID_CLASS = DotName.createSimple("void");
 
     static final DotName CHAT_MEMORY_PROVIDER = DotName.createSimple(ChatMemoryProvider.class);
 
-    static final DotName BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanChatMemoryProviderSupplier.class);
-
-    static final DotName NO_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.NoChatMemoryProviderSupplier.class);
-
     public static final DotName RETRIEVER = DotName.createSimple(ContentRetriever.class);
-    static final DotName NO_RETRIEVER = DotName.createSimple(
-            RegisterAiService.NoRetriever.class);
 
     public static final DotName RETRIEVAL_AUGMENTOR = DotName.createSimple(RetrievalAugmentor.class);
-    static final DotName BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsRetrievalAugmentorSupplier.class);
-
-    static final DotName NO_RETRIEVAL_AUGMENTOR_SUPPLIER = DotName.createSimple(
-            RegisterAiService.NoRetrievalAugmentorSupplier.class);
-
-    static final DotName BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsModerationModelSupplier.class);
-
-    static final DotName BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsImageModelSupplier.class);
-
-    static final DotName BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsToolProviderSupplier.class);
-
-    static final DotName NO_TOOL_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.NoToolProviderSupplier.class);
-
-    static final DotName BEAN_IF_EXISTS_TOOL_SEARCH_STRATEGY_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsToolSearchStrategySupplier.class);
-
-    static final DotName NO_TOOL_SEARCH_STRATEGY_SUPPLIER = DotName.createSimple(
-            RegisterAiService.NoToolSearchStrategySupplier.class);
 
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);
 
     static final DotName SEED_MEMORY = DotName.createSimple(SeedMemory.class);
-
-    static final DotName NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.NoSystemMessageProviderSupplier.class);
-
-    static final DotName BEAN_IF_EXISTS_SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsSystemMessageProviderSupplier.class);
-
-    static final DotName DEFAULT_CHAT_MEMORY_FLUSH_STRATEGY_SUPPLIER = DotName.createSimple(
-            RegisterAiService.DefaultChatMemoryFlushStrategySupplier.class);
 
     static final DotName HANDLE_TOOL_ARGUMENT_ERROR = DotName.createSimple(HandleToolArgumentError.class);
     static final DotName HANDLE_TOOL_EXECUTION_ERROR = DotName.createSimple(HandleToolExecutionError.class);

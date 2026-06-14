@@ -24,12 +24,11 @@ public class NoExplicitToolsAndNoToolProviderTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(TestAiSupplier.class,
-                            TestAiModel.class,
+                    .addClasses(TestAiModel.class,
                             ServiceWithNoToolProvider.class,
                             MyCustomToolProvider.class));
 
-    @RegisterAiService(toolProviderSupplier = RegisterAiService.NoToolProviderSupplier.class, chatLanguageModelSupplier = TestAiSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class, toolProvider = void.class)
     interface ServiceWithNoToolProvider {
         String chat(@UserMessage String msg, @MemoryId Object id);
     }

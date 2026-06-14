@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -31,7 +30,9 @@ public class ToolArgumentsErrorHandlerTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                    .addClasses(Assistant.class, Assistant2.class, Tools.class,
+                            TestChatModelProducer.class));
 
     @Inject
     Assistant assistant;
@@ -69,7 +70,7 @@ public class ToolArgumentsErrorHandlerTest {
         assertThat(Assistant2.ARGUMENT_ERROR_HANDLER_CALLED).isTrue();
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = TestChatModelSupplier.class)
+    @RegisterAiService
     interface Assistant {
 
         AtomicBoolean ARGUMENT_ERROR_HANDLER_CALLED = new AtomicBoolean(false);
@@ -85,7 +86,7 @@ public class ToolArgumentsErrorHandlerTest {
 
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = TestChatModelSupplier.class)
+    @RegisterAiService
     interface Assistant2 {
 
         AtomicBoolean ARGUMENT_ERROR_HANDLER_CALLED = new AtomicBoolean(false);
@@ -114,10 +115,9 @@ public class ToolArgumentsErrorHandlerTest {
     }
 
     @ApplicationScoped
-    public static class TestChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            // given
+    public static class TestChatModelProducer {
+        @jakarta.enterprise.inject.Produces
+        ChatModel chatModel() {
             ToolExecutionRequest toolExecutionRequest1 = ToolExecutionRequest.builder()
                     .name("getWeather")
                     .arguments("{ invalid json }")

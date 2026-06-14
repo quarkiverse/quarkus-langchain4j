@@ -2,8 +2,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.function.Supplier;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -31,9 +29,10 @@ public class ProgrammaticMaxSequentialToolsInvocationsTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Tools.class, ModelSupplier.class));
+                    .addClasses(Tools.class, TestChatModel.class));
 
-    static ChatModel chatModel = new ChatModel() {
+    @ApplicationScoped
+    public static class TestChatModel implements ChatModel {
         @Override
         public ChatResponse chat(ChatRequest chatRequest) {
             ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder()
@@ -47,19 +46,12 @@ public class ProgrammaticMaxSequentialToolsInvocationsTest {
                     .finishReason(FinishReason.TOOL_EXECUTION)
                     .build();
         }
-    };
-
-    @CreatedAware
-    @RegisterAiService(tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
-    public interface AssistantService {
-        String chat(String message);
     }
 
-    public static class ModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return chatModel;
-        }
+    @CreatedAware
+    @RegisterAiService(tools = Tools.class)
+    public interface AssistantService {
+        String chat(String message);
     }
 
     @ApplicationScoped
@@ -82,7 +74,7 @@ public class ProgrammaticMaxSequentialToolsInvocationsTest {
         Tools.invocations = 0;
 
         AssistantService programmaticService = AiServices.builder(AssistantService.class)
-                .chatModel(chatModel)
+                .chatModel(new TestChatModel())
                 .tools(new Tools())
                 .maxSequentialToolsInvocations(15)
                 .build();

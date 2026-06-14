@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -36,7 +35,7 @@ public class StaticImmediateReturnToolTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class,
-                            SimpleChatModel.class, SimpleChatModelSupplier.class));
+                            SimpleChatModel.class));
 
     @Inject
     MyAiService aiService;
@@ -76,7 +75,7 @@ public class StaticImmediateReturnToolTest {
         assertThat(SimpleChatModel.callCount).isEqualTo(2);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = SimpleChatModelSupplier.class, tools = MyTools.class)
+    @RegisterAiService(tools = MyTools.class)
     public interface MyAiService {
         Result<String> chat(@UserMessage String message);
     }
@@ -95,13 +94,7 @@ public class StaticImmediateReturnToolTest {
         }
     }
 
-    public static class SimpleChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new SimpleChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class SimpleChatModel implements ChatModel {
         static int callCount = 0;
 

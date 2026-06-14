@@ -27,7 +27,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**
- * End-to-end check that the {@code toolSearchStrategySupplier} option works in a running application: the catalog is
+ * End-to-end check that the {@code toolSearchStrategy} option works in a running application: the catalog is
  * narrowed to the search tool, and the tool surfaced by the search is added and executed.
  */
 @QuarkusTest

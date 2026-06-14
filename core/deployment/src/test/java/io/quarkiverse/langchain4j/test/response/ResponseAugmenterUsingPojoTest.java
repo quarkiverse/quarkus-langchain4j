@@ -3,8 +3,6 @@ package io.quarkiverse.langchain4j.test.response;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.function.Supplier;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -52,7 +50,7 @@ public class ResponseAugmenterUsingPojoTest {
 
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = PersonChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Dummy")
@@ -65,14 +63,7 @@ public class ResponseAugmenterUsingPojoTest {
 
     }
 
-    public static class PersonChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new PersonChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class PersonChatModel implements ChatModel {
 
         @Override
