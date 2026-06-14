@@ -460,13 +460,6 @@ public class AiServicesProcessor {
                         reflectiveClassProducer, unremovableBeanProducer);
             }
 
-            ComponentResolution retrievalAugmentorResolution = resolveComponent(
-                    instance.valueWithDefault(index, "retrievalAugmentor"), LangChain4jDotNames.RETRIEVAL_AUGMENTOR);
-            if (retrievalAugmentorResolution.mode() == ComponentResolutionMode.EXPLICIT) {
-                validateClassExistsAndRegister(retrievalAugmentorResolution.className(), index,
-                        reflectiveClassProducer, unremovableBeanProducer);
-            }
-
             ComponentResolution moderationModelResolution = resolveComponent(
                     instance.valueWithDefault(index, "moderationModel"), LangChain4jDotNames.MODERATION_MODEL);
             if (moderationModelResolution.mode() == ComponentResolutionMode.EXPLICIT) {
@@ -570,8 +563,6 @@ public class AiServicesProcessor {
                             chatMemoryProviderResolution.mode(),
                             chatMemoryFlushStrategyResolution.className(),
                             chatMemoryFlushStrategyResolution.mode(),
-                            retrievalAugmentorResolution.className(),
-                            retrievalAugmentorResolution.mode(),
                             moderationModelResolution.className(),
                             moderationModelResolution.mode(),
                             imageModelResolution.className(),
@@ -917,7 +908,6 @@ public class AiServicesProcessor {
         boolean needsStreamingChatModelBean = false;
         boolean needsChatMemoryProviderBean = false;
         boolean needsRetrieverBean = false;
-        boolean needsRetrievalAugmentorBean = false;
         boolean needsModerationModelBean = false;
         boolean needsImageModelBean = false;
         boolean needsToolProviderBean = false;
@@ -952,8 +942,6 @@ public class AiServicesProcessor {
                     bi.getChatMemoryProviderResolutionMode());
             ComponentEntry chatMemoryFlushStrategyEntry = toComponentEntry(bi.getChatMemoryFlushStrategyClassDotName(),
                     bi.getChatMemoryFlushStrategyResolutionMode());
-            ComponentEntry retrievalAugmentorEntry = toComponentEntry(bi.getRetrievalAugmentorClassDotName(),
-                    bi.getRetrievalAugmentorResolutionMode());
             ComponentEntry moderationModelEntry = toComponentEntry(bi.getModerationModelClassDotName(),
                     bi.getModerationModelResolutionMode());
             ComponentEntry imageModelEntry = toComponentEntry(bi.getImageModelClassDotName(),
@@ -1069,7 +1057,6 @@ public class AiServicesProcessor {
                                     toolToQualifierMap,
                                     chatMemoryProviderEntry,
                                     chatMemoryFlushStrategyEntry,
-                                    retrievalAugmentorEntry,
                                     ragPipelineCreateInfo,
                                     moderationModelEntry,
                                     imageModelEntry,
@@ -1175,22 +1162,6 @@ public class AiServicesProcessor {
                         UnremovableBeanBuildItem.beanTypes(bi.getSystemMessageProviderClassDotName()));
             }
 
-            // Retrieval augmentor injection
-            switch (bi.getRetrievalAugmentorResolutionMode()) {
-                case AUTO_DISCOVER -> {
-                    configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                            new Type[] { ClassType.create(LangChain4jDotNames.RETRIEVAL_AUGMENTOR) }, null));
-                    needsRetrievalAugmentorBean = true;
-                }
-                case EXPLICIT -> {
-                    configurator.addInjectionPoint(ClassType.create(bi.getRetrievalAugmentorClassDotName()));
-                    unremovableProducer.produce(
-                            UnremovableBeanBuildItem.beanClassNames(bi.getRetrievalAugmentorClassDotName().toString()));
-                }
-                case SKIP -> {
-                }
-            }
-
             // RAG pipeline injection points (companion mode)
             if (ragPipelineCreateInfo != null) {
                 RagPipelineProcessor.addRagInjectionPoints(configurator, ragPipelineCreateInfo);
@@ -1269,9 +1240,6 @@ public class AiServicesProcessor {
         }
         if (needsRetrieverBean) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVER));
-        }
-        if (needsRetrievalAugmentorBean) {
-            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVAL_AUGMENTOR));
         }
         if (needsModerationModelBean) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.MODERATION_MODEL));

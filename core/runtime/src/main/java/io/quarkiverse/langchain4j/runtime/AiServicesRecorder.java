@@ -47,9 +47,6 @@ import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class AiServicesRecorder {
-    private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_TYPE_LITERAL = new TypeLiteral<>() {
-    };
-
     private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
@@ -299,25 +296,6 @@ public class AiServicesRecorder {
                             quarkusAiServices.chatMemoryFlushStrategy(flushStrategy);
                         }
                         case AUTO_DISCOVER, SKIP -> {
-                        }
-                    }
-
-                    // Retrieval augmentor
-                    DeclarativeAiServiceCreateInfo.ComponentEntry retrievalAugmentorEntry = info.retrievalAugmentor();
-                    switch (retrievalAugmentorEntry.mode()) {
-                        case AUTO_DISCOVER -> {
-                            Instance<RetrievalAugmentor> instance = creationalContext
-                                    .getInjectedReference(RETRIEVAL_AUGMENTOR_TYPE_LITERAL);
-                            if (instance.isResolvable()) {
-                                quarkusAiServices.retrievalAugmentor(instance.get());
-                            }
-                        }
-                        case EXPLICIT -> {
-                            RetrievalAugmentor augmentor = (RetrievalAugmentor) creationalContext
-                                    .getInjectedReference(loadClass(retrievalAugmentorEntry.className()));
-                            quarkusAiServices.retrievalAugmentor(augmentor);
-                        }
-                        case SKIP -> {
                         }
                     }
 

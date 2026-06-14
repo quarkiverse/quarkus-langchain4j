@@ -13,7 +13,6 @@ public record DeclarativeAiServiceCreateInfo(
         Map<String, AnnotationLiteral<?>> toolsClassInfo,
         ComponentEntry chatMemoryProvider,
         ComponentEntry chatMemoryFlushStrategy,
-        ComponentEntry retrievalAugmentor,
         RagPipelineCreateInfo ragPipelineCreateInfo,
         ComponentEntry moderationModel,
         ComponentEntry imageModel,

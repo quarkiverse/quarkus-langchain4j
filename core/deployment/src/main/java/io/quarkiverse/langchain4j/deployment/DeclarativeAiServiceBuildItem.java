@@ -22,8 +22,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final ComponentResolutionMode chatMemoryProviderResolutionMode;
     private final DotName chatMemoryFlushStrategyClassDotName;
     private final ComponentResolutionMode chatMemoryFlushStrategyResolutionMode;
-    private final DotName retrievalAugmentorClassDotName;
-    private final ComponentResolutionMode retrievalAugmentorResolutionMode;
     private final DotName moderationModelClassDotName;
     private final ComponentResolutionMode moderationModelResolutionMode;
     private final DotName imageModelClassDotName;
@@ -62,8 +60,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             ComponentResolutionMode chatMemoryProviderResolutionMode,
             DotName chatMemoryFlushStrategyClassDotName,
             ComponentResolutionMode chatMemoryFlushStrategyResolutionMode,
-            DotName retrievalAugmentorClassDotName,
-            ComponentResolutionMode retrievalAugmentorResolutionMode,
             DotName moderationModelClassDotName,
             ComponentResolutionMode moderationModelResolutionMode,
             DotName imageModelClassDotName,
@@ -98,8 +94,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.chatMemoryProviderResolutionMode = chatMemoryProviderResolutionMode;
         this.chatMemoryFlushStrategyClassDotName = chatMemoryFlushStrategyClassDotName;
         this.chatMemoryFlushStrategyResolutionMode = chatMemoryFlushStrategyResolutionMode;
-        this.retrievalAugmentorClassDotName = retrievalAugmentorClassDotName;
-        this.retrievalAugmentorResolutionMode = retrievalAugmentorResolutionMode;
         this.moderationModelClassDotName = moderationModelClassDotName;
         this.moderationModelResolutionMode = moderationModelResolutionMode;
         this.imageModelClassDotName = imageModelClassDotName;
@@ -152,14 +146,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public ComponentResolutionMode getChatMemoryFlushStrategyResolutionMode() {
         return chatMemoryFlushStrategyResolutionMode;
-    }
-
-    public DotName getRetrievalAugmentorClassDotName() {
-        return retrievalAugmentorClassDotName;
-    }
-
-    public ComponentResolutionMode getRetrievalAugmentorResolutionMode() {
-        return retrievalAugmentorResolutionMode;
     }
 
     public DotName getModerationModelClassDotName() {

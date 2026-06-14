@@ -6,9 +6,11 @@ import org.eclipse.microprofile.faulttolerance.Timeout;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RagPipeline;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
-@RegisterAiService(retrievalAugmentor = FraudDetectionRetrievalAugmentor.class)
+@RegisterAiService
+@RagPipeline(augmentor = FraudDetectionRetrievalAugmentor.class)
 public interface FraudDetectionAi {
 
     @SystemMessage("""

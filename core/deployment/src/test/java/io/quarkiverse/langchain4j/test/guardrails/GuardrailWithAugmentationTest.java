@@ -40,6 +40,7 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.guardrail.InputGuardrails;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
+import io.quarkiverse.langchain4j.RagPipeline;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -113,7 +114,8 @@ public class GuardrailWithAugmentationTest extends TokenStreamExecutor {
         assertThat(outputGuardrail.getSpy()).isEqualTo(1);
     }
 
-    @RegisterAiService(retrievalAugmentor = MyRetrievalAugmentor.class)
+    @RegisterAiService
+    @RagPipeline(augmentor = MyRetrievalAugmentor.class)
     public interface MyAiService {
 
         @InputGuardrails(MyInputGuardrail.class)

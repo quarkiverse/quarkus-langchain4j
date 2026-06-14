@@ -18,6 +18,7 @@ import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RagPipeline;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.response.ResponseAugmenter;
@@ -49,7 +50,8 @@ public class ResponseAugmenterWithAugmentationResultTest {
         assertThat(list).containsExactly("HI!", " ", "WORLD!");
     }
 
-    @RegisterAiService(retrievalAugmentor = MyRetrievalAugmentor.class)
+    @RegisterAiService
+    @RagPipeline(augmentor = MyRetrievalAugmentor.class)
     public interface MyAiService {
 
         @UserMessage("Say Hello World!")

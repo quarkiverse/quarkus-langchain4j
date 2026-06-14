@@ -62,6 +62,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.ImageUrl;
+import io.quarkiverse.langchain4j.RagPipeline;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
@@ -135,17 +136,10 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
             }
             return new AugmentationResult(augmentationRequest.chatMessage(), Collections.emptyList());
         }
-
-        public static class Supplier implements java.util.function.Supplier<RetrievalAugmentor> {
-
-            @Override
-            public RetrievalAugmentor get() {
-                return new DummyRetriever();
-            }
-        }
     }
 
-    @RegisterAiService(retrievalAugmentor = DummyRetriever.Supplier.class)
+    @RegisterAiService
+    @RagPipeline(augmentor = DummyRetriever.class)
     interface AssistantWithRetriever {
 
         String chat(String message);

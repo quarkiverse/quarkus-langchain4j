@@ -2,10 +2,12 @@ package io.quarkiverse.langchain4j.sample.chatbot;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RagPipeline;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.SessionScoped;
 
-@RegisterAiService(retrievalAugmentor = MovieMuseRetrievalAugmentor.class)
+@RegisterAiService
+@RagPipeline(augmentor = MovieMuseRetrievalAugmentor.class)
 @SessionScoped
 public interface MovieMuse {
 

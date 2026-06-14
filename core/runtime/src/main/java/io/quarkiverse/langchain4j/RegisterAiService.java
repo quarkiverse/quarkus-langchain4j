@@ -11,7 +11,6 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ToolChoice;
-import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -128,14 +127,6 @@ public @interface RegisterAiService {
      * @see ChatMemoryFlushStrategy
      */
     Class<?> chatMemoryFlushStrategy() default void.class;
-
-    /**
-     * Configures the {@link RetrievalAugmentor} to use (when using RAG).
-     * <p>
-     * By default ({@code void.class}), no retrieval augmentor is used unless one is discovered via CDI.
-     * Set to a concrete implementation class to inject a specific CDI bean.
-     */
-    Class<?> retrievalAugmentor() default void.class;
 
     /**
      * Configures the moderation model to use.
