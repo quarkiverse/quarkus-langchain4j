@@ -2,8 +2,10 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.ChatMemory;
@@ -63,6 +65,19 @@ class ImmediateFlushChatMemory implements CommittableChatMemory {
     @Override
     public void clear() {
         delegate.clear();
+    }
+
+    @Override
+    public void replaceLastAiMessage(AiMessage newAiMessage) {
+        List<ChatMessage> messages = new ArrayList<>(delegate.messages());
+        ListIterator<ChatMessage> it = messages.listIterator(messages.size());
+        while (it.hasPrevious()) {
+            if (it.previous() instanceof AiMessage) {
+                it.set(newAiMessage);
+                delegate.set(messages);
+                return;
+            }
+        }
     }
 
     @Override
