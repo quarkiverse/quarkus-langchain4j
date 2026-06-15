@@ -1,0 +1,987 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-enabled[`+++quarkus.langchain4j.google.genai.chat-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the chat model provider is enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-enabled[`+++quarkus.langchain4j.google.genai.embedding-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the embedding model provider is enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-api-key]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-api-key[`+++quarkus.langchain4j.google.genai.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-base-url]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-base-url[`+++quarkus.langchain4j.google.genai.base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Meant to be used for testing only in order to override the base URL used by the client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-enable-integration[`+++quarkus.langchain4j.google.genai.enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Google GenAI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-log-requests]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-log-requests[`+++quarkus.langchain4j.google.genai.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-log-responses]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-log-responses[`+++quarkus.langchain4j.google.genai.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-timeout]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-timeout[`+++quarkus.langchain4j.google.genai.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for requests to Google GenAI APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-google-genai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`+++10s+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-proxy-configuration-name[`+++quarkus.langchain4j.google.genai.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Quarkus Proxy Registry configuration to use.
+
+If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.proxy.<name>.++*++`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-model-id[`+++quarkus.langchain4j.google.genai.chat-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++gemini-2.5-flash+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature[`+++quarkus.langchain4j.google.genai.chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The temperature is used for sampling during response generation, which occurs when topP and topK are applied. Temperature controls the degree of randomness in token selection. Lower temperatures are good for prompts that require a less open-ended or creative response, while higher temperatures can lead to more diverse or creative results.
+
+Range: 0.0 - 2.0
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-max-output-tokens[`+++quarkus.langchain4j.google.genai.chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of tokens that can be generated in the response. The maximum value depends on the model being used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++8192+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-top-p[`+++quarkus.langchain4j.google.genai.chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-P changes how the model selects tokens for output. Tokens are selected from the most (see top-K) to least probable until the sum of their probabilities equals the top-P value.
+
+Range: 0.0 - 1.0
+
+Default: 0.95
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-top-k[`+++quarkus.langchain4j.google.genai.chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-K changes how the model selects tokens for output. A top-K of 1 means the next selected token is the most probable among all tokens in the model's vocabulary (also called greedy decoding), while a top-K of 3 means that the next token is selected from among the 3 most probable using the temperature.
+
+Range: 1 - 40
+
+Default: 40
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-log-requests[`+++quarkus.langchain4j.google.genai.chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-log-responses[`+++quarkus.langchain4j.google.genai.chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-thinking-thinking-budget]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-thinking-thinking-budget[`+++quarkus.langchain4j.google.genai.chat-model.thinking.thinking-budget+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.thinking.thinking-budget+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinking budget guides the model on the number of thinking tokens to use. A higher token count generally allows for more detailed reasoning. Setting the thinkingBudget to -1 turns on dynamic thinking. Setting it to 0 disables thinking.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_THINKING_THINKING_BUDGET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_THINKING_THINKING_BUDGET+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-thinking-thinking-level]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-thinking-thinking-level[`+++quarkus.langchain4j.google.genai.chat-model.thinking.thinking-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.chat-model.thinking.thinking-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinking level to use. This is the recommended parameter for Gemini 3.x models. Allowed values are `"MINIMAL"`, `"LOW"`, `"MEDIUM"`, `"HIGH"`. Cannot be used together with `thinkingBudget`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_THINKING_THINKING_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_THINKING_THINKING_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-model-id[`+++quarkus.langchain4j.google.genai.embedding-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text-embedding-004+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai.embedding-model.output-dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.embedding-model.output-dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reduced dimension for the output embedding
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_OUTPUT_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_OUTPUT_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-task-type]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-task-type[`+++quarkus.langchain4j.google.genai.embedding-model.task-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.embedding-model.task-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional task type for which the embeddings will be used.
+
+Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_TASK_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_TASK_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-log-requests[`+++quarkus.langchain4j.google.genai.embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-log-responses[`+++quarkus.langchain4j.google.genai.embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+h|[[quarkus-langchain4j-google-genai_section_quarkus-langchain4j-google-genai]] [.section-name.section-level0]##link:#quarkus-langchain4j-google-genai_section_quarkus-langchain4j-google-genai[Named model config]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-api-key[`+++quarkus.langchain4j.google.genai."model-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-base-url[`+++quarkus.langchain4j.google.genai."model-name".base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Meant to be used for testing only in order to override the base URL used by the client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-enable-integration[`+++quarkus.langchain4j.google.genai."model-name".enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Google GenAI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-log-requests[`+++quarkus.langchain4j.google.genai."model-name".log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-log-responses[`+++quarkus.langchain4j.google.genai."model-name".log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-timeout[`+++quarkus.langchain4j.google.genai."model-name".timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for requests to Google GenAI APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-google-genai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`+++10s+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-proxy-configuration-name[`+++quarkus.langchain4j.google.genai."model-name".proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Quarkus Proxy Registry configuration to use.
+
+If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.proxy.<name>.++*++`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-model-id[`+++quarkus.langchain4j.google.genai."model-name".chat-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++gemini-2.5-flash+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature[`+++quarkus.langchain4j.google.genai."model-name".chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The temperature is used for sampling during response generation, which occurs when topP and topK are applied. Temperature controls the degree of randomness in token selection. Lower temperatures are good for prompts that require a less open-ended or creative response, while higher temperatures can lead to more diverse or creative results.
+
+Range: 0.0 - 2.0
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-max-output-tokens[`+++quarkus.langchain4j.google.genai."model-name".chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of tokens that can be generated in the response. The maximum value depends on the model being used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++8192+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-top-p[`+++quarkus.langchain4j.google.genai."model-name".chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-P changes how the model selects tokens for output. Tokens are selected from the most (see top-K) to least probable until the sum of their probabilities equals the top-P value.
+
+Range: 0.0 - 1.0
+
+Default: 0.95
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-top-k[`+++quarkus.langchain4j.google.genai."model-name".chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-K changes how the model selects tokens for output. A top-K of 1 means the next selected token is the most probable among all tokens in the model's vocabulary (also called greedy decoding), while a top-K of 3 means that the next token is selected from among the 3 most probable using the temperature.
+
+Range: 1 - 40
+
+Default: 40
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-log-requests[`+++quarkus.langchain4j.google.genai."model-name".chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-log-responses[`+++quarkus.langchain4j.google.genai."model-name".chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-thinking-thinking-budget]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-thinking-thinking-budget[`+++quarkus.langchain4j.google.genai."model-name".chat-model.thinking.thinking-budget+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.thinking.thinking-budget+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinking budget guides the model on the number of thinking tokens to use. A higher token count generally allows for more detailed reasoning. Setting the thinkingBudget to -1 turns on dynamic thinking. Setting it to 0 disables thinking.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_BUDGET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_BUDGET+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-thinking-thinking-level]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-thinking-thinking-level[`+++quarkus.langchain4j.google.genai."model-name".chat-model.thinking.thinking-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".chat-model.thinking.thinking-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinking level to use. This is the recommended parameter for Gemini 3.x models. Allowed values are `"MINIMAL"`, `"LOW"`, `"MEDIUM"`, `"HIGH"`. Cannot be used together with `thinkingBudget`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-model-id[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text-embedding-004+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.output-dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".embedding-model.output-dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reduced dimension for the output embedding
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_OUTPUT_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_OUTPUT_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-task-type]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-task-type[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.task-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".embedding-model.task-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional task type for which the embeddings will be used.
+
+Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_TASK_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_TASK_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-log-requests[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-log-responses[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-google-genai_quarkus-langchain4j]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]
