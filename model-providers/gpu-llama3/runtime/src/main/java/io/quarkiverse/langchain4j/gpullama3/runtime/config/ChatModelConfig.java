@@ -70,4 +70,13 @@ public interface ChatModelConfig {
      */
     @WithDefault("true")
     boolean enableThinking();
+
+    /**
+     * Amount of GPU memory TornadoVM is allowed to allocate e.g. {@code "7GB"}, {@code "512MB"}.
+     * <p>
+     * Note: this maps to the JVM-global engine flag {@code tornado.device.memory}, so when
+     * multiple models are configured the first one to initialize wins.
+     */
+    @WithDefault("4GB")
+    String deviceMemory();
 }

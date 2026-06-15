@@ -37,6 +37,7 @@ public class GPULlama3ModelHolder {
     private final boolean withPrefillDecode;
     private final int prefillBatchSize;
     final boolean enableThinking;
+    private final String deviceMemory;
 
     // force happens-before relationship between initialization and usage
     private volatile boolean initialized = false;
@@ -58,7 +59,8 @@ public class GPULlama3ModelHolder {
             Boolean onGPU,
             Boolean withPrefillDecode,
             Integer prefillBatchSize,
-            Boolean enableThinking) {
+            Boolean enableThinking,
+            String deviceMemory) {
         DefaultConfig defaultConfig = defaultConfigForModel(modelName);
         this.modelCachePath = modelCachePath;
         this.modelName = modelName;
@@ -71,6 +73,7 @@ public class GPULlama3ModelHolder {
         this.withPrefillDecode = getOrDefault(withPrefillDecode, Boolean.TRUE);
         this.prefillBatchSize = getOrDefault(prefillBatchSize, 32);
         this.enableThinking = getOrDefault(enableThinking, Boolean.TRUE);
+        this.deviceMemory = getOrDefault(deviceMemory, "4GB");
     }
 
     private static DefaultConfig defaultConfigForModel(String modelName) {
@@ -99,6 +102,7 @@ public class GPULlama3ModelHolder {
             // before ModelLoader initializes the model and TornadoVM plan.
             System.setProperty("llama.withPrefillDecode", Boolean.toString(withPrefillDecode));
             System.setProperty("llama.prefillBatchSize", Integer.toString(prefillBatchSize));
+            System.setProperty("tornado.device.memory", deviceMemory);
 
             LOG.info("GPULlama3 model initialization {modelPath=" + modelPath
                     + ", temperature=" + temperature
@@ -108,7 +112,8 @@ public class GPULlama3ModelHolder {
                     + ", onGPU=" + onGPU
                     + ", withPrefillDecode=" + withPrefillDecode
                     + ", prefillBatchSize=" + prefillBatchSize
-                    + ", enableThinking=" + enableThinking + "}...");
+                    + ", enableThinking=" + enableThinking
+                    + ", deviceMemory=" + deviceMemory + "}...");
 
             this.model = ModelLoader.loadModel(modelPath, maxTokens, true, onGPU);
             this.state = model.createNewState();

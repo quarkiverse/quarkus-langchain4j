@@ -163,6 +163,7 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
         private Boolean withPrefillDecode;
         private Integer prefillBatchSize;
         private Boolean enableThinking;
+        private String deviceMemory;
 
         public Builder() {
             // This is public so it can be extended
@@ -228,11 +229,17 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
             return this;
         }
 
+        public Builder deviceMemory(String deviceMemory) {
+            this.deviceMemory = deviceMemory;
+            return this;
+        }
+
         public GPULlama3StreamingChatModel build() {
             GPULlama3ModelHolder h = modelHolder != null
                     ? modelHolder
                     : new GPULlama3ModelHolder(modelCachePath, modelName, quantization,
-                            temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize, enableThinking);
+                            temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize, enableThinking,
+                            deviceMemory);
             return new GPULlama3StreamingChatModel(h);
         }
     }

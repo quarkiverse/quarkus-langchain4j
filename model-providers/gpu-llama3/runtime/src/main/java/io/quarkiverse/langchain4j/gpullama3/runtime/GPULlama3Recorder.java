@@ -73,7 +73,8 @@ public class GPULlama3Recorder {
                     Boolean.TRUE,
                     chatModelConfig.prefillDecode(),
                     chatModelConfig.prefillBatchSize(),
-                    chatModelConfig.enableThinking());
+                    chatModelConfig.enableThinking(),
+                    chatModelConfig.deviceMemory());
         });
     }
 
