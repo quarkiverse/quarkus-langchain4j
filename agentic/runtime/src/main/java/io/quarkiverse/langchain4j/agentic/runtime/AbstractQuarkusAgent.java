@@ -185,6 +185,11 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
         return agent.allowChatMemory();
     }
 
+    @Override
+    public <T extends AgentInstance> T as(Class<T> agentInstanceClass) {
+        return agent.as(agentInstanceClass);
+    }
+
     // AgenticScopeOwner delegation
 
     @Override
