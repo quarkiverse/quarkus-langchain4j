@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 import java.util.Collections;
 import java.util.List;
 
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 
@@ -29,6 +30,10 @@ public class NoopChatMemory implements CommittableChatMemory {
     @Override
     public void clear() {
 
+    }
+
+    @Override
+    public void replaceLastAiMessage(AiMessage newAiMessage) {
     }
 
     @Override

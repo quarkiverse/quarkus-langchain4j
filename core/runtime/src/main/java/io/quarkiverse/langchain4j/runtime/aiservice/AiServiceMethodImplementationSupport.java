@@ -663,6 +663,14 @@ public class AiServiceMethodImplementationSupport {
                         .aiServiceListenerRegistrar(context.eventListenerRegistrar)
                         .build());
 
+        if (guardrailResult instanceof ChatResponse guardrailChatResponse) {
+            AiMessage validatedAiMessage = guardrailChatResponse.aiMessage();
+            if (validatedAiMessage != null && !validatedAiMessage.equals(response.aiMessage())) {
+                committableChatMemory.replaceLastAiMessage(validatedAiMessage);
+            }
+            response = guardrailChatResponse;
+        }
+
         // everything worked as expected so let's commit the messages
         committableChatMemory.commit();
 
@@ -677,10 +685,6 @@ public class AiServiceMethodImplementationSupport {
                             .build());
 
             return ResponseAugmenterSupport.invoke(guardrailResult, methodCreateInfo, responseAugmenterParam);
-        }
-
-        if (guardrailResult instanceof ChatResponse) {
-            response = (ChatResponse) guardrailResult;
         }
 
         response = ChatResponse.builder().aiMessage(response.aiMessage()).metadata(response.metadata()).build();
