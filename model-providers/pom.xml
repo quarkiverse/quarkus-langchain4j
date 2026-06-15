@@ -15,6 +15,7 @@
         <module>bedrock</module>
         <module>cohere</module>
         <module>google/gemini/ai-gemini</module>
+        <module>google/google-genai</module>
         <module>google/gemini/gemini-common</module>
         <module>google/vertex-ai</module>
         <module>google/vertex-ai-gemini</module>
