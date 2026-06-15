@@ -101,7 +101,7 @@ abstract class GPULlama3BaseModel {
         //   quarkus.log.category."io.quarkiverse.langchain4j.gpullama3".level=DEBUG
         if (LOG.isDebugEnabled()) {
             LOG.debugf("[Prompt: %d tokens]%n>>>%n%s%n<<<",
-                    promptTokens.size(), model.tokenizer().decode(promptTokens));
+                    promptTokens.size(), holder.model.tokenizer().decode(promptTokens));
         }
 
         // Use tool-aware stop tokens whenever tools are present so the model can signal a tool
@@ -297,7 +297,7 @@ abstract class GPULlama3BaseModel {
      * tool calling is gated upstream by {@code chatFormat.supportsToolCalling()}.
      */
     private String buildToolsJson(List<ToolSpecification> tools) {
-        return switch (model.getModelType()) {
+        return switch (holder.model.getModelType()) {
             case LLAMA_3 -> buildToolsJsonLlama(tools);
             case QWEN_3, DEEPSEEK_R1_DISTILL_QWEN -> buildToolsJsonQwen3(tools);
             // Llama 3.1 and 3.2 both report LLAMA_3 and share the same tool template, so no
