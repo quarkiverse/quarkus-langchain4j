@@ -15,6 +15,12 @@ import org.beehive.gpullama3.model.format.ChatFormat;
 import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -86,6 +92,16 @@ abstract class GPULlama3BaseModel {
             } else {
                 LOG.infof("[Tool turn] %d tool(s) available: %s", tools.size(), toolNames);
             }
+        }
+
+        // Full decoded prompt the model is about to see this turn: includes the thinking-control
+        // primer, injected tool definitions, re-encoded prior assistant tool-call turns, and the
+        // <tool_response>-wrapped tool results. This is the precise view for debugging tool calls
+        // and tool responses. Enable with:
+        //   quarkus.log.category."io.quarkiverse.langchain4j.gpullama3".level=DEBUG
+        if (LOG.isDebugEnabled()) {
+            LOG.debugf("[Prompt: %d tokens]%n>>>%n%s%n<<<",
+                    promptTokens.size(), model.tokenizer().decode(promptTokens));
         }
 
         // Use tool-aware stop tokens whenever tools are present so the model can signal a tool
@@ -265,15 +281,56 @@ abstract class GPULlama3BaseModel {
         return sb.toString();
     }
 
+    private static final ObjectMapper TOOL_MAPPER = new ObjectMapper();
+    /** Compact single-line JSON writer — Qwen3 ChatML tool list. */
+    private static final ObjectWriter COMPACT_TOOL_WRITER = TOOL_MAPPER.writer();
+    /** 4-space pretty JSON writer — Llama Instruct tool list (matches the template's {@code tojson(indent=4)}). */
+    private static final ObjectWriter PRETTY_TOOL_WRITER = TOOL_MAPPER.writer(
+            new DefaultPrettyPrinter()
+                    .withObjectIndenter(new DefaultIndenter("    ", "\n"))
+                    .withArrayIndenter(new DefaultIndenter("    ", "\n")));
+
     /**
-     * Builds the tools JSON array in OpenAI / native Llama 3.2 format:
-     * {@code [{"type":"function","function":{"name":...,"description":...,"parameters":{...}}}]}.
-     *
-     * This matches the format Ollama sends to the model and the format Llama 3.2 expects in its
-     * native {@code <|start_header_id|>tools<|end_header_id|>} section. Using this format (rather
-     * than flat JSON without the {@code type/function} wrapper) triggers reliable tool calling.
+     * Builds the {@code <tools>} JSON for the model family, dispatching on
+     * {@link Model#getModelType()}. Each family expects a different serialization (see the
+     * dedicated builders). Only Llama and Qwen3/ChatML formats currently reach this method —
+     * tool calling is gated upstream by {@code chatFormat.supportsToolCalling()}.
      */
-    static String buildToolsJson(List<ToolSpecification> tools) {
+    private String buildToolsJson(List<ToolSpecification> tools) {
+        return switch (model.getModelType()) {
+            case LLAMA_3 -> buildToolsJsonLlama(tools);
+            case QWEN_3, DEEPSEEK_R1_DISTILL_QWEN -> buildToolsJsonQwen3(tools);
+            // Llama 3.1 and 3.2 both report LLAMA_3 and share the same tool template, so no
+            // per-version split is needed. Any other ChatML-based format that opts into tool
+            // calling later falls back to the Qwen3 layout.
+            default -> buildToolsJsonQwen3(tools);
+        };
+    }
+
+    /**
+     * Qwen3 tool list: each tool object as <em>compact</em> single-line JSON, one per line, with
+     * no enclosing array — matching the official Qwen3 chat template, which renders the section as
+     * {@code <tools>\n{tool|tojson}\n…\n</tools>}. Compact output keeps the per-turn token cost low.
+     */
+    static String buildToolsJsonQwen3(List<ToolSpecification> tools) {
+        return buildToolMaps(tools).stream()
+                .map(m -> writeJson(COMPACT_TOOL_WRITER, m))
+                .collect(Collectors.joining("\n"));
+    }
+
+    /**
+     * Llama 3.1/3.2 tool list: each tool object <em>pretty-printed with 4-space indentation</em>,
+     * separated by blank lines, with no enclosing array — matching the Llama Instruct template,
+     * which renders each tool via {@code t | tojson(indent=4)} in the first user message.
+     */
+    static String buildToolsJsonLlama(List<ToolSpecification> tools) {
+        return buildToolMaps(tools).stream()
+                .map(m -> writeJson(PRETTY_TOOL_WRITER, m))
+                .collect(Collectors.joining("\n\n"));
+    }
+
+    /** Builds the shared OpenAI-style tool maps ({@code {"type":"function","function":{…}}}). */
+    private static List<Map<String, Object>> buildToolMaps(List<ToolSpecification> tools) {
         List<Map<String, Object>> toolArray = new ArrayList<>();
         for (ToolSpecification tool : tools) {
             Map<String, Object> funcMap = new LinkedHashMap<>();
@@ -288,7 +345,15 @@ abstract class GPULlama3BaseModel {
             toolMap.put("function", funcMap);
             toolArray.add(toolMap);
         }
-        return Json.toJson(toolArray);
+        return toolArray;
+    }
+
+    private static String writeJson(ObjectWriter writer, Object value) {
+        try {
+            return writer.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize tool definition JSON", e);
+        }
     }
 
     private static Map<String, Object> buildParametersMap(ToolSpecification tool) {

@@ -67,23 +67,40 @@ public class GPULlama3ResponseParser {
         String thinking = null;
         String actualResponse = rawResponse;
 
-        // Find <think> and </think> positions
         int thinkStart = rawResponse.indexOf("<think>");
         int thinkEnd = rawResponse.indexOf("</think>");
 
-        if (thinkStart != -1 && thinkEnd != -1 && thinkEnd > thinkStart) {
-            // Extract thinking content INCLUDING the tags
-            thinking = rawResponse.substring(thinkStart, thinkEnd + 8).trim(); // Include </think>
-
-            // Remove the entire thinking block from response, preserving the answer's own
-            // formatting (newlines, indentation) — never collapse internal whitespace, or code
-            // and multi-line answers would be flattened to a single line.
-            String beforeThink = rawResponse.substring(0, thinkStart);
-            String afterThink = rawResponse.substring(thinkEnd + 8); // Skip </think>
-            actualResponse = (beforeThink + afterThink).trim();
+        // Strip the reasoning block whenever the CLOSING </think> appears, because the opening
+        // <think> may be absent from the *generated* text. In thinking-disabled mode the primer
+        // puts a <think>…</think> block into the PROMPT, so when a small model still reasons it
+        // emits trailing reasoning plus its own </think> without re-opening the tag. The engine
+        // never injects a stray </think> (verified: it only ever primes <think> openings), so a
+        // lone </think> always marks the end of genuine reasoning. When the opening tag is also
+        // present we strip from it; otherwise everything up to and including </think> is reasoning.
+        if (thinkEnd != -1) {
+            int blockStart = (thinkStart != -1 && thinkStart < thinkEnd) ? thinkStart : 0;
+            // Extract thinking content INCLUDING the tags. Preserve the answer's own formatting
+            // (newlines, indentation) — never collapse internal whitespace, or code and
+            // multi-line answers would be flattened to a single line.
+            thinking = rawResponse.substring(blockStart, thinkEnd + 8).trim(); // Include </think>
+            String before = rawResponse.substring(0, blockStart);
+            String after = rawResponse.substring(thinkEnd + 8); // Skip </think>
+            actualResponse = (before + after).trim();
         }
 
+        // Defensively strip any residual control tags the model emitted without a matching pair
+        // (e.g. a stray </tool_call> or an extra </think> on small models), so they never leak
+        // into the user-facing answer.
+        actualResponse = stripControlTags(actualResponse).trim();
+
         return new ParsedResponse(thinking, actualResponse);
+    }
+
+    private static String stripControlTags(String text) {
+        return text.replace("<think>", "")
+                .replace("</think>", "")
+                .replace("<tool_call>", "")
+                .replace("</tool_call>", "");
     }
 
     public static String extractThinking(String rawResponse) {

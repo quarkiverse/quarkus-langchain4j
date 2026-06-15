@@ -105,6 +105,7 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
             if (!toolCalls.isEmpty()) {
                 LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
                 String thinkingContent = parser.getThinkingContent();
+                LOG.debugf("[Parsed tool turn] toolCalls=%d  thinking=>>>%s<<<", toolCalls.size(), thinkingContent);
                 List<ToolExecutionRequest> toolReqs = new ArrayList<>();
                 for (ToolCallExtract tc : toolCalls) {
                     String callId = tc.id().orElseGet(() -> generateCallId());
@@ -129,6 +130,7 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
             // Plain text — parse thinking and deliver final response
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
 
+            LOG.debugf("[Parsed response] thinking=>>>%s<<<", parsed.getThinkingContent());
             LOG.infof("[LLM response]\n%s", parsed.getActualResponse());
 
             handler.onCompleteResponse(ChatResponse.builder()

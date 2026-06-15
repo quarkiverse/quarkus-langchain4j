@@ -54,6 +54,8 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             if (!toolCalls.isEmpty()) {
                 LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
                 GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
+                LOG.debugf("[Parsed tool turn] toolCalls=%d  thinking=>>>%s<<<",
+                        toolCalls.size(), parsed.getThinkingContent());
                 List<ToolExecutionRequest> toolReqs = new ArrayList<>();
                 for (ToolCallExtract tc : toolCalls) {
                     String callId = tc.id().orElseGet(() -> generateCallId());
@@ -77,6 +79,7 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             // Plain text response — separate thinking content if present
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
 
+            LOG.debugf("[Parsed response] thinking=>>>%s<<<", parsed.getThinkingContent());
             LOG.infof("[LLM response]\n%s", parsed.getActualResponse());
 
             return ChatResponse.builder()
