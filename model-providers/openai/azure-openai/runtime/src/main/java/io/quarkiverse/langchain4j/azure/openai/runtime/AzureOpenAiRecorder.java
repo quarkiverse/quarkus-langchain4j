@@ -90,6 +90,7 @@ public class AzureOpenAiRecorder {
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .apiKey(apiKey)
                     .adToken(adToken)
+                    .modelName(azureAiConfig.deploymentNameFor(EndpointType.CHAT).orElse(null))
                     // .tokenizer(new OpenAiTokenizer("<modelName>")) TODO: Set the tokenizer, it is always null!!
                     .apiVersion(chatModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -153,6 +154,7 @@ public class AzureOpenAiRecorder {
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
                     .apiKey(apiKey)
                     .adToken(adToken)
+                    .modelName(azureAiConfig.deploymentNameFor(EndpointType.CHAT).orElse(null))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
