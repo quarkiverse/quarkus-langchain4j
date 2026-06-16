@@ -71,6 +71,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 
     private final OpenAiClient client;
     private final String apiVersion;
+    private final String modelName;
     private final Double temperature;
     private final Integer seed;
     private final Double topP;
@@ -86,6 +87,7 @@ public class AzureOpenAiChatModel implements ChatModel {
             String apiVersion,
             String apiKey,
             String adToken,
+            String modelName,
             TokenCountEstimator tokenizer,
             Double temperature,
             Integer seed,
@@ -103,6 +105,7 @@ public class AzureOpenAiChatModel implements ChatModel {
             String configName, List<ChatModelListener> listeners) {
         this.listeners = listeners;
         this.apiVersion = apiVersion;
+        this.modelName = modelName;
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
@@ -230,7 +233,7 @@ public class AzureOpenAiChatModel implements ChatModel {
         return ChatRequest.builder()
                 .messages(messages)
                 .parameters(ChatRequestParameters.builder()
-                        .modelName(request.model())
+                        .modelName(modelName)
                         .temperature(request.temperature())
                         .topP(request.topP())
                         .maxOutputTokens(request.maxTokens())
@@ -277,6 +280,7 @@ public class AzureOpenAiChatModel implements ChatModel {
         private String apiVersion;
         private String apiKey;
         private String adToken;
+        private String modelName;
         private TokenCountEstimator tokenizer;
         private Double temperature;
         private Integer seed;
@@ -335,6 +339,11 @@ public class AzureOpenAiChatModel implements ChatModel {
 
         public Builder adToken(String adToken) {
             this.adToken = adToken;
+            return this;
+        }
+
+        public Builder modelName(String modelName) {
+            this.modelName = modelName;
             return this;
         }
 
@@ -418,6 +427,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                     apiVersion,
                     apiKey,
                     adToken,
+                    modelName,
                     tokenizer,
                     temperature,
                     seed,

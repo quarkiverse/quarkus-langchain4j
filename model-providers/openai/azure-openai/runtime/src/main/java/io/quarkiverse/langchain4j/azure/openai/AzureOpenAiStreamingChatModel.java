@@ -77,6 +77,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
     private final OpenAiClient client;
     private final String apiVersion;
+    private final String modelName;
     private final Double temperature;
     private final Double topP;
     private final Integer maxTokens;
@@ -90,6 +91,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             String apiVersion,
             String apiKey,
             String adToken,
+            String modelName,
             TokenCountEstimator tokenizer,
             Double temperature,
             Double topP,
@@ -106,6 +108,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             List<ChatModelListener> listeners) {
         this.listeners = listeners;
         this.apiVersion = apiVersion;
+        this.modelName = modelName;
         timeout = getOrDefault(timeout, ofSeconds(60));
 
         this.client = QuarkusOpenAiClient.builder()
@@ -263,7 +266,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         return ChatRequest.builder()
                 .messages(messages)
                 .parameters(ChatRequestParameters.builder()
-                        .modelName(request.model())
+                        .modelName(modelName)
                         .temperature(request.temperature())
                         .topP(request.topP())
                         .maxOutputTokens(request.maxTokens())
@@ -310,6 +313,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         private String apiVersion;
         private String apiKey;
         private String adToken;
+        private String modelName;
         private TokenCountEstimator tokenizer;
         private Double temperature;
         private Double topP;
@@ -361,6 +365,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
         public Builder adToken(String adToken) {
             this.adToken = adToken;
+            return this;
+        }
+
+        public Builder modelName(String modelName) {
+            this.modelName = modelName;
             return this;
         }
 
@@ -439,6 +448,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                     apiVersion,
                     apiKey,
                     adToken,
+                    modelName,
                     tokenizer,
                     temperature,
                     topP,
