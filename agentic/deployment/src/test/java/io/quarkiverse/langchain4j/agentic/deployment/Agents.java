@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -20,12 +21,19 @@ import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.agentic.supervisor.SupervisorResponseStrategy;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
+import dev.langchain4j.service.guardrail.InputGuardrails;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 
 public class Agents {
 
@@ -334,6 +342,90 @@ public class Agents {
         @SupervisorRequest
         static String request(@V("topic") String topic, @V("style") String style) {
             return "Write a story about " + topic + " in " + style + " style";
+        }
+    }
+
+    @ApplicationScoped
+    public static class ViolenceInputGuardrail implements InputGuardrail {
+
+        final AtomicBoolean invoked = new AtomicBoolean();
+
+        @Override
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
+            invoked.set(true);
+            String text = request.userMessage().singleText();
+            if (text != null && text.toLowerCase().contains("violence")) {
+                return failure("Input must not contain the word 'violence'");
+            }
+            return success();
+        }
+
+        public boolean isInvoked() {
+            return invoked.get();
+        }
+    }
+
+    @ApplicationScoped
+    public static class LengthOutputGuardrail implements OutputGuardrail {
+
+        final AtomicBoolean invoked = new AtomicBoolean();
+
+        @Override
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            invoked.set(true);
+            String text = responseFromLLM.text();
+            if (text == null || text.length() <= 10) {
+                return failure("Story must be longer than 10 characters");
+            }
+            return success();
+        }
+
+        public boolean isInvoked() {
+            return invoked.get();
+        }
+    }
+
+    public interface GuardedCreativeWriter {
+
+        @UserMessage("""
+                You are a creative writer.
+                Generate a draft of a story long no more than 3 sentence around the given topic.
+                Return only the story and nothing else.
+                The topic is {{topic}}.
+                """)
+        @Agent(description = "Generate a story based on the given topic", outputKey = "story")
+        @InputGuardrails(ViolenceInputGuardrail.class)
+        String generateStory(@V("topic") String topic);
+
+        @ChatModelSupplier
+        static ChatModel chatModel() {
+            return new FixedResponseChatModel("""
+                    In a realm where dragons soared through the skies, a young wizard named Elara discovered an ancient
+                    spell that could bind their fiery hearts to her will. As she summoned the might of a thousand dragons,
+                    she realized that true power lay not in control, but in the bond of trust forged between them.
+                    Together, they soared into the sunset, guardians of a world where magic and freedom danced in harmony.
+                    """);
+        }
+    }
+
+    public interface GuardedStyleEditor {
+
+        @UserMessage("""
+                You are a professional editor.
+                Analyze and rewrite the following story to better fit and be more coherent with the {{style}} style.
+                Return only the story and nothing else.
+                The story is "{{story}}".
+                """)
+        @Agent(description = "Edit a story to better fit a given style", outputKey = "story")
+        @OutputGuardrails(LengthOutputGuardrail.class)
+        String editStory(@V("story") String story, @V("style") String style);
+
+        @ChatModelSupplier
+        static ChatModel chatModel() {
+            return new FixedResponseChatModel("""
+                    In a realm where dragons soared majestically through the azure skies, a young wizard named Elara
+                    unearthed an ancient incantation that promised to command the will of these magnificent beasts.
+                    """);
         }
     }
 }

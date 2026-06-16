@@ -37,7 +37,10 @@ public class WorkflowTest extends OpenAiBaseTest {
                             CreativeWriter.class, AudienceEditor.class, StyleEditor.class, FixedResponseChatModel.class,
                             StyleReviewLoopAgent.class, StoryCreatorWithReview.class, StyleScorer.class,
                             MedicalExpert.class, TechnicalExpert.class, LegalExpert.class, CategoryRouter.class,
-                            RequestCategory.class, ExpertsAgent.class, ExpertRouterAgent.class))
+                            RequestCategory.class, ExpertsAgent.class, ExpertRouterAgent.class,
+                            GuardedCreativeWriter.class, GuardedStyleEditor.class,
+                            ViolenceInputGuardrail.class, LengthOutputGuardrail.class,
+                            GuardedStoryCreator.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     WiremockAware.wiremockUrlForConfig("/v1"));
@@ -162,5 +165,29 @@ public class WorkflowTest extends OpenAiBaseTest {
 
         AgenticScope agenticScope = result.agenticScope();
         assertThat(agenticScope.readState("category")).isEqualTo(RequestCategory.MEDICAL);
+    }
+
+    public interface GuardedStoryCreator {
+
+        @SequenceAgent(outputKey = "story", subAgents = { GuardedCreativeWriter.class, GuardedStyleEditor.class })
+        String write(@V("topic") String topic, @V("style") String style);
+    }
+
+    @Inject
+    GuardedStoryCreator guardedStoryCreator;
+
+    @Inject
+    ViolenceInputGuardrail violenceInputGuardrail;
+
+    @Inject
+    LengthOutputGuardrail lengthOutputGuardrail;
+
+    @Test
+    void declarative_sequence_tests_with_guardrails_tests() {
+        String story = guardedStoryCreator.write("dragons and wizards", "fantasy");
+        System.out.println(story);
+        assertThat(story).isNotNull();
+        assertThat(violenceInputGuardrail.isInvoked()).isTrue();
+        assertThat(lengthOutputGuardrail.isInvoked()).isTrue();
     }
 }
