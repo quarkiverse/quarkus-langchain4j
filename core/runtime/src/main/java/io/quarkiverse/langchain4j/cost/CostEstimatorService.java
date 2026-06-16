@@ -26,38 +26,47 @@ public class CostEstimatorService {
     }
 
     public Cost estimate(ChatModelResponseContext response) {
-        TokenUsage tokenUsage = response.chatResponse().tokenUsage();
-        CostEstimator.CostContext costContext = new MyCostContext(tokenUsage, response);
+        CostEstimator.CostContext costContext = new MyCostContext(response);
 
         for (CostEstimator costEstimator : costEstimators) {
             if (costEstimator.supports(costContext)) {
                 CostEstimator.CostResult costResult = costEstimator.estimate(costContext);
                 if (costResult != null) {
-                    BigDecimal totalCost = costResult.inputTokensCost().add(costResult.outputTokensCost());
-                    return new Cost(totalCost, costResult.currency());
+                    return new Cost(totalCost(costResult), costResult.currency());
                 }
             }
         }
         return null;
     }
 
-    private record MyCostContext(TokenUsage tokenUsage, ChatModelResponseContext response)
-            implements
-                CostEstimator.CostContext {
+    private static BigDecimal totalCost(CostEstimator.CostResult costResult) {
+        BigDecimal total = costResult.inputTokensCost().add(costResult.outputTokensCost());
+        if (costResult.cacheReadTokensCost() != null) {
+            total = total.add(costResult.cacheReadTokensCost());
+        }
+        if (costResult.cacheCreationTokensCost() != null) {
+            total = total.add(costResult.cacheCreationTokensCost());
+        }
+        return total;
+    }
+
+    private record MyCostContext(ChatModelResponseContext responseContext) implements CostEstimator.CostContext {
 
         @Override
         public Integer inputTokens() {
+            TokenUsage tokenUsage = responseContext.chatResponse().tokenUsage();
             return tokenUsage != null ? tokenUsage.inputTokenCount() : 0;
         }
 
         @Override
         public Integer outputTokens() {
+            TokenUsage tokenUsage = responseContext.chatResponse().tokenUsage();
             return tokenUsage != null ? tokenUsage.outputTokenCount() : 0;
         }
 
         @Override
         public String model() {
-            return response.chatRequest().parameters().modelName();
+            return responseContext.chatRequest().parameters().modelName();
         }
     }
 }

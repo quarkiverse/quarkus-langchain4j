@@ -18,6 +18,8 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+import io.quarkiverse.langchain4j.cost.CacheTokenUsage;
+import io.quarkiverse.langchain4j.cost.CacheTokenUsageResolver;
 import io.quarkiverse.langchain4j.cost.Cost;
 import io.quarkiverse.langchain4j.cost.CostEstimatorService;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
@@ -35,14 +37,19 @@ public class MetricsChatModelListener implements ChatModelListener {
     public static final String START_TIME_KEY_NAME = "startTime";
 
     private final CostEstimatorService costEstimatorService;
+    private final CacheTokenUsageResolver cacheTokenUsageResolver;
 
     private final Meter.MeterProvider<Counter> inputTokenUsage;
     private final Meter.MeterProvider<Counter> outputTokenUsage;
+    private final Meter.MeterProvider<Counter> cacheReadInputTokenUsage;
+    private final Meter.MeterProvider<Counter> cacheCreationInputTokenUsage;
     private final Meter.MeterProvider<Timer> duration;
     private final Meter.MeterProvider<Counter> estimatedCost;
 
-    public MetricsChatModelListener(CostEstimatorService costEstimatorService) {
+    public MetricsChatModelListener(CostEstimatorService costEstimatorService,
+            CacheTokenUsageResolver cacheTokenUsageResolver) {
         this.costEstimatorService = costEstimatorService;
+        this.cacheTokenUsageResolver = cacheTokenUsageResolver;
 
         this.inputTokenUsage = Counter.builder("gen_ai.client.token.usage")
                 .description("Measures number of input tokens used")
@@ -53,6 +60,16 @@ public class MetricsChatModelListener implements ChatModelListener {
                 .description("Measures number of output tokens used")
                 .tag("gen_ai.operation.name", "chat")
                 .tag("gen_ai.token.type", "output")
+                .withRegistry(Metrics.globalRegistry);
+        this.cacheReadInputTokenUsage = Counter.builder("gen_ai.client.token.usage")
+                .description("Measures number of input tokens read from the prompt cache")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "cache_read")
+                .withRegistry(Metrics.globalRegistry);
+        this.cacheCreationInputTokenUsage = Counter.builder("gen_ai.client.token.usage")
+                .description("Measures number of input tokens written to the prompt cache")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "cache_creation")
                 .withRegistry(Metrics.globalRegistry);
         this.duration = Timer.builder("gen_ai.client.operation.duration")
                 .description("GenAI operation duration")
@@ -152,6 +169,19 @@ public class MetricsChatModelListener implements ChatModelListener {
             outputTokenUsage
                     .withTags(tags)
                     .increment(outputTokenCount);
+        }
+        CacheTokenUsage cacheTokenUsage = cacheTokenUsageResolver.resolve(tokenUsage);
+        Integer cacheReadInputTokens = cacheTokenUsage.cacheReadInputTokens();
+        if (cacheReadInputTokens != null && cacheReadInputTokens > 0) {
+            cacheReadInputTokenUsage
+                    .withTags(tags)
+                    .increment(cacheReadInputTokens);
+        }
+        Integer cacheCreationInputTokens = cacheTokenUsage.cacheCreationInputTokens();
+        if (cacheCreationInputTokens != null && cacheCreationInputTokens > 0) {
+            cacheCreationInputTokenUsage
+                    .withTags(tags)
+                    .increment(cacheCreationInputTokens);
         }
         if (inputTokenCount != null && outputTokenCount != null) {
             Cost costEstimate = costEstimatorService.estimate(responseContext);

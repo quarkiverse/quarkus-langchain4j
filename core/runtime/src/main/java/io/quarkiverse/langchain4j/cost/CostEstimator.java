@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.cost;
 
 import java.math.BigDecimal;
 
+import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import io.smallrye.common.annotation.Experimental;
 
 /**
@@ -19,6 +20,8 @@ public interface CostEstimator {
 
     interface SupportsContext {
         String model();
+
+        ChatModelResponseContext responseContext();
     }
 
     interface CostContext extends SupportsContext {
@@ -27,7 +30,14 @@ public interface CostEstimator {
         Integer outputTokens();
     }
 
-    record CostResult(BigDecimal inputTokensCost, BigDecimal outputTokensCost, String currency) {
+    record CostResult(BigDecimal inputTokensCost, BigDecimal outputTokensCost, BigDecimal cacheReadTokensCost,
+            BigDecimal cacheCreationTokensCost, String currency) {
 
+        /**
+         * Convenience constructor for estimators that do not compute prompt cache costs.
+         */
+        public CostResult(BigDecimal inputTokensCost, BigDecimal outputTokensCost, String currency) {
+            this(inputTokensCost, outputTokensCost, null, null, currency);
+        }
     }
 }
