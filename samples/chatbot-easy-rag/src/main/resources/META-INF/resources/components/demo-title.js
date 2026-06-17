@@ -43,12 +43,12 @@ export class DemoTitle extends LitElement {
             </div>
             <div class="explanation">
                 This demo shows how to build a chat bot powered by GPT 3.5 and retrieval augmented generation.
-                The description of the different accounts is ingested into a Redis database and relevant information
+                The description of the different accounts is ingested into a in-memory vector database and relevant information
                 is sent to the LLM before answering the user.
             </div>
             
             <div class="explanation">
-                <img src="images/chatbot-architecture.png"/>
+                <img src="images/easyrag.png"/>
             </div>
             
             <div class="explanation">
