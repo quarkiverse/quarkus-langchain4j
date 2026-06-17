@@ -280,85 +280,29 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-address[`+++quarkus.langchain4j.bedrock.client.proxy-address+++`]##
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-configuration-name[`+++quarkus.langchain4j.bedrock.client.proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.client.proxy-address+++[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.client.proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_ADDRESS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_ADDRESS+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-user[`+++quarkus.langchain4j.bedrock.client.proxy-user+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.client.proxy-user+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_USER+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_USER+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-password[`+++quarkus.langchain4j.bedrock.client.proxy-password+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.client.proxy-password+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_PASSWORD+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_PASSWORD+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-non-proxy-hosts[`+++quarkus.langchain4j.bedrock.client.non-proxy-hosts+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.client.non-proxy-hosts+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_NON_PROXY_HOSTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_NON_PROXY_HOSTS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -1004,85 +948,29 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-address[`+++quarkus.langchain4j.bedrock.chat-model.client.proxy-address+++`]##
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-configuration-name[`+++quarkus.langchain4j.bedrock.chat-model.client.proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.proxy-address+++[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_ADDRESS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_ADDRESS+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-user[`+++quarkus.langchain4j.bedrock.chat-model.client.proxy-user+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.proxy-user+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_USER+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_USER+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-password[`+++quarkus.langchain4j.bedrock.chat-model.client.proxy-password+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.proxy-password+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_PASSWORD+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_PASSWORD+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-non-proxy-hosts[`+++quarkus.langchain4j.bedrock.chat-model.client.non-proxy-hosts+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.non-proxy-hosts+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -1783,85 +1671,29 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-address[`+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-address+++`]##
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-configuration-name[`+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-address+++[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-user[`+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-user+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-user+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_USER+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_USER+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-password[`+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-password+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-password+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-non-proxy-hosts[`+++quarkus.langchain4j.bedrock.embedding-model.client.non-proxy-hosts+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.non-proxy-hosts+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -2142,6 +1974,282 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-address[[.line-through]#`+++quarkus.langchain4j.bedrock.client.proxy-address+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.client.proxy-address+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_ADDRESS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_ADDRESS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-user[[.line-through]#`+++quarkus.langchain4j.bedrock.client.proxy-user+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.client.proxy-user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-password[[.line-through]#`+++quarkus.langchain4j.bedrock.client.proxy-password+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.client.proxy-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_PROXY_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-non-proxy-hosts[[.line-through]#`+++quarkus.langchain4j.bedrock.client.non-proxy-hosts+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.client.non-proxy-hosts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-address[[.line-through]#`+++quarkus.langchain4j.bedrock.chat-model.client.proxy-address+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.proxy-address+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_ADDRESS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_ADDRESS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-user[[.line-through]#`+++quarkus.langchain4j.bedrock.chat-model.client.proxy-user+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.proxy-user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-password[[.line-through]#`+++quarkus.langchain4j.bedrock.chat-model.client.proxy-password+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.proxy-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_PROXY_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-non-proxy-hosts[[.line-through]#`+++quarkus.langchain4j.bedrock.chat-model.client.non-proxy-hosts+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.client.non-proxy-hosts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-address[[.line-through]#`+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-address+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-address+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-user[[.line-through]#`+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-user+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-password[[.line-through]#`+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-password+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.proxy-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-non-proxy-hosts[[.line-through]#`+++quarkus.langchain4j.bedrock.embedding-model.client.non-proxy-hosts+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.client.non-proxy-hosts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 h|[[quarkus-langchain4j-bedrock_section_quarkus-langchain4j-bedrock]] [.section-name.section-level0]##link:#quarkus-langchain4j-bedrock_section_quarkus-langchain4j-bedrock[Named model config]##
 h|Type
 h|Default
@@ -2377,85 +2485,29 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-address[`+++quarkus.langchain4j.bedrock."model-name".client.proxy-address+++`]##
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-configuration-name[`+++quarkus.langchain4j.bedrock."model-name".client.proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".client.proxy-address+++[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".client.proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_ADDRESS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_ADDRESS+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-user[`+++quarkus.langchain4j.bedrock."model-name".client.proxy-user+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".client.proxy-user+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_USER+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_USER+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-password[`+++quarkus.langchain4j.bedrock."model-name".client.proxy-password+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".client.proxy-password+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_PASSWORD+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_PASSWORD+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-non-proxy-hosts[`+++quarkus.langchain4j.bedrock."model-name".client.non-proxy-hosts+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".client.non-proxy-hosts+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_NON_PROXY_HOSTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_NON_PROXY_HOSTS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -3101,85 +3153,29 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-address[`+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-address+++`]##
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-configuration-name[`+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-address+++[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_ADDRESS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_ADDRESS+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-user[`+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-user+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-user+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_USER+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_USER+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-password[`+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-password+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-password+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_PASSWORD+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_PASSWORD+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-non-proxy-hosts[`+++quarkus.langchain4j.bedrock."model-name".chat-model.client.non-proxy-hosts+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.client.non-proxy-hosts+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -3880,85 +3876,29 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-address[`+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-address+++`]##
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-configuration-name[`+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-address+++[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-user[`+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-user+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-user+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_USER+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_USER+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-password[`+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-password+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-password+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|
-
-a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-non-proxy-hosts[`+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.non-proxy-hosts+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".embedding-model.client.non-proxy-hosts+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string

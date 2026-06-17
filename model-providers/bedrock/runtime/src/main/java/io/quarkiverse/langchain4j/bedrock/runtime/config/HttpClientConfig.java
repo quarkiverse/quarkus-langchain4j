@@ -20,25 +20,52 @@ public interface HttpClientConfig {
     Optional<Duration> timeout();
 
     /**
+     * The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+     * <p>
+     * Precedence rules:
+     * <ul>
+     * <li>If set, it takes precedence over the deprecated {@code proxy-address}, {@code proxy-user},
+     * {@code proxy-password} and {@code non-proxy-hosts} properties, which are ignored.</li>
+     * <li>If not set and a default proxy configuration is configured ({@code quarkus.proxy.*}), then that one is
+     * used.</li>
+     * <li>If set, the configuration from {@code quarkus.proxy.<name>.*} is used.</li>
+     * <li>If set but no proxy configuration is found with that name, an error is thrown at runtime.</li>
+     * </ul>
+     */
+    Optional<String> proxyConfigurationName();
+
+    /**
      * A string value in the form of `<proxyHost>:<proxyPort>` that specifies the HTTP proxy server hostname
      * (or IP address) and port for requests of clients to use.
+     *
+     * @deprecated Use {@code proxy-configuration-name} with the Quarkus Proxy Registry instead.
      */
+    @Deprecated(forRemoval = true)
     Optional<String> proxyAddress();
 
     /**
      * Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
+     *
+     * @deprecated Use {@code proxy-configuration-name} with the Quarkus Proxy Registry instead.
      */
+    @Deprecated(forRemoval = true)
     Optional<String> proxyUser();
 
     /**
      * Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
+     *
+     * @deprecated Use {@code proxy-configuration-name} with the Quarkus Proxy Registry instead.
      */
+    @Deprecated(forRemoval = true)
     Optional<String> proxyPassword();
 
     /**
      * Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings.
      * Please note that unlike the JVM settings, this property is empty by default.
+     *
+     * @deprecated Use {@code proxy-configuration-name} with the Quarkus Proxy Registry instead.
      */
+    @Deprecated(forRemoval = true)
     Optional<String> nonProxyHosts();
 
     /**

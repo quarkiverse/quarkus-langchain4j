@@ -38,6 +38,7 @@ import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.vertx.core.Vertx;
@@ -114,10 +115,6 @@ public class BedrockRecorder {
 
             var clientBuilder = BedrockRuntimeClient.builder();
 
-            clientBuilder.httpClient(
-                    BedrockSdkHttpClientFactory.createSync(modelConfig.client(), config.client(),
-                            rootRuntimeConfig.getValue(), vertx));
-
             configureClient(clientBuilder, modelConfig, config);
 
             if (modelConfig.responseFormat().isPresent()) {
@@ -126,13 +123,17 @@ public class BedrockRecorder {
 
             var builder = BedrockChatModel.builder()
                     .modelId(modelConfig.modelId().orElse("us.amazon.nova-lite-v1:0"))
-                    .client(clientBuilder.build())
                     .defaultRequestParameters(paramBuilder.build())
                     .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
 
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    clientBuilder.httpClient(
+                            BedrockSdkHttpClientFactory.createSync(modelConfig.client(), config.client(),
+                                    rootRuntimeConfig.getValue(), vertx, proxyRegistry));
+                    builder.client(clientBuilder.build());
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     ModelBuilderCustomizer.applyCustomizers(
@@ -176,10 +177,6 @@ public class BedrockRecorder {
 
             var clientBuilder = BedrockRuntimeAsyncClient.builder();
 
-            clientBuilder.httpClient(
-                    BedrockSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(),
-                            rootRuntimeConfig.getValue(), vertx));
-
             configureClient(clientBuilder, modelConfig, config);
 
             var paramsBuilder = BedrockChatRequestParameters.builder()
@@ -219,13 +216,17 @@ public class BedrockRecorder {
 
             var builder = BedrockStreamingChatModel.builder()
                     .modelId(modelConfig.modelId().orElse("anthropic.claude-v2"))
-                    .client(clientBuilder.build())
                     .defaultRequestParameters(paramsBuilder.build())
                     .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
 
             return new Function<>() {
                 @Override
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    clientBuilder.httpClient(
+                            BedrockSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(),
+                                    rootRuntimeConfig.getValue(), vertx, proxyRegistry));
+                    builder.client(clientBuilder.build());
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     ModelBuilderCustomizer.applyCustomizers(
@@ -253,10 +254,6 @@ public class BedrockRecorder {
 
             var clientBuilder = BedrockRuntimeClient.builder(); //NOSONAR creds can be specified later
 
-            clientBuilder.httpClient(
-                    BedrockSdkHttpClientFactory.createSync(modelConfig.client(), config.client(),
-                            rootRuntimeConfig.getValue(), vertx));
-
             configureClient(clientBuilder, modelConfig, config);
 
             var modelId = modelConfig.modelId();
@@ -264,8 +261,7 @@ public class BedrockRecorder {
             Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> function;
             if (modelId.contains("cohere")) {
                 var builder = BedrockCohereEmbeddingModel.builder()
-                        .model(modelId)
-                        .client(clientBuilder.build());
+                        .model(modelId);
 
                 if (modelConfig.cohere().inputType().isPresent()) {
                     builder.inputType(modelConfig.cohere().inputType().get());
@@ -278,6 +274,12 @@ public class BedrockRecorder {
                 function = new Function<>() {
                     @Override
                     public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                        ProxyConfigurationRegistry proxyRegistry = context
+                                .getInjectedReference(ProxyConfigurationRegistry.class);
+                        clientBuilder.httpClient(
+                                BedrockSdkHttpClientFactory.createSync(modelConfig.client(), config.client(),
+                                        rootRuntimeConfig.getValue(), vertx, proxyRegistry));
+                        builder.client(clientBuilder.build());
                         ModelBuilderCustomizer.applyCustomizers(
                                 context.getInjectedReference(COHERE_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL,
                                         Any.Literal.INSTANCE),
@@ -287,8 +289,7 @@ public class BedrockRecorder {
                 };
             } else {
                 var builder = BedrockTitanEmbeddingModel.builder()
-                        .model(modelId)
-                        .client(clientBuilder.build());
+                        .model(modelId);
 
                 if (modelConfig.titan().dimensions().isPresent()) {
                     builder.dimensions(modelConfig.titan().dimensions().getAsInt());
@@ -301,6 +302,12 @@ public class BedrockRecorder {
                 function = new Function<>() {
                     @Override
                     public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                        ProxyConfigurationRegistry proxyRegistry = context
+                                .getInjectedReference(ProxyConfigurationRegistry.class);
+                        clientBuilder.httpClient(
+                                BedrockSdkHttpClientFactory.createSync(modelConfig.client(), config.client(),
+                                        rootRuntimeConfig.getValue(), vertx, proxyRegistry));
+                        builder.client(clientBuilder.build());
                         ModelBuilderCustomizer.applyCustomizers(
                                 context.getInjectedReference(TITAN_EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL,
                                         Any.Literal.INSTANCE),
