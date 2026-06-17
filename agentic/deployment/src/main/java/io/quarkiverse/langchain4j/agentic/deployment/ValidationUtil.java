@@ -1,11 +1,18 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 
 import dev.langchain4j.service.IllegalConfigurationException;
@@ -70,5 +77,41 @@ class ValidationUtil {
                                     method.name(),
                                     method.declaringClass().name().toString()));
         }
+    }
+
+    /**
+     * Returns the given interface and all its transitive parent interfaces, in BFS order.
+     * The result always includes {@code start} itself as the first element.
+     * Uses BFS to ensure each interface appears at most once.
+     */
+    static Set<ClassInfo> transitiveInterfaces(ClassInfo start, IndexView index) {
+        Set<ClassInfo> result = new LinkedHashSet<>();
+        Deque<ClassInfo> queue = new ArrayDeque<>();
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            ClassInfo current = queue.poll();
+            if (!result.add(current)) {
+                continue;
+            }
+            for (DotName parentName : current.interfaceNames()) {
+                ClassInfo parent = index.getClassByName(parentName);
+                if (parent != null) {
+                    queue.add(parent);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns true if any annotation in {@code annotations} has a name contained in {@code names}.
+     */
+    static boolean hasAnnotation(Collection<AnnotationInstance> annotations, Set<DotName> names) {
+        for (AnnotationInstance ann : annotations) {
+            if (names.contains(ann.name())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

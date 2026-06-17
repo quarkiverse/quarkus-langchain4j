@@ -17,6 +17,7 @@ import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.declarative.DeclarativeUtil;
 import dev.langchain4j.agentic.internal.InternalAgent;
+import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
 import dev.langchain4j.model.chat.ChatModel;
@@ -77,8 +78,9 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
-    public void registerChatSupplierParameterResolver() {
-        DeclarativeUtil.addChatSupplierParameterResolver(new CdiChatSupplierParameterResolver());
+    public void registerChatSupplierParameterResolver(Set<String> qualifierNames) {
+        DeclarativeUtil.addChatSupplierParameterResolver(
+                new CdiChatSupplierParameterResolver(Collections.unmodifiableSet(qualifierNames)));
     }
 
     @RuntimeInit
@@ -192,18 +194,25 @@ public class AgenticRecorder {
             implements
                 Consumer<AgenticServices.DeclarativeAgentCreationContext<?>> {
 
-        private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+        private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_INSTANCE = new TypeLiteral<>() {
+        };
+        private static final TypeLiteral<Instance<AgentListener>> AGENT_LISTENER_INSTANCE = new TypeLiteral<>() {
         };
 
         @Override
         public void accept(AgenticServices.DeclarativeAgentCreationContext agenticContext) {
+            var agentBuilder = agenticContext.agentBuilder();
             String agentClassName = agenticContext.agentServiceClass().getName();
+
+            // MCP ToolProvider support
             if (AgenticRecorder.agentsWithMcpToolBox.contains(agentClassName)) {
-                Instance<ToolProvider> injectedReference = cdiContext.getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
-                if (injectedReference.isResolvable()) {
-                    agenticContext.agentBuilder().toolProvider(injectedReference.get());
+                Instance<ToolProvider> toolProviderInstance = cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE);
+                if (toolProviderInstance.isResolvable()) {
+                    agentBuilder.toolProvider(toolProviderInstance.get());
                 }
             }
+
+            // @ToolBox support — resolve tool beans by class name
             List<String> toolClassNames = AgenticRecorder.agentsWithToolBox.get(agentClassName);
             if (toolClassNames != null) {
                 List<Object> tools = new ArrayList<>(toolClassNames.size());
@@ -216,7 +225,13 @@ public class AgenticRecorder {
                         throw new RuntimeException("Unable to load @ToolBox class: " + toolClassName, e);
                     }
                 }
-                agenticContext.agentBuilder().tools(tools.toArray());
+                agentBuilder.tools(tools.toArray());
+            }
+
+            // AgentListener support (unconditional — build-time always adds the injection point)
+            Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
+            for (AgentListener listener : listeners) {
+                agentBuilder.listener(listener);
             }
         }
     }
