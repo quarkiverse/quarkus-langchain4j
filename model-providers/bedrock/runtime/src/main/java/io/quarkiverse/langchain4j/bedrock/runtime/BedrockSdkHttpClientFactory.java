@@ -21,6 +21,8 @@ import io.quarkiverse.langchain4j.bedrock.runtime.client.VertxSdkAsyncHttpClient
 import io.quarkiverse.langchain4j.bedrock.runtime.client.VertxSdkHttpClient;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.HttpClientConfig;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
+import io.quarkus.proxy.ProxyConfiguration;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.tls.TlsConfiguration;
 import io.quarkus.tls.TlsConfigurationRegistry;
 import io.quarkus.tls.runtime.config.TlsConfigUtils;
@@ -42,8 +44,8 @@ final class BedrockSdkHttpClientFactory {
     }
 
     static SdkHttpClient createSync(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
-            LangChain4jConfig rootConfig, Supplier<Vertx> vertx) {
-        HttpClientOptions options = buildHttpClientOptions(modelConfig, bedrockConfig, rootConfig);
+            LangChain4jConfig rootConfig, Supplier<Vertx> vertx, ProxyConfigurationRegistry proxyRegistry) {
+        HttpClientOptions options = buildHttpClientOptions(modelConfig, bedrockConfig, rootConfig, proxyRegistry);
 
         Duration readTimeout = firstOrDefault(Duration.ofSeconds(10),
                 modelConfig.timeout(), bedrockConfig.timeout(), rootConfig.timeout());
@@ -52,14 +54,14 @@ final class BedrockSdkHttpClientFactory {
     }
 
     static SdkAsyncHttpClient createAsync(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
-            LangChain4jConfig rootConfig, Supplier<Vertx> vertx) {
-        HttpClientOptions options = buildHttpClientOptions(modelConfig, bedrockConfig, rootConfig);
+            LangChain4jConfig rootConfig, Supplier<Vertx> vertx, ProxyConfigurationRegistry proxyRegistry) {
+        HttpClientOptions options = buildHttpClientOptions(modelConfig, bedrockConfig, rootConfig, proxyRegistry);
 
         return new VertxSdkAsyncHttpClient(vertx.get().createHttpClient(options));
     }
 
     private static HttpClientOptions buildHttpClientOptions(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
-            LangChain4jConfig rootConfig) {
+            LangChain4jConfig rootConfig, ProxyConfigurationRegistry proxyRegistry) {
         HttpClientOptions options = new HttpClientOptions();
 
         Duration connectTimeout = firstOrDefault(Duration.ofSeconds(3),
@@ -96,18 +98,74 @@ final class BedrockSdkHttpClientFactory {
         }
 
         configureTls(options, modelConfig, bedrockConfig);
-        configureProxy(options, modelConfig, bedrockConfig);
+        configureProxy(options, modelConfig, bedrockConfig, proxyRegistry);
 
         return options;
     }
 
+    @SuppressWarnings("removal")
     private static void configureProxy(HttpClientOptions options, HttpClientConfig modelConfig,
-            HttpClientConfig bedrockConfig) {
+            HttpClientConfig bedrockConfig, ProxyConfigurationRegistry proxyRegistry) {
+        String proxyConfigName = firstOrDefault(null, modelConfig.proxyConfigurationName(),
+                bedrockConfig.proxyConfigurationName());
         String proxyAddress = firstOrDefault(null, modelConfig.proxyAddress(), bedrockConfig.proxyAddress());
-        if (proxyAddress == null) {
+
+        if (proxyConfigName != null) {
+            if (proxyAddress != null) {
+                LOG.warnf("Both 'proxy-configuration-name' (%s) and the deprecated 'proxy-address' (%s) are set. " +
+                        "The deprecated proxy properties are ignored. Please remove 'proxy-address', 'proxy-user', " +
+                        "'proxy-password' and 'non-proxy-hosts' from your configuration.", proxyConfigName, proxyAddress);
+            }
+            applyProxyFromRegistry(options, Optional.of(proxyConfigName), proxyRegistry);
             return;
         }
 
+        if (proxyAddress != null) {
+            LOG.warn("Using the deprecated 'proxy-address' configuration. Please migrate to 'proxy-configuration-name' " +
+                    "using the Quarkus Proxy Registry. The 'proxy-address', 'proxy-user', 'proxy-password' and " +
+                    "'non-proxy-hosts' properties will be removed in a future version.");
+            configureProxyFromProperties(options, modelConfig, bedrockConfig, proxyAddress);
+            return;
+        }
+
+        applyProxyFromRegistry(options, Optional.empty(), proxyRegistry);
+    }
+
+    private static void applyProxyFromRegistry(HttpClientOptions options, Optional<String> proxyConfigName,
+            ProxyConfigurationRegistry proxyRegistry) {
+        Optional<ProxyConfiguration> proxyConfig = proxyRegistry.get(proxyConfigName);
+        if (proxyConfig.isEmpty()) {
+            return;
+        }
+
+        ProxyConfiguration pc = proxyConfig.get();
+        ProxyOptions proxyOptions = new ProxyOptions()
+                .setType(ProxyType.valueOf(pc.type().name()))
+                .setHost(pc.host())
+                .setPort(pc.port());
+
+        if (pc.username().isPresent()) {
+            proxyOptions.setUsername(pc.username().get());
+        }
+        if (pc.password().isPresent()) {
+            proxyOptions.setPassword(pc.password().get());
+        }
+
+        options.setProxyOptions(proxyOptions);
+
+        if (pc.nonProxyHosts().isPresent()) {
+            for (String nonProxyHost : pc.nonProxyHosts().get()) {
+                String trimmed = nonProxyHost.trim();
+                if (!trimmed.isEmpty()) {
+                    options.addNonProxyHost(trimmed);
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("removal")
+    private static void configureProxyFromProperties(HttpClientOptions options, HttpClientConfig modelConfig,
+            HttpClientConfig bedrockConfig, String proxyAddress) {
         int lastColonIndex = proxyAddress.lastIndexOf(':');
         if (lastColonIndex <= 0 || lastColonIndex == proxyAddress.length() - 1) {
             throw new RuntimeException("Invalid proxy string. Expected <hostname>:<port>, found '" + proxyAddress + "'");

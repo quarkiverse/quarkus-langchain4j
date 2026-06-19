@@ -34,6 +34,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
+import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
 import io.smallrye.config.ConfigSourceInterceptor;
 
@@ -93,6 +94,7 @@ public class BedrockProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(
                                 DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
@@ -111,6 +113,7 @@ public class BedrockProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(
                                 DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
@@ -133,6 +136,7 @@ public class BedrockProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(BEDROCK_COHERE_EMBEDDING_MODEL_BUILDER) }, null) },
