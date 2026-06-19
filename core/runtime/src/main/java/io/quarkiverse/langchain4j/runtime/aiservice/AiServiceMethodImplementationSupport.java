@@ -193,7 +193,8 @@ public class AiServiceMethodImplementationSupport {
                 .methodName(createInfo.getMethodName())
                 .modelProvider(modelProvider)
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
-                .chatMemoryId(memoryId(createInfo, methodArgs, context.hasChatMemory(), context.defaultMemoryIdProvider))
+                .chatMemoryId(
+                        memoryId(createInfo, methodArgs, context.hasChatMemoryProvider(), context.defaultMemoryIdProvider))
                 .invocationParameters(findInvocationParams(methodArgs))
                 .managedParameters(LangChain4jManaged.current())
                 .defaultRequestParameters(defaultRequestParameters)
