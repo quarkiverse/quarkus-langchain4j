@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.agentic.runtime;
 
-public record AiAgentCreateInfo(String agentClassName, ChatModelInfo chatModelInfo, boolean hasInterceptorBindings) {
+public record AiAgentCreateInfo(String agentClassName, ChatModelInfo chatModelInfo, boolean hasInterceptorBindings,
+        boolean hasMcpToolBox) {
 
     public sealed interface ChatModelInfo permits ChatModelInfo.FromAnnotation, ChatModelInfo.FromBeanWithName {
 
