@@ -1,0 +1,53 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-agentic_quarkus-langchain4j-agent-default-max-iterations]] [.property-path]##link:#quarkus-langchain4j-agentic_quarkus-langchain4j-agent-default-max-iterations[`+++quarkus.langchain4j.agent.default-max-iterations+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.agent.default-max-iterations+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum iterations for loop and planner agents. When absent, langchain4j-agentic uses its own default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AGENT_DEFAULT_MAX_ITERATIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AGENT_DEFAULT_MAX_ITERATIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-agentic_quarkus-langchain4j-agent-dev-ui-eager-init]] [.property-path]##link:#quarkus-langchain4j-agentic_quarkus-langchain4j-agent-dev-ui-eager-init[`+++quarkus.langchain4j.agent.dev-ui.eager-init+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.agent.dev-ui.eager-init+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to eagerly initialise root agents at startup in dev mode. Set to `false` in CI environments to avoid unnecessary agent startup latency.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AGENT_DEV_UI_EAGER_INIT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AGENT_DEV_UI_EAGER_INIT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+|===
+

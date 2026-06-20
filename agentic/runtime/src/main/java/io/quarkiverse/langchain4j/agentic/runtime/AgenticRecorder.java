@@ -5,20 +5,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.declarative.DeclarativeUtil;
 import dev.langchain4j.agentic.internal.InternalAgent;
+import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
+import dev.langchain4j.internal.DefaultExecutorProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
@@ -82,6 +86,23 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
+    public void registerDefaultExecutorProvider() {
+        ManagedExecutor managedExecutor = Arc.container().instance(ManagedExecutor.class).get();
+        if (managedExecutor == null) {
+            log.warn("ManagedExecutor not available — parallel agents will use raw virtual threads "
+                    + "without CDI/OTel/Security context propagation");
+            return;
+        }
+        try {
+            java.lang.reflect.Method setter = DefaultExecutorProvider.class
+                    .getMethod("setDefaultExecutorService", ExecutorService.class);
+            setter.invoke(null, managedExecutor);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to register ManagedExecutor as default executor provider", e);
+        }
+    }
+
+    @RuntimeInit
     public void setDevUIAllowedAgentClassNames(Set<String> classNames) {
         DevAgentMonitorHolder.allowedAgentClassNames = Collections.unmodifiableSet(classNames);
     }
@@ -92,7 +113,8 @@ public class AgenticRecorder {
         AgenticRecorder.devModeMonitoringEnabled = true;
         for (String className : rootAgentClassNames) {
             try {
-                Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+                // TCCL not reliable in dev-mode startup on virtual threads; use recorder classloader.
+                Class<?> clazz = Class.forName(className, true, AgenticRecorder.class.getClassLoader());
                 ClientProxy.unwrap(Arc.container().select(clazz).get());
             } catch (Exception e) {
                 log.warn("Failed to eagerly initialize root agent for dev mode topology: " + className, e);
@@ -118,7 +140,7 @@ public class AgenticRecorder {
                     throw new IllegalStateException("Unknown type: " + info.chatModelInfo().getClass());
                 }
 
-                Class<?> agentClass = loadClassSafe(info);
+                Class<?> agentClass = loadClassSafe(info, cdiContext.getClass().getClassLoader());
                 Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
                         new AgentConfigurator(new QuarkusAgenticContextConsumer(cdiContext, info),
                                 QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY));
@@ -178,13 +200,39 @@ public class AgenticRecorder {
         }
     }
 
-    private static Class<?> loadClassSafe(AiAgentCreateInfo info) {
+    private static Class<?> loadClassSafe(AiAgentCreateInfo info, ClassLoader contextCl) {
+        // Classloader resolution strategy (tried in order):
+        // 1. contextCl — the classloader of the SyntheticCreationalContext generated class.
+        //    This is the Quarkus augmentation CL and knows about ALL application and test classes
+        //    including @QuarkusTest inner classes.  This is the most reliable source.
+        // 2. TCCL — may work on normal threads but is unreliable on Vert.x I/O threads and
+        //    virtual threads spawned by Executors.newVirtualThreadPerTaskExecutor().
+        // 3. Recorder's own classloader — runtime module CL; correct for production/dev mode
+        //    worker threads where TCCL may be the system CL.
         try {
-            return Class.forName(info.agentClassName(), true, Thread.currentThread().getContextClassLoader());
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to load agent class '" + info.agentClassName() + "'", e);
-            throw new RuntimeException(e);
+            return Class.forName(info.agentClassName(), true, contextCl);
+        } catch (ClassNotFoundException ignored) {
+            // fall through
         }
+        ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+        if (tccl != contextCl) {
+            try {
+                return Class.forName(info.agentClassName(), true, tccl);
+            } catch (ClassNotFoundException ignored) {
+                // fall through
+            }
+        }
+        ClassLoader recorderCl = AgenticRecorder.class.getClassLoader();
+        if (recorderCl != contextCl && recorderCl != tccl) {
+            try {
+                return Class.forName(info.agentClassName(), true, recorderCl);
+            } catch (ClassNotFoundException ignored) {
+                // fall through
+            }
+        }
+        log.error("Unable to load agent class '" + info.agentClassName()
+                + "' from any classloader (context, TCCL, or recorder)");
+        throw new RuntimeException(new ClassNotFoundException(info.agentClassName()));
     }
 
     private record QuarkusAgenticContextConsumer(SyntheticCreationalContext<Object> cdiContext,
@@ -192,14 +240,16 @@ public class AgenticRecorder {
             implements
                 Consumer<AgenticServices.DeclarativeAgentCreationContext<?>> {
 
-        private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+        private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_INSTANCE = new TypeLiteral<>() {
+        };
+        private static final TypeLiteral<Instance<AgentListener>> AGENT_LISTENER_INSTANCE = new TypeLiteral<>() {
         };
 
         @Override
         public void accept(AgenticServices.DeclarativeAgentCreationContext agenticContext) {
             String agentClassName = agenticContext.agentServiceClass().getName();
             if (AgenticRecorder.agentsWithMcpToolBox.contains(agentClassName)) {
-                Instance<ToolProvider> injectedReference = cdiContext.getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
+                Instance<ToolProvider> injectedReference = cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE);
                 if (injectedReference.isResolvable()) {
                     agenticContext.agentBuilder().toolProvider(injectedReference.get());
                 }
@@ -217,6 +267,13 @@ public class AgenticRecorder {
                     }
                 }
                 agenticContext.agentBuilder().tools(tools.toArray());
+
+            }
+
+            // AgentListener support (unconditional — build-time always adds the injection point)
+            Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
+            for (AgentListener listener : listeners) {
+                agenticContext.agentBuilder().listener(listener);
             }
         }
     }
