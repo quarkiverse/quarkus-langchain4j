@@ -3,8 +3,8 @@ package io.quarkiverse.langchain4j.test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -37,7 +37,7 @@ public class ChatRequestParametersTest {
                             ServiceWithoutParams.class,
                             ServiceWithParamsAndTemplateVars.class,
                             ServiceWithParamsAndTools.class,
-                            CapturingModelSupplier.class,
+                            CapturingChatModel.class,
                             MyTool.class));
 
     static volatile ChatRequest lastCapturedRequest;
@@ -158,23 +158,23 @@ public class ChatRequestParametersTest {
         assertThat(lastCapturedRequest.toolSpecifications().get(0).name()).isEqualTo("greet");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = CapturingModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface ServiceWithParams {
         String chat(@dev.langchain4j.service.UserMessage String userMessage, ChatRequestParameters params);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = CapturingModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface ServiceWithoutParams {
         String chat(@dev.langchain4j.service.UserMessage String userMessage);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = CapturingModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface ServiceWithParamsAndTemplateVars {
         @dev.langchain4j.service.UserMessage("Hello {name}, you are {age} years old")
         String chat(@V("name") String name, @V("age") int age, ChatRequestParameters params);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = CapturingModelSupplier.class)
+    @RegisterAiService
     interface ServiceWithParamsAndTools {
         @ToolBox(MyTool.class)
         @dev.langchain4j.service.UserMessage("{message}")
@@ -189,13 +189,7 @@ public class ChatRequestParametersTest {
         }
     }
 
-    public static class CapturingModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new CapturingChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class CapturingChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest chatRequest) {

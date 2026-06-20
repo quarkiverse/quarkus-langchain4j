@@ -5,7 +5,7 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
-@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+@RegisterAiService(chatMemoryProvider = void.class)
 public interface PdfDocumentAnalyzer {
 
     @UserMessage("Analyze the given document")

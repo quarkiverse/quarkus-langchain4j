@@ -9,8 +9,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -90,7 +90,7 @@ public class ToolExecutionModelWithStreamingCancellationTest {
         CountableTool.TOOL_STARTED = new CountDownLatch(1);
         CountableTool.TOOL_MAY_PROCEED = new CountDownLatch(1);
         AsyncMultiRoundChatModel.CHAT_CALL_COUNT.set(0);
-        MyMemoryProviderSupplier.MEMORIES.clear();
+        MyMemoryProvider.MEMORIES.clear();
 
         List<ChatEvent> receivedEvents = new CopyOnWriteArrayList<>();
 
@@ -130,7 +130,7 @@ public class ToolExecutionModelWithStreamingCancellationTest {
 
         // Assert: memory is in a consistent state after cancellation
         // Every AiMessage with tool requests must have matching ToolExecutionResultMessages
-        ChatMemory memory = MyMemoryProviderSupplier.MEMORIES.get("mem1");
+        ChatMemory memory = MyMemoryProvider.MEMORIES.get("mem1");
         assertThat(memory).as("Memory should exist for memoryId 'mem1'").isNotNull();
 
         List<ChatMessage> messages = memory.messages();
@@ -164,7 +164,7 @@ public class ToolExecutionModelWithStreamingCancellationTest {
                 .isTrue();
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
     public interface MyAiService {
         @ToolBox(CountableTool.class)
         Multi<ChatEvent> chat(@MemoryId String memoryId, @UserMessage String message);
@@ -192,13 +192,6 @@ public class ToolExecutionModelWithStreamingCancellationTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
-        @Override
-        public StreamingChatModel get() {
-            return new AsyncMultiRoundChatModel();
-        }
-    }
-
     /**
      * A mock streaming chat model that responds asynchronously on a new thread.
      * This simulates real model behavior where responses arrive on I/O threads
@@ -207,6 +200,7 @@ public class ToolExecutionModelWithStreamingCancellationTest {
      * The model requests two tool executions per round (to test mid-batch cancellation)
      * for up to 3 rounds, then returns a final response.
      */
+    @ApplicationScoped
     public static class AsyncMultiRoundChatModel implements StreamingChatModel {
         static final AtomicInteger CHAT_CALL_COUNT = new AtomicInteger(0);
 
@@ -256,18 +250,14 @@ public class ToolExecutionModelWithStreamingCancellationTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProvider implements ChatMemoryProvider {
         static final Map<Object, ChatMemory> MEMORIES = new ConcurrentHashMap<>();
 
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return MEMORIES.computeIfAbsent(memoryId,
-                            k -> MessageWindowChatMemory.withMaxMessages(20));
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return MEMORIES.computeIfAbsent(memoryId,
+                    k -> MessageWindowChatMemory.withMaxMessages(20));
         }
     }
 }

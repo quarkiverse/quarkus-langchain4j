@@ -7,7 +7,6 @@ import static org.awaitility.Awaitility.await;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -54,9 +53,7 @@ public class OutputGuardrailMetricsTest {
                             SecondOutputGuardrailWithFailure.class,
                             StreamingSuccessOutputGuardrail.class,
                             MyChatModel.class,
-                            MyChatModelSupplier.class,
                             MyStreamingChatModel.class,
-                            MyStreamingChatModelSupplier.class,
                             PassThroughAccumulator.class,
                             MeterRegistryProducer.class));
 
@@ -476,7 +473,7 @@ public class OutputGuardrailMetricsTest {
                 });
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, streamingChatLanguageModelSupplier = MyStreamingChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @OutputGuardrails(SuccessOutputGuardrail.class)
@@ -566,13 +563,7 @@ public class OutputGuardrailMetricsTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest request) {
@@ -590,13 +581,7 @@ public class OutputGuardrailMetricsTest {
         }
     }
 
-    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatModel> {
-        @Override
-        public StreamingChatModel get() {
-            return new MyStreamingChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyStreamingChatModel implements StreamingChatModel {
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {

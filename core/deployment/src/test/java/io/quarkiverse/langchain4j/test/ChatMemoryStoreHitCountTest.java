@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
@@ -39,8 +39,8 @@ public class ChatMemoryStoreHitCountTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(AiService.class, CustomChatMemoryStore.class, MirrorModelSupplier.class,
-                            ChatMemoryStoreSupplier.class));
+                    .addClasses(AiService.class, CustomChatMemoryStore.class, MirrorChatModel.class,
+                            CustomChatMemoryProvider.class));
 
     public record HitCounts(int getMessages, int updateMessages, int deleteMessages) {
         public HitCounts subtract(HitCounts other) {
@@ -85,36 +85,28 @@ public class ChatMemoryStoreHitCountTest {
         }
     }
 
-    public static class MirrorModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class MirrorChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest chatRequest) {
-                    return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
-                            .build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
+                    .build();
         }
     }
 
-    public static class ChatMemoryStoreSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class CustomChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new MessageWindowChatMemory.Builder()
-                            .id(memoryId)
-                            .maxMessages(10)
-                            .chatMemoryStore(new CustomChatMemoryStore())
-                            .build();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new MessageWindowChatMemory.Builder()
+                    .id(memoryId)
+                    .maxMessages(10)
+                    .chatMemoryStore(new CustomChatMemoryStore())
+                    .build();
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MirrorModelSupplier.class, chatMemoryProviderSupplier = ChatMemoryStoreSupplier.class)
+    @RegisterAiService(chatMemoryProvider = CustomChatMemoryProvider.class)
     interface AiService {
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);
     }

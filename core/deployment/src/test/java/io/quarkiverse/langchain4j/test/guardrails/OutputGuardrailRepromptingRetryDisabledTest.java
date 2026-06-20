@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -40,7 +39,7 @@ public class OutputGuardrailRepromptingRetryDisabledTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class))
+                            MyChatModel.class, MyMemoryProviderSupplier.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.guardrails.max-retries", "0");
 
     @Inject
@@ -76,7 +75,7 @@ public class OutputGuardrailRepromptingRetryDisabledTest {
         assertThat(repromptingGuardrail.getSpy()).isEqualTo(1); // No retry
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     @SystemMessage("Say Hi!")
     public interface MyAiService {
 
@@ -88,14 +87,6 @@ public class OutputGuardrailRepromptingRetryDisabledTest {
 
         @OutputGuardrails(RepromptingGuardrail.class)
         String reprompting(@MemoryId String mem, @dev.langchain4j.service.UserMessage String message);
-    }
-
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
     }
 
     @ApplicationScoped
@@ -140,6 +131,7 @@ public class OutputGuardrailRepromptingRetryDisabledTest {
         }
     }
 
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest request) {
@@ -147,17 +139,13 @@ public class OutputGuardrailRepromptingRetryDisabledTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProviderSupplier implements ChatMemoryProvider {
         private final Map<String, ChatMemory> memories = new HashMap<>();
 
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return memories.computeIfAbsent(memoryId.toString(), k -> MessageWindowChatMemory.withMaxMessages(10));
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return memories.computeIfAbsent(memoryId.toString(), k -> MessageWindowChatMemory.withMaxMessages(10));
         }
     }
 }

@@ -6,7 +6,6 @@ import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -47,7 +46,6 @@ public class InputGuardrailMetricsTest {
                             SecondInputGuardrail.class,
                             SecondInputGuardrailWithFailure.class,
                             MyChatModel.class,
-                            MyChatModelSupplier.class,
                             MeterRegistryProducer.class));
 
     @Inject
@@ -310,7 +308,7 @@ public class InputGuardrailMetricsTest {
                 });
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @InputGuardrails(SuccessInputGuardrail.class)
@@ -366,13 +364,7 @@ public class InputGuardrailMetricsTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest request) {

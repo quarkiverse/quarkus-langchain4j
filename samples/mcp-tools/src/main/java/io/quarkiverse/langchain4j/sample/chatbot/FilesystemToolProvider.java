@@ -19,7 +19,7 @@ import java.util.function.Supplier;
  * project, it is unused because we declaratively configure the
  * `ToolProvider` via configuration properties, so this class serves just as
  * a reference example. To use it instead of the generated one, uncomment
- * the @ApplicationScoped annotation here and add a `toolProviderSupplier =
+ * the @ApplicationScoped annotation here and add a `toolProvider =
  * FilesystemToolProvider.class` argument to the RegisterAiService
  * annotation on the Bot interface.
  */

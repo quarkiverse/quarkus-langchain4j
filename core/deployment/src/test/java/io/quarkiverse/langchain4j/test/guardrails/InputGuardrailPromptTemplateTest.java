@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -19,6 +19,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.guardrail.InputGuardrail;
 import dev.langchain4j.guardrail.InputGuardrailRequest;
 import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -36,7 +37,7 @@ public class InputGuardrailPromptTemplateTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyAiService.class, GuardrailValidation.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class, MyChatMemoryProvider.class));
     @Inject
     MyAiService aiService;
 
@@ -146,7 +147,7 @@ public class InputGuardrailPromptTemplateTest {
         assertThat(guardrailValidation.spyVariables()).isEmpty();
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @InputGuardrails(GuardrailValidation.class)
@@ -209,14 +210,7 @@ public class InputGuardrailPromptTemplateTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -225,10 +219,11 @@ public class InputGuardrailPromptTemplateTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> new NoopChatMemory();
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

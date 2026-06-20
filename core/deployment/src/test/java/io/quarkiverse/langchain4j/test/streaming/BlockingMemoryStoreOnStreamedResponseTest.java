@@ -107,7 +107,7 @@ public class BlockingMemoryStoreOnStreamedResponseTest {
         latch.await();
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = StreamTestUtils.FakeStreamedChatModelSupplier.class, chatMemoryProviderSupplier = StreamTestUtils.FakeMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         Multi<String> hi(@MemoryId String id, @UserMessage String query);

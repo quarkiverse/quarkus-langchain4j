@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
+import io.quarkiverse.langchain4j.runtime.aiservice.ComponentResolutionMode;
 import io.quarkus.builder.item.MultiBuildItem;
 
 /**
@@ -14,21 +15,28 @@ import io.quarkus.builder.item.MultiBuildItem;
 public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     private final ClassInfo serviceClassInfo;
-    private final DotName chatLanguageModelSupplierClassDotName;
-    private final DotName streamingChatLanguageModelSupplierClassDotName;
     private final List<ClassInfo> toolClassInfos;
-    private final DotName toolProviderClassDotName;
-    private final DotName toolSearchStrategyClassDotName;
-    private final DotName toolHallucinationStrategyClassDotName;
 
-    private final DotName chatMemoryProviderSupplierClassDotName;
-    private final DotName retrievalAugmentorSupplierClassDotName;
-    private final boolean customRetrievalAugmentorSupplierClassIsABean;
-    private final DotName moderationModelSupplierDotName;
-    private final DotName imageModelSupplierDotName;
+    // Component resolution fields — each has a DotName (nullable) and a resolution mode
+    private final DotName chatMemoryProviderClassDotName;
+    private final ComponentResolutionMode chatMemoryProviderResolutionMode;
+    private final DotName chatMemoryFlushStrategyClassDotName;
+    private final ComponentResolutionMode chatMemoryFlushStrategyResolutionMode;
+    private final DotName moderationModelClassDotName;
+    private final ComponentResolutionMode moderationModelResolutionMode;
+    private final DotName imageModelClassDotName;
+    private final ComponentResolutionMode imageModelResolutionMode;
+    private final DotName toolProviderClassDotName;
+    private final ComponentResolutionMode toolProviderResolutionMode;
+    private final DotName toolSearchStrategyClassDotName;
+    private final ComponentResolutionMode toolSearchStrategyResolutionMode;
+    private final DotName toolHallucinationStrategyClassDotName;
+    private final ComponentResolutionMode toolHallucinationStrategyResolutionMode;
+    private final DotName systemMessageProviderClassDotName;
+    private final ComponentResolutionMode systemMessageProviderResolutionMode;
+
     private final DotName chatMemorySeederClassDotName;
     private final DotName thinkingHandlerClassDotName;
-    private final DotName systemMessageProviderClassDotName;
     private final DotName cdiScope;
     private DotName defaultMemoryIdProviderClassDotName;
     private final String chatModelName;
@@ -44,29 +52,33 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
     private final boolean shouldThrowExceptionOnEventError;
-    private final DotName chatMemoryFlushStrategySupplierClassDotName;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
-            DotName chatLanguageModelSupplierClassDotName,
-            DotName streamingChatLanguageModelSupplierClassDotName,
             List<ClassInfo> toolClassInfos,
-            DotName chatMemoryProviderSupplierClassDotName,
-            DotName retrievalAugmentorSupplierClassDotName,
-            boolean customRetrievalAugmentorSupplierClassIsABean,
-            DotName moderationModelSupplierDotName,
-            DotName imageModelSupplierDotName,
+            DotName chatMemoryProviderClassDotName,
+            ComponentResolutionMode chatMemoryProviderResolutionMode,
+            DotName chatMemoryFlushStrategyClassDotName,
+            ComponentResolutionMode chatMemoryFlushStrategyResolutionMode,
+            DotName moderationModelClassDotName,
+            ComponentResolutionMode moderationModelResolutionMode,
+            DotName imageModelClassDotName,
+            ComponentResolutionMode imageModelResolutionMode,
+            DotName toolProviderClassDotName,
+            ComponentResolutionMode toolProviderResolutionMode,
+            DotName toolSearchStrategyClassDotName,
+            ComponentResolutionMode toolSearchStrategyResolutionMode,
+            DotName toolHallucinationStrategyClassDotName,
+            ComponentResolutionMode toolHallucinationStrategyResolutionMode,
+            DotName systemMessageProviderClassDotName,
+            ComponentResolutionMode systemMessageProviderResolutionMode,
             DotName chatMemorySeederClassDotName,
             DotName thinkingHandlerClassDotName,
-            DotName systemMessageProviderClassDotName,
             DotName cdiScope,
             String chatModelName,
             String moderationModelName,
             String imageModelName,
-            DotName toolProviderClassDotName,
-            DotName toolSearchStrategyClassDotName,
             Optional<String> beanName,
-            DotName toolHallucinationStrategyClassDotName,
             DeclarativeAiServiceInputGuardrails inputGuardrails,
             DeclarativeAiServiceOutputGuardrails outputGuardrails,
             DotName toolArgumentsErrorHandlerDotName,
@@ -74,28 +86,33 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             Integer maxToolCallingRoundTrips,
             Integer maxToolCallsPerResponse,
             boolean allowContinuousForcedToolCalling,
-            boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
-            DotName chatMemoryFlushStrategySupplierClassDotName) {
+            boolean makeDefaultBean,
+            boolean shouldThrowExceptionOnEventError) {
         this.serviceClassInfo = serviceClassInfo;
-        this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
-        this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
         this.toolClassInfos = toolClassInfos;
-        this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
-        this.retrievalAugmentorSupplierClassDotName = retrievalAugmentorSupplierClassDotName;
-        this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
-        this.moderationModelSupplierDotName = moderationModelSupplierDotName;
-        this.imageModelSupplierDotName = imageModelSupplierDotName;
+        this.chatMemoryProviderClassDotName = chatMemoryProviderClassDotName;
+        this.chatMemoryProviderResolutionMode = chatMemoryProviderResolutionMode;
+        this.chatMemoryFlushStrategyClassDotName = chatMemoryFlushStrategyClassDotName;
+        this.chatMemoryFlushStrategyResolutionMode = chatMemoryFlushStrategyResolutionMode;
+        this.moderationModelClassDotName = moderationModelClassDotName;
+        this.moderationModelResolutionMode = moderationModelResolutionMode;
+        this.imageModelClassDotName = imageModelClassDotName;
+        this.imageModelResolutionMode = imageModelResolutionMode;
+        this.toolProviderClassDotName = toolProviderClassDotName;
+        this.toolProviderResolutionMode = toolProviderResolutionMode;
+        this.toolSearchStrategyClassDotName = toolSearchStrategyClassDotName;
+        this.toolSearchStrategyResolutionMode = toolSearchStrategyResolutionMode;
+        this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
+        this.toolHallucinationStrategyResolutionMode = toolHallucinationStrategyResolutionMode;
+        this.systemMessageProviderClassDotName = systemMessageProviderClassDotName;
+        this.systemMessageProviderResolutionMode = systemMessageProviderResolutionMode;
         this.chatMemorySeederClassDotName = chatMemorySeederClassDotName;
         this.thinkingHandlerClassDotName = thinkingHandlerClassDotName;
-        this.systemMessageProviderClassDotName = systemMessageProviderClassDotName;
         this.cdiScope = cdiScope;
         this.chatModelName = chatModelName;
         this.moderationModelName = moderationModelName;
         this.imageModelName = imageModelName;
-        this.toolProviderClassDotName = toolProviderClassDotName;
-        this.toolSearchStrategyClassDotName = toolSearchStrategyClassDotName;
         this.beanName = beanName;
-        this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
         this.toolArgumentsErrorHandlerDotName = toolArgumentsErrorHandlerDotName;
@@ -105,43 +122,78 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
-        this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
     }
 
     public ClassInfo getServiceClassInfo() {
         return serviceClassInfo;
     }
 
-    public DotName getChatLanguageModelSupplierClassDotName() {
-        return chatLanguageModelSupplierClassDotName;
-    }
-
-    public DotName getStreamingChatLanguageModelSupplierClassDotName() {
-        return streamingChatLanguageModelSupplierClassDotName;
-    }
-
     public List<ClassInfo> getToolClassInfos() {
         return toolClassInfos;
     }
 
-    public DotName getChatMemoryProviderSupplierClassDotName() {
-        return chatMemoryProviderSupplierClassDotName;
+    public DotName getChatMemoryProviderClassDotName() {
+        return chatMemoryProviderClassDotName;
     }
 
-    public DotName getRetrievalAugmentorSupplierClassDotName() {
-        return retrievalAugmentorSupplierClassDotName;
+    public ComponentResolutionMode getChatMemoryProviderResolutionMode() {
+        return chatMemoryProviderResolutionMode;
     }
 
-    public boolean isCustomRetrievalAugmentorSupplierClassIsABean() {
-        return customRetrievalAugmentorSupplierClassIsABean;
+    public DotName getChatMemoryFlushStrategyClassDotName() {
+        return chatMemoryFlushStrategyClassDotName;
     }
 
-    public DotName getModerationModelSupplierDotName() {
-        return moderationModelSupplierDotName;
+    public ComponentResolutionMode getChatMemoryFlushStrategyResolutionMode() {
+        return chatMemoryFlushStrategyResolutionMode;
     }
 
-    public DotName getImageModelSupplierDotName() {
-        return imageModelSupplierDotName;
+    public DotName getModerationModelClassDotName() {
+        return moderationModelClassDotName;
+    }
+
+    public ComponentResolutionMode getModerationModelResolutionMode() {
+        return moderationModelResolutionMode;
+    }
+
+    public DotName getImageModelClassDotName() {
+        return imageModelClassDotName;
+    }
+
+    public ComponentResolutionMode getImageModelResolutionMode() {
+        return imageModelResolutionMode;
+    }
+
+    public DotName getToolProviderClassDotName() {
+        return toolProviderClassDotName;
+    }
+
+    public ComponentResolutionMode getToolProviderResolutionMode() {
+        return toolProviderResolutionMode;
+    }
+
+    public DotName getToolSearchStrategyClassDotName() {
+        return toolSearchStrategyClassDotName;
+    }
+
+    public ComponentResolutionMode getToolSearchStrategyResolutionMode() {
+        return toolSearchStrategyResolutionMode;
+    }
+
+    public DotName getToolHallucinationStrategyClassDotName() {
+        return toolHallucinationStrategyClassDotName;
+    }
+
+    public ComponentResolutionMode getToolHallucinationStrategyResolutionMode() {
+        return toolHallucinationStrategyResolutionMode;
+    }
+
+    public DotName getSystemMessageProviderClassDotName() {
+        return systemMessageProviderClassDotName;
+    }
+
+    public ComponentResolutionMode getSystemMessageProviderResolutionMode() {
+        return systemMessageProviderResolutionMode;
     }
 
     public DotName getChatMemorySeederClassDotName() {
@@ -150,10 +202,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getThinkingHandlerClassDotName() {
         return thinkingHandlerClassDotName;
-    }
-
-    public DotName getSystemMessageProviderClassDotName() {
-        return systemMessageProviderClassDotName;
     }
 
     public DotName getCdiScope() {
@@ -172,20 +220,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return imageModelName;
     }
 
-    public DotName getToolProviderClassDotName() {
-        return toolProviderClassDotName;
-    }
-
-    public DotName getToolSearchStrategyClassDotName() {
-        return toolSearchStrategyClassDotName;
-    }
-
     public Optional<String> getBeanName() {
         return beanName;
-    }
-
-    public DotName getToolHallucinationStrategyClassDotName() {
-        return toolHallucinationStrategyClassDotName;
     }
 
     public DeclarativeAiServiceInputGuardrails getInputGuardrails() {
@@ -243,10 +279,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public boolean isAllowContinuousForcedToolCalling() {
         return allowContinuousForcedToolCalling;
-    }
-
-    public DotName getChatMemoryFlushStrategySupplierClassDotName() {
-        return chatMemoryFlushStrategySupplierClassDotName;
     }
 
     public DotName getDefaultMemoryIdProviderClassDotName() {

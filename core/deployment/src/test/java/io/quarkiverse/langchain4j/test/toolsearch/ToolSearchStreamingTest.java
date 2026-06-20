@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
@@ -27,6 +27,7 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -43,7 +44,7 @@ public class ToolSearchStreamingTest {
                             BookingTools.class,
                             StreamingServiceWithToolSearch.class));
 
-    @RegisterAiService(tools = BookingTools.class, streamingChatLanguageModelSupplier = StreamingModelSupplier.class)
+    @RegisterAiService(tools = BookingTools.class, toolSearchStrategy = ToolSearchStrategy.class)
     interface StreamingServiceWithToolSearch {
 
         Multi<String> chat(@UserMessage String msg, @MemoryId Object id);
@@ -62,17 +63,11 @@ public class ToolSearchStreamingTest {
         assertEquals("REAL_TOOL_RESULT", String.join("", tokens));
     }
 
-    public static class StreamingModelSupplier implements Supplier<StreamingChatModel> {
-        @Override
-        public StreamingChatModel get() {
-            return new StreamingModel();
-        }
-    }
-
     /**
      * Streaming counterpart of {@code ToolSearchModel}: same staged expectations, driven through a
      * {@link StreamingChatResponseHandler}.
      */
+    @ApplicationScoped
     public static class StreamingModel implements StreamingChatModel {
 
         @Override

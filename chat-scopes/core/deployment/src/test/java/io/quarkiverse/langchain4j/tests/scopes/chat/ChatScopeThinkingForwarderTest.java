@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -40,23 +39,19 @@ public class ChatScopeThinkingForwarderTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(
-                            ThinkingAssistant.class, ThinkingModelSupplier.class, ThinkingRoute.class));
+                            ThinkingAssistant.class, ThinkingChatModel.class, ThinkingRoute.class));
 
-    public static class ThinkingModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class ThinkingChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest chatRequest) {
-                    return ChatResponse.builder()
-                            .aiMessage(AiMessage.builder().text("4").thinking(THINKING_TEXT).build())
-                            .build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            return ChatResponse.builder()
+                    .aiMessage(AiMessage.builder().text("4").thinking(THINKING_TEXT).build())
+                    .build();
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = ThinkingModelSupplier.class)
+    @RegisterAiService
     @ChatScoped
     interface ThinkingAssistant {
         String solve(@UserMessage String input);

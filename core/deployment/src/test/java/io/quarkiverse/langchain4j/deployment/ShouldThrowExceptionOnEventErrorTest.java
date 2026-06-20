@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -99,17 +98,17 @@ class ShouldThrowExceptionOnEventErrorTest {
     }
 
     @ApplicationScoped
-    @RegisterAiService(chatLanguageModelSupplier = AssistantChatModeSupplier.class)
+    @RegisterAiService
     interface NormalAssistant extends Assistant {
     }
 
     @ApplicationScoped
-    @RegisterAiService(chatLanguageModelSupplier = AssistantChatModeSupplier.class, shouldThrowExceptionOnEventError = false)
+    @RegisterAiService(shouldThrowExceptionOnEventError = false)
     interface DoesntThrowExceptionsAssistant extends Assistant {
     }
 
     @ApplicationScoped
-    @RegisterAiService(chatLanguageModelSupplier = AssistantChatModeSupplier.class, shouldThrowExceptionOnEventError = true)
+    @RegisterAiService(shouldThrowExceptionOnEventError = true)
     interface ThrowsExceptionsAssistant extends Assistant {
     }
 
@@ -117,13 +116,7 @@ class ShouldThrowExceptionOnEventErrorTest {
         String chat(String message);
     }
 
-    public static class AssistantChatModeSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new AssistantChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class AssistantChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest chatRequest) {

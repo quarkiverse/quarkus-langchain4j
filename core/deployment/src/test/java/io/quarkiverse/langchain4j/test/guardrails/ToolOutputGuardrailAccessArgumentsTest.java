@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.guardrails;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -21,6 +20,7 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -53,6 +53,7 @@ public class ToolOutputGuardrailAccessArgumentsTest {
                             MyAiService.class,
                             ArgumentAccessingGuardrail.class,
                             InputOutputValidatingGuardrail.class,
+                            MyChatMemoryProvider.class,
                             Lists.class));
 
     @Inject
@@ -141,7 +142,7 @@ public class ToolOutputGuardrailAccessArgumentsTest {
         assertThat(ArgumentAccessingGuardrail.enabledFromArgs).isTrue();
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
         @ToolBox(MyTools.class)
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);
@@ -287,13 +288,7 @@ public class ToolOutputGuardrailAccessArgumentsTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse chat(List<ChatMessage> messages) {
@@ -343,10 +338,11 @@ public class ToolOutputGuardrailAccessArgumentsTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> new NoopChatMemory();
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

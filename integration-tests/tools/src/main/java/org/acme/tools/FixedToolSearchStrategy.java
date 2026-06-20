@@ -2,6 +2,8 @@ package org.acme.tools;
 
 import java.util.List;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.service.tool.search.ToolSearchRequest;
@@ -11,6 +13,7 @@ import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 /**
  * Deterministic tool search strategy: exposes a single {@code find_tools} tool and always surfaces the booking tool.
  */
+@ApplicationScoped
 public class FixedToolSearchStrategy implements ToolSearchStrategy {
 
     public static final String SEARCH_TOOL_NAME = "find_tools";

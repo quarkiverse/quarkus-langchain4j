@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -25,12 +26,11 @@ public class ToolSearchStrategyTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ToolSearchModel.class,
-                            ToolSearchModelSupplier.class,
                             FakeToolSearchStrategy.class,
                             BookingTools.class,
                             ServiceWithToolSearch.class));
 
-    @RegisterAiService(tools = BookingTools.class, chatLanguageModelSupplier = ToolSearchModelSupplier.class)
+    @RegisterAiService(tools = BookingTools.class, toolSearchStrategy = ToolSearchStrategy.class)
     interface ServiceWithToolSearch {
 
         String chat(@UserMessage String msg, @MemoryId Object id);

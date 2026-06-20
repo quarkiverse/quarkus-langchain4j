@@ -37,7 +37,7 @@ public class NamedAiServicesAreResolvableByNameTest {
                     .addClasses(MyNamedService.class));
 
     @Named(MY_NAMED_SERVICE_BEAN)
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface MyNamedService {
         @UserMessage("Dummy prompt for " + MY_NAMED_SERVICE_BEAN)
         String chat();

@@ -24,9 +24,7 @@ public class MissingResponseAugmenterTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
-                            ResponseAugmenterTestUtils.FakeChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeChatModel.class,
-                            ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeStreamedChatModel.class));
 
     @Inject
@@ -56,7 +54,7 @@ public class MissingResponseAugmenterTest {
 
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hello World!")
@@ -65,7 +63,7 @@ public class MissingResponseAugmenterTest {
 
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class)
+    @RegisterAiService
     @ResponseAugmenter(MissingResponseAugmenter.class)
     public interface MyAiServiceWithClassAugmenter {
 

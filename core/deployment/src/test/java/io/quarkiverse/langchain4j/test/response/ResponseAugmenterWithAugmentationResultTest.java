@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.response;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -19,6 +18,7 @@ import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RagPipeline;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.response.ResponseAugmenter;
@@ -32,9 +32,7 @@ public class ResponseAugmenterWithAugmentationResultTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
-                            ResponseAugmenterTestUtils.FakeChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeChatModel.class,
-                            ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeStreamedChatModel.class,
                             ResponseAugmenterTestUtils.UppercaseAugmenter.class,
                             ResponseAugmenterTestUtils.AppenderAugmenter.class));
@@ -52,7 +50,8 @@ public class ResponseAugmenterWithAugmentationResultTest {
         assertThat(list).containsExactly("HI!", " ", "WORLD!");
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class, chatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeChatModelSupplier.class, retrievalAugmentor = MyRetrievalAugmentor.class)
+    @RegisterAiService
+    @RagPipeline(augmentor = MyRetrievalAugmentor.class)
     public interface MyAiService {
 
         @UserMessage("Say Hello World!")
@@ -81,16 +80,12 @@ public class ResponseAugmenterWithAugmentationResultTest {
         }
     }
 
-    public static class MyRetrievalAugmentor implements Supplier<RetrievalAugmentor> {
+    @ApplicationScoped
+    public static class MyRetrievalAugmentor implements RetrievalAugmentor {
         @Override
-        public RetrievalAugmentor get() {
-            return new RetrievalAugmentor() {
-                @Override
-                public AugmentationResult augment(AugmentationRequest augmentationRequest) {
-                    List<Content> content = List.of(Content.from("content1"), Content.from("content2"));
-                    return new AugmentationResult(dev.langchain4j.data.message.UserMessage.userMessage("augmented"), content);
-                }
-            };
+        public AugmentationResult augment(AugmentationRequest augmentationRequest) {
+            List<Content> content = List.of(Content.from("content1"), Content.from("content2"));
+            return new AugmentationResult(dev.langchain4j.data.message.UserMessage.userMessage("augmented"), content);
         }
     }
 

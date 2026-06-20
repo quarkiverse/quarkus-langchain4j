@@ -4,11 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -40,7 +39,7 @@ public class DynamicImmediateReturnToolTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, SimpleToolProvider.class,
-                            SimpleChatModel.class, SimpleChatModelSupplier.class));
+                            SimpleChatModel.class));
 
     @Inject
     MyAiService aiService;
@@ -80,54 +79,43 @@ public class DynamicImmediateReturnToolTest {
         assertThat(SimpleChatModel.callCount).isEqualTo(2);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = SimpleChatModelSupplier.class, toolProviderSupplier = SimpleToolProvider.class)
+    @RegisterAiService(toolProvider = SimpleToolProvider.class)
     public interface MyAiService {
         Result<String> chat(@UserMessage String message);
     }
 
-    @Singleton
-    public static class SimpleToolProvider implements Supplier<ToolProvider> {
+    @ApplicationScoped
+    public static class SimpleToolProvider implements ToolProvider {
         @Override
-        public ToolProvider get() {
-            return new ToolProvider() {
-                @Override
-                public ToolProviderResult provideTools(ToolProviderRequest request) {
-                    // Tool 1: Calculator with IMMEDIATE return
-                    ToolSpecification calculator = ToolSpecification.builder()
-                            .name("calculator")
-                            .description("Calculates and returns immediately")
-                            .build();
+        public ToolProviderResult provideTools(ToolProviderRequest request) {
+            // Tool 1: Calculator with IMMEDIATE return
+            ToolSpecification calculator = ToolSpecification.builder()
+                    .name("calculator")
+                    .description("Calculates and returns immediately")
+                    .build();
 
-                    ToolExecutor calculatorExecutor = (toolRequest, memoryId) -> {
-                        return "42"; // Simple tool that returns a number
-                    };
-
-                    // Tool 2: Processor with normal return (goes back to LLM)
-                    ToolSpecification processor = ToolSpecification.builder()
-                            .name("processor")
-                            .description("Processes data normally")
-                            .build();
-
-                    ToolExecutor processorExecutor = (toolRequest, memoryId) -> {
-                        return "42"; // Same result, different flow
-                    };
-
-                    return ToolProviderResult.builder()
-                            .add(calculator, calculatorExecutor, ReturnBehavior.IMMEDIATE)
-                            .add(processor, processorExecutor) // Normal return behavior
-                            .build();
-                }
+            ToolExecutor calculatorExecutor = (toolRequest, memoryId) -> {
+                return "42"; // Simple tool that returns a number
             };
+
+            // Tool 2: Processor with normal return (goes back to LLM)
+            ToolSpecification processor = ToolSpecification.builder()
+                    .name("processor")
+                    .description("Processes data normally")
+                    .build();
+
+            ToolExecutor processorExecutor = (toolRequest, memoryId) -> {
+                return "42"; // Same result, different flow
+            };
+
+            return ToolProviderResult.builder()
+                    .add(calculator, calculatorExecutor, ReturnBehavior.IMMEDIATE)
+                    .add(processor, processorExecutor) // Normal return behavior
+                    .build();
         }
     }
 
-    public static class SimpleChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new SimpleChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class SimpleChatModel implements ChatModel {
         static int callCount = 0;
 

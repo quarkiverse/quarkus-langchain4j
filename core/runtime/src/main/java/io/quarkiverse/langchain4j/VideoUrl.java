@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  *
  * <pre>
  * {@code
- * &#64;RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+ * &#64;RegisterAiService(chatMemoryProvider = void.class)
  * public interface VideoDescriber {
  *
  *     &#64;UserMessage("Describe the video")

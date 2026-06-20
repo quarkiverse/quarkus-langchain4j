@@ -7,7 +7,6 @@ import static org.awaitility.Awaitility.await;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -65,6 +64,7 @@ public class ToolOutputGuardrailMetricsTest {
                             FailureGuardrail.class,
                             FatalGuardrail.class,
                             MeterRegistryProducer.class,
+                            MyChatMemoryProvider.class,
                             Lists.class));
 
     @Inject
@@ -243,7 +243,7 @@ public class ToolOutputGuardrailMetricsTest {
     }
 
     // AI Service
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
         @ToolBox(MyTools.class)
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);
@@ -323,13 +323,8 @@ public class ToolOutputGuardrailMetricsTest {
     }
 
     // Mock Chat Model
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
 
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse chat(List<ChatMessage> messages) {
@@ -366,15 +361,11 @@ public class ToolOutputGuardrailMetricsTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

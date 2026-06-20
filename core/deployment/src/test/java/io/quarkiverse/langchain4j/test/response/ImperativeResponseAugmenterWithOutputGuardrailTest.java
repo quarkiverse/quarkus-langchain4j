@@ -25,8 +25,7 @@ public class ImperativeResponseAugmenterWithOutputGuardrailTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(ResponseAugmenterTestUtils.FakeChatModelSupplier.class,
-                            ResponseAugmenterTestUtils.FakeChatModel.class,
+                    .addClasses(ResponseAugmenterTestUtils.FakeChatModel.class,
                             ResponseAugmenterTestUtils.UppercaseAugmenter.class,
                             ResponseAugmenterTestUtils.AppenderAugmenter.class));
 
@@ -39,7 +38,7 @@ public class ImperativeResponseAugmenterWithOutputGuardrailTest {
         assertThat(ai.hi()).isEqualTo("BONJOUR!");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hello World!")

@@ -5,30 +5,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ToolChoice;
-import dev.langchain4j.model.image.ImageModel;
-import dev.langchain4j.model.moderation.ModerationModel;
-import dev.langchain4j.rag.RetrievalAugmentor;
-import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
-import dev.langchain4j.rag.query.Query;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
-import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
-import io.quarkiverse.langchain4j.runtime.aiservice.BaseSystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
@@ -39,6 +26,13 @@ import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithCon
  * Under the hood LangChain4j's {@link AiServices#builder(Class)} is called
  * while also providing the builder with the proper {@link ChatModel} bean (mandatory), {@code tools} bean (optional),
  * {@link ChatMemoryProvider} and {@link ContentRetriever} beans (which by default are configured if such beans exist).
+ * <p>
+ * Component attributes use a tri-state resolution model:
+ * <ul>
+ * <li>{@code void.class} — disabled / not configured (SKIP)</li>
+ * <li>Interface type (e.g. {@code ChatMemoryProvider.class}) — auto-discover via CDI (AUTO_DISCOVER)</li>
+ * <li>Concrete class — inject a specific CDI bean by type (EXPLICIT)</li>
+ * </ul>
  * <p>
  * NOTE: The resulting CDI bean is {@link jakarta.enterprise.context.RequestScoped} by default. If you need to change the scope,
  * simply annotate the class with a CDI scope.
@@ -54,26 +48,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithCon
 public @interface RegisterAiService {
 
     /**
-     * Configures the way to obtain the {@link StreamingChatModel} to use.
-     * If not configured, the default CDI bean implementing the model is looked up.
-     * Such a bean provided automatically by extensions such as {@code quarkus-langchain4j-openai},
-     * {@code quarkus-langchain4j-azure-openai} or
-     * {@code quarkus-langchain4j-hugging-face}
-     */
-    Class<? extends Supplier<StreamingChatModel>> streamingChatLanguageModelSupplier() default BeanStreamingChatLanguageModelSupplier.class;
-
-    /**
-     * Configures the way to obtain the {@link ChatModel} to use.
-     * If not configured, the default CDI bean implementing the model is looked up.
-     * Such a bean provided automatically by extensions such as {@code quarkus-langchain4j-openai},
-     * {@code quarkus-langchain4j-azure-openai} or
-     * {@code quarkus-langchain4j-hugging-face}
-     */
-    Class<? extends Supplier<ChatModel>> chatLanguageModelSupplier() default BeanChatLanguageModelSupplier.class;
-
-    /**
-     * When {@code chatLanguageModelSupplier} is set to {@code BeanChatLanguageModelSupplier.class} (which is the default)
-     * this allows the selection of the {@link ChatModel} CDI bean to use.
+     * Selects the {@link ChatModel} CDI bean to use by name.
      * <p>
      * If not set, the default model (i.e. the one configured without setting the model name) is used.
      * An example of the default model configuration is the following:
@@ -86,18 +61,6 @@ public @interface RegisterAiService {
      * If the model needs to be selected at runtime, then {@link ModelName} can be used as a method parameter of an AiService.
      */
     String modelName() default "<default>";
-
-    /**
-     * Defines the maximum number of sequential calls to tools while handling a single chat request.
-     * If this number is exceeded, the chat request will fail.
-     * If not specified (left to zero) for a specific AI service,
-     * the AI service will use the value of the common {@code quarkus.langchain4j.ai-service.max-tool-executions} property.
-     * If that property is unset too, the default is 10 invocations.
-     *
-     * @deprecated Use {@link #maxToolCallingRoundTrips()} instead.
-     */
-    @Deprecated(forRemoval = true, since = "1.11.0")
-    int maxSequentialToolInvocations() default 10;
 
     /**
      * Defines the maximum number of LLM request/response round trips while handling a single chat request.
@@ -126,16 +89,20 @@ public @interface RegisterAiService {
 
     /**
      * Strategy to be used when the AI service hallucinates the tool name.
+     * <p>
+     * Use {@code void.class} to disable. Set to a concrete implementation class
+     * to inject a specific CDI bean.
      */
-    Class<? extends Function<ToolExecutionRequest, ToolExecutionResultMessage>> toolHallucinationStrategy() default BeanIfExistsToolHallucinationStrategy.class;
+    Class<?> toolHallucinationStrategy() default void.class;
 
     /**
-     * Configures the way to obtain the {@link ChatMemoryProvider}.
+     * Configures the {@link ChatMemoryProvider} to use.
      * <p>
-     * Be default, Quarkus configures a {@link ChatMemoryProvider} bean that uses a {@link InMemoryChatMemoryStore} bean
+     * By default ({@code ChatMemoryProvider.class}), Quarkus auto-discovers a CDI bean implementing
+     * {@link ChatMemoryProvider}. Quarkus itself provides a default bean that uses an {@link InMemoryChatMemoryStore}
      * as the backing store. The default type for the actual {@link ChatMemory} is {@link MessageWindowChatMemory}
      * and it is configured with the value of the {@code quarkus.langchain4j.chat-memory.memory-window.max-messages}
-     * configuration property (which default to 10) as a way of limiting the number of messages in each chat.
+     * configuration property (which defaults to 10) as a way of limiting the number of messages in each chat.
      * <p>
      * If the application provides its own {@link ChatMemoryProvider} bean, that takes precedence over what Quarkus provides as
      * the default.
@@ -143,68 +110,49 @@ public @interface RegisterAiService {
      * If the application provides an implementation of {@link ChatMemoryStore}, then that is used instead of the default
      * {@link InMemoryChatMemoryStore}.
      * <p>
-     * In the most advances case, an arbitrary {@link ChatMemoryProvider} can be used by having a custom
-     * {@code Supplier<ChatMemoryProvider>} configured in this property.
-     * {@link Supplier<ChatMemoryProvider>} needs to be provided.
-     * <p>
+     * Set to {@code void.class} to disable chat memory for this AI service.
+     * Set to a concrete implementation class to inject a specific CDI bean.
      */
-    Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanChatMemoryProviderSupplier.class;
+    Class<?> chatMemoryProvider() default ChatMemoryProvider.class;
 
     /**
      * Configures the flush strategy for the committable chat memory.
      * <p>
-     * By default, Quarkus Langchain4j defers committing messages to the {@link ChatMemory}
+     * By default ({@code void.class}), Quarkus Langchain4j defers committing messages to the {@link ChatMemory}
      * until the AI service method completes successfully. This enables seamless
-     * {@code @Retry} support - if a failure occurs, the uncommitted messages are discarded.
-     * This is the default strategy for most use cases as it leads to more predictable behavior
-     * in case of errors and allows the retry mechanism to work as expected.
+     * {@code @Retry} support — if a failure occurs, the uncommitted messages are discarded.
      * <p>
-     * A custom {@link ChatMemoryFlushStrategy} can be provided to control this behavior,
-     * for example to use {@link ChatMemoryFlushStrategy#IMMEDIATE} so that messages are
-     * persisted as they are added.
-     * <p>
-     * The supplier may or may not be a CDI bean. If it is not a CDI bean,
-     * Quarkus will create an instance by calling its no-arg constructor.
+     * Set to a concrete {@link ChatMemoryFlushStrategy} implementation class to control this behavior.
      *
      * @see ChatMemoryFlushStrategy
      */
-    Class<? extends Supplier<ChatMemoryFlushStrategy>> chatMemoryFlushStrategySupplier() default DefaultChatMemoryFlushStrategySupplier.class;
+    Class<?> chatMemoryFlushStrategy() default void.class;
 
     /**
-     * Configures the way to obtain the {@link RetrievalAugmentor} to use
-     * (when using RAG). The Supplier may or may not be a CDI bean (but most
-     * typically it will, so consider adding a bean-defining annotation to
-     * it). If it is not a CDI bean, Quarkus will create an instance
-     * by calling its no-arg constructor.
+     * Configures the moderation model to use.
      * <p>
-     * If unspecified, Quarkus will attempt to locate a CDI bean that
-     * implements {@link RetrievalAugmentor} and use it if one exists.
+     * By default ({@code void.class}), Quarkus will auto-detect if one is needed (when methods are annotated
+     * with {@code @Moderate}) and look for a CDI bean.
+     * Set to a concrete implementation class to inject a specific CDI bean.
      */
-    Class<? extends Supplier<RetrievalAugmentor>> retrievalAugmentor() default BeanIfExistsRetrievalAugmentorSupplier.class;
+    Class<?> moderationModel() default void.class;
 
     /**
-     * Configures the way to obtain the {@link ModerationModel} to use.
-     * By default, Quarkus will look for a CDI bean that implements {@link ModerationModel} if at least one method is annotated
-     * with @Moderate.
-     * If an arbitrary {@link ModerationModel} instance is needed, a custom implementation of {@link Supplier<ModerationModel>}
-     * needs to be provided.
+     * Configures the tool provider to use.
+     * <p>
+     * By default ({@code void.class}), no tool provider is used unless one is discovered via CDI.
+     * Set to a concrete implementation class to inject a specific CDI bean.
      */
-    Class<? extends Supplier<ModerationModel>> moderationModelSupplier() default BeanIfExistsModerationModelSupplier.class;
+    Class<?> toolProvider() default ToolProvider.class;
 
     /**
-     * Configures a toolProviderSupplier. It is possible to use together toolProviderSupplier and "normal" tools.
-     */
-    Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
-
-    /**
-     * Configures the {@link ToolSearchStrategy} used to let the model discover tools dynamically at inference time
+     * Configures the tool search strategy used to let the model discover tools dynamically at inference time
      * instead of exposing the whole tool catalog upfront.
      * <p>
-     * By default, Quarkus will use a CDI bean that implements {@link ToolSearchStrategy} if exactly one exists, and no
-     * tool search strategy otherwise. To use a specific instance, provide a custom {@link Supplier<ToolSearchStrategy>}.
-     * Use {@link NoToolSearchStrategySupplier} to explicitly opt out even when such a bean is present.
+     * By default ({@code void.class}), no tool search strategy is used unless one is discovered via CDI.
+     * Set to a concrete implementation class to inject a specific CDI bean.
      */
-    Class<? extends Supplier<ToolSearchStrategy>> toolSearchStrategySupplier() default BeanIfExistsToolSearchStrategySupplier.class;
+    Class<?> toolSearchStrategy() default void.class;
 
     /**
      * By default, after first tool call execution, in subsequent prompts the {@code toolChoice} of
@@ -224,14 +172,14 @@ public @interface RegisterAiService {
      * Provide either a {@link SystemMessageProvider} (based on the memory ID) or a
      * {@link SystemMessageProviderWithContext} (based on the invocation context, so the system message can vary by model).
      * <p>
-     * If not configured (left at the default), no dynamic system message provider is used. In that case,
+     * By default ({@code void.class}), no dynamic system message provider is used. In that case,
      * the system message can still be provided via the {@link dev.langchain4j.service.SystemMessage} annotation
      * on the AiService method.
      *
      * @see <a href="https://docs.langchain4j.dev/tutorials/ai-services#system-message-provider">LangChain4j System Message
      *      Provider</a>
      */
-    Class<? extends BaseSystemMessageProvider> systemMessageProviderSupplier() default NoSystemMessageProviderSupplier.class;
+    Class<?> systemMessageProvider() default void.class;
 
     /**
      * Indicates whether exceptions thrown during
@@ -248,209 +196,4 @@ public @interface RegisterAiService {
      */
     boolean shouldThrowExceptionOnEventError() default false;
 
-    /**
-     * Marker that is used to tell Quarkus to use the {@link ChatModel} that has been configured as a CDI bean by
-     * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
-     * {@code quarkus-langchain4j-hugging-face}).
-     */
-    final class BeanChatLanguageModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link StreamingChatModel} that has been configured as a CDI bean
-     * by * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
-     * {@code quarkus-langchain4j-hugging-face}).
-     */
-    final class BeanStreamingChatLanguageModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the retriever that the user has configured as a CDI bean.
-     * Be default, Quarkus configures an {@link ChatMemoryProvider} by using an {@link InMemoryChatMemoryStore}
-     * as the backing store while using {@link MessageWindowChatMemory} with the value of
-     * configuration property {@code quarkus.langchain4j.chat-memory.memory-window.max-messages} (which default to 10)
-     * as a way of limiting the number of messages in each chat.
-     */
-    final class BeanChatMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-
-        @Override
-        public ChatMemoryProvider get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used when the user does not want any memory configured for the AiService
-     */
-    final class NoChatMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-
-        @Override
-        public ChatMemoryProvider get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker class to indicate that no retriever should be used
-     */
-    final class NoRetriever implements ContentRetriever {
-
-        @Override
-        public List<Content> retrieve(Query query) {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used when the user does not want any tool provider
-     */
-    final class NoToolProviderSupplier implements Supplier<ToolProvider> {
-
-        @Override
-        public ToolProvider get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link RetrievalAugmentor} that the user has configured as a CDI bean.
-     * If no such bean exists, then no retrieval augmentor will be used.
-     */
-    final class BeanIfExistsRetrievalAugmentorSupplier implements Supplier<RetrievalAugmentor> {
-
-        @Override
-        public RetrievalAugmentor get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to not use any retrieval augmentor even if a CDI bean implementing
-     * the `RetrievalAugmentor` interface exists.
-     */
-    final class NoRetrievalAugmentorSupplier implements Supplier<RetrievalAugmentor> {
-
-        @Override
-        public RetrievalAugmentor get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link ModerationModel} that the user has configured as a CDI bean.
-     * If no such bean exists, then no audit service will be used.
-     */
-    final class BeanIfExistsModerationModelSupplier implements Supplier<ModerationModel> {
-
-        @Override
-        public ModerationModel get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link ImageModel} that the user has configured as a CDI bean.
-     * If no such bean exists, then no audit service will be used.
-     */
-    final class BeanIfExistsImageModelSupplier implements Supplier<ImageModel> {
-
-        @Override
-        public ImageModel get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link ToolProvider} that the user has configured as a CDI bean.
-     * If no such bean exists, then no tool provider will be used.
-     */
-    final class BeanIfExistsToolProviderSupplier implements Supplier<ToolProvider> {
-
-        @Override
-        public ToolProvider get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link ToolSearchStrategy} that the user has configured as a CDI
-     * bean. If no such bean exists, then no tool search strategy will be used.
-     */
-    final class BeanIfExistsToolSearchStrategySupplier implements Supplier<ToolSearchStrategy> {
-
-        @Override
-        public ToolSearchStrategy get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used when the user does not want any tool search strategy, even if a CDI bean implementing
-     * {@link ToolSearchStrategy} exists.
-     */
-    final class NoToolSearchStrategySupplier implements Supplier<ToolSearchStrategy> {
-
-        @Override
-        public ToolSearchStrategy get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the ToolHallucinationStrategy that the user has configured as a CDI bean.
-     * If no such bean exists, then the default LangChain4j strategy will be used.
-     */
-    final class BeanIfExistsToolHallucinationStrategy implements Function<ToolExecutionRequest, ToolExecutionResultMessage> {
-
-        @Override
-        public ToolExecutionResultMessage apply(ToolExecutionRequest toolExecutionRequest) {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used when the user does not want any {@link SystemMessageProvider} configured for the AiService.
-     * This is the default.
-     */
-    final class NoSystemMessageProviderSupplier implements SystemMessageProvider {
-
-        @Override
-        public java.util.Optional<String> getSystemMessage(Object memoryId) {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link SystemMessageProvider} that the user has configured as a CDI bean.
-     * If no such bean exists, then no system message provider will be used.
-     */
-    final class BeanIfExistsSystemMessageProviderSupplier implements SystemMessageProvider {
-
-        @Override
-        public java.util.Optional<String> getSystemMessage(Object memoryId) {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that uses the default flush strategy which only commits on success.
-     * This is the default behavior that enables seamless {@code @Retry} support.
-     */
-    final class DefaultChatMemoryFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
-
-        @Override
-        public ChatMemoryFlushStrategy get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
 }

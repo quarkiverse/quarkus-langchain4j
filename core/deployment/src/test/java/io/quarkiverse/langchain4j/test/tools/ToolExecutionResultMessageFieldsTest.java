@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -23,6 +22,7 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
@@ -48,8 +48,8 @@ public class ToolExecutionResultMessageFieldsTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class,
                             TrackingChatMemoryStore.class,
-                            TrackingChatMemoryStoreSupplier.class,
-                            MyChatModelSupplier.class, MyChatModel.class));
+                            TrackingChatMemoryStoreProvider.class,
+                            MyChatModel.class));
 
     @Inject
     MyAiService aiService;
@@ -81,7 +81,7 @@ public class ToolExecutionResultMessageFieldsTest {
         assertThat(toolResult.attributes()).isEqualTo(TOOL_RESULT_ATTRIBUTES);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = TrackingChatMemoryStoreSupplier.class, tools = MyTools.class)
+    @RegisterAiService(chatMemoryProvider = TrackingChatMemoryStoreProvider.class, tools = MyTools.class)
     public interface MyAiService {
         String chat(@MemoryId String memoryId, @UserMessage String message);
     }
@@ -124,10 +124,11 @@ public class ToolExecutionResultMessageFieldsTest {
         }
     }
 
-    public static class TrackingChatMemoryStoreSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class TrackingChatMemoryStoreProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> MessageWindowChatMemory.builder()
+        public ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.builder()
                     .id(memoryId)
                     .maxMessages(20)
                     .chatMemoryStore(TrackingChatMemoryStore.INSTANCE)
@@ -135,13 +136,7 @@ public class ToolExecutionResultMessageFieldsTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest chatRequest) {

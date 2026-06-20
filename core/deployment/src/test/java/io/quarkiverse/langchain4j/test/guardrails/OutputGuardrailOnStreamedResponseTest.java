@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
@@ -19,8 +18,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.guardrail.OutputGuardrailResult;
-import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -31,7 +28,6 @@ import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
-import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -42,7 +38,7 @@ public class OutputGuardrailOnStreamedResponseTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class,
-                            MyChatModelSupplier.class, MyMemoryProviderSupplier.class, ValidationException.class));
+                            MyStreamedChatModel.class, PassThroughAccumulator.class, ValidationException.class));
 
     @Inject
     MyAiService aiService;
@@ -128,7 +124,7 @@ public class OutputGuardrailOnStreamedResponseTest {
         assertThat(koGuardrail.spy()).isEqualTo(4);
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     public interface MyAiService {
 
         @UserMessage("Say Hi!")
@@ -191,14 +187,7 @@ public class OutputGuardrailOnStreamedResponseTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new MyStreamedChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyStreamedChatModel implements StreamingChatModel {
 
         @Override
@@ -216,18 +205,6 @@ public class OutputGuardrailOnStreamedResponseTest {
         @Override
         public Multi<String> accumulate(Multi<String> tokens) {
             return tokens;
-        }
-    }
-
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-        @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
         }
     }
 }

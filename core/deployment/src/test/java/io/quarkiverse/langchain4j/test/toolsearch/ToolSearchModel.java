@@ -4,6 +4,8 @@ import static dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT
 
 import java.util.List;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -23,6 +25,7 @@ import dev.langchain4j.model.output.FinishReason;
  * <li>finally: the found tool result is returned as the answer.</li>
  * </ul>
  */
+@ApplicationScoped
 public class ToolSearchModel implements ChatModel {
 
     @Override

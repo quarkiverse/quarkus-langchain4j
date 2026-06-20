@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
@@ -199,14 +200,23 @@ public class BeansProcessor {
                     }
                 }
 
-                String provider = selectProvider(
-                        chatCandidateItems,
-                        beanDiscoveryFinished.beanStream().withBeanType(ChatModel.class),
-                        userSelectedProvider,
-                        chatModelBeanType,
-                        configNamespace);
-                if (provider != null) {
-                    selectedChatProducer.produce(new SelectedChatModelProviderBuildItem(provider, modelName));
+                boolean hasUserProvidedChatBean = !beanDiscoveryFinished.beanStream().withBeanType(ChatModel.class)
+                        .collect().isEmpty()
+                        || !beanDiscoveryFinished.beanStream().withBeanType(StreamingChatModel.class)
+                                .collect().isEmpty();
+                if (hasUserProvidedChatBean && chatCandidateItems.isEmpty()) {
+                    // User-provided ChatModel or StreamingChatModel bean exists and no provider extension
+                    // is on the classpath — skip provider setup
+                } else {
+                    String provider = selectProvider(
+                            chatCandidateItems,
+                            beanDiscoveryFinished.beanStream().withBeanType(ChatModel.class),
+                            userSelectedProvider,
+                            chatModelBeanType,
+                            configNamespace);
+                    if (provider != null) {
+                        selectedChatProducer.produce(new SelectedChatModelProviderBuildItem(provider, modelName));
+                    }
                 }
             }
 

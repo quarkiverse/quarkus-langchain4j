@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.tests.scopes.chat;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -31,26 +30,18 @@ public class ToolErrorTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(AiService.class, MyChatModel.class,
-                            MyChatModelSupplier.class));
+                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(AiService.class, MyChatModel.class));
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, shouldThrowExceptionOnEventError = true)
+    @RegisterAiService(shouldThrowExceptionOnEventError = true)
     @ApplicationScoped
     interface AiService {
         @ToolBox(MyToolBox.class)
         String chat(@UserMessage String userMessage);
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
     static String TOOL_ID = "my-tool";
 
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override

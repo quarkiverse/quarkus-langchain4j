@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -23,6 +22,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.exception.ToolExecutionException;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -72,6 +72,7 @@ public class GuardrailEventLoopBlockingTest {
                             MyTools.class,
                             SimpleInputGuardrail.class,
                             SimpleOutputGuardrail.class,
+                            MyChatMemoryProvider.class,
                             Lists.class));
 
     @Inject
@@ -234,7 +235,7 @@ public class GuardrailEventLoopBlockingTest {
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
         @ToolBox(MyTools.class)
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);
@@ -326,13 +327,7 @@ public class GuardrailEventLoopBlockingTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse chat(List<ChatMessage> messages) {
@@ -369,10 +364,11 @@ public class GuardrailEventLoopBlockingTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> new NoopChatMemory();
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

@@ -74,7 +74,7 @@ public class AiChatServiceTest extends WireMockAbstract {
     }
 
     @Singleton
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     @SystemMessage("This is a systemMessage")
     interface AIService {
         @UserMessage("This is a userMessage {text}")
@@ -85,7 +85,7 @@ public class AiChatServiceTest extends WireMockAbstract {
     }
 
     @Singleton
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface ImageDescriptor {
         String chat(Image image, @UserMessage String text);
     }

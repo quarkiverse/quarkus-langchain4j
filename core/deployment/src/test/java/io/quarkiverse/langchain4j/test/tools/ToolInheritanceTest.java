@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -21,6 +21,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -156,19 +157,19 @@ public class ToolInheritanceTest {
 
     // --- AI Services ---
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
     public interface AiServiceWithChildTool {
         @ToolBox(ChildTool.class)
         String chat(@MemoryId String memoryId, @dev.langchain4j.service.UserMessage String msg);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
     public interface AiServiceWithOverridingTool {
         @ToolBox(ChildOverridingTool.class)
         String chat(@MemoryId String memoryId, @dev.langchain4j.service.UserMessage String msg);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
     public interface AiServiceWithOverloadedTool {
         @ToolBox(ChildWithOverloadedProcess.class)
         String chat(@MemoryId String memoryId, @dev.langchain4j.service.UserMessage String msg);
@@ -176,13 +177,7 @@ public class ToolInheritanceTest {
 
     // --- Mock ChatModel ---
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse chat(List<ChatMessage> messages) {
@@ -223,10 +218,11 @@ public class ToolInheritanceTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> new NoopChatMemory();
+        public ChatMemory get(Object memoryId) {
+            return new NoopChatMemory();
         }
     }
 }

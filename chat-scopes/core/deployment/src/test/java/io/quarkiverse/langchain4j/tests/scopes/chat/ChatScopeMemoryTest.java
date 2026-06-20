@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -34,24 +33,20 @@ public class ChatScopeMemoryTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(AiService.class, MirrorModelSupplier.class,
+                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(AiService.class, MirrorChatModel.class,
                             CustomChatMemoryStore.class));
 
-    public static class MirrorModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class MirrorChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest chatRequest) {
-                    return ChatResponse.builder()
-                            .aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
-                            .build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            return ChatResponse.builder()
+                    .aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
+                    .build();
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MirrorModelSupplier.class)
+    @RegisterAiService
     @ChatScoped
     interface AiService {
         String chat(@UserMessage String userMessage);

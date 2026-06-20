@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.tools;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -38,7 +37,7 @@ public class ToolReturningToolExecutionResultTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class,
-                            MyChatModelSupplier.class, MyChatModel.class, Lists.class));
+                            MyChatModel.class, Lists.class));
 
     @Inject
     MyAiService aiService;
@@ -66,7 +65,7 @@ public class ToolReturningToolExecutionResultTest {
         assertThat(r.toolExecutions().get(0).resultObject()).isEqualTo("uni-result-object");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, tools = MyTools.class)
+    @RegisterAiService(tools = MyTools.class)
     public interface MyAiService {
         Result<String> chat(@UserMessage String toolName);
     }
@@ -91,13 +90,7 @@ public class ToolReturningToolExecutionResultTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest chatRequest) {
