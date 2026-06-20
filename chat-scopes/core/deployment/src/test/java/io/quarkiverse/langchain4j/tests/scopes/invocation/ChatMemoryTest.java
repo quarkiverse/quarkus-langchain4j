@@ -2,8 +2,7 @@ package io.quarkiverse.langchain4j.tests.scopes.invocation;
 
 import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 
-import java.util.function.Supplier;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -30,28 +29,24 @@ public class ChatMemoryTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MirrorModelSupplier.class));
+                    .addClasses(MirrorChatModel.class));
 
-    public static class MirrorModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class MirrorChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest chatRequest) {
-                    return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
-                            .build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
+                    .build();
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MirrorModelSupplier.class)
+    @RegisterAiService
     @InvocationScoped
     interface AiService {
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MirrorModelSupplier.class)
+    @RegisterAiService
     @RequestScoped
     interface RequestScopedAiService {
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);

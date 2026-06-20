@@ -9,26 +9,25 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
 
 public record DeclarativeAiServiceCreateInfo(
         String serviceClassName,
-        String languageModelSupplierClassName,
-        String streamingChatLanguageModelSupplierClassName,
         Map<String, AnnotationLiteral<?>> toolsClassInfo,
-        String toolProviderSupplier,
-        String toolSearchStrategySupplier,
-        String chatMemoryProviderSupplierClassName,
-        String chatMemoryFlushStrategySupplierClassName,
-        String retrievalAugmentorSupplierClassName,
-        String moderationModelSupplierClassName,
-        String imageModelSupplierClassName,
+        ComponentEntry chatMemoryProvider,
+        ComponentEntry chatMemoryFlushStrategy,
+        ComponentEntry retrievalAugmentor,
+        ComponentEntry moderationModel,
+        ComponentEntry imageModel,
+        ComponentEntry toolProvider,
+        ComponentEntry toolSearchStrategy,
+        ComponentEntry toolHallucinationStrategy,
+        ComponentEntry systemMessageProvider,
         String chatMemorySeederClassName,
         String thinkingHandlerClassName,
-        String systemMessageProviderClassName,
         String chatModelName,
         String moderationModelName,
         String imageModelName,
+        boolean needsChatModel,
         boolean needsStreamingChatModel,
         boolean needsModerationModel,
         boolean needsImageModel,
-        String toolHallucinationStrategyClassName,
         String toolArgumentsErrorHandlerClassName,
         String toolExecutionErrorHandlerClassName,
         InputGuardrailsLiteral inputGuardrails,
@@ -38,4 +37,13 @@ public record DeclarativeAiServiceCreateInfo(
         boolean allowContinuousForcedToolCalling,
         boolean shouldThrowExceptionOnEventError,
         String defaultMemoryIdProviderClassName) {
+
+    /**
+     * Pairs a class name with its resolution mode. Used for all component attributes
+     * that follow the tri-state resolution model (void = SKIP, interface = AUTO_DISCOVER,
+     * concrete class = EXPLICIT).
+     */
+    public record ComponentEntry(String className, ComponentResolutionMode mode) {
+        public static final ComponentEntry SKIP = new ComponentEntry(null, ComponentResolutionMode.SKIP);
+    }
 }

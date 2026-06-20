@@ -4,12 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -38,7 +36,6 @@ public class SystemMessageAnnotationPrecedenceTest {
                     .addClasses(
                             Assistant.class,
                             ProviderShouldNotWin.class,
-                            ModelSupplier.class,
                             EchoModel.class));
 
     @Inject
@@ -50,7 +47,7 @@ public class SystemMessageAnnotationPrecedenceTest {
         assertThat(assistant.chat("Hello")).isEqualTo("from annotation");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = ModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class, systemMessageProviderSupplier = ProviderShouldNotWin.class)
+    @RegisterAiService(chatMemoryProvider = void.class, systemMessageProvider = ProviderShouldNotWin.class)
     public interface Assistant {
         @dev.langchain4j.service.SystemMessage("from annotation")
         String chat(@UserMessage String userMessage);
@@ -65,14 +62,7 @@ public class SystemMessageAnnotationPrecedenceTest {
         }
     }
 
-    @Singleton
-    public static class ModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new EchoModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class EchoModel implements ChatModel {
 
         @Override

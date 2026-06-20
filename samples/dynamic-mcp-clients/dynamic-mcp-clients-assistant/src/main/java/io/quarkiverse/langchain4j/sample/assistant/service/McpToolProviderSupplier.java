@@ -2,15 +2,15 @@ package io.quarkiverse.langchain4j.sample.assistant.service;
 
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.service.tool.ToolProviderRequest;
+import dev.langchain4j.service.tool.ToolProviderResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
-import java.awt.image.AreaAveragingScaleFilter;
 import java.util.ArrayList;
-import java.util.function.Supplier;
 
 @ApplicationScoped
-public class McpToolProviderSupplier implements Supplier<ToolProvider> {
+public class McpToolProviderSupplier implements ToolProvider {
 
     private final McpToolProvider mcpToolProvider;
 
@@ -19,8 +19,8 @@ public class McpToolProviderSupplier implements Supplier<ToolProvider> {
     }
 
     @Override
-    public ToolProvider get() {
-        return mcpToolProvider;
+    public ToolProviderResult provideTools(ToolProviderRequest request) {
+        return mcpToolProvider.provideTools(request);
     }
 
     @Produces

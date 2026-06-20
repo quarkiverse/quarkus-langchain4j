@@ -30,7 +30,7 @@ public class ModerationModelTest extends OpenAiBaseTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     WiremockAware.wiremockUrlForConfig("/v1"));
 
-    @RegisterAiService(moderationModelSupplier = RegisterAiService.BeanIfExistsModerationModelSupplier.class)
+    @RegisterAiService
     interface ChatWithModeration {
 
         @Moderate

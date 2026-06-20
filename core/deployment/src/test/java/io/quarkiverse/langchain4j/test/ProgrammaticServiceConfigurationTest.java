@@ -3,8 +3,8 @@ package io.quarkiverse.langchain4j.test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -31,7 +31,7 @@ public class ProgrammaticServiceConfigurationTest {
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(AssistantService.class));
+                    .addClasses(AssistantService.class, MyChatModel.class));
 
     @Test
     @ActivateRequestContext
@@ -48,20 +48,13 @@ public class ProgrammaticServiceConfigurationTest {
                 .build();
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class)
+    @RegisterAiService
     public interface AssistantService {
 
         String echoSystemMessage(@UserMessage String userMessage);
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override

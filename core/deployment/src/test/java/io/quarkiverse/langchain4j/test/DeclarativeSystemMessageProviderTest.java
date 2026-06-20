@@ -4,13 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -30,7 +27,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Tests for the {@code systemMessageProviderSupplier} attribute on {@link RegisterAiService}.
+ * Tests for the {@code systemMessageProvider} attribute on {@link RegisterAiService}.
  */
 public class DeclarativeSystemMessageProviderTest {
 
@@ -40,7 +37,6 @@ public class DeclarativeSystemMessageProviderTest {
                     .addClasses(
                             AssistantWithSystemMessageProvider.class,
                             MySystemMessageProvider.class,
-                            MyChatModelSupplier.class,
                             MyChatModel.class));
 
     @Inject
@@ -60,7 +56,7 @@ public class DeclarativeSystemMessageProviderTest {
         assertThat(response).isEqualTo("System message for user: user456");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class, systemMessageProviderSupplier = MySystemMessageProvider.class)
+    @RegisterAiService(chatMemoryProvider = void.class, systemMessageProvider = MySystemMessageProvider.class)
     public interface AssistantWithSystemMessageProvider {
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);
     }
@@ -73,23 +69,9 @@ public class DeclarativeSystemMessageProviderTest {
         }
     }
 
-    @Singleton
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        private MyChatModel myChatModel;
-
-        @PostConstruct
-        public void init() {
-            myChatModel = new MyChatModel();
-        }
-
-        @Override
-        public ChatModel get() {
-            return myChatModel;
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
+
         @Override
         public ChatResponse chat(List<ChatMessage> messages) {
             throw new UnsupportedOperationException("Should not be called");

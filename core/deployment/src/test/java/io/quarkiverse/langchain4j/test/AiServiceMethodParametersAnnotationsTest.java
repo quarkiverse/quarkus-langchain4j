@@ -6,8 +6,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.constraints.Email;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -50,7 +50,7 @@ public class AiServiceMethodParametersAnnotationsTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MyResource.class, MyService.class, MirrorModelSupplier.class))
+                    .addClasses(MyResource.class, MyService.class, MirrorChatModel.class))
             .addBuildChainCustomizer(buildCustomizer());
 
     protected static Consumer<BuildChainBuilder> buildCustomizer() {
@@ -79,16 +79,12 @@ public class AiServiceMethodParametersAnnotationsTest {
         };
     }
 
-    public static class MirrorModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class MirrorChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse doChat(ChatRequest chatRequest) {
-                    return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
-                            .build();
-                }
-            };
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
+                    .build();
         }
     }
 
@@ -132,7 +128,7 @@ public class AiServiceMethodParametersAnnotationsTest {
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MirrorModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface MyService {
         @UserMessage("@∅={none}, @Email={email}, @MemoryId={memId}, @Email@MemoryId={emailAndMemId}, @Deprecated@MemoryId={deprecatedAndMemId}, @Email@Deprecated@MemoryId={emailDeprecatedAndMemId}")
         String validAnnotationCombinationsAreIncluded(

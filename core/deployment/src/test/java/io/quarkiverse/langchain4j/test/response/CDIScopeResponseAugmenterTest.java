@@ -28,10 +28,8 @@ public class CDIScopeResponseAugmenterTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
-                            ResponseAugmenterTestUtils.FakeChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeChatModel.class,
-                            ResponseAugmenterTestUtils.FakeStreamedChatModel.class,
-                            ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class));
+                            ResponseAugmenterTestUtils.FakeStreamedChatModel.class));
 
     @Inject
     RequestScopedAiService requestScopedAiService;
@@ -72,7 +70,7 @@ public class CDIScopeResponseAugmenterTest {
     }
 
     @RequestScoped
-    @RegisterAiService(streamingChatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class, chatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeChatModelSupplier.class)
+    @RegisterAiService
     public interface RequestScopedAiService {
 
         @UserMessage("Say Hello World! {id}")

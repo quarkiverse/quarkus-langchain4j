@@ -24,9 +24,7 @@ public class PassThroughResponseAugmenterTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
-                            ResponseAugmenterTestUtils.FakeChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeChatModel.class,
-                            ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeStreamedChatModel.class));
 
     @Inject
@@ -45,7 +43,7 @@ public class PassThroughResponseAugmenterTest {
 
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeChatModelSupplier.class, streamingChatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hello World!")

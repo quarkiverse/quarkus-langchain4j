@@ -24,14 +24,12 @@ public class ExplicitToolBoxAndProviderSupplierTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(TestAiSupplier.class,
-                            TestAiModel.class,
+                    .addClasses(TestAiModel.class,
                             ServiceWithToolClash.class,
-                            MyCustomToolProviderSupplier.class,
                             MyCustomToolProvider.class,
                             ToolsClass.class));
 
-    @RegisterAiService(toolProviderSupplier = MyCustomToolProviderSupplier.class, chatLanguageModelSupplier = TestAiSupplier.class)
+    @RegisterAiService(toolProvider = MyCustomToolProvider.class)
     interface ServiceWithToolClash {
 
         @ToolBox(ToolsClass.class)

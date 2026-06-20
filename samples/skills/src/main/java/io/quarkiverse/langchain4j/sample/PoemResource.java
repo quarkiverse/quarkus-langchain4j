@@ -13,7 +13,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 @Path("/poem")
 public class PoemResource {
 
-    @RegisterAiService(systemMessageProviderSupplier = SkillsSystemMessageProvider.class)
+    @RegisterAiService(systemMessageProvider = SkillsSystemMessageProvider.class)
     public interface PoemAiService {
 
         String chat(String message);

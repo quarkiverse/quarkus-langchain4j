@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -45,7 +44,7 @@ public class OutputGuardrailRepromptingTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class, MyMemoryProviderSupplier.class));
 
     @Inject
     MyAiService aiService;
@@ -80,7 +79,7 @@ public class OutputGuardrailRepromptingTest {
 
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     @SystemMessage("Say Hi!")
     public interface MyAiService {
 
@@ -92,14 +91,6 @@ public class OutputGuardrailRepromptingTest {
 
         @OutputGuardrails(RepromptingFailed.class)
         String fail(@MemoryId String mem, @dev.langchain4j.service.UserMessage String message);
-    }
-
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
     }
 
     @ApplicationScoped
@@ -198,6 +189,7 @@ public class OutputGuardrailRepromptingTest {
         }
     }
 
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -213,17 +205,13 @@ public class OutputGuardrailRepromptingTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProviderSupplier implements ChatMemoryProvider {
         private final Map<String, ChatMemory> memories = new HashMap<>();
 
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return memories.computeIfAbsent(memoryId.toString(), k -> MessageWindowChatMemory.withMaxMessages(10));
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return memories.computeIfAbsent(memoryId.toString(), k -> MessageWindowChatMemory.withMaxMessages(10));
         }
     }
 }

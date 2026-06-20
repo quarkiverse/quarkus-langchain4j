@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -55,7 +54,7 @@ public class VectorToolSearchStrategyTest {
                             StrategyProducer.class,
                             ServiceWithVectorToolSearch.class));
 
-    @RegisterAiService(tools = { BookingTools.class, WeatherTools.class }, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(tools = { BookingTools.class, WeatherTools.class }, toolSearchStrategy = ToolSearchStrategy.class)
     interface ServiceWithVectorToolSearch {
 
         String chat(@UserMessage String msg, @MemoryId Object id);
@@ -92,17 +91,11 @@ public class VectorToolSearchStrategyTest {
         }
     }
 
-    public static class ModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new Model();
-        }
-    }
-
     /**
      * Calls the built-in {@code tool_search_tool} with a natural language query and then invokes whichever tool the
      * vector search surfaced. If the search returned the wrong tool, the booking tool would not be available.
      */
+    @ApplicationScoped
     public static class Model implements ChatModel {
 
         @Override

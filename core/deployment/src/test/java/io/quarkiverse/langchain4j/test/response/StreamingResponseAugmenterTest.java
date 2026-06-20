@@ -24,7 +24,6 @@ public class StreamingResponseAugmenterTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ResponseAugmenterTestUtils.FakeStreamedChatModel.class,
-                            ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class,
                             ResponseAugmenterTestUtils.StreamedUppercaseAugmenter.class,
                             ResponseAugmenterTestUtils.AppenderAugmenter.class));
 
@@ -47,7 +46,7 @@ public class StreamingResponseAugmenterTest {
         assertThat(list).containsExactly("Hi!", " ", "World!", " WONDERFUL!");
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = ResponseAugmenterTestUtils.FakeStreamedChatModelSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hello World!")

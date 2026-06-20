@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -53,7 +53,7 @@ public class GuardrailWithAugmentationTest extends TokenStreamExecutor {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class, MyMemoryProviderSupplier.class));
 
     @Inject
     MyInputGuardrail inputGuardrail;
@@ -113,7 +113,7 @@ public class GuardrailWithAugmentationTest extends TokenStreamExecutor {
         assertThat(outputGuardrail.getSpy()).isEqualTo(1);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, streamingChatLanguageModelSupplier = MyStreamingChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class, retrievalAugmentor = MyRetrievalAugmentor.class)
+    @RegisterAiService(retrievalAugmentor = MyRetrievalAugmentor.class)
     public interface MyAiService {
 
         @InputGuardrails(MyInputGuardrail.class)
@@ -167,22 +167,7 @@ public class GuardrailWithAugmentationTest extends TokenStreamExecutor {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
-    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            return new MyStreamingChatModel();
-        }
-    }
-
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -192,6 +177,7 @@ public class GuardrailWithAugmentationTest extends TokenStreamExecutor {
         }
     }
 
+    @ApplicationScoped
     public static class MyStreamingChatModel implements StreamingChatModel {
 
         @Override
@@ -203,28 +189,20 @@ public class GuardrailWithAugmentationTest extends TokenStreamExecutor {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProviderSupplier implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new MessageWindowChatMemory.Builder().maxMessages(5).build();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new MessageWindowChatMemory.Builder().maxMessages(5).build();
         }
     }
 
-    public static class MyRetrievalAugmentor implements Supplier<RetrievalAugmentor> {
+    @ApplicationScoped
+    public static class MyRetrievalAugmentor implements RetrievalAugmentor {
         @Override
-        public RetrievalAugmentor get() {
-            return new RetrievalAugmentor() {
-                @Override
-                public AugmentationResult augment(AugmentationRequest augmentationRequest) {
-                    List<Content> content = List.of(Content.from("content1"), Content.from("content2"));
-                    return new AugmentationResult(dev.langchain4j.data.message.UserMessage.userMessage("augmented"), content);
-                }
-            };
+        public AugmentationResult augment(AugmentationRequest augmentationRequest) {
+            List<Content> content = List.of(Content.from("content1"), Content.from("content2"));
+            return new AugmentationResult(dev.langchain4j.data.message.UserMessage.userMessage("augmented"), content);
         }
     }
 }

@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -20,6 +19,8 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.mock.ChatModelMock;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.tool.ToolErrorContext;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
@@ -33,7 +34,7 @@ public class DefaultToolExecutionErrorHandlerTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Assistant.class, Tools.class, TestChatModelSupplier.class, MyErrorHandler.class));
+                    .addClasses(Assistant.class, Tools.class, TestChatModel.class, MyErrorHandler.class));
 
     @Inject
     Assistant assistant;
@@ -65,7 +66,7 @@ public class DefaultToolExecutionErrorHandlerTest {
         }
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = TestChatModelSupplier.class)
+    @RegisterAiService
     interface Assistant {
 
         @ToolBox(Tools.class)
@@ -90,17 +91,24 @@ public class DefaultToolExecutionErrorHandlerTest {
     }
 
     @ApplicationScoped
-    public static class TestChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
+    public static class TestChatModel implements ChatModel {
+
+        private final ChatModel delegate;
+
+        public TestChatModel() {
             ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder()
                     .name("getWeather")
                     .arguments("{\"arg0\":\"Munich\"}")
                     .build();
 
-            return ChatModelMock.thatAlwaysResponds(
+            delegate = ChatModelMock.thatAlwaysResponds(
                     AiMessage.from(toolExecutionRequest),
                     AiMessage.from("I was not able to get the weather"));
+        }
+
+        @Override
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            return delegate.doChat(chatRequest);
         }
     }
 }

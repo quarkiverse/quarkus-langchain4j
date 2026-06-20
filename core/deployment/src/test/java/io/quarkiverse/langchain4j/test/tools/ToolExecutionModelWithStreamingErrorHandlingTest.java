@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -37,7 +37,6 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Vertx;
@@ -130,7 +129,7 @@ public class ToolExecutionModelWithStreamingErrorHandlingTest {
         assertThat(failure.get()).hasMessageContaining("Cannot execute blocking tools on event loop thread");
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = EventLoopCallbackChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
     public interface MyAiService {
 
         @ToolBox(FailingBlockingTool.class)
@@ -158,28 +157,16 @@ public class ToolExecutionModelWithStreamingErrorHandlingTest {
         }
     }
 
-    public static class EventLoopCallbackChatModelSupplier implements Supplier<StreamingChatModel> {
-
-        @Override
-        public StreamingChatModel get() {
-            // Get Vertx from CDI programmatically since Supplier is not a CDI bean
-            Vertx vertx = Arc.container().instance(Vertx.class).get();
-            return new EventLoopCallbackChatModel(vertx);
-        }
-    }
-
     /**
      * Mock chat model that simulates real HTTP client behavior by delivering callbacks on the event loop.
      * Real streaming HTTP clients (like those used by OpenAI, Anthropic, etc.) deliver responses
      * via Vert.x HTTP client callbacks which run on the event loop.
      */
+    @ApplicationScoped
     public static class EventLoopCallbackChatModel implements StreamingChatModel {
 
-        private final Vertx vertx;
-
-        public EventLoopCallbackChatModel(Vertx vertx) {
-            this.vertx = vertx;
-        }
+        @Inject
+        Vertx vertx;
 
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
@@ -214,15 +201,11 @@ public class ToolExecutionModelWithStreamingErrorHandlingTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return MessageWindowChatMemory.withMaxMessages(10);
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
         }
     }
 }

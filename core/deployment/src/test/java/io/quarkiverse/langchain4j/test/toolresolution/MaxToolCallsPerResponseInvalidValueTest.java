@@ -2,8 +2,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.function.Supplier;
-
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -26,7 +24,7 @@ public class MaxToolCallsPerResponseInvalidValueTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Tools.class, ModelSupplier.class))
+                    .addClasses(Tools.class, TestChatModel.class))
             .assertException(e -> {
                 assertThatThrownBy(() -> {
                     throw e;
@@ -35,20 +33,16 @@ public class MaxToolCallsPerResponseInvalidValueTest {
                         .hasMessageContaining("maxToolCallsPerResponse must be 0 or greater");
             });
 
-    @RegisterAiService(maxToolCallsPerResponse = -1, tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = -1, tools = Tools.class)
     public interface AiServiceWithInvalidLimit {
         String chat(String message);
     }
 
-    public static class ModelSupplier implements Supplier<ChatModel> {
+    @ApplicationScoped
+    public static class TestChatModel implements ChatModel {
         @Override
-        public ChatModel get() {
-            return new ChatModel() {
-                @Override
-                public ChatResponse chat(ChatRequest chatRequest) {
-                    return null;
-                }
-            };
+        public ChatResponse chat(ChatRequest chatRequest) {
+            return null;
         }
     }
 

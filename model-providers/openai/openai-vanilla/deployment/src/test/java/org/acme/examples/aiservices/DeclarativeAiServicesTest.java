@@ -465,7 +465,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     interface NoMemoryService {
 
         String chat(@UserMessage String userMessage);
@@ -501,7 +501,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertSingleRequestMessage(getRequestAsMap(), secondUserMessage);
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     @ApplicationScoped
     interface ImageDescriber {
 
@@ -593,7 +593,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         });
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     @ApplicationScoped
     interface MultiImageDescriber {
 

@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -19,6 +19,7 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -95,7 +96,7 @@ public class ToolExecutionModelWithStreamingPartialToolCallTest {
                         ChatEvent.ChatEventType.Completed);
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
     public interface MyAiService {
         @ToolBox(SimpleTool.class)
         Multi<ChatEvent> chat(@MemoryId String memoryId, @UserMessage String message);
@@ -109,18 +110,12 @@ public class ToolExecutionModelWithStreamingPartialToolCallTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
-        @Override
-        public StreamingChatModel get() {
-            return new PartialToolCallChatModel();
-        }
-    }
-
     /**
      * A mock streaming chat model that emits {@code onPartialToolCall} events
      * before completing with a tool execution request, simulating how real providers
      * (Anthropic, OpenAI) stream tool call arguments token by token.
      */
+    @ApplicationScoped
     public static class PartialToolCallChatModel implements StreamingChatModel {
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
@@ -204,10 +199,11 @@ public class ToolExecutionModelWithStreamingPartialToolCallTest {
         }
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> MessageWindowChatMemory.withMaxMessages(10);
+        public ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
         }
     }
 }

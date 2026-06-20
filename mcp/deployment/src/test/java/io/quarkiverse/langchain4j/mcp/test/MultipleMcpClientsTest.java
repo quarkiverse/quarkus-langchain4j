@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatIterable;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
@@ -21,8 +21,6 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.invocation.InvocationContext;
-import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -31,7 +29,6 @@ import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
-import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -47,7 +44,7 @@ public class MultipleMcpClientsTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class, Mock2HttpMcpServer.class,
                             Mock3HttpMcpServer.class, AllToolsService.class, SelectedToolsService.class,
-                            SingleToolService.class)
+                            SingleToolService.class, MyChatModel.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever
                             quarkus.langchain4j.mcp.client1.transport-type=http
@@ -106,7 +103,7 @@ public class MultipleMcpClientsTest {
                 .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     public interface AllToolsService {
 
         @McpToolBox
@@ -122,7 +119,7 @@ public class MultipleMcpClientsTest {
                 .containsExactlyInAnyOrder("add", "subtract", "multiply", "longRunningOperation", "logging");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     public interface SelectedToolsService {
 
         @McpToolBox({ "client1", "client3" })
@@ -138,7 +135,7 @@ public class MultipleMcpClientsTest {
                 .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     public interface SingleToolService {
 
         @McpToolBox("client2")
@@ -153,15 +150,7 @@ public class MultipleMcpClientsTest {
         assertThat(toolNames[0]).isEqualTo("subtract");
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return new MyChatModel();
-        }
-    }
-
-    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService(chatMemoryProvider = void.class)
     public interface NoToolService {
 
         String toolsList(@UserMessage String userMessage);
@@ -173,6 +162,7 @@ public class MultipleMcpClientsTest {
         assertThat(noToolService.toolsList("test")).hasSize(0);
     }
 
+    @ApplicationScoped
     public static class MyChatModel implements ChatModel {
 
         @Override
@@ -188,18 +178,6 @@ public class MultipleMcpClientsTest {
                             .map(ToolSpecification::name)
                             .collect(Collectors.joining(","));
             return ChatResponse.builder().aiMessage(new AiMessage(tools)).build();
-        }
-    }
-
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-        @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new NoopChatMemory();
-                }
-            };
         }
     }
 }

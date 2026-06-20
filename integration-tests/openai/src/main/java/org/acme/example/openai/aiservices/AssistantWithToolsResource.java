@@ -50,7 +50,7 @@ public class AssistantWithToolsResource {
         return assistant.chat(message);
     }
 
-    @RegisterAiService(tools = Calculator.class, chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
+    @RegisterAiService(tools = Calculator.class)
     public interface Assistant {
 
         String chat(String userMessage);

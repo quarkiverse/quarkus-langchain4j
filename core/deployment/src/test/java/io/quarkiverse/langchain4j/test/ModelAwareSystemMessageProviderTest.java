@@ -4,13 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -45,7 +42,6 @@ public class ModelAwareSystemMessageProviderTest {
                     .addClasses(
                             Assistant.class,
                             ModelAwareProvider.class,
-                            ClaudeModelSupplier.class,
                             FakeClaudeModel.class));
 
     @Inject
@@ -58,7 +54,7 @@ public class ModelAwareSystemMessageProviderTest {
         assertThat(response).isEqualTo("provider=ANTHROPIC model=claude-opus-4-8");
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = ClaudeModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class, systemMessageProviderSupplier = ModelAwareProvider.class)
+    @RegisterAiService(chatMemoryProvider = void.class, systemMessageProvider = ModelAwareProvider.class)
     public interface Assistant {
         String chat(@MemoryId String memoryId, @UserMessage String userMessage);
     }
@@ -73,22 +69,7 @@ public class ModelAwareSystemMessageProviderTest {
         }
     }
 
-    @Singleton
-    public static class ClaudeModelSupplier implements Supplier<ChatModel> {
-
-        private FakeClaudeModel model;
-
-        @PostConstruct
-        public void init() {
-            model = new FakeClaudeModel();
-        }
-
-        @Override
-        public ChatModel get() {
-            return model;
-        }
-    }
-
+    @ApplicationScoped
     public static class FakeClaudeModel implements ChatModel {
 
         @Override

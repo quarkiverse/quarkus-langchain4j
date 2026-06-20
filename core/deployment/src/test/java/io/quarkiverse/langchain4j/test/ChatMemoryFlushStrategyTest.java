@@ -7,11 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -38,7 +39,7 @@ import io.quarkus.test.QuarkusUnitTest;
 
 /**
  * Verifies that a custom {@code ChatMemoryFlushStrategy} configured via
- * {@code chatMemoryFlushStrategySupplier} on {@code @RegisterAiService} is used.
+ * {@code chatMemoryFlushStrategy} on {@code @RegisterAiService} is used.
  *
  * <pre>
  * This test uses a ChatModel that triggers a tool call that always throws,
@@ -54,9 +55,9 @@ public class ChatMemoryFlushStrategyTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, FailingTool.class,
                             TrackingChatMemoryStore.class,
-                            TrackingChatMemoryStoreSupplier.class,
-                            ImmediateFlushStrategySupplier.class,
-                            FakeChatModelSupplier.class, FakeChatModel.class));
+                            TrackingChatMemoryProvider.class,
+                            ImmediateFlushStrategyProducer.class,
+                            FakeChatModel.class, PingService.class));
 
     @Inject
     MyAiService aiService;
@@ -85,7 +86,7 @@ public class ChatMemoryFlushStrategyTest {
         assertThat(stored).isNotEmpty();
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = FakeChatModelSupplier.class, chatMemoryProviderSupplier = TrackingChatMemoryStoreSupplier.class, chatMemoryFlushStrategySupplier = ImmediateFlushStrategySupplier.class, tools = FailingTool.class)
+    @RegisterAiService(chatMemoryProvider = TrackingChatMemoryProvider.class, chatMemoryFlushStrategy = ChatMemoryFlushStrategy.class, tools = FailingTool.class)
     public interface MyAiService {
         String chat(@MemoryId String memoryId, @UserMessage String message);
     }
@@ -106,14 +107,15 @@ public class ChatMemoryFlushStrategyTest {
     }
 
     @ApplicationScoped
-    public static class ImmediateFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
+    public static class ImmediateFlushStrategyProducer {
 
-        public ImmediateFlushStrategySupplier(PingService pingService) {
+        public ImmediateFlushStrategyProducer(PingService pingService) {
             System.out.println("ping: " + pingService.ping());
         }
 
-        @Override
-        public ChatMemoryFlushStrategy get() {
+        @Produces
+        @Singleton
+        ChatMemoryFlushStrategy flushStrategy() {
             return ChatMemoryFlushStrategy.IMMEDIATE;
         }
     }
@@ -158,21 +160,15 @@ public class ChatMemoryFlushStrategyTest {
         }
     }
 
-    public static class TrackingChatMemoryStoreSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class TrackingChatMemoryProvider implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return memoryId -> MessageWindowChatMemory.builder()
+        public dev.langchain4j.memory.ChatMemory get(Object memoryId) {
+            return MessageWindowChatMemory.builder()
                     .id(memoryId)
                     .maxMessages(20)
                     .chatMemoryStore(TrackingChatMemoryStore.INSTANCE)
                     .build();
-        }
-    }
-
-    public static class FakeChatModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return new FakeChatModel();
         }
     }
 
@@ -182,6 +178,7 @@ public class ChatMemoryFlushStrategyTest {
      * for the "failingAction" tool, which will throw an exception.
      * </pre>
      */
+    @ApplicationScoped
     public static class FakeChatModel implements ChatModel {
         @Override
         public ChatResponse doChat(ChatRequest chatRequest) {

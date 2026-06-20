@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -41,7 +40,7 @@ public class OutputGuardrailAccumulatorTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MyStreamingChatModelSupplier.class, MyMemoryProviderSupplier.class, MyGuardrail.class,
+                    .addClasses(MyStreamingChatModel.class, MyMemoryProviderSupplier.class, MyGuardrail.class,
                             SizeBasedAccumulator.class, SeparatorAccumulator.class));
 
     @Inject
@@ -110,7 +109,7 @@ public class OutputGuardrailAccumulatorTest {
         assertThat(guardrail.count()).isEqualTo(0);
     }
 
-    @RegisterAiService(streamingChatLanguageModelSupplier = MyStreamingChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @RegisterAiService
     public interface MyAiService {
 
         @UserMessage("Say Hi!")
@@ -138,33 +137,24 @@ public class OutputGuardrailAccumulatorTest {
         Multi<String> usingThrowingAccumulator(@MemoryId String mem);
     }
 
-    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+    @ApplicationScoped
+    public static class MyMemoryProviderSupplier implements ChatMemoryProvider {
         @Override
-        public ChatMemoryProvider get() {
-            return new ChatMemoryProvider() {
-                @Override
-                public ChatMemory get(Object memoryId) {
-                    return new MessageWindowChatMemory.Builder().maxMessages(5).build();
-                }
-            };
+        public ChatMemory get(Object memoryId) {
+            return new MessageWindowChatMemory.Builder().maxMessages(5).build();
         }
     }
 
-    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatModel> {
-
+    @ApplicationScoped
+    public static class MyStreamingChatModel implements StreamingChatModel {
         @Override
-        public StreamingChatModel get() {
-            return new StreamingChatModel() {
-                @Override
-                public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-                    handler.onPartialResponse("Stream");
-                    handler.onPartialResponse("ing");
-                    handler.onPartialResponse(" ");
-                    handler.onPartialResponse("world");
-                    handler.onPartialResponse("!");
-                    handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
-                }
-            };
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+            handler.onPartialResponse("Stream");
+            handler.onPartialResponse("ing");
+            handler.onPartialResponse(" ");
+            handler.onPartialResponse("world");
+            handler.onPartialResponse("!");
+            handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
         }
     }
 

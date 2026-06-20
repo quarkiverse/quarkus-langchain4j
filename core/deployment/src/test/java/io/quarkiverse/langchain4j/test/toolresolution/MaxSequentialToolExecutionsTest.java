@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.test.toolresolution;
 
-import java.util.function.Supplier;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -34,7 +32,8 @@ public class MaxSequentialToolExecutionsTest {
                     .addClasses());
 
     // chat model that simply always requests to execute the 'dummy' tool
-    static ChatModel chatModel = new ChatModel() {
+    @ApplicationScoped
+    public static class TestChatModel implements ChatModel {
         @Override
         public ChatResponse chat(ChatRequest chatRequest) {
             ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder()
@@ -48,19 +47,11 @@ public class MaxSequentialToolExecutionsTest {
                     .finishReason(FinishReason.TOOL_EXECUTION)
                     .build();
         }
-    };
-
-    @RegisterAiService(maxSequentialToolInvocations = 5, tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
-    public interface AiService {
-        String chat(String message);
     }
 
-    public static class ModelSupplier implements Supplier<ChatModel> {
-
-        @Override
-        public ChatModel get() {
-            return chatModel;
-        }
+    @RegisterAiService(tools = Tools.class, maxToolCallingRoundTrips = 5)
+    public interface AiService {
+        String chat(String message);
     }
 
     @ApplicationScoped

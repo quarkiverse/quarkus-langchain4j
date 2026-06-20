@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -34,12 +33,13 @@ public class MaxToolCallsPerResponseTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Tools.class, ModelSupplier.class));
+                    .addClasses(Tools.class, TestChatModel.class));
 
     static List<Integer> toolCallsCounts = new ArrayList<>();
     static int responseCount = 0;
 
-    static ChatModel chatModel = new ChatModel() {
+    @ApplicationScoped
+    public static class TestChatModel implements ChatModel {
         @Override
         public ChatResponse chat(ChatRequest chatRequest) {
             responseCount++;
@@ -66,33 +66,26 @@ public class MaxToolCallsPerResponseTest {
                     .finishReason(FinishReason.TOOL_EXECUTION)
                     .build();
         }
-    };
+    }
 
-    @RegisterAiService(maxToolCallsPerResponse = 3, tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = 3, tools = Tools.class)
     public interface AiServiceWithLimit3 {
         String chat(String message);
     }
 
-    @RegisterAiService(maxToolCallsPerResponse = 5, tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = 5, tools = Tools.class)
     public interface AiServiceWithLimit5 {
         String chat(String message);
     }
 
-    @RegisterAiService(maxToolCallsPerResponse = 0, tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(maxToolCallsPerResponse = 0, tools = Tools.class)
     public interface AiServiceUnlimited {
         String chat(String message);
     }
 
-    @RegisterAiService(tools = Tools.class, chatLanguageModelSupplier = ModelSupplier.class)
+    @RegisterAiService(tools = Tools.class)
     public interface AiServiceNoLimit {
         String chat(String message);
-    }
-
-    public static class ModelSupplier implements Supplier<ChatModel> {
-        @Override
-        public ChatModel get() {
-            return chatModel;
-        }
     }
 
     @ApplicationScoped

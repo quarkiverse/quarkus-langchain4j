@@ -24,12 +24,11 @@ public class AutomaticToolProviderTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(TestAiSupplier.class,
-                            TestAiModel.class,
+                    .addClasses(TestAiModel.class,
                             ServiceWithDefaultToolProviderConfig.class,
                             MyCustomToolProvider.class));
 
-    @RegisterAiService(chatLanguageModelSupplier = TestAiSupplier.class)
+    @RegisterAiService
     interface ServiceWithDefaultToolProviderConfig {
         String chat(@UserMessage String msg, @MemoryId Object id);
     }
