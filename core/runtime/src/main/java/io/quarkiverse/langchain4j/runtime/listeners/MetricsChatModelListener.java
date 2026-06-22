@@ -14,6 +14,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tags;
@@ -43,6 +44,10 @@ public class MetricsChatModelListener implements ChatModelListener {
     private final Meter.MeterProvider<Counter> outputTokenUsage;
     private final Meter.MeterProvider<Counter> cacheReadInputTokenUsage;
     private final Meter.MeterProvider<Counter> cacheCreationInputTokenUsage;
+    private final Meter.MeterProvider<DistributionSummary> inputTokenUsageDistribution;
+    private final Meter.MeterProvider<DistributionSummary> outputTokenUsageDistribution;
+    private final Meter.MeterProvider<DistributionSummary> cacheReadInputTokenUsageDistribution;
+    private final Meter.MeterProvider<DistributionSummary> cacheCreationInputTokenUsageDistribution;
     private final Meter.MeterProvider<Timer> duration;
     private final Meter.MeterProvider<Counter> estimatedCost;
 
@@ -68,6 +73,28 @@ public class MetricsChatModelListener implements ChatModelListener {
                 .withRegistry(Metrics.globalRegistry);
         this.cacheCreationInputTokenUsage = Counter.builder("gen_ai.client.token.usage")
                 .description("Measures number of input tokens written to the prompt cache")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "cache_creation")
+                .withRegistry(Metrics.globalRegistry);
+        this.inputTokenUsageDistribution = DistributionSummary.builder("gen_ai.client.token.usage.distribution")
+                .description("Distribution of input tokens used per request")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "input")
+                .withRegistry(Metrics.globalRegistry);
+        this.outputTokenUsageDistribution = DistributionSummary.builder("gen_ai.client.token.usage.distribution")
+                .description("Distribution of output tokens used per request")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "output")
+                .withRegistry(Metrics.globalRegistry);
+        this.cacheReadInputTokenUsageDistribution = DistributionSummary
+                .builder("gen_ai.client.token.usage.distribution")
+                .description("Distribution of input tokens read from the prompt cache per request")
+                .tag("gen_ai.operation.name", "chat")
+                .tag("gen_ai.token.type", "cache_read")
+                .withRegistry(Metrics.globalRegistry);
+        this.cacheCreationInputTokenUsageDistribution = DistributionSummary
+                .builder("gen_ai.client.token.usage.distribution")
+                .description("Distribution of input tokens written to the prompt cache per request")
                 .tag("gen_ai.operation.name", "chat")
                 .tag("gen_ai.token.type", "cache_creation")
                 .withRegistry(Metrics.globalRegistry);
@@ -163,12 +190,18 @@ public class MetricsChatModelListener implements ChatModelListener {
             inputTokenUsage
                     .withTags(tags)
                     .increment(inputTokenCount);
+            inputTokenUsageDistribution
+                    .withTags(tags)
+                    .record(inputTokenCount);
         }
         Integer outputTokenCount = tokenUsage.outputTokenCount();
         if (outputTokenCount != null) {
             outputTokenUsage
                     .withTags(tags)
                     .increment(outputTokenCount);
+            outputTokenUsageDistribution
+                    .withTags(tags)
+                    .record(outputTokenCount);
         }
         CacheTokenUsage cacheTokenUsage = cacheTokenUsageResolver.resolve(tokenUsage);
         Integer cacheReadInputTokens = cacheTokenUsage.cacheReadInputTokens();
@@ -176,12 +209,18 @@ public class MetricsChatModelListener implements ChatModelListener {
             cacheReadInputTokenUsage
                     .withTags(tags)
                     .increment(cacheReadInputTokens);
+            cacheReadInputTokenUsageDistribution
+                    .withTags(tags)
+                    .record(cacheReadInputTokens);
         }
         Integer cacheCreationInputTokens = cacheTokenUsage.cacheCreationInputTokens();
         if (cacheCreationInputTokens != null && cacheCreationInputTokens > 0) {
             cacheCreationInputTokenUsage
                     .withTags(tags)
                     .increment(cacheCreationInputTokens);
+            cacheCreationInputTokenUsageDistribution
+                    .withTags(tags)
+                    .record(cacheCreationInputTokens);
         }
         if (inputTokenCount != null && outputTokenCount != null) {
             Cost costEstimate = costEstimatorService.estimate(responseContext);
