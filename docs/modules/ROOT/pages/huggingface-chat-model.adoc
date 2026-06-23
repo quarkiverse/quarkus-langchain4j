@@ -67,4 +67,4 @@ Hugging Face models do not support tool usage or function calling.
 
 == Configuration Reference
 
-include::includes/quarkus-langchain4j-huggingface.adoc[leveloffset=+1,opts=optional]
+include::includes/quarkus-langchain4j-hugging-face.adoc[leveloffset=+1,opts=optional]
