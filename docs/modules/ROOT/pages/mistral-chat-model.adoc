@@ -50,4 +50,4 @@ public interface Assistant {
 }
 ----
 
-include::includes/quarkus-langchain4j-mistralai.adoc[leveloffset=+1,opts=optional]
+include::includes/quarkus-langchain4j-mistral-ai.adoc[leveloffset=+1,opts=optional]

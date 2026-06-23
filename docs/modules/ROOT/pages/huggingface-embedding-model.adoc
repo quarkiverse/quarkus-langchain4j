@@ -61,4 +61,4 @@ Not all Sentence Transformers models are compatible. If you use a custom model, 
 
 == Configuration Reference
 
-include::includes/quarkus-langchain4j-huggingface.adoc[leveloffset=+1,opts=optional]
+include::includes/quarkus-langchain4j-hugging-face.adoc[leveloffset=+1,opts=optional]

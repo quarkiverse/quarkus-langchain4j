@@ -118,6 +118,40 @@ jobs:
             build-reports.zip
           retention-days: 7
 
+  documentation-check:
+    name: Documentation check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Build with Maven
+        run: ./mvnw -B clean install -DskipTests -Dno-format -ntp
+
+      - name: Validate documentation
+        run: |
+          STATUS=$(git status --porcelain docs/modules/ROOT/pages/includes/)
+          if [ -n "$STATUS" ]; then
+            echo "Generated documentation is not up to date."
+            echo "'git status' output after rebuilding the docs:"
+            git status
+            echo "To fix this (make sure you use JDK 22+ so that all modules are activated):"
+            echo "  1. Run: mvn clean install"
+            echo "  2. Commit the generated documentation files"
+            exit 1
+          else
+            echo "Generated documentation is up to date."
+          fi
+
   jvm-tests:
     needs: quick-build
     strategy:
@@ -316,7 +350,7 @@ jobs:
       - name: Unzip the Maven Repo
         shell: bash
         run: |
-          tar -xzf ../maven-repo.tgz -C ~      
+          tar -xzf ../maven-repo.tgz -C ~
 
       - name: Prepare for conformance tests
         run: |
@@ -327,7 +361,7 @@ jobs:
         run: |
           cd integration-tests/mcp-conformance
           npm -y exec -- @modelcontextprotocol/conformance@0.1.16 client --command "sh client-command.sh" --suite all --expected-failures conformance-baseline.yml
-          
+
 
   build-report:
     runs-on: ubuntu-latest
