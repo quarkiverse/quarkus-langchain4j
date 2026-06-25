@@ -37114,6 +37114,74 @@ endif::add-copy-button-to-env-var[]
 
 
 
+h|[.extension-name]##Quarkus LangChain4j - Workload Identity Federation ModelAuthProvider##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-enabled]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-enabled[`+++quarkus.langchain4j.workload-model-auth-provider.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Workload Identity Federation ModelAuthProvider should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-model-name]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-model-name[`+++quarkus.langchain4j.workload-model-auth-provider.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider name to bind this model authentication provider to. When set, the provider is qualified with `io.quarkiverse.langchain4j.ModelName` and only used by the matching model provider. When not set, the provider is registered as a global default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-token-path]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-token-path[`+++quarkus.langchain4j.workload-model-auth-provider.token-path+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.token-path+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Path to the workload identity provider token file, for example, a SPIFFE JWT-SVID. The token is read from this path and periodically refreshed based on its expiry claim.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_TOKEN_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_TOKEN_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
 h|[.extension-name]##Quarkus LangChain4j Skills##
 h|Type
 h|Default
