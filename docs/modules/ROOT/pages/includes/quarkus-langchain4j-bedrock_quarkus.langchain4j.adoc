@@ -770,7 +770,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++chat: us.amazon.nova-lite-v1:0, stream: anthropic.claude-v2+++`
+|`+++global.amazon.nova-2-lite-v1:0+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-temperature[`+++quarkus.langchain4j.bedrock.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2975,7 +2975,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_MO
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++chat: us.amazon.nova-lite-v1:0, stream: anthropic.claude-v2+++`
+|`+++global.amazon.nova-2-lite-v1:0+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-temperature[`+++quarkus.langchain4j.bedrock."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
