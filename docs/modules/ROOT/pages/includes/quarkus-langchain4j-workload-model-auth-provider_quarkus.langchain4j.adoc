@@ -1,0 +1,74 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-enabled]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-enabled[`+++quarkus.langchain4j.workload-model-auth-provider.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Workload Identity Federation ModelAuthProvider should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-oidc-client-name]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-oidc-client-name[`+++quarkus.langchain4j.workload-model-auth-provider.oidc-client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.oidc-client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the OIDC client to use for the token exchange. If not set, the default OIDC client is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_OIDC_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_OIDC_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-token-path]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-token-path[`+++quarkus.langchain4j.workload-model-auth-provider.token-path+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.token-path+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Path to the workload identity provider token file, for example, a SPIFFE JWT-SVID. The token is read from this path and periodically refreshed based on its expiry claim.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_TOKEN_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_TOKEN_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+|===
+
