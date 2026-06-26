@@ -13,6 +13,7 @@
     <modules>
         <module>chroma</module>
         <module>infinispan</module>
+        <module>lancedb</module>
         <module>milvus</module>
         <module>neo4j</module>
         <module>oracle</module>

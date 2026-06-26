@@ -1,0 +1,192 @@
+= LanceDB Document Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The LanceDB extension allows you to use LanceDB as a vector database for Retrieval-Augmented Generation (RAG) with Quarkus LangChain4j.
+LanceDB is a high-performance, serverless vector database optimized for AI/LLM scenarios, featuring low latency and seamless cross-language data sharing.
+
+== Prerequisites
+
+To use LanceDB as a document store:
+
+* A LanceDB Cloud or Enterprise account is required.
+* An API key for authentication with LanceDB Cloud or Enterprise.
+* The embedding vector dimension must match your embedding model.
+
+[NOTE]
+====
+LanceDB is a serverless vector database that supports multiple distance metrics including L2, cosine, and inner product.
+This extension connects to LanceDB Cloud or Enterprise via its REST API.
+====
+
+== Dependency
+
+To enable LanceDB integration in your Quarkus project, add the following Maven dependency:
+
+:provider-artifact: quarkus-langchain4j-lancedb
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+== Configuration
+
+Configure the LanceDB connection using the following properties:
+
+[source,properties]
+----
+quarkus.langchain4j.lancedb.api-key=your-lancedb-api-key
+quarkus.langchain4j.lancedb.database=your-database-name
+quarkus.langchain4j.lancedb.dimension=384
+----
+
+=== Required Configuration
+
+|===
+|Property |Description
+|`quarkus.langchain4j.lancedb.api-key` |The API key for authenticating with LanceDB Cloud or Enterprise.
+|`quarkus.langchain4j.lancedb.database` |The name of the LanceDB database to connect to.
+|`quarkus.langchain4j.lancedb.dimension` |The dimension of the embedding vectors. Must match the embedding model in use.
+|===
+
+=== Optional Configuration
+
+|===
+|Property |Default |Description
+|`quarkus.langchain4j.lancedb.table-name` |`default` |The name of the table to use for storing embeddings.
+|`quarkus.langchain4j.lancedb.region` |`us-east-1` |The AWS region for LanceDB Cloud.
+|`quarkus.langchain4j.lancedb.endpoint` |_none_ |Custom endpoint URL for LanceDB Enterprise. If not set, LanceDB Cloud is used.
+|`quarkus.langchain4j.lancedb.distance-type` |`l2` |The distance metric for vector similarity search. Accepted values: `l2`, `cosine`, `ip`.
+|===
+
+== Embedding Dimension
+
+You must explicitly configure the dimensionality of the embedding vector:
+
+[source,properties]
+----
+quarkus.langchain4j.lancedb.dimension=384
+----
+
+This value depends on the embedding model in use:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` -> 384
+* OpenAI `text-embedding-ada-002` -> 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+== Distance Type
+
+LanceDB supports multiple distance metrics for similarity search. Configure the metric using the `distance-type` property:
+
+* `l2` (default) - L2 (Euclidean) distance. Best for general-purpose similarity search.
+* `cosine` - Cosine distance. Best for comparing normalized vectors based on direction rather than magnitude.
+* `ip` - Inner product. Best for comparing vectors where magnitude matters.
+
+[source,properties]
+----
+quarkus.langchain4j.lancedb.distance-type=cosine
+----
+
+== Metadata Filtering
+
+The LanceDB extension supports metadata filtering during search operations.
+Filters are translated to LanceDB SQL predicates and applied before vector search (prefilter).
+
+For example, to filter by a `userId` metadata field:
+
+[source,java]
+----
+import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
+
+EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+        .queryEmbedding(queryEmbedding)
+        .filter(metadataKey("userId").isEqualTo("1"))
+        .maxResults(10)
+        .build();
+----
+
+Supported filter comparisons:
+
+* `isEqualTo` / `isNotEqualTo`
+* `isGreaterThan` / `isGreaterThanOrEqualTo`
+* `isLessThan` / `isLessThanOrEqualTo`
+* `isIn` / `isNotIn`
+
+Logical filters: `AND`, `OR`, `NOT`.
+
+== Named Stores
+
+You can configure multiple named LanceDB stores, each with its own connection and configuration.
+This is useful when your application needs to manage embeddings for different domains or tenants.
+
+To configure a named store:
+
+[source,properties]
+----
+quarkus.langchain4j.lancedb.products.api-key=your-api-key
+quarkus.langchain4j.lancedb.products.database=products-db
+quarkus.langchain4j.lancedb.products.dimension=1536
+quarkus.langchain4j.lancedb.products.table-name=product_embeddings
+----
+
+To inject a named store, use the `@EmbeddingStoreName` qualifier:
+
+[source,java]
+----
+@Inject
+@EmbeddingStoreName("products")
+EmbeddingStore<TextSegment> productsStore;
+----
+
+The default store and named stores can coexist.
+If you only need named stores, disable the default store:
+
+[source,properties]
+----
+quarkus.langchain4j.lancedb.default-store-enabled=false
+----
+
+== Usage Example
+
+Once the extension is installed and configured, you can ingest documents into LanceDB and perform similarity search:
+
+[source,java]
+----
+@Inject
+EmbeddingStore<TextSegment> embeddingStore;
+
+@Inject
+EmbeddingModel embeddingModel;
+
+public void ingest(String text, Metadata metadata) {
+    Embedding embedding = embeddingModel.embed(text).content();
+    embeddingStore.add(embedding, new TextSegment(text, metadata));
+}
+
+public List<EmbeddingMatch<TextSegment>> search(String query) {
+    Embedding queryEmbedding = embeddingModel.embed(query).content();
+    EmbeddingSearchResult<TextSegment> result = embeddingStore.search(
+            EmbeddingSearchRequest.builder()
+                    .queryEmbedding(queryEmbedding)
+                    .maxResults(10)
+                    .minScore(0.5)
+                    .build());
+    return result.matches();
+}
+----
+
+== How It Works
+
+The LanceDB extension stores each ingested document as a row in a LanceDB table.
+Each row contains:
+
+* The unique identifier (id)
+* The vector embedding (stored as a fixed-size list of float32)
+* The original text content
+* Optional metadata (stored as JSON-serialized binary)
+
+During retrieval, a vector similarity search is performed using the configured distance metric, with optional metadata pre-filtering.

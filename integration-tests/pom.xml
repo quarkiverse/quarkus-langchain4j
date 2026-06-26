@@ -32,6 +32,7 @@
     <module>rag-pgvector</module>
     <module>rag-pgvector-flyway</module>
     <module>easy-rag</module>
+    <module>rag-lancedb</module>
     <module>tools</module>
     <module>mcp</module>
     <module>mcp-opentelemetry</module>
@@ -126,6 +127,11 @@
                   <dependency>
                       <groupId>io.quarkiverse.langchain4j</groupId>
                       <artifactId>quarkus-langchain4j-easy-rag</artifactId>
+                      <version>999-SNAPSHOT</version>
+                  </dependency>
+                  <dependency>
+                      <groupId>io.quarkiverse.langchain4j</groupId>
+                      <artifactId>quarkus-langchain4j-lancedb</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
                   <dependency>
