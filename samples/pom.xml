@@ -40,6 +40,8 @@
         <module>react-chatbot</module>
         <module>skills</module>
         <module>a2a-agent-discovery</module>
+        <module>workload-identity-federation-spiffe</module>
+        <module>workload-identity-federation-kubernetes</module>
     </modules>
 
     <build>

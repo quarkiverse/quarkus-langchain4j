@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.workload.runtime.WorkloadModelAuthProviderRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -45,6 +46,11 @@ public class WorkloadModelAuthProviderProcessor {
                 .unremovable()
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(Vertx.class)));
+
+        if (buildConfig.modelName().isPresent()) {
+            builder.addQualifier().annotation(ModelName.class)
+                    .addValue("value", buildConfig.modelName().get()).done();
+        }
 
         if (buildConfig.oidcClientName().isPresent()) {
             builder.addInjectionPoint(ClassType.create(DotName.createSimple(OidcClients.class)))
