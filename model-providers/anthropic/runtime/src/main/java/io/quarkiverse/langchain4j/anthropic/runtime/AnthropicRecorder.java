@@ -27,11 +27,15 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.anthropic.QuarkusAnthropicClient;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.ToolSearchType;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
@@ -46,6 +50,8 @@ public class AnthropicRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<AnthropicChatModel.AnthropicChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<AnthropicStreamingChatModel.AnthropicStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private static final String DUMMY_KEY = "dummy";
@@ -64,10 +70,7 @@ public class AnthropicRecorder {
         if (anthropicConfig.enableIntegration()) {
             var chatModelConfig = anthropicConfig.chatModel();
             var apiKey = anthropicConfig.apiKey();
-
-            if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, configName);
 
             if (chatModelConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblem(configName));
@@ -212,10 +215,12 @@ public class AnthropicRecorder {
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, context, configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     QuarkusAnthropicClient.setLogCurlHint(logCurl);
                     QuarkusAnthropicClient.setDisableBetaHint(disableBeta);
+                    QuarkusAnthropicClient.setConfigNameHint(configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
@@ -239,10 +244,7 @@ public class AnthropicRecorder {
         if (anthropicConfig.enableIntegration()) {
             var chatModelConfig = anthropicConfig.chatModel();
             var apiKey = anthropicConfig.apiKey();
-
-            if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, configName);
 
             var builder = AnthropicStreamingChatModel.builder()
                     .baseUrl(anthropicConfig.baseUrl())
@@ -382,10 +384,12 @@ public class AnthropicRecorder {
             return new Function<>() {
                 @Override
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, context, configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     QuarkusAnthropicClient.setLogCurlHint(logCurl);
                     QuarkusAnthropicClient.setDisableBetaHint(disableBeta);
+                    QuarkusAnthropicClient.setConfigNameHint(configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
                                     Any.Literal.INSTANCE),
@@ -401,6 +405,37 @@ public class AnthropicRecorder {
                 }
             };
         }
+    }
+
+    private static void throwIfApiKeyNotConfigured(String apiKey, String configName) {
+        ArcContainer container = Arc.container();
+        if (DUMMY_KEY.equals(apiKey) && container != null && container.isRunning()
+                && !isAuthProviderAvailable(container, configName)) {
+            throw new ConfigValidationException(createApiKeyConfigProblem(configName));
+        }
+    }
+
+    private static <T> void throwIfApiKeyNotConfigured(String apiKey,
+            SyntheticCreationalContext<T> context, String configName) {
+        if (DUMMY_KEY.equals(apiKey) && !isAuthProviderAvailable(context, configName)) {
+            throw new ConfigValidationException(createApiKeyConfigProblem(configName));
+        }
+    }
+
+    private static <T> boolean isAuthProviderAvailable(SyntheticCreationalContext<T> context, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)
+                && Arc.container().instance(ModelAuthProvider.class, ModelName.Literal.of(configName)).isAvailable()) {
+            return true;
+        }
+        return context.getInjectedReference(MODEL_AUTH_PROVIDER_TYPE_LITERAL).isResolvable();
+    }
+
+    private static boolean isAuthProviderAvailable(ArcContainer container, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)
+                && container.instance(ModelAuthProvider.class, ModelName.Literal.of(configName)).isAvailable()) {
+            return true;
+        }
+        return container.instance(ModelAuthProvider.class).isAvailable();
     }
 
     private LangChain4jAnthropicConfig.AnthropicConfig correspondingAnthropicConfig(
