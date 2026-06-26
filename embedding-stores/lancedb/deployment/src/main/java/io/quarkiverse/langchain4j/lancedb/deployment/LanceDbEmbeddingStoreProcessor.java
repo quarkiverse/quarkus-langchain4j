@@ -38,6 +38,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 
 class LanceDbEmbeddingStoreProcessor {
 
@@ -54,6 +55,13 @@ class LanceDbEmbeddingStoreProcessor {
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("com.lancedb", "lancedb-core"));
         producer.produce(new IndexDependencyBuildItem("org.lance", "lance-core"));
+    }
+
+    @BuildStep
+    void runtimeInitializedClasses(BuildProducer<RuntimeInitializedClassBuildItem> producer) {
+        producer.produce(new RuntimeInitializedClassBuildItem("org.apache.arrow.memory.util.MemoryUtil"));
+        producer.produce(new RuntimeInitializedClassBuildItem(
+                "com.fasterxml.jackson.module.jaxb.deser.DataHandlerJsonDeserializer"));
     }
 
     @BuildStep

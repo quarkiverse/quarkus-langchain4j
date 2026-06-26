@@ -15102,6 +15102,352 @@ endif::add-copy-button-to-env-var[]
 
 
 
+h|[.extension-name]##Quarkus LangChain4j - LanceDB##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-default-store-enabled[`+++quarkus.langchain4j.lancedb.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) LanceDB embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-api-key]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-api-key[`+++quarkus.langchain4j.lancedb.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API key for authenticating with LanceDB Cloud or Enterprise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-database]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-database[`+++quarkus.langchain4j.lancedb.database+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.database+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the LanceDB database to connect to.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_DATABASE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_DATABASE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-endpoint]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-endpoint[`+++quarkus.langchain4j.lancedb.endpoint+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.endpoint+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The endpoint URL for LanceDB Enterprise. If not set, LanceDB Cloud will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_ENDPOINT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-region]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-region[`+++quarkus.langchain4j.lancedb.region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The AWS region for LanceDB Cloud.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++us-east-1+++`
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-table-name]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-table-name[`+++quarkus.langchain4j.lancedb.table-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.table-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the table to use for storing embeddings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_TABLE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_TABLE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-dimension]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-dimension[`+++quarkus.langchain4j.lancedb.dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embeddings to be stored. Must match the dimension of the embedding model used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-distance-type]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-distance-type[`+++quarkus.langchain4j.lancedb.distance-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb.distance-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The distance metric for vector similarity search.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB_DISTANCE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB_DISTANCE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`l2`, `cosine`, `ip`
+|`+++l2+++`
+
+h|[[quarkus-langchain4j-lancedb_section_quarkus-langchain4j-lancedb]] [.section-name.section-level0]##link:#quarkus-langchain4j-lancedb_section_quarkus-langchain4j-lancedb[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-database]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-database[`+++quarkus.langchain4j.lancedb."store-name".database+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".database+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The database name for this named store. This property serves as the build-time key that enables named store discovery. If not set, the database name from the runtime configuration will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DATABASE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DATABASE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-api-key]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-api-key[`+++quarkus.langchain4j.lancedb."store-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API key for authenticating with LanceDB Cloud or Enterprise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-database]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-database[`+++quarkus.langchain4j.lancedb."store-name".database+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".database+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the LanceDB database to connect to.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DATABASE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DATABASE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-endpoint]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-endpoint[`+++quarkus.langchain4j.lancedb."store-name".endpoint+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".endpoint+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The endpoint URL for LanceDB Enterprise. If not set, LanceDB Cloud will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__ENDPOINT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-region]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-region[`+++quarkus.langchain4j.lancedb."store-name".region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The AWS region for LanceDB Cloud.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++us-east-1+++`
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-table-name]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-table-name[`+++quarkus.langchain4j.lancedb."store-name".table-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".table-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the table to use for storing embeddings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__TABLE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__TABLE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-dimension]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-dimension[`+++quarkus.langchain4j.lancedb."store-name".dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embeddings to be stored. Must match the dimension of the embedding model used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-distance-type]] [.property-path]##link:#quarkus-langchain4j-lancedb_quarkus-langchain4j-lancedb-store-name-distance-type[`+++quarkus.langchain4j.lancedb."store-name".distance-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.lancedb."store-name".distance-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The distance metric for vector similarity search.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DISTANCE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANCEDB__STORE_NAME__DISTANCE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`l2`, `cosine`, `ip`
+|`+++l2+++`
+
+
+
 h|[.extension-name]##Quarkus LangChain4j - Llama3 - Java##
 h|Type
 h|Default
