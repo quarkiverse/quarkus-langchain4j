@@ -221,6 +221,8 @@ public class AiServicesProcessor {
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
 
+    public static final String AGENTIC_PACKAGE_PREFIX = "dev.langchain4j.agentic.";
+
     private static final Set<DotName> GUARDRAIL_ANNOTATIONS = Set.of(
             TOOL_INPUT_GUARDRAIL, TOOL_INPUT_GUARDRAILS, TOOL_OUTPUT_GUARDRAIL, TOOL_OUTPUT_GUARDRAILS);
 
@@ -673,6 +675,10 @@ public class AiServicesProcessor {
                     return;
                 }
                 if (!ci.isInterface()) {
+                    return;
+                }
+                if (ci.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                    // Agentic interfaces and annotations are checked in the agentic module
                     return;
                 }
                 impliedDefaultRegisterAiService.add(AnnotationInstance.builder(REGISTER_AI_SERVICES).buildWithTarget(ci));

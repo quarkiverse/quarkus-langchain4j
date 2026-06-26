@@ -108,7 +108,8 @@ public class AgenticRecorder {
             @Override
             public Object apply(SyntheticCreationalContext<Object> cdiContext) {
                 ChatModel chatModel;
-                if (info.chatModelInfo() instanceof AiAgentCreateInfo.ChatModelInfo.FromAnnotation) {
+                if (info.chatModelInfo() instanceof AiAgentCreateInfo.ChatModelInfo.FromAnnotation
+                        || info.chatModelInfo() instanceof AiAgentCreateInfo.ChatModelInfo.NotNeeded) {
                     chatModel = null;
                 } else if (info.chatModelInfo() instanceof AiAgentCreateInfo.ChatModelInfo.FromBeanWithName b) {
                     if (NamedConfigUtil.isDefault(b.name())) {
