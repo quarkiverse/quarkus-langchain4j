@@ -37,6 +37,8 @@
         <module>weather-agent</module>
         <module>react-chatbot</module>
         <module>skills</module>
+        <module>workload-identity-federation-spiffe</module>
+        <module>workload-identity-federation-kubernetes</module>
     </modules>
 
     <build>

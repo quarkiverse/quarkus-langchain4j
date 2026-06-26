@@ -12,10 +12,18 @@ import org.jboss.logging.Logger;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkus.oidc.client.OidcClient;
 import io.quarkus.oidc.client.runtime.TokensHelper;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 public class WorkloadModelAuthProvider implements ModelAuthProvider {
+
+    private record IdentityToken(String token, long expiresAt, long timerId) {
+        private boolean isExpired() {
+            final long nowSecs = System.currentTimeMillis() / 1000;
+            return nowSecs > expiresAt;
+        }
+    }
 
     private static final Logger LOG = Logger.getLogger(WorkloadModelAuthProvider.class);
 
@@ -24,8 +32,7 @@ public class WorkloadModelAuthProvider implements ModelAuthProvider {
     private final TokensHelper tokensHelper = new TokensHelper();
     private final Path tokenPath;
     private final String tokenParamName;
-    private volatile String identityToken;
-    private volatile long timerId = -1;
+    private volatile IdentityToken identityToken;
 
     WorkloadModelAuthProvider(Vertx vertx, OidcClient oidcClient, String tokenPath, String tokenParamName) {
         this.vertx = vertx;
@@ -37,64 +44,72 @@ public class WorkloadModelAuthProvider implements ModelAuthProvider {
 
     @Override
     public String getAuthorization(Input input) {
-        String token = identityToken;
-        if (token == null) {
-            token = reloadIdentityToken();
+        IdentityToken current = identityToken;
+        if (isInvalid(current)) {
+            current = loadIdentityToken();
         }
-        if (token == null) {
+        if (current == null) {
             return null;
         }
-        return "Bearer " + tokensHelper.getTokens(oidcClient, Map.of(tokenParamName, token), false)
+        return "Bearer " + tokensHelper.getTokens(oidcClient, Map.of(tokenParamName, current.token), false)
                 .await().indefinitely().getAccessToken();
     }
 
-    private synchronized String reloadIdentityToken() {
-        if (identityToken == null) {
+    private synchronized IdentityToken loadIdentityToken() {
+        if (isInvalid(identityToken)) {
+            cancelRefresh();
             identityToken = loadFromFileSystem();
         }
         return identityToken;
     }
 
-    private String loadFromFileSystem() {
-        if (!Files.exists(tokenPath)) {
-            LOG.warnf("Workload identity token file not found: %s", tokenPath);
-            return null;
-        }
-        try {
-            String token = Files.readString(tokenPath).trim();
-            if (token.isEmpty()) {
-                LOG.errorf("Workload identity token file is empty: %s", tokenPath);
-                return null;
-            }
-            Long expiresAt = getExpiresAt(token);
-            if (expiresAt != null) {
-                scheduleRefresh(expiresAt);
-            }
-            return token;
-        } catch (IOException e) {
-            LOG.errorf(e, "Failed to read workload identity token file: %s", tokenPath);
-            return null;
-        }
-    }
-
-    private void scheduleRefresh(long expiresAt) {
-        cancelRefresh();
+    private long scheduleRefresh(long expiresAt) {
         long nowSecs = System.currentTimeMillis() / 1000;
         long ttlMs = (expiresAt - nowSecs) * 1000;
         // refresh at 85% of TTL, matching Kubernetes token rotation conventions
         long delayMs = (long) (ttlMs * 0.85);
-        if (delayMs > 0) {
-            timerId = vertx.setTimer(delayMs, id -> {
-                identityToken = loadFromFileSystem();
-            });
+        if (delayMs <= 0) {
+            return -1;
         }
+        return vertx.setTimer(delayMs, new Handler<Long>() {
+            @Override
+            public void handle(Long ignored) {
+                WorkloadModelAuthProvider.this.identityToken = loadFromFileSystem();
+            }
+        });
     }
 
     private void cancelRefresh() {
-        if (timerId >= 0) {
-            vertx.cancelTimer(timerId);
-            timerId = -1;
+        if (identityToken != null) {
+            vertx.cancelTimer(identityToken.timerId);
         }
+    }
+
+    private IdentityToken loadFromFileSystem() {
+        if (Files.exists(tokenPath)) {
+            try {
+                String token = Files.readString(tokenPath).trim();
+                if (token.isEmpty()) {
+                    LOG.errorf("Workload identity token file is empty: %s", tokenPath);
+                    return null;
+                }
+                Long expiresAt = getExpiresAt(token);
+                if (expiresAt != null) {
+                    return new IdentityToken(token, expiresAt, scheduleRefresh(expiresAt));
+                } else {
+                    LOG.errorf("Workload identity token or its 'exp' claim is invalid: %s", tokenPath);
+                }
+            } catch (IOException e) {
+                LOG.errorf(e, "Failed to read workload identity token file: %s", tokenPath);
+            }
+        } else {
+            LOG.warnf("Workload identity token file not found: %s", tokenPath);
+        }
+        return null;
+    }
+
+    private static boolean isInvalid(IdentityToken identityToken) {
+        return identityToken == null || identityToken.isExpired();
     }
 
     static Long getExpiresAt(String jwt) {
@@ -105,7 +120,10 @@ public class WorkloadModelAuthProvider implements ModelAuthProvider {
         try {
             String payload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
             JsonObject claims = new JsonObject(payload);
-            return claims.containsKey("exp") ? claims.getLong("exp") : null;
+            if (!claims.containsKey("exp")) {
+                return null;
+            }
+            return claims.getLong("exp");
         } catch (Exception e) {
             LOG.debugf("Failed to decode JWT expiry claim: %s", e.getMessage());
             return null;
