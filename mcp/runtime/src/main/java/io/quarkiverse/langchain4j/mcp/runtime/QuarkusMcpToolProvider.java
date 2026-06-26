@@ -1,6 +1,8 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
@@ -14,39 +16,43 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
 
 public class QuarkusMcpToolProvider extends McpToolProvider {
 
-    QuarkusMcpToolProvider(List<McpClient> mcpClients, boolean exposeResourcesAsTools) {
-        super(mcpClients, false,
+    /**
+     * We keep a separate mapping of client names despite the key being available through client.key()
+     * because calling client.key() may unnecessarily trigger initialization of the client
+     * in cases when it's needed.
+     */
+    private Map<String, McpClient> nameToClient = new HashMap<>();
+
+    QuarkusMcpToolProvider(Map<String, McpClient> nameToClient, boolean exposeResourcesAsTools) {
+        super(nameToClient.values().stream().toList(), false,
                 AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE,
                 Function.identity(),
                 exposeResourcesAsTools ? DefaultMcpResourcesAsToolsPresenter.builder().build() : null,
                 null, null);
+        this.nameToClient = nameToClient;
     }
 
     @Override
     public ToolProviderResult provideTools(ToolProviderRequest request) {
-        return provideTools(request, getMcpClientsFilter(request));
-    }
-
-    private BiPredicate<McpClient, ToolSpecification> getMcpClientsFilter(ToolProviderRequest request) {
         if (request instanceof QuarkusToolProviderRequest quarkusRequest) {
-            return new McpClientKeyFilter(quarkusRequest.getMcpClientNames());
-        }
-        return AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE;
-    }
-
-    private static class McpClientKeyFilter implements BiPredicate<McpClient, ToolSpecification> {
-        private final List<String> keys;
-
-        private McpClientKeyFilter(List<String> keys) {
-            this.keys = keys;
-        }
-
-        @Override
-        public boolean test(McpClient mcpClient, ToolSpecification tool) {
-            // keys == null means no McpToolBox annotation, so no MCP clients, whereas
-            // keys.size() == 0 means all MCP clients
-            return keys != null
-                    && (keys.isEmpty() || keys.stream().anyMatch(name -> name.equals(mcpClient.key())));
+            if (quarkusRequest.getMcpClientNames() == null) {
+                // This means we have no @McpToolBox annotation -> no clients
+                return ToolProviderResult.builder().build();
+            } else if (quarkusRequest.getMcpClientNames().isEmpty()) {
+                // This means we have a @McpToolBox annotation with no arguments -> all clients
+                return provideTools(request, AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE);
+            } else {
+                // This means specific clients were given explicitly... so,
+                // limit the request to only these clients
+                // use the nameToClient map, avoid calling .key() on the client itself
+                // because that may unnecessarily trigger an initialization of it
+                List<McpClient> allowedClients = quarkusRequest.getMcpClientNames().stream()
+                        .map(nameToClient::get)
+                        .toList();
+                return provideTools(request, AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE, allowedClients);
+            }
+        } else {
+            return provideTools(request, AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE);
         }
     }
 
