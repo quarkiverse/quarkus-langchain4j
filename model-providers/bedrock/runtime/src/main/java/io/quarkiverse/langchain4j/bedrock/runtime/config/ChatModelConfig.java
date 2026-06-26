@@ -17,7 +17,7 @@ public interface ChatModelConfig extends AwsClientConfig {
      * Model id to use. See <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html">Models
      * Supported</a>
      */
-    @ConfigDocDefault("chat: us.amazon.nova-lite-v1:0, stream: anthropic.claude-v2")
+    @ConfigDocDefault("global.amazon.nova-2-lite-v1:0")
     Optional<String> modelId();
 
     /**

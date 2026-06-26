@@ -53,6 +53,8 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 @Recorder
 public class BedrockRecorder {
 
+    private static final String DEFAULT_CHAT_MODEL_ID = "global.amazon.nova-2-lite-v1:0";
+
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<BedrockChatModel.Builder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
@@ -122,7 +124,7 @@ public class BedrockRecorder {
             }
 
             var builder = BedrockChatModel.builder()
-                    .modelId(modelConfig.modelId().orElse("us.amazon.nova-lite-v1:0"))
+                    .modelId(modelConfig.modelId().orElse(DEFAULT_CHAT_MODEL_ID))
                     .defaultRequestParameters(paramBuilder.build())
                     .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
 
@@ -215,7 +217,7 @@ public class BedrockRecorder {
             }
 
             var builder = BedrockStreamingChatModel.builder()
-                    .modelId(modelConfig.modelId().orElse("anthropic.claude-v2"))
+                    .modelId(modelConfig.modelId().orElse(DEFAULT_CHAT_MODEL_ID))
                     .defaultRequestParameters(paramsBuilder.build())
                     .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
 
