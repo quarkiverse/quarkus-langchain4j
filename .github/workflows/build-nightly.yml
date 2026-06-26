@@ -49,7 +49,7 @@ jobs:
           PINECONE_PROJECT_ID: ${{ secrets.PINECONE_PROJECT_ID }}
 
       - name: Build with Maven in Native mode
-        run: ./mvnw -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
+        run: ./mvnw -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip -pl '!io.quarkiverse.langchain4j:quarkus-langchain4j-docs'
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
