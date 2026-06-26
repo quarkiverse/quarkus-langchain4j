@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.valid
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateNoMethodParameters;
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateRequiredParameterTypes;
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateStaticMethod;
+import static io.quarkiverse.langchain4j.deployment.AiServicesProcessor.AGENTIC_PACKAGE_PREFIX;
 import static io.quarkiverse.langchain4j.deployment.AiServicesProcessor.TOOLBOX;
 
 import java.lang.reflect.InvocationHandler;
@@ -91,6 +92,14 @@ public class AgenticProcessor {
     private static final MethodDescriptor HANDLER_INVOKE = MethodDescriptor.ofMethod(
             InvocationHandler.class, "invoke", Object.class, Object.class, Method.class, Object[].class);
 
+    private static final Set<DotName> CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS = Set.of(
+            AgenticLangChain4jDotNames.A2A_AGENT,
+            AgenticLangChain4jDotNames.SEQUENCE_AGENT,
+            AgenticLangChain4jDotNames.PARALLEL_AGENT,
+            AgenticLangChain4jDotNames.PARALLEL_MAPPER_AGENT,
+            AgenticLangChain4jDotNames.LOOP_AGENT,
+            AgenticLangChain4jDotNames.CONDITIONAL_AGENT);
+
     private static final List<DotName> ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS = List.of(
             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
             AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER,
@@ -126,6 +135,9 @@ public class AgenticProcessor {
         nonAiMapProducer.produce(DetectedNonAiAgentAsMapBuildItem.from(classToNonAiAgentMethodsMap));
 
         ifaceToAgentMethodsMap.forEach((classInfo, methods) -> {
+            if (classInfo.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                return;
+            }
             Optional<MethodInfo> chatModelSupplier = classInfo.methods().stream()
                     .filter(m -> Modifier.isStatic(m.flags()) && m.hasAnnotation(
                             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER))
@@ -418,7 +430,10 @@ public class AgenticProcessor {
 
     @BuildStep
     AnnotationsImpliesAiServiceBuildItem implyAiService() {
-        return new AnnotationsImpliesAiServiceBuildItem(AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS);
+        List<DotName> annotations = AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
+                .filter(a -> !CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS.contains(a))
+                .toList();
+        return new AnnotationsImpliesAiServiceBuildItem(annotations);
     }
 
     @BuildStep
@@ -608,14 +623,18 @@ public class AgenticProcessor {
         IndexView index = indexBuildItem.getIndex();
         Set<String> requestedChatModelNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
-            String chatModelName = detectedAiAgentBuildItem.getModelName() != null
-                    ? detectedAiAgentBuildItem.getModelName()
-                    : NamedConfigUtil.DEFAULT_NAME;
-            requestedChatModelNames.add(chatModelName);
-
-            AiAgentCreateInfo.ChatModelInfo chatModelInfo = detectedAiAgentBuildItem.getChatModelSupplier() != null
-                    ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
-                    : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
+            AiAgentCreateInfo.ChatModelInfo chatModelInfo;
+            if (detectedAiAgentBuildItem.getChatModelSupplier() != null) {
+                chatModelInfo = new AiAgentCreateInfo.ChatModelInfo.FromAnnotation();
+            } else if (requiresChatModel(detectedAiAgentBuildItem)) {
+                String chatModelName = detectedAiAgentBuildItem.getModelName() != null
+                        ? detectedAiAgentBuildItem.getModelName()
+                        : NamedConfigUtil.DEFAULT_NAME;
+                requestedChatModelNames.add(chatModelName);
+                chatModelInfo = new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
+            } else {
+                chatModelInfo = new AiAgentCreateInfo.ChatModelInfo.NotNeeded();
+            }
 
             boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings, index);
             String ifaceName = detectedAiAgentBuildItem.getIface().name().toString();
@@ -736,6 +755,14 @@ public class AgenticProcessor {
             }
         }
         return false;
+    }
+
+    private static boolean requiresChatModel(DetectedAiAgentBuildItem agent) {
+        return agent.getAgenticMethods().stream()
+                .flatMap(m -> m.annotations().stream())
+                .map(AnnotationInstance::name)
+                .anyMatch(name -> AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.contains(name)
+                        && !CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS.contains(name));
     }
 
     @BuildStep
@@ -1218,7 +1245,7 @@ public class AgenticProcessor {
                 }
                 MethodInfo method = instance.target().asMethod();
                 // don't validate any of the upstream agents
-                if (method.declaringClass().name().toString().startsWith("dev.langchain4j.agentic")) {
+                if (method.declaringClass().name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
                     return;
                 }
                 List<MethodParameterInfo> parameters = method.parameters();
