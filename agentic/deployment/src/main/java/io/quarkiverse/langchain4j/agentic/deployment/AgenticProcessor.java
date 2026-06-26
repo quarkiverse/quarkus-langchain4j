@@ -208,7 +208,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.AGENT_LISTENER), annotationToValidate);
         }
     }
@@ -240,7 +239,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.CHAT_MEMORY), annotationToValidate);
         }
     }
@@ -271,7 +269,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.RETRIEVER), annotationToValidate);
         }
     }
@@ -376,7 +373,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.RETRIEVAL_AUGMENTOR), annotationToValidate);
         }
     }
@@ -392,7 +388,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.TOOL_PROVIDER), annotationToValidate);
         }
     }
@@ -408,7 +403,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.OBJECT, DotNames.OBJECT_ARRAY), annotationToValidate);
         }
     }
@@ -575,7 +569,7 @@ public class AgenticProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    void registerChatSupplierParameterResolver(List<DetectedAiAgentBuildItem> agents,
+    void registerSupplierParameterResolver(List<DetectedAiAgentBuildItem> agents,
             CombinedIndexBuildItem indexBuildItem,
             AgenticRecorder recorder) {
         IndexView index = indexBuildItem.getIndex();
@@ -591,7 +585,7 @@ public class AgenticProcessor {
                 }
             }
         }
-        recorder.registerChatSupplierParameterResolver(qualifierNames);
+        recorder.registerSupplierParameterResolver(qualifierNames);
     }
 
     /**

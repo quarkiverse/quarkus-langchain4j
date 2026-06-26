@@ -15,6 +15,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
+import dev.langchain4j.service.tool.ToolService;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -39,12 +40,12 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     // needed by Arc
     public QuarkusAiServiceContext() {
         super(null);
-        this.toolService = new QuarkusToolService();
+        this.toolService = new ToolService();
     }
 
     public QuarkusAiServiceContext(Class<?> aiServiceClass) {
         super(aiServiceClass);
-        this.toolService = new QuarkusToolService();
+        this.toolService = new ToolService();
     }
 
     /**

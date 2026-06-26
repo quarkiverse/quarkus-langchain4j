@@ -58,7 +58,6 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.message.VideoContent;
 import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.data.video.Video;
-import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.invocation.InvocationContext;
@@ -95,12 +94,8 @@ import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
-import dev.langchain4j.service.tool.BeforeToolExecution;
-import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
-import dev.langchain4j.service.tool.ToolErrorContext;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
-import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -115,7 +110,6 @@ import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
-import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
@@ -498,15 +492,8 @@ public class AiServiceMethodImplementationSupport {
                 toolCallsCount++;
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-
-                fireBeforeToolExecution(context, toolExecutionRequest, invocationContext);
-
-                ToolExecutionResult toolExecutionResult = toolExecutor == null
-                        ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
-                        : executeTool(toolExecutionRequest, toolExecutor, invocationContext,
-                                context.toolService.argumentsErrorHandler(), context.toolService.executionErrorHandler());
-
-                fireAfterToolExecution(context, toolExecutionRequest, toolExecutionResult, invocationContext);
+                ToolExecutionResult toolExecutionResult = context.toolService.executeTool(
+                        invocationContext, toolExecutors, toolExecutionRequest, null, null);
 
                 // New firing
                 context.eventListenerRegistrar.fireEvent(
@@ -792,76 +779,6 @@ public class AiServiceMethodImplementationSupport {
             }
         }
         return Optional.empty();
-    }
-
-    private static void fireBeforeToolExecution(AiServiceContext context,
-            ToolExecutionRequest toolExecutionRequest, InvocationContext invocationContext) {
-        if (context.toolService instanceof QuarkusToolService qts && qts.getBeforeToolExecution() != null) {
-            qts.getBeforeToolExecution().accept(BeforeToolExecution.builder()
-                    .request(toolExecutionRequest)
-                    .invocationContext(invocationContext)
-                    .build());
-        }
-    }
-
-    private static void fireAfterToolExecution(AiServiceContext context,
-            ToolExecutionRequest toolExecutionRequest, ToolExecutionResult toolExecutionResult,
-            InvocationContext invocationContext) {
-        if (context.toolService instanceof QuarkusToolService qts && qts.getAfterToolExecution() != null) {
-            qts.getAfterToolExecution().accept(ToolExecution.builder()
-                    .request(toolExecutionRequest)
-                    .result(toolExecutionResult)
-                    .invocationContext(invocationContext)
-                    .build());
-        }
-    }
-
-    private static ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
-            InvocationContext invocationContext,
-            ToolArgumentsErrorHandler toolArgumentsErrorHandler,
-            ToolExecutionErrorHandler toolExecutionErrorHandler) {
-        ToolExecutionResult toolExecutionResult;
-        try {
-            toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
-        } catch (ToolArgumentsException e) {
-            if (toolArgumentsErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool arguments. Executing  ",
-                        toolArgumentsErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolArgumentsErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        } catch (Exception e) {
-            if (e instanceof PreventsErrorHandlerExecution) {
-                throw e;
-            }
-            if (toolExecutionErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool. Executing '",
-                        toolExecutionErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolExecutionErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        }
-        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-
-        return toolExecutionResult;
     }
 
     static ChatRequest createChatRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,

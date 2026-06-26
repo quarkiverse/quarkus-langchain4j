@@ -225,20 +225,26 @@ public class AiServicesRecorder {
                         quarkusAiServices.toolArgumentsErrorHandler(toolArgumentsErrorHandler);
                     }
 
+                    ToolExecutionErrorHandler toolExecutionErrorHandler;
                     if (info.toolExecutionErrorHandlerClassName() != null) {
-                        ToolExecutionErrorHandler toolArgumentsErrorHandler = (ToolExecutionErrorHandler) creationalContext
+                        toolExecutionErrorHandler = (ToolExecutionErrorHandler) creationalContext
                                 .getInjectedReference(
                                         loadClass(info.toolExecutionErrorHandlerClassName()));
-                        quarkusAiServices.toolExecutionErrorHandler(toolArgumentsErrorHandler);
                     } else {
                         InstanceHandle<ToolExecutionErrorHandler> instance = Arc.container()
                                 .instance(ToolExecutionErrorHandler.class, DefaultToolExecutionErrorHandler.Literal.INSTANCE);
-                        if (instance.isAvailable()) {
-                            quarkusAiServices.toolExecutionErrorHandler(instance.get());
-                        } else {
-                            quarkusAiServices.toolExecutionErrorHandler(new LoggingToolExecutionErrorHandler());
-                        }
+                        toolExecutionErrorHandler = instance.isAvailable() ? instance.get()
+                                : new LoggingToolExecutionErrorHandler();
                     }
+                    quarkusAiServices.toolExecutionErrorHandler((cause, ctx) -> {
+                        if (ctx.rawError() instanceof PreventsErrorHandlerExecution) {
+                            Exception raw = ctx.rawError();
+                            if (raw instanceof RuntimeException re)
+                                throw re;
+                            throw new RuntimeException(raw);
+                        }
+                        return toolExecutionErrorHandler.handle(cause, ctx);
+                    });
 
                     // if no explicit tools are provided, check if we should use a tool provider
                     if (info.toolProviderSupplier() != null) {

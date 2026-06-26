@@ -123,7 +123,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 "tool_choice": {"type": "function", "function": {"name": "my_function"}},
                 "time_limit": 120000,
                 "chat_template_kwargs": {
-                    "thinking": true
+                    "thinking": true,
+                    "enable_thinking": true
                 },
                 "include_reasoning": true,
                 "reasoning_effort": "low",

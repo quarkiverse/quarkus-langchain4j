@@ -78,9 +78,9 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
-    public void registerChatSupplierParameterResolver(Set<String> qualifierNames) {
-        DeclarativeUtil.addChatSupplierParameterResolver(
-                new CdiChatSupplierParameterResolver(Collections.unmodifiableSet(qualifierNames)));
+    public void registerSupplierParameterResolver(Set<String> qualifierNames) {
+        DeclarativeUtil.addSupplierParameterResolver(
+                new CdiSupplierParameterResolver(Collections.unmodifiableSet(qualifierNames)));
     }
 
     @RuntimeInit
