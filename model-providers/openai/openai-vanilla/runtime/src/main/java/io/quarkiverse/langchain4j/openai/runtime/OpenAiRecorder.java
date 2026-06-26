@@ -44,6 +44,8 @@ import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
 import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.openai.DisabledAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiAudioTranscriptionModelBuilderFactory;
@@ -62,6 +64,8 @@ import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ResponsesChatModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.proxy.ProxyConfiguration;
 import io.quarkus.proxy.ProxyConfigurationRegistry;
@@ -95,6 +99,8 @@ public class OpenAiRecorder {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiAudioTranscriptionModel.Builder>>> AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private static final String DUMMY_KEY = "dummy";
     private static final String OPENAI_BASE_URL = "https://api.openai.com/v1/";
@@ -111,9 +117,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -158,6 +162,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
 
@@ -192,9 +197,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             var builder = (QuarkusOpenAiStreamingChatModelBuilderFactory.Builder) OpenAiStreamingChatModel.builder();
             builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
@@ -227,6 +230,7 @@ public class OpenAiRecorder {
                 @Override
                 public StreamingChatModel apply(
                         SyntheticCreationalContext<StreamingChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
 
@@ -258,9 +262,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
 
@@ -345,6 +347,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     List<ChatModelListener> listeners = new ArrayList<>();
                     for (ChatModelListener listener : context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL)) {
                         listeners.add(listener);
@@ -373,9 +376,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
 
@@ -463,6 +464,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     List<ChatModelListener> listeners = new ArrayList<>();
                     for (ChatModelListener listener : context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL)) {
                         listeners.add(listener);
@@ -519,9 +521,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -547,6 +547,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
                     Optional<Proxy> embeddingProxy = resolveProxy(openAiConfig, proxyRegistry);
                     if (embeddingProxy.isPresent()) {
@@ -575,9 +576,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -600,6 +599,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ModerationModel apply(SyntheticCreationalContext<ModerationModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
@@ -626,9 +626,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             ImageModelConfig imageModelConfig = openAiConfig.imageModel();
             var builder = QuarkusOpenAiImageModel.builder()
                     .configName(configName)
@@ -675,6 +673,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
@@ -703,9 +702,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -729,6 +726,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public AudioTranscriptionModel apply(SyntheticCreationalContext<AudioTranscriptionModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL,
                                     Any.Literal.INSTANCE),
@@ -808,24 +806,59 @@ public class OpenAiRecorder {
         return openAiConfig;
     }
 
-    private ConfigValidationException.Problem[] createApiKeyConfigProblems(String configName) {
+    private static ConfigValidationException.Problem[] createApiKeyConfigProblems(String configName) {
         return createConfigProblems("api-key", configName);
     }
 
-    private ConfigValidationException.Problem[] createMaxRetriesConfigProblems(String configName) {
+    private static ConfigValidationException.Problem[] createMaxRetriesConfigProblems(String configName) {
         return new ConfigValidationException.Problem[] { new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.openai%smax-retries must be greater than zero",
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."))) };
     }
 
-    private ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
+    private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
         return new ConfigValidationException.Problem[] { createConfigProblem(key, configName) };
     }
 
-    private ConfigValidationException.Problem createConfigProblem(String key, String configName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.openai%s%s is required but it could not be found in any config source",
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    private static void throwIfApiKeyNotConfigured(String apiKey, String baseUrl, String configName) {
+        ArcContainer container = Arc.container();
+        if (isApiKeyMissing(apiKey, baseUrl) && container != null && container.isRunning()
+                && !isAuthProviderAvailable(container, configName)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+        }
+    }
+
+    private static <T> void throwIfApiKeyNotConfigured(String apiKey, String baseUrl,
+            SyntheticCreationalContext<T> context, String configName) {
+        if (isApiKeyMissing(apiKey, baseUrl) && !isAuthProviderAvailable(context, configName)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+        }
+    }
+
+    private static boolean isApiKeyMissing(String apiKey, String baseUrl) {
+        return DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(baseUrl);
+    }
+
+    private static <T> boolean isAuthProviderAvailable(SyntheticCreationalContext<T> context, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)
+                && Arc.container().instance(ModelAuthProvider.class, ModelName.Literal.of(configName)).isAvailable()) {
+            return true;
+        }
+        return context.getInjectedReference(MODEL_AUTH_PROVIDER_TYPE_LITERAL).isResolvable();
+    }
+
+    private static boolean isAuthProviderAvailable(ArcContainer container, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)
+                && container.instance(ModelAuthProvider.class, ModelName.Literal.of(configName)).isAvailable()) {
+            return true;
+        }
+        return container.instance(ModelAuthProvider.class).isAvailable();
     }
 
     public void cleanUp(ShutdownContext shutdown) {
