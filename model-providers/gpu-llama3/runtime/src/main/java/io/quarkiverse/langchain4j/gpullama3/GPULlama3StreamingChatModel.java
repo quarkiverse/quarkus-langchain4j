@@ -3,10 +3,14 @@ package io.quarkiverse.langchain4j.gpullama3;
 import static io.quarkiverse.langchain4j.runtime.VertxUtil.runOutEventLoop;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -14,6 +18,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import dev.langchain4j.model.output.FinishReason;
 
 /**
  * GPULlama3StreamingChatModel is a specialized implementation of the {@link StreamingChatModel} for Quarkus-Langchain4j
@@ -82,20 +87,58 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
      */
     private void coreDoChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         try {
+            // The StreamingParser detects and buffers tool-call JSON in real time (<tool_call> and
+            // <|python_tag|> markers), so streaming is never suppressed — plain-text responses
+            // stream token-by-token even when tool specifications are registered.
             GPULlama3ResponseParser.StreamingParser parser = GPULlama3ResponseParser.createStreamingParser(handler, getModel());
 
             String rawResponse = modelResponse(chatRequest, parser::onToken);
 
+            // Finalize parser: resolves any unclosed <|python_tag|> tool call (LLaMA 3.1)
+            List<ToolCallExtract> toolCalls = parser.finish();
+
+            // Check for tool calls
+            // Fallback for models that emit raw JSON without <tool_call> tags (rare)
+            if (toolCalls.isEmpty()) {
+                toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
+            }
+            if (!toolCalls.isEmpty()) {
+                LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
+                String thinkingContent = parser.getThinkingContent();
+                LOG.debugf("[Parsed tool turn] toolCalls=%d  thinking=>>>%s<<<", toolCalls.size(), thinkingContent);
+                List<ToolExecutionRequest> toolReqs = new ArrayList<>();
+                for (ToolCallExtract tc : toolCalls) {
+                    String callId = tc.id().orElseGet(() -> generateCallId());
+                    LOG.infof("[Tool call] → %s(%s)", tc.name(),
+                            tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
+                    toolReqs.add(ToolExecutionRequest.builder()
+                            .id(callId)
+                            .name(tc.name())
+                            .arguments(tc.argumentsJson())
+                            .build());
+                }
+                handler.onCompleteResponse(ChatResponse.builder()
+                        .aiMessage(AiMessage.builder()
+                                .thinking(thinkingContent)
+                                .toolExecutionRequests(toolReqs)
+                                .build())
+                        .finishReason(FinishReason.TOOL_EXECUTION)
+                        .build());
+                return;
+            }
+
+            // Plain text — parse thinking and deliver final response
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
 
-            ChatResponse chatResponse = ChatResponse.builder()
+            LOG.debugf("[Parsed response] thinking=>>>%s<<<", parsed.getThinkingContent());
+            LOG.infof("[LLM response]\n%s", parsed.getActualResponse());
+
+            handler.onCompleteResponse(ChatResponse.builder()
                     .aiMessage(AiMessage.builder()
                             .text(parsed.getActualResponse())
                             .thinking(parsed.getThinkingContent())
                             .build())
-                    .build();
-
-            handler.onCompleteResponse(chatResponse);
+                    .build());
         } catch (Exception e) {
             LOG.error("Error in GPULlama3 coreDoChat", e);
             handler.onError(e);
@@ -117,6 +160,10 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
         private Integer seed;
         private Integer maxTokens;
         private Boolean onGPU;
+        private Boolean withPrefillDecode;
+        private Integer prefillBatchSize;
+        private Boolean enableThinking;
+        private String deviceMemory;
 
         public Builder() {
             // This is public so it can be extended
@@ -167,11 +214,32 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
             return this;
         }
 
+        public Builder withPrefillDecode(Boolean withPrefillDecode) {
+            this.withPrefillDecode = withPrefillDecode;
+            return this;
+        }
+
+        public Builder prefillBatchSize(Integer prefillBatchSize) {
+            this.prefillBatchSize = prefillBatchSize;
+            return this;
+        }
+
+        public Builder enableThinking(Boolean enableThinking) {
+            this.enableThinking = enableThinking;
+            return this;
+        }
+
+        public Builder deviceMemory(String deviceMemory) {
+            this.deviceMemory = deviceMemory;
+            return this;
+        }
+
         public GPULlama3StreamingChatModel build() {
             GPULlama3ModelHolder h = modelHolder != null
                     ? modelHolder
                     : new GPULlama3ModelHolder(modelCachePath, modelName, quantization,
-                            temperature, topP, seed, maxTokens, onGPU);
+                            temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize, enableThinking,
+                            deviceMemory);
             return new GPULlama3StreamingChatModel(h);
         }
     }
