@@ -13,8 +13,10 @@ import dev.langchain4j.spi.ServiceHelper;
 import dev.langchain4j.spi.prompt.PromptTemplateFactory;
 import io.quarkiverse.langchain4j.spi.PromptTemplateFactoryContentFilterProvider;
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.impl.LazyValue;
 import io.quarkus.qute.Engine;
+import io.quarkus.qute.EngineBuilder;
 import io.quarkus.qute.ParserHelper;
 import io.quarkus.qute.ParserHook;
 import io.quarkus.qute.TemplateInstance;
@@ -27,8 +29,14 @@ public class QuarkusPromptTemplateFactory implements PromptTemplateFactory {
         engineLazyValue.set(new LazyValue<>(new Supplier<Engine>() {
             @Override
             public Engine get() {
-                return Arc.container().instance(Engine.class).get().newBuilder()
-                        .addParserHook(new MustacheTemplateVariableStyleParserHook()).build();
+                ArcContainer container = Arc.container();
+                EngineBuilder builder = container.instance(Engine.class).get().newBuilder()
+                        .addParserHook(new MustacheTemplateVariableStyleParserHook());
+                // fire event to call DebugQuteEngineObserver#configureEngine(@Observes EngineBuilder builder, QuteConfig config)
+                // to track the langchain4j engine builder with Qute debugger
+                // see https://github.com/quarkusio/quarkus/blob/84414f0fd571881f5601c1dc73a0f43c07080a87/extensions/qute/runtime/src/main/java/io/quarkus/qute/runtime/debug/DebugQuteEngineObserver.java#L41
+                container.beanManager().getEvent().fire(builder);
+                return builder.build();
             }
         }));
     }
@@ -42,7 +50,8 @@ public class QuarkusPromptTemplateFactory implements PromptTemplateFactory {
 
     @Override
     public Template create(Input input) {
-        return new QuteTemplate(engineLazyValue.get().get().parse(input.getTemplate()));
+        String javaElementUri = input.getName();
+        return new QuteTemplate(engineLazyValue.get().get().parse(input.getTemplate(), null, javaElementUri));
     }
 
     public static class MustacheTemplateVariableStyleParserHook implements ParserHook {
