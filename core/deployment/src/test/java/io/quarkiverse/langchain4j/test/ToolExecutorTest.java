@@ -117,6 +117,11 @@ class ToolExecutorTest {
         int noArgs() {
             return 1;
         }
+
+        @Tool
+        int singleInt(int n) {
+            return n;
+        }
     }
 
     @ParameterizedTest
@@ -287,6 +292,22 @@ class ToolExecutorTest {
         String result = toolExecutor.execute(request, null);
 
         assertThat(result).isEqualTo("1");
+    }
+
+    @Test
+    void should_execute_tool_with_well_formed_object_arguments() {
+        executeAndAssert("{\"n\": 2}", "singleInt", "2");
+    }
+
+    @Test
+    void should_unwrap_double_encoded_json_arguments() {
+        // Some models (e.g. WatsonX ibm/granite-*) return arguments as a JSON string wrapping the JSON object.
+        executeAndAssert("\"{\\\"n\\\": 2}\"", "singleInt", "2");
+    }
+
+    @Test
+    void should_reject_genuinely_malformed_string_arguments() {
+        executeAndExpectFailure("\"not json\"", "singleInt");
     }
 
     @Test

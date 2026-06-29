@@ -237,8 +237,38 @@ public class QuarkusToolExecutor implements ToolExecutor {
         if (argumentsJsonStr == null || argumentsJsonStr.isEmpty()) {
             return Collections.emptySet();
         }
-        Map<String, Object> raw = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(argumentsJsonStr, MAP_TYPE_REF);
+        Map<String, Object> raw = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
+                .readValue(unwrapDoubleEncodedJson(argumentsJsonStr), MAP_TYPE_REF);
         return raw.keySet();
+    }
+
+    /**
+     * Some models (for example WatsonX {@code ibm/granite-*}) occasionally return tool call arguments as a JSON
+     * string that itself contains the JSON object, i.e. double-encoded like {@code "{ \"n\": 2 }"} instead of the
+     * expected {@code { "n": 2 }}. Feeding that quoted string directly to the object mapper fails to map onto the
+     * tool parameters. This method conservatively detects that case and returns the decoded inner JSON object.
+     * <p>
+     * The unwrap only happens when the trimmed input is a JSON string token whose decoded value is itself a JSON
+     * object (starts with {@code {}). Normal object payloads and legitimate scalar strings are returned untouched.
+     */
+    private String unwrapDoubleEncodedJson(String argumentsJsonStr) {
+        if (argumentsJsonStr == null) {
+            return null;
+        }
+        String trimmed = argumentsJsonStr.trim();
+        if (trimmed.length() < 2 || trimmed.charAt(0) != '"' || trimmed.charAt(trimmed.length() - 1) != '"') {
+            return argumentsJsonStr;
+        }
+        try {
+            String decoded = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(trimmed, String.class);
+            if (decoded != null && decoded.trim().startsWith("{")) {
+                log.debugv("Unwrapping double-encoded JSON tool arguments {0}", argumentsJsonStr);
+                return decoded;
+            }
+        } catch (JsonProcessingException e) {
+            // Not a decodable JSON string token, leave the original input untouched.
+        }
+        return argumentsJsonStr;
     }
 
     public static Object parseDefaultValue(String defaultValue, String parameterName, Class<?> parameterClass) {
@@ -283,7 +313,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
         if (argumentsJsonStr == null || argumentsJsonStr.isEmpty()) {
             return Collections.emptyMap();
         }
-        Mappable mappable = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(argumentsJsonStr, loadMapperClass());
+        Mappable mappable = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
+                .readValue(unwrapDoubleEncodedJson(argumentsJsonStr), loadMapperClass());
         return mappable.obtainFieldValuesMap();
     }
 
