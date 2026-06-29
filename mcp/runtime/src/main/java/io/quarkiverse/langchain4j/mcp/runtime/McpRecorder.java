@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.mcp.runtime;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -244,10 +245,10 @@ public class McpRecorder {
         return new Function<>() {
             @Override
             public ToolProvider apply(SyntheticCreationalContext<ToolProvider> context) {
-                List<McpClient> clients = new ArrayList<>();
+                Map<String, McpClient> clients = new HashMap<>();
                 for (String mcpClientName : mcpClientNames) {
                     McpClientName.Literal qualifier = McpClientName.Literal.of(mcpClientName);
-                    clients.add(context.getInjectedReference(McpClient.class, qualifier));
+                    clients.put(mcpClientName, context.getInjectedReference(McpClient.class, qualifier));
                 }
                 boolean exposeResourcesAsTools = mcpRuntimeConfiguration.getValue().exposeResourcesAsTools().orElse(false);
                 return new QuarkusMcpToolProvider(clients, exposeResourcesAsTools);
