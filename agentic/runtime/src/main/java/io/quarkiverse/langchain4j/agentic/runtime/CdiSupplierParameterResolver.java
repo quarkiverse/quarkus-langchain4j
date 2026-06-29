@@ -5,14 +5,14 @@ import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Set;
 
-import dev.langchain4j.agentic.declarative.ChatSupplierParameterResolver;
+import dev.langchain4j.agentic.declarative.SupplierParameterResolver;
 import io.quarkus.arc.Arc;
 
-public class CdiChatSupplierParameterResolver implements ChatSupplierParameterResolver {
+public class CdiSupplierParameterResolver implements SupplierParameterResolver {
 
     private final Set<String> qualifierNames;
 
-    public CdiChatSupplierParameterResolver(Set<String> qualifierNames) {
+    public CdiSupplierParameterResolver(Set<String> qualifierNames) {
         this.qualifierNames = qualifierNames;
     }
 

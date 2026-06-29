@@ -23,7 +23,7 @@ import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class CdiChatSupplierParameterResolverTest extends OpenAiBaseTest {
+public class CdiSupplierParameterResolverTest extends OpenAiBaseTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()

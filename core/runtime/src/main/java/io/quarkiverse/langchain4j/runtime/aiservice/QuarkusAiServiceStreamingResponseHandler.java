@@ -22,7 +22,6 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -48,16 +47,11 @@ import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import dev.langchain4j.service.tool.BeforeToolExecution;
-import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
-import dev.langchain4j.service.tool.ToolErrorContext;
-import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
-import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolServiceContext;
 import dev.langchain4j.service.tool.search.ToolSearchService;
-import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.vertx.core.Context;
 
@@ -363,85 +357,6 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    private void fireBeforeToolExecution(ToolExecutionRequest toolExecutionRequest,
-            InvocationContext invocationContext,
-            Consumer<BeforeToolExecution> externalBeforeHandler) {
-        BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
-                .request(toolExecutionRequest)
-                .invocationContext(invocationContext)
-                .build();
-        if (context.toolService instanceof QuarkusToolService qts && qts.getBeforeToolExecution() != null) {
-            qts.getBeforeToolExecution().accept(beforeToolExecution);
-        }
-        if (externalBeforeHandler != null) {
-            externalBeforeHandler.accept(beforeToolExecution);
-        }
-    }
-
-    private void fireAfterToolExecution(ToolExecutionRequest toolExecutionRequest,
-            ToolExecutionResult toolExecutionResult, InvocationContext invocationContext,
-            Consumer<ToolExecution> externalAfterHandler) {
-        ToolExecution toolExecution = ToolExecution.builder()
-                .request(toolExecutionRequest)
-                .result(toolExecutionResult)
-                .invocationContext(invocationContext)
-                .build();
-        if (context.toolService instanceof QuarkusToolService qts && qts.getAfterToolExecution() != null) {
-            qts.getAfterToolExecution().accept(toolExecution);
-        }
-        if (externalAfterHandler != null) {
-            externalAfterHandler.accept(toolExecution);
-        }
-    }
-
-    private ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
-            InvocationContext invocationContext,
-            ToolArgumentsErrorHandler toolArgumentsErrorHandler,
-            ToolExecutionErrorHandler toolExecutionErrorHandler) {
-        ToolExecutionResult toolExecutionResult;
-        try {
-            toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
-        } catch (ToolArgumentsException e) {
-            if (toolArgumentsErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool arguments. Executing  ",
-                        toolArgumentsErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolArgumentsErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        } catch (Exception e) {
-            if (e instanceof PreventsErrorHandlerExecution) {
-                throw e;
-            }
-            if (toolExecutionErrorHandler != null) {
-                log.debugv(e, "Error occurred while executing tool. Executing '",
-                        toolExecutionErrorHandler.getClass().getName() + "' to handle it");
-                ToolErrorContext errorContext = ToolErrorContext.builder()
-                        .toolExecutionRequest(toolExecutionRequest)
-                        .invocationContext(invocationContext)
-                        .build();
-                ToolErrorHandlerResult toolErrorHandlerResult = toolExecutionErrorHandler.handle(e, errorContext);
-                return ToolExecutionResult.builder()
-                        .isError(true)
-                        .resultText(toolErrorHandlerResult.text())
-                        .build();
-            } else {
-                throw e;
-            }
-        }
-        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-
-        return toolExecutionResult;
-    }
-
     @Override
     public void onCompleteResponse(ChatResponse completeResponse) {
         if (isCancelled()) {
@@ -493,24 +408,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
                             continue;
                         }
-                        // Fire before tool execution handlers (stored AgentListener callbacks + external)
-                        fireBeforeToolExecution(toolExecutionRequest, invocationContext,
-                                beforeToolExecutionHandler);
-
-                        String toolName = toolExecutionRequest.name();
-                        ToolExecutor toolExecutor = toolExecutors.get(toolName);
-                        ToolExecutionResult toolExecutionResult = toolExecutor == null
-                                ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
-                                : executeTool(
-                                        toolExecutionRequest,
-                                        toolExecutor,
-                                        invocationContext,
-                                        context.toolService.argumentsErrorHandler(),
-                                        context.toolService.executionErrorHandler());
-
-                        // Fire after tool execution handlers (stored AgentListener callbacks + external)
-                        fireAfterToolExecution(toolExecutionRequest, toolExecutionResult, invocationContext,
-                                toolExecuteHandler);
+                        ToolExecutionResult toolExecutionResult = context.toolService.executeTool(
+                                invocationContext, toolExecutors, toolExecutionRequest,
+                                beforeToolExecutionHandler, toolExecuteHandler);
 
                         fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
                         rawToolResults.add(toolExecutionResult);
