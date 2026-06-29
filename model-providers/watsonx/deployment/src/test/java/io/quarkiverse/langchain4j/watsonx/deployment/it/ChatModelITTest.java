@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.ibm.watsonx.ai.chat.model.ExtractionTags;
 import com.ibm.watsonx.ai.core.Json;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -31,7 +30,6 @@ import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
-import dev.langchain4j.model.watsonx.WatsonxChatRequestParameters;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -43,6 +41,8 @@ public class ChatModelITTest {
     static final String API_KEY = System.getenv("WATSONX_API_KEY");
     static final String PROJECT_ID = System.getenv("WATSONX_PROJECT_ID");
     static final String URL = System.getenv("WATSONX_URL");
+    static final String DEPLOYMENT_ID = System.getenv("WATSONX_DEPLOYMENT_ID");
+    static final String GRANITE_3_3_DEPLOYMENT_ID = System.getenv("WATSONX_GRANITE_3_3_DEPLOYMENT_ID");
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -51,11 +51,17 @@ public class ChatModelITTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.timeout", "30s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"wrong-key\".api-key", "wrong-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.model-name",
-                    "ibm/granite-3-3-8b-instruct")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.think", "think")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.response",
-                    "response")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.deployment-id",
+                    GRANITE_3_3_DEPLOYMENT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.think.opening",
+                    "<think>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.think.closing",
+                    "</think>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.response.opening",
+                    "<response>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.response.closing",
+                    "</response>")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"deployment\".chat-model.deployment-id", DEPLOYMENT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
@@ -69,11 +75,16 @@ public class ChatModelITTest {
     @ModelName("think-model")
     ChatModel thinkingChatModel;
 
+    @Inject
+    @ModelName("deployment")
+    ChatModel deploymentChatModel;
+
     @Test
     void test_chat() {
 
         ChatRequest chatRequest = ChatRequest.builder()
                 .messages(UserMessage.from("Hello"))
+                .parameters(ChatRequestParameters.builder().modelName("openai/gpt-oss-120b").build())
                 .build();
         var chatResponse = assertDoesNotThrow(() -> chatModel.chat(chatRequest));
         var text = chatResponse.aiMessage().text();
@@ -176,33 +187,6 @@ public class ChatModelITTest {
     }
 
     @Test
-    void test_chat_thinking_with_parameters() {
-
-        WatsonxChatRequestParameters parameters = WatsonxChatRequestParameters.builder()
-                .modelName("ibm/granite-3-3-8b-instruct")
-                .thinking(new ExtractionTags("think", "response"))
-                .build();
-
-        ChatRequest request = ChatRequest.builder()
-                .messages(UserMessage.from("Why the sky is blue?"))
-                .parameters(parameters)
-                .build();
-
-        var chatResponse = assertDoesNotThrow(() -> chatModel.chat(request));
-        var text = chatResponse.aiMessage().text();
-
-        assertNotNull(chatResponse);
-        assertNotNull(text);
-        assertFalse(text.isBlank());
-        assertFalse(text.contains("<think>") && text.contains("</think>"));
-        assertFalse(text.contains("<response>") && text.contains("</response>"));
-
-        var thinkingMessage = chatResponse.aiMessage().thinking();
-        assertNotNull(thinkingMessage);
-        assertFalse(thinkingMessage.isBlank());
-    }
-
-    @Test
     void test_chat_tool_without_params() {
 
         ChatRequest request = ChatRequest.builder()
@@ -264,5 +248,18 @@ public class ChatModelITTest {
 
         var ex = assertThrows(LangChain4jException.class, () -> wrongKeyChatModel.chat(request));
         assertTrue(ex.getMessage().contains("Provided API key could not be found."));
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "WATSONX_DEPLOYMENT_ID", matches = ".+")
+    void test_chat_with_deployment_id() {
+
+        ChatRequest request = ChatRequest.builder()
+                .messages(UserMessage.from("Hello!"))
+                .build();
+
+        var chatResponse = assertDoesNotThrow(() -> deploymentChatModel.chat(request));
+        var assistantMessage = chatResponse.aiMessage();
+        assertTrue(!assistantMessage.text().isBlank());
     }
 }

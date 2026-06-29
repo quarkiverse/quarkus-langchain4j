@@ -28,6 +28,15 @@ public interface ChatModelConfig {
     String modelName();
 
     /**
+     * The deployment ID of a model deployed in watsonx.ai.
+     * <p>
+     * Use this when targeting a custom model deployment instead of a foundation model. When set, it takes precedence over
+     * {@code modelName}, and
+     * neither {@code projectId} nor {@code spaceId} is required.
+     */
+    Optional<String> deploymentId();
+
+    /**
      * Specifies how the model should choose which tool to call during a request.
      * <p>
      * This value can be:
@@ -263,13 +272,42 @@ public interface ChatModelConfig {
          * <p>
          * Example: {@code <think> ... </think>}
          */
-        String think();
+        Think think();
 
         /**
          * The XML-like tag enclosing the model’s final response.
          * <p>
          * Optional — if not defined, all text outside the reasoning tag is treated as the response.
          */
-        Optional<String> response();
+        Optional<Response> response();
     }
+
+    @ConfigGroup
+    public interface Think {
+
+        /**
+         * The opening delimiter for the model's internal reasoning section.
+         */
+        String opening();
+
+        /**
+         * The closing delimiter for the model's internal reasoning section.
+         */
+        String closing();
+    }
+
+    @ConfigGroup
+    public interface Response {
+
+        /**
+         * The opening delimiter for the model's final response section.
+         */
+        String opening();
+
+        /**
+         * The closing delimiter for the model's final response section.
+         */
+        String closing();
+    }
+
 }

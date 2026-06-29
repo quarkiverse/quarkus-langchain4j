@@ -108,6 +108,19 @@ quarkus.langchain4j.watsonx.chat-model.temperature=0.2
 
 If a chat model is configured, Quarkus automatically registers a `ChatModel` / `StreamingChatModel` bean.
 
+=== Using a Deployment
+
+As an alternative to `model-name`, you can target a model deployed in watsonx.ai by specifying its `deployment-id`. When set, the deployment ID takes precedence over `model-name`, and neither `project-id` nor `space-id` is required.
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+
+# Use a deployed model instead of a foundation model
+quarkus.langchain4j.watsonx.chat-model.deployment-id=${DEPLOYMENT_ID}
+----
+
 === Injection
 
 [source,java]
@@ -130,20 +143,32 @@ This ensures that LangChain4j can automatically extract the reasoning and respon
 === Models that return reasoning and response together
 
 Use **`ExtractionTags`** when the model outputs reasoning and response in the same text string.  
-The tags define XML-like markers used to separate the reasoning from the final response.
+Configure the exact opening and closing delimiters used by the model.
+
+==== Example for **ibm/granite-3-3-8b-instruct**
 
 [source,properties]
 ----
-# Example configuration for ibm/granite-3-3-8b-instruct
 quarkus.langchain4j.watsonx.chat-model.model-name=ibm/granite-3-3-8b-instruct
-quarkus.langchain4j.watsonx.chat-model.thinking.tags.think=think
-quarkus.langchain4j.watsonx.chat-model.thinking.tags.response=response
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.opening=<think>
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.closing=</think>
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.opening=<response>
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.response.closing=</response>
+----
+
+==== Example for **google/gemma-4-31b-it**
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.chat-model.model-name=google/gemma-4-31b-it
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.opening=<|channel>thought\n
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.closing=<channel|>
 ----
 
 ==== Behavior
 
-- If **both tags** are specified, they are used directly to extract reasoning and response segments.  
-- If **only the reasoning tag** is specified, everything outside that tag is considered the response.
+- If **both `think` and `response`** delimiters are specified, they are used to extract reasoning and response segments respectively.
+- If **only `think`** delimiters are specified, everything outside that delimiter pair is treated as the response.
 
 [source,java]
 ----
@@ -206,7 +231,7 @@ streamingChatModel.chat(chatRequest, new StreamingChatResponseHandler() {
 [NOTE]
 ====
 - Ensure that the selected model supports reasoning output.  
-- Use `thinking.tags` for models that embed reasoning and response in a single text string.  
+- Use `thinking.tags` for models that embed reasoning and response in a single text string, specifying the full opening and closing delimiters explicitly.  
 - Use `thinking.effort` or `thinking=true` for models that already separate reasoning and response automatically.
 ====
 
