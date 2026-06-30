@@ -38,9 +38,37 @@ public interface LangChain4jGoogleGenAiConfig {
     interface GoogleGenAiConfig {
 
         /**
-         * The API key
+         * The API key.
+         * <p>
+         * Required when using the Gemini Developer API backend (the default). When {@code vertex-ai} is set to
+         * {@code true}, the API key is not used and authentication relies on Application Default Credentials (ADC).
          */
         Optional<String> apiKey();
+
+        /**
+         * Whether to use the Vertex AI backend instead of the Gemini Developer API.
+         * <p>
+         * When set to {@code true}, requests are sent to the Vertex AI endpoint and authentication uses Google
+         * Application Default Credentials (ADC) instead of an API key. In that case {@code project} and {@code location}
+         * must be configured (or provided through the standard {@code GOOGLE_CLOUD_PROJECT} /
+         * {@code GOOGLE_CLOUD_LOCATION} environment variables).
+         */
+        @WithDefault("false")
+        Boolean vertexAi();
+
+        /**
+         * The Google Cloud project id to use when {@code vertex-ai} is enabled.
+         * <p>
+         * If not set, the {@code GOOGLE_CLOUD_PROJECT} environment variable is used.
+         */
+        Optional<String> project();
+
+        /**
+         * The Google Cloud location (region) to use when {@code vertex-ai} is enabled, e.g. {@code us-central1}.
+         * <p>
+         * If not set, the {@code GOOGLE_CLOUD_LOCATION} environment variable is used.
+         */
+        Optional<String> location();
 
         /**
          * Meant to be used for testing only in order to override the base URL used by the client

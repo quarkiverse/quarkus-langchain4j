@@ -57,7 +57,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The API key
+The API key.
+
+Required when using the Gemini Developer API backend (the default). When `vertex-ai` is set to `true`, the API key is not used and authentication relies on Application Default Credentials (ADC).
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -65,6 +67,75 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GEN
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-vertex-ai]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-vertex-ai[`+++quarkus.langchain4j.google.genai.vertex-ai+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.vertex-ai+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to use the Vertex AI backend instead of the Gemini Developer API.
+
+When set to `true`, requests are sent to the Vertex AI endpoint and authentication uses Google Application Default Credentials (ADC) instead of an API key. In that case `project` and `location` must be configured (or provided through the standard `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` environment variables).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_VERTEX_AI+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_VERTEX_AI+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-project]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-project[`+++quarkus.langchain4j.google.genai.project+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.project+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Google Cloud project id to use when `vertex-ai` is enabled.
+
+If not set, the `GOOGLE_CLOUD_PROJECT` environment variable is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_PROJECT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_PROJECT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-location]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-location[`+++quarkus.langchain4j.google.genai.location+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai.location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Google Cloud location (region) to use when `vertex-ai` is enabled, e.g. `us-central1`.
+
+If not set, the `GOOGLE_CLOUD_LOCATION` environment variable is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_LOCATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -516,7 +587,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The API key
+The API key.
+
+Required when using the Gemini Developer API backend (the default). When `vertex-ai` is set to `true`, the API key is not used and authentication relies on Application Default Credentials (ADC).
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -524,6 +597,75 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GEN
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-vertex-ai]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-vertex-ai[`+++quarkus.langchain4j.google.genai."model-name".vertex-ai+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".vertex-ai+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to use the Vertex AI backend instead of the Gemini Developer API.
+
+When set to `true`, requests are sent to the Vertex AI endpoint and authentication uses Google Application Default Credentials (ADC) instead of an API key. In that case `project` and `location` must be configured (or provided through the standard `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` environment variables).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__VERTEX_AI+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__VERTEX_AI+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-project]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-project[`+++quarkus.langchain4j.google.genai."model-name".project+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".project+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Google Cloud project id to use when `vertex-ai` is enabled.
+
+If not set, the `GOOGLE_CLOUD_PROJECT` environment variable is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__PROJECT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__PROJECT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-location]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-location[`+++quarkus.langchain4j.google.genai."model-name".location+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.google.genai."model-name".location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Google Cloud location (region) to use when `vertex-ai` is enabled, e.g. `us-central1`.
+
+If not set, the `GOOGLE_CLOUD_LOCATION` environment variable is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__LOCATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
