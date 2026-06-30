@@ -22,9 +22,7 @@ import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
-import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
-import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.arc.SyntheticCreationalContext;
@@ -107,19 +105,7 @@ public class AgenticRecorder {
         return new Function<>() {
             @Override
             public Object apply(SyntheticCreationalContext<Object> cdiContext) {
-                ChatModel chatModel;
-                if (info.chatModelInfo() instanceof AiAgentCreateInfo.ChatModelInfo.FromAnnotation
-                        || info.chatModelInfo() instanceof AiAgentCreateInfo.ChatModelInfo.NotNeeded) {
-                    chatModel = null;
-                } else if (info.chatModelInfo() instanceof AiAgentCreateInfo.ChatModelInfo.FromBeanWithName b) {
-                    if (NamedConfigUtil.isDefault(b.name())) {
-                        chatModel = cdiContext.getInjectedReference(ChatModel.class);
-                    } else {
-                        chatModel = cdiContext.getInjectedReference(ChatModel.class, ModelName.Literal.of(b.name()));
-                    }
-                } else {
-                    throw new IllegalStateException("Unknown type: " + info.chatModelInfo().getClass());
-                }
+                ChatModel chatModel = info.chatModelInfo().resolve(cdiContext);
 
                 Class<?> agentClass = loadClassSafe(info);
                 Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
