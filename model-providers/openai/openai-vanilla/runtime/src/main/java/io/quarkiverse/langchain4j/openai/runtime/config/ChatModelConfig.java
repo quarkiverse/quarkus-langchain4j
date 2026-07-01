@@ -11,6 +11,17 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
+     * Which OpenAI chat API to use.
+     * <p>
+     * {@code chat-completions} uses the legacy {@code POST /v1/chat/completions} endpoint.
+     * {@code responses} uses the newer {@code POST /v1/responses} endpoint, which is required for some
+     * newer models and features (reasoning summaries, server tools, response chaining via
+     * {@code previous-response-id}, etc.).
+     */
+    @WithDefault("chat-completions")
+    Api api();
+
+    /**
      * Model name to use
      */
     @WithDefault("gpt-4o-mini")
@@ -50,6 +61,14 @@ public interface ChatModelConfig {
      * reasoning tokens.
      */
     Optional<Integer> maxCompletionTokens();
+
+    /**
+     * An upper bound for the number of tokens that can be generated for a response, including visible output tokens and
+     * reasoning tokens.
+     * <p>
+     * Used when {@link #api()} is set to {@code responses}. If not set, {@link #maxCompletionTokens()} is used as a fallback.
+     */
+    Optional<Integer> maxOutputTokens();
 
     /**
      * Number between -2.0 and 2.0.
@@ -121,4 +140,88 @@ public interface ChatModelConfig {
      */
     @ConfigDocDefault("default")
     Optional<String> serviceTier();
+
+    /**
+     * Whether to store the response for later retrieval via the Responses API.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<Boolean> store();
+
+    /**
+     * The ID of a previous response to continue a multi-turn conversation.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<String> previousResponseId();
+
+    /**
+     * Truncation strategy for model responses.
+     * Supported values are {@code auto} and {@code disabled}.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<String> truncation();
+
+    /**
+     * Additional output data to include in the model response.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<List<String>> include();
+
+    /**
+     * Level of detail for reasoning summaries returned by reasoning models.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<String> reasoningSummary();
+
+    /**
+     * Controls the verbosity of the model's text output.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<String> textVerbosity();
+
+    /**
+     * A key used to identify prompts for caching purposes.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<String> promptCacheKey();
+
+    /**
+     * Controls how long prompt cache entries are retained.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<String> promptCacheRetention();
+
+    /**
+     * The number of most likely tokens to return at each position, each with an associated log probability.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<Integer> topLogprobs();
+
+    /**
+     * Whether to allow parallel tool calls when tools are enabled.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<Boolean> parallelToolCalls();
+
+    /**
+     * Maximum number of tool calls the model may make in a single response.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<Integer> maxToolCalls();
+
+    /**
+     * A stable identifier used to help detect users that may be violating OpenAI's usage policies.
+     * Only used when {@link #api()} is set to {@code responses}.
+     */
+    Optional<String> safetyIdentifier();
+
+    /**
+     * Whether to include obfuscation fields in streaming responses.
+     * Only used when {@link #api()} is set to {@code responses} with a streaming chat model.
+     */
+    Optional<Boolean> streamIncludeObfuscation();
+
+    enum Api {
+        CHAT_COMPLETIONS,
+        RESPONSES
+    }
 }

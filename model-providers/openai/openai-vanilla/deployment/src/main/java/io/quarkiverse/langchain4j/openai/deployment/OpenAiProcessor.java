@@ -24,6 +24,8 @@ import dev.langchain4j.model.openai.OpenAiAudioTranscriptionModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.openai.spi.OpenAiAudioTranscriptionModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiChatModelBuilderFactory;
@@ -48,6 +50,7 @@ import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFacto
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.runtime.OpenAiModelAuthProviderFilter;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -271,5 +274,14 @@ public class OpenAiProcessor {
         reflectiveClassProducer
                 .produce(ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).build());
         reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OPEN_AI_EMBEDDING_DESERIALIZER).build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OpenAiResponsesChatModel.class)
+                .methods().fields().build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OpenAiResponsesStreamingChatModel.class)
+                .methods().fields().build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OpenAiResponsesChatModel.Builder.class)
+                .methods().fields().build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OpenAiResponsesStreamingChatModel.Builder.class)
+                .methods().fields().build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OpenAiModelAuthProviderFilter.class).build());
     }
 }

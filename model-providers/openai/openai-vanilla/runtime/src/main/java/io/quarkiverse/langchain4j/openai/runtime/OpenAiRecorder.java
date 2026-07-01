@@ -36,8 +36,13 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.openai.DisabledAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiAudioTranscriptionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
@@ -49,17 +54,20 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.openai.runtime.config.AudioTranscriptionModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig.Api;
 import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.proxy.ProxyConfiguration;
 import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.config.ConfigValidationException;
 
 @Recorder
@@ -104,6 +112,9 @@ public class OpenAiRecorder {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            if (chatModelConfig.api() == Api.RESPONSES) {
+                return responsesChatModel(configName, openAiConfig, chatModelConfig, apiKey);
+            }
             var builder = (QuarkusOpenAiChatModelBuilderFactory.Builder) OpenAiChatModel.builder();
             builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
 
@@ -182,6 +193,9 @@ public class OpenAiRecorder {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            if (chatModelConfig.api() == Api.RESPONSES) {
+                return responsesStreamingChatModel(configName, openAiConfig, chatModelConfig, apiKey);
+            }
             var builder = (QuarkusOpenAiStreamingChatModelBuilderFactory.Builder) OpenAiStreamingChatModel.builder();
             builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
             builder
@@ -474,6 +488,135 @@ public class OpenAiRecorder {
                 }
             };
         }
+    }
+
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> responsesChatModel(String configName,
+            LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, ChatModelConfig chatModelConfig, String apiKey) {
+        var httpClientBuilder = createResponsesHttpClientBuilder(openAiConfig);
+        var builder = OpenAiResponsesChatModel.builder()
+                .httpClientBuilder(httpClientBuilder)
+                .baseUrl(openAiConfig.baseUrl())
+                .apiKey(apiKey)
+                .modelName(chatModelConfig.modelName())
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()));
+        applyResponsesChatModelConfig(builder, openAiConfig, chatModelConfig);
+        return new Function<>() {
+            @Override
+            public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                configureResponsesHttpClient(openAiConfig, configName, httpClientBuilder);
+                builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                        .collect(Collectors.toList()));
+                return builder.build();
+            }
+        };
+    }
+
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> responsesStreamingChatModel(
+            String configName, LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, ChatModelConfig chatModelConfig,
+            String apiKey) {
+        var httpClientBuilder = createResponsesHttpClientBuilder(openAiConfig);
+        var builder = OpenAiResponsesStreamingChatModel.builder()
+                .httpClientBuilder(httpClientBuilder)
+                .baseUrl(openAiConfig.baseUrl())
+                .apiKey(apiKey)
+                .modelName(chatModelConfig.modelName())
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()));
+        applyResponsesStreamingChatModelConfig(builder, openAiConfig, chatModelConfig);
+        return new Function<>() {
+            @Override
+            public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                configureResponsesHttpClient(openAiConfig, configName, httpClientBuilder);
+                builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                        .collect(Collectors.toList()));
+                return builder.build();
+            }
+        };
+    }
+
+    private JaxRsHttpClientBuilder createResponsesHttpClientBuilder(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
+        var httpClientBuilder = new JaxRsHttpClientBuilder();
+        Duration timeout = openAiConfig.timeout().orElse(Duration.ofSeconds(10));
+        httpClientBuilder.connectTimeout(timeout).readTimeout(timeout);
+        return httpClientBuilder;
+    }
+
+    private void configureResponsesHttpClient(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, String configName,
+            JaxRsHttpClientBuilder httpClientBuilder) {
+        openAiConfig.tlsConfigurationName().ifPresent(tlsName -> Arc.container()
+                .instance(TlsConfigurationRegistry.class)
+                .get()
+                .get(tlsName)
+                .ifPresent(httpClientBuilder::tlsConfiguration));
+        ModelAuthProvider.resolve(configName)
+                .ifPresent(ignored -> httpClientBuilder
+                        .addClientProvider(new OpenAiModelAuthProviderFilter(configName)));
+    }
+
+    private void applyResponsesChatModelConfig(OpenAiResponsesChatModel.Builder builder,
+            LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, ChatModelConfig chatModelConfig) {
+        chatModelConfig.temperature().ifPresent(builder::temperature);
+        chatModelConfig.topP().ifPresent(builder::topP);
+        chatModelConfig.responseFormat().map(OpenAiRecorder::toResponseFormat).ifPresent(builder::responseFormat);
+        chatModelConfig.strictJsonSchema().ifPresent(builder::strictJsonSchema);
+        chatModelConfig.serviceTier().ifPresent(builder::serviceTier);
+        chatModelConfig.reasoningEffort().ifPresent(builder::reasoningEffort);
+        chatModelConfig.store().ifPresent(builder::store);
+        chatModelConfig.previousResponseId().ifPresent(builder::previousResponseId);
+        chatModelConfig.truncation().ifPresent(builder::truncation);
+        chatModelConfig.include().ifPresent(builder::include);
+        chatModelConfig.reasoningSummary().ifPresent(builder::reasoningSummary);
+        chatModelConfig.textVerbosity().ifPresent(builder::textVerbosity);
+        chatModelConfig.promptCacheKey().ifPresent(builder::promptCacheKey);
+        chatModelConfig.promptCacheRetention().ifPresent(builder::promptCacheRetention);
+        chatModelConfig.topLogprobs().ifPresent(builder::topLogprobs);
+        chatModelConfig.parallelToolCalls().ifPresent(builder::parallelToolCalls);
+        chatModelConfig.maxToolCalls().ifPresent(builder::maxToolCalls);
+        chatModelConfig.safetyIdentifier().ifPresent(builder::safetyIdentifier);
+        resolveMaxOutputTokens(chatModelConfig).ifPresent(builder::maxOutputTokens);
+        openAiConfig.organizationId().ifPresent(builder::organizationId);
+    }
+
+    private void applyResponsesStreamingChatModelConfig(OpenAiResponsesStreamingChatModel.Builder builder,
+            LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, ChatModelConfig chatModelConfig) {
+        chatModelConfig.temperature().ifPresent(builder::temperature);
+        chatModelConfig.topP().ifPresent(builder::topP);
+        chatModelConfig.responseFormat().map(OpenAiRecorder::toResponseFormat).ifPresent(builder::responseFormat);
+        chatModelConfig.strictJsonSchema().ifPresent(builder::strictJsonSchema);
+        chatModelConfig.serviceTier().ifPresent(builder::serviceTier);
+        chatModelConfig.reasoningEffort().ifPresent(builder::reasoningEffort);
+        chatModelConfig.store().ifPresent(builder::store);
+        chatModelConfig.previousResponseId().ifPresent(builder::previousResponseId);
+        chatModelConfig.truncation().ifPresent(builder::truncation);
+        chatModelConfig.include().ifPresent(builder::include);
+        chatModelConfig.reasoningSummary().ifPresent(builder::reasoningSummary);
+        chatModelConfig.textVerbosity().ifPresent(builder::textVerbosity);
+        chatModelConfig.promptCacheKey().ifPresent(builder::promptCacheKey);
+        chatModelConfig.promptCacheRetention().ifPresent(builder::promptCacheRetention);
+        chatModelConfig.topLogprobs().ifPresent(builder::topLogprobs);
+        chatModelConfig.parallelToolCalls().ifPresent(builder::parallelToolCalls);
+        chatModelConfig.maxToolCalls().ifPresent(builder::maxToolCalls);
+        chatModelConfig.safetyIdentifier().ifPresent(builder::safetyIdentifier);
+        chatModelConfig.streamIncludeObfuscation().ifPresent(builder::streamIncludeObfuscation);
+        resolveMaxOutputTokens(chatModelConfig).ifPresent(builder::maxOutputTokens);
+        openAiConfig.organizationId().ifPresent(builder::organizationId);
+    }
+
+    private Optional<Integer> resolveMaxOutputTokens(ChatModelConfig chatModelConfig) {
+        if (chatModelConfig.maxOutputTokens().isPresent()) {
+            return chatModelConfig.maxOutputTokens();
+        }
+        return chatModelConfig.maxCompletionTokens();
+    }
+
+    private static ResponseFormat toResponseFormat(String format) {
+        return switch (format.toLowerCase()) {
+            case "json" -> ResponseFormat.JSON;
+            case "text" -> ResponseFormat.TEXT;
+            default -> throw new IllegalArgumentException(
+                    String.format("Unknown response format: %s, must be one of: [json, text]", format));
+        };
     }
 
     @SuppressWarnings({ "removal" })
