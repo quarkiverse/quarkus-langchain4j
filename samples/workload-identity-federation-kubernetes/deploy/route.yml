@@ -1,0 +1,13 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: workload-identity-federation-kubernetes
+  namespace: workload-identity-k8s
+spec:
+  to:
+    kind: Service
+    name: workload-identity-federation-kubernetes
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge

@@ -5,14 +5,16 @@
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parent</artifactId>
         <version>999-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>quarkus-langchain4j-model-auth-providers-parent</artifactId>
-    <name>Quarkus LangChain4j - Model Auth Providers - Parent</name>
+    <artifactId>quarkus-langchain4j-workload-model-auth-provider-parent</artifactId>
+    <name>Quarkus LangChain4j - Workload Identity Federation ModelAuthProvider - Parent</name>
     <packaging>pom</packaging>
 
     <modules>
-        <module>oidc-model-auth-provider</module>
-        <module>workload-model-auth-provider</module>
+        <module>deployment</module>
+        <module>runtime</module>
     </modules>
-    
+
+
 </project>
