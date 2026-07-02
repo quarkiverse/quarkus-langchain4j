@@ -175,36 +175,8 @@ Reasoning models often exhibit a tradeoff between training complexity and infere
 
 Quarkus LangChain4j enables orchestration across multiple model types using `@RegisterAiService`.
 
-[mermaid,ai_service_orchestration,svg]
-----
-flowchart LR
-    App[Quarkus Application]
-    AIS[AI Service]
-    CM[Chat Model]
-    MM[Moderation Model]
-    IM[Image Model]
-    EM[Embedding Model]
-    CMP[Chat Model Provider]
-    MMP[Moderation Model Provider]
-    IMP[Image Model Provider]
-    EMP[Embedding Model Provider]
-
-    App e1@-->|1 - Invoke method| AIS
-    AIS e2@-.->|2 - Invoke models| CM
-    AIS e3@-.->|2 - Invoke models| EM
-    AIS e4@-.->|2 - Invoke models| IM
-    AIS e5@-.->|2 - Invoke models| MM
-    CM e6@--> CMP
-    EM e7@--> EMP
-    IM e8@--> IMP
-    MM e9@--> MMP
-    AIS e0@-->|3 - Provide result| App
-
-    class A,B,C,D,E,F node;
-    class e0,e1,e2,e3,e4,e5,e6,e7,e8,e9 edge;
-    classDef node fill:#4A93E9,stroke:white,color:white
-    classDef edge stroke-width:3px,stroke:#DF1862
-----
+// Generated from diagrams/ai-service-orchestration.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::ai-service-orchestration.svg[AI service orchestration]
 
 == Customizing Model Builders
 
