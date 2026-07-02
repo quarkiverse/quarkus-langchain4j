@@ -69,8 +69,7 @@ public class GoogleGenAiRecorder {
         if (config.enableIntegration()) {
             var chatModelConfig = config.chatModel();
 
-            String apiKey = config.apiKey().orElse(null);
-            throwIfApiKeyNotConfigured(apiKey, configName);
+            validateAuthConfig(config, configName);
 
             var builder = GoogleGenAiChatModel.builder()
                     .modelName(chatModelConfig.modelId())
@@ -100,7 +99,7 @@ public class GoogleGenAiRecorder {
 
                     var managedExecutor = context.getInjectedReference(ManagedExecutor.class);
                     var proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
-                    builder.client(createClient(config, managedExecutor, openTelemetryAvailable, apiKey, proxyRegistry));
+                    builder.client(createClient(config, managedExecutor, openTelemetryAvailable, proxyRegistry));
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
 
@@ -128,8 +127,7 @@ public class GoogleGenAiRecorder {
         if (config.enableIntegration()) {
             var chatModelConfig = config.chatModel();
 
-            String apiKey = config.apiKey().orElse(null);
-            throwIfApiKeyNotConfigured(apiKey, configName);
+            validateAuthConfig(config, configName);
 
             var builder = GoogleGenAiStreamingChatModel.builder()
                     .modelName(chatModelConfig.modelId())
@@ -159,7 +157,7 @@ public class GoogleGenAiRecorder {
 
                     var managedExecutor = context.getInjectedReference(ManagedExecutor.class);
                     var proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
-                    builder.client(createClient(config, managedExecutor, openTelemetryAvailable, apiKey, proxyRegistry));
+                    builder.client(createClient(config, managedExecutor, openTelemetryAvailable, proxyRegistry));
                     builder.executor(managedExecutor);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
@@ -189,8 +187,7 @@ public class GoogleGenAiRecorder {
         if (config.enableIntegration()) {
             var embeddingModelConfig = config.embeddingModel();
 
-            String apiKey = config.apiKey().orElse(null);
-            throwIfApiKeyNotConfigured(apiKey, configName);
+            validateAuthConfig(config, configName);
 
             var builder = GoogleGenAiEmbeddingModel.builder()
                     .modelName(embeddingModelConfig.modelId())
@@ -216,7 +213,7 @@ public class GoogleGenAiRecorder {
 
                     var managedExecutor = context.getInjectedReference(ManagedExecutor.class);
                     var proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
-                    builder.client(createClient(config, managedExecutor, openTelemetryAvailable, apiKey, proxyRegistry));
+                    builder.client(createClient(config, managedExecutor, openTelemetryAvailable, proxyRegistry));
 
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
@@ -235,7 +232,7 @@ public class GoogleGenAiRecorder {
     }
 
     private Client createClient(GoogleGenAiConfig config, ManagedExecutor managedExecutor,
-            boolean openTelemetryAvailable, String apiKey, ProxyConfigurationRegistry proxyRegistry) {
+            boolean openTelemetryAvailable, ProxyConfigurationRegistry proxyRegistry) {
         Dispatcher dispatcher = new Dispatcher(managedExecutor);
         OkHttpClient.Builder okHttpBuilder = new OkHttpClient.Builder()
                 .dispatcher(dispatcher);
@@ -267,7 +264,15 @@ public class GoogleGenAiRecorder {
                 .httpOptions(httpOptions.build())
                 .clientOptions(clientOptions);
 
-        clientBuilder.apiKey(apiKey);
+        if (config.vertexAi()) {
+            // Use the Vertex AI backend with Application Default Credentials (ADC).
+            // The GenAI SDK resolves credentials through GoogleCredentials.getApplicationDefault().
+            clientBuilder.vertexAI(true);
+            config.project().ifPresent(clientBuilder::project);
+            config.location().ifPresent(clientBuilder::location);
+        } else {
+            clientBuilder.apiKey(config.apiKey().orElse(null));
+        }
 
         return clientBuilder.build();
     }
@@ -305,8 +310,10 @@ public class GoogleGenAiRecorder {
         }
     }
 
-    private void throwIfApiKeyNotConfigured(String apiKey, String configName) {
-        if (apiKey == null) {
+    private void validateAuthConfig(GoogleGenAiConfig config, String configName) {
+        // When using the Vertex AI backend, authentication relies on Application Default Credentials (ADC),
+        // so no API key is required. Otherwise (Gemini Developer API), an API key is mandatory.
+        if (!config.vertexAi() && config.apiKey().isEmpty()) {
             throw new ConfigValidationException(createConfigProblems("api-key", configName));
         }
     }
