@@ -28,6 +28,29 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-mode]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-mode[`+++quarkus.langchain4j.openai.chat-model.mode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Which OpenAI API the chat model should target.
+
+`chat-completion` (the default) uses the `/v1/chat/completions` endpoint, while `responses` uses the newer `/v1/responses` endpoint. The `responses` mode is required for models that are only available through the Responses API and unlocks Responses-specific settings under `quarkus.langchain4j.openai.chat-model.responses.++*++`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`chat-completion`, `responses`
+|`+++chat-completion+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-enabled[`+++quarkus.langchain4j.openai.embedding-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai.embedding-model.enabled+++[]
@@ -628,6 +651,321 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`+++default+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-store]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-store[`+++quarkus.langchain4j.openai.chat-model.responses.store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to store the generated model response for later retrieval via the Responses API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-previous-response-id]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-previous-response-id[`+++quarkus.langchain4j.openai.chat-model.responses.previous-response-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.previous-response-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique ID of the previous response to the model, used to create multi-turn conversations.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PREVIOUS_RESPONSE_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PREVIOUS_RESPONSE_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-reasoning-summary]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-reasoning-summary[`+++quarkus.langchain4j.openai.chat-model.responses.reasoning-summary+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.reasoning-summary+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A summary of the reasoning performed by the model, for reasoning models. Supported values are `auto`, `concise`, and `detailed`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_REASONING_SUMMARY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_REASONING_SUMMARY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-max-output-tokens[`+++quarkus.langchain4j.openai.chat-model.responses.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An upper bound for the number of tokens that can be generated for a response, including visible output tokens and reasoning tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-max-tool-calls]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-max-tool-calls[`+++quarkus.langchain4j.openai.chat-model.responses.max-tool-calls+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.max-tool-calls+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of total calls to built-in tools that can be processed in a response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_MAX_TOOL_CALLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_MAX_TOOL_CALLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-parallel-tool-calls]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-parallel-tool-calls[`+++quarkus.langchain4j.openai.chat-model.responses.parallel-tool-calls+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.parallel-tool-calls+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to allow the model to run tool calls in parallel.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PARALLEL_TOOL_CALLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PARALLEL_TOOL_CALLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-include]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-include[`+++quarkus.langchain4j.openai.chat-model.responses.include+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.include+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Additional output data to include in the model response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_INCLUDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_INCLUDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-truncation]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-truncation[`+++quarkus.langchain4j.openai.chat-model.responses.truncation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.truncation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The truncation strategy to use for the model response. Supported values are `auto` and `disabled`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_TRUNCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_TRUNCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-text-verbosity]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-text-verbosity[`+++quarkus.langchain4j.openai.chat-model.responses.text-verbosity+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.text-verbosity+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the verbosity of the model's response. Supported values are `low`, `medium`, and `high`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_TEXT_VERBOSITY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_TEXT_VERBOSITY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-prompt-cache-key]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-prompt-cache-key[`+++quarkus.langchain4j.openai.chat-model.responses.prompt-cache-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.prompt-cache-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Used by OpenAI to cache responses for similar requests to optimize your cache hit rates.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PROMPT_CACHE_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PROMPT_CACHE_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-prompt-cache-retention]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-prompt-cache-retention[`+++quarkus.langchain4j.openai.chat-model.responses.prompt-cache-retention+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.prompt-cache-retention+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The retention policy for the prompt cache.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PROMPT_CACHE_RETENTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_PROMPT_CACHE_RETENTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-safety-identifier]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-safety-identifier[`+++quarkus.langchain4j.openai.chat-model.responses.safety-identifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.safety-identifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier used to help detect users of your application that may be violating OpenAI's usage policies.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_SAFETY_IDENTIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_SAFETY_IDENTIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-top-logprobs[`+++quarkus.langchain4j.openai.chat-model.responses.top-logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of most likely tokens to return at each token position, each with an associated log probability.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_TOP_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_TOP_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-strict-tools]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-strict-tools[`+++quarkus.langchain4j.openai.chat-model.responses.strict-tools+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.strict-tools+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enforce strict schema validation on tool/function definitions.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_STRICT_TOOLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_STRICT_TOOLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-stream-include-obfuscation]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-responses-stream-include-obfuscation[`+++quarkus.langchain4j.openai.chat-model.responses.stream-include-obfuscation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.responses.stream-include-obfuscation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether obfuscation fields should be included in streaming events. Only applies to the streaming chat model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_STREAM_INCLUDE_OBFUSCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSES_STREAM_INCLUDE_OBFUSCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-model-name[`+++quarkus.langchain4j.openai.embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1744,6 +2082,321 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`+++default+++`
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-store]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-store[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to store the generated model response for later retrieval via the Responses API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-previous-response-id]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-previous-response-id[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.previous-response-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.previous-response-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique ID of the previous response to the model, used to create multi-turn conversations.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PREVIOUS_RESPONSE_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PREVIOUS_RESPONSE_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-reasoning-summary]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-reasoning-summary[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.reasoning-summary+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.reasoning-summary+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A summary of the reasoning performed by the model, for reasoning models. Supported values are `auto`, `concise`, and `detailed`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_REASONING_SUMMARY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_REASONING_SUMMARY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-max-output-tokens[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An upper bound for the number of tokens that can be generated for a response, including visible output tokens and reasoning tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-max-tool-calls]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-max-tool-calls[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.max-tool-calls+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.max-tool-calls+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of total calls to built-in tools that can be processed in a response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_MAX_TOOL_CALLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_MAX_TOOL_CALLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-parallel-tool-calls]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-parallel-tool-calls[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.parallel-tool-calls+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.parallel-tool-calls+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to allow the model to run tool calls in parallel.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PARALLEL_TOOL_CALLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PARALLEL_TOOL_CALLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-include]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-include[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.include+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.include+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Additional output data to include in the model response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_INCLUDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_INCLUDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-truncation]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-truncation[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.truncation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.truncation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The truncation strategy to use for the model response. Supported values are `auto` and `disabled`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_TRUNCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_TRUNCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-text-verbosity]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-text-verbosity[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.text-verbosity+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.text-verbosity+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the verbosity of the model's response. Supported values are `low`, `medium`, and `high`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_TEXT_VERBOSITY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_TEXT_VERBOSITY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-prompt-cache-key]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-prompt-cache-key[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.prompt-cache-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.prompt-cache-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Used by OpenAI to cache responses for similar requests to optimize your cache hit rates.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PROMPT_CACHE_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PROMPT_CACHE_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-prompt-cache-retention]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-prompt-cache-retention[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.prompt-cache-retention+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.prompt-cache-retention+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The retention policy for the prompt cache.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PROMPT_CACHE_RETENTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_PROMPT_CACHE_RETENTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-safety-identifier]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-safety-identifier[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.safety-identifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.safety-identifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier used to help detect users of your application that may be violating OpenAI's usage policies.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_SAFETY_IDENTIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_SAFETY_IDENTIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-top-logprobs[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.top-logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of most likely tokens to return at each token position, each with an associated log probability.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_TOP_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_TOP_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-strict-tools]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-strict-tools[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.strict-tools+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.strict-tools+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enforce strict schema validation on tool/function definitions.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_STRICT_TOOLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_STRICT_TOOLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-stream-include-obfuscation]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-responses-stream-include-obfuscation[`+++quarkus.langchain4j.openai."model-name".chat-model.responses.stream-include-obfuscation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.responses.stream-include-obfuscation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether obfuscation fields should be included in streaming events. Only applies to the streaming chat model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_STREAM_INCLUDE_OBFUSCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSES_STREAM_INCLUDE_OBFUSCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-embedding-model-model-name[`+++quarkus.langchain4j.openai."model-name".embedding-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]

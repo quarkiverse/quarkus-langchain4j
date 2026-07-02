@@ -8,6 +8,8 @@ import java.net.Proxy.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.util.TypeLiteral;
 
 import org.jboss.logging.Logger;
@@ -25,6 +28,7 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
@@ -36,8 +40,11 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.openai.DisabledAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiAudioTranscriptionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
@@ -53,6 +60,7 @@ import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.ResponsesChatModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.proxy.ProxyConfiguration;
@@ -60,6 +68,8 @@ import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.quarkus.tls.TlsConfiguration;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.config.ConfigValidationException;
 
 @Recorder
@@ -72,6 +82,10 @@ public class OpenAiRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder>>> CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesChatModel.Builder>>> RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesStreamingChatModel.Builder>>> RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
@@ -236,6 +250,267 @@ public class OpenAiRecorder {
                     return new DisabledStreamingChatModel();
                 }
             };
+        }
+    }
+
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> responsesChatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+            }
+            ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
+
+            JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+            Duration timeout = openAiConfig.timeout().orElse(Duration.ofSeconds(10));
+            httpClientBuilder.connectTimeout(timeout);
+            httpClientBuilder.readTimeout(timeout);
+
+            var builder = OpenAiResponsesChatModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
+                    .baseUrl(normalizeBaseUrl(openAiConfig.baseUrl()))
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelName())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()));
+
+            if (openAiConfig.organizationId().isPresent()) {
+                builder.organizationId(openAiConfig.organizationId().get());
+            }
+            if (chatModelConfig.temperature().isPresent()) {
+                builder.temperature(chatModelConfig.temperature().get());
+            }
+            if (chatModelConfig.topP().isPresent()) {
+                builder.topP(chatModelConfig.topP().get());
+            }
+            if (chatModelConfig.serviceTier().isPresent()) {
+                builder.serviceTier(chatModelConfig.serviceTier().get());
+            }
+            if (chatModelConfig.reasoningEffort().isPresent()) {
+                builder.reasoningEffort(chatModelConfig.reasoningEffort().get());
+            }
+            if (chatModelConfig.strictJsonSchema().isPresent()) {
+                builder.strictJsonSchema(chatModelConfig.strictJsonSchema().get());
+            }
+            if (chatModelConfig.responseFormat().isPresent()) {
+                builder.responseFormat(toResponseFormat(chatModelConfig.responseFormat().get()));
+            }
+
+            if (responsesConfig.store().isPresent()) {
+                builder.store(responsesConfig.store().get());
+            }
+            if (responsesConfig.previousResponseId().isPresent()) {
+                builder.previousResponseId(responsesConfig.previousResponseId().get());
+            }
+            if (responsesConfig.reasoningSummary().isPresent()) {
+                builder.reasoningSummary(responsesConfig.reasoningSummary().get());
+            }
+            if (responsesConfig.maxOutputTokens().isPresent()) {
+                builder.maxOutputTokens(responsesConfig.maxOutputTokens().get());
+            }
+            if (responsesConfig.maxToolCalls().isPresent()) {
+                builder.maxToolCalls(responsesConfig.maxToolCalls().get());
+            }
+            if (responsesConfig.parallelToolCalls().isPresent()) {
+                builder.parallelToolCalls(responsesConfig.parallelToolCalls().get());
+            }
+            if (responsesConfig.include().isPresent()) {
+                builder.include(responsesConfig.include().get());
+            }
+            if (responsesConfig.truncation().isPresent()) {
+                builder.truncation(responsesConfig.truncation().get());
+            }
+            if (responsesConfig.textVerbosity().isPresent()) {
+                builder.textVerbosity(responsesConfig.textVerbosity().get());
+            }
+            if (responsesConfig.promptCacheKey().isPresent()) {
+                builder.promptCacheKey(responsesConfig.promptCacheKey().get());
+            }
+            if (responsesConfig.promptCacheRetention().isPresent()) {
+                builder.promptCacheRetention(responsesConfig.promptCacheRetention().get());
+            }
+            if (responsesConfig.safetyIdentifier().isPresent()) {
+                builder.safetyIdentifier(responsesConfig.safetyIdentifier().get());
+            }
+            if (responsesConfig.topLogprobs().isPresent()) {
+                builder.topLogprobs(responsesConfig.topLogprobs().get());
+            }
+            if (responsesConfig.strictTools().isPresent()) {
+                builder.strictTools(responsesConfig.strictTools().get());
+            }
+
+            return new Function<>() {
+                @Override
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    List<ChatModelListener> listeners = new ArrayList<>();
+                    for (ChatModelListener listener : context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL)) {
+                        listeners.add(listener);
+                    }
+                    builder.listeners(listeners);
+                    resolveTlsConfiguration(openAiConfig, httpClientBuilder);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    return new DisabledChatModel();
+                }
+            };
+        }
+    }
+
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> responsesStreamingChatModel(
+            String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+            }
+            ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
+
+            JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+            Duration timeout = openAiConfig.timeout().orElse(Duration.ofSeconds(10));
+            httpClientBuilder.connectTimeout(timeout);
+            httpClientBuilder.readTimeout(timeout);
+
+            var builder = OpenAiResponsesStreamingChatModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
+                    .baseUrl(normalizeBaseUrl(openAiConfig.baseUrl()))
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelName())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()));
+
+            if (openAiConfig.organizationId().isPresent()) {
+                builder.organizationId(openAiConfig.organizationId().get());
+            }
+            if (chatModelConfig.temperature().isPresent()) {
+                builder.temperature(chatModelConfig.temperature().get());
+            }
+            if (chatModelConfig.topP().isPresent()) {
+                builder.topP(chatModelConfig.topP().get());
+            }
+            if (chatModelConfig.serviceTier().isPresent()) {
+                builder.serviceTier(chatModelConfig.serviceTier().get());
+            }
+            if (chatModelConfig.reasoningEffort().isPresent()) {
+                builder.reasoningEffort(chatModelConfig.reasoningEffort().get());
+            }
+            if (chatModelConfig.strictJsonSchema().isPresent()) {
+                builder.strictJsonSchema(chatModelConfig.strictJsonSchema().get());
+            }
+            if (chatModelConfig.responseFormat().isPresent()) {
+                builder.responseFormat(toResponseFormat(chatModelConfig.responseFormat().get()));
+            }
+
+            if (responsesConfig.store().isPresent()) {
+                builder.store(responsesConfig.store().get());
+            }
+            if (responsesConfig.previousResponseId().isPresent()) {
+                builder.previousResponseId(responsesConfig.previousResponseId().get());
+            }
+            if (responsesConfig.reasoningSummary().isPresent()) {
+                builder.reasoningSummary(responsesConfig.reasoningSummary().get());
+            }
+            if (responsesConfig.maxOutputTokens().isPresent()) {
+                builder.maxOutputTokens(responsesConfig.maxOutputTokens().get());
+            }
+            if (responsesConfig.maxToolCalls().isPresent()) {
+                builder.maxToolCalls(responsesConfig.maxToolCalls().get());
+            }
+            if (responsesConfig.parallelToolCalls().isPresent()) {
+                builder.parallelToolCalls(responsesConfig.parallelToolCalls().get());
+            }
+            if (responsesConfig.include().isPresent()) {
+                builder.include(responsesConfig.include().get());
+            }
+            if (responsesConfig.truncation().isPresent()) {
+                builder.truncation(responsesConfig.truncation().get());
+            }
+            if (responsesConfig.textVerbosity().isPresent()) {
+                builder.textVerbosity(responsesConfig.textVerbosity().get());
+            }
+            if (responsesConfig.promptCacheKey().isPresent()) {
+                builder.promptCacheKey(responsesConfig.promptCacheKey().get());
+            }
+            if (responsesConfig.promptCacheRetention().isPresent()) {
+                builder.promptCacheRetention(responsesConfig.promptCacheRetention().get());
+            }
+            if (responsesConfig.safetyIdentifier().isPresent()) {
+                builder.safetyIdentifier(responsesConfig.safetyIdentifier().get());
+            }
+            if (responsesConfig.topLogprobs().isPresent()) {
+                builder.topLogprobs(responsesConfig.topLogprobs().get());
+            }
+            if (responsesConfig.strictTools().isPresent()) {
+                builder.strictTools(responsesConfig.strictTools().get());
+            }
+            if (responsesConfig.streamIncludeObfuscation().isPresent()) {
+                builder.streamIncludeObfuscation(responsesConfig.streamIncludeObfuscation().get());
+            }
+
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    List<ChatModelListener> listeners = new ArrayList<>();
+                    for (ChatModelListener listener : context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL)) {
+                        listeners.add(listener);
+                    }
+                    builder.listeners(listeners);
+                    resolveTlsConfiguration(openAiConfig, httpClientBuilder);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    return new DisabledStreamingChatModel();
+                }
+            };
+        }
+    }
+
+    private static String normalizeBaseUrl(String baseUrl) {
+        if (baseUrl == null) {
+            return null;
+        }
+        // The Responses client appends "/responses" to the base URL, so a trailing slash would produce a double slash.
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    }
+
+    private static ResponseFormat toResponseFormat(String responseFormat) {
+        if ("text".equalsIgnoreCase(responseFormat)) {
+            return ResponseFormat.TEXT;
+        }
+        // Everything else (json, json_object, json_schema) maps to JSON structured output
+        return ResponseFormat.JSON;
+    }
+
+    private void resolveTlsConfiguration(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
+            JaxRsHttpClientBuilder httpClientBuilder) {
+        Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current().select(TlsConfigurationRegistry.class);
+        if (tlsConfigurationRegistry.isResolvable()) {
+            Optional<TlsConfiguration> maybeTlsConfiguration = TlsConfiguration.from(tlsConfigurationRegistry.get(),
+                    openAiConfig.tlsConfigurationName());
+            if (maybeTlsConfiguration.isPresent()) {
+                httpClientBuilder.tlsConfiguration(maybeTlsConfiguration.get());
+            }
         }
     }
 
