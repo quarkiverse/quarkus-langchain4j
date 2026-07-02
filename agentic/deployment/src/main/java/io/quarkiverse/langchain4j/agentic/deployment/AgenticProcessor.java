@@ -1026,7 +1026,7 @@ public class AgenticProcessor {
             } else {
                 argsArray = mc.newArray(Object.class, paramTypes.length);
                 for (int i = 0; i < paramTypes.length; i++) {
-                    mc.writeArrayValue(argsArray, i, mc.smartCast(mc.getMethodParam(i), Object.class));
+                    mc.writeArrayValue(argsArray, i, mc.checkCast(mc.getMethodParam(i), Object.class));
                 }
             }
 
