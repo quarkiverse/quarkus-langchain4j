@@ -1,0 +1,179 @@
+= Hibernate ORM Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The Quarkus LangChain4j Hibernate ORM extension provides an Embedding Store implementation that can be used with a custom entity to make use of databases supporting vector search for Retrieval-Augmented Generation (RAG).
+This extension enables you to persist and query embedding vectors for document retrieval and is based on the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate[LangChain4j Hibernate ORM integration].
+
+Contrary to other embedding store extensions, this extension have various advantages thanks to its usage of Hibernate ORM:
+
+* Support multiple databases through a unified configuration and user API
+* Customization of metadata through Hibernate ORM entities
+* Advanced queries based on HQL and JPA Criteria
+
+== Prerequisites
+
+To use Hibernate ORM as an Embedding store:
+
+* A supported database with vector search capability is required.
+* A Quarkus datasource must be configured.
+* The embedding vector dimension must match the dimension of vectors produced by your embedding model.
+
+The currently supported databases are:
+
+* DB2
+* MariaDB
+* MySQL Heatwave
+* PostgreSQL with pgvector
+* Oracle
+* SQL Server
+
+== Dependency
+
+To enable the LangChain4j Hibernate ORM extension in your Quarkus project, add the following Maven dependency:
+
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-hibernate]
+
+This extension requires a configured Hibernate ORM persistence unit.
+For configuration details, refer to the https://quarkus.io/guides/hibernate-orm[Hibernate ORM Guide].
+
+NOTE: Please beware that if you're using PostgreSQL, you have to make sure that the `pgvector` extension is available.
+This can be done through Quarkus DevServices by configuring `quarkus.datasource.devservices.image-name=pgvector/pgvector:pg17`.
+
+== How It Works
+
+The extension maps each ingested document to an entity. Each entity contains:
+
+* The original text content
+* Optional metadata
+* The vector embedding (stored as a `vector` type column)
+
+During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding +<=>+ :query_vector FETCH FIRST N ROWS ONLY`.
+
+== Comparison with quarkus-langchain4j-pgvector extension
+
+The Quarkus LangChain4j Hibernate ORM extension provides similar features to the Quarkus LangChain4j pgvector extension
+and can also be used with pgvector on PostgreSQL.
+
+The major difference is that the Quarkus LangChain4j Hibernate ORM extension is implemented through Hibernate ORM APIs,
+which abstract away the data store details. This extension can thus also be used with other supported data stores.
+
+This also means the same entities defined for use in Quarkus LangChain4j Hibernate ORM can be used in Quarkus Hibernate ORM,
+unlocking additional APIs and addressing additional use cases:
+
+* Managed entities with `Session`
+* Quarkus Panache
+* Jakarta Data repositories
+* ...
+
+== Entity definition
+
+To use a Hibernate ORM entity as source for the `EmbeddingStore` API,
+the entity class needs at least one persistent attribute, representing the embedding vector,
+that is annotated with `@EmbeddingVector` and a `Map` attribute annotated with `@UnmappedMetadata`.
+The embedding vector size must be specified via the `@Array(length = ...)` annotation on the `@EmbeddingVector` annotated attribute.
+
+The embedding vector size value depends on the embedding model in use. For example:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+* OpenAI `text-embedding-ada-002` → 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+You may specify an `@EmbeddedText` attribute if a single entity attribute is the source for the embedding vector,
+but it is optional. Note that you require a `@EmbeddedText` attribute if you want to use metadata via the `TextSegment`
+API that is exposed in the search result `EmbeddingMatch`. During ingestion,
+`TextSegment` metadata is automatically mapped to entity attributes.
+
+To map metadata to entity attributes/columns rather than JSON payload content, you can annotate entity attributes with `@MetadataAttribute`.
+During ingestion, `TextSegment#metadata` attributes are mapped into dedicated entity attributes if possible,
+while other metadata is stored in the JSON entity attribute, annotated with `@UnmappedMetadata`.
+
+[source,java]
+----
+@Entity
+public class MyEmbeddingEntity {
+    @Id
+    UUID id;
+    @EmbeddingVector
+    @Array(length = 384)                // The dimension of the embedding vector based on the embedding model
+    float[] embedding;
+    @EmbeddedText
+    String text;
+    @UnmappedMetadata
+    Map<String, Object> metadata;       // Can be either a Map<String, Object> or a String
+
+    @MetadataAttribute
+    String mimeType;                    // Explicitly mapped. Synchronizes TextSegment#metadata with this attribute
+    @MetadataAttribute
+    String fileName;                    // Explicitly mapped. Synchronizes TextSegment#metadata with this attribute
+}
+----
+
+NOTE: In development and test mode, the pgvector extension is automatically enabled (controlled via <<quarkus-langchain4j-hibernate-orm_quarkus-langchain4j-hibernate-orm-setup-vector-config,`quarkus.langchain4j.hibernate-orm.setup-vector-config`>>),
+but keep in mind to enable the `vector` extension in your PostgreSQL database schema via `create extension if not exists vector;` with a schema management tool like Liquibase or Flyway.
+
+== Embedding Index
+
+When defining a custom entity, you are in charge of the database schema,
+so the extension does not attempt to create any database objects.
+
+In production, you will most likely need an index to achieve acceptable performance
+for the vector search though.
+It's best to use a schema management tool (like Liquibase or Flyway) to create your indexes.
+Take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#5-custom-hibernate-entity-ddl[LangChain4j Hibernate ORM integration documentation]
+for details about creating vector search indexes, as well as the documentation of your database vendor to get more
+information about vector search indexes.
+
+== Usage Example
+
+Once the extension is installed and configured, you can ingest documents into your database using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithHibernate.java[]
+----
+
+This example shows how to embed and persist documents using the Hibernate ORM store, enabling efficient similarity search during RAG queries.
+`TextSegment#metadata` is automatically mapped to explicit `@MetadataAttribute` and `@UnmappedMetadata` attributes on the entity instances.
+
+Alternatively, you can also persist your entities through Hibernate ORM APIs directly, like:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/PersistExampleWithHibernate.java[]
+----
+
+== Query Example
+
+Assuming that data was ingested, one of the various `search` methods on the `HibernateEmbeddingStore` can be used
+to search for matching entities.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/QueryExampleWithHibernate.java[]
+----
+
+For further examples, take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#examples[LangChain4j Hibernate ORM documentation examples].
+
+== Configuration
+
+Customize the behavior of the extension using one of the following configuration `quarkus.langchain4j.hibernate-orm` options:
+
+include::includes/quarkus-langchain4j-hibernate.adoc[leveloffset=+1,opts=optional]
+
+== Summary
+
+To use Hibernate ORM as an embedding store with Quarkus LangChain4j:
+
+* Ensure your database is configured correctly for vector search.
+* Add the extension dependency.
+* Configure a datasource and set the correct embedding dimension.
+* Use `HibernateEmbeddingStore` to ingest and retrieve embedded documents.
+
