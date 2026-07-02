@@ -111,6 +111,42 @@ import jakarta.inject.Inject;
 
 If no model name is specified, the default configuration is used.
 
+== Responses API
+
+By default, the chat model targets OpenAI's `/v1/chat/completions` endpoint. OpenAI also offers the newer
+https://platform.openai.com/docs/api-reference/responses[Responses API] (`/v1/responses`), which is required for models
+that are only exposed through it (for example `gpt-5-pro`, `o1-pro`) and which unlocks Responses-specific settings.
+
+To switch the chat model to the Responses API, set the build-time `mode` property:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.chat-model.mode=responses
+quarkus.langchain4j.openai.api-key=sk-...
+quarkus.langchain4j.openai.chat-model.model-name=gpt-5-pro
+----
+
+Both the blocking `ChatModel` and the `StreamingChatModel` are supported in this mode, including tool/function calling and
+structured outputs. The injection points and AI service usage are unchanged — only the underlying API and endpoint differ.
+
+Responses-specific options are configured under `quarkus.langchain4j.openai.chat-model.responses.*`, for example:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.chat-model.responses.store=false
+quarkus.langchain4j.openai.chat-model.responses.reasoning-summary=auto
+quarkus.langchain4j.openai.chat-model.responses.max-output-tokens=1024
+----
+
+[NOTE]
+====
+In `responses` mode the model communicates over a Quarkus REST Client-based HTTP client (the same engine used elsewhere,
+so native image and TLS registry configuration continue to work). A few features of the chat-completions path do not apply:
+`quarkus.langchain4j.openai.log-requests-curl` and proxy configuration (`quarkus.langchain4j.openai.proxy-configuration-name`)
+are not honored for Responses traffic. Request/response logging still works via the standard
+`log-requests`/`log-responses` settings.
+====
+
 == Advanced usage
 
 The OpenAI extension internally uses a Quarkus REST Client to make API calls. This client can also be used directly:

@@ -24,6 +24,8 @@ import dev.langchain4j.model.openai.OpenAiAudioTranscriptionModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.openai.spi.OpenAiAudioTranscriptionModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiChatModelBuilderFactory;
@@ -71,6 +73,10 @@ public class OpenAiProcessor {
             .createSimple(OpenAiChatModel.OpenAiChatModelBuilder.class);
     private static final DotName OPENAI_STREAMING_CHAT_MODEL_BUILDER = DotName
             .createSimple(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder.class);
+    private static final DotName OPENAI_RESPONSES_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiResponsesChatModel.Builder.class);
+    private static final DotName OPENAI_RESPONSES_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiResponsesStreamingChatModel.Builder.class);
     private static final DotName OPENAI_EMBEDDING_MODEL_BUILDER = DotName
             .createSimple(OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder.class);
     private static final DotName OPENAI_MODERATION_MODEL_BUILDER = DotName
@@ -121,40 +127,31 @@ public class OpenAiProcessor {
             List<SelectedModerationModelProviderBuildItem> selectedModeration,
             List<SelectedImageModelProviderBuildItem> selectedImage,
             List<SelectedAudioTranscriptionModelProviderBuildItem> selectedAudioTranscription,
+            LangChain4jOpenAiBuildConfig buildConfig,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+
+        boolean useResponseMode = buildConfig.chatModel().mode() == ChatModelBuildConfig.Mode.RESPONSES;
 
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
-                var builder = SyntheticBeanBuildItem
-                        .configure(CHAT_MODEL)
-                        .setRuntimeInit()
-                        .defaultBean()
-                        .scope(ApplicationScoped.class)
-                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
-                                        new Type[] { ClassType.create(OPENAI_CHAT_MODEL_BUILDER) }, null) },
-                                null), ANY)
-                        .createWith(recorder.chatModel(configName));
-                addQualifierIfNecessary(builder, configName);
-                beanProducer.produce(builder.done());
 
-                var streamingBuilder = SyntheticBeanBuildItem
-                        .configure(STREAMING_CHAT_MODEL)
-                        .setRuntimeInit()
-                        .defaultBean()
-                        .scope(ApplicationScoped.class)
-                        .addInjectionPoint(Type.create(ProxyConfigurationRegistry.class))
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
-                                        new Type[] { ClassType.create(OPENAI_STREAMING_CHAT_MODEL_BUILDER) }, null) },
-                                null), ANY)
-                        .createWith(recorder.streamingChatModel(configName));
+                var chatBuilder = configureChatModelBean(CHAT_MODEL,
+                        useResponseMode ? OPENAI_RESPONSES_CHAT_MODEL_BUILDER : OPENAI_CHAT_MODEL_BUILDER,
+                        useResponseMode);
+                chatBuilder.createWith(useResponseMode
+                        ? recorder.responsesChatModel(configName)
+                        : recorder.chatModel(configName));
+                addQualifierIfNecessary(chatBuilder, configName);
+                beanProducer.produce(chatBuilder.done());
+
+                var streamingBuilder = configureChatModelBean(STREAMING_CHAT_MODEL,
+                        useResponseMode ? OPENAI_RESPONSES_STREAMING_CHAT_MODEL_BUILDER
+                                : OPENAI_STREAMING_CHAT_MODEL_BUILDER,
+                        useResponseMode);
+                streamingBuilder.createWith(useResponseMode
+                        ? recorder.responsesStreamingChatModel(configName)
+                        : recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
@@ -238,6 +235,26 @@ public class OpenAiProcessor {
         }
     }
 
+    private static SyntheticBeanBuildItem.ExtendedBeanConfigurator configureChatModelBean(
+            DotName beanType, DotName builderCustomizerType, boolean useResponseMode) {
+        var configurator = SyntheticBeanBuildItem
+                .configure(beanType)
+                .setRuntimeInit()
+                .defaultBean()
+                .scope(ApplicationScoped.class)
+                .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                        new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                        new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                new Type[] { ClassType.create(builderCustomizerType) }, null) },
+                        null), ANY);
+        // Only the chat-completions path flows through QuarkusOpenAiClient, which honors proxy configuration.
+        if (!useResponseMode) {
+            configurator.addInjectionPoint(Type.create(ProxyConfigurationRegistry.class));
+        }
+        return configurator;
+    }
+
     private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
         if (!NamedConfigUtil.isDefault(configName)) {
             builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
@@ -271,5 +288,8 @@ public class OpenAiProcessor {
         reflectiveClassProducer
                 .produce(ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).build());
         reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OPEN_AI_EMBEDDING_DESERIALIZER).build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem
+                .builder(OpenAiResponsesChatModel.class, OpenAiResponsesStreamingChatModel.class)
+                .methods().fields().build());
     }
 }
