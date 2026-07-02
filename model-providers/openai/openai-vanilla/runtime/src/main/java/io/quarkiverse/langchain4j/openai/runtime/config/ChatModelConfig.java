@@ -121,4 +121,9 @@ public interface ChatModelConfig {
      */
     @ConfigDocDefault("default")
     Optional<String> serviceTier();
+
+    /**
+     * Settings that only apply when {@code quarkus.langchain4j.openai.chat-model.mode} is set to {@code responses}.
+     */
+    ResponsesChatModelConfig responses();
 }
