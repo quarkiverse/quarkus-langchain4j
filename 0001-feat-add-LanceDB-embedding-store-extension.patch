@@ -1,0 +1,2356 @@
+From 78ea518f200754755b8db2a81ef7155f9498a071 Mon Sep 17 00:00:00 2001
+From: JeffersonSantos29 <jeffersonalfredosa30@gmail.com>
+Date: Fri, 26 Jun 2026 11:47:28 -0300
+Subject: [PATCH] feat: add LanceDB embedding store extension
+
+---
+ docs/modules/ROOT/nav.adoc                    |   1 +
+ .../modules/ROOT/pages/rag-lancedb-store.adoc | 192 +++++++
+ embedding-stores/lancedb/deployment/pom.xml   |  71 +++
+ .../LanceDbEmbeddingStoreBuildTimeConfig.java |  45 ++
+ .../LanceDbEmbeddingStoreProcessor.java       | 126 +++++
+ .../LanceDbNamedStoreBuildTimeConfig.java     |  18 +
+ .../LanceDbDefaultAndNamedStoreTest.java      |  51 ++
+ .../deployment/LanceDbDefaultStoreTest.java   |  42 ++
+ .../deployment/LanceDbMissingApiKeyTest.java  |  32 ++
+ .../LanceDbMissingDatabaseTest.java           |  32 ++
+ .../LanceDbMissingDimensionTest.java          |  32 ++
+ .../LanceDbMultipleNamedStoresTest.java       |  53 ++
+ .../deployment/LanceDbNamedStoreTest.java     |  50 ++
+ embedding-stores/lancedb/pom.xml              |  17 +
+ embedding-stores/lancedb/runtime/pom.xml      |  74 +++
+ .../lancedb/LanceDbEmbeddingStore.java        | 480 ++++++++++++++++++
+ .../lancedb/LanceDbFilterMapper.java          | 119 +++++
+ .../runtime/LanceDbEmbeddingStoreConfig.java  |  32 ++
+ .../LanceDbEmbeddingStoreRecorder.java        |  84 +++
+ .../runtime/LanceDbStoreRuntimeConfig.java    |  49 ++
+ .../src/main/resources/META-INF/beans.xml     |   7 +
+ .../resources/META-INF/quarkus-extension.yaml |  12 +
+ .../lancedb/LanceDbFilterMapperTest.java      | 150 ++++++
+ embedding-stores/pom.xml                      |   1 +
+ integration-tests/pom.xml                     |   6 +
+ integration-tests/rag-lancedb/pom.xml         | 132 +++++
+ .../acme/example/AiWithUserFilterService.java |  56 ++
+ .../acme/example/EmbeddingStoreIngestor.java  |  30 ++
+ .../src/main/resources/application.properties |   7 +
+ .../example/RAGWithMetadataFilterTest.java    |  59 +++
+ pom.xml                                       |   7 +
+ 31 files changed, 2067 insertions(+)
+ create mode 100644 docs/modules/ROOT/pages/rag-lancedb-store.adoc
+ create mode 100644 embedding-stores/lancedb/deployment/pom.xml
+ create mode 100644 embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreBuildTimeConfig.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreProcessor.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreBuildTimeConfig.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultAndNamedStoreTest.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultStoreTest.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingApiKeyTest.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDatabaseTest.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDimensionTest.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMultipleNamedStoresTest.java
+ create mode 100644 embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreTest.java
+ create mode 100644 embedding-stores/lancedb/pom.xml
+ create mode 100644 embedding-stores/lancedb/runtime/pom.xml
+ create mode 100644 embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbEmbeddingStore.java
+ create mode 100644 embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapper.java
+ create mode 100644 embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreConfig.java
+ create mode 100644 embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreRecorder.java
+ create mode 100644 embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbStoreRuntimeConfig.java
+ create mode 100644 embedding-stores/lancedb/runtime/src/main/resources/META-INF/beans.xml
+ create mode 100644 embedding-stores/lancedb/runtime/src/main/resources/META-INF/quarkus-extension.yaml
+ create mode 100644 embedding-stores/lancedb/runtime/src/test/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapperTest.java
+ create mode 100644 integration-tests/rag-lancedb/pom.xml
+ create mode 100644 integration-tests/rag-lancedb/src/main/java/org/acme/example/AiWithUserFilterService.java
+ create mode 100644 integration-tests/rag-lancedb/src/main/java/org/acme/example/EmbeddingStoreIngestor.java
+ create mode 100644 integration-tests/rag-lancedb/src/main/resources/application.properties
+ create mode 100644 integration-tests/rag-lancedb/src/test/java/org/acme/example/RAGWithMetadataFilterTest.java
+
+diff --git a/docs/modules/ROOT/nav.adoc b/docs/modules/ROOT/nav.adoc
+index 006461149..9d81b5eac 100644
+--- a/docs/modules/ROOT/nav.adoc
++++ b/docs/modules/ROOT/nav.adoc
+@@ -93,6 +93,7 @@
+ ** Document and Vector Stores
+ *** xref:rag-chroma-store.adoc[Chroma]
+ *** xref:rag-infinispan-store.adoc[Infinispan]
++*** xref:rag-lancedb-store.adoc[LanceDB]
+ *** xref:rag-milvus-store.adoc[Milvus]
+ *** xref:rag-neo4j.adoc[Neo4j]
+ *** xref:rag-oracle-store.adoc[Oracle Database]
+diff --git a/docs/modules/ROOT/pages/rag-lancedb-store.adoc b/docs/modules/ROOT/pages/rag-lancedb-store.adoc
+new file mode 100644
+index 000000000..6fd858ba6
+--- /dev/null
++++ b/docs/modules/ROOT/pages/rag-lancedb-store.adoc
+@@ -0,0 +1,192 @@
++= LanceDB Document Store
++
++include::./includes/attributes.adoc[]
++include::./includes/customization.adoc[]
++
++The LanceDB extension allows you to use LanceDB as a vector database for Retrieval-Augmented Generation (RAG) with Quarkus LangChain4j.
++LanceDB is a high-performance, serverless vector database optimized for AI/LLM scenarios, featuring low latency and seamless cross-language data sharing.
++
++== Prerequisites
++
++To use LanceDB as a document store:
++
++* A LanceDB Cloud or Enterprise account is required.
++* An API key for authentication with LanceDB Cloud or Enterprise.
++* The embedding vector dimension must match your embedding model.
++
++[NOTE]
++====
++LanceDB is a serverless vector database that supports multiple distance metrics including L2, cosine, and inner product.
++This extension connects to LanceDB Cloud or Enterprise via its REST API.
++====
++
++== Dependency
++
++To enable LanceDB integration in your Quarkus project, add the following Maven dependency:
++
++:provider-artifact: quarkus-langchain4j-lancedb
++include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
++
++== Configuration
++
++Configure the LanceDB connection using the following properties:
++
++[source,properties]
++----
++quarkus.langchain4j.lancedb.api-key=your-lancedb-api-key
++quarkus.langchain4j.lancedb.database=your-database-name
++quarkus.langchain4j.lancedb.dimension=384
++----
++
++=== Required Configuration
++
++|===
++|Property |Description
++|`quarkus.langchain4j.lancedb.api-key` |The API key for authenticating with LanceDB Cloud or Enterprise.
++|`quarkus.langchain4j.lancedb.database` |The name of the LanceDB database to connect to.
++|`quarkus.langchain4j.lancedb.dimension` |The dimension of the embedding vectors. Must match the embedding model in use.
++|===
++
++=== Optional Configuration
++
++|===
++|Property |Default |Description
++|`quarkus.langchain4j.lancedb.table-name` |`default` |The name of the table to use for storing embeddings.
++|`quarkus.langchain4j.lancedb.region` |`us-east-1` |The AWS region for LanceDB Cloud.
++|`quarkus.langchain4j.lancedb.endpoint` |_none_ |Custom endpoint URL for LanceDB Enterprise. If not set, LanceDB Cloud is used.
++|`quarkus.langchain4j.lancedb.distance-type` |`l2` |The distance metric for vector similarity search. Accepted values: `l2`, `cosine`, `ip`.
++|===
++
++== Embedding Dimension
++
++You must explicitly configure the dimensionality of the embedding vector:
++
++[source,properties]
++----
++quarkus.langchain4j.lancedb.dimension=384
++----
++
++This value depends on the embedding model in use:
++
++* `AllMiniLmL6V2QuantizedEmbeddingModel` -> 384
++* OpenAI `text-embedding-ada-002` -> 1536
++
++[IMPORTANT]
++====
++If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
++
++If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
++====
++
++== Distance Type
++
++LanceDB supports multiple distance metrics for similarity search. Configure the metric using the `distance-type` property:
++
++* `l2` (default) - L2 (Euclidean) distance. Best for general-purpose similarity search.
++* `cosine` - Cosine distance. Best for comparing normalized vectors based on direction rather than magnitude.
++* `ip` - Inner product. Best for comparing vectors where magnitude matters.
++
++[source,properties]
++----
++quarkus.langchain4j.lancedb.distance-type=cosine
++----
++
++== Metadata Filtering
++
++The LanceDB extension supports metadata filtering during search operations.
++Filters are translated to LanceDB SQL predicates and applied before vector search (prefilter).
++
++For example, to filter by a `userId` metadata field:
++
++[source,java]
++----
++import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
++
++EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
++        .queryEmbedding(queryEmbedding)
++        .filter(metadataKey("userId").isEqualTo("1"))
++        .maxResults(10)
++        .build();
++----
++
++Supported filter comparisons:
++
++* `isEqualTo` / `isNotEqualTo`
++* `isGreaterThan` / `isGreaterThanOrEqualTo`
++* `isLessThan` / `isLessThanOrEqualTo`
++* `isIn` / `isNotIn`
++
++Logical filters: `AND`, `OR`, `NOT`.
++
++== Named Stores
++
++You can configure multiple named LanceDB stores, each with its own connection and configuration.
++This is useful when your application needs to manage embeddings for different domains or tenants.
++
++To configure a named store:
++
++[source,properties]
++----
++quarkus.langchain4j.lancedb.products.api-key=your-api-key
++quarkus.langchain4j.lancedb.products.database=products-db
++quarkus.langchain4j.lancedb.products.dimension=1536
++quarkus.langchain4j.lancedb.products.table-name=product_embeddings
++----
++
++To inject a named store, use the `@EmbeddingStoreName` qualifier:
++
++[source,java]
++----
++@Inject
++@EmbeddingStoreName("products")
++EmbeddingStore<TextSegment> productsStore;
++----
++
++The default store and named stores can coexist.
++If you only need named stores, disable the default store:
++
++[source,properties]
++----
++quarkus.langchain4j.lancedb.default-store-enabled=false
++----
++
++== Usage Example
++
++Once the extension is installed and configured, you can ingest documents into LanceDB and perform similarity search:
++
++[source,java]
++----
++@Inject
++EmbeddingStore<TextSegment> embeddingStore;
++
++@Inject
++EmbeddingModel embeddingModel;
++
++public void ingest(String text, Metadata metadata) {
++    Embedding embedding = embeddingModel.embed(text).content();
++    embeddingStore.add(embedding, new TextSegment(text, metadata));
++}
++
++public List<EmbeddingMatch<TextSegment>> search(String query) {
++    Embedding queryEmbedding = embeddingModel.embed(query).content();
++    EmbeddingSearchResult<TextSegment> result = embeddingStore.search(
++            EmbeddingSearchRequest.builder()
++                    .queryEmbedding(queryEmbedding)
++                    .maxResults(10)
++                    .minScore(0.5)
++                    .build());
++    return result.matches();
++}
++----
++
++== How It Works
++
++The LanceDB extension stores each ingested document as a row in a LanceDB table.
++Each row contains:
++
++* The unique identifier (id)
++* The vector embedding (stored as a fixed-size list of float32)
++* The original text content
++* Optional metadata (stored as JSON-serialized binary)
++
++During retrieval, a vector similarity search is performed using the configured distance metric, with optional metadata pre-filtering.
+diff --git a/embedding-stores/lancedb/deployment/pom.xml b/embedding-stores/lancedb/deployment/pom.xml
+new file mode 100644
+index 000000000..ba7033626
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/pom.xml
+@@ -0,0 +1,71 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
++  <modelVersion>4.0.0</modelVersion>
++  <parent>
++    <groupId>io.quarkiverse.langchain4j</groupId>
++    <artifactId>quarkus-langchain4j-lancedb-parent</artifactId>
++    <version>999-SNAPSHOT</version>
++  </parent>
++  <artifactId>quarkus-langchain4j-lancedb-deployment</artifactId>
++  <name>Quarkus LangChain4j - LanceDB - Deployment</name>
++  <dependencies>
++    <dependency>
++      <groupId>io.quarkiverse.langchain4j</groupId>
++      <artifactId>quarkus-langchain4j-lancedb</artifactId>
++      <version>${project.version}</version>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkus</groupId>
++      <artifactId>quarkus-arc-deployment</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkus</groupId>
++      <artifactId>quarkus-jackson-deployment</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkiverse.langchain4j</groupId>
++      <artifactId>quarkus-langchain4j-core-deployment</artifactId>
++      <version>${project.version}</version>
++    </dependency>
++    <dependency>
++      <groupId>dev.langchain4j</groupId>
++      <artifactId>langchain4j-core</artifactId>
++      <classifier>tests</classifier>
++      <type>test-jar</type>
++      <scope>test</scope>
++      <version>${langchain4j.version}</version>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkus</groupId>
++      <artifactId>quarkus-junit-internal</artifactId>
++      <scope>test</scope>
++    </dependency>
++    <dependency>
++      <groupId>org.assertj</groupId>
++      <artifactId>assertj-core</artifactId>
++      <version>${assertj.version}</version>
++      <scope>test</scope>
++    </dependency>
++  </dependencies>
++  <build>
++    <plugins>
++      <plugin>
++        <artifactId>maven-compiler-plugin</artifactId>
++        <configuration>
++          <annotationProcessorPaths>
++            <path>
++              <groupId>io.quarkus</groupId>
++              <artifactId>quarkus-extension-processor</artifactId>
++            </path>
++          </annotationProcessorPaths>
++        </configuration>
++      </plugin>
++      <plugin>
++        <artifactId>maven-surefire-plugin</artifactId>
++        <configuration>
++          <argLine>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</argLine>
++        </configuration>
++      </plugin>
++    </plugins>
++  </build>
++</project>
+diff --git a/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreBuildTimeConfig.java b/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreBuildTimeConfig.java
+new file mode 100644
+index 000000000..67df98e3c
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreBuildTimeConfig.java
+@@ -0,0 +1,45 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
++
++import java.util.Map;
++
++import io.quarkus.runtime.annotations.ConfigDocMapKey;
++import io.quarkus.runtime.annotations.ConfigDocSection;
++import io.quarkus.runtime.annotations.ConfigGroup;
++import io.quarkus.runtime.annotations.ConfigRoot;
++import io.smallrye.config.ConfigMapping;
++import io.smallrye.config.WithDefault;
++import io.smallrye.config.WithDefaults;
++import io.smallrye.config.WithParentName;
++
++@ConfigRoot(phase = BUILD_TIME)
++@ConfigMapping(prefix = "quarkus.langchain4j.lancedb")
++public interface LanceDbEmbeddingStoreBuildTimeConfig {
++
++    /**
++     * Default store build-time config.
++     */
++    @WithParentName
++    DefaultStoreBuildTimeConfig defaultConfig();
++
++    /**
++     * Named store configurations.
++     */
++    @ConfigDocSection
++    @ConfigDocMapKey("store-name")
++    @WithParentName
++    @WithDefaults
++    Map<String, LanceDbNamedStoreBuildTimeConfig> namedConfig();
++
++    @ConfigGroup
++    interface DefaultStoreBuildTimeConfig {
++
++        /**
++         * Whether the default (unnamed) LanceDB embedding store should be enabled.
++         * Set to {@code false} when you only want to use named stores.
++         */
++        @WithDefault("true")
++        boolean defaultStoreEnabled();
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreProcessor.java b/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreProcessor.java
+new file mode 100644
+index 000000000..4f0746314
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbEmbeddingStoreProcessor.java
+@@ -0,0 +1,126 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import java.util.Map;
++
++import jakarta.enterprise.context.ApplicationScoped;
++
++import org.apache.arrow.memory.RootAllocator;
++import org.apache.arrow.vector.Float4Vector;
++import org.apache.arrow.vector.VarBinaryVector;
++import org.apache.arrow.vector.VarCharVector;
++import org.apache.arrow.vector.VectorSchemaRoot;
++import org.apache.arrow.vector.complex.FixedSizeListVector;
++import org.apache.arrow.vector.ipc.ArrowFileReader;
++import org.apache.arrow.vector.ipc.ArrowStreamWriter;
++import org.jboss.jandex.AnnotationInstance;
++import org.jboss.jandex.ClassType;
++import org.jboss.jandex.DotName;
++import org.jboss.jandex.ParameterizedType;
++import org.lance.namespace.model.CreateTableRequest;
++import org.lance.namespace.model.DeleteFromTableRequest;
++import org.lance.namespace.model.InsertIntoTableRequest;
++import org.lance.namespace.model.QueryTableRequest;
++import org.lance.namespace.model.QueryTableRequestColumns;
++import org.lance.namespace.model.QueryTableRequestVector;
++
++import dev.langchain4j.data.segment.TextSegment;
++import dev.langchain4j.store.embedding.EmbeddingStore;
++import io.quarkiverse.langchain4j.EmbeddingStoreName;
++import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkiverse.langchain4j.lancedb.runtime.LanceDbEmbeddingStoreRecorder;
++import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
++import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
++import io.quarkus.deployment.annotations.BuildProducer;
++import io.quarkus.deployment.annotations.BuildStep;
++import io.quarkus.deployment.annotations.ExecutionTime;
++import io.quarkus.deployment.annotations.Record;
++import io.quarkus.deployment.builditem.FeatureBuildItem;
++import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
++import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
++
++class LanceDbEmbeddingStoreProcessor {
++
++    private static final DotName LANCEDB_EMBEDDING_STORE = DotName.createSimple(LanceDbEmbeddingStore.class);
++
++    private static final String FEATURE = "langchain4j-lancedb";
++
++    @BuildStep
++    FeatureBuildItem feature() {
++        return new FeatureBuildItem(FEATURE);
++    }
++
++    @BuildStep
++    void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
++        producer.produce(new IndexDependencyBuildItem("com.lancedb", "lancedb-core"));
++        producer.produce(new IndexDependencyBuildItem("org.lance", "lance-core"));
++    }
++
++    @BuildStep
++    void reflectiveClasses(BuildProducer<ReflectiveClassBuildItem> producer) {
++        producer.produce(ReflectiveClassBuildItem.builder(RootAllocator.class,
++                Float4Vector.class,
++                VarCharVector.class,
++                VarBinaryVector.class,
++                FixedSizeListVector.class,
++                VectorSchemaRoot.class,
++                ArrowFileReader.class,
++                ArrowStreamWriter.class).methods().fields().build());
++
++        producer.produce(ReflectiveClassBuildItem.builder(CreateTableRequest.class,
++                InsertIntoTableRequest.class,
++                QueryTableRequest.class,
++                QueryTableRequestColumns.class,
++                QueryTableRequestVector.class,
++                DeleteFromTableRequest.class).methods().fields().build());
++    }
++
++    @BuildStep
++    @Record(ExecutionTime.RUNTIME_INIT)
++    public void createBean(
++            BuildProducer<SyntheticBeanBuildItem> beanProducer,
++            LanceDbEmbeddingStoreRecorder recorder,
++            LanceDbEmbeddingStoreBuildTimeConfig buildTimeConfig,
++            BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
++
++        if (buildTimeConfig.defaultConfig().defaultStoreEnabled()) {
++            beanProducer.produce(SyntheticBeanBuildItem
++                    .configure(LANCEDB_EMBEDDING_STORE)
++                    .types(ClassType.create(LanceDbEmbeddingStore.class),
++                            ClassType.create(EmbeddingStore.class),
++                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
++                    .setRuntimeInit()
++                    .defaultBean()
++                    .unremovable()
++                    .scope(ApplicationScoped.class)
++                    .createWith(recorder.embeddingStoreFunction(NamedConfigUtil.DEFAULT_NAME))
++                    .done());
++
++            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
++        }
++
++        Map<String, LanceDbNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
++        for (Map.Entry<String, LanceDbNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
++            String storeName = entry.getKey();
++
++            AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
++                    .add("value", storeName)
++                    .build();
++
++            beanProducer.produce(SyntheticBeanBuildItem
++                    .configure(LANCEDB_EMBEDDING_STORE)
++                    .types(ClassType.create(LanceDbEmbeddingStore.class),
++                            ClassType.create(EmbeddingStore.class),
++                            ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
++                    .setRuntimeInit()
++                    .defaultBean()
++                    .unremovable()
++                    .scope(ApplicationScoped.class)
++                    .addQualifier(storeNameQualifier)
++                    .createWith(recorder.embeddingStoreFunction(storeName))
++                    .done());
++
++            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
++        }
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreBuildTimeConfig.java b/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreBuildTimeConfig.java
+new file mode 100644
+index 000000000..eb6d3118c
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/main/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreBuildTimeConfig.java
+@@ -0,0 +1,18 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import java.util.Optional;
++
++import io.quarkus.runtime.annotations.ConfigGroup;
++import io.smallrye.config.WithDefault;
++
++@ConfigGroup
++public interface LanceDbNamedStoreBuildTimeConfig {
++
++    /**
++     * The database name for this named store.
++     * This property serves as the build-time key that enables named store discovery.
++     * If not set, the database name from the runtime configuration will be used.
++     */
++    @WithDefault("<default>")
++    Optional<String> database();
++}
+diff --git a/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultAndNamedStoreTest.java b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultAndNamedStoreTest.java
+new file mode 100644
+index 000000000..936b44db7
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultAndNamedStoreTest.java
+@@ -0,0 +1,51 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++import jakarta.inject.Inject;
++
++import org.jboss.shrinkwrap.api.ShrinkWrap;
++import org.jboss.shrinkwrap.api.spec.JavaArchive;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.RegisterExtension;
++
++import dev.langchain4j.data.segment.TextSegment;
++import dev.langchain4j.store.embedding.EmbeddingStore;
++import io.quarkiverse.langchain4j.EmbeddingStoreName;
++import io.quarkus.test.QuarkusUnitTest;
++
++public class LanceDbDefaultAndNamedStoreTest {
++
++    @RegisterExtension
++    static final QuarkusUnitTest test = new QuarkusUnitTest()
++            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.api-key", "test-api-key")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.database", "test-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.dimension", "384")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.named-store.api-key", "test-api-key")
++            .overrideConfigKey("quarkus.langchain4j.lancedb.named-store.database", "named-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.named-store.dimension", "1536")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.named-store.table-name", "named_embeddings");
++
++    @Inject
++    EmbeddingStore<TextSegment> defaultEmbeddingStore;
++
++    @Inject
++    @EmbeddingStoreName("named-store")
++    EmbeddingStore<TextSegment> namedEmbeddingStore;
++
++    @Test
++    void testDefault() {
++        assertThat(defaultEmbeddingStore).isNotNull();
++    }
++
++    @Test
++    void testNamed() {
++        assertThat(namedEmbeddingStore).isNotNull();
++    }
++
++    @Test
++    void testNotSame() {
++        assertThat(defaultEmbeddingStore).isNotSameAs(namedEmbeddingStore);
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultStoreTest.java b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultStoreTest.java
+new file mode 100644
+index 000000000..8889371d3
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbDefaultStoreTest.java
+@@ -0,0 +1,42 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++import jakarta.inject.Inject;
++
++import org.jboss.shrinkwrap.api.ShrinkWrap;
++import org.jboss.shrinkwrap.api.spec.JavaArchive;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.RegisterExtension;
++
++import dev.langchain4j.data.segment.TextSegment;
++import dev.langchain4j.store.embedding.EmbeddingStore;
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkus.test.QuarkusUnitTest;
++
++public class LanceDbDefaultStoreTest {
++
++    @RegisterExtension
++    static final QuarkusUnitTest test = new QuarkusUnitTest()
++            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.api-key", "test-api-key")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.database", "test-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.dimension", "384");
++
++    @Inject
++    LanceDbEmbeddingStore store;
++
++    @Inject
++    EmbeddingStore<TextSegment> embeddingStore;
++
++    @Test
++    void testDefaultStoreInjected() {
++        assertThat(store).isNotNull();
++    }
++
++    @Test
++    void testStoreAvailableViaEmbeddingStoreInterface() {
++        assertThat(embeddingStore).isNotNull();
++        assertThat(embeddingStore).isSameAs(store);
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingApiKeyTest.java b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingApiKeyTest.java
+new file mode 100644
+index 000000000..16cc5e7d1
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingApiKeyTest.java
+@@ -0,0 +1,32 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static org.assertj.core.api.Assertions.assertThatThrownBy;
++
++import jakarta.inject.Inject;
++
++import org.jboss.shrinkwrap.api.ShrinkWrap;
++import org.jboss.shrinkwrap.api.spec.JavaArchive;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.RegisterExtension;
++
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkus.test.QuarkusUnitTest;
++import io.smallrye.config.ConfigValidationException;
++
++public class LanceDbMissingApiKeyTest {
++
++    @RegisterExtension
++    static final QuarkusUnitTest test = new QuarkusUnitTest()
++            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.database", "test-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.dimension", "384");
++
++    @Inject
++    LanceDbEmbeddingStore store;
++
++    @Test
++    void testMissingApiKey() {
++        assertThatThrownBy(() -> store.toString())
++                .hasCauseInstanceOf(ConfigValidationException.class);
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDatabaseTest.java b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDatabaseTest.java
+new file mode 100644
+index 000000000..e0736e80e
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDatabaseTest.java
+@@ -0,0 +1,32 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static org.assertj.core.api.Assertions.assertThatThrownBy;
++
++import jakarta.inject.Inject;
++
++import org.jboss.shrinkwrap.api.ShrinkWrap;
++import org.jboss.shrinkwrap.api.spec.JavaArchive;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.RegisterExtension;
++
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkus.test.QuarkusUnitTest;
++import io.smallrye.config.ConfigValidationException;
++
++public class LanceDbMissingDatabaseTest {
++
++    @RegisterExtension
++    static final QuarkusUnitTest test = new QuarkusUnitTest()
++            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.api-key", "test-api-key")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.dimension", "384");
++
++    @Inject
++    LanceDbEmbeddingStore store;
++
++    @Test
++    void testMissingDatabase() {
++        assertThatThrownBy(() -> store.toString())
++                .hasCauseInstanceOf(ConfigValidationException.class);
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDimensionTest.java b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDimensionTest.java
+new file mode 100644
+index 000000000..53f8676d9
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMissingDimensionTest.java
+@@ -0,0 +1,32 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static org.assertj.core.api.Assertions.assertThatThrownBy;
++
++import jakarta.inject.Inject;
++
++import org.jboss.shrinkwrap.api.ShrinkWrap;
++import org.jboss.shrinkwrap.api.spec.JavaArchive;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.RegisterExtension;
++
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkus.test.QuarkusUnitTest;
++import io.smallrye.config.ConfigValidationException;
++
++public class LanceDbMissingDimensionTest {
++
++    @RegisterExtension
++    static final QuarkusUnitTest test = new QuarkusUnitTest()
++            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.api-key", "test-api-key")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.database", "test-db");
++
++    @Inject
++    LanceDbEmbeddingStore store;
++
++    @Test
++    void testMissingDimension() {
++        assertThatThrownBy(() -> store.toString())
++                .hasCauseInstanceOf(ConfigValidationException.class);
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMultipleNamedStoresTest.java b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMultipleNamedStoresTest.java
+new file mode 100644
+index 000000000..74db6408b
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbMultipleNamedStoresTest.java
+@@ -0,0 +1,53 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++import jakarta.inject.Inject;
++
++import org.jboss.shrinkwrap.api.ShrinkWrap;
++import org.jboss.shrinkwrap.api.spec.JavaArchive;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.RegisterExtension;
++
++import io.quarkiverse.langchain4j.EmbeddingStoreName;
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkus.test.QuarkusUnitTest;
++
++public class LanceDbMultipleNamedStoresTest {
++
++    @RegisterExtension
++    static final QuarkusUnitTest test = new QuarkusUnitTest()
++            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
++            .overrideConfigKey("quarkus.langchain4j.lancedb.default-store-enabled", "false")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.products.api-key", "test-api-key")
++            .overrideConfigKey("quarkus.langchain4j.lancedb.products.database", "products-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.products.dimension", "1536")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.products.table-name", "product_embeddings")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.documents.api-key", "test-api-key")
++            .overrideConfigKey("quarkus.langchain4j.lancedb.documents.database", "documents-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.documents.dimension", "768")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.documents.table-name", "document_embeddings");
++
++    @Inject
++    @EmbeddingStoreName("products")
++    LanceDbEmbeddingStore productsEmbeddingStore;
++
++    @Inject
++    @EmbeddingStoreName("documents")
++    LanceDbEmbeddingStore documentsEmbeddingStore;
++
++    @Test
++    void testProductsStore() {
++        assertThat(productsEmbeddingStore).isNotNull();
++    }
++
++    @Test
++    void testDocumentsStore() {
++        assertThat(documentsEmbeddingStore).isNotNull();
++    }
++
++    @Test
++    void testStoresAreDifferent() {
++        assertThat(productsEmbeddingStore).isNotSameAs(documentsEmbeddingStore);
++    }
++}
+diff --git a/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreTest.java b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreTest.java
+new file mode 100644
+index 000000000..9fe6c2e4c
+--- /dev/null
++++ b/embedding-stores/lancedb/deployment/src/test/java/io/quarkiverse/langchain4j/lancedb/deployment/LanceDbNamedStoreTest.java
+@@ -0,0 +1,50 @@
++package io.quarkiverse.langchain4j.lancedb.deployment;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++import jakarta.inject.Inject;
++
++import org.jboss.shrinkwrap.api.ShrinkWrap;
++import org.jboss.shrinkwrap.api.spec.JavaArchive;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.extension.RegisterExtension;
++
++import io.quarkiverse.langchain4j.EmbeddingStoreName;
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkus.test.QuarkusUnitTest;
++
++public class LanceDbNamedStoreTest {
++
++    @RegisterExtension
++    static final QuarkusUnitTest test = new QuarkusUnitTest()
++            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.api-key", "test-api-key")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.database", "test-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.dimension", "384")
++            .overrideConfigKey("quarkus.langchain4j.lancedb.products.database", "products-db")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.products.api-key", "test-api-key")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.products.dimension", "1536")
++            .overrideRuntimeConfigKey("quarkus.langchain4j.lancedb.products.table-name", "product_embeddings");
++
++    @Inject
++    LanceDbEmbeddingStore defaultEmbeddingStore;
++
++    @Inject
++    @EmbeddingStoreName("products")
++    LanceDbEmbeddingStore productsEmbeddingStore;
++
++    @Test
++    void testDefault() {
++        assertThat(defaultEmbeddingStore).isNotNull();
++    }
++
++    @Test
++    void testNamed() {
++        assertThat(productsEmbeddingStore).isNotNull();
++    }
++
++    @Test
++    void testNotSame() {
++        assertThat(defaultEmbeddingStore).isNotSameAs(productsEmbeddingStore);
++    }
++}
+diff --git a/embedding-stores/lancedb/pom.xml b/embedding-stores/lancedb/pom.xml
+new file mode 100644
+index 000000000..e0732b605
+--- /dev/null
++++ b/embedding-stores/lancedb/pom.xml
+@@ -0,0 +1,17 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
++  <modelVersion>4.0.0</modelVersion>
++  <parent>
++        <groupId>io.quarkiverse.langchain4j</groupId>
++        <artifactId>quarkus-langchain4j-parent</artifactId>
++        <version>999-SNAPSHOT</version>
++        <relativePath>../../pom.xml</relativePath>
++    </parent>
++  <artifactId>quarkus-langchain4j-lancedb-parent</artifactId>
++  <name>Quarkus LangChain4j - LanceDB - Parent</name>
++  <packaging>pom</packaging>
++  <modules>
++    <module>deployment</module>
++    <module>runtime</module>
++  </modules>
++</project>
+diff --git a/embedding-stores/lancedb/runtime/pom.xml b/embedding-stores/lancedb/runtime/pom.xml
+new file mode 100644
+index 000000000..130e64efa
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/pom.xml
+@@ -0,0 +1,74 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
++  <modelVersion>4.0.0</modelVersion>
++  <parent>
++    <groupId>io.quarkiverse.langchain4j</groupId>
++    <artifactId>quarkus-langchain4j-lancedb-parent</artifactId>
++    <version>999-SNAPSHOT</version>
++  </parent>
++  <artifactId>quarkus-langchain4j-lancedb</artifactId>
++  <name>Quarkus LangChain4j - LanceDB - Runtime</name>
++  <dependencies>
++    <dependency>
++        <groupId>io.quarkus</groupId>
++        <artifactId>quarkus-arc</artifactId>
++    </dependency>
++    <dependency>
++        <groupId>io.quarkiverse.langchain4j</groupId>
++        <artifactId>quarkus-langchain4j-core</artifactId>
++        <version>${project.version}</version>
++    </dependency>
++    <dependency>
++        <groupId>com.lancedb</groupId>
++        <artifactId>lancedb-core</artifactId>
++        <version>${lancedb.version}</version>
++    </dependency>
++    <dependency>
++        <groupId>io.quarkus</groupId>
++        <artifactId>quarkus-jackson</artifactId>
++    </dependency>
++    <dependency>
++        <groupId>org.assertj</groupId>
++        <artifactId>assertj-core</artifactId>
++        <version>${assertj.version}</version>
++        <scope>test</scope>
++    </dependency>
++    <dependency>
++        <groupId>io.quarkus</groupId>
++        <artifactId>quarkus-junit-internal</artifactId>
++        <scope>test</scope>
++    </dependency>
++  </dependencies>
++  <build>
++    <plugins>
++      <plugin>
++        <groupId>io.quarkus</groupId>
++        <artifactId>quarkus-extension-maven-plugin</artifactId>
++        <version>${quarkus.version}</version>
++        <executions>
++          <execution>
++            <phase>compile</phase>
++            <goals>
++              <goal>extension-descriptor</goal>
++            </goals>
++            <configuration>
++              <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
++              <skipExtensionDependencyValidation>true</skipExtensionDependencyValidation>
++            </configuration>
++          </execution>
++        </executions>
++      </plugin>
++      <plugin>
++        <artifactId>maven-compiler-plugin</artifactId>
++        <configuration>
++          <annotationProcessorPaths>
++            <path>
++              <groupId>io.quarkus</groupId>
++              <artifactId>quarkus-extension-processor</artifactId>
++            </path>
++          </annotationProcessorPaths>
++        </configuration>
++      </plugin>
++    </plugins>
++  </build>
++</project>
+diff --git a/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbEmbeddingStore.java b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbEmbeddingStore.java
+new file mode 100644
+index 000000000..5191e6e26
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbEmbeddingStore.java
+@@ -0,0 +1,480 @@
++package io.quarkiverse.langchain4j.lancedb;
++
++import java.io.ByteArrayOutputStream;
++import java.io.IOException;
++import java.io.UncheckedIOException;
++import java.nio.ByteBuffer;
++import java.nio.channels.Channels;
++import java.nio.channels.SeekableByteChannel;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++
++import org.apache.arrow.memory.BufferAllocator;
++import org.apache.arrow.memory.RootAllocator;
++import org.apache.arrow.vector.Float4Vector;
++import org.apache.arrow.vector.VarBinaryVector;
++import org.apache.arrow.vector.VarCharVector;
++import org.apache.arrow.vector.VectorSchemaRoot;
++import org.apache.arrow.vector.complex.FixedSizeListVector;
++import org.apache.arrow.vector.ipc.ArrowFileReader;
++import org.apache.arrow.vector.ipc.ArrowStreamWriter;
++import org.apache.arrow.vector.types.FloatingPointPrecision;
++import org.apache.arrow.vector.types.pojo.ArrowType;
++import org.apache.arrow.vector.types.pojo.Field;
++import org.apache.arrow.vector.types.pojo.FieldType;
++import org.apache.arrow.vector.types.pojo.Schema;
++import org.lance.namespace.LanceNamespace;
++import org.lance.namespace.model.CreateTableRequest;
++import org.lance.namespace.model.DeleteFromTableRequest;
++import org.lance.namespace.model.InsertIntoTableRequest;
++import org.lance.namespace.model.QueryTableRequest;
++import org.lance.namespace.model.QueryTableRequestColumns;
++import org.lance.namespace.model.QueryTableRequestVector;
++
++import com.fasterxml.jackson.core.JsonProcessingException;
++import com.fasterxml.jackson.databind.ObjectMapper;
++
++import dev.langchain4j.data.embedding.Embedding;
++import dev.langchain4j.data.segment.TextSegment;
++import dev.langchain4j.store.embedding.EmbeddingMatch;
++import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
++import dev.langchain4j.store.embedding.EmbeddingSearchResult;
++import dev.langchain4j.store.embedding.EmbeddingStore;
++import dev.langchain4j.store.embedding.RelevanceScore;
++
++public class LanceDbEmbeddingStore implements EmbeddingStore<TextSegment> {
++
++    private static final String ID_COLUMN = "id";
++    private static final String VECTOR_COLUMN = "vector";
++    private static final String TEXT_COLUMN = "text";
++    private static final String METADATA_COLUMN = "metadata";
++
++    private final LanceNamespace namespace;
++    private final String tableName;
++    private final int dimension;
++    private final Schema schema;
++    private final DistanceType distanceType;
++    private final LanceDbFilterMapper filterMapper;
++    private final ObjectMapper objectMapper;
++    private volatile boolean tableCreated = false;
++
++    public LanceDbEmbeddingStore(LanceNamespace namespace, String tableName, int dimension) {
++        this(namespace, tableName, dimension, DistanceType.l2);
++    }
++
++    public LanceDbEmbeddingStore(LanceNamespace namespace, String tableName, int dimension, DistanceType distanceType) {
++        this.namespace = namespace;
++        this.tableName = tableName;
++        this.dimension = dimension;
++        this.distanceType = distanceType;
++        this.schema = createSchema(dimension);
++        this.filterMapper = new LanceDbFilterMapper();
++        this.objectMapper = new ObjectMapper();
++    }
++
++    @Override
++    public String add(Embedding embedding) {
++        String id = generateId();
++        addInternal(List.of(id), List.of(embedding), List.of());
++        return id;
++    }
++
++    @Override
++    public void add(String id, Embedding embedding) {
++        addInternal(List.of(id), List.of(embedding), List.of());
++    }
++
++    @Override
++    public String add(Embedding embedding, TextSegment textSegment) {
++        String id = generateId();
++        addInternal(List.of(id), List.of(embedding),
++                textSegment != null ? List.of(textSegment) : List.of());
++        return id;
++    }
++
++    @Override
++    public List<String> addAll(List<Embedding> embeddings) {
++        List<String> ids = embeddings.stream()
++                .map(e -> generateId())
++                .toList();
++        addInternal(ids, embeddings, List.of());
++        return ids;
++    }
++
++    @Override
++    public List<String> addAll(List<Embedding> embeddings, List<TextSegment> textSegments) {
++        List<String> ids = embeddings.stream()
++                .map(e -> generateId())
++                .toList();
++        addInternal(ids, embeddings, textSegments != null ? textSegments : List.of());
++        return ids;
++    }
++
++    @Override
++    public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
++        ensureTableCreated();
++
++        QueryTableRequest query = new QueryTableRequest();
++        query.setId(Arrays.asList(tableName));
++        query.setK(request.maxResults());
++        query.setVectorColumn(VECTOR_COLUMN);
++
++        List<Float> queryVector = toFloatList(request.queryEmbedding().vector());
++        QueryTableRequestVector vector = new QueryTableRequestVector();
++        vector.setSingleVector(queryVector);
++        query.setVector(vector);
++
++        if (request.filter() != null) {
++            String filterString = filterMapper.map(request.filter());
++            if (filterString != null) {
++                query.setFilter(filterString);
++                query.setPrefilter(true);
++            }
++        }
++
++        QueryTableRequestColumns columns = new QueryTableRequestColumns();
++        columns.setColumnNames(Arrays.asList(ID_COLUMN, VECTOR_COLUMN, TEXT_COLUMN, METADATA_COLUMN));
++        query.setColumns(columns);
++
++        try {
++            byte[] resultBytes = namespace.queryTable(query);
++            List<EmbeddingMatch<TextSegment>> matches = parseQueryResult(resultBytes, request.minScore());
++            return new EmbeddingSearchResult<>(matches);
++        } catch (Exception e) {
++            throw new RuntimeException("Failed to search LanceDB", e);
++        }
++    }
++
++    @Override
++    public void remove(String id) {
++        ensureTableCreated();
++        try {
++            DeleteFromTableRequest request = new DeleteFromTableRequest();
++            request.setId(Arrays.asList(tableName));
++            request.setPredicate(ID_COLUMN + " = '" + id + "'");
++            namespace.deleteFromTable(request);
++        } catch (Exception e) {
++            throw new RuntimeException("Failed to remove from LanceDB", e);
++        }
++    }
++
++    private void addInternal(List<String> ids, List<Embedding> embeddings, List<TextSegment> textSegments) {
++        ensureTableCreated();
++        byte[] arrowData = createArrowData(ids, embeddings, textSegments);
++        try {
++            InsertIntoTableRequest request = new InsertIntoTableRequest();
++            request.setId(Arrays.asList(tableName));
++            request.setMode("append");
++            namespace.insertIntoTable(request, arrowData);
++        } catch (Exception e) {
++            throw new RuntimeException("Failed to add embedding to LanceDB", e);
++        }
++    }
++
++    private synchronized void ensureTableCreated() {
++        if (tableCreated) {
++            return;
++        }
++        try {
++            byte[] emptyData = createEmptyArrowData();
++            CreateTableRequest request = new CreateTableRequest();
++            request.setId(Arrays.asList(tableName));
++            namespace.createTable(request, emptyData);
++            tableCreated = true;
++        } catch (Exception e) {
++            if (isTableAlreadyExistsError(e)) {
++                tableCreated = true;
++            } else {
++                throw new RuntimeException("Failed to create table in LanceDB", e);
++            }
++        }
++    }
++
++    private boolean isTableAlreadyExistsError(Exception e) {
++        String message = e.getMessage();
++        if (message == null) {
++            if (e.getCause() != null && e.getCause().getMessage() != null) {
++                message = e.getCause().getMessage();
++            } else {
++                return false;
++            }
++        }
++        String lowerMessage = message.toLowerCase();
++        return lowerMessage.contains("already exists") || lowerMessage.contains("duplicate")
++                || lowerMessage.contains("conflict");
++    }
++
++    private Schema createSchema(int dim) {
++        return new Schema(Arrays.asList(
++                new Field(ID_COLUMN, FieldType.nullable(new ArrowType.Utf8()), null),
++                new Field(VECTOR_COLUMN,
++                        FieldType.nullable(new ArrowType.FixedSizeList(dim)),
++                        Arrays.asList(new Field("item",
++                                FieldType.nullable(new ArrowType.FloatingPoint(FloatingPointPrecision.SINGLE)),
++                                null))),
++                new Field(TEXT_COLUMN, FieldType.nullable(new ArrowType.Utf8()), null),
++                new Field(METADATA_COLUMN, FieldType.nullable(new ArrowType.Binary()), null)));
++    }
++
++    private byte[] createArrowData(List<String> ids, List<Embedding> embeddings, List<TextSegment> textSegments) {
++        try (BufferAllocator allocator = new RootAllocator();
++                VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator)) {
++
++            VarCharVector idVector = (VarCharVector) root.getVector(ID_COLUMN);
++            FixedSizeListVector vectorVector = (FixedSizeListVector) root.getVector(VECTOR_COLUMN);
++            Float4Vector vectorData = (Float4Vector) vectorVector.getDataVector();
++            VarCharVector textVector = (VarCharVector) root.getVector(TEXT_COLUMN);
++            VarBinaryVector metadataVector = (VarBinaryVector) root.getVector(METADATA_COLUMN);
++
++            int rowCount = ids.size();
++            root.setRowCount(rowCount);
++
++            for (int i = 0; i < rowCount; i++) {
++                idVector.setSafe(i, ids.get(i).getBytes());
++
++                vectorVector.setNotNull(i);
++                float[] vector = embeddings.get(i).vector();
++                for (int j = 0; j < dimension; j++) {
++                    vectorData.setSafe(i * dimension + j, vector[j]);
++                }
++
++                if (i < textSegments.size() && textSegments.get(i) != null) {
++                    TextSegment segment = textSegments.get(i);
++                    textVector.setSafe(i, segment.text().getBytes());
++                    byte[] metaBytes = serializeMetadata(segment);
++                    if (metaBytes != null) {
++                        metadataVector.setSafe(i, metaBytes);
++                    } else {
++                        metadataVector.setNull(i);
++                    }
++                } else {
++                    textVector.setNull(i);
++                    metadataVector.setNull(i);
++                }
++            }
++
++            idVector.setValueCount(rowCount);
++            vectorData.setValueCount(rowCount * dimension);
++            vectorVector.setValueCount(rowCount);
++            textVector.setValueCount(rowCount);
++            metadataVector.setValueCount(rowCount);
++
++            return serializeToArrowIpc(root);
++        }
++    }
++
++    private byte[] createEmptyArrowData() {
++        try (BufferAllocator allocator = new RootAllocator();
++                VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator)) {
++            root.setRowCount(0);
++            return serializeToArrowIpc(root);
++        }
++    }
++
++    private byte[] serializeToArrowIpc(VectorSchemaRoot root) {
++        ByteArrayOutputStream out = new ByteArrayOutputStream();
++        try (ArrowStreamWriter writer = new ArrowStreamWriter(root, null, Channels.newChannel(out))) {
++            writer.start();
++            writer.writeBatch();
++            writer.end();
++        } catch (IOException e) {
++            throw new UncheckedIOException("Failed to serialize Arrow data", e);
++        }
++        return out.toByteArray();
++    }
++
++    private List<EmbeddingMatch<TextSegment>> parseQueryResult(byte[] resultBytes, double minScore) {
++        List<EmbeddingMatch<TextSegment>> matches = new ArrayList<>();
++        try (BufferAllocator allocator = new RootAllocator();
++                ArrowFileReader reader = new ArrowFileReader(
++                        new ByteArraySeekableByteChannel(resultBytes), allocator)) {
++
++            for (int i = 0; i < reader.getRecordBlocks().size(); i++) {
++                reader.loadRecordBatch(reader.getRecordBlocks().get(i));
++                VectorSchemaRoot root = reader.getVectorSchemaRoot();
++
++                VarCharVector idVector = (VarCharVector) root.getVector(ID_COLUMN);
++                FixedSizeListVector vectorVector = (FixedSizeListVector) root.getVector(VECTOR_COLUMN);
++                Float4Vector vectorData = (Float4Vector) vectorVector.getDataVector();
++                VarCharVector textVector = (VarCharVector) root.getVector(TEXT_COLUMN);
++                VarBinaryVector metadataVector = (VarBinaryVector) root.getVector(METADATA_COLUMN);
++
++                Float4Vector distanceVector = null;
++                try {
++                    distanceVector = (Float4Vector) root.getVector("_distance");
++                } catch (IllegalArgumentException ignored) {
++                }
++
++                for (int row = 0; row < root.getRowCount(); row++) {
++                    String id = new String(idVector.get(row));
++
++                    float[] embedding = new float[dimension];
++                    for (int j = 0; j < dimension; j++) {
++                        embedding[j] = vectorData.get(row * dimension + j);
++                    }
++
++                    TextSegment textSegment = null;
++                    if (!textVector.isNull(row)) {
++                        String text = new String(textVector.get(row));
++                        byte[] metaBytes = metadataVector.isNull(row) ? null : metadataVector.get(row);
++                        textSegment = deserializeTextSegment(text, metaBytes);
++                    }
++
++                    double score;
++                    if (distanceVector != null && row < distanceVector.getValueCount() && !distanceVector.isNull(row)) {
++                        float distance = distanceVector.get(row);
++                        score = distanceType.toRelevanceScore(distance);
++                    } else {
++                        score = 1.0;
++                    }
++
++                    if (score >= minScore) {
++                        matches.add(new EmbeddingMatch<>(score, id, new Embedding(embedding), textSegment));
++                    }
++                }
++            }
++        } catch (Exception e) {
++            throw new RuntimeException("Failed to parse LanceDB query result", e);
++        }
++        return matches;
++    }
++
++    private byte[] serializeMetadata(TextSegment textSegment) {
++        if (textSegment.metadata() == null) {
++            return null;
++        }
++        Map<String, Object> map = textSegment.metadata().toMap();
++        if (map.isEmpty()) {
++            return null;
++        }
++        try {
++            return objectMapper.writeValueAsBytes(map);
++        } catch (JsonProcessingException e) {
++            throw new RuntimeException("Failed to serialize metadata to JSON", e);
++        }
++    }
++
++    private TextSegment deserializeTextSegment(String text, byte[] metaBytes) {
++        if (metaBytes == null || metaBytes.length == 0) {
++            return new TextSegment(text, dev.langchain4j.data.document.Metadata.from(Collections.emptyMap()));
++        }
++        try {
++            @SuppressWarnings("unchecked")
++            Map<String, Object> map = objectMapper.readValue(metaBytes, HashMap.class);
++            return new TextSegment(text, dev.langchain4j.data.document.Metadata.from(map));
++        } catch (IOException e) {
++            return fallbackDeserializeTextSegment(text, metaBytes);
++        }
++    }
++
++    private TextSegment fallbackDeserializeTextSegment(String text, byte[] metaBytes) {
++        String metaStr = new String(metaBytes);
++        Map<String, Object> map = new HashMap<>();
++        for (String entry : metaStr.split("\0")) {
++            int eq = entry.indexOf('=');
++            if (eq > 0) {
++                map.put(entry.substring(0, eq), entry.substring(eq + 1));
++            }
++        }
++        return new TextSegment(text, dev.langchain4j.data.document.Metadata.from(map));
++    }
++
++    private List<Float> toFloatList(float[] vector) {
++        List<Float> list = new ArrayList<>(vector.length);
++        for (float v : vector) {
++            list.add(v);
++        }
++        return list;
++    }
++
++    private String generateId() {
++        return UUID.randomUUID().toString();
++    }
++
++    public enum DistanceType {
++        l2 {
++            @Override
++            public double toRelevanceScore(float distance) {
++                return RelevanceScore.fromCosineSimilarity(1.0 - distance / 2);
++            }
++        },
++        cosine {
++            @Override
++            public double toRelevanceScore(float distance) {
++                return RelevanceScore.fromCosineSimilarity(1.0 - distance);
++            }
++        },
++        ip {
++            @Override
++            public double toRelevanceScore(float distance) {
++                return RelevanceScore.fromCosineSimilarity(distance);
++            }
++        };
++
++        public abstract double toRelevanceScore(float distance);
++    }
++
++    private static class ByteArraySeekableByteChannel implements SeekableByteChannel {
++        private final byte[] data;
++        private long position = 0;
++        private boolean isOpen = true;
++
++        ByteArraySeekableByteChannel(byte[] data) {
++            this.data = data;
++        }
++
++        @Override
++        public int read(ByteBuffer dst) {
++            int remaining = dst.remaining();
++            int available = (int) (data.length - position);
++            if (available <= 0) {
++                return -1;
++            }
++            int toRead = Math.min(remaining, available);
++            dst.put(data, (int) position, toRead);
++            position += toRead;
++            return toRead;
++        }
++
++        @Override
++        public long position() {
++            return position;
++        }
++
++        @Override
++        public SeekableByteChannel position(long newPosition) {
++            this.position = newPosition;
++            return this;
++        }
++
++        @Override
++        public long size() {
++            return data.length;
++        }
++
++        @Override
++        public boolean isOpen() {
++            return isOpen;
++        }
++
++        @Override
++        public void close() {
++            isOpen = false;
++        }
++
++        @Override
++        public int write(ByteBuffer src) {
++            throw new UnsupportedOperationException();
++        }
++
++        @Override
++        public SeekableByteChannel truncate(long size) {
++            throw new UnsupportedOperationException();
++        }
++    }
++}
+diff --git a/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapper.java b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapper.java
+new file mode 100644
+index 000000000..ca3ef6607
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapper.java
+@@ -0,0 +1,119 @@
++package io.quarkiverse.langchain4j.lancedb;
++
++import java.util.Collection;
++import java.util.stream.Collectors;
++
++import dev.langchain4j.store.embedding.filter.Filter;
++import dev.langchain4j.store.embedding.filter.comparison.IsEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsGreaterThan;
++import dev.langchain4j.store.embedding.filter.comparison.IsGreaterThanOrEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsIn;
++import dev.langchain4j.store.embedding.filter.comparison.IsLessThan;
++import dev.langchain4j.store.embedding.filter.comparison.IsLessThanOrEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsNotEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsNotIn;
++import dev.langchain4j.store.embedding.filter.logical.And;
++import dev.langchain4j.store.embedding.filter.logical.Not;
++import dev.langchain4j.store.embedding.filter.logical.Or;
++
++public class LanceDbFilterMapper {
++
++    public String map(Filter filter) {
++        if (filter == null) {
++            return null;
++        }
++        return mapFilter(filter);
++    }
++
++    private String mapFilter(Filter filter) {
++        if (filter instanceof IsEqualTo f) {
++            return mapEqual(f);
++        } else if (filter instanceof IsNotEqualTo f) {
++            return mapNotEqual(f);
++        } else if (filter instanceof IsGreaterThan f) {
++            return mapGreaterThan(f);
++        } else if (filter instanceof IsGreaterThanOrEqualTo f) {
++            return mapGreaterThanOrEqual(f);
++        } else if (filter instanceof IsLessThan f) {
++            return mapLessThan(f);
++        } else if (filter instanceof IsLessThanOrEqualTo f) {
++            return mapLessThanOrEqual(f);
++        } else if (filter instanceof IsIn f) {
++            return mapIn(f);
++        } else if (filter instanceof IsNotIn f) {
++            return mapNotIn(f);
++        } else if (filter instanceof And f) {
++            return mapAnd(f);
++        } else if (filter instanceof Or f) {
++            return mapOr(f);
++        } else if (filter instanceof Not f) {
++            return mapNot(f);
++        }
++        throw new UnsupportedOperationException("Unsupported filter type: " + filter.getClass().getName());
++    }
++
++    private String mapEqual(IsEqualTo filter) {
++        return metadataKey(filter.key()) + " = " + formatValue(filter.comparisonValue());
++    }
++
++    private String mapNotEqual(IsNotEqualTo filter) {
++        return metadataKey(filter.key()) + " != " + formatValue(filter.comparisonValue());
++    }
++
++    private String mapGreaterThan(IsGreaterThan filter) {
++        return metadataKey(filter.key()) + " > " + formatValue(filter.comparisonValue());
++    }
++
++    private String mapGreaterThanOrEqual(IsGreaterThanOrEqualTo filter) {
++        return metadataKey(filter.key()) + " >= " + formatValue(filter.comparisonValue());
++    }
++
++    private String mapLessThan(IsLessThan filter) {
++        return metadataKey(filter.key()) + " < " + formatValue(filter.comparisonValue());
++    }
++
++    private String mapLessThanOrEqual(IsLessThanOrEqualTo filter) {
++        return metadataKey(filter.key()) + " <= " + formatValue(filter.comparisonValue());
++    }
++
++    private String mapIn(IsIn filter) {
++        return metadataKey(filter.key()) + " IN (" + formatCollection(filter.comparisonValues()) + ")";
++    }
++
++    private String mapNotIn(IsNotIn filter) {
++        return metadataKey(filter.key()) + " NOT IN (" + formatCollection(filter.comparisonValues()) + ")";
++    }
++
++    private String mapAnd(And filter) {
++        return "(" + mapFilter(filter.left()) + " AND " + mapFilter(filter.right()) + ")";
++    }
++
++    private String mapOr(Or filter) {
++        return "(" + mapFilter(filter.left()) + " OR " + mapFilter(filter.right()) + ")";
++    }
++
++    private String mapNot(Not filter) {
++        return "NOT (" + mapFilter(filter.expression()) + ")";
++    }
++
++    private String metadataKey(String key) {
++        return "metadata." + key;
++    }
++
++    static String formatValue(Object value) {
++        if (value instanceof Number) {
++            return value.toString();
++        }
++        return "'" + escapeString(value.toString()) + "'";
++    }
++
++    static String formatCollection(Collection<?> values) {
++        return values.stream()
++                .map(LanceDbFilterMapper::formatValue)
++                .collect(Collectors.joining(", "));
++    }
++
++    private static String escapeString(String value) {
++        return value.replace("\\", "\\\\").replace("'", "\\'");
++    }
++}
+diff --git a/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreConfig.java b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreConfig.java
+new file mode 100644
+index 000000000..77ab572e4
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreConfig.java
+@@ -0,0 +1,32 @@
++package io.quarkiverse.langchain4j.lancedb.runtime;
++
++import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
++
++import java.util.Map;
++
++import io.quarkus.runtime.annotations.ConfigDocMapKey;
++import io.quarkus.runtime.annotations.ConfigDocSection;
++import io.quarkus.runtime.annotations.ConfigRoot;
++import io.smallrye.config.ConfigMapping;
++import io.smallrye.config.WithDefaults;
++import io.smallrye.config.WithParentName;
++
++@ConfigRoot(phase = RUN_TIME)
++@ConfigMapping(prefix = "quarkus.langchain4j.lancedb")
++public interface LanceDbEmbeddingStoreConfig {
++
++    /**
++     * Default store runtime config.
++     */
++    @WithParentName
++    LanceDbStoreRuntimeConfig defaultConfig();
++
++    /**
++     * Named store configurations.
++     */
++    @ConfigDocSection
++    @ConfigDocMapKey("store-name")
++    @WithParentName
++    @WithDefaults
++    Map<String, LanceDbStoreRuntimeConfig> namedConfig();
++}
+diff --git a/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreRecorder.java b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreRecorder.java
+new file mode 100644
+index 000000000..d789f014b
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbEmbeddingStoreRecorder.java
+@@ -0,0 +1,84 @@
++package io.quarkiverse.langchain4j.lancedb.runtime;
++
++import java.util.function.Function;
++
++import org.lance.namespace.LanceNamespace;
++
++import com.lancedb.LanceDbNamespaceClientBuilder;
++
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore;
++import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
++import io.quarkus.arc.SyntheticCreationalContext;
++import io.quarkus.runtime.RuntimeValue;
++import io.quarkus.runtime.annotations.Recorder;
++import io.smallrye.config.ConfigValidationException;
++
++@Recorder
++public class LanceDbEmbeddingStoreRecorder {
++
++    private final RuntimeValue<LanceDbEmbeddingStoreConfig> runtimeConfig;
++
++    public LanceDbEmbeddingStoreRecorder(RuntimeValue<LanceDbEmbeddingStoreConfig> runtimeConfig) {
++        this.runtimeConfig = runtimeConfig;
++    }
++
++    public Function<SyntheticCreationalContext<LanceDbEmbeddingStore>, LanceDbEmbeddingStore> embeddingStoreFunction(
++            String storeName) {
++        return new Function<>() {
++            @Override
++            public LanceDbEmbeddingStore apply(SyntheticCreationalContext<LanceDbEmbeddingStore> context) {
++                LanceDbStoreRuntimeConfig storeConfig = correspondingStoreConfig(storeName);
++
++                String apiKey = storeConfig.apiKey().orElseThrow(
++                        () -> new ConfigValidationException(createApiKeyConfigProblems(storeName)));
++                String database = storeConfig.database().orElseThrow(
++                        () -> new ConfigValidationException(createDatabaseConfigProblems(storeName)));
++
++                if (storeConfig.dimension().isEmpty()) {
++                    throw new ConfigValidationException(createDimensionConfigProblems(storeName));
++                }
++
++                LanceDbNamespaceClientBuilder builder = LanceDbNamespaceClientBuilder.newBuilder()
++                        .apiKey(apiKey)
++                        .database(database)
++                        .region(storeConfig.region());
++                storeConfig.endpoint().ifPresent(builder::endpoint);
++                LanceNamespace namespace = builder.build();
++
++                return new LanceDbEmbeddingStore(namespace, storeConfig.tableName(),
++                        storeConfig.dimension().get(), storeConfig.distanceType());
++            }
++        };
++    }
++
++    private LanceDbStoreRuntimeConfig correspondingStoreConfig(String storeName) {
++        if (NamedConfigUtil.isDefault(storeName)) {
++            return runtimeConfig.getValue().defaultConfig();
++        }
++        return runtimeConfig.getValue().namedConfig().get(storeName);
++    }
++
++    private ConfigValidationException.Problem[] createApiKeyConfigProblems(String storeName) {
++        return new ConfigValidationException.Problem[] {
++                new ConfigValidationException.Problem(String.format(
++                        "SRCFG00014: The config property quarkus.langchain4j.lancedb%sapi-key is required but it could not be found in any config source",
++                        NamedConfigUtil.isDefault(storeName) ? "." : ("." + storeName + ".")))
++        };
++    }
++
++    private ConfigValidationException.Problem[] createDatabaseConfigProblems(String storeName) {
++        return new ConfigValidationException.Problem[] {
++                new ConfigValidationException.Problem(String.format(
++                        "SRCFG00014: The config property quarkus.langchain4j.lancedb%sdatabase is required but it could not be found in any config source",
++                        NamedConfigUtil.isDefault(storeName) ? "." : ("." + storeName + ".")))
++        };
++    }
++
++    private ConfigValidationException.Problem[] createDimensionConfigProblems(String storeName) {
++        return new ConfigValidationException.Problem[] {
++                new ConfigValidationException.Problem(String.format(
++                        "SRCFG00014: The config property quarkus.langchain4j.lancedb%sdimension is required but it could not be found in any config source",
++                        NamedConfigUtil.isDefault(storeName) ? "." : ("." + storeName + ".")))
++        };
++    }
++}
+diff --git a/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbStoreRuntimeConfig.java b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbStoreRuntimeConfig.java
+new file mode 100644
+index 000000000..3cb169777
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/main/java/io/quarkiverse/langchain4j/lancedb/runtime/LanceDbStoreRuntimeConfig.java
+@@ -0,0 +1,49 @@
++package io.quarkiverse.langchain4j.lancedb.runtime;
++
++import java.util.Optional;
++
++import io.quarkiverse.langchain4j.lancedb.LanceDbEmbeddingStore.DistanceType;
++import io.quarkus.runtime.annotations.ConfigGroup;
++import io.smallrye.config.WithDefault;
++
++@ConfigGroup
++public interface LanceDbStoreRuntimeConfig {
++
++    /**
++     * The API key for authenticating with LanceDB Cloud or Enterprise.
++     */
++    Optional<String> apiKey();
++
++    /**
++     * The name of the LanceDB database to connect to.
++     */
++    Optional<String> database();
++
++    /**
++     * The endpoint URL for LanceDB Enterprise. If not set, LanceDB Cloud will be used.
++     */
++    Optional<String> endpoint();
++
++    /**
++     * The AWS region for LanceDB Cloud.
++     */
++    @WithDefault("us-east-1")
++    String region();
++
++    /**
++     * The name of the table to use for storing embeddings.
++     */
++    @WithDefault("default")
++    String tableName();
++
++    /**
++     * The dimension of the embeddings to be stored. Must match the dimension of the embedding model used.
++     */
++    Optional<Integer> dimension();
++
++    /**
++     * The distance metric for vector similarity search.
++     */
++    @WithDefault("l2")
++    DistanceType distanceType();
++}
+diff --git a/embedding-stores/lancedb/runtime/src/main/resources/META-INF/beans.xml b/embedding-stores/lancedb/runtime/src/main/resources/META-INF/beans.xml
+new file mode 100644
+index 000000000..184b243f9
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/main/resources/META-INF/beans.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<beans xmlns="https://jakarta.ee/xml/ns/jakartaee"
++       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++       xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd"
++       version="4.0"
++       bean-discovery-mode="annotated">
++</beans>
+diff --git a/embedding-stores/lancedb/runtime/src/main/resources/META-INF/quarkus-extension.yaml b/embedding-stores/lancedb/runtime/src/main/resources/META-INF/quarkus-extension.yaml
+new file mode 100644
+index 000000000..6c18244c6
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/main/resources/META-INF/quarkus-extension.yaml
+@@ -0,0 +1,12 @@
++name: LangChain4j LanceDB
++artifact: ${project.groupId}:${project.artifactId}:${project.version}
++description: Provides integration of Quarkus LangChain4j with the LanceDB vector database
++metadata:
++  keywords:
++    - ai
++    - langchain4j
++    - lancedb
++  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/rag-lancedb-store.html"
++  categories:
++    - "ai"
++  status: "preview"
+diff --git a/embedding-stores/lancedb/runtime/src/test/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapperTest.java b/embedding-stores/lancedb/runtime/src/test/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapperTest.java
+new file mode 100644
+index 000000000..296be6895
+--- /dev/null
++++ b/embedding-stores/lancedb/runtime/src/test/java/io/quarkiverse/langchain4j/lancedb/LanceDbFilterMapperTest.java
+@@ -0,0 +1,150 @@
++package io.quarkiverse.langchain4j.lancedb;
++
++import static org.assertj.core.api.Assertions.assertThat;
++import static org.assertj.core.api.Assertions.assertThatThrownBy;
++
++import java.util.Arrays;
++
++import org.junit.jupiter.api.Test;
++
++import dev.langchain4j.store.embedding.filter.Filter;
++import dev.langchain4j.store.embedding.filter.comparison.IsEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsGreaterThan;
++import dev.langchain4j.store.embedding.filter.comparison.IsGreaterThanOrEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsIn;
++import dev.langchain4j.store.embedding.filter.comparison.IsLessThan;
++import dev.langchain4j.store.embedding.filter.comparison.IsLessThanOrEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsNotEqualTo;
++import dev.langchain4j.store.embedding.filter.comparison.IsNotIn;
++import dev.langchain4j.store.embedding.filter.logical.And;
++import dev.langchain4j.store.embedding.filter.logical.Not;
++import dev.langchain4j.store.embedding.filter.logical.Or;
++
++class LanceDbFilterMapperTest {
++
++    private final LanceDbFilterMapper mapper = new LanceDbFilterMapper();
++
++    @Test
++    void testNullFilter() {
++        assertThat(mapper.map(null)).isNull();
++    }
++
++    @Test
++    void testStringEqual() {
++        assertThat(mapper.map(new IsEqualTo("name", "John"))).isEqualTo("metadata.name = 'John'");
++    }
++
++    @Test
++    void testStringNotEqual() {
++        assertThat(mapper.map(new IsNotEqualTo("status", "active"))).isEqualTo("metadata.status != 'active'");
++    }
++
++    @Test
++    void testIntegerEqual() {
++        assertThat(mapper.map(new IsEqualTo("age", 25))).isEqualTo("metadata.age = 25");
++    }
++
++    @Test
++    void testLongEqual() {
++        assertThat(mapper.map(new IsEqualTo("id", 123L))).isEqualTo("metadata.id = 123");
++    }
++
++    @Test
++    void testDoubleEqual() {
++        assertThat(mapper.map(new IsEqualTo("price", 99.99))).isEqualTo("metadata.price = 99.99");
++    }
++
++    @Test
++    void testStringGreaterThan() {
++        assertThat(mapper.map(new IsGreaterThan("name", "A"))).isEqualTo("metadata.name > 'A'");
++    }
++
++    @Test
++    void testIntegerGreaterThan() {
++        assertThat(mapper.map(new IsGreaterThan("age", 18))).isEqualTo("metadata.age > 18");
++    }
++
++    @Test
++    void testGreaterThanOrEqual() {
++        assertThat(mapper.map(new IsGreaterThanOrEqualTo("age", 21))).isEqualTo("metadata.age >= 21");
++    }
++
++    @Test
++    void testStringLessThan() {
++        assertThat(mapper.map(new IsLessThan("name", "Z"))).isEqualTo("metadata.name < 'Z'");
++    }
++
++    @Test
++    void testFloatLessThan() {
++        assertThat(mapper.map(new IsLessThan("score", 4.5f))).isEqualTo("metadata.score < 4.5");
++    }
++
++    @Test
++    void testLessThanOrEqual() {
++        assertThat(mapper.map(new IsLessThanOrEqualTo("price", 100.0))).isEqualTo("metadata.price <= 100.0");
++    }
++
++    @Test
++    void testStringIn() {
++        assertThat(mapper.map(new IsIn("category", Arrays.asList("A", "B", "C"))))
++                .isEqualTo("metadata.category IN ('A', 'B', 'C')");
++    }
++
++    @Test
++    void testIntegerIn() {
++        assertThat(mapper.map(new IsIn("status", Arrays.asList(1, 2, 3))))
++                .isEqualTo("metadata.status IN (1, 2, 3)");
++    }
++
++    @Test
++    void testStringNotIn() {
++        assertThat(mapper.map(new IsNotIn("category", Arrays.asList("X", "Y"))))
++                .isEqualTo("metadata.category NOT IN ('X', 'Y')");
++    }
++
++    @Test
++    void testIntegerNotIn() {
++        assertThat(mapper.map(new IsNotIn("status", Arrays.asList(0, 9))))
++                .isEqualTo("metadata.status NOT IN (0, 9)");
++    }
++
++    @Test
++    void testAndFilter() {
++        assertThat(mapper.map(new And(new IsEqualTo("name", "John"), new IsEqualTo("age", 25))))
++                .isEqualTo("(metadata.name = 'John' AND metadata.age = 25)");
++    }
++
++    @Test
++    void testOrFilter() {
++        assertThat(mapper.map(new Or(new IsEqualTo("name", "John"), new IsEqualTo("name", "Jane"))))
++                .isEqualTo("(metadata.name = 'John' OR metadata.name = 'Jane')");
++    }
++
++    @Test
++    void testNotFilter() {
++        assertThat(mapper.map(new Not(new IsEqualTo("status", "inactive"))))
++                .isEqualTo("NOT (metadata.status = 'inactive')");
++    }
++
++    @Test
++    void testComplexNestedFilter() {
++        assertThat(mapper.map(new And(
++                new IsEqualTo("category", "book"),
++                new Or(new IsGreaterThan("price", 10.0), new IsLessThan("price", 5.0)))))
++                .isEqualTo("(metadata.category = 'book' AND (metadata.price > 10.0 OR metadata.price < 5.0))");
++    }
++
++    @Test
++    void testStringEscaping() {
++        assertThat(mapper.map(new IsEqualTo("name", "O'Brien")))
++                .isEqualTo("metadata.name = 'O\\'Brien'");
++    }
++
++    @Test
++    void testUnsupportedFilter() {
++        Filter unsupportedFilter = object -> false;
++        assertThatThrownBy(() -> mapper.map(unsupportedFilter))
++                .isInstanceOf(UnsupportedOperationException.class)
++                .hasMessageContaining("Unsupported filter type:");
++    }
++}
+diff --git a/embedding-stores/pom.xml b/embedding-stores/pom.xml
+index 9729f95fa..292657e63 100644
+--- a/embedding-stores/pom.xml
++++ b/embedding-stores/pom.xml
+@@ -13,6 +13,7 @@
+     <modules>
+         <module>chroma</module>
+         <module>infinispan</module>
++        <module>lancedb</module>
+         <module>milvus</module>
+         <module>neo4j</module>
+         <module>oracle</module>
+diff --git a/integration-tests/pom.xml b/integration-tests/pom.xml
+index 971aaa23e..2aa1f3e8f 100644
+--- a/integration-tests/pom.xml
++++ b/integration-tests/pom.xml
+@@ -32,6 +32,7 @@
+     <module>rag-pgvector</module>
+     <module>rag-pgvector-flyway</module>
+     <module>easy-rag</module>
++    <module>rag-lancedb</module>
+     <module>tools</module>
+     <module>mcp</module>
+     <module>mcp-opentelemetry</module>
+@@ -128,6 +129,11 @@
+                       <artifactId>quarkus-langchain4j-easy-rag</artifactId>
+                       <version>999-SNAPSHOT</version>
+                   </dependency>
++                  <dependency>
++                      <groupId>io.quarkiverse.langchain4j</groupId>
++                      <artifactId>quarkus-langchain4j-lancedb</artifactId>
++                      <version>999-SNAPSHOT</version>
++                  </dependency>
+                   <dependency>
+                       <groupId>io.quarkiverse.langchain4j</groupId>
+                       <artifactId>quarkus-langchain4j-hugging-face</artifactId>
+diff --git a/integration-tests/rag-lancedb/pom.xml b/integration-tests/rag-lancedb/pom.xml
+new file mode 100644
+index 000000000..b43690574
+--- /dev/null
++++ b/integration-tests/rag-lancedb/pom.xml
+@@ -0,0 +1,132 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
++  <modelVersion>4.0.0</modelVersion>
++  <parent>
++    <groupId>io.quarkiverse.langchain4j</groupId>
++    <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
++    <version>999-SNAPSHOT</version>
++  </parent>
++  <artifactId>quarkus-langchain4j-integration-test-rag-lancedb</artifactId>
++  <name>Quarkus LangChain4j - Integration Tests - RAG With LanceDB</name>
++  <properties>
++    <skipITs>true</skipITs>
++  </properties>
++  <dependencies>
++    <dependency>
++      <groupId>io.quarkus</groupId>
++      <artifactId>quarkus-rest-jackson</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>dev.langchain4j</groupId>
++      <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkiverse.langchain4j</groupId>
++      <artifactId>quarkus-langchain4j-openai</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkiverse.langchain4j</groupId>
++      <artifactId>quarkus-langchain4j-lancedb</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkus</groupId>
++      <artifactId>quarkus-junit-mockito</artifactId>
++      <scope>test</scope>
++    </dependency>
++    <dependency>
++      <groupId>io.rest-assured</groupId>
++      <artifactId>rest-assured</artifactId>
++      <scope>test</scope>
++    </dependency>
++    <dependency>
++      <groupId>org.assertj</groupId>
++      <artifactId>assertj-core</artifactId>
++      <scope>test</scope>
++    </dependency>
++    <dependency>
++      <groupId>io.quarkus</groupId>
++      <artifactId>quarkus-devtools-testing</artifactId>
++      <scope>test</scope>
++    </dependency>
++  </dependencies>
++  <build>
++    <plugins>
++      <plugin>
++        <groupId>${quarkus.platform.group-id}</groupId>
++        <artifactId>quarkus-maven-plugin</artifactId>
++        <executions>
++          <execution>
++            <goals>
++              <goal>build</goal>
++            </goals>
++          </execution>
++        </executions>
++      </plugin>
++      <plugin>
++        <artifactId>maven-failsafe-plugin</artifactId>
++        <executions>
++          <execution>
++            <goals>
++              <goal>integration-test</goal>
++              <goal>verify</goal>
++            </goals>
++            <configuration>
++              <systemPropertyVariables>
++                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
++                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
++                <maven.home>${maven.home}</maven.home>
++              </systemPropertyVariables>
++            </configuration>
++          </execution>
++        </executions>
++      </plugin>
++    </plugins>
++  </build>
++  <profiles>
++    <profile>
++      <id>default-project-deps</id>
++      <activation>
++        <property>
++          <name>!platform-deps</name>
++        </property>
++      </activation>
++      <dependencies>
++        <dependency>
++          <groupId>io.quarkiverse.langchain4j</groupId>
++          <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
++          <version>999-SNAPSHOT</version>
++          <type>pom</type>
++          <scope>test</scope>
++          <exclusions>
++            <exclusion>
++              <groupId>*</groupId>
++              <artifactId>*</artifactId>
++            </exclusion>
++          </exclusions>
++        </dependency>
++      </dependencies>
++    </profile>
++    <profile>
++      <id>native-image</id>
++      <activation>
++        <property>
++          <name>native</name>
++        </property>
++      </activation>
++      <build>
++        <plugins>
++          <plugin>
++            <artifactId>maven-surefire-plugin</artifactId>
++            <configuration>
++              <skipTests>${native.surefire.skip}</skipTests>
++            </configuration>
++          </plugin>
++        </plugins>
++      </build>
++      <properties>
++        <skipITs>false</skipITs>
++        <quarkus.package.type>native</quarkus.package.type>
++      </properties>
++    </profile>
++  </profiles>
++</project>
+diff --git a/integration-tests/rag-lancedb/src/main/java/org/acme/example/AiWithUserFilterService.java b/integration-tests/rag-lancedb/src/main/java/org/acme/example/AiWithUserFilterService.java
+new file mode 100644
+index 000000000..4ea8ebf1d
+--- /dev/null
++++ b/integration-tests/rag-lancedb/src/main/java/org/acme/example/AiWithUserFilterService.java
+@@ -0,0 +1,56 @@
++package org.acme.example;
++
++import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
++
++import java.util.function.Function;
++
++import jakarta.enterprise.context.ApplicationScoped;
++import jakarta.enterprise.inject.Produces;
++import jakarta.inject.Inject;
++
++import dev.langchain4j.data.segment.TextSegment;
++import dev.langchain4j.model.embedding.EmbeddingModel;
++import dev.langchain4j.rag.DefaultRetrievalAugmentor;
++import dev.langchain4j.rag.RetrievalAugmentor;
++import dev.langchain4j.rag.content.retriever.ContentRetriever;
++import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
++import dev.langchain4j.rag.query.Query;
++import dev.langchain4j.service.MemoryId;
++import dev.langchain4j.service.UserMessage;
++import dev.langchain4j.store.embedding.EmbeddingStore;
++import dev.langchain4j.store.embedding.filter.Filter;
++import io.quarkiverse.langchain4j.RegisterAiService;
++
++@RegisterAiService
++public interface AiWithUserFilterService {
++
++    String chat(@MemoryId String userId, @UserMessage String message);
++
++    @ApplicationScoped
++    @SuppressWarnings("unused")
++    class AugmentorProducer {
++
++        @Inject
++        EmbeddingStore<TextSegment> store;
++
++        @Inject
++        EmbeddingModel embeddingModel;
++
++        @Produces
++        public RetrievalAugmentor get() {
++            Function<Query, Filter> filterByUserId = (query) -> metadataKey("userId")
++                    .isEqualTo(query.metadata().chatMemoryId().toString());
++
++            ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
++                    .embeddingModel(embeddingModel)
++                    .embeddingStore(store)
++                    .dynamicFilter(filterByUserId)
++                    .maxResults(10)
++                    .build();
++
++            return DefaultRetrievalAugmentor.builder()
++                    .contentRetriever(contentRetriever)
++                    .build();
++        }
++    }
++}
+diff --git a/integration-tests/rag-lancedb/src/main/java/org/acme/example/EmbeddingStoreIngestor.java b/integration-tests/rag-lancedb/src/main/java/org/acme/example/EmbeddingStoreIngestor.java
+new file mode 100644
+index 000000000..1ff3b310e
+--- /dev/null
++++ b/integration-tests/rag-lancedb/src/main/java/org/acme/example/EmbeddingStoreIngestor.java
+@@ -0,0 +1,30 @@
++package org.acme.example;
++
++import jakarta.enterprise.event.Observes;
++import jakarta.inject.Inject;
++
++import dev.langchain4j.data.document.Metadata;
++import dev.langchain4j.data.segment.TextSegment;
++import dev.langchain4j.model.embedding.EmbeddingModel;
++import dev.langchain4j.store.embedding.EmbeddingStore;
++import io.quarkus.runtime.StartupEvent;
++
++public class EmbeddingStoreIngestor {
++
++    @Inject
++    EmbeddingModel embeddingModel;
++
++    @Inject
++    EmbeddingStore<TextSegment> embeddingStore;
++
++    @SuppressWarnings("unused")
++    public void ingest(@Observes StartupEvent event) {
++        embed(embeddingStore, "Charlie was born in 2018.", Metadata.metadata("userId", "1"));
++        embed(embeddingStore, "Charlie was born in 2015.", Metadata.metadata("userId", "2"));
++        embed(embeddingStore, "David was born in 2019.", Metadata.metadata("userId", "1"));
++    }
++
++    private void embed(EmbeddingStore<TextSegment> store, String text, Metadata metadata) {
++        store.add(embeddingModel.embed(text).content(), new TextSegment(text, metadata));
++    }
++}
+diff --git a/integration-tests/rag-lancedb/src/main/resources/application.properties b/integration-tests/rag-lancedb/src/main/resources/application.properties
+new file mode 100644
+index 000000000..bf0e6b505
+--- /dev/null
++++ b/integration-tests/rag-lancedb/src/main/resources/application.properties
+@@ -0,0 +1,7 @@
++quarkus.langchain4j.embedding-model.provider=dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel
++quarkus.langchain4j.openai.api-key=blabla
++
++quarkus.langchain4j.lancedb.api-key=${LANCEDB_API_KEY}
++quarkus.langchain4j.lancedb.database=${LANCEDB_DATABASE:test-db}
++quarkus.langchain4j.lancedb.dimension=384
++quarkus.langchain4j.lancedb.distance-type=cosine
+diff --git a/integration-tests/rag-lancedb/src/test/java/org/acme/example/RAGWithMetadataFilterTest.java b/integration-tests/rag-lancedb/src/test/java/org/acme/example/RAGWithMetadataFilterTest.java
+new file mode 100644
+index 000000000..d4c35548d
+--- /dev/null
++++ b/integration-tests/rag-lancedb/src/test/java/org/acme/example/RAGWithMetadataFilterTest.java
+@@ -0,0 +1,59 @@
++package org.acme.example;
++
++import java.util.List;
++import java.util.concurrent.atomic.AtomicReference;
++
++import jakarta.inject.Inject;
++
++import org.junit.jupiter.api.Assertions;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
++import org.mockito.Mockito;
++import org.mockito.stubbing.Answer;
++
++import dev.langchain4j.data.message.AiMessage;
++import dev.langchain4j.data.message.ChatMessage;
++import dev.langchain4j.data.message.UserMessage;
++import dev.langchain4j.model.chat.ChatModel;
++import dev.langchain4j.model.chat.request.ChatRequest;
++import dev.langchain4j.model.chat.response.ChatResponse;
++import io.quarkus.test.junit.QuarkusMock;
++import io.quarkus.test.junit.QuarkusTest;
++
++@QuarkusTest
++@EnabledIfSystemProperty(named = "enable.lancedb-tests", matches = "true")
++public class RAGWithMetadataFilterTest {
++
++    @Inject
++    AiWithUserFilterService aiWithUserFilterService;
++
++    private final static AtomicReference<List<ChatMessage>> lastQuery = new AtomicReference<>();
++
++    @BeforeAll
++    public static void initializeModel() {
++        ChatModel mock = Mockito.mock(ChatModel.class);
++        Answer<ChatResponse> answer = invocation -> {
++            lastQuery.set(((ChatRequest) invocation.getArgument(0)).messages());
++            return ChatResponse.builder().aiMessage(new AiMessage("Mock response")).build();
++        };
++        Mockito.when(mock.chat(Mockito.any(ChatRequest.class))).thenAnswer(answer);
++        QuarkusMock.installMockForType(mock, ChatModel.class);
++    }
++
++    @Test
++    public void testWithUser1Filter() {
++        aiWithUserFilterService.chat("1", "When was Charlie born?");
++        List<ChatMessage> query = lastQuery.get();
++        UserMessage userMessage = (UserMessage) query.get(0);
++        Assertions.assertTrue(userMessage.singleText().contains("Charlie was born in 2018."));
++    }
++
++    @Test
++    public void testWithUser2Filter() {
++        aiWithUserFilterService.chat("2", "When was Charlie born?");
++        List<ChatMessage> query = lastQuery.get();
++        UserMessage userMessage = (UserMessage) query.get(0);
++        Assertions.assertTrue(userMessage.singleText().contains("Charlie was born in 2015."));
++    }
++}
+diff --git a/pom.xml b/pom.xml
+index d4dc102ad..859b5b2a5 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -52,6 +52,7 @@
+     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
+     <gpu-llama3.version>0.4.0</gpu-llama3.version>
+     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
++    <lancedb.version>0.30.0-final.0</lancedb.version>
+   </properties>
+   <dependencyManagement>
+     <dependencies>
+@@ -202,6 +203,12 @@
+                         <version>${project.version}</version>
+                         <classifier>codestarts</classifier>
+                     </dependency>
++                    <dependency>
++                        <groupId>io.quarkiverse.langchain4j</groupId>
++                        <artifactId>quarkus-langchain4j-lancedb</artifactId>
++                        <version>${project.version}</version>
++                        <classifier>codestarts</classifier>
++                    </dependency>
+                     <dependency>
+                         <groupId>io.quarkiverse.langchain4j</groupId>
+                         <artifactId>quarkus-langchain4j-milvus</artifactId>
+-- 
+2.47.1.windows.1
+

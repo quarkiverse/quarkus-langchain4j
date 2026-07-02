@@ -96,6 +96,7 @@
 ** Document and Vector Stores
 *** xref:rag-chroma-store.adoc[Chroma]
 *** xref:rag-infinispan-store.adoc[Infinispan]
+*** xref:rag-lancedb-store.adoc[LanceDB]
 *** xref:rag-milvus-store.adoc[Milvus]
 *** xref:rag-neo4j.adoc[Neo4j]
 *** xref:rag-oracle-store.adoc[Oracle Database]
