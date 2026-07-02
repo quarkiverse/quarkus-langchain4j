@@ -37,6 +37,7 @@
         <module>weather-agent</module>
         <module>react-chatbot</module>
         <module>skills</module>
+        <module>a2a-agent-discovery</module>
     </modules>
 
     <build>
