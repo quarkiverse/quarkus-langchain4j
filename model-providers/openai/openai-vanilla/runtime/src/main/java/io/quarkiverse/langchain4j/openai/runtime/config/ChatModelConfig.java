@@ -17,6 +17,11 @@ public interface ChatModelConfig {
      * {@code responses} uses the newer {@code POST /v1/responses} endpoint, which is required for some
      * newer models and features (reasoning summaries, server tools, response chaining via
      * {@code previous-response-id}, etc.).
+     * <p>
+     * Note: when {@code responses} is selected, the following options are <em>not</em> applied because the
+     * underlying client does not support them: {@code max-retries} and {@code log-requests-curl}. Conversely,
+     * the Responses-specific options (for example {@code previous-response-id}, {@code reasoning-summary},
+     * {@code store}, {@code truncation}, {@code include}, ...) are ignored when {@code chat-completions} is used.
      */
     @WithDefault("chat-completions")
     Api api();

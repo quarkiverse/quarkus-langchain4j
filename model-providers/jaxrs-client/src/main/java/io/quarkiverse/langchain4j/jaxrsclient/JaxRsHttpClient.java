@@ -27,6 +27,7 @@ import io.quarkus.runtime.BlockingOperationControl;
 import io.quarkus.tls.TlsConfiguration;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.net.KeyCertOptions;
+import io.vertx.core.net.ProxyType;
 import io.vertx.core.net.SSLOptions;
 import io.vertx.core.net.TrustOptions;
 
@@ -38,6 +39,16 @@ public class JaxRsHttpClient implements HttpClient {
         ClientBuilderImpl clientBuilder = (ClientBuilderImpl) new ClientBuilderImpl()
                 .connectTimeout(builder.connectTimeout().getSeconds(), TimeUnit.SECONDS)
                 .readTimeout(builder.readTimeout().getSeconds(), TimeUnit.SECONDS);
+        if (builder.proxyHost() != null && builder.proxyType() != java.net.Proxy.Type.DIRECT) {
+            clientBuilder.proxy(builder.proxyHost(), builder.proxyPort());
+            clientBuilder.proxyType(toVertxProxyType(builder.proxyType()));
+            if (builder.proxyUsername() != null) {
+                clientBuilder.proxyUser(builder.proxyUsername());
+            }
+            if (builder.proxyPassword() != null) {
+                clientBuilder.proxyPassword(builder.proxyPassword());
+            }
+        }
         for (Object provider : builder.clientProviders()) {
             clientBuilder.register(provider);
         }
@@ -100,6 +111,10 @@ public class JaxRsHttpClient implements HttpClient {
 
     public static JaxRsHttpClientBuilder builder() {
         return new JaxRsHttpClientBuilder();
+    }
+
+    private static ProxyType toVertxProxyType(java.net.Proxy.Type type) {
+        return type == java.net.Proxy.Type.SOCKS ? ProxyType.SOCKS5 : ProxyType.HTTP;
     }
 
     @Override

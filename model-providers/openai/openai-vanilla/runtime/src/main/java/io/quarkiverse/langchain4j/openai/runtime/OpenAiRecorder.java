@@ -81,6 +81,10 @@ public class OpenAiRecorder {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesChatModel.Builder>>> RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesStreamingChatModel.Builder>>> RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiModerationModel.OpenAiModerationModelBuilder>>> MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
@@ -492,6 +496,7 @@ public class OpenAiRecorder {
 
     private Function<SyntheticCreationalContext<ChatModel>, ChatModel> responsesChatModel(String configName,
             LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, ChatModelConfig chatModelConfig, String apiKey) {
+        warnUnsupportedResponsesOptions(configName, openAiConfig);
         var httpClientBuilder = createResponsesHttpClientBuilder(openAiConfig);
         var builder = OpenAiResponsesChatModel.builder()
                 .httpClientBuilder(httpClientBuilder)
@@ -504,9 +509,13 @@ public class OpenAiRecorder {
         return new Function<>() {
             @Override
             public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
-                configureResponsesHttpClient(openAiConfig, configName, httpClientBuilder);
+                configureResponsesHttpClient(openAiConfig, configName, httpClientBuilder,
+                        context.getInjectedReference(ProxyConfigurationRegistry.class));
                 builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                         .collect(Collectors.toList()));
+                ModelBuilderCustomizer.applyCustomizers(
+                        context.getInjectedReference(RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                        builder, configName);
                 return builder.build();
             }
         };
@@ -515,6 +524,7 @@ public class OpenAiRecorder {
     private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> responsesStreamingChatModel(
             String configName, LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, ChatModelConfig chatModelConfig,
             String apiKey) {
+        warnUnsupportedResponsesOptions(configName, openAiConfig);
         var httpClientBuilder = createResponsesHttpClientBuilder(openAiConfig);
         var builder = OpenAiResponsesStreamingChatModel.builder()
                 .httpClientBuilder(httpClientBuilder)
@@ -527,12 +537,31 @@ public class OpenAiRecorder {
         return new Function<>() {
             @Override
             public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
-                configureResponsesHttpClient(openAiConfig, configName, httpClientBuilder);
+                configureResponsesHttpClient(openAiConfig, configName, httpClientBuilder,
+                        context.getInjectedReference(ProxyConfigurationRegistry.class));
                 builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                         .collect(Collectors.toList()));
+                ModelBuilderCustomizer.applyCustomizers(
+                        context.getInjectedReference(RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                Any.Literal.INSTANCE),
+                        builder, configName);
                 return builder.build();
             }
         };
+    }
+
+    private void warnUnsupportedResponsesOptions(String configName,
+            LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
+        if (openAiConfig.maxRetries() > 1) {
+            log.warnf("Configuration 'max-retries=%d' is not supported by the OpenAI Responses API " +
+                    "(chat-model.api=responses) for config '%s' and will be ignored.",
+                    openAiConfig.maxRetries(), NamedConfigUtil.isDefault(configName) ? "default" : configName);
+        }
+        if (firstOrDefault(false, openAiConfig.logRequestsCurl())) {
+            log.warnf("Configuration 'log-requests-curl=true' is not supported by the OpenAI Responses API " +
+                    "(chat-model.api=responses) for config '%s' and will be ignored.",
+                    NamedConfigUtil.isDefault(configName) ? "default" : configName);
+        }
     }
 
     private JaxRsHttpClientBuilder createResponsesHttpClientBuilder(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
@@ -543,7 +572,7 @@ public class OpenAiRecorder {
     }
 
     private void configureResponsesHttpClient(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig, String configName,
-            JaxRsHttpClientBuilder httpClientBuilder) {
+            JaxRsHttpClientBuilder httpClientBuilder, ProxyConfigurationRegistry proxyRegistry) {
         openAiConfig.tlsConfigurationName().ifPresent(tlsName -> Arc.container()
                 .instance(TlsConfigurationRegistry.class)
                 .get()
@@ -552,6 +581,12 @@ public class OpenAiRecorder {
         ModelAuthProvider.resolve(configName)
                 .ifPresent(ignored -> httpClientBuilder
                         .addClientProvider(new OpenAiModelAuthProviderFilter(configName)));
+        resolveProxy(openAiConfig, proxyRegistry)
+                .filter(proxy -> proxy.type() != Type.DIRECT && proxy.address() instanceof InetSocketAddress)
+                .ifPresent(proxy -> {
+                    InetSocketAddress address = (InetSocketAddress) proxy.address();
+                    httpClientBuilder.proxy(address.getHostString(), address.getPort(), proxy.type());
+                });
     }
 
     private void applyResponsesChatModelConfig(OpenAiResponsesChatModel.Builder builder,

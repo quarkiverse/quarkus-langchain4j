@@ -3,10 +3,12 @@ package io.quarkiverse.langchain4j.jaxrsclient;
 import static dev.langchain4j.http.client.HttpMethod.GET;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -150,6 +152,46 @@ class JaxRsHttpClientTest {
         assertEquals(200, openResponse.get().statusCode());
         assertEquals(null, openResponse.get().body());
         assertEquals("data: hello\n\n", parsedPayload.get());
+    }
+
+    @Test
+    void executeShouldRouteThroughHttpProxy() throws IOException {
+        AtomicReference<String> proxiedUri = new AtomicReference<>();
+        HttpServer proxy = HttpServer.create(new InetSocketAddress(0), 0);
+        proxy.createContext("/", exchange -> {
+            proxiedUri.set(exchange.getRequestURI().toString());
+            byte[] body = "via-proxy".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            } finally {
+                exchange.close();
+            }
+        });
+        proxy.start();
+
+        try {
+            int proxyPort = proxy.getAddress().getPort();
+            HttpClient client = new JaxRsHttpClientBuilder()
+                    .proxy("localhost", proxyPort, Proxy.Type.HTTP)
+                    .connectTimeout(Duration.ofSeconds(2))
+                    .readTimeout(Duration.ofSeconds(2))
+                    .build();
+
+            HttpRequest request = HttpRequest.builder()
+                    .method(GET)
+                    .url("http://target.example/through-proxy")
+                    .build();
+
+            SuccessfulHttpResponse response = client.execute(request);
+
+            assertEquals(200, response.statusCode());
+            assertEquals("via-proxy", response.body());
+            assertTrue(proxiedUri.get().contains("through-proxy"),
+                    "Expected the request to be forwarded through the proxy, but was: " + proxiedUri.get());
+        } finally {
+            proxy.stop(0);
+        }
     }
 
     private void handleOk(HttpExchange exchange) throws IOException {

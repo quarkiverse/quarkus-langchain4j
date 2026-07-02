@@ -74,6 +74,10 @@ public class OpenAiProcessor {
             .createSimple(OpenAiChatModel.OpenAiChatModelBuilder.class);
     private static final DotName OPENAI_STREAMING_CHAT_MODEL_BUILDER = DotName
             .createSimple(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder.class);
+    private static final DotName OPENAI_RESPONSES_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiResponsesChatModel.Builder.class);
+    private static final DotName OPENAI_RESPONSES_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiResponsesStreamingChatModel.Builder.class);
     private static final DotName OPENAI_EMBEDDING_MODEL_BUILDER = DotName
             .createSimple(OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder.class);
     private static final DotName OPENAI_MODERATION_MODEL_BUILDER = DotName
@@ -141,6 +145,10 @@ public class OpenAiProcessor {
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(OPENAI_CHAT_MODEL_BUILDER) }, null) },
                                 null), ANY)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_RESPONSES_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
@@ -156,6 +164,11 @@ public class OpenAiProcessor {
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(OPENAI_STREAMING_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_RESPONSES_STREAMING_CHAT_MODEL_BUILDER) },
+                                        null) },
                                 null), ANY)
                         .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);

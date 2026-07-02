@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.jaxrsclient;
 
+import java.net.Proxy;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,11 @@ public class JaxRsHttpClientBuilder implements HttpClientBuilder {
     private Duration readTimeout;
     private final List<Object> clientProviders = new ArrayList<>();
     private TlsConfiguration tlsConfiguration;
+    private String proxyHost;
+    private int proxyPort;
+    private Proxy.Type proxyType;
+    private String proxyUsername;
+    private String proxyPassword;
 
     @Override
     public Duration connectTimeout() {
@@ -47,12 +53,45 @@ public class JaxRsHttpClientBuilder implements HttpClientBuilder {
         return this;
     }
 
+    public JaxRsHttpClientBuilder proxy(String host, int port, Proxy.Type type) {
+        this.proxyHost = host;
+        this.proxyPort = port;
+        this.proxyType = type;
+        return this;
+    }
+
+    public JaxRsHttpClientBuilder proxyCredentials(String username, String password) {
+        this.proxyUsername = username;
+        this.proxyPassword = password;
+        return this;
+    }
+
     public List<Object> clientProviders() {
         return clientProviders;
     }
 
     public TlsConfiguration tlsConfiguration() {
         return tlsConfiguration;
+    }
+
+    public String proxyHost() {
+        return proxyHost;
+    }
+
+    public int proxyPort() {
+        return proxyPort;
+    }
+
+    public Proxy.Type proxyType() {
+        return proxyType;
+    }
+
+    public String proxyUsername() {
+        return proxyUsername;
+    }
+
+    public String proxyPassword() {
+        return proxyPassword;
     }
 
     @Override
