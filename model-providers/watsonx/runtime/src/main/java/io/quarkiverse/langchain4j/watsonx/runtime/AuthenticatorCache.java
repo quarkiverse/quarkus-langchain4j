@@ -16,10 +16,11 @@ public class AuthenticatorCache {
     }
 
     static Authenticator getOrCreateTokenGenerator(URI baseUrl, String apiKey) {
-        return cache.computeIfAbsent(apiKey,
+        var cacheKey = String.valueOf(baseUrl) + "|" + apiKey;
+        return cache.computeIfAbsent(cacheKey,
                 new Function<String, Authenticator>() {
                     @Override
-                    public Authenticator apply(String apiKey) {
+                    public Authenticator apply(String key) {
                         return IBMCloudAuthenticator.builder()
                                 .baseUrl(baseUrl)
                                 .apiKey(apiKey)

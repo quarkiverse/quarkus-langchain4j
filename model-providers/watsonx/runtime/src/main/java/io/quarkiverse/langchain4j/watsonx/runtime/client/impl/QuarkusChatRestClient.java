@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
@@ -60,7 +61,7 @@ public final class QuarkusChatRestClient extends ChatRestClient {
         return retryOn(requestId, new Callable<ChatResponse>() {
             @Override
             public ChatResponse call() throws Exception {
-                return client.chat(UUID.randomUUID().toString(), transactionId, version, textChatRequest);
+                return client.chat(requestId, transactionId, version, textChatRequest);
             }
         });
     }
@@ -77,18 +78,24 @@ public final class QuarkusChatRestClient extends ChatRestClient {
                 new SseEventProcessor(textChatRequest.tools(), context.extractionTags()), handler);
 
         CompletableFuture<ChatResponse> future = new CompletableFuture<>();
+        AtomicBoolean itemEmitted = new AtomicBoolean(false);
 
         client.chatStreaming(requestId, transactionId, version, textChatRequest)
                 .onItem().invoke(new Consumer<String>() {
                     @Override
                     public void accept(String message) {
                         if (nonNull(message) && !message.isBlank()) {
+                            itemEmitted.set(true);
                             subscriber.onNext("data: " + message);
                         }
                     }
                 })
-                .onFailure(WatsonxRestClientUtils::shouldRetry).retry().atMost(10)
-                .onFailure().invoke(subscriber::onError)
+                .onFailure(throwable -> !itemEmitted.get() && WatsonxRestClientUtils.shouldRetry(throwable))
+                .retry().atMost(10)
+                .onFailure().invoke(throwable -> {
+                    subscriber.onError(throwable);
+                    future.completeExceptionally(throwable);
+                })
                 .onCompletion().invoke(() -> {
                     subscriber.onComplete().whenComplete((response, throwable) -> {
                         if (throwable != null) {

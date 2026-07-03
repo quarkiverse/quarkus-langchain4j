@@ -26,7 +26,6 @@ import io.vertx.core.http.HttpClientResponse;
 public class WatsonxClientLogger implements ClientLogger {
 
     private static final Logger log = Logger.getLogger(WatsonxClientLogger.class);
-    private static final Pattern AUTHORIZATION_PATTERN = Pattern.compile("(\\w+\\s)(\\w{4})(\\w+)(\\w{4})");
     private static final Pattern BASE64_IMAGE_PATTERN = Pattern.compile("(data:[\\w\\/+]+;base64,)(.{15})([^\"]+)");
     private static final Pattern API_KEY_PATTERN = Pattern.compile("\"(api-key|apiKey)\"\\s*:\\s*\"([^\"]+\")",
             Pattern.CASE_INSENSITIVE);
@@ -166,14 +165,14 @@ public class WatsonxClientLogger implements ClientLogger {
     private static String maskAuthorizationHeaderValue(String authorizationHeaderValue) {
         try {
 
-            Matcher matcher = AUTHORIZATION_PATTERN.matcher(authorizationHeaderValue);
+            int space = authorizationHeaderValue.indexOf(' ');
+            String scheme = space > 0 ? authorizationHeaderValue.substring(0, space + 1) : "";
+            String token = space > 0 ? authorizationHeaderValue.substring(space + 1) : authorizationHeaderValue;
 
-            StringBuilder sb = new StringBuilder();
-            while (matcher.find()) {
-                matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "..." + matcher.group(4));
-            }
+            if (token.length() <= 8)
+                return scheme + "...";
 
-            return sb.toString();
+            return scheme + token.substring(0, 4) + "..." + token.substring(token.length() - 4);
         } catch (Exception e) {
             return "Failed to mask the API key.";
         }
@@ -190,10 +189,11 @@ public class WatsonxClientLogger implements ClientLogger {
             StringBuilder sb = new StringBuilder();
             while (matcher.find()) {
                 matcher.appendReplacement(sb,
-                        matcher.group(1) + matcher.group(2) + "..." + matcher.group(4) + matcher.group(5));
+                        Matcher.quoteReplacement(matcher.group(1) + matcher.group(2) + "..."));
             }
+            matcher.appendTail(sb);
 
-            return sb.isEmpty() ? body : sb.toString();
+            return sb.toString();
         } catch (Exception e) {
             return "Failed to format the base64 image value.";
         }

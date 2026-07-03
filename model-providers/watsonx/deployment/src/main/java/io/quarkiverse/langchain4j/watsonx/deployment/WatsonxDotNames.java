@@ -2,6 +2,9 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import org.jboss.jandex.DotName;
 
+import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 import com.ibm.watsonx.ai.tool.ToolService;
@@ -24,4 +27,7 @@ public class WatsonxDotNames {
     public static final DotName TEXT_EXTRACTION = DotName.createSimple(TextExtractionService.class);
     public static final DotName TEXT_CLASSIFICATION = DotName.createSimple(TextClassificationService.class);
     public static final DotName TOOL_SERVICE = DotName.createSimple(ToolService.class);
+    public static final DotName CREATE_SCHEMA = DotName.createSimple(CreateSchemaService.class);
+    public static final DotName MERGE_SCHEMA = DotName.createSimple(MergeSchemaService.class);
+    public static final DotName IMPROVE_SCHEMA = DotName.createSimple(ImproveSchemaService.class);
 }
