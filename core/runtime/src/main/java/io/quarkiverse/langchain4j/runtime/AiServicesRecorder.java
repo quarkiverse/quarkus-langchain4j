@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -15,9 +16,12 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
 
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -39,11 +43,13 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
+import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkiverse.langchain4j.runtime.tool.LoggingToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.arc.runtime.BeanContainer;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
@@ -400,6 +406,20 @@ public class AiServicesRecorder {
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
 
+                    // @Skills annotation support
+                    if (info.skillNames() != null) {
+                        SkillsConfigurator configurator = creationalContext
+                                .getInjectedReference(SkillsConfigurator.class);
+                        if (configurator == null) {
+                            throw new IllegalStateException("@Skills annotation on '" + info.serviceClassName()
+                                    + "' requires the quarkus-langchain4j-skills extension");
+                        }
+                        java.util.List<String> names = info.skillNames();
+                        quarkusAiServices.toolProvider(configurator.createToolProvider(names));
+                        String skillsSystemMsg = configurator.buildSkillsSystemMessage(names);
+                        aiServiceContext.chatRequestTransformer = new SkillsChatRequestTransformer(skillsSystemMsg);
+                    }
+
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);
@@ -416,6 +436,15 @@ public class AiServicesRecorder {
         };
     }
 
+    public void validateSkillNames(BeanContainer beanContainer, List<String> skillNames) {
+        SkillsConfigurator configurator = beanContainer.beanInstance(SkillsConfigurator.class);
+        if (configurator == null) {
+            throw new IllegalStateException(
+                    "@Skills annotation requires the quarkus-langchain4j-skills extension");
+        }
+        configurator.createToolProvider(skillNames);
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> Supplier<T> createSupplier(String className) throws InstantiationException, IllegalAccessException,
             InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
@@ -428,5 +457,31 @@ public class AiServicesRecorder {
                     .getConstructor().newInstance();
         }
 
+    }
+
+    private static final class SkillsChatRequestTransformer implements BiFunction<ChatRequest, Object, ChatRequest> {
+
+        private final String skillsSystemMsg;
+
+        SkillsChatRequestTransformer(String skillsSystemMsg) {
+            this.skillsSystemMsg = skillsSystemMsg;
+        }
+
+        @Override
+        public ChatRequest apply(ChatRequest request, Object memoryId) {
+            List<ChatMessage> messages = new ArrayList<>(request.messages());
+            boolean appended = false;
+            for (int i = 0; i < messages.size(); i++) {
+                if (messages.get(i) instanceof SystemMessage existing) {
+                    messages.set(i, SystemMessage.from(existing.text() + "\n\n" + skillsSystemMsg));
+                    appended = true;
+                    break;
+                }
+            }
+            if (!appended) {
+                messages.add(0, SystemMessage.from(skillsSystemMsg));
+            }
+            return request.toBuilder().messages(messages).build();
+        }
     }
 }

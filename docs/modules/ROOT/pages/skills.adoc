@@ -69,7 +69,61 @@ And `application.properties`:
 quarkus.langchain4j.skills.directories=skills
 ----
 
-The skills `ToolProvider` is automatically registered as a CDI bean of type `SkillsToolProvider`.
+== The `@Skills` annotation
+
+The `@Skills` annotation (`io.quarkiverse.langchain4j.skills.Skills`) is the recommended way to wire skills into your AI services and agents.
+It automatically configures both the tool provider (exposing the `activate_skill` tool) and a system message that tells the LLM which skills are available.
+
+=== With `@RegisterAiService`
+
+Place `@Skills` on the AI service interface:
+
+[source,java]
+----
+@RegisterAiService
+@Skills // <1>
+public interface PoemAiService {
+
+    String chat(@UserMessage String message);
+}
+----
+<1> All loaded skills are available.
+
+To restrict the service to specific skills, pass their names:
+
+[source,java]
+----
+@RegisterAiService
+@Skills("poem-writing") // <1>
+public interface PoemAiService {
+
+    String chat(@UserMessage String message);
+}
+----
+<1> Only the `poem-writing` skill is available. If the name does not match any loaded skill, the application will fail at startup.
+
+=== With `@Agent`
+
+Place `@Skills` on the `@Agent`-annotated method:
+
+[source,java]
+----
+public interface TripPlannerAgent {
+
+    @Agent(description = "Plans trips", outputKey = "plan")
+    @Skills("adventure-trip", "family-trip") // <1>
+    String planTrip(@V("request") String request);
+}
+----
+<1> Only the named skills are available to this agent.
+
+=== Fail-fast validation
+
+If any skill name passed to `@Skills` does not match a loaded skill, the application will fail at startup with a clear error listing the available skill names.
+
+== Using the `SkillsToolProvider`
+
+Another way to wire skills to your AI services is through The skills `ToolProvider` which is automatically registered as a CDI bean of type `SkillsToolProvider`.
 Any `@RegisterAiService` that uses a `ToolProvider` will pick it up:
 
 [source,java]

@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -133,11 +134,13 @@ import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
+import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.SynthesisFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.SyntheticBeansRuntimeInitBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
@@ -146,6 +149,7 @@ import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
@@ -598,39 +602,52 @@ public class AiServicesProcessor {
                 }
             }
 
-            declarativeAiServiceProducer.produce(
-                    new DeclarativeAiServiceBuildItem(
-                            declarativeAiServiceClassInfo,
-                            chatLanguageModelSupplierClassDotName,
-                            streamingChatLanguageModelSupplierClassDotName,
-                            tools,
-                            chatMemoryProviderSupplierClassDotName,
-                            retrievalAugmentorSupplierClassName,
-                            customRetrievalAugmentorSupplierClassIsABean,
-                            moderationModelSupplierClassName,
-                            imageModelSupplierClassName(reflectiveClassProducer, unremovableBeanProducer, instance, index),
-                            determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
-                            determineThinkingHandler(declarativeAiServiceClassInfo, generatedClassOutput),
-                            systemMessageProviderClassDotName,
-                            cdiScope(customScopes, declarativeAiServiceClassInfo),
-                            chatModelName,
-                            moderationModelName,
-                            imageModelName,
-                            toolProviderClassName,
-                            toolSearchStrategyClassName,
-                            beanName(declarativeAiServiceClassInfo),
-                            toolHallucinationStrategy(instance),
-                            classInputGuardrails(declarativeAiServiceClassInfo, index),
-                            classOutputGuardrails(declarativeAiServiceClassInfo, index),
-                            toolArgumentsErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
-                            toolExecutionErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
-                            maxToolCallingRoundTrips,
-                            maxToolCallsPerResponse,
-                            allowContinuousForcedToolCalling,
-                            // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
-                            impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
-                            shouldThrowExceptionOnEventError,
-                            chatMemoryFlushStrategySupplierClassDotName));
+            // @Skills annotation support
+            List<String> skillNames = null;
+            AnnotationInstance skillsAnnotation = declarativeAiServiceClassInfo
+                    .declaredAnnotation(LangChain4jDotNames.SKILLS);
+            if (skillsAnnotation != null) {
+                AnnotationValue skillsValue = skillsAnnotation.value();
+                if (skillsValue != null && skillsValue.asStringArray().length > 0) {
+                    skillNames = List.of(skillsValue.asStringArray());
+                } else {
+                    skillNames = List.of();
+                }
+            }
+
+            declarativeAiServiceProducer.produce(new DeclarativeAiServiceBuildItem(
+                    declarativeAiServiceClassInfo,
+                    chatLanguageModelSupplierClassDotName,
+                    streamingChatLanguageModelSupplierClassDotName,
+                    tools,
+                    chatMemoryProviderSupplierClassDotName,
+                    retrievalAugmentorSupplierClassName,
+                    customRetrievalAugmentorSupplierClassIsABean,
+                    moderationModelSupplierClassName,
+                    imageModelSupplierClassName(reflectiveClassProducer, unremovableBeanProducer, instance, index),
+                    determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
+                    determineThinkingHandler(declarativeAiServiceClassInfo, generatedClassOutput),
+                    systemMessageProviderClassDotName,
+                    cdiScope(customScopes, declarativeAiServiceClassInfo),
+                    chatModelName,
+                    moderationModelName,
+                    imageModelName,
+                    toolProviderClassName,
+                    toolSearchStrategyClassName,
+                    beanName(declarativeAiServiceClassInfo),
+                    toolHallucinationStrategy(instance),
+                    classInputGuardrails(declarativeAiServiceClassInfo, index),
+                    classOutputGuardrails(declarativeAiServiceClassInfo, index),
+                    toolArgumentsErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
+                    toolExecutionErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
+                    maxToolCallingRoundTrips,
+                    maxToolCallsPerResponse,
+                    allowContinuousForcedToolCalling,
+                    // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
+                    impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
+                    shouldThrowExceptionOnEventError,
+                    chatMemoryFlushStrategySupplierClassDotName,
+                    skillNames));
 
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
@@ -1155,7 +1172,8 @@ public class AiServicesProcessor {
                                     bi.getMaxToolCallsPerResponse(),
                                     allowContinuousForcedToolCalling,
                                     bi.isShouldThrowExceptionOnEventError(),
-                                    defaultMemoryIdProviderClassName)))
+                                    defaultMemoryIdProviderClassName,
+                                    bi.getSkillNames())))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -1283,6 +1301,10 @@ public class AiServicesProcessor {
                 allToolSearchStrategies.add(toolSearchStrategy);
             }
 
+            if (bi.getSkillNames() != null) {
+                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.SKILLS_CONFIGURATOR));
+            }
+
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(OutputGuardrail.class) }, null))
@@ -1329,6 +1351,23 @@ public class AiServicesProcessor {
         }
         if (!allToolHallucinationStrategies.isEmpty()) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolHallucinationStrategies));
+        }
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    @Consume(SyntheticBeansRuntimeInitBuildItem.class)
+    void validateSkillNames(List<DeclarativeAiServiceBuildItem> items, AiServicesRecorder recorder,
+            BeanContainerBuildItem beanContainer) {
+        Set<String> allSkillNames = new LinkedHashSet<>();
+        for (DeclarativeAiServiceBuildItem bi : items) {
+            List<String> names = bi.getSkillNames();
+            if (names != null && !names.isEmpty()) {
+                allSkillNames.addAll(names);
+            }
+        }
+        if (!allSkillNames.isEmpty()) {
+            recorder.validateSkillNames(beanContainer.getValue(), List.copyOf(allSkillNames));
         }
     }
 

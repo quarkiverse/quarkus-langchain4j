@@ -154,6 +154,10 @@ public class LangChain4jDotNames {
     static final DotName DEFAULT_CHAT_MEMORY_FLUSH_STRATEGY_SUPPLIER = DotName.createSimple(
             RegisterAiService.DefaultChatMemoryFlushStrategySupplier.class);
 
+    static final DotName SKILLS = DotName.createSimple("io.quarkiverse.langchain4j.skills.Skills");
+    static final DotName SKILLS_CONFIGURATOR = DotName
+            .createSimple("io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator");
+
     static final DotName HANDLE_TOOL_ARGUMENT_ERROR = DotName.createSimple(HandleToolArgumentError.class);
     static final DotName HANDLE_TOOL_EXECUTION_ERROR = DotName.createSimple(HandleToolExecutionError.class);
 

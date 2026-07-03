@@ -87,6 +87,8 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName TOOL_SUPPLIER = DotName
             .createSimple(ToolsSupplier.class.getName());
 
+    public static final DotName SKILLS = DotName.createSimple("io.quarkiverse.langchain4j.skills.Skills");
+
     public static final DotName CDI_BEAN = DotName.createSimple("io.quarkiverse.langchain4j.agentic.runtime.CdiBean");
 
     public static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class.getName());

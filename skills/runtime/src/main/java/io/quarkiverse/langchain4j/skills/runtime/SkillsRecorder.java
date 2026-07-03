@@ -36,7 +36,7 @@ public class SkillsRecorder {
                 if (config.directories().isEmpty() || config.directories().get().isEmpty()) {
                     log.warn("No skills directories configured (quarkus.langchain4j.skills.directories). "
                             + "The skills ToolProvider will provide no tools.");
-                    return new SkillsToolProvider(request -> ToolProviderResult.builder().build(), null);
+                    return new SkillsToolProvider(request -> ToolProviderResult.builder().build(), null, List.of());
                 }
                 List<String> directories = config.directories().get();
                 List<Skill> allSkills = new ArrayList<>();
@@ -68,10 +68,10 @@ public class SkillsRecorder {
                 if (allSkills.isEmpty()) {
                     log.warn("No skills were loaded from any configured directory. "
                             + "The skills ToolProvider will provide no tools.");
-                    return new SkillsToolProvider(request -> ToolProviderResult.builder().build(), null);
+                    return new SkillsToolProvider(request -> ToolProviderResult.builder().build(), null, List.of());
                 }
                 Skills skills = Skills.from(allSkills);
-                return new SkillsToolProvider(skills.toolProvider(), skills);
+                return new SkillsToolProvider(skills.toolProvider(), skills, allSkills);
             }
         };
     }

@@ -45,6 +45,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean makeDefaultBean;
     private final boolean shouldThrowExceptionOnEventError;
     private final DotName chatMemoryFlushStrategySupplierClassDotName;
+    private final List<String> skillNames;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -75,7 +76,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             Integer maxToolCallsPerResponse,
             boolean allowContinuousForcedToolCalling,
             boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
-            DotName chatMemoryFlushStrategySupplierClassDotName) {
+            DotName chatMemoryFlushStrategySupplierClassDotName,
+            List<String> skillNames) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -106,6 +108,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.makeDefaultBean = makeDefaultBean;
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
         this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
+        this.skillNames = skillNames;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -256,4 +259,13 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     public void setDefaultMemoryIdProviderClassDotName(DotName defaultMemoryIdProviderClassDotName) {
         this.defaultMemoryIdProviderClassDotName = defaultMemoryIdProviderClassDotName;
     }
+
+    /**
+     * @return the skill names from {@code @Skills}, or null if not configured.
+     *         An empty list means all skills.
+     */
+    public List<String> getSkillNames() {
+        return skillNames;
+    }
+
 }
