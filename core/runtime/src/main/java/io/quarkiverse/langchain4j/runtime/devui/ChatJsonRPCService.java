@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToTe
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -137,6 +138,10 @@ public class ChatJsonRPCService {
     private final AtomicReference<ChatMemory> currentMemory = new AtomicReference<>();
     private final AtomicLong currentMemoryId = new AtomicLong();
 
+    // maps a RAG-augmented UserMessage (by identity) to the original text the user typed, so the
+    // Dev UI can later highlight just the retrieved-context part instead of the whole message
+    private final Map<ChatMessage, String> ragOriginalTexts = new IdentityHashMap<>();
+
     public String reset(String systemMessage) {
         if (currentMemory.get() != null) {
             currentMemory.get().clear();
@@ -145,6 +150,7 @@ public class ChatJsonRPCService {
         currentMemoryId.set(memoryId);
         ChatMemory memory = memoryProvider.get(memoryId);
         currentMemory.set(memory);
+        ragOriginalTexts.clear();
         if (systemMessage != null && !systemMessage.isEmpty()) {
             memory.add(new SystemMessage(systemMessage));
         }
@@ -178,7 +184,9 @@ public class ChatJsonRPCService {
                     AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
                     ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
                     memory.add(augmentedMessage);
-                    em.emit(new JsonObject().put("augmentedMessage", chatMessageToText(augmentedMessage)));
+                    ragOriginalTexts.put(augmentedMessage, message);
+                    em.emit(new JsonObject().put("augmentedMessage",
+                            ChatMessagePojo.formatRagAugmentedText(message, chatMessageToText(augmentedMessage))));
                 } else {
                     memory.add(new UserMessage(message));
                 }
@@ -240,6 +248,7 @@ public class ChatJsonRPCService {
                 AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
                 ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
                 memory.add(augmentedMessage);
+                ragOriginalTexts.put(augmentedMessage, message);
             } else {
                 memory.add(new UserMessage(message));
             }
@@ -257,7 +266,7 @@ public class ChatJsonRPCService {
                 toolSpecifications.clear();
                 toolExecutors.clear();
             }
-            List<ChatMessagePojo> response = ChatMessagePojo.listFromMemory(memory);
+            List<ChatMessagePojo> response = ChatMessagePojo.listFromMemory(memory, ragOriginalTexts);
             return new ChatResultPojo(response, null);
         } catch (Throwable t) {
             // restore the memory from the backup
