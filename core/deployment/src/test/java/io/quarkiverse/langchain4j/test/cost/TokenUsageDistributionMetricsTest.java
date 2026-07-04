@@ -32,7 +32,7 @@ import io.quarkiverse.langchain4j.runtime.listeners.MetricsChatModelListener;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Verifies that {@link MetricsChatModelListener} records per-request token usage as a
+ * Verifies that {@link MetricsChatModelListener} records per-request token usage as a single declared
  * {@link DistributionSummary} alongside the existing {@link Counter} metrics, so operators can answer
  * per-request distribution questions (p50/p95/p99/max prompt size) that a monotonic Counter cannot.
  * <p>
@@ -73,6 +73,8 @@ class TokenUsageDistributionMetricsTest {
                 .tag("gen_ai.token.type", "input")
                 .summary();
         assertThat(inputDistribution).isNotNull();
+        assertThat(inputDistribution.getId().getDescription()).isEqualTo("Distribution of token usage per request");
+        assertThat(inputDistribution.getId().getTag("gen_ai.token.type")).isEqualTo("input");
         assertThat(inputDistribution.count()).isEqualTo(1L);
         assertThat(inputDistribution.max()).isEqualTo(100.0);
         assertThat(inputDistribution.totalAmount()).isEqualTo(100.0);
@@ -82,6 +84,8 @@ class TokenUsageDistributionMetricsTest {
                 .tag("gen_ai.token.type", "output")
                 .summary();
         assertThat(outputDistribution).isNotNull();
+        assertThat(outputDistribution.getId().getDescription()).isEqualTo("Distribution of token usage per request");
+        assertThat(outputDistribution.getId().getTag("gen_ai.token.type")).isEqualTo("output");
         assertThat(outputDistribution.count()).isEqualTo(1L);
         assertThat(outputDistribution.max()).isEqualTo(25.0);
         assertThat(outputDistribution.totalAmount()).isEqualTo(25.0);
