@@ -15,6 +15,20 @@ import 'qui-alert';
 import { JsonRpc } from 'jsonrpc';
 import { systemMessages } from 'build-time-data';
 import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
+import { registerStyles, css as vaadinCss } from '@vaadin/vaadin-themable-mixin/register-styles.js';
+
+// Styles the RAG context box (see ChatMessagePojo#formatRagAugmentedText) as a distinct box in the same bubble
+registerStyles('vaadin-markdown', vaadinCss`
+    ::slotted(.lc4j-rag-context) {
+        margin: var(--lumo-space-s) 0 0 0;
+        padding: var(--lumo-space-xs) var(--lumo-space-m);
+        border-left: 3px solid var(--lumo-primary-color) !important;
+        border-radius: var(--lumo-border-radius-m);
+        background-color: var(--lumo-primary-color-10pct);
+        color: var(--lumo-secondary-text-color);
+        font-size: var(--lumo-font-size-s);
+    }
+`);
 
 export class QwcChat extends LitElement {
 
@@ -169,7 +183,7 @@ export class QwcChat extends LitElement {
     _renderChatView() {
         return html`
             <div class="chatContainer">
-                <vaadin-message-list .items="${this._chatItems}"></vaadin-message-list>
+                <vaadin-message-list .items="${this._chatItems}" markdown></vaadin-message-list>
                 <vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>
                 <vaadin-message-input @submit="${this._handleSendChat}"></vaadin-message-input>
             </div>
