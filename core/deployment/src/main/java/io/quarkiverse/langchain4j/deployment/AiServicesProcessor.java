@@ -2410,7 +2410,9 @@ public class AiServicesProcessor {
                     .filter(IS_METHOD_PARAMETER_ANNOTATION).findFirst();
             if (userMessageOnMethodParam.isPresent()) {
                 if (DotNames.STRING.equals(userMessageOnMethodParam.get().target().asMethodParameter().type().name())
-                        && !templateParams.isEmpty()) {
+                        && !templateParams.isEmpty()
+                        && !userMessageOnMethodParam.get().target().asMethodParameter()
+                                .hasAnnotation(LangChain4jDotNames.NO_TEMPLATING)) {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                             AiServiceMethodCreateInfo.TemplateInfo.fromMethodParam(
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())

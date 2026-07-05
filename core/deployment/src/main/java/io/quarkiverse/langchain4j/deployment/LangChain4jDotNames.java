@@ -45,6 +45,7 @@ import io.quarkiverse.langchain4j.HandleToolArgumentError;
 import io.quarkiverse.langchain4j.HandleToolExecutionError;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.NoTemplating;
 import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -93,6 +94,7 @@ public class LangChain4jDotNames {
     static final DotName STRUCTURED_PROMPT_PROCESSOR = DotName.createSimple(StructuredPromptProcessor.class);
     static final DotName DEFAULT_TOOL_EXECUTION_ERROR_HANDLER = DotName.createSimple(DefaultToolExecutionErrorHandler.class);
     public static final DotName V = DotName.createSimple(dev.langchain4j.service.V.class);
+    public static final DotName NO_TEMPLATING = DotName.createSimple(NoTemplating.class);
 
     public static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
     public static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);

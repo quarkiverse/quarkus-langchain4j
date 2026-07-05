@@ -67,6 +67,18 @@ Qute supports logic and loops. Here's an advanced example where a follow-up ques
 public String rephrase(List<ChatMessage> chatMessages, @UserMessage String question);
 ----
 
+== Disabling Templating
+
+When a `String` parameter annotated with `@UserMessage` is combined with other template variables, its value is processed as a Qute template. This fails if the value contains `{...}` sequences that are not template expressions (for example user input that happens to include `{some.key}`).
+
+Annotate the parameter with `@NoTemplating` to send its value verbatim:
+
+[source,java]
+----
+@SystemMessage("Summarize in up to {maximum} tokens.")
+String summarize(@UserMessage @NoTemplating String text, int maximum);
+----
+
 == Template Extensions for ChatMessage Lists
 
 To avoid repetitive logic, there are  Qute `TemplateExtension` methods for `List<ChatMessage>`. These simplify formatting historical chat messages.
