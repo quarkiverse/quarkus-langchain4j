@@ -7,6 +7,7 @@ import static java.util.Objects.nonNull;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import jakarta.enterprise.inject.Any;
@@ -21,6 +22,9 @@ import com.ibm.watsonx.ai.detection.detector.BaseDetector;
 import com.ibm.watsonx.ai.detection.detector.GraniteGuardian;
 import com.ibm.watsonx.ai.detection.detector.Hap;
 import com.ibm.watsonx.ai.detection.detector.Pii;
+import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 
@@ -46,9 +50,12 @@ import io.quarkiverse.langchain4j.watsonx.runtime.client.QuarkusRestClientConfig
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig.ExtractionTagsConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig.ThinkingConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.CreateSchemaConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ImproveSchemaConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig.WatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.MergeSchemaConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig.GraniteGuardianConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig.HapConfig;
@@ -79,6 +86,12 @@ public class WatsonxRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<TextExtractionService.Builder>>> TEXT_EXTRACTION_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<TextClassificationService.Builder>>> TEXT_CLASSIFICATION_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<CreateSchemaService.Builder>>> CREATE_SCHEMA_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<MergeSchemaService.Builder>>> MERGE_SCHEMA_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<ImproveSchemaService.Builder>>> IMPROVE_SCHEMA_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private final RuntimeValue<LangChain4jWatsonxConfig> runtimeConfig;
@@ -671,6 +684,178 @@ public class WatsonxRecorder {
                     builder.authenticator(authenticator);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(TEXT_EXTRACTION_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    public Function<SyntheticCreationalContext<CreateSchemaService>, CreateSchemaService> createSchema(
+            String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+        CreateSchemaConfig createSchemaConfig = watsonxConfig.createSchema().orElse(null);
+
+        var apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null), watsonxConfig.apiKey());
+
+        URI baseUrl = watsonxConfig.baseUrl()
+                .or(() -> defaultConfig.baseUrl())
+                .map(URI::create)
+                .orElseThrow();
+
+        CreateSchemaService.Builder builder = CreateSchemaService.builder()
+                .baseUrl(baseUrl)
+                .timeout(watsonxConfig.timeout().orElse(null))
+                .documentReference(createSchemaConfig.documentReference().connection(),
+                        createSchemaConfig.documentReference().bucketName())
+                .cosUrl(createSchemaConfig.cosUrl());
+
+        builder.logRequests(
+                firstOrDefault(
+                        defaultConfig.logRequests().orElse(false),
+                        createSchemaConfig.logRequests(),
+                        watsonxConfig.logRequests()));
+
+        builder.logResponses(
+                firstOrDefault(
+                        defaultConfig.logResponses().orElse(false),
+                        createSchemaConfig.logResponses(),
+                        watsonxConfig.logResponses()));
+
+        builder.spaceId(
+                firstOrDefault(
+                        defaultConfig.spaceId().orElse(null),
+                        watsonxConfig.spaceId()));
+
+        builder.projectId(
+                firstOrDefault(
+                        defaultConfig.projectId().orElse(null),
+                        watsonxConfig.projectId()));
+
+        return new Function<>() {
+            @Override
+            public CreateSchemaService apply(SyntheticCreationalContext<CreateSchemaService> context) {
+                var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(
+                                defaultConfig.logRequestsCurl().orElse(false),
+                                createSchemaConfig.logRequestsCurl(),
+                                watsonxConfig.logRequestsCurl()));
+                try {
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CREATE_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    public Function<SyntheticCreationalContext<MergeSchemaService>, MergeSchemaService> mergeSchema(
+            String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+        MergeSchemaConfig mergeSchemaConfig = watsonxConfig.mergeSchema().orElse(null);
+
+        var apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null), watsonxConfig.apiKey());
+
+        URI baseUrl = watsonxConfig.baseUrl()
+                .or(() -> defaultConfig.baseUrl())
+                .map(URI::create)
+                .orElseThrow();
+
+        Optional<Boolean> logRequests = nonNull(mergeSchemaConfig) ? mergeSchemaConfig.logRequests() : Optional.empty();
+        Optional<Boolean> logResponses = nonNull(mergeSchemaConfig) ? mergeSchemaConfig.logResponses() : Optional.empty();
+        Optional<Boolean> logRequestsCurl = nonNull(mergeSchemaConfig) ? mergeSchemaConfig.logRequestsCurl()
+                : Optional.empty();
+
+        MergeSchemaService.Builder builder = MergeSchemaService.builder()
+                .baseUrl(baseUrl)
+                .timeout(watsonxConfig.timeout().orElse(null));
+
+        builder.logRequests(
+                firstOrDefault(defaultConfig.logRequests().orElse(false), logRequests, watsonxConfig.logRequests()));
+
+        builder.logResponses(
+                firstOrDefault(defaultConfig.logResponses().orElse(false), logResponses, watsonxConfig.logResponses()));
+
+        builder.spaceId(
+                firstOrDefault(defaultConfig.spaceId().orElse(null), watsonxConfig.spaceId()));
+
+        builder.projectId(
+                firstOrDefault(defaultConfig.projectId().orElse(null), watsonxConfig.projectId()));
+
+        return new Function<>() {
+            @Override
+            public MergeSchemaService apply(SyntheticCreationalContext<MergeSchemaService> context) {
+                var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(defaultConfig.logRequestsCurl().orElse(false), logRequestsCurl,
+                                watsonxConfig.logRequestsCurl()));
+                try {
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(MERGE_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    public Function<SyntheticCreationalContext<ImproveSchemaService>, ImproveSchemaService> improveSchema(
+            String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+        ImproveSchemaConfig improveSchemaConfig = watsonxConfig.improveSchema().orElse(null);
+
+        var apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null), watsonxConfig.apiKey());
+
+        URI baseUrl = watsonxConfig.baseUrl()
+                .or(() -> defaultConfig.baseUrl())
+                .map(URI::create)
+                .orElseThrow();
+
+        Optional<Boolean> logRequests = nonNull(improveSchemaConfig) ? improveSchemaConfig.logRequests() : Optional.empty();
+        Optional<Boolean> logResponses = nonNull(improveSchemaConfig) ? improveSchemaConfig.logResponses() : Optional.empty();
+        Optional<Boolean> logRequestsCurl = nonNull(improveSchemaConfig) ? improveSchemaConfig.logRequestsCurl()
+                : Optional.empty();
+
+        ImproveSchemaService.Builder builder = ImproveSchemaService.builder()
+                .baseUrl(baseUrl)
+                .timeout(watsonxConfig.timeout().orElse(null));
+
+        builder.logRequests(
+                firstOrDefault(defaultConfig.logRequests().orElse(false), logRequests, watsonxConfig.logRequests()));
+
+        builder.logResponses(
+                firstOrDefault(defaultConfig.logResponses().orElse(false), logResponses, watsonxConfig.logResponses()));
+
+        builder.spaceId(
+                firstOrDefault(defaultConfig.spaceId().orElse(null), watsonxConfig.spaceId()));
+
+        builder.projectId(
+                firstOrDefault(defaultConfig.projectId().orElse(null), watsonxConfig.projectId()));
+
+        return new Function<>() {
+            @Override
+            public ImproveSchemaService apply(SyntheticCreationalContext<ImproveSchemaService> context) {
+                var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(defaultConfig.logRequestsCurl().orElse(false), logRequestsCurl,
+                                watsonxConfig.logRequestsCurl()));
+                try {
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(IMPROVE_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
                     return builder.build();
                 } finally {

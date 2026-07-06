@@ -19,11 +19,11 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
+import com.ibm.watsonx.ai.textprocessing.ExtendedSemanticConfig.SchemaMergeStrategy;
 import com.ibm.watsonx.ai.textprocessing.KvpFields;
 import com.ibm.watsonx.ai.textprocessing.KvpFields.KvpField;
 import com.ibm.watsonx.ai.textprocessing.Language;
 import com.ibm.watsonx.ai.textprocessing.Schema;
-import com.ibm.watsonx.ai.textprocessing.SemanticConfig.SchemaMergeStrategy;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationDeleteParameters;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationParameters;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationSemanticConfig;
@@ -35,8 +35,6 @@ import io.quarkus.test.QuarkusUnitTest;
 @EnabledIfEnvironmentVariable(named = "WATSONX_PROJECT_ID", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_URL", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_DOCUMENT_REFERENCE_CONNECTION_ID", matches = ".+")
-@EnabledIfEnvironmentVariable(named = "WATSONX_DOCUMENT_REFERENCE_BUCKET", matches = ".+")
-@EnabledIfEnvironmentVariable(named = "WATSONX_RESULTS_REFERENCE_CONNECTION_ID", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_DOCUMENT_REFERENCE_BUCKET", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "CLOUD_OBJECT_STORAGE_URL", matches = ".+")
 public class TextClassificationITTest {

@@ -310,7 +310,7 @@ quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
 quarkus.langchain4j.watsonx.scoring-model.model-name=cross-encoder/ms-marco-minilm-l-12-v2
 ----
 
-If an score model is configured, Quarkus will automatically create and register
+If a scoring model is configured, Quarkus will automatically create and register
 a `ScoringModel` bean.
 
 === Injection
@@ -382,7 +382,7 @@ quarkus.langchain4j.watsonx.moderation-model.granite-guardian.enabled=true
 ----
 
 Each detector configuration group may also expose additional settings depending on its capabilities.
-If an score model is configured, Quarkus will automatically create and register
+If a moderation model is configured, Quarkus will automatically create and register
 a `ModerationModel` bean.
 
 === Injection
@@ -519,7 +519,7 @@ Alternatively, if you're working with a local file, you can upload it and start 
 [source,java]
 ----
 File file = new File("path/to/document");
-File response = textExtraction.uploadAndStartExtraction(file);
+TextExtractionResponse response = textExtraction.uploadAndStartExtraction(file);
 String id = response.metadata().id();
 ----
 
@@ -564,7 +564,7 @@ var parameters = TextExtractionParameters.builder()
         .build()
 
 File file = new File("path/to/document.pdf");
-String extractedText = textExtraction.uploadExtractAndFetch(file, parameters));
+String extractedText = textExtraction.uploadExtractAndFetch(file, parameters);
 ----
 
 == Text Classification
@@ -683,7 +683,7 @@ var parameters = TextClassificationParameters.builder()
         .build();
 
 File file = new File("path/to/document.pdf");
-ClassificationResult result = classificationService.uploadClassifyAndFetch(file, parameters));
+ClassificationResult result = classificationService.uploadClassifyAndFetch(file, parameters);
 ----
 
 ==== Semantic Configuration
@@ -736,6 +736,246 @@ classificationService.deleteRequest(requestId,
 // Delete a file from the bucket
 classificationService.deleteFile("bucket-name", "filename.pdf");
 ----
+
+== Create Schema
+
+The `CreateSchemaService` automatically generates a document schema from a sample file. It analyzes the document and produces a set of key-value field definitions (each with a description and an example) that describe the document type. The resulting `Schema` can then be reused by the Text Extraction and Text Classification services to drive key-value pair extraction.
+
+Like Text Extraction and Text Classification, this service reads the source file from IBM Cloud Object Storage, so it requires the COS settings.
+
+TIP: For the complete API reference see the link:https://github.com/IBM/watsonx-ai-java-sdk/tree/main/docs/services/schema[watsonx.ai Java SDK schema documentation].
+
+=== Configuration
+
+To enable `CreateSchemaService` in your application, configure the following properties:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+quarkus.langchain4j.watsonx.create-schema.cos-url=<base-url>
+quarkus.langchain4j.watsonx.create-schema.document-reference.connection=<connection-id>
+quarkus.langchain4j.watsonx.create-schema.document-reference.bucket-name=<bucket-name>
+----
+
+- **`cos-url`**: The endpoint where the IBM Cloud Object Storage instance is deployed. To find the appropriate value, refer to the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints#regionalendpointtable1[IBM Cloud Object Storage endpoint table].
+- **`document-reference.connection`**: The connection asset ID containing credentials to access the source storage.
+- **`document-reference.bucket-name`**: The bucket where documents to be processed will be uploaded (or are already stored).
+
+=== Injection
+
+To use `CreateSchemaService`, inject an instance into your application. If multiple configurations are defined, you can select the appropriate one using the `@ModelName` qualifier.
+
+[source,java]
+----
+@Inject
+CreateSchemaService createSchemaService;
+
+@Inject
+@ModelName("custom")
+CreateSchemaService customCreateSchemaService;
+----
+
+=== Using Create Schema
+
+If you are working with a local file, you can upload it and generate the schema in a single call:
+
+[source,java]
+----
+File file = new File("path/to/invoice.pdf");
+CreateSchemaResult result = createSchemaService.uploadCreateSchemaAndFetch(file);
+
+Schema schema = result.schema();
+System.out.println(schema.documentType());
+System.out.println(schema.documentDescription());
+----
+
+If the document is already stored in IBM Cloud Object Storage, you can generate the schema directly from its path:
+
+[source,java]
+----
+CreateSchemaResult result = createSchemaService.createSchemaAndFetch("path/to/invoice.pdf");
+----
+
+You can also drive the lifecycle manually, starting the request and then polling for the result:
+
+[source,java]
+----
+CreateSchemaResponse response = createSchemaService.startCreateSchema("path/to/invoice.pdf");
+String id = response.metadata().id();
+
+CreateSchemaResponse status = createSchemaService.fetchRequest(id);
+----
+
+All methods can accept a `CreateSchemaParameters` object to customize the behavior of the request, including the processing **mode**, **OCR settings**, **grounding**, and the languages to consider.
+
+[source,java]
+----
+var parameters = CreateSchemaParameters.builder()
+        .mode(Mode.HIGH_QUALITY)
+        .ocrMode(OcrMode.AUTO)
+        .languages(Language.ENGLISH)
+        .enableGrounding(true)
+        .removeUploadedFile(true)
+        .build();
+
+CreateSchemaResult result = createSchemaService.uploadCreateSchemaAndFetch(file, parameters);
+----
+
+The service also provides utility methods to manage the lifecycle of your requests and files:
+
+[source,java]
+----
+// Delete a create schema request history
+createSchemaService.deleteRequest(requestId,
+    CreateSchemaDeleteParameters.builder().hardDelete(true).build());
+
+// Delete a file from the bucket
+createSchemaService.deleteFile("bucket-name", "invoice.pdf");
+----
+
+== Merge Schema
+
+The `MergeSchemaService` combines multiple schemas into a single, unified schema by merging their field definitions and descriptions. It is typically used to consolidate several document variants (for example schemas produced by the Create Schema service) into one comprehensive schema.
+
+Unlike Create Schema, this service operates on `Schema` objects that you already have in memory, so it does **not** require any Cloud Object Storage configuration.
+
+=== Configuration
+
+Only the base watsonx configuration is required. Optionally, you can tune the logging for this service:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Optional per-service logging
+quarkus.langchain4j.watsonx.merge-schema.log-requests=true
+quarkus.langchain4j.watsonx.merge-schema.log-responses=true
+----
+
+=== Injection
+
+[source,java]
+----
+@Inject
+MergeSchemaService mergeSchemaService;
+
+@Inject
+@ModelName("custom")
+MergeSchemaService customMergeSchemaService;
+----
+
+=== Using Merge Schema
+
+Merge a list of schemas and retrieve the unified schema in a single call:
+
+[source,java]
+----
+List<Schema> schemas = List.of(schemaA, schemaB);
+MergeSchemaResult result = mergeSchemaService.mergeSchemaAndFetch(schemas);
+
+Schema merged = result.schema();
+System.out.println(merged.documentType());
+----
+
+As with the other schema services, you can drive the lifecycle manually and manage previous requests:
+
+[source,java]
+----
+MergeSchemaResponse response = mergeSchemaService.startMergeSchema(schemas);
+String id = response.metadata().id();
+
+MergeSchemaResponse status = mergeSchemaService.fetchRequest(id);
+
+mergeSchemaService.deleteRequest(id,
+    MergeSchemaDeleteParameters.builder().hardDelete(true).build());
+----
+
+You can pass a `MergeSchemaParameters` object to customize the request, for example to override the foundation model used through the semantic configuration:
+
+[source,java]
+----
+var parameters = MergeSchemaParameters.builder()
+        .semanticConfig(MergeSchemaSemanticConfig.builder()
+                .defaultModelName("ibm/granite-4-h-small")
+                .build())
+        .build();
+
+MergeSchemaResult result = mergeSchemaService.mergeSchemaAndFetch(schemas, parameters);
+----
+
+== Improve Schema
+
+The `ImproveSchemaService` refines an existing schema by enhancing its field descriptions, optimizing its structure, and enriching the document description to improve downstream extraction accuracy.
+
+Like Merge Schema, it works on an in-memory `Schema` object and does **not** require any Cloud Object Storage configuration.
+
+=== Configuration
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Optional per-service logging
+quarkus.langchain4j.watsonx.improve-schema.log-requests=true
+quarkus.langchain4j.watsonx.improve-schema.log-responses=true
+----
+
+=== Injection
+
+[source,java]
+----
+@Inject
+ImproveSchemaService improveSchemaService;
+
+@Inject
+@ModelName("custom")
+ImproveSchemaService customImproveSchemaService;
+----
+
+=== Using Improve Schema
+
+Improve a schema and retrieve the enhanced result in a single call:
+
+[source,java]
+----
+ImproveSchemaResult result = improveSchemaService.improveSchemaAndFetch(schema);
+
+Schema improved = result.schema();
+System.out.println(improved.documentDescription());
+----
+
+The lifecycle can also be driven manually, and previous requests can be removed:
+
+[source,java]
+----
+ImproveSchemaResponse response = improveSchemaService.startImproveSchema(schema);
+String id = response.metadata().id();
+
+ImproveSchemaResponse status = improveSchemaService.fetchRequest(id);
+
+improveSchemaService.deleteRequest(id,
+    ImproveSchemaDeleteParameters.builder().hardDelete(true).build());
+----
+
+An `ImproveSchemaParameters` object lets you customize the request, for example to select a specific foundation model:
+
+[source,java]
+----
+var parameters = ImproveSchemaParameters.builder()
+        .semanticConfig(ImproveSchemaSemanticConfig.builder()
+                .defaultModelName("ibm/granite-4-h-small")
+                .build())
+        .build();
+
+ImproveSchemaResult result = improveSchemaService.improveSchemaAndFetch(schema, parameters);
+----
+
 == Configuration
 
 include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]

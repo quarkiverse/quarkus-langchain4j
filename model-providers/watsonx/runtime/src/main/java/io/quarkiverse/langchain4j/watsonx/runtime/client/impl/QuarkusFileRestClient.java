@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.runtime.client.impl;
 
 import static io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils.retryOn;
+import static java.util.Objects.nonNull;
 
 import java.net.URI;
 import java.util.UUID;
@@ -83,7 +84,10 @@ public final class QuarkusFileRestClient extends FileRestClient {
                         version,
                         fileListRequest.projectId(),
                         fileListRequest.spaceId(),
-                        fileListRequest.after(), fileListRequest.limit(), fileListRequest.order(), fileListRequest.purpose());
+                        fileListRequest.after(),
+                        fileListRequest.limit(),
+                        nonNull(fileListRequest.order()) ? fileListRequest.order().value() : null,
+                        nonNull(fileListRequest.purpose()) ? fileListRequest.purpose().value() : null);
             }
         });
     }

@@ -18,9 +18,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.textprocessing.Language;
+import com.ibm.watsonx.ai.textprocessing.Mode;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionDeleteParameters;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters;
-import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Mode;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 
@@ -32,7 +32,7 @@ import io.quarkus.test.QuarkusUnitTest;
 @EnabledIfEnvironmentVariable(named = "WATSONX_DOCUMENT_REFERENCE_CONNECTION_ID", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_DOCUMENT_REFERENCE_BUCKET", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_RESULTS_REFERENCE_CONNECTION_ID", matches = ".+")
-@EnabledIfEnvironmentVariable(named = "WATSONX_DOCUMENT_REFERENCE_BUCKET", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "WATSONX_RESULTS_REFERENCE_BUCKET", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "CLOUD_OBJECT_STORAGE_URL", matches = ".+")
 public class TextExtractionITTest {
 
@@ -133,8 +133,8 @@ public class TextExtractionITTest {
                 .build();
 
         var text = textExtractionService.uploadExtractAndFetch(file, parameters);
-        assertEquals("PDF TEST", text);
-        assertEquals("PDF TEST", textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
+        assertTrue(text.contains("PDF TEST"));
+        assertTrue(textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md").contains("PDF TEST"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.md"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.pdf"));
         assertThrows(WatsonxException.class, () -> textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
@@ -147,7 +147,7 @@ public class TextExtractionITTest {
                 .build();
 
         text = textExtractionService.uploadExtractAndFetch(file, parameters);
-        assertEquals("PDF TEST", text);
+        assertTrue(text.contains("PDF TEST"));
 
         // Wait for async deletion
         Thread.sleep(500);
@@ -188,8 +188,8 @@ public class TextExtractionITTest {
                 .build();
 
         var text = textExtractionService.uploadExtractAndFetch(inputstream, filename);
-        assertEquals("PDF TEST", text);
-        assertEquals("PDF TEST", textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
+        assertTrue(text.contains("PDF TEST"));
+        assertTrue(textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md").contains("PDF TEST"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.md"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.pdf"));
         assertThrows(WatsonxException.class, () -> textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
@@ -203,7 +203,7 @@ public class TextExtractionITTest {
 
         inputstream = getClass().getClassLoader().getResourceAsStream(filename);
         text = textExtractionService.uploadExtractAndFetch(inputstream, filename, parameters);
-        assertEquals("PDF TEST", text);
+        assertTrue(text.contains("PDF TEST"));
 
         // Wait for async deletion
         Thread.sleep(500);

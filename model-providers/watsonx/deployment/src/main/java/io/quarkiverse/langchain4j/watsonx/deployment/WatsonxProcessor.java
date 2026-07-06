@@ -5,6 +5,9 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDIN
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.CREATE_SCHEMA;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.IMPROVE_SCHEMA;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.MERGE_SCHEMA;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.TEXT_CLASSIFICATION;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.TEXT_EXTRACTION;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.TOOL_SERVICE;
@@ -36,6 +39,9 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProvid
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.deployment.items.BuiltinServiceBuildItem;
+import io.quarkiverse.langchain4j.watsonx.deployment.items.CreateSchemaClassBuildItem;
+import io.quarkiverse.langchain4j.watsonx.deployment.items.ImproveSchemaClassBuildItem;
+import io.quarkiverse.langchain4j.watsonx.deployment.items.MergeSchemaClassBuildItem;
 import io.quarkiverse.langchain4j.watsonx.deployment.items.TextClassificationClassBuildItem;
 import io.quarkiverse.langchain4j.watsonx.deployment.items.TextExtractionClassBuildItem;
 import io.quarkiverse.langchain4j.watsonx.runtime.BuiltinToolRecorder;
@@ -73,6 +79,12 @@ public class WatsonxProcessor {
             .createSimple(com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService.Builder.class);
     private static final DotName TEXT_CLASSIFICATION_SERVICE_BUILDER = DotName
             .createSimple(com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService.Builder.class);
+    private static final DotName CREATE_SCHEMA_SERVICE_BUILDER = DotName
+            .createSimple(com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService.Builder.class);
+    private static final DotName MERGE_SCHEMA_SERVICE_BUILDER = DotName
+            .createSimple(com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService.Builder.class);
+    private static final DotName IMPROVE_SCHEMA_SERVICE_BUILDER = DotName
+            .createSimple(com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService.Builder.class);
 
     private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
             Any.class)).build();
@@ -178,6 +190,87 @@ public class WatsonxProcessor {
     }
 
     @BuildStep
+    void discoverCreateSchemaBeans(
+            CombinedIndexBuildItem indexBuildItem,
+            BeanDiscoveryFinishedBuildItem beans,
+            BuildProducer<CreateSchemaClassBuildItem> producer) {
+
+        Set<String> qualifiers = beans.getInjectionPoints().stream()
+                .filter(injectionPoint -> injectionPoint.getRequiredType().name().equals(WatsonxDotNames.CREATE_SCHEMA))
+                .map(injectionPoint -> {
+                    AnnotationInstance modelName = injectionPoint.getRequiredQualifier(LangChain4jDotNames.MODEL_NAME);
+                    if (modelName != null) {
+                        String value = modelName.value().asString();
+                        if ((value != null) && !value.isEmpty()) {
+                            return value;
+                        }
+                    }
+                    if (modelName == null && injectionPoint.isProgrammaticLookup()) {
+                        return null;
+                    }
+                    return NamedConfigUtil.DEFAULT_NAME;
+                }).collect(Collectors.toSet());
+
+        qualifiers.stream()
+                .map(CreateSchemaClassBuildItem::new)
+                .forEach(producer::produce);
+    }
+
+    @BuildStep
+    void discoverMergeSchemaBeans(
+            CombinedIndexBuildItem indexBuildItem,
+            BeanDiscoveryFinishedBuildItem beans,
+            BuildProducer<MergeSchemaClassBuildItem> producer) {
+
+        Set<String> qualifiers = beans.getInjectionPoints().stream()
+                .filter(injectionPoint -> injectionPoint.getRequiredType().name().equals(WatsonxDotNames.MERGE_SCHEMA))
+                .map(injectionPoint -> {
+                    AnnotationInstance modelName = injectionPoint.getRequiredQualifier(LangChain4jDotNames.MODEL_NAME);
+                    if (modelName != null) {
+                        String value = modelName.value().asString();
+                        if ((value != null) && !value.isEmpty()) {
+                            return value;
+                        }
+                    }
+                    if (modelName == null && injectionPoint.isProgrammaticLookup()) {
+                        return null;
+                    }
+                    return NamedConfigUtil.DEFAULT_NAME;
+                }).collect(Collectors.toSet());
+
+        qualifiers.stream()
+                .map(MergeSchemaClassBuildItem::new)
+                .forEach(producer::produce);
+    }
+
+    @BuildStep
+    void discoverImproveSchemaBeans(
+            CombinedIndexBuildItem indexBuildItem,
+            BeanDiscoveryFinishedBuildItem beans,
+            BuildProducer<ImproveSchemaClassBuildItem> producer) {
+
+        Set<String> qualifiers = beans.getInjectionPoints().stream()
+                .filter(injectionPoint -> injectionPoint.getRequiredType().name().equals(WatsonxDotNames.IMPROVE_SCHEMA))
+                .map(injectionPoint -> {
+                    AnnotationInstance modelName = injectionPoint.getRequiredQualifier(LangChain4jDotNames.MODEL_NAME);
+                    if (modelName != null) {
+                        String value = modelName.value().asString();
+                        if ((value != null) && !value.isEmpty()) {
+                            return value;
+                        }
+                    }
+                    if (modelName == null && injectionPoint.isProgrammaticLookup()) {
+                        return null;
+                    }
+                    return NamedConfigUtil.DEFAULT_NAME;
+                }).collect(Collectors.toSet());
+
+        qualifiers.stream()
+                .map(ImproveSchemaClassBuildItem::new)
+                .forEach(producer::produce);
+    }
+
+    @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBuiltinToolBeans(
             BuiltinToolRecorder recorder,
@@ -236,6 +329,9 @@ public class WatsonxProcessor {
             List<SelectedModerationModelProviderBuildItem> selectedModeration,
             List<TextExtractionClassBuildItem> selectedTextExtraction,
             List<TextClassificationClassBuildItem> selectedTextClassification,
+            List<CreateSchemaClassBuildItem> selectedCreateSchema,
+            List<MergeSchemaClassBuildItem> selectedMergeSchema,
+            List<ImproveSchemaClassBuildItem> selectedImproveSchema,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedTextExtraction) {
@@ -285,6 +381,81 @@ public class WatsonxProcessor {
                         .createWith(recorder.textClassification(configName));
                 addQualifierIfNecessary(textClassificationBuilder, configName);
                 beanProducer.produce(textClassificationBuilder.done());
+            }
+        }
+
+        for (var selected : selectedCreateSchema) {
+
+            String configName = selected.getQualifier();
+
+            var createSchema = selectedCreateSchema.stream()
+                    .filter(value -> value.getQualifier().equals(configName))
+                    .findFirst();
+
+            if (createSchema.isPresent()) {
+                var createSchemaBuilder = SyntheticBeanBuildItem
+                        .configure(CREATE_SCHEMA)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(CREATE_SCHEMA_SERVICE_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.createSchema(configName));
+                addQualifierIfNecessary(createSchemaBuilder, configName);
+                beanProducer.produce(createSchemaBuilder.done());
+            }
+        }
+
+        for (var selected : selectedMergeSchema) {
+
+            String configName = selected.getQualifier();
+
+            var mergeSchema = selectedMergeSchema.stream()
+                    .filter(value -> value.getQualifier().equals(configName))
+                    .findFirst();
+
+            if (mergeSchema.isPresent()) {
+                var mergeSchemaBuilder = SyntheticBeanBuildItem
+                        .configure(MERGE_SCHEMA)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(MERGE_SCHEMA_SERVICE_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.mergeSchema(configName));
+                addQualifierIfNecessary(mergeSchemaBuilder, configName);
+                beanProducer.produce(mergeSchemaBuilder.done());
+            }
+        }
+
+        for (var selected : selectedImproveSchema) {
+
+            String configName = selected.getQualifier();
+
+            var improveSchema = selectedImproveSchema.stream()
+                    .filter(value -> value.getQualifier().equals(configName))
+                    .findFirst();
+
+            if (improveSchema.isPresent()) {
+                var improveSchemaBuilder = SyntheticBeanBuildItem
+                        .configure(IMPROVE_SCHEMA)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(IMPROVE_SCHEMA_SERVICE_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.improveSchema(configName));
+                addQualifierIfNecessary(improveSchemaBuilder, configName);
+                beanProducer.produce(improveSchemaBuilder.done());
             }
         }
 

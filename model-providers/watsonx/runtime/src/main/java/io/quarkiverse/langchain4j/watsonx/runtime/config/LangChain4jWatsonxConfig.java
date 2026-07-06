@@ -131,6 +131,27 @@ public interface LangChain4jWatsonxConfig {
         Optional<TextClassificationConfig> textClassification();
 
         /**
+         * Cloud Object Storage related settings.
+         * <p>
+         * This configuration is only required when using the {@code CreateSchemaService} class.
+         */
+        Optional<CreateSchemaConfig> createSchema();
+
+        /**
+         * Merge schema related settings.
+         * <p>
+         * This configuration is optional and only used to customize logging for the {@code MergeSchemaService} class.
+         */
+        Optional<MergeSchemaConfig> mergeSchema();
+
+        /**
+         * Improve schema related settings.
+         * <p>
+         * This configuration is optional and only used to customize logging for the {@code ImproveSchemaService} class.
+         */
+        Optional<ImproveSchemaConfig> improveSchema();
+
+        /**
          * Chat model related settings.
          */
         ChatModelConfig chatModel();

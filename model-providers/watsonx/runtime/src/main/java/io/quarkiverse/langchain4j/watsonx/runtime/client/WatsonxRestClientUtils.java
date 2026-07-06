@@ -77,7 +77,8 @@ public final class WatsonxRestClientUtils {
 
                         Thread.sleep(timeout.toMillis());
 
-                    } catch (Exception ex) {
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
                         throw new RuntimeException(e);
                     }
                     timeout = timeout.multipliedBy(2);
