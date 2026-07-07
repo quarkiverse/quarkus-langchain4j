@@ -12,6 +12,14 @@ import org.junit.jupiter.api.Test;
 class EvaluationReportTest {
 
     @Test
+    void globalScoreShouldBeZeroForEmptyEvaluations() {
+        EvaluationReport<String> report = new EvaluationReport<>(List.of());
+
+        assertThat(report.score()).isEqualTo(0.0);
+        assertThat(report.evaluations()).isEmpty();
+    }
+
+    @Test
     void globalScoreShouldBeCorrect() {
         // Create mock evaluations.
         Scorer.EvaluationResult<String> result1 = Scorer.EvaluationResult.fromCompletedEvaluation(

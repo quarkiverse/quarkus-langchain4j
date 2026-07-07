@@ -50,34 +50,33 @@ class SamplesTest {
         assertThat(samples.get(1)).isEqualTo(sample2);
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Test
-    void constructorShouldThrowExceptionIfListIsNull() {
-        assertThatThrownBy(() -> new Samples<>((List<EvaluationSample<String>>) null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Samples must not be null");
+    void constructorShouldCreateEmptySamplesFromNullList() {
+        Samples<String> samples = new Samples<>((List<EvaluationSample<String>>) null);
+
+        assertThat(samples).isEmpty();
     }
 
     @Test
-    void constructorShouldThrowExceptionIfVarargsAreNull() {
-        assertThatThrownBy(() -> new Samples<>((EvaluationSample<String>[]) null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Samples must not be null");
+    void constructorShouldCreateEmptySamplesFromNullVarargs() {
+        Samples<String> samples = new Samples<>((EvaluationSample<String>[]) null);
+
+        assertThat(samples).isEmpty();
     }
 
     @Test
-    void constructorShouldThrowExceptionIfListIsEmpty() {
-        assertThatThrownBy(() -> new Samples<>(List.of()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Samples must not be empty");
+    void constructorShouldCreateEmptySamplesFromEmptyList() {
+        Samples<String> samples = new Samples<>(List.of());
+
+        assertThat(samples).isEmpty();
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    void constructorShouldThrowExceptionIfVarargsAreEmpty() {
-        assertThatThrownBy(Samples::new)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Samples must not be empty");
+    void constructorShouldCreateEmptySamplesFromEmptyVarargs() {
+        Samples<String> samples = new Samples<>();
+
+        assertThat(samples).isEmpty();
     }
 
     @Test
