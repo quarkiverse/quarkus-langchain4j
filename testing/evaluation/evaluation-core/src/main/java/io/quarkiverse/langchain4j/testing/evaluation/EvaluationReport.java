@@ -21,11 +21,12 @@ public class EvaluationReport<T> {
     /**
      * Create a new evaluation report and computes the global score.
      *
-     * @param evaluations the evaluations, must not be {@code null}, must not be empty.
+     * @param evaluations the evaluations, must not be {@code null}.
      */
     public EvaluationReport(List<Scorer.EvaluationResult<T>> evaluations) {
         this.evaluations = evaluations;
-        this.score = 100.0 * evaluations.stream().filter(Scorer.EvaluationResult::passed).count() / evaluations.size();
+        this.score = evaluations.isEmpty() ? 0.0
+                : 100.0 * evaluations.stream().filter(Scorer.EvaluationResult::passed).count() / evaluations.size();
     }
 
     /**
@@ -49,9 +50,13 @@ public class EvaluationReport<T> {
      * @return the score for the given tag, between 0.0 and 100.0.
      */
     public double scoreForTag(String tag) {
+        long total = evaluations.stream().filter(e -> e.sample().tags().contains(tag)).count();
+        if (total == 0) {
+            return 0.0;
+        }
         return 100.0 * evaluations.stream().filter(e -> e.sample().tags().contains(tag))
                 .filter(Scorer.EvaluationResult::passed).count()
-                / evaluations.stream().filter(e -> e.sample().tags().contains(tag)).count();
+                / total;
     }
 
     /**
