@@ -1200,6 +1200,10 @@ public class AgenticProcessor {
         if (subAgentMethods == null) {
             subAgentMethods = classToNonAiAgentMethodsMap.get(subagentName);
         }
+        if (subAgentMethods == null || subAgentMethods.isEmpty()) {
+            throw new IllegalConfigurationException(
+                    "Class '%s' is declared as a sub-agent but does not declare any agent method".formatted(subagentName));
+        }
         if (subAgentMethods.size() != 1) {
             log.warn("Unable to determine agentic method for subagent with type '%s'"
                     .formatted(subagentName));
@@ -1277,6 +1281,149 @@ public class AgenticProcessor {
                 }
             });
         });
+    }
+
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    public void validateAgentNames(DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
+            DetectedNonAiAgentAsMapBuildItem detectedNonAiAgentAsMapBuildItem) {
+        Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap = detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap();
+        Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap = detectedNonAiAgentAsMapBuildItem
+                .getClassToNonAiAgentMethodsMap();
+
+        for (var entry : ifaceToAgentMethodsMap.entrySet()) {
+            if (entry.getKey().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                continue;
+            }
+            for (MethodInfo agenticMethod : entry.getValue()) {
+                for (DotName annotation : AgenticLangChain4jDotNames.AGENT_ANNOTATIONS_WITH_SUB_AGENTS) {
+                    AnnotationInstance instance = agenticMethod.annotation(annotation);
+                    if (instance == null) {
+                        continue;
+                    }
+                    validateSubAgentNames(instance, entry.getKey(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap);
+                }
+            }
+        }
+    }
+
+    /**
+     * Explicitly assigned duplicate agent names are rejected. Implicit duplicates (method names) are legal at
+     * runtime, but under a supervisor they reach the planner prompt distinguished only by a positional suffix,
+     * so those get a warning.
+     */
+    private void validateSubAgentNames(AnnotationInstance workflowInstance, DotName rootAgentName,
+            Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap,
+            Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap) {
+        boolean isSupervisor = AgenticLangChain4jDotNames.SUPERVISOR_AGENT.equals(workflowInstance.name());
+        Map<String, DotName> explicitNameToClass = new HashMap<>();
+        Map<String, DotName> effectiveNameToClass = new HashMap<>();
+
+        List<Type> subAgentTypes = new ArrayList<>();
+        AnnotationValue subAgentsValue = workflowInstance.value("subAgents");
+        if (subAgentsValue != null) {
+            subAgentTypes.addAll(List.of(subAgentsValue.asClassArray()));
+        }
+        AnnotationValue subAgentValue = workflowInstance.value("subAgent");
+        if (subAgentValue != null) {
+            subAgentTypes.add(subAgentValue.asClass());
+        }
+
+        for (Type subAgentType : subAgentTypes) {
+            DotName subAgentClassName = subAgentType.name();
+            Optional<MethodInfo> maybeSubAgentMethod = subagentMethod(subAgentClassName, ifaceToAgentMethodsMap,
+                    classToNonAiAgentMethodsMap);
+            if (maybeSubAgentMethod.isEmpty()) {
+                continue;
+            }
+            MethodInfo subAgentMethod = maybeSubAgentMethod.get();
+            for (DotName annotation : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
+                AnnotationInstance subAgentInstance = subAgentMethod.annotation(annotation);
+                if (subAgentInstance == null) {
+                    continue;
+                }
+                String explicitName = explicitAgentName(subAgentInstance);
+                if (explicitName != null) {
+                    DotName previous = explicitNameToClass.put(explicitName, subAgentClassName);
+                    if (previous != null && !previous.equals(subAgentClassName)) {
+                        throw new IllegalConfigurationException(
+                                "Duplicate agent name '%s' used by both '%s' and '%s' in the agentic system rooted at '%s'"
+                                        .formatted(explicitName, previous, subAgentClassName, rootAgentName));
+                    }
+                }
+                if (isSupervisor) {
+                    String effectiveName = explicitName != null ? explicitName : subAgentMethod.name();
+                    DotName previous = effectiveNameToClass.put(effectiveName, subAgentClassName);
+                    if (previous != null && !previous.equals(subAgentClassName)) {
+                        log.warn(
+                                "Sub-agents '%s' and '%s' of supervisor agent '%s' share the agent name '%s'. The supervisor planner distinguishes them only by a positional suffix, which can degrade planning"
+                                        .formatted(previous, subAgentClassName, rootAgentName, effectiveName));
+                    }
+                }
+                validateSubAgentNames(subAgentInstance, rootAgentName, ifaceToAgentMethodsMap,
+                        classToNonAiAgentMethodsMap);
+                break;
+            }
+        }
+    }
+
+    private static String explicitAgentName(AnnotationInstance agentInstance) {
+        AnnotationValue nameValue = agentInstance.value("name");
+        if (nameValue != null && !nameValue.asString().isBlank()) {
+            return nameValue.asString();
+        }
+        return null;
+    }
+
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    public void warnAboutSupervisorSubAgentsWithoutDescription(CombinedIndexBuildItem indexBuildItem,
+            DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
+            DetectedNonAiAgentAsMapBuildItem detectedNonAiAgentAsMapBuildItem) {
+        Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap = detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap();
+        Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap = detectedNonAiAgentAsMapBuildItem
+                .getClassToNonAiAgentMethodsMap();
+
+        indexBuildItem.getIndex().getAnnotations(AgenticLangChain4jDotNames.SUPERVISOR_AGENT).forEach(instance -> {
+            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                return;
+            }
+            MethodInfo supervisorMethod = instance.target().asMethod();
+            if (supervisorMethod.declaringClass().name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                return;
+            }
+            AnnotationValue subAgentsValue = instance.value("subAgents");
+            if (subAgentsValue == null) {
+                return;
+            }
+            for (Type subAgentType : subAgentsValue.asClassArray()) {
+                subagentMethod(subAgentType.name(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap)
+                        .ifPresent(subAgentMethod -> {
+                            if (!hasDescription(subAgentMethod)) {
+                                log.warn(
+                                        "Sub-agent '%s' of supervisor agent '%s' has no description. The supervisor planner relies on agent descriptions to decide which agent to invoke"
+                                                .formatted(subAgentType.name(),
+                                                        supervisorMethod.declaringClass().name()));
+                            }
+                        });
+            }
+        });
+    }
+
+    private static boolean hasDescription(MethodInfo agentMethod) {
+        for (DotName annotation : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
+            AnnotationInstance agentInstance = agentMethod.annotation(annotation);
+            if (agentInstance == null) {
+                continue;
+            }
+            AnnotationValue descriptionValue = agentInstance.value("description");
+            if (descriptionValue != null && !descriptionValue.asString().isBlank()) {
+                return true;
+            }
+            AnnotationValue aliasValue = agentInstance.value("value");
+            return aliasValue != null && !aliasValue.asString().isBlank();
+        }
+        return false;
     }
 
     private static boolean needsResolution(OutputKeyBuildItem outputKeyBuildItem, String parameterName) {
