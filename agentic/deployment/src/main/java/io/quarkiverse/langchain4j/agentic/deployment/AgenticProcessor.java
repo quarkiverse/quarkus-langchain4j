@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,15 +61,18 @@ import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipToolBoxProcessingBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.SyntheticBeansRuntimeInitBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
@@ -156,8 +160,10 @@ public class AgenticProcessor {
                     .filter(mi -> mi.hasAnnotation(LangChain4jDotNames.MCP_TOOLBOX)).toList();
             List<MethodInfo> toolBoxMethods = methods.stream()
                     .filter(mi -> mi.hasAnnotation(TOOLBOX)).toList();
+            List<MethodInfo> skillsMethods = methods.stream()
+                    .filter(mi -> mi.hasAnnotation(AgenticLangChain4jDotNames.SKILLS)).toList();
             DetectedAiAgentBuildItem item = new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null),
-                    modelName, mcpToolBoxMethods, toolBoxMethods);
+                    modelName, mcpToolBoxMethods, toolBoxMethods, skillsMethods);
             validate(item);
             producer.produce(
                     item);
@@ -537,6 +543,51 @@ public class AgenticProcessor {
             }
         }
         recorder.setAgentsWithToolBox(agentsWithToolBox);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
+    void skillsSupport(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder) {
+        Map<String, List<String>> agentsWithSkills = new HashMap<>();
+        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
+            if (bi.getSkillsMethods().isEmpty()) {
+                continue;
+            }
+            List<String> skillNames = new ArrayList<>();
+            for (MethodInfo method : bi.getSkillsMethods()) {
+                AnnotationInstance skillsAnnotation = method.declaredAnnotation(AgenticLangChain4jDotNames.SKILLS);
+                if (skillsAnnotation != null && skillsAnnotation.value() != null) {
+                    for (String name : skillsAnnotation.value().asStringArray()) {
+                        if (!skillNames.contains(name)) {
+                            skillNames.add(name);
+                        }
+                    }
+                }
+            }
+            agentsWithSkills.put(bi.getIface().name().toString(), skillNames);
+        }
+        recorder.setAgentsWithSkills(agentsWithSkills);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    @Consume(SyntheticBeansRuntimeInitBuildItem.class)
+    void validateSkillNames(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder,
+            BeanContainerBuildItem beanContainer) {
+        Set<String> allSkillNames = new LinkedHashSet<>();
+        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
+            for (MethodInfo method : bi.getSkillsMethods()) {
+                AnnotationInstance skillsAnnotation = method.declaredAnnotation(AgenticLangChain4jDotNames.SKILLS);
+                if (skillsAnnotation != null && skillsAnnotation.value() != null) {
+                    for (String name : skillsAnnotation.value().asStringArray()) {
+                        allSkillNames.add(name);
+                    }
+                }
+            }
+        }
+        if (!allSkillNames.isEmpty()) {
+            recorder.validateSkillNames(beanContainer.getValue(), allSkillNames);
+        }
     }
 
     private static final DotName CDI_QUALIFIER = DotName.createSimple(jakarta.inject.Qualifier.class);

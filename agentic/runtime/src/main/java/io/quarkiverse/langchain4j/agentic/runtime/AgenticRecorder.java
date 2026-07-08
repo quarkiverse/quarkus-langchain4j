@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -20,12 +21,15 @@ import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
+import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.arc.runtime.BeanContainer;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.annotations.RuntimeInit;
 import io.quarkus.runtime.annotations.StaticInit;
@@ -36,6 +40,7 @@ public class AgenticRecorder {
     private static final Logger log = Logger.getLogger(AgenticRecorder.class);
     private static volatile Set<String> agentsWithMcpToolBox = Collections.emptySet();
     private static volatile Map<String, List<String>> agentsWithToolBox = Map.of();
+    private static volatile Map<String, List<String>> agentsWithSkills = Map.of();
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
@@ -63,6 +68,11 @@ public class AgenticRecorder {
     @StaticInit
     public void setAgentsWithToolBox(Map<String, List<String>> agentsWithToolBox) {
         AgenticRecorder.agentsWithToolBox = Map.copyOf(agentsWithToolBox);
+    }
+
+    @StaticInit
+    public void setAgentsWithSkills(Map<String, List<String>> agentsWithSkills) {
+        AgenticRecorder.agentsWithSkills = Map.copyOf(agentsWithSkills);
     }
 
     @StaticInit
@@ -98,6 +108,16 @@ public class AgenticRecorder {
                 log.warn("Failed to eagerly initialize root agent for dev mode topology: " + className, e);
             }
         }
+    }
+
+    @RuntimeInit
+    public void validateSkillNames(BeanContainer beanContainer, Set<String> skillNames) {
+        SkillsConfigurator configurator = beanContainer.beanInstance(SkillsConfigurator.class);
+        if (configurator == null) {
+            throw new IllegalStateException(
+                    "@Skills annotation requires the quarkus-langchain4j-skills extension");
+        }
+        configurator.createToolProvider(new ArrayList<>(skillNames));
     }
 
     @RuntimeInit
@@ -213,6 +233,17 @@ public class AgenticRecorder {
                     }
                 }
                 agentBuilder.tools(tools.toArray());
+            }
+
+            // @Skills support — configure skills tool provider and system message
+            List<String> skillNames = AgenticRecorder.agentsWithSkills.get(agentClassName);
+            if (skillNames != null) {
+                SkillsConfigurator configurator = Arc.container().select(SkillsConfigurator.class).get();
+                agentBuilder.toolProvider(configurator.createToolProvider(skillNames));
+                String skillsMsg = configurator.buildSkillsSystemMessage(skillNames);
+                BiFunction<String, InvocationContext, String> transformer = (
+                        msg, ctx) -> (msg != null && !msg.isBlank()) ? msg + "\n\n" + skillsMsg : skillsMsg;
+                agentBuilder.systemMessageTransformer(transformer);
             }
 
             // AgentListener support (unconditional — build-time always adds the injection point)
