@@ -6,7 +6,6 @@ import java.util.ServiceLoader;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
-import jakarta.enterprise.util.TypeLiteral;
 
 /**
  * Resolver for SampleLoader implementations using a hybrid CDI/ServiceLoader approach.
@@ -197,12 +196,11 @@ public class SampleLoaderResolver {
         List<SampleLoader<?>> loaders = new ArrayList<>();
 
         try {
-            Instance<SampleLoader<?>> instances = CDI.current()
-                    .select(new TypeLiteral<SampleLoader<?>>() {
-                    });
+            Instance instances = CDI.current()
+                    .select(SampleLoader.class);
 
-            for (SampleLoader<?> loader : instances) {
-                loaders.add(loader);
+            for (Object loader : instances) {
+                loaders.add((SampleLoader<?>) loader);
             }
         } catch (Exception e) {
             throw new SampleLoadException("Failed to discover SampleLoaders via CDI", e);
