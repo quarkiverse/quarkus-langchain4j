@@ -1,0 +1,74 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-enabled[`+++quarkus.langchain4j.mcp.apicurio-registry.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Apicurio Registry MCP integration is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-url]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-url[`+++quarkus.langchain4j.mcp.apicurio-registry.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of the Apicurio Registry instance (e.g. http://localhost:8080/apis/registry/v3).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-tool-provider[`+++quarkus.langchain4j.mcp.apicurio-registry.tool-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.tool-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional: name of the tool provider to target when the application uses multiple tool providers. If not set, the default tool provider is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_TOOL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_TOOL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+|===
+
