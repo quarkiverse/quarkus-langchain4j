@@ -1,8 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { JsonRpc } from 'jsonrpc';
+import { themeState } from 'theme-state';
 import '@vaadin/button';
 import '@vaadin/select';
 import '@vaadin/progress-bar';
+
+const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.min.js';
 
 export class QwcAgentsTopology extends LitElement {
 
@@ -18,16 +21,18 @@ export class QwcAgentsTopology extends LitElement {
             align-items: center;
             gap: 10px;
         }
-        .iframe-container {
+        .diagram-container {
             flex: 1;
             padding: 0 15px 15px 15px;
+            overflow: auto;
         }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: 1px solid var(--lumo-contrast-20pct);
-            border-radius: 4px;
-            background: var(--lumo-base-color);
+        .mermaid-target {
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid-target svg {
+            max-width: 100%;
+            height: auto;
         }
         .placeholder {
             padding: 20px;
@@ -37,7 +42,7 @@ export class QwcAgentsTopology extends LitElement {
     `;
 
     static properties = {
-        _htmlContent: { state: true },
+        _mermaid: { state: true },
         _loading: { state: true },
         _error: { state: true },
         _agentEntries: { state: true },
@@ -48,7 +53,7 @@ export class QwcAgentsTopology extends LitElement {
 
     constructor() {
         super();
-        this._htmlContent = null;
+        this._mermaid = null;
         this._loading = true;
         this._error = null;
         this._agentEntries = [];
@@ -57,7 +62,35 @@ export class QwcAgentsTopology extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
-        this._loadAgentEntries();
+        if (!window.mermaid) {
+            const script = document.createElement('script');
+            script.src = MERMAID_CDN;
+            script.onload = () => {
+                this._initializeMermaid();
+                this._loadAgentEntries();
+            };
+            script.onerror = () => {
+                this._error = 'Failed to load the diagram library.';
+                this._loading = false;
+            };
+            document.head.appendChild(script);
+        } else {
+            this._initializeMermaid();
+            this._loadAgentEntries();
+        }
+    }
+
+    _initializeMermaid() {
+        window.mermaid.initialize({
+            startOnLoad: false,
+            theme: themeState.theme.name === 'dark' ? 'dark' : 'default',
+            fontFamily: 'var(--lumo-font-family)',
+            fontSize: 12,
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+            },
+        });
     }
 
     _loadAgentEntries() {
@@ -78,15 +111,38 @@ export class QwcAgentsTopology extends LitElement {
     _loadTopology() {
         this._loading = true;
         this._error = null;
-        this.jsonRpc.getTopologyHtml({ index: this._selectedIndex })
+        this.jsonRpc.getTopologyMermaid({ index: this._selectedIndex })
             .then(response => {
-                this._htmlContent = response.result;
+                const result = response.result;
+                if (result && result.error) {
+                    this._error = result.error;
+                    this._mermaid = null;
+                } else {
+                    this._mermaid = result ? result.mermaid : null;
+                }
                 this._loading = false;
             })
             .catch(error => {
                 this._error = String(error);
                 this._loading = false;
             });
+    }
+
+    async updated(changed) {
+        super.updated?.(changed);
+        if (this._mermaid && window.mermaid) {
+            const target = this.shadowRoot?.querySelector('.mermaid-target');
+            if (target && target.dataset.rendered !== this._mermaid) {
+                try {
+                    const { svg } = await window.mermaid.render('agents-topology-svg', this._mermaid);
+                    target.innerHTML = svg;
+                    target.dataset.rendered = this._mermaid;
+                } catch (error) {
+                    target.innerHTML = '';
+                    this._error = 'Error rendering diagram: ' + (error.message || error);
+                }
+            }
+        }
     }
 
     render() {
@@ -114,10 +170,12 @@ export class QwcAgentsTopology extends LitElement {
                 <vaadin-progress-bar indeterminate></vaadin-progress-bar>
             ` : this._error ? html`
                 <div class="placeholder">${this._error}</div>
-            ` : html`
-                <div class="iframe-container">
-                    <iframe .srcdoc="${this._htmlContent}" sandbox="allow-scripts"></iframe>
+            ` : this._mermaid ? html`
+                <div class="diagram-container">
+                    <div class="mermaid-target"></div>
                 </div>
+            ` : html`
+                <div class="placeholder">No topology available.</div>
             `}
         `;
     }
