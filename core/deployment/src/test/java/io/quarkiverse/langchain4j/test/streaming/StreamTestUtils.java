@@ -18,6 +18,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkus.arc.Arc;
+import io.smallrye.common.vertx.ContextLocals;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Vertx;
 
@@ -96,7 +97,7 @@ public class StreamTestUtils {
 
         private void checkDuplicatedContext() {
             if (DC_DATA != null) {
-                if (!DC_DATA.equals(Vertx.currentContext().getLocal("DC_DATA"))) {
+                if (!DC_DATA.equals(ContextLocals.get("DC_DATA").orElse(null))) {
                     throw new AssertionError("Expected to be in the same context");
                 }
             }

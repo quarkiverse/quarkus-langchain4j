@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.jaxrsclient;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.Optional;
@@ -24,12 +25,14 @@ import dev.langchain4j.http.client.SuccessfulHttpResponse;
 import dev.langchain4j.http.client.sse.ServerSentEventListener;
 import dev.langchain4j.http.client.sse.ServerSentEventParser;
 import io.quarkus.runtime.BlockingOperationControl;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkus.tls.TlsConfiguration;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.SSLOptions;
 import io.vertx.core.net.TrustOptions;
 
+@RegisterForReflection(targets = TlsConfiguration.class)
 public class JaxRsHttpClient implements HttpClient {
 
     private final Client delegate;
@@ -66,7 +69,7 @@ public class JaxRsHttpClient implements HttpClient {
 
                 @Override
                 public SSLOptions getSSLOptions() {
-                    return tlsConfiguration.getSSLOptions();
+                    return getClientSSLOptions(tlsConfiguration);
                 }
 
                 @Override
@@ -100,6 +103,20 @@ public class JaxRsHttpClient implements HttpClient {
 
     public static JaxRsHttpClientBuilder builder() {
         return new JaxRsHttpClientBuilder();
+    }
+
+    private static SSLOptions getClientSSLOptions(TlsConfiguration tlsConfiguration) {
+        try {
+            try {
+                return (SSLOptions) TlsConfiguration.class.getMethod("getClientSSLOptions").invoke(tlsConfiguration);
+            } catch (NoSuchMethodException ignored) {
+                return (SSLOptions) TlsConfiguration.class.getMethod("getSSLOptions").invoke(tlsConfiguration);
+            }
+        } catch (IllegalAccessException | NoSuchMethodException e) {
+            throw new IllegalStateException("Unable to read the TLS client options", e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException("Unable to read the TLS client options", e.getCause());
+        }
     }
 
     @Override

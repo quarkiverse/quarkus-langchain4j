@@ -22,6 +22,7 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.common.vertx.ContextLocals;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Context;
@@ -63,7 +64,7 @@ public class BlockingMemoryStoreOnStreamedResponseTest {
                 Arc.container().requestContext().activate();
                 var value = UUID.randomUUID().toString();
                 StreamTestUtils.FakeMemoryStore.DC_DATA = value;
-                Vertx.currentContext().putLocal("DC_DATA", value);
+                ContextLocals.put("DC_DATA", value);
                 List<String> list = service.hi("123", "Say hello").collect().asList().await().indefinitely();
                 assertThat(list).containsExactly("Hi!", " ", "World!");
                 Arc.container().requestContext().deactivate();
@@ -76,7 +77,7 @@ public class BlockingMemoryStoreOnStreamedResponseTest {
 
             } finally {
                 Arc.container().requestContext().deactivate();
-                Vertx.currentContext().removeLocal("DC_DATA");
+                ContextLocals.remove("DC_DATA");
 
             }
         }, false);

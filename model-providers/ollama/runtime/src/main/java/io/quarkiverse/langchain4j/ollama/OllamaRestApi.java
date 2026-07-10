@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.smallrye.common.vertx.ContextLocals;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -106,19 +107,19 @@ public interface OllamaRestApi {
                             // but in pieces (my guess is that it is a Vertx bug).
                             // There is nothing we can do in this case except for returning empty responses and in the meantime buffer the pieces
                             // by storing them in the Vertx Duplicated Context
-                            String existingBuffer = ctx.getLocal("buffer");
+                            String existingBuffer = ContextLocals.<String> get("buffer").orElse(null);
                             if ((existingBuffer != null) && !existingBuffer.isEmpty()) {
                                 if (chunk.endsWith("}")) {
-                                    ctx.putLocal("buffer", "");
+                                    ContextLocals.put("buffer", "");
                                     String entireLine = existingBuffer + chunk;
                                     return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER.readValue(entireLine,
                                             ChatResponse.class);
                                 } else {
-                                    ctx.putLocal("buffer", existingBuffer + chunk);
+                                    ContextLocals.put("buffer", existingBuffer + chunk);
                                     return ChatResponse.emptyNotDone();
                                 }
                             } else {
-                                ctx.putLocal("buffer", chunk);
+                                ContextLocals.put("buffer", chunk);
                                 return ChatResponse.emptyNotDone();
                             }
                         }

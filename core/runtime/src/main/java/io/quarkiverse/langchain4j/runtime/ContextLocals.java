@@ -21,7 +21,7 @@ public final class ContextLocals {
         if (current == null) {
             return null;
         }
-        return current.getLocal(Assert.checkNotNullParam("key", key));
+        return io.smallrye.common.vertx.ContextLocals.<T> get(Assert.checkNotNullParam("key", key)).orElse(null);
     }
 
     /**
@@ -38,7 +38,7 @@ public final class ContextLocals {
         if (current == null) {
             return;
         }
-        current.putLocal(
+        io.smallrye.common.vertx.ContextLocals.put(
                 Assert.checkNotNullParam("key", key),
                 Assert.checkNotNullParam("value", value));
     }
@@ -55,7 +55,7 @@ public final class ContextLocals {
         if (current == null) {
             return false;
         }
-        return current.removeLocal(Assert.checkNotNullParam("key", key));
+        return io.smallrye.common.vertx.ContextLocals.remove(Assert.checkNotNullParam("key", key));
     }
 
     public static boolean duplicatedContextActive() {
