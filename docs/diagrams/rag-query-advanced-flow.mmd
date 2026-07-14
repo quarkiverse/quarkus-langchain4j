@@ -1,0 +1,12 @@
+%% Source for modules/ROOT/assets/images/rag-query-advanced-flow.svg.
+%% Regenerate with: npm run diagrams (see "Regenerating diagrams" in docs/README.adoc).
+flowchart TD
+A[User Query] --> B[Query Transformer]
+B --> C[Query Router]
+C --> D1[Retriever A]
+C --> D2[Retriever B]
+D1 --> E[Content Aggregator]
+D2 --> E
+E --> F[Content Injector]
+F --> G[Augmented Prompt]
+G --> H[LLM Response]

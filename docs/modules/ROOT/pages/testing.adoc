@@ -147,18 +147,8 @@ In the context of Quarkus Langchain4J, an evaluation consists of:
 
 The evaluation process works as follows:
 
-[mermaid]
-----
-flowchart TD
-    A[Sample<br/>input + expected output] --> B[Function Under Test<br/>produces actual output]
-    B --> C[Evaluation Strategy<br/>compares actual vs expected]
-    C --> D[Evaluation Result<br/>passed/failed, score, explanation]
-
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#ffe1f5
-    style D fill:#e1ffe1
-----
+// Generated from diagrams/evaluation-flow.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::evaluation-flow.svg[Evaluation process,align="center"]
 
 For example, testing a customer support chatbot:
 

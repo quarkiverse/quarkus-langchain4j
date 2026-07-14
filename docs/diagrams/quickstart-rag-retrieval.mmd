@@ -1,0 +1,15 @@
+%% Source for modules/ROOT/assets/images/quickstart-rag-retrieval.svg.
+%% Regenerate with: npm run diagrams (see "Regenerating diagrams" in docs/README.adoc).
+flowchart TB
+    A[User asks question] e1@--> B[1 - The AI Service processes request]
+    B e2@--> C[2 - The document retriever orchestrates the retrieval process]
+    C e3@<--> D[3 - The embedding model is used to generate an embedding for the query]
+    C e4@<--> |4 - Query the embedding store| E[(Embedding Store)]
+    C e5@-->|5 - Provides the segments| B
+    B e6@<--> F[6 - LLM generates answer based on segments]
+    B e7@-->|7 - Return the response| A
+
+    class A,B,C,D,E,F node;
+    classDef node fill:#4A93E9,stroke:white,color:white
+    class e1,e2,e3,e4,e5,e6,e7 edge
+    classDef edge stroke-width:3px,stroke:#DF1862
