@@ -40,8 +40,6 @@
 * xref:ai-services.adoc[AI Services]
 ** xref:prompt-and-template.adoc[Prompt and Template]
 ** xref:messages-and-memory.adoc[Messages and Memory]
-** xref:function-calling.adoc[Function Calling]
-** xref:guardrails.adoc[Guardrails]
 ** xref:response-augmenter.adoc[Response Augmenter]
 ** xref:chat-scopes.adoc[Chat Scopes Framework]
 * xref:agentic.adoc[Agentic AI]
@@ -107,7 +105,9 @@
 *** xref:rag-redis.adoc[Redis]
 *** xref:rag-weaviate.adoc[Weaviate]
 
+* xref:function-calling.adoc[Function Calling]
 * xref:mcp.adoc[Model Context Protocol (MCP)]
+* xref:guardrails.adoc[Guardrails]
 * xref:skills.adoc[Skills]
 * xref:dev-ui.adoc[Dev UI]
 * xref:observability.adoc[Observability]
