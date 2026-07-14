@@ -12,10 +12,7 @@ ui:
     snapshot: true
 
 asciidoc:
-  extensions:
-    - asciidoctor-kroki
   attributes:
-    kroki-fetch-diagram: false
     page-related-doc-categories: ai,java,ml
     page-pagination: ''
     hide-uri-scheme: '@'

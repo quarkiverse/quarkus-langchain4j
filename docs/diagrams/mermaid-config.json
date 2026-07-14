@@ -1,0 +1,10 @@
+{
+  "flowchart": { "useMaxWidth": false },
+  "sequence": { "useMaxWidth": false },
+  "class": { "useMaxWidth": false },
+  "state": { "useMaxWidth": false },
+  "er": { "useMaxWidth": false },
+  "journey": { "useMaxWidth": false },
+  "gantt": { "useMaxWidth": false },
+  "pie": { "useMaxWidth": false }
+}
