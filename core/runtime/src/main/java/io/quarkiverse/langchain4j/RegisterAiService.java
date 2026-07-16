@@ -32,6 +32,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.BaseSystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
+import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 
 /**
  * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by
@@ -47,7 +48,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithCon
  * NOTE: When the application also contains the {@code quarkus-micrometer} extension, metrics are automatically generated
  * for the method invocations.
  * <p>
- * See also {@link ToolBox}, {@link SeedMemory}
+ * See also {@link ToolBox}, {@link SeedMemory}.
  */
 @Retention(RUNTIME)
 @Target(ElementType.TYPE)
@@ -130,6 +131,33 @@ public @interface RegisterAiService {
     Class<? extends Function<ToolExecutionRequest, ToolExecutionResultMessage>> toolHallucinationStrategy() default BeanIfExistsToolHallucinationStrategy.class;
 
     /**
+     * Selects a specific {@link ChatMemoryProvider} CDI bean for this AI service.
+     * This cannot be combined with {@link #chatMemoryProviderSupplier()}, {@link #chatMemoryStore()}, or
+     * {@link #chatMemoryMaxMessages()}.
+     */
+    Class<? extends ChatMemoryProvider> chatMemoryProvider() default ChatMemoryProvider.class;
+
+    /**
+     * Selects the {@link ChatMemoryStore} CDI bean used by the message-window memory for this AI service.
+     */
+    Class<? extends ChatMemoryStore> chatMemoryStore() default ChatMemoryStore.class;
+
+    /**
+     * Maximum messages retained by the message-window memory for this AI service.
+     */
+    int chatMemoryMaxMessages() default 10;
+
+    /**
+     * Selects a {@link DefaultMemoryIdProvider} CDI bean used when an AI-service method has no explicit memory ID.
+     */
+    Class<? extends DefaultMemoryIdProvider> defaultMemoryIdProvider() default DefaultMemoryIdProvider.class;
+
+    /**
+     * Configures when changes to chat memory are persisted.
+     */
+    ChatMemoryFlushStrategy chatMemoryFlushStrategy() default ChatMemoryFlushStrategy.DEFERRED;
+
+    /**
      * Configures the way to obtain the {@link ChatMemoryProvider}.
      * <p>
      * Be default, Quarkus configures a {@link ChatMemoryProvider} bean that uses a {@link InMemoryChatMemoryStore} bean
@@ -197,6 +225,11 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
 
     /**
+     * Selects a specific {@link ToolProvider} CDI bean.
+     */
+    Class<? extends ToolProvider> toolProvider() default ToolProvider.class;
+
+    /**
      * Configures the {@link ToolSearchStrategy} used to let the model discover tools dynamically at inference time
      * instead of exposing the whole tool catalog upfront.
      * <p>
@@ -205,6 +238,11 @@ public @interface RegisterAiService {
      * Use {@link NoToolSearchStrategySupplier} to explicitly opt out even when such a bean is present.
      */
     Class<? extends Supplier<ToolSearchStrategy>> toolSearchStrategySupplier() default BeanIfExistsToolSearchStrategySupplier.class;
+
+    /**
+     * Selects a specific {@link ToolSearchStrategy} CDI bean.
+     */
+    Class<? extends ToolSearchStrategy> toolSearchStrategy() default ToolSearchStrategy.class;
 
     /**
      * By default, after first tool call execution, in subsequent prompts the {@code toolChoice} of

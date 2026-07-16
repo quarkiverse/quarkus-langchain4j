@@ -446,6 +446,10 @@ public class AiServicesProcessor {
             }
             alreadyHandled.add(declarativeAiServiceClassInfo.name());
 
+            boolean chatMemoryProviderClassIsBean = false;
+            boolean toolProviderClassIsBean = false;
+            boolean toolSearchStrategyClassIsBean = false;
+
             DotName chatLanguageModelSupplierClassDotName = getSupplierDotName(instance.value("chatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER,
                     supplierDotName -> validateSupplierAndRegister(
@@ -494,7 +498,15 @@ public class AiServicesProcessor {
 
             DotName toolProviderClassName = LangChain4jDotNames.BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER;
             AnnotationValue toolProviderValue = instance.value("toolProviderSupplier");
-            if (toolProviderValue != null) {
+            AnnotationValue configuredToolProvider = instance.value("toolProvider");
+            rejectConflictingConfiguration(declarativeAiServiceClassInfo, toolProviderValue, configuredToolProvider,
+                    "toolProviderSupplier", "toolProvider");
+            if (configuredToolProvider != null) {
+                toolProviderClassName = configuredToolProvider.asClass().name();
+                toolProviderClassIsBean = true;
+                toolProviderInfos.add(new ToolProviderInfo(toolProviderClassName.toString(),
+                        declarativeAiServiceClassInfo.simpleName()));
+            } else if (toolProviderValue != null) {
                 if (LangChain4jDotNames.NO_TOOL_PROVIDER_SUPPLIER.equals(toolProviderValue.asClass().name())) {
                     toolProviderClassName = null;
                 } else {
@@ -508,7 +520,13 @@ public class AiServicesProcessor {
 
             DotName toolSearchStrategyClassName = LangChain4jDotNames.BEAN_IF_EXISTS_TOOL_SEARCH_STRATEGY_SUPPLIER;
             AnnotationValue toolSearchStrategyValue = instance.value("toolSearchStrategySupplier");
-            if (toolSearchStrategyValue != null) {
+            AnnotationValue configuredToolSearchStrategy = instance.value("toolSearchStrategy");
+            rejectConflictingConfiguration(declarativeAiServiceClassInfo, toolSearchStrategyValue,
+                    configuredToolSearchStrategy, "toolSearchStrategySupplier", "toolSearchStrategy");
+            if (configuredToolSearchStrategy != null) {
+                toolSearchStrategyClassName = configuredToolSearchStrategy.asClass().name();
+                toolSearchStrategyClassIsBean = true;
+            } else if (toolSearchStrategyValue != null) {
                 if (LangChain4jDotNames.NO_TOOL_SEARCH_STRATEGY_SUPPLIER.equals(toolSearchStrategyValue.asClass().name())) {
                     toolSearchStrategyClassName = null;
                 } else {
@@ -549,14 +567,43 @@ public class AiServicesProcessor {
             List<ClassInfo> tools = tools(instance, index);
             DotName chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName(reflectiveClassProducer,
                     unremovableBeanProducer, instance, index);
-            if (!tools.isEmpty() && chatMemoryProviderSupplierClassDotName == null) {
+            chatMemoryProviderClassIsBean = instance.value("chatMemoryProvider") != null;
+            AnnotationValue configuredStore = instance.value("chatMemoryStore");
+            AnnotationValue configuredMaxMessages = instance.value("chatMemoryMaxMessages");
+            if (chatMemoryProviderClassIsBean && (configuredStore != null || configuredMaxMessages != null)) {
+                throw new IllegalArgumentException("AI service '" + declarativeAiServiceClassInfo.name()
+                        + "' cannot combine @RegisterAiService.chatMemoryProvider with chatMemoryStore or "
+                        + "chatMemoryMaxMessages");
+            }
+            DotName chatMemoryStoreClassDotName = null;
+            Integer chatMemoryMaxMessages = null;
+            if (configuredStore != null || configuredMaxMessages != null) {
+                chatMemoryStoreClassDotName = configuredStore != null
+                        ? configuredStore.asClass().name()
+                        : DotName.createSimple(dev.langchain4j.store.memory.chat.ChatMemoryStore.class);
+                chatMemoryMaxMessages = configuredMaxMessages != null ? configuredMaxMessages.asInt() : 10;
+                if (chatMemoryMaxMessages <= 0) {
+                    throw new IllegalArgumentException(
+                            "@RegisterAiService.chatMemoryMaxMessages must be greater than zero, but was: "
+                                    + chatMemoryMaxMessages);
+                }
+                chatMemoryProviderSupplierClassDotName = null;
+            }
+            DotName configuredMemoryIdProviderClassDotName = null;
+            boolean defaultMemoryIdProviderClassIsBean = false;
+            AnnotationValue configuredMemoryIdProvider = instance.value("defaultMemoryIdProvider");
+            if (configuredMemoryIdProvider != null) {
+                configuredMemoryIdProviderClassDotName = configuredMemoryIdProvider.asClass().name();
+                defaultMemoryIdProviderClassIsBean = true;
+            }
+            if (!tools.isEmpty() && chatMemoryProviderSupplierClassDotName == null
+                    && chatMemoryStoreClassDotName == null) {
                 throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
                         + declarativeAiServiceClassInfo.name() + "'");
             }
             Integer maxToolCallingRoundTrips = 0;
             AnnotationValue newAnnoValue = instance.value("maxToolCallingRoundTrips");
             AnnotationValue legacyAnnoValue = instance.value("maxSequentialToolInvocations");
-
             if (newAnnoValue != null) {
                 maxToolCallingRoundTrips = newAnnoValue.asInt();
             } else if (legacyAnnoValue != null) {
@@ -592,7 +639,14 @@ public class AiServicesProcessor {
             }
 
             DotName chatMemoryFlushStrategySupplierClassDotName = null;
+            String chatMemoryFlushStrategy = null;
             AnnotationValue chatMemoryFlushStrategySupplierValue = instance.value("chatMemoryFlushStrategySupplier");
+            AnnotationValue configuredFlushStrategy = instance.value("chatMemoryFlushStrategy");
+            rejectConflictingConfiguration(declarativeAiServiceClassInfo, chatMemoryFlushStrategySupplierValue,
+                    configuredFlushStrategy, "chatMemoryFlushStrategySupplier", "chatMemoryFlushStrategy");
+            if (configuredFlushStrategy != null) {
+                chatMemoryFlushStrategy = configuredFlushStrategy.asEnum();
+            }
             if (chatMemoryFlushStrategySupplierValue != null) {
                 DotName supplierDotName = chatMemoryFlushStrategySupplierValue.asClass().name();
                 if (!LangChain4jDotNames.DEFAULT_CHAT_MEMORY_FLUSH_STRATEGY_SUPPLIER.equals(supplierDotName)) {
@@ -633,7 +687,9 @@ public class AiServicesProcessor {
                     moderationModelName,
                     imageModelName,
                     toolProviderClassName,
+                    toolProviderClassIsBean,
                     toolSearchStrategyClassName,
+                    toolSearchStrategyClassIsBean,
                     beanName(declarativeAiServiceClassInfo),
                     toolHallucinationStrategy(instance),
                     classInputGuardrails(declarativeAiServiceClassInfo, index),
@@ -647,6 +703,12 @@ public class AiServicesProcessor {
                     impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
                     shouldThrowExceptionOnEventError,
                     chatMemoryFlushStrategySupplierClassDotName,
+                    chatMemoryFlushStrategy,
+                    chatMemoryProviderClassIsBean,
+                    chatMemoryStoreClassDotName,
+                    chatMemoryMaxMessages,
+                    configuredMemoryIdProviderClassDotName,
+                    defaultMemoryIdProviderClassIsBean,
                     skillNames));
 
         }
@@ -757,6 +819,12 @@ public class AiServicesProcessor {
         // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
         DotName chatMemoryProviderSupplierClassDotName = LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
         AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
+        AnnotationValue configuredProvider = instance.value("chatMemoryProvider");
+        rejectConflictingConfiguration(instance.target().asClass(), chatMemoryProviderSupplierValue, configuredProvider,
+                "chatMemoryProviderSupplier", "chatMemoryProvider");
+        if (configuredProvider != null) {
+            return configuredProvider.asClass().name();
+        }
         if (chatMemoryProviderSupplierValue != null) {
             chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
             if (chatMemoryProviderSupplierClassDotName.equals(
@@ -917,6 +985,14 @@ public class AiServicesProcessor {
             return toolHallucinationStrategyInstance.asClass().name();
         }
         return null;
+    }
+
+    private static void rejectConflictingConfiguration(ClassInfo serviceClass, AnnotationValue supplierValue,
+            AnnotationValue beanValue, String supplierName, String beanName) {
+        if (supplierValue != null && beanValue != null) {
+            throw new IllegalArgumentException("AI service '" + serviceClass.name() + "' configures both @RegisterAiService."
+                    + supplierName + " and @RegisterAiService." + beanName + ". Configure only one of them.");
+        }
     }
 
     private DotName getSupplierDotName(
@@ -1083,6 +1159,9 @@ public class AiServicesProcessor {
             String defaultMemoryIdProviderClassName = (bi.getDefaultMemoryIdProviderClassDotName() != null
                     ? bi.getDefaultMemoryIdProviderClassDotName().toString()
                     : null);
+            String chatMemoryStoreClassName = (bi.getChatMemoryStoreClassDotName() != null
+                    ? bi.getChatMemoryStoreClassDotName().toString()
+                    : null);
 
             String chatMemoryFlushStrategySupplierClassName = (bi.getChatMemoryFlushStrategySupplierClassDotName() != null
                     ? bi.getChatMemoryFlushStrategySupplierClassDotName().toString()
@@ -1148,9 +1227,15 @@ public class AiServicesProcessor {
                                     streamingChatLanguageModelSupplierClassName,
                                     toolToQualifierMap,
                                     toolProviderSupplierClassName,
+                                    bi.isToolProviderClassBean(),
                                     toolSearchStrategySupplierClassName,
+                                    bi.isToolSearchStrategyClassBean(),
                                     chatMemoryProviderSupplierClassName,
+                                    bi.isChatMemoryProviderClassBean(),
                                     chatMemoryFlushStrategySupplierClassName,
+                                    bi.getChatMemoryFlushStrategy(),
+                                    chatMemoryStoreClassName,
+                                    bi.getChatMemoryMaxMessages(),
                                     retrievalAugmentorSupplierClassName,
                                     moderationModelSupplierClassName,
                                     imageModelSupplierClassName,
@@ -1173,6 +1258,7 @@ public class AiServicesProcessor {
                                     allowContinuousForcedToolCalling,
                                     bi.isShouldThrowExceptionOnEventError(),
                                     defaultMemoryIdProviderClassName,
+                                    bi.isDefaultMemoryIdProviderClassBean(),
                                     bi.getSkillNames())))
                     .setRuntimeInit()
                     .addQualifier()
@@ -1227,6 +1313,14 @@ public class AiServicesProcessor {
             if (LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
                 configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MEMORY_PROVIDER));
                 needsChatMemoryProviderBean = true;
+            } else if (bi.isChatMemoryProviderClassBean()) {
+                configurator.addInjectionPoint(ClassType.create(bi.getChatMemoryProviderSupplierClassDotName()));
+            }
+            if (bi.getChatMemoryStoreClassDotName() != null) {
+                configurator.addInjectionPoint(ClassType.create(bi.getChatMemoryStoreClassDotName()));
+            }
+            if (bi.isDefaultMemoryIdProviderClassBean()) {
+                configurator.addInjectionPoint(ClassType.create(bi.getDefaultMemoryIdProviderClassDotName()));
             }
 
             if (LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER.toString()
