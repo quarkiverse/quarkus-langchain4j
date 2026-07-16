@@ -26,6 +26,7 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -48,6 +49,8 @@ public class OllamaStreamingChatLanguageModelSmokeTest extends WiremockAware {
     @RegisterAiService
     interface AIServiceWithoutTool {
         Multi<String> streaming(@dev.langchain4j.service.UserMessage String text);
+
+        Multi<ChatEvent> streamingEvents(@dev.langchain4j.service.UserMessage String text);
     }
 
     @Singleton
@@ -96,6 +99,34 @@ public class OllamaStreamingChatLanguageModelSmokeTest extends WiremockAware {
 
         var result = aiServiceWithoutTool.streaming("Hello").collect().asList().await().indefinitely();
         assertEquals(List.of("Hello", "!"), result);
+    }
+
+    @Test
+    void emitsThinkingEvents() {
+        wiremock().register(
+                post(urlEqualTo("/api/chat"))
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/x-ndjson")
+                                .withBody(
+                                        """
+                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.422542932Z","message":{"role":"assistant","content":"","thinking":"Let me "},"done":false}
+                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.522542932Z","message":{"role":"assistant","content":"","thinking":"think."},"done":false}
+                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.622542932Z","message":{"role":"assistant","content":"Hello"},"done":false}
+                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.722542932Z","message":{"role":"assistant","content":"!"},"done":false}
+                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.822542932Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"prompt_eval_count":11,"eval_count":10}""")));
+
+        List<ChatEvent> events = aiServiceWithoutTool.streamingEvents("Hello")
+                .collect().asList().await().indefinitely();
+
+        assertEquals(5, events.size());
+        assertEquals("Let me ", ((ChatEvent.PartialThinkingEvent) events.get(0)).getText());
+        assertEquals("think.", ((ChatEvent.PartialThinkingEvent) events.get(1)).getText());
+        assertEquals("Hello", ((ChatEvent.PartialResponseEvent) events.get(2)).getChunk());
+        assertEquals("!", ((ChatEvent.PartialResponseEvent) events.get(3)).getChunk());
+
+        ChatEvent.ChatCompletedEvent completed = (ChatEvent.ChatCompletedEvent) events.get(4);
+        assertEquals("Hello!", completed.getChatResponse().aiMessage().text());
+        assertEquals("Let me think.", completed.getChatResponse().aiMessage().thinking());
     }
 
     @Test

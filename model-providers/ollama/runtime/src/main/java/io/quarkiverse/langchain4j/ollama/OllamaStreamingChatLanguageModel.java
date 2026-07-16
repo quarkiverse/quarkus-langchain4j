@@ -27,6 +27,7 @@ import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import io.smallrye.mutiny.Context;
@@ -41,6 +42,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
     private static final String TOOLS_CONTEXT = "TOOLS";
     private static final String TOKEN_USAGE_CONTEXT = "TOKEN_USAGE";
     private static final String RESPONSE_CONTEXT = "RESPONSE";
+    private static final String THINKING_CONTEXT = "THINKING";
     private static final String MODEL_ID = "MODEL_ID";
     private final OllamaClient client;
     private final String model;
@@ -80,6 +82,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
         Context context = Context.empty();
         context.put(MODEL_ID, "");
         context.put(RESPONSE_CONTEXT, new ArrayList<ChatResponse>());
+        context.put(THINKING_CONTEXT, new ArrayList<String>());
         context.put(TOOLS_CONTEXT, new ArrayList<ToolExecutionRequest>());
 
         dev.langchain4j.model.chat.request.ChatRequest modelListenerRequest = createModelListenerRequest(request, messages,
@@ -118,6 +121,12 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                                     if (!response.message().content().isEmpty()) {
                                         ((List<ChatResponse>) context.get(RESPONSE_CONTEXT)).add(response);
                                         handler.onPartialResponse(response.message().content());
+                                    }
+
+                                    String thinking = response.message().thinking();
+                                    if (thinking != null && !thinking.isEmpty()) {
+                                        ((List<String>) context.get(THINKING_CONTEXT)).add(thinking);
+                                        handler.onPartialThinking(new PartialThinking(thinking));
                                     }
 
                                     if (response.done()) {
@@ -166,11 +175,17 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                                 TokenUsage tokenUsage = context.contains(TOKEN_USAGE_CONTEXT) ? context.get(TOKEN_USAGE_CONTEXT)
                                         : null;
                                 List<ChatResponse> chatResponses = context.get(RESPONSE_CONTEXT);
+                                List<String> thinkingResponses = context.get(THINKING_CONTEXT);
                                 List<ToolExecutionRequest> toolExecutionRequests = context.get(TOOLS_CONTEXT);
+
+                                String thinkingResponse = String.join("", thinkingResponses);
 
                                 if (!toolExecutionRequests.isEmpty()) {
                                     handler.onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse.builder()
-                                            .aiMessage(AiMessage.from(toolExecutionRequests))
+                                            .aiMessage(AiMessage.builder()
+                                                    .thinking(thinkingResponse.isEmpty() ? null : thinkingResponse)
+                                                    .toolExecutionRequests(toolExecutionRequests)
+                                                    .build())
                                             .tokenUsage(tokenUsage).build());
                                     return;
                                 }
@@ -180,7 +195,10 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                                         .map(Message::content)
                                         .collect(Collectors.joining());
 
-                                AiMessage aiMessage = new AiMessage(stringResponse);
+                                AiMessage aiMessage = AiMessage.builder()
+                                        .text(stringResponse)
+                                        .thinking(thinkingResponse.isEmpty() ? null : thinkingResponse)
+                                        .build();
                                 dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse = dev.langchain4j.model.chat.response.ChatResponse
                                         .builder().aiMessage(aiMessage).tokenUsage(tokenUsage).build();
 
