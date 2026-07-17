@@ -288,7 +288,7 @@ public class AiServiceMethodImplementationSupport {
         }
 
         AugmentationResult augmentationResult = null;
-        if (context.retrievalAugmentor != null) {
+        if (!methodCreateInfo.isResumeConversation() && context.retrievalAugmentor != null) {
             Metadata metadata = Metadata.builder()
                     .chatMessage(userMessage)
                     .chatMemory(committableChatMemory.messages())
@@ -311,11 +311,20 @@ public class AiServiceMethodImplementationSupport {
                 .aiServiceListenerRegistrar(context.eventListenerRegistrar)
                 .build();
 
-        userMessage = GuardrailsSupport.executeInputGuardrails(guardrailService, userMessage, methodCreateInfo,
-                guardrailParams);
+        if (!methodCreateInfo.isResumeConversation()) {
+            userMessage = GuardrailsSupport.executeInputGuardrails(guardrailService, userMessage, methodCreateInfo,
+                    guardrailParams);
+        }
 
         List<ChatMessage> messagesToSend;
-        if (context.hasChatMemory()) {
+        if (methodCreateInfo.isResumeConversation()) {
+            if (!context.hasChatMemory()) {
+                throw illegalConfiguration(
+                        "AI Service method '%s' is annotated with @ResumeConversation but no chat memory is configured",
+                        methodCreateInfo.getMethodName());
+            }
+            messagesToSend = createMessagesToSendForResume(systemMessage, committableChatMemory);
+        } else if (context.hasChatMemory()) {
             messagesToSend = createMessagesToSendForExistingMemory(systemMessage, userMessage, committableChatMemory,
                     needsMemorySeed,
                     context, methodCreateInfo);
@@ -923,6 +932,23 @@ public class AiServiceMethodImplementationSupport {
 
         chatMemory.add(userMessage);
         return chatMemory.messages();
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private static List<ChatMessage> createMessagesToSendForResume(Optional<SystemMessage> systemMessage,
+            CommittableChatMemory chatMemory) {
+        if (systemMessage.isPresent()) {
+            chatMemory.add(systemMessage.get());
+        }
+        List<ChatMessage> messages = chatMemory.messages();
+        if (messages.isEmpty()) {
+            throw illegalConfiguration("Cannot resume a conversation with empty chat memory");
+        }
+        if (!(messages.get(messages.size() - 1) instanceof ToolExecutionResultMessage)) {
+            throw illegalConfiguration(
+                    "Cannot resume a conversation unless the last chat memory message is a ToolExecutionResultMessage");
+        }
+        return messages;
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

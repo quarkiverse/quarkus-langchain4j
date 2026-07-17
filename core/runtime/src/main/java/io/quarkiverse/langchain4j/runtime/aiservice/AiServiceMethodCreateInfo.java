@@ -35,6 +35,7 @@ public final class AiServiceMethodCreateInfo {
     private final UserMessageInfo userMessageInfo;
     private final Optional<Integer> memoryIdParamPosition;
     private final boolean requiresModeration;
+    private final boolean resumeConversation;
     private final String returnTypeSignature; // transient so bytecode recording ignores it
     private final Optional<Integer> overrideChatModelParamPosition;
     private final Optional<Integer> chatRequestParametersParamPosition;
@@ -75,6 +76,7 @@ public final class AiServiceMethodCreateInfo {
             UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
             boolean requiresModeration,
+            boolean resumeConversation,
             String returnTypeSignature,
             Optional<Integer> overrideChatModelParamPosition,
             Optional<Integer> chatRequestParametersParamPosition,
@@ -96,6 +98,7 @@ public final class AiServiceMethodCreateInfo {
         this.userMessageInfo = userMessageInfo;
         this.memoryIdParamPosition = memoryIdParamPosition;
         this.requiresModeration = requiresModeration;
+        this.resumeConversation = resumeConversation;
         this.returnTypeSignature = returnTypeSignature;
         this.overrideChatModelParamPosition = overrideChatModelParamPosition;
         this.chatRequestParametersParamPosition = chatRequestParametersParamPosition;
@@ -152,6 +155,10 @@ public final class AiServiceMethodCreateInfo {
 
     public boolean isRequiresModeration() {
         return requiresModeration;
+    }
+
+    public boolean isResumeConversation() {
+        return resumeConversation;
     }
 
     public String getReturnTypeSignature() {
