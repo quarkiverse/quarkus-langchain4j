@@ -66,7 +66,7 @@ class ResumeConversationTest {
                 ToolExecutionResultMessage.from(toolRequest, "approved"));
         TestChatMemoryStore.MESSAGES.put(memoryId, new ArrayList<>(suspendedConversation));
 
-        assertThat(assistant.resume(memoryId)).isEqualTo("Continuing after approval");
+        assertThat(assistant.resume(memoryId)).isEqualTo("Conversation continued");
 
         assertThat(TestChatModel.lastRequest.messages()).containsExactlyElementsOf(suspendedConversation);
         assertThat(TestChatModel.lastRequest.messages()).filteredOn(UserMessage.class::isInstance).hasSize(1);
@@ -75,17 +75,27 @@ class ResumeConversationTest {
                         suspendedConversation.get(0),
                         suspendedConversation.get(1),
                         suspendedConversation.get(2),
-                        AiMessage.from("Continuing after approval")));
+                        AiMessage.from("Conversation continued")));
     }
 
     @Test
     @ActivateRequestContext
-    void rejectsConversationThatIsNotWaitingForAToolResult() {
-        String memoryId = "active-conversation";
-        TestChatMemoryStore.MESSAGES.put(memoryId, new ArrayList<>(List.of(UserMessage.from("Hello"))));
+    void resumesFromGeneralConversationHistory() {
+        String memoryId = "general-conversation";
+        List<ChatMessage> conversation = List.of(
+                UserMessage.from("Summarize our discussion"),
+                AiMessage.from("We discussed deployment options."));
+        TestChatMemoryStore.MESSAGES.put(memoryId, new ArrayList<>(conversation));
 
-        assertThatThrownBy(() -> assistant.resume(memoryId))
-                .hasMessageContaining("last chat memory message is a ToolExecutionResultMessage");
+        assertThat(assistant.resume(memoryId)).isEqualTo("Conversation continued");
+        assertThat(TestChatModel.lastRequest.messages()).containsExactlyElementsOf(conversation);
+    }
+
+    @Test
+    @ActivateRequestContext
+    void rejectsEmptyConversation() {
+        assertThatThrownBy(() -> assistant.resume("empty-conversation"))
+                .hasMessageContaining("Cannot resume a conversation with empty chat memory");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = TestChatModelSupplier.class, chatMemoryProviderSupplier = TestChatMemoryProviderSupplier.class)
@@ -143,7 +153,7 @@ class ResumeConversationTest {
         public ChatResponse doChat(ChatRequest chatRequest) {
             lastRequest = chatRequest;
             return ChatResponse.builder()
-                    .aiMessage(AiMessage.from("Continuing after approval"))
+                    .aiMessage(AiMessage.from("Conversation continued"))
                     .build();
         }
     }

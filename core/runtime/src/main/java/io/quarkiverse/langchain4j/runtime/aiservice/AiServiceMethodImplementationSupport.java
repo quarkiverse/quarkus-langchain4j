@@ -944,10 +944,6 @@ public class AiServiceMethodImplementationSupport {
         if (messages.isEmpty()) {
             throw illegalConfiguration("Cannot resume a conversation with empty chat memory");
         }
-        if (!(messages.get(messages.size() - 1) instanceof ToolExecutionResultMessage)) {
-            throw illegalConfiguration(
-                    "Cannot resume a conversation unless the last chat memory message is a ToolExecutionResultMessage");
-        }
         return messages;
     }
 
