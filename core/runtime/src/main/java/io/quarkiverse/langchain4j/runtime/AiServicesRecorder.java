@@ -265,9 +265,7 @@ public class AiServicesRecorder {
                             // if-exists provider
                             Instance<ToolProvider> instance = creationalContext
                                     .getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
-                            // if the service has explicit tools and a BeanIfExistsToolProviderSupplier,
-                            // just give priority to the explicit tools, don't throw an error
-                            if (instance.isResolvable() && !hasExplicitTools) {
+                            if (instance.isResolvable()) {
                                 quarkusAiServices.toolProvider(instance.get());
                             }
                         }

@@ -72,7 +72,8 @@ public class McpProcessor {
     private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
     private static final DotName MCP_RESOURCE_UPDATED_EVENT = DotName.createSimple(McpResourceUpdatedEvent.class);
     private static final DotName OBSERVES = DotName.createSimple("jakarta.enterprise.event.Observes");
-    private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client", "tracing");
+    private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client", "tracing",
+            "apicurio-registry");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @BuildStep
@@ -145,7 +146,8 @@ public class McpProcessor {
             BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
             CombinedIndexBuildItem combinedIndex,
             McpRecorder recorder,
-            Optional<OpenTelemetrySdkBuildItem> openTelemetrySdkBuildItem) {
+            Optional<OpenTelemetrySdkBuildItem> openTelemetrySdkBuildItem,
+            Optional<AlwaysCreateMcpToolProviderBuildItem> alwaysCreateToolProvider) {
         if (!mcpBuildTimeConfiguration.enabled()) {
             return;
         }
@@ -232,6 +234,16 @@ public class McpProcessor {
                 healthBuildItems.produce(new HealthBuildItem(McpClientHealthCheck.class.getName(),
                         true));
             }
+        } else if (alwaysCreateToolProvider.isPresent()
+                && mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
+                    .configure(LangChain4jDotNames.TOOL_PROVIDER)
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .createWith(recorder.toolProviderFunction(Collections.emptySet()));
+            beanProducer.produce(configurator.done());
         }
     }
 
