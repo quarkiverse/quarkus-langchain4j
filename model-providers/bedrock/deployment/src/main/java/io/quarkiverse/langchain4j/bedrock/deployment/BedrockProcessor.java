@@ -33,6 +33,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
@@ -60,9 +61,12 @@ public class BedrockProcessor {
     }
 
     @BuildStep
-    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
+    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         serviceProviderProducer
                 .produce(ServiceProviderBuildItem.allProvidersFromClassPath(ConfigSourceInterceptor.class.getName()));
+        reflectiveClassProducer.produce(
+                ReflectiveClassBuildItem.builder("dev.langchain4j.model.bedrock.BedrockCohereEmbeddingResponse").build());
     }
 
     @BuildStep
