@@ -20,6 +20,7 @@
     <module>model-auth-providers</module>
     <module>model-providers</module>
     <module>mcp-auth-providers</module>
+    <module>a2a-apicurio-registry</module>
     <module>quarkus-integrations</module>
     <module>rag</module>
     <module>chat-scopes</module>
@@ -52,6 +53,7 @@
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
     <gpu-llama3.version>0.4.0</gpu-llama3.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
+    <apicurio-registry-sdk.version>3.3.0</apicurio-registry-sdk.version>
   </properties>
   <dependencyManagement>
     <dependencies>
