@@ -9,10 +9,21 @@ import io.smallrye.config.WithDefault;
 public interface QdrantNamedStoreBuildTimeConfig {
 
     /**
-     * The collection name for this named store.
-     * This property serves as the build-time key that enables named store discovery.
-     * If not set, the collection name from the runtime configuration will be used.
+     * The name of the Qdrant client to use. These clients are configured by means of the `quarkus-qdrant` extension.
+     * If not set, the default Qdrant client will be used.
      */
     @WithDefault("<default>")
-    Optional<String> collectionName();
+    Optional<String> clientName();
+
+    /**
+     * The name of the Qdrant collection to use.
+     */
+    @WithDefault("default")
+    String collectionName();
+
+    /**
+     * The field name of the text segment in the payload.
+     */
+    @WithDefault("text_segment")
+    String payloadTextKey();
 }

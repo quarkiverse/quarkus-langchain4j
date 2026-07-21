@@ -4,7 +4,6 @@ import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
@@ -34,11 +33,6 @@ public interface QdrantEmbeddingStoreBuildTimeConfig {
     @WithDefaults
     Map<String, QdrantNamedStoreBuildTimeConfig> namedConfig();
 
-    /**
-     * Configuration for DevServices. DevServices allows Quarkus to automatically start a database in dev and test mode.
-     */
-    DevServicesConfig devservices();
-
     @ConfigGroup
     interface DefaultStoreBuildTimeConfig {
 
@@ -48,63 +42,23 @@ public interface QdrantEmbeddingStoreBuildTimeConfig {
          */
         @WithDefault("true")
         boolean defaultStoreEnabled();
-    }
-
-    @ConfigGroup
-    interface DevServicesConfig {
 
         /**
-         * Whether Dev Services for Qdrant are enabled or not.
+         * The name of the Qdrant client to use. These clients are configured by means of the `quarkus-qdrant` extension.
+         * If not set, the default Qdrant client will be used.
          */
-        @WithDefault("true")
-        boolean enabled();
+        Optional<String> clientName();
 
         /**
-         * Container image for Qdrant.
+         * The name of the Qdrant collection to use.
          */
-        @WithDefault("docker.io/qdrant/qdrant:v1.16-unprivileged")
-        String qdrantImageName();
+        @WithDefault("default")
+        String collectionName();
 
         /**
-         * Optional fixed port the Qdrant dev service will listen to.
-         * If not defined, the port will be chosen randomly.
+         * The field name of the text segment in the payload.
          */
-        OptionalInt port();
-
-        /**
-         * Indicates if the Dev Service containers managed by Quarkus for Qdrant are shared.
-         */
-        @WithDefault("true")
-        boolean shared();
-
-        /**
-         * Service label to apply to created Dev Services containers.
-         */
-        @WithDefault("qdrant")
-        String serviceName();
-
-        /**
-         * The Qdrant collection configuration.
-         */
-        Optional<CollectionConfig> collection();
-
-        interface CollectionConfig {
-            /**
-             * The vector parameters.
-             */
-            VectorParamsConfig vectorParams();
-        }
-
-        interface VectorParamsConfig {
-            /**
-             * Distance function used for comparing vectors
-             */
-            Distance distance();
-
-            /**
-             * Size of the vectors
-             */
-            long size();
-        }
+        @WithDefault("text_segment")
+        String payloadTextKey();
     }
 }
