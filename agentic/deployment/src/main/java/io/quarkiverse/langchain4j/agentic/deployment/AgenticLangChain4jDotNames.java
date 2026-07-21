@@ -9,6 +9,7 @@ import dev.langchain4j.agentic.agent.ErrorContext;
 import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.declarative.ActivationCondition;
 import dev.langchain4j.agentic.declarative.AgentListenerSupplier;
+import dev.langchain4j.agentic.declarative.BeforeCall;
 import dev.langchain4j.agentic.declarative.ChatMemoryProviderSupplier;
 import dev.langchain4j.agentic.declarative.ChatMemorySupplier;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
@@ -40,6 +41,7 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName AGENT = DotName.createSimple(Agent.class.getName());
     public static final DotName HUMAN_IN_THE_LOOP_AGENT = DotName.createSimple(HumanInTheLoop.class.getName());
     public static final DotName A2A_AGENT = DotName.createSimple(AGENTIC_PACKAGE + ".A2AClientAgent");
+    public static final DotName A2A_SERVER_URL_SUPPLIER = DotName.createSimple(AGENTIC_PACKAGE + ".A2AServerUrlSupplier");
     public static final DotName SUPERVISOR_AGENT = DotName.createSimple(SupervisorAgent.class.getName());
     public static final DotName SEQUENCE_AGENT = DotName.createSimple(SequenceAgent.class.getName());
     public static final DotName PARALLEL_AGENT = DotName.createSimple(ParallelAgent.class.getName());
@@ -66,6 +68,8 @@ public final class AgenticLangChain4jDotNames {
             .createSimple(ChatMemorySupplier.class.getName());
     public static final DotName CONTENT_RETRIEVER_SUPPLIER = DotName
             .createSimple(ContentRetrieverSupplier.class.getName());
+    public static final DotName BEFORE_CALL = DotName
+            .createSimple(BeforeCall.class.getName());
     public static final DotName ERROR_HANDLER = DotName
             .createSimple(ErrorHandler.class.getName());
     public static final DotName ERROR_CONTEXT = DotName

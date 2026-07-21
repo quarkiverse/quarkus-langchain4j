@@ -170,7 +170,7 @@ public class JaxRsHttpClient implements HttpClient {
                 listener.onOpen(SuccessfulHttpResponse.builder()
                         .statusCode(response.getStatus())
                         .headers(response.getStringHeaders())
-                        .body(null)
+                        .body((byte[]) null)
                         .build());
 
                 try (InputStream inputStream = response.readEntity(InputStream.class)) {

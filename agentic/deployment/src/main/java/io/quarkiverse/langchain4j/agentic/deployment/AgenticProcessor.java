@@ -172,8 +172,10 @@ public class AgenticProcessor {
 
     private void validate(DetectedAiAgentBuildItem item) {
         ClassInfo iface = item.getIface();
+        validateA2AServerUrlSupplier(iface);
         validateActivationCondition(iface);
         validateAgentListenerSupplier(iface);
+        validateBeforeCall(iface);
         validateChatMemoryProviderSupplier(iface);
         validateChatMemorySupplier(iface);
         validateChatModelSupplier(iface);
@@ -187,6 +189,21 @@ public class AgenticProcessor {
         validateRetrievalAugmentorSupplier(iface);
         validateToolProviderSupplier(iface);
         validateToolSupplier(iface);
+    }
+
+    private void validateA2AServerUrlSupplier(ClassInfo iface) {
+        DotName annotationToValidate = AgenticLangChain4jDotNames.A2A_SERVER_URL_SUPPLIER;
+        List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
+        for (AnnotationInstance instance : instances) {
+            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                log.warnf("Unhandled '@%s' annotation: '%s'", annotationToValidate.withoutPackagePrefix(), instance.target());
+                continue;
+            }
+            MethodInfo method = instance.target().asMethod();
+            validateStaticMethod(method, annotationToValidate);
+            validateNoMethodParameters(method, annotationToValidate);
+            validateAllowedReturnTypes(method, Set.of(DotNames.STRING), annotationToValidate);
+        }
     }
 
     private static void validateActivationCondition(ClassInfo iface) {
@@ -215,6 +232,21 @@ public class AgenticProcessor {
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.AGENT_LISTENER), annotationToValidate);
+        }
+    }
+
+    private void validateBeforeCall(ClassInfo iface) {
+        DotName annotationToValidate = AgenticLangChain4jDotNames.BEFORE_CALL;
+        List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
+        for (AnnotationInstance instance : instances) {
+            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                log.warnf("Unhandled '@%s' annotation: '%s'", annotationToValidate.withoutPackagePrefix(), instance.target());
+                continue;
+            }
+            MethodInfo method = instance.target().asMethod();
+            validateStaticMethod(method, annotationToValidate);
+            validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
+            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE), annotationToValidate);
         }
     }
 
