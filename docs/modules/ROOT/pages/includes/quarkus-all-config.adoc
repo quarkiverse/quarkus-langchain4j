@@ -25371,6 +25371,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++qdrant+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-create-collections]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-create-collections[`+++quarkus.langchain4j.qdrant.devservices.create-collections+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.create-collections+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to automatically create Qdrant collections for all configured named stores when Dev Services starts. Requires the collection vector-params to be configured.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_QDRANT_DEVSERVICES_CREATE_COLLECTIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT_DEVSERVICES_CREATE_COLLECTIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-distance]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-distance[`+++quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance+++[]

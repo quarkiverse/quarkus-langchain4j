@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -48,8 +48,6 @@ public class QdrantDevServicesProcessor {
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
-
-        Set<String> namedStoreNames = qdrantBuildConfig.namedConfig().keySet();
 
         List<DevServicesResultBuildItem> result = new ArrayList<>();
         QdrantDevServiceCfg configuration = getConfiguration(qdrantBuildConfig);
@@ -85,8 +83,7 @@ public class QdrantDevServicesProcessor {
                     configuration,
                     launchMode,
                     devServicesConfig.timeout(),
-                    !devServicesSharedNetworkBuildItem.isEmpty(),
-                    namedStoreNames);
+                    !devServicesSharedNetworkBuildItem.isEmpty());
 
             if (newDevService != null) {
                 devService = newDevService;
@@ -141,8 +138,7 @@ public class QdrantDevServicesProcessor {
             QdrantDevServiceCfg config,
             LaunchModeBuildItem launchMode,
             Optional<Duration> timeout,
-            boolean useSharedNetwork,
-            Set<String> namedStoreNames) {
+            boolean useSharedNetwork) {
 
         if (!dockerStatusBuildItem.isDockerAvailable()) {
             LOG.warn("Docker isn't working, please configure the Qdrant server location.");
@@ -162,26 +158,38 @@ public class QdrantDevServicesProcessor {
 
             if (config.vectorCfg() != null) {
                 try (QdrantClient client = client(container)) {
-                    client
-                            .createCollectionAsync(
-                                    config.serviceName(),
-                                    io.qdrant.client.grpc.Collections.VectorParams.newBuilder()
-                                            .setDistance(config.vectorCfg().distance())
-                                            .setSize(config.vectorCfg().size())
-                                            .build())
-                            .get();
+                    var vectorParams = io.qdrant.client.grpc.Collections.VectorParams.newBuilder()
+                            .setDistance(config.vectorCfg().distance())
+                            .setSize(config.vectorCfg().size())
+                            .build();
+
+                    client.createCollectionAsync(config.serviceName(), vectorParams).get();
+
+                    if (config.createCollections()) {
+                        for (var entry : config.namedStoreCollectionNames().entrySet()) {
+                            var collectionName = entry.getValue();
+                            if (!collectionName.equals(config.serviceName())) {
+                                client.createCollectionAsync(collectionName, vectorParams).get();
+                                LOG.debugf("Created Qdrant collection '%s' for named store '%s'",
+                                        collectionName, entry.getKey());
+                            }
+                        }
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
+            } else if (config.createCollections() && !config.namedStoreCollectionNames().isEmpty()) {
+                LOG.warn("Cannot create collections for named stores: "
+                        + "vector parameters (quarkus.langchain4j.qdrant.devservices.collection.vector-params) "
+                        + "are not configured.");
             }
 
             return getRunningQdrantDevService(
-                    config.serviceName(),
+                    config,
                     container.getContainerId(),
                     container::close,
                     container.getHost(),
-                    container.getPort(),
-                    namedStoreNames);
+                    container.getPort());
         };
 
         return QdrantDevServices.LOCATOR
@@ -190,30 +198,35 @@ public class QdrantDevServicesProcessor {
                         config.shared(),
                         launchMode.getLaunchMode())
                 .map(containerAddress -> getRunningQdrantDevService(
-                        config.serviceName(),
+                        config,
                         containerAddress.getId(),
                         null,
                         containerAddress.getHost(),
-                        containerAddress.getPort(),
-                        namedStoreNames))
+                        containerAddress.getPort()))
                 .orElseGet(defaultQdrantSupplier);
     }
 
     private DevServicesResultBuildItem.RunningDevService getRunningQdrantDevService(
-            String serviceName,
+            QdrantDevServiceCfg config,
             String containerId,
             Closeable closeable,
             String host,
-            int port,
-            Set<String> namedStoreNames) {
+            int port) {
 
         Map<String, String> configMap = new HashMap<>();
-        configMap.put("quarkus.langchain4j.qdrant.collection.name", serviceName);
+        configMap.put("quarkus.langchain4j.qdrant.collection.name", config.serviceName());
         configMap.put("quarkus.langchain4j.qdrant.host", host);
         configMap.put("quarkus.langchain4j.qdrant.port", String.valueOf(port));
-        for (String namedStore : namedStoreNames) {
-            configMap.put("quarkus.langchain4j.qdrant." + namedStore + ".host", host);
-            configMap.put("quarkus.langchain4j.qdrant." + namedStore + ".port", String.valueOf(port));
+
+        for (var entry : config.namedStoreCollectionNames().entrySet()) {
+            var storeName = entry.getKey();
+            configMap.put("quarkus.langchain4j.qdrant." + storeName + ".host", host);
+            configMap.put("quarkus.langchain4j.qdrant." + storeName + ".port", String.valueOf(port));
+
+            if (config.createCollections()) {
+                configMap.put("quarkus.langchain4j.qdrant." + storeName + ".collection.name",
+                        entry.getValue());
+            }
         }
 
         return new DevServicesResultBuildItem.RunningDevService(
@@ -224,6 +237,17 @@ public class QdrantDevServicesProcessor {
     }
 
     private QdrantDevServiceCfg getConfiguration(QdrantEmbeddingStoreBuildTimeConfig cfg) {
+        Map<String, String> namedStoreCollectionNames = new HashMap<>();
+
+        for (var entry : cfg.namedConfig().entrySet()) {
+            var storeName = entry.getKey();
+            var collectionName = entry.getValue().collectionName()
+                    .filter(name -> !NamedConfigUtil.isDefault(name))
+                    .orElse(storeName);
+
+            namedStoreCollectionNames.put(storeName, collectionName);
+        }
+
         return new QdrantDevServiceCfg(
                 cfg.devservices().enabled(),
                 cfg.devservices().port(),
@@ -237,7 +261,9 @@ public class QdrantDevServicesProcessor {
 
                             return new QdrantVectorCfg(distance, c.vectorParams().size());
                         })
-                        .orElse(null));
+                        .orElse(null),
+                cfg.devservices().createCollections(),
+                namedStoreCollectionNames);
     }
 
     private QdrantClient client(QdrantContainer container) {
