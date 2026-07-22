@@ -29,4 +29,14 @@ public class MockOidcTokenEndpoint {
                 {"access_token":"token-from-provider2","token_type":"Bearer","expires_in":3600}
                 """;
     }
+
+    @POST
+    @Path("/default/token")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String defaultToken(@FormParam("grant_type") String grantType) {
+        return """
+                {"access_token":"token-from-default","token_type":"Bearer","expires_in":3600}
+                """;
+    }
 }
