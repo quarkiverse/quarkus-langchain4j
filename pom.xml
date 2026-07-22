@@ -29,6 +29,7 @@
     <module>testing-internal</module>
     <module>testing</module>
     <module>integration-tests</module>
+    <module>docs-rag</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
@@ -136,6 +137,7 @@
                       <exclude>*:quarkus-langchain4j-integration-test*</exclude>
                       <exclude>*:quarkus-langchain4j-docs</exclude>
                       <exclude>*:quarkus-langchain4j-sample-*</exclude>
+                      <exclude>*:quarkus-langchain4j-docs-rag</exclude>
                     </excludes>
                   </modules>
                   <extraDependencies>
