@@ -16,19 +16,20 @@ public class ListenersProcessor {
 
     @BuildStep
     public void spanListeners(Capabilities capabilities,
-            Optional<MetricsCapabilityBuildItem> metricsCapability,
-            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
-        var addOpenTelemetrySpan = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
-        if (addOpenTelemetrySpan) {
-            additionalBeanProducer.produce(
-                    AdditionalBeanBuildItem.builder().addBeanClass(SpanChatModelListener.class).setUnremovable().build());
-        }
+                              Optional<MetricsCapabilityBuildItem> metricsCapability,
+                              BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
 
         var addMicrometerMetrics = metricsCapability.isPresent()
                 && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
         if (addMicrometerMetrics) {
             additionalBeanProducer.produce(
-                    AdditionalBeanBuildItem.builder().addBeanClass(MetricsChatModelListener.class).setUnremovable().build());
+                    AdditionalBeanBuildItem.builder()
+                            .addBeanClass(MetricsChatModelListener.class)
+                            .setUnremovable()
+                            .build());
+        } else if (capabilities.isPresent(Capability.OPENTELEMETRY_TRACER)) {
+            additionalBeanProducer.produce(
+                    AdditionalBeanBuildItem.builder().addBeanClass(SpanChatModelListener.class).setUnremovable().build());
         }
     }
 }
