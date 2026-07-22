@@ -12,7 +12,9 @@ import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
+import io.quarkus.arc.DefaultBean;
 
+@DefaultBean
 @ApplicationScoped
 public class DefaultSkillsConfigurator implements SkillsConfigurator {
 

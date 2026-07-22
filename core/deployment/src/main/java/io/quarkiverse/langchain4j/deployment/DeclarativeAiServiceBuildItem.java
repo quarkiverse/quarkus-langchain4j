@@ -46,6 +46,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean shouldThrowExceptionOnEventError;
     private final DotName chatMemoryFlushStrategySupplierClassDotName;
     private final List<String> skillNames;
+    private final boolean hasMethodLevelSkills;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -77,7 +78,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             boolean allowContinuousForcedToolCalling,
             boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
             DotName chatMemoryFlushStrategySupplierClassDotName,
-            List<String> skillNames) {
+            List<String> skillNames,
+            boolean hasMethodLevelSkills) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -109,6 +111,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
         this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
         this.skillNames = skillNames;
+        this.hasMethodLevelSkills = hasMethodLevelSkills;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -266,6 +269,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
      */
     public List<String> getSkillNames() {
         return skillNames;
+    }
+
+    public boolean hasMethodLevelSkills() {
+        return hasMethodLevelSkills;
     }
 
 }

@@ -37,6 +37,8 @@ public class SkillsAiServiceIntegrationTest {
                             FilteredSkillsService.class,
                             SkillsWithSystemMessageService.class,
                             SkillsWithoutSystemMessageService.class,
+                            MethodLevelSkillsService.class,
+                            MethodOverridesClassService.class,
                             CapturingChatModelSupplier.class,
                             CapturingChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.skills.directories", SKILLS_DIR.toString());
@@ -93,6 +95,26 @@ public class SkillsAiServiceIntegrationTest {
         String chat(@UserMessage String msg);
     }
 
+    @RegisterAiService(chatLanguageModelSupplier = CapturingChatModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    public interface MethodLevelSkillsService {
+        @Skills("foobar-skill")
+        String chatWithFoobar(@UserMessage String msg);
+
+        @Skills("bazqux-skill")
+        String chatWithBazqux(@UserMessage String msg);
+
+        String chatWithoutSkills(@UserMessage String msg);
+    }
+
+    @RegisterAiService(chatLanguageModelSupplier = CapturingChatModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @Skills
+    public interface MethodOverridesClassService {
+        @Skills("foobar-skill")
+        String chatWithFoobarOnly(@UserMessage String msg);
+
+        String chatInheritingClassSkills(@UserMessage String msg);
+    }
+
     @Inject
     AllSkillsService allSkillsService;
 
@@ -104,6 +126,12 @@ public class SkillsAiServiceIntegrationTest {
 
     @Inject
     SkillsWithoutSystemMessageService skillsWithoutSystemMessageService;
+
+    @Inject
+    MethodLevelSkillsService methodLevelSkillsService;
+
+    @Inject
+    MethodOverridesClassService methodOverridesClassService;
 
     @Test
     @ActivateRequestContext
@@ -147,6 +175,55 @@ public class SkillsAiServiceIntegrationTest {
         assertThat(response).contains("SYSTEM:");
         assertThat(response).contains("You have access to the following skills");
         assertThat(response).contains("foobar-skill");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void methodLevelSkillsWiresOnlyFoobarSkill() {
+        String response = methodLevelSkillsService.chatWithFoobar("hello");
+        assertThat(response).contains("SYSTEM:");
+        assertThat(response).contains("foobar-skill");
+        assertThat(response).doesNotContain("bazqux-skill");
+        assertThat(response).contains("TOOLS:");
+        assertThat(response).contains("activate_skill,");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void methodLevelSkillsWiresOnlyBazquxSkill() {
+        String response = methodLevelSkillsService.chatWithBazqux("hello");
+        assertThat(response).contains("SYSTEM:");
+        assertThat(response).contains("bazqux-skill");
+        assertThat(response).doesNotContain("foobar-skill");
+        assertThat(response).contains("TOOLS:");
+        assertThat(response).contains("activate_skill,");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void methodWithoutSkillsAnnotationHasNoSkills() {
+        String response = methodLevelSkillsService.chatWithoutSkills("hello");
+        assertThat(response).doesNotContain("foobar-skill");
+        assertThat(response).doesNotContain("bazqux-skill");
+        assertThat(response).doesNotContain("activate_skill");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void methodLevelSkillsOverrideClassLevel() {
+        String response = methodOverridesClassService.chatWithFoobarOnly("hello");
+        assertThat(response).contains("SYSTEM:");
+        assertThat(response).contains("foobar-skill");
+        assertThat(response).doesNotContain("bazqux-skill");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void methodInheritsClassLevelSkillsWhenNoMethodAnnotation() {
+        String response = methodOverridesClassService.chatInheritingClassSkills("hello");
+        assertThat(response).contains("SYSTEM:");
+        assertThat(response).contains("foobar-skill");
+        assertThat(response).contains("bazqux-skill");
     }
 
 }
