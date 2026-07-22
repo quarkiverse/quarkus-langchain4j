@@ -614,6 +614,8 @@ public class AiServicesProcessor {
                     skillNames = List.of();
                 }
             }
+            boolean hasMethodLevelSkills = declarativeAiServiceClassInfo.methods().stream()
+                    .anyMatch(m -> m.hasAnnotation(LangChain4jDotNames.SKILLS));
 
             declarativeAiServiceProducer.produce(new DeclarativeAiServiceBuildItem(
                     declarativeAiServiceClassInfo,
@@ -647,7 +649,8 @@ public class AiServicesProcessor {
                     impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
                     shouldThrowExceptionOnEventError,
                     chatMemoryFlushStrategySupplierClassDotName,
-                    skillNames));
+                    skillNames,
+                    hasMethodLevelSkills));
 
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
@@ -1301,14 +1304,14 @@ public class AiServicesProcessor {
                 allToolSearchStrategies.add(toolSearchStrategy);
             }
 
-            if (bi.getSkillNames() != null) {
-                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.SKILLS_CONFIGURATOR));
-            }
-
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(OutputGuardrail.class) }, null))
                     .done();
+
+            if (bi.getSkillNames() != null || bi.hasMethodLevelSkills()) {
+                unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.SKILLS_CONFIGURATOR));
+            }
 
             syntheticBeanProducer.produce(configurator.done());
         }
@@ -1364,6 +1367,19 @@ public class AiServicesProcessor {
             List<String> names = bi.getSkillNames();
             if (names != null && !names.isEmpty()) {
                 allSkillNames.addAll(names);
+            }
+            if (bi.hasMethodLevelSkills()) {
+                for (MethodInfo method : bi.getServiceClassInfo().methods()) {
+                    AnnotationInstance skillsAnnotation = method.declaredAnnotation(LangChain4jDotNames.SKILLS);
+                    if (skillsAnnotation != null) {
+                        AnnotationValue skillsValue = skillsAnnotation.value();
+                        if (skillsValue != null) {
+                            for (String name : skillsValue.asStringArray()) {
+                                allSkillNames.add(name);
+                            }
+                        }
+                    }
+                }
             }
         }
         if (!allSkillNames.isEmpty()) {
@@ -2126,6 +2142,7 @@ public class AiServicesProcessor {
                                 ToolQualifierProvider.BuildItem::getProvider).toList());
 
         List<String> methodMcpClientNames = gatherMethodMcpClientNames(method);
+        List<String> methodSkillNames = gatherMethodSkillNames(method, skipToolBoxPredicate);
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
         String responseAugmenterClassName = AiServicesMethodBuildItem.gatherResponseAugmenter(method);
 
@@ -2149,7 +2166,7 @@ public class AiServicesProcessor {
                 userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, chatRequestParametersParamPosition,
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
-                methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution,
+                methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
                 accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
                 gatherOutputGuardrails(method, methodReturnTypeSignature));
     }
@@ -2822,6 +2839,23 @@ public class AiServicesProcessor {
         }
 
         return Arrays.asList(mcpClientNames);
+    }
+
+    private List<String> gatherMethodSkillNames(MethodInfo method, Predicate<MethodInfo> skipPredicate) {
+        if (skipPredicate.test(method)) {
+            return null;
+        }
+        AnnotationInstance skillsInstance = method.declaredAnnotation(LangChain4jDotNames.SKILLS);
+        if (skillsInstance == null) {
+            return null;
+        }
+
+        AnnotationValue skillsValue = skillsInstance.value();
+        if (skillsValue != null && skillsValue.asStringArray().length > 0) {
+            return List.of(skillsValue.asStringArray());
+        }
+
+        return List.of();
     }
 
     private DotName determineThinkingHandler(ClassInfo iface, ClassOutput classOutput) {

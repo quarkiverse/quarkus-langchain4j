@@ -102,6 +102,40 @@ public interface PoemAiService {
 ----
 <1> Only the `poem-writing` skill is available. If the name does not match any loaded skill, the application will fail at startup.
 
+You can also place `@Skills` on individual methods to give each method its own set of skills:
+
+[source,java]
+----
+@RegisterAiService
+public interface TravelService {
+
+    @Skills("adventure-trip")
+    String planAdventure(@UserMessage String request);
+
+    @Skills("family-trip")
+    String planFamilyTrip(@UserMessage String request);
+}
+----
+
+When `@Skills` is present on both the interface and a method, the method-level annotation takes precedence.
+Methods without `@Skills` inherit the class-level skills.
+
+[source,java]
+----
+@RegisterAiService
+@Skills // <1>
+public interface TravelService {
+
+    @Skills("adventure-trip") // <2>
+    String planAdventure(@UserMessage String request);
+
+    String generalChat(@UserMessage String request); // <3>
+}
+----
+<1> Class-level: all skills available by default.
+<2> Method-level overrides: only `adventure-trip` is available here.
+<3> No method-level annotation: inherits all skills from the class.
+
 === With `@Agent`
 
 Place `@Skills` on the `@Agent`-annotated method:
@@ -120,6 +154,41 @@ public interface TripPlannerAgent {
 === Fail-fast validation
 
 If any skill name passed to `@Skills` does not match a loaded skill, the application will fail at startup with a clear error listing the available skill names.
+
+=== Custom `SkillsConfigurator`
+
+The built-in `DefaultSkillsConfigurator` generates an English system message describing the available skills.
+To customize the message (for example, to use a different language), provide your own `SkillsConfigurator` CDI bean.
+It will automatically override the default:
+
+[source,java]
+----
+@ApplicationScoped
+public class MySkillsConfigurator implements SkillsConfigurator {
+
+    @Inject
+    DefaultSkillsConfigurator delegate; // <1>
+
+    @Override
+    public ToolProvider createToolProvider(List<String> skillNames) {
+        return delegate.createToolProvider(skillNames);
+    }
+
+    @Override
+    public String formatAvailableSkills(List<String> skillNames) {
+        return delegate.formatAvailableSkills(skillNames);
+    }
+
+    @Override
+    public String buildSkillsSystemMessage(List<String> skillNames) {
+        return "Hai accesso alle seguenti competenze:\n"
+                + formatAvailableSkills(skillNames)
+                + "\nQuando la richiesta riguarda una di queste competenze, "
+                + "attivala prima con lo strumento `activate_skill`.";
+    }
+}
+----
+<1> You can inject and delegate to the default implementation to reuse its tool provider and formatting logic.
 
 == Using the `SkillsToolProvider`
 

@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.enterprise.inject.Any;
@@ -34,6 +35,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public DefaultMemoryIdProvider defaultMemoryIdProvider;
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
     public ToolSearchService toolSearchService;
+    public List<String> classLevelSkillNames;
 
     private boolean hasChatMemoryProvider;
 

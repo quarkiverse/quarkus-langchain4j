@@ -45,6 +45,7 @@ public final class AiServiceMethodCreateInfo {
     // support @Toolbox
     private final Map<String, AnnotationLiteral<?>> toolClassInfo;
     private final List<String> mcpClientNames;
+    private final List<String> skillNames;
     private final ResponseSchemaInfo responseSchemaInfo;
 
     // support for guardrails
@@ -84,6 +85,7 @@ public final class AiServiceMethodCreateInfo {
             ResponseSchemaInfo responseSchemaInfo,
             Map<String, AnnotationLiteral<?>> toolClassInfo,
             List<String> mcpClientNames,
+            List<String> skillNames,
             boolean switchToWorkerThreadForToolExecution,
             String outputTokenAccumulatorClassName,
             String responseAugmenterClassName,
@@ -111,6 +113,7 @@ public final class AiServiceMethodCreateInfo {
         this.responseSchemaInfo = responseSchemaInfo;
         this.toolClassInfo = toolClassInfo;
         this.mcpClientNames = mcpClientNames;
+        this.skillNames = skillNames;
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
         this.outputTokenAccumulatorClassName = outputTokenAccumulatorClassName;
@@ -192,6 +195,10 @@ public final class AiServiceMethodCreateInfo {
 
     public List<String> getMcpClientNames() {
         return mcpClientNames;
+    }
+
+    public List<String> getSkillNames() {
+        return skillNames;
     }
 
     public List<ToolSpecification> getToolSpecifications() {
