@@ -39,7 +39,7 @@ public class GPULlama3Recorder {
         var gpuLlama3Config = correspondingConfig(configName);
 
         if (gpuLlama3Config.enableIntegration()) {
-            LOG.info("Registering GPULlama3ChatModel CDI Bean for config: " + configName);
+            LOG.debugf("Registering GPULlama3ChatModel CDI Bean for config: %s", configName);
             return () -> GPULlama3ChatModel.create(getOrCreateHolder(configName));
         } else {
             return () -> new DisabledChatModel();
@@ -50,7 +50,7 @@ public class GPULlama3Recorder {
         var gpuLlama3Config = correspondingConfig(configName);
 
         if (gpuLlama3Config.enableIntegration()) {
-            LOG.info("Registering GPULlama3StreamingChatModel CDI Bean for config: " + configName);
+            LOG.debugf("Registering GPULlama3StreamingChatModel CDI Bean for config: %s", configName);
             return () -> GPULlama3StreamingChatModel.create(getOrCreateHolder(configName));
         } else {
             return () -> new DisabledStreamingChatModel();
@@ -70,7 +70,11 @@ public class GPULlama3Recorder {
                     chatModelConfig.topP().isPresent() ? chatModelConfig.topP().getAsDouble() : null,
                     chatModelConfig.seed().isPresent() ? chatModelConfig.seed().getAsInt() : null,
                     chatModelConfig.maxTokens().isPresent() ? chatModelConfig.maxTokens().getAsInt() : null,
-                    Boolean.TRUE);
+                    Boolean.TRUE,
+                    chatModelConfig.prefillDecode(),
+                    chatModelConfig.prefillBatchSize(),
+                    chatModelConfig.enableThinking(),
+                    chatModelConfig.deviceMemory());
         });
     }
 

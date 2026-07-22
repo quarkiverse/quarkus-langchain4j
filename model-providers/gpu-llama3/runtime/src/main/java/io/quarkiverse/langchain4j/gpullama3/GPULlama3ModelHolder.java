@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.beehive.gpullama3.inference.sampler.Sampler;
 import org.beehive.gpullama3.inference.state.State;
@@ -33,6 +34,10 @@ public class GPULlama3ModelHolder {
     private final int seed;
     final int maxTokens;
     final boolean onGPU;
+    private final boolean withPrefillDecode;
+    private final int prefillBatchSize;
+    final boolean enableThinking;
+    private final String deviceMemory;
 
     // force happens-before relationship between initialization and usage
     private volatile boolean initialized = false;
@@ -51,15 +56,38 @@ public class GPULlama3ModelHolder {
             Double topP,
             Integer seed,
             Integer maxTokens,
-            Boolean onGPU) {
+            Boolean onGPU,
+            Boolean withPrefillDecode,
+            Integer prefillBatchSize,
+            Boolean enableThinking,
+            String deviceMemory) {
+        DefaultConfig defaultConfig = defaultConfigForModel(modelName);
         this.modelCachePath = modelCachePath;
         this.modelName = modelName;
         this.quantization = quantization;
-        this.temperature = getOrDefault(temperature, 0.1);
-        this.topP = getOrDefault(topP, 1.0);
-        this.seed = getOrDefault(seed, 12345);
-        this.maxTokens = getOrDefault(maxTokens, 512);
+        this.temperature = getOrDefault(temperature, defaultConfig.temperature());
+        this.topP = getOrDefault(topP, defaultConfig.topP());
+        this.seed = getOrDefault(seed, ThreadLocalRandom.current().nextInt());
+        this.maxTokens = getOrDefault(maxTokens, defaultConfig.maxTokens());
         this.onGPU = getOrDefault(onGPU, Boolean.TRUE);
+        this.withPrefillDecode = getOrDefault(withPrefillDecode, Boolean.TRUE);
+        this.prefillBatchSize = getOrDefault(prefillBatchSize, 32);
+        this.enableThinking = getOrDefault(enableThinking, Boolean.TRUE);
+        this.deviceMemory = getOrDefault(deviceMemory, "4GB");
+    }
+
+    private static DefaultConfig defaultConfigForModel(String modelName) {
+        String normalizedName = modelName != null ? modelName.toLowerCase() : "";
+        if (normalizedName.contains("qwen")) {
+            return new DefaultConfig(0.8, 0.9, 2048);
+        }
+        if (normalizedName.contains("llama")) {
+            return new DefaultConfig(0.3, 0.95, 2048);
+        }
+        return new DefaultConfig(0.7, 0.9, 2048);
+    }
+
+    private record DefaultConfig(double temperature, double topP, int maxTokens) {
     }
 
     public synchronized void ensureInitialized() {
@@ -70,12 +98,22 @@ public class GPULlama3ModelHolder {
         try {
             Path modelPath = registry.downloadModel(modelName, quantization, Optional.empty(), Optional.empty());
 
+            // The engine reads these JVM-global flags during class loading, so set them
+            // before ModelLoader initializes the model and TornadoVM plan.
+            System.setProperty("llama.withPrefillDecode", Boolean.toString(withPrefillDecode));
+            System.setProperty("llama.prefillBatchSize", Integer.toString(prefillBatchSize));
+            System.setProperty("tornado.device.memory", deviceMemory);
+
             LOG.info("GPULlama3 model initialization {modelPath=" + modelPath
                     + ", temperature=" + temperature
                     + ", topP=" + topP
                     + ", seed=" + seed
                     + ", maxTokens=" + maxTokens
-                    + ", onGPU=" + onGPU + "}...");
+                    + ", onGPU=" + onGPU
+                    + ", withPrefillDecode=" + withPrefillDecode
+                    + ", prefillBatchSize=" + prefillBatchSize
+                    + ", enableThinking=" + enableThinking
+                    + ", deviceMemory=" + deviceMemory + "}...");
 
             this.model = ModelLoader.loadModel(modelPath, maxTokens, true, onGPU);
             this.state = model.createNewState();
@@ -85,6 +123,10 @@ public class GPULlama3ModelHolder {
                     (float) topP,
                     seed);
             this.chatFormat = model.chatFormat();
+            if (!chatFormat.supportsThinking()) {
+                LOG.debugf("Thinking control not applicable for %s; enable-thinking=%s has no effect.",
+                        chatFormat.getClass().getSimpleName(), enableThinking);
+            }
             if (onGPU) {
                 this.tornadoVMPlan = TornadoVMMasterPlan.initializeTornadoVMPlan(state, model);
             }

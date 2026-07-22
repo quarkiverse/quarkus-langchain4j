@@ -1,16 +1,21 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.output.FinishReason;
 
 public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel {
 
@@ -36,12 +41,46 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
         ChatRequestValidationUtils.validate(parameters.toolChoice());
         ChatRequestValidationUtils.validate(parameters.responseFormat());
 
+        boolean hasPriorToolResult = chatRequest.messages().stream()
+                .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
+
         try {
             // Generate a raw response from the model
             String rawResponse = modelResponse(chatRequest, null);
 
-            // Parse thinking and actual response using the GPULlama3ResponseParser
+            // Use extractAllToolCalls to handle batched tool calls (matches ToolCallingSession)
+            List<ToolCallExtract> toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
+            LOG.debugf("extractAllToolCalls result: %d call(s)", toolCalls.size());
+            if (!toolCalls.isEmpty()) {
+                LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
+                GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
+                LOG.debugf("[Parsed tool turn] toolCalls=%d  thinking=>>>%s<<<",
+                        toolCalls.size(), parsed.getThinkingContent());
+                List<ToolExecutionRequest> toolReqs = new ArrayList<>();
+                for (ToolCallExtract tc : toolCalls) {
+                    String callId = tc.id().orElseGet(() -> generateCallId());
+                    LOG.infof("[Tool call]  → %s(%s)", tc.name(),
+                            tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
+                    toolReqs.add(ToolExecutionRequest.builder()
+                            .id(callId)
+                            .name(tc.name())
+                            .arguments(tc.argumentsJson())
+                            .build());
+                }
+                return ChatResponse.builder()
+                        .aiMessage(AiMessage.builder()
+                                .thinking(parsed.getThinkingContent())
+                                .toolExecutionRequests(toolReqs)
+                                .build())
+                        .finishReason(FinishReason.TOOL_EXECUTION)
+                        .build();
+            }
+
+            // Plain text response — separate thinking content if present
             GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
+
+            LOG.debugf("[Parsed response] thinking=>>>%s<<<", parsed.getThinkingContent());
+            LOG.infof("[LLM response]\n%s", parsed.getActualResponse());
 
             return ChatResponse.builder()
                     .aiMessage(AiMessage.builder()
@@ -69,6 +108,10 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
         private Integer seed;
         private Integer maxTokens;
         private Boolean onGPU;
+        private Boolean withPrefillDecode;
+        private Integer prefillBatchSize;
+        private Boolean enableThinking;
+        private String deviceMemory;
 
         public Builder() {
             // This is public so it can be extended
@@ -119,11 +162,32 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             return this;
         }
 
+        public Builder withPrefillDecode(Boolean withPrefillDecode) {
+            this.withPrefillDecode = withPrefillDecode;
+            return this;
+        }
+
+        public Builder prefillBatchSize(Integer prefillBatchSize) {
+            this.prefillBatchSize = prefillBatchSize;
+            return this;
+        }
+
+        public Builder enableThinking(Boolean enableThinking) {
+            this.enableThinking = enableThinking;
+            return this;
+        }
+
+        public Builder deviceMemory(String deviceMemory) {
+            this.deviceMemory = deviceMemory;
+            return this;
+        }
+
         public GPULlama3ChatModel build() {
             GPULlama3ModelHolder h = modelHolder != null
                     ? modelHolder
                     : new GPULlama3ModelHolder(modelCachePath, modelName, quantization,
-                            temperature, topP, seed, maxTokens, onGPU);
+                            temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize, enableThinking,
+                            deviceMemory);
             return new GPULlama3ChatModel(h);
         }
     }
