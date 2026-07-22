@@ -14,9 +14,15 @@ public record DeclarativeAiServiceCreateInfo(
         String streamingChatLanguageModelSupplierClassName,
         Map<String, AnnotationLiteral<?>> toolsClassInfo,
         String toolProviderSupplier,
+        boolean toolProviderClassIsBean,
         String toolSearchStrategySupplier,
+        boolean toolSearchStrategyClassIsBean,
         String chatMemoryProviderSupplierClassName,
+        boolean chatMemoryProviderClassIsBean,
         String chatMemoryFlushStrategySupplierClassName,
+        String chatMemoryFlushStrategy,
+        String chatMemoryStoreClassName,
+        Integer chatMemoryMaxMessages,
         String retrievalAugmentorSupplierClassName,
         String moderationModelSupplierClassName,
         String imageModelSupplierClassName,
@@ -39,5 +45,6 @@ public record DeclarativeAiServiceCreateInfo(
         boolean allowContinuousForcedToolCalling,
         boolean shouldThrowExceptionOnEventError,
         String defaultMemoryIdProviderClassName,
+        boolean defaultMemoryIdProviderClassIsBean,
         List<String> skillNames) {
 }

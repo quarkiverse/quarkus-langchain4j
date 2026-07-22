@@ -55,6 +55,76 @@ interface Assistant {
 
 <1> Provide access to the `stringLength` method from the `Calculator` bean.
 
+Service-wide tools are configured on `@RegisterAiService`. Tool providers and search strategies can be referenced
+directly as CDI beans, without supplier wrappers.
+
+[source,java]
+----
+@RegisterAiService(
+    tools = {BookingTool.class, WeatherTool.class},
+    toolProvider = DynamicToolProvider.class,
+    toolSearchStrategy = SemanticToolSearchStrategy.class,
+    maxToolCallingRoundTrips = 5
+)
+public interface Assistant {
+    String chat(String message);
+}
+----
+
+.`@RegisterAiService` tool attributes
+|===
+|Attribute |Description |Default
+
+|`tools`
+|Tool CDI bean classes available to every method of the service.
+|Empty
+
+|`toolProvider`
+|Concrete `ToolProvider` CDI bean class that provides tools dynamically.
+|The same optional provider lookup used by `@RegisterAiService`
+
+|`toolSearchStrategy`
+|Concrete `ToolSearchStrategy` CDI bean class used for model-driven tool discovery.
+|The same optional strategy lookup used by `@RegisterAiService`
+
+|`toolHallucinationStrategy`
+|CDI bean used when the model requests an unknown tool.
+|The same optional strategy lookup used by `@RegisterAiService`
+
+|`maxToolCallingRoundTrips`
+|Maximum LLM request/response round trips for one service invocation. Zero uses global configuration.
+|`0`
+
+|`maxToolCallsPerResponse`
+|Maximum tool calls in one model response. Zero means unlimited.
+|`0`
+
+|`allowContinuousForcedToolCalling`
+|Keeps the initial forced tool choice after a tool call.
+|`false`
+|===
+
+The supplier-based provider and search-strategy attributes remain supported for compatibility. A direct bean attribute
+and its corresponding supplier attribute cannot both be set.
+
+.Supplier migration
+[source,java]
+----
+// Before
+@RegisterAiService(
+    tools = BookingTool.class,
+    toolProviderSupplier = DynamicToolProviderSupplier.class,
+    toolSearchStrategySupplier = SemanticToolSearchStrategySupplier.class
+)
+
+// After
+@RegisterAiService(
+    tools = BookingTool.class,
+    toolProvider = DynamicToolProvider.class,
+    toolSearchStrategy = SemanticToolSearchStrategy.class
+)
+----
+
 Alternatively, you can use `@RegisterAiService(tools=...)` to provide tools to all the methods from the AI service.
 Here's a simple example:
 

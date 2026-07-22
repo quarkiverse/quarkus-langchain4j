@@ -18,10 +18,15 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName streamingChatLanguageModelSupplierClassDotName;
     private final List<ClassInfo> toolClassInfos;
     private final DotName toolProviderClassDotName;
+    private final boolean toolProviderClassIsBean;
     private final DotName toolSearchStrategyClassDotName;
+    private final boolean toolSearchStrategyClassIsBean;
     private final DotName toolHallucinationStrategyClassDotName;
 
     private final DotName chatMemoryProviderSupplierClassDotName;
+    private final boolean chatMemoryProviderClassIsBean;
+    private final DotName chatMemoryStoreClassDotName;
+    private final Integer chatMemoryMaxMessages;
     private final DotName retrievalAugmentorSupplierClassDotName;
     private final boolean customRetrievalAugmentorSupplierClassIsABean;
     private final DotName moderationModelSupplierDotName;
@@ -31,6 +36,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName systemMessageProviderClassDotName;
     private final DotName cdiScope;
     private DotName defaultMemoryIdProviderClassDotName;
+    private boolean defaultMemoryIdProviderClassIsBean;
     private final String chatModelName;
     private final String moderationModelName;
     private final String imageModelName;
@@ -45,6 +51,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean makeDefaultBean;
     private final boolean shouldThrowExceptionOnEventError;
     private final DotName chatMemoryFlushStrategySupplierClassDotName;
+    private final String chatMemoryFlushStrategy;
     private final List<String> skillNames;
 
     public DeclarativeAiServiceBuildItem(
@@ -65,7 +72,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             String moderationModelName,
             String imageModelName,
             DotName toolProviderClassDotName,
+            boolean toolProviderClassIsBean,
             DotName toolSearchStrategyClassDotName,
+            boolean toolSearchStrategyClassIsBean,
             Optional<String> beanName,
             DotName toolHallucinationStrategyClassDotName,
             DeclarativeAiServiceInputGuardrails inputGuardrails,
@@ -77,12 +86,23 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             boolean allowContinuousForcedToolCalling,
             boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
             DotName chatMemoryFlushStrategySupplierClassDotName,
+            String chatMemoryFlushStrategy,
+            boolean chatMemoryProviderClassIsBean,
+            DotName chatMemoryStoreClassDotName,
+            Integer chatMemoryMaxMessages,
+            DotName defaultMemoryIdProviderClassDotName,
+            boolean defaultMemoryIdProviderClassIsBean,
             List<String> skillNames) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
         this.toolClassInfos = toolClassInfos;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
+        this.chatMemoryProviderClassIsBean = chatMemoryProviderClassIsBean;
+        this.chatMemoryStoreClassDotName = chatMemoryStoreClassDotName;
+        this.chatMemoryMaxMessages = chatMemoryMaxMessages;
+        this.defaultMemoryIdProviderClassDotName = defaultMemoryIdProviderClassDotName;
+        this.defaultMemoryIdProviderClassIsBean = defaultMemoryIdProviderClassIsBean;
         this.retrievalAugmentorSupplierClassDotName = retrievalAugmentorSupplierClassDotName;
         this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
@@ -95,7 +115,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.moderationModelName = moderationModelName;
         this.imageModelName = imageModelName;
         this.toolProviderClassDotName = toolProviderClassDotName;
+        this.toolProviderClassIsBean = toolProviderClassIsBean;
         this.toolSearchStrategyClassDotName = toolSearchStrategyClassDotName;
+        this.toolSearchStrategyClassIsBean = toolSearchStrategyClassIsBean;
         this.beanName = beanName;
         this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
         this.inputGuardrails = inputGuardrails;
@@ -108,6 +130,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.makeDefaultBean = makeDefaultBean;
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
         this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
+        this.chatMemoryFlushStrategy = chatMemoryFlushStrategy;
         this.skillNames = skillNames;
     }
 
@@ -179,8 +202,16 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return toolProviderClassDotName;
     }
 
+    public boolean isToolProviderClassBean() {
+        return toolProviderClassIsBean;
+    }
+
     public DotName getToolSearchStrategyClassDotName() {
         return toolSearchStrategyClassDotName;
+    }
+
+    public boolean isToolSearchStrategyClassBean() {
+        return toolSearchStrategyClassIsBean;
     }
 
     public Optional<String> getBeanName() {
@@ -252,12 +283,33 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return chatMemoryFlushStrategySupplierClassDotName;
     }
 
+    public String getChatMemoryFlushStrategy() {
+        return chatMemoryFlushStrategy;
+    }
+
+    public boolean isChatMemoryProviderClassBean() {
+        return chatMemoryProviderClassIsBean;
+    }
+
+    public DotName getChatMemoryStoreClassDotName() {
+        return chatMemoryStoreClassDotName;
+    }
+
+    public Integer getChatMemoryMaxMessages() {
+        return chatMemoryMaxMessages;
+    }
+
     public DotName getDefaultMemoryIdProviderClassDotName() {
         return defaultMemoryIdProviderClassDotName;
     }
 
     public void setDefaultMemoryIdProviderClassDotName(DotName defaultMemoryIdProviderClassDotName) {
         this.defaultMemoryIdProviderClassDotName = defaultMemoryIdProviderClassDotName;
+        this.defaultMemoryIdProviderClassIsBean = false;
+    }
+
+    public boolean isDefaultMemoryIdProviderClassBean() {
+        return defaultMemoryIdProviderClassIsBean;
     }
 
     /**

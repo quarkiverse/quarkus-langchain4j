@@ -113,6 +113,66 @@ public interface MyAiService {
 }
 ----
 
+=== Memory configuration
+
+Memory can be configured directly on `@RegisterAiService`. Provider, store, and default memory-ID provider classes
+are referenced as CDI beans; no supplier wrappers are required.
+
+[source,java]
+----
+@RegisterAiService(
+    chatMemoryStore = RedisChatMemoryStore.class,
+    chatMemoryMaxMessages = 20,
+    defaultMemoryIdProvider = TenantMemoryIdProvider.class,
+    chatMemoryFlushStrategy = ChatMemoryFlushStrategy.IMMEDIATE
+)
+public interface MyAiService {
+    String chat(@UserMessage String message);
+}
+----
+
+.`@RegisterAiService` memory attributes
+|===
+|Attribute |Description |Default
+
+|`chatMemoryProvider`
+|Concrete `ChatMemoryProvider` CDI bean class used by this service.
+|The same automatically selected provider used by `@RegisterAiService`
+
+|`chatMemoryStore`
+|Concrete `ChatMemoryStore` CDI bean used by the service's message-window memory.
+|The selected `ChatMemoryStore` bean
+
+|`chatMemoryMaxMessages`
+|Maximum number of messages retained by the message-window memory created for `store`.
+|`10`
+
+|`defaultMemoryIdProvider`
+|Concrete `DefaultMemoryIdProvider` CDI bean used when a method has no `@MemoryId` parameter.
+|The existing default memory-ID provider chain
+
+|`chatMemoryFlushStrategy`
+|Controls whether chat-memory changes are persisted after a successful invocation or immediately.
+|`DEFERRED`
+|===
+
+`chatMemoryProvider` is mutually exclusive with `chatMemoryStore` and `chatMemoryMaxMessages`, because a custom provider
+controls its own memory implementation and window. An explicit `@MemoryId` method parameter still takes precedence over
+the configured default memory-ID provider.
+
+For compatibility, `chatMemoryProviderSupplier` and `chatMemoryFlushStrategySupplier` on
+`@RegisterAiService` remain supported. A direct bean attribute and its corresponding supplier attribute cannot both be set.
+
+.Supplier migration
+[source,java]
+----
+// Before
+@RegisterAiService(chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+
+// After
+@RegisterAiService(chatMemoryProvider = MyMemoryProvider.class)
+----
+
 === @SystemMessage
 
 The `@SystemMessage` annotation defines initial instructions or context for the LLM interaction.
@@ -568,4 +628,3 @@ Image generate(String prompt);
 * xref:models.adoc[LLM Configuration and Providers]
 * xref:rag.adoc[Retrieval-Augmented Generation (RAG)]
 * xref:function-calling.adoc[Function Calling and Tool Integration]
-

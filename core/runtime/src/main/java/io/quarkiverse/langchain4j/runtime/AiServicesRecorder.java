@@ -19,6 +19,7 @@ import jakarta.enterprise.util.TypeLiteral;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -30,6 +31,7 @@ import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import dev.langchain4j.service.tool.search.ToolSearchStrategy;
+import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.DefaultToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -142,9 +144,14 @@ public class AiServicesRecorder {
 
                     QuarkusAiServiceContext aiServiceContext = new QuarkusAiServiceContext(serviceClass);
                     if (info.defaultMemoryIdProviderClassName() != null) {
-                        aiServiceContext.defaultMemoryIdProvider = (DefaultMemoryIdProvider) Thread
-                                .currentThread().getContextClassLoader().loadClass(info.defaultMemoryIdProviderClassName())
-                                .getConstructor().newInstance();
+                        Class<?> memoryIdProviderClass = loadClass(info.defaultMemoryIdProviderClassName());
+                        if (info.defaultMemoryIdProviderClassIsBean()) {
+                            aiServiceContext.defaultMemoryIdProvider = (DefaultMemoryIdProvider) creationalContext
+                                    .getInjectedReference(memoryIdProviderClass);
+                        } else {
+                            aiServiceContext.defaultMemoryIdProvider = (DefaultMemoryIdProvider) memoryIdProviderClass
+                                    .getConstructor().newInstance();
+                        }
                     }
 
                     // we don't really care about QuarkusAiServices here, all we care about is that it
@@ -254,7 +261,10 @@ public class AiServicesRecorder {
 
                     // if no explicit tools are provided, check if we should use a tool provider
                     if (info.toolProviderSupplier() != null) {
-                        if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
+                        if (info.toolProviderClassIsBean()) {
+                            quarkusAiServices.toolProvider((ToolProvider) creationalContext
+                                    .getInjectedReference(loadClass(info.toolProviderSupplier())));
+                        } else if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
                                 .equals(info.toolProviderSupplier())) {
                             // specific provider
                             Class<?> toolProviderClass = loadClass(info.toolProviderSupplier());
@@ -275,7 +285,10 @@ public class AiServicesRecorder {
 
                     if (info.toolSearchStrategySupplier() != null) {
                         ToolSearchStrategy toolSearchStrategy = null;
-                        if (RegisterAiService.BeanIfExistsToolSearchStrategySupplier.class.getName()
+                        if (info.toolSearchStrategyClassIsBean()) {
+                            toolSearchStrategy = (ToolSearchStrategy) creationalContext
+                                    .getInjectedReference(loadClass(info.toolSearchStrategySupplier()));
+                        } else if (RegisterAiService.BeanIfExistsToolSearchStrategySupplier.class.getName()
                                 .equals(info.toolSearchStrategySupplier())) {
                             Instance<ToolSearchStrategy> instance = creationalContext
                                     .getInjectedReference(TOOL_SEARCH_STRATEGY_TYPE_LITERAL);
@@ -294,7 +307,10 @@ public class AiServicesRecorder {
                     }
 
                     if (info.chatMemoryProviderSupplierClassName() != null) {
-                        if (RegisterAiService.BeanChatMemoryProviderSupplier.class.getName()
+                        if (info.chatMemoryProviderClassIsBean()) {
+                            quarkusAiServices.chatMemoryProvider((ChatMemoryProvider) creationalContext
+                                    .getInjectedReference(loadClass(info.chatMemoryProviderSupplierClassName())));
+                        } else if (RegisterAiService.BeanChatMemoryProviderSupplier.class.getName()
                                 .equals(info.chatMemoryProviderSupplierClassName())) {
                             quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
                                     ChatMemoryProvider.class));
@@ -303,6 +319,14 @@ public class AiServicesRecorder {
                                     info.chatMemoryProviderSupplierClassName());
                             quarkusAiServices.chatMemoryProvider(supplier.get());
                         }
+                    } else if (info.chatMemoryStoreClassName() != null) {
+                        ChatMemoryStore chatMemoryStore = (ChatMemoryStore) creationalContext
+                                .getInjectedReference(loadClass(info.chatMemoryStoreClassName()));
+                        quarkusAiServices.chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
+                                .id(memoryId)
+                                .maxMessages(info.chatMemoryMaxMessages())
+                                .chatMemoryStore(chatMemoryStore)
+                                .build());
                     }
 
                     if (info.retrievalAugmentorSupplierClassName() != null) {
@@ -401,6 +425,9 @@ public class AiServicesRecorder {
                         Supplier<? extends ChatMemoryFlushStrategy> supplier = createSupplier(
                                 info.chatMemoryFlushStrategySupplierClassName());
                         quarkusAiServices.chatMemoryFlushStrategy(supplier.get());
+                    } else if (info.chatMemoryFlushStrategy() != null) {
+                        quarkusAiServices.chatMemoryFlushStrategy(
+                                ChatMemoryFlushStrategy.valueOf(info.chatMemoryFlushStrategy()));
                     }
 
                     aiServiceContext.eventListenerRegistrar

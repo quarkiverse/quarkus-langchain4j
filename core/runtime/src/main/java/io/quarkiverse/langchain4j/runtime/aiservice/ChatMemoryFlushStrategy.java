@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
+import io.quarkiverse.langchain4j.RegisterAiService;
+
 /**
  * <pre>
  * Controls when messages are flushed (persisted) to the ChatMemoryStore
@@ -18,13 +20,10 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
  *   the current state of the conversation, even if the invocation
  *   eventually fails.
  *
+ * Configure it per AI service with {@link RegisterAiService#chatMemoryFlushStrategy()}.
  * Usage:
  *
- *   &#64;RegisterAiService(
- *       chatMemoryFlushStrategySupplier = MyFlushStrategySupplier.class
- *   )
- *
- * Where MyFlushStrategySupplier implements Supplier&lt;ChatMemoryFlushStrategy&gt;.
+ *   &#64;RegisterAiService(chatMemoryFlushStrategy = ChatMemoryFlushStrategy.IMMEDIATE)
  * </pre>
  */
 public enum ChatMemoryFlushStrategy {
