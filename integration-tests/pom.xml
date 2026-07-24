@@ -29,6 +29,7 @@
     <module>devui-multiple-embedding-models</module>
     <module>in-process-embedding-models</module>
     <module>rag</module>
+    <module>rag-lancedb</module>
     <module>rag-pgvector</module>
     <module>rag-pgvector-flyway</module>
     <module>easy-rag</module>
@@ -126,6 +127,11 @@
                   <dependency>
                       <groupId>io.quarkiverse.langchain4j</groupId>
                       <artifactId>quarkus-langchain4j-easy-rag</artifactId>
+                      <version>999-SNAPSHOT</version>
+                  </dependency>
+                  <dependency>
+                      <groupId>io.quarkiverse.langchain4j</groupId>
+                      <artifactId>quarkus-langchain4j-lancedb</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
                   <dependency>
