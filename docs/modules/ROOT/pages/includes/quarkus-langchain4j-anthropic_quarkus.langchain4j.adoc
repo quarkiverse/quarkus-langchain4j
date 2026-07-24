@@ -250,6 +250,8 @@ What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 wi
 
 It is generally recommended to set this or the `top-k` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TEMPERATURE+++[]
@@ -296,6 +298,8 @@ Double (0.0-1.0). Nucleus sampling, where the model considers the results of the
 
 It is generally recommended to set this or the `temperature` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_P+++[]
@@ -315,7 +319,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.
+
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -326,7 +332,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_K+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`+++40+++`
+|
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-retries[`+++quarkus.langchain4j.anthropic.chat-model.max-retries+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -919,6 +925,8 @@ What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 wi
 
 It is generally recommended to set this or the `top-k` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
@@ -965,6 +973,8 @@ Double (0.0-1.0). Nucleus sampling, where the model considers the results of the
 
 It is generally recommended to set this or the `temperature` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
@@ -984,7 +994,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.
+
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -995,7 +1007,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`+++40+++`
+|
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-retries[`+++quarkus.langchain4j.anthropic."model-name".chat-model.max-retries+++`]##
 ifdef::add-copy-button-to-config-props[]

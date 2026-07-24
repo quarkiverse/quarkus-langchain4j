@@ -88,10 +88,30 @@ public class AnthropicRecorder {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
             }
 
-            builder.topK(chatModelConfig.topK().orElse(40));
+            if (chatModelConfig.topK().isPresent()) {
+                builder.topK(chatModelConfig.topK().getAsInt());
+            }
 
             if (chatModelConfig.topP().isPresent()) {
                 builder.topP(chatModelConfig.topP().getAsDouble());
+            }
+
+            if (modelRejectsSamplingParameters(chatModelConfig.modelName())) {
+                if (chatModelConfig.temperature().isPresent()) {
+                    LOG.warn("temperature was not configured because model " + chatModelConfig.modelName()
+                            + " does not support sampling parameters");
+                }
+                if (chatModelConfig.topK().isPresent()) {
+                    LOG.warn("topK was not configured because model " + chatModelConfig.modelName()
+                            + " does not support sampling parameters");
+                }
+                if (chatModelConfig.topP().isPresent()) {
+                    LOG.warn("topP was not configured because model " + chatModelConfig.modelName()
+                            + " does not support sampling parameters");
+                }
+                builder.temperature(null);
+                builder.topK(null);
+                builder.topP(null);
             }
 
             if (chatModelConfig.stopSequences().isPresent()) {
@@ -232,15 +252,36 @@ public class AnthropicRecorder {
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), anthropicConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), anthropicConfig.logResponses()))
                     .timeout(anthropicConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .topK(chatModelConfig.topK().orElse(40))
                     .maxTokens(chatModelConfig.maxTokens());
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
             }
 
+            if (chatModelConfig.topK().isPresent()) {
+                builder.topK(chatModelConfig.topK().getAsInt());
+            }
+
             if (chatModelConfig.topP().isPresent()) {
                 builder.topP(chatModelConfig.topP().getAsDouble());
+            }
+
+            if (modelRejectsSamplingParameters(chatModelConfig.modelName())) {
+                if (chatModelConfig.temperature().isPresent()) {
+                    LOG.warn("temperature was not configured because model " + chatModelConfig.modelName()
+                            + " does not support sampling parameters");
+                }
+                if (chatModelConfig.topK().isPresent()) {
+                    LOG.warn("topK was not configured because model " + chatModelConfig.modelName()
+                            + " does not support sampling parameters");
+                }
+                if (chatModelConfig.topP().isPresent()) {
+                    LOG.warn("topP was not configured because model " + chatModelConfig.modelName()
+                            + " does not support sampling parameters");
+                }
+                builder.temperature(null);
+                builder.topK(null);
+                builder.topP(null);
             }
 
             if (chatModelConfig.stopSequences().isPresent()) {
@@ -388,6 +429,14 @@ public class AnthropicRecorder {
                 "SRCFG00014: The config property quarkus.langchain4j.anthropic%s%s is required but it could not be found in any config source"
                         .formatted(
                                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    static boolean modelRejectsSamplingParameters(String modelName) {
+        return modelName.startsWith("claude-opus-4-7")
+                || modelName.startsWith("claude-opus-4-8")
+                || modelName.startsWith("claude-sonnet-5")
+                || modelName.startsWith("claude-fable")
+                || modelName.startsWith("claude-mythos");
     }
 
     private static ResponseFormat toResponseFormat(String format) {

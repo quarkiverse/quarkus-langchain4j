@@ -22,6 +22,10 @@ public interface ChatModelConfig {
      * lower values like 0.2 will make it more focused and deterministic.
      * <p>
      * It is generally recommended to set this or the {@code top-k} property but not both.
+     * <p>
+     * Not supported by {@code claude-opus-4-7}, {@code claude-opus-4-8}, {@code claude-sonnet-5}, {@code claude-fable-5},
+     * and later models. See
+     * <a href="https://platform.claude.com/docs/en/about-claude/models/migration-guide">Anthropic's migration guide</a>.
      */
     @ConfigDocDefault("0.7")
     @WithDefault("${quarkus.langchain4j.temperature}")
@@ -40,15 +44,22 @@ public interface ChatModelConfig {
      * So 0.1 means only the tokens comprising the top 10% probability mass are considered.
      * <p>
      * It is generally recommended to set this or the {@code temperature} property but not both.
+     * <p>
+     * Not supported by {@code claude-opus-4-7}, {@code claude-opus-4-8}, {@code claude-sonnet-5}, {@code claude-fable-5},
+     * and later models. See
+     * <a href="https://platform.claude.com/docs/en/about-claude/models/migration-guide">Anthropic's migration guide</a>.
      */
     @ConfigDocDefault("1.0")
     OptionalDouble topP();
 
     /**
      * Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower
-     * value (e.g. 10) will be more conservative
+     * value (e.g. 10) will be more conservative.
+     * <p>
+     * Not supported by {@code claude-opus-4-7}, {@code claude-opus-4-8}, {@code claude-sonnet-5}, {@code claude-fable-5},
+     * and later models. See
+     * <a href="https://platform.claude.com/docs/en/about-claude/models/migration-guide">Anthropic's migration guide</a>.
      */
-    @ConfigDocDefault("40")
     OptionalInt topK();
 
     /**
