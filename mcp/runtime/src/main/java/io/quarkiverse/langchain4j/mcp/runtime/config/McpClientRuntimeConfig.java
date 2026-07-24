@@ -138,6 +138,15 @@ public interface McpClientRuntimeConfig {
     Optional<Boolean> cachePromptList();
 
     /**
+     * Extra parameters that can be used by extensions to configure additional behavior
+     * for this MCP client. For example, {@code extra-params.oidc-client-name} can be used
+     * by the {@code langchain4j-oidc-client-mcp-auth-provider} extension to select
+     * a named OIDC client for acquiring access tokens.
+     */
+    @ConfigDocMapKey("param-name")
+    Map<String, String> extraParams();
+
+    /**
      * Whether the MCP client should perform health checks regularly and try to reconnect immediately if a connection issue is
      * detected.
      * The default is true.
