@@ -247,8 +247,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                     } ]
                   } ],
                   "max_tokens" : 1024,
-                  "stream" : true,
-                  "top_k" : 40
+                  "stream" : true
                 }""";
         assertThat(new String(loggedRequest.getBody()))
                 .isEqualTo(requestBody)
