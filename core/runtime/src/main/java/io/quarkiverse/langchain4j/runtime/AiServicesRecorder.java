@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -16,12 +15,9 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
 
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
-import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -406,18 +402,9 @@ public class AiServicesRecorder {
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
 
-                    // @Skills annotation support
+                    // @Skills annotation support — store class-level names for per-method resolution in doImplement0()
                     if (info.skillNames() != null) {
-                        SkillsConfigurator configurator = creationalContext
-                                .getInjectedReference(SkillsConfigurator.class);
-                        if (configurator == null) {
-                            throw new IllegalStateException("@Skills annotation on '" + info.serviceClassName()
-                                    + "' requires the quarkus-langchain4j-skills extension");
-                        }
-                        java.util.List<String> names = info.skillNames();
-                        quarkusAiServices.toolProvider(configurator.createToolProvider(names));
-                        String skillsSystemMsg = configurator.buildSkillsSystemMessage(names);
-                        aiServiceContext.chatRequestTransformer = new SkillsChatRequestTransformer(skillsSystemMsg);
+                        aiServiceContext.classLevelSkillNames = info.skillNames();
                     }
 
                     return aiServiceContext;
@@ -459,29 +446,4 @@ public class AiServicesRecorder {
 
     }
 
-    private static final class SkillsChatRequestTransformer implements BiFunction<ChatRequest, Object, ChatRequest> {
-
-        private final String skillsSystemMsg;
-
-        SkillsChatRequestTransformer(String skillsSystemMsg) {
-            this.skillsSystemMsg = skillsSystemMsg;
-        }
-
-        @Override
-        public ChatRequest apply(ChatRequest request, Object memoryId) {
-            List<ChatMessage> messages = new ArrayList<>(request.messages());
-            boolean appended = false;
-            for (int i = 0; i < messages.size(); i++) {
-                if (messages.get(i) instanceof SystemMessage existing) {
-                    messages.set(i, SystemMessage.from(existing.text() + "\n\n" + skillsSystemMsg));
-                    appended = true;
-                    break;
-                }
-            }
-            if (!appended) {
-                messages.add(0, SystemMessage.from(skillsSystemMsg));
-            }
-            return request.toBuilder().messages(messages).build();
-        }
-    }
 }

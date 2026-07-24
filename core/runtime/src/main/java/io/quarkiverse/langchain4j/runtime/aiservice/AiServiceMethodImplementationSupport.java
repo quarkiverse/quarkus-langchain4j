@@ -114,6 +114,7 @@ import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
+import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
@@ -287,6 +288,25 @@ public class AiServiceMethodImplementationSupport {
             }
         }
 
+        // @Skills annotation support — resolve per-method or class-level skills
+        List<String> effectiveSkillNames = methodCreateInfo.getSkillNames();
+        if (effectiveSkillNames == null && context instanceof QuarkusAiServiceContext) {
+            effectiveSkillNames = ((QuarkusAiServiceContext) context).classLevelSkillNames;
+        }
+        String skillsSystemMessage = null;
+        if (effectiveSkillNames != null) {
+            SkillsConfigurator configurator = Arc.container().select(SkillsConfigurator.class).get();
+            ToolProviderRequest skillsRequest = new QuarkusToolProviderRequest(invocationContext, userMessage,
+                    methodCreateInfo.getMcpClientNames());
+            ToolProviderResult skillsResult = configurator.createToolProvider(effectiveSkillNames)
+                    .provideTools(skillsRequest);
+            for (ToolSpecification spec : skillsResult.tools().keySet()) {
+                toolSpecifications.add(spec);
+                toolExecutors.put(spec.name(), skillsResult.tools().get(spec));
+            }
+            skillsSystemMessage = configurator.buildSkillsSystemMessage(effectiveSkillNames);
+        }
+
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             Metadata metadata = Metadata.builder()
@@ -322,6 +342,21 @@ public class AiServiceMethodImplementationSupport {
         } else {
             messagesToSend = createMessagesToSendForNoMemory(systemMessage, userMessage, needsMemorySeed, context,
                     methodCreateInfo);
+        }
+
+        if (skillsSystemMessage != null) {
+            boolean appended = false;
+            for (int i = 0; i < messagesToSend.size(); i++) {
+                if (messagesToSend.get(i) instanceof dev.langchain4j.data.message.SystemMessage existing) {
+                    messagesToSend.set(i,
+                            dev.langchain4j.data.message.SystemMessage.from(existing.text() + "\n\n" + skillsSystemMessage));
+                    appended = true;
+                    break;
+                }
+            }
+            if (!appended) {
+                messagesToSend.add(0, dev.langchain4j.data.message.SystemMessage.from(skillsSystemMessage));
+            }
         }
 
         if (TypeUtil.isTokenStream(returnType)) {
