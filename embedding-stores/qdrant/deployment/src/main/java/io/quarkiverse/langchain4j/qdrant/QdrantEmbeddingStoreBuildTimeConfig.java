@@ -84,6 +84,13 @@ public interface QdrantEmbeddingStoreBuildTimeConfig {
         String serviceName();
 
         /**
+         * Whether to automatically create Qdrant collections for all configured named stores
+         * when Dev Services starts. Requires the collection vector-params to be configured.
+         */
+        @WithDefault("false")
+        boolean createCollections();
+
+        /**
          * The Qdrant collection configuration.
          */
         Optional<CollectionConfig> collection();
