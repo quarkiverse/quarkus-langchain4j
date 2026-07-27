@@ -216,4 +216,60 @@ class InfinispanMetadataFilterMapperTest {
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("Unsupported filter type:");
     }
+
+    @Test
+    void testIckleInjectionInKeySingleQuoteIsEscaped() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsEqualTo("foo' OR 1=1 OR name='", "bar"));
+        assertThat(result.query)
+                .isEqualTo("m0.name='foo'' OR 1=1 OR name=''' and m0.value = 'bar'");
+    }
+
+    @Test
+    void testIckleInjectionInValueSingleQuoteIsEscaped() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsEqualTo("name", "x' OR 1=1 --"));
+        assertThat(result.query)
+                .isEqualTo("m0.name='name' and m0.value = 'x'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInKeyNotEqual() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsNotEqualTo("a' OR 1=1 --", "val"));
+        assertThat(result.query)
+                .contains("m0.name='a'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInKeyIsIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("k' OR 1=1 --", Arrays.asList("a", "b")));
+        assertThat(result.query)
+                .contains("m0.name='k'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInValuesIsIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("key", Arrays.asList("x' OR 1=1 --", "normal")));
+        assertThat(result.query)
+                .contains("'x'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInKeyNotIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsNotIn("k' OR 1=1 --", Arrays.asList("a")));
+        assertThat(result.query)
+                .contains("m0.name='k'' OR 1=1 --'")
+                .contains("m0.name!='k'' OR 1=1 --'");
+    }
+
+    @Test
+    void testBackslashInValueIsEscaped() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsEqualTo("path", "C:\\Users\\test"));
+        assertThat(result.query).isEqualTo("m0.name='path' and m0.value = 'C:\\\\Users\\\\test'");
+    }
 }

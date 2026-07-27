@@ -80,13 +80,14 @@ class InfinispanMetadataFilterMapper {
 
     private String mapComparison(String key, String operator, Object value) {
         String alias = nextAlias();
-        return alias + "name='" + key + "' and " + alias + valueField(value) + " " + operator + " " + formatValue(value);
+        return alias + "name=" + stringLiteral(key) + " and " + alias + valueField(value) + " " + operator + " "
+                + formatValue(value);
     }
 
     private String mapNegatedComparison(String key, String operator, Object value) {
         String alias = nextAlias();
         return alias + valueField(value) + " " + operator + " " + formatValue(value)
-                + " and " + alias + "name='" + key + "'"
+                + " and " + alias + "name=" + stringLiteral(key)
                 + " OR (i.metadata is null) ";
     }
 
@@ -95,7 +96,7 @@ class InfinispanMetadataFilterMapper {
         String alias = nextAlias();
         String field = valueField(sample);
         String values = formatCollection(filter.comparisonValues(), sample instanceof Number);
-        return alias + "name='" + filter.key() + "' and " + alias + field + " IN (" + values + ")";
+        return alias + "name=" + stringLiteral(filter.key()) + " and " + alias + field + " IN (" + values + ")";
     }
 
     private String mapNotIn(IsNotIn filter) {
@@ -103,8 +104,9 @@ class InfinispanMetadataFilterMapper {
         String alias = nextAlias();
         String field = valueField(sample);
         String values = formatCollection(filter.comparisonValues(), sample instanceof Number);
-        return "(" + alias + field + " NOT IN (" + values + ") and " + alias + "name='" + filter.key() + "')"
-                + " OR (" + alias + field + " IN (" + values + ") and " + alias + "name!='" + filter.key() + "')"
+        return "(" + alias + field + " NOT IN (" + values + ") and " + alias + "name=" + stringLiteral(filter.key()) + ")"
+                + " OR (" + alias + field + " IN (" + values + ") and " + alias + "name!=" + stringLiteral(filter.key())
+                + ")"
                 + " OR (i.metadata is null) ";
     }
 
@@ -132,12 +134,12 @@ class InfinispanMetadataFilterMapper {
         } else if (value instanceof Double) {
             return String.valueOf(value);
         }
-        return "'" + value + "'";
+        return stringLiteral(String.valueOf(value));
     }
 
     private static String formatCollection(Collection<?> values, boolean numeric) {
         return values.stream()
-                .map(v -> numeric ? v.toString() : "'" + v + "'")
+                .map(v -> numeric ? v.toString() : stringLiteral(String.valueOf(v)))
                 .collect(Collectors.joining(", "));
     }
 
@@ -145,5 +147,9 @@ class InfinispanMetadataFilterMapper {
         return values.stream().findFirst()
                 .orElseThrow(() -> new UnsupportedOperationException(
                         "Infinispan metadata filter IN must contain values"));
+    }
+
+    private static String stringLiteral(String value) {
+        return "'" + value.replace("\\", "\\\\").replace("'", "''") + "'";
     }
 }
