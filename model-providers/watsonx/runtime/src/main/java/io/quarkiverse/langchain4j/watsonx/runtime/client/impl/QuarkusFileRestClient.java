@@ -83,7 +83,8 @@ public final class QuarkusFileRestClient extends FileRestClient {
                         version,
                         fileListRequest.projectId(),
                         fileListRequest.spaceId(),
-                        fileListRequest.after(), fileListRequest.limit(), fileListRequest.order(), fileListRequest.purpose());
+                        fileListRequest.after(), fileListRequest.limit(), fileListRequest.order().value(),
+                        fileListRequest.purpose().value());
             }
         });
     }
