@@ -267,6 +267,30 @@ class InfinispanMetadataFilterMapperTest {
     }
 
     @Test
+    void testRejectMixedNumericAndStringInFilter() {
+        assertThatThrownBy(() -> new InfinispanMetadataFilterMapper()
+                .map(new IsIn("key", Arrays.asList(1, "x' OR 1=1 --"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("cannot mix numeric and non-numeric values");
+    }
+
+    @Test
+    void testRejectMixedNumericAndStringNotInFilter() {
+        assertThatThrownBy(() -> new InfinispanMetadataFilterMapper()
+                .map(new IsNotIn("key", Arrays.asList(42, "<ickle fragment>"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("cannot mix numeric and non-numeric values");
+    }
+
+    @Test
+    void testMixedNumericSubtypesInFilter() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("mixed", Arrays.asList(1, 2L, 3.0f, 4.0)));
+        assertThat(result.query).startsWith("m0.name='mixed' and m0.value_");
+        assertThat(result.query).contains("1").contains("2").contains("3.0").contains("4.0");
+    }
+
+    @Test
     void testBackslashInValueIsEscaped() {
         InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
                 .map(new IsEqualTo("path", "C:\\Users\\test"));
