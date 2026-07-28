@@ -28,7 +28,6 @@ import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.*;
-import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
@@ -94,20 +93,6 @@ public class McpRecorder {
                                 .environment(runtimeConfig.environment())
                                 .executorService(context.getInjectedReference(ExecutorService.class))
                                 .build();
-                    }
-                    case HTTP -> {
-                        QuarkusHttpMcpTransport.Builder httpBuilder = new QuarkusHttpMcpTransport.Builder()
-                                .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
-                                        "MCP client configuration named " + key + " is missing the 'url' property")))
-                                .logRequests(runtimeConfig.logRequests().orElse(false))
-                                .logResponses(runtimeConfig.logResponses().orElse(false))
-                                .tlsConfiguration(tlsConfiguration.orElse(null))
-                                .mcpClientName(key)
-                                .timeout(runtimeConfig.toolExecutionTimeout());
-                        if (!runtimeConfig.header().isEmpty()) {
-                            httpBuilder.headers(runtimeConfig.header());
-                        }
-                        yield httpBuilder.build();
                     }
                     case STREAMABLE_HTTP -> {
                         HttpClientOptions httpClientOptions = new HttpClientOptions();
