@@ -18,9 +18,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.textprocessing.Language;
+import com.ibm.watsonx.ai.textprocessing.Mode;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionDeleteParameters;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters;
-import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Mode;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 
