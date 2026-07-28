@@ -31,6 +31,7 @@ public class McpTracingDisabledTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class, InMemorySpanExporterProducer.class))
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "stdio")
+            .overrideConfigKey("quarkus.langchain4j.mcp.client1.protocol-version", "2025-11-25")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.command",
                     "jbang,--quiet,--fresh,run,src/test/resources/tracing_mcp_server.java")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.log-requests", "true")

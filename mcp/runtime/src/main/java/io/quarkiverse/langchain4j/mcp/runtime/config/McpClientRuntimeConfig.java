@@ -158,9 +158,38 @@ public interface McpClientRuntimeConfig {
      * initialization, allowing the server to send notifications and requests to the client
      * without the client first sending data via HTTP POST. This is useful for receiving
      * server-initiated messages such as tool list change notifications.
+     * Only used with the legacy MCP protocol (versions up to 2025-11-25).
      * Only applies to MCP clients using the streamable HTTP transport.
      */
     @WithDefault("false")
     boolean subsidiaryChannel();
+
+    /**
+     * The MCP protocol version to use. If not set, the client will auto-detect
+     * the server's protocol version, preferring 2026-07-28 over 2025-11-25.
+     * Set to "2026-07-28" to force modern protocol, or "2025-11-25" to force legacy.
+     */
+    Optional<String> protocolVersion();
+
+    /**
+     * Whether to subscribe to tool list change notifications from the server.
+     * Only applies when using the modern protocol (2026-07-28).
+     */
+    @WithDefault("true")
+    boolean subscribeToToolListChanges();
+
+    /**
+     * Whether to subscribe to prompt list change notifications from the server.
+     * Only applies when using the modern protocol (2026-07-28).
+     */
+    @WithDefault("true")
+    boolean subscribeToPromptListChanges();
+
+    /**
+     * Whether to subscribe to resource list change notifications from the server.
+     * Only applies when using the modern protocol (2026-07-28).
+     */
+    @WithDefault("true")
+    boolean subscribeToResourceListChanges();
 
 }

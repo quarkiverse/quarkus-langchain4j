@@ -60,11 +60,15 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private final McpClientAuthProvider mcpClientAuthProvider;
     private final McpHeadersSupplier headersSupplier;
     private final HttpClient httpClient;
+    // Legacy protocol only (up to 2025-11-25) — stored for 404 reinitialize
     private McpInitializeRequest initializeRequest;
     private volatile SseSubscriber sseSubscriber;
 
     private volatile Runnable onFailure;
     private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    private volatile boolean modernProtocol;
+    private volatile String protocolVersionHeader;
 
     // Subsidiary SSE channel fields
     private final boolean subsidiaryChannelEnabled;
@@ -98,6 +102,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         this.sseSubscriber = new SseSubscriber(operationHandler, logResponses, null);
     }
 
+    /**
+     * Only used with the legacy MCP protocol (versions up to 2025-11-25).
+     */
     @Override
     public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
         this.initializeRequest = request;
@@ -126,6 +133,14 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     @Override
     public void onFailure(Runnable actionOnFailure) {
         this.onFailure = actionOnFailure;
+    }
+
+    public void setModernProtocol(boolean modernProtocol) {
+        this.modernProtocol = modernProtocol;
+    }
+
+    public void setProtocolVersion(String protocolVersion) {
+        this.protocolVersionHeader = protocolVersion;
     }
 
     @Override
@@ -178,8 +193,45 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                 .addHeader("Accept", "application/json,text/event-stream")
                 .addHeader("Content-Type", "application/json")
                 .setMethod(HttpMethod.POST);
-        if (mcpSessionId.get() != null && !(request instanceof McpInitializeRequest)) {
-            options.addHeader("Mcp-Session-Id", mcpSessionId.get());
+
+        if (modernProtocol) {
+            // Modern protocol headers
+            if (protocolVersionHeader != null) {
+                options.addHeader("MCP-Protocol-Version", protocolVersionHeader);
+            }
+            // Extract method from JSON-RPC message
+            try {
+                JsonNode bodyNode = objectMapper.readTree(body);
+                String method = bodyNode.path("method").asText(null);
+                if (method != null) {
+                    options.addHeader("Mcp-Method", method);
+                }
+                // Extract name for tools/call, resources/read, prompts/get
+                JsonNode params = bodyNode.path("params");
+                if ("tools/call".equals(method) || "prompts/get".equals(method)) {
+                    String name = params.path("name").asText(null);
+                    if (name != null) {
+                        options.addHeader("Mcp-Name", name);
+                    }
+                } else if ("resources/read".equals(method)) {
+                    String uri = params.path("uri").asText(null);
+                    if (uri != null) {
+                        options.addHeader("Mcp-Name", uri);
+                    }
+                }
+            } catch (JsonProcessingException e) {
+                // If we can't parse the body, continue without method/name headers
+                log.warn("Failed to parse request body for modern protocol headers", e);
+            }
+            // Mcp-Param headers from context
+            if (context.mcpParamHeaders() != null) {
+                context.mcpParamHeaders().forEach((k, v) -> options.addHeader("Mcp-Param-" + k, v));
+            }
+        } else {
+            // Legacy: send Mcp-Session-Id
+            if (mcpSessionId.get() != null && !(request instanceof McpInitializeRequest)) {
+                options.addHeader("Mcp-Session-Id", mcpSessionId.get());
+            }
         }
         if (mcpClientAuthProvider != null) {
             String authValue = mcpClientAuthProvider.getAuthorization(new McpClientAuthFilter.AuthInputImpl("POST",
@@ -204,10 +256,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                             } else {
                                 if (isExpectedStatusCode(response.result().statusCode())) {
                                     // did the server assign a session ID?
-                                    String mcpSessionId = response.result().getHeader("Mcp-Session-Id");
-                                    if (mcpSessionId != null && !mcpSessionId.isEmpty()) {
-                                        log.debug("Assigned MCP session ID: " + mcpSessionId);
-                                        this.mcpSessionId.set(mcpSessionId);
+                                    if (!modernProtocol) {
+                                        String mcpSessionId = response.result().getHeader("Mcp-Session-Id");
+                                        if (mcpSessionId != null && !mcpSessionId.isEmpty()) {
+                                            log.debug("Assigned MCP session ID: " + mcpSessionId);
+                                            this.mcpSessionId.set(mcpSessionId);
+                                        }
                                     }
                                     String contentType = response.result().getHeader("Content-Type");
                                     if (id != null && contentType != null && contentType.contains("text/event-stream")) {
@@ -237,8 +291,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                             }
                                         });
                                     }
+                                    // Legacy protocol only (up to 2025-11-25) — 404 means session expired
                                 } else if (!(request instanceof McpInitializeRequest) && response.result().statusCode() == 404
-                                        && !isRetry) {
+                                        && !modernProtocol && !isRetry) {
                                     log.debug("Received 404 for operation, retrying after re-initialize");
                                     McpInitializeRequest initReq = QuarkusStreamableHttpMcpTransport.this.initializeRequest;
                                     if (initReq == null) {
@@ -267,6 +322,20 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                     } else {
                                         response.result().bodyHandler(bodyBuffer -> {
                                             String responseString = bodyBuffer.toString();
+                                            // Try to parse as JSON-RPC error response
+                                            if (id != null && responseString != null && !responseString.isEmpty()) {
+                                                try {
+                                                    JsonNode node = objectMapper.readTree(responseString);
+                                                    if (node.has("error") && node.has("jsonrpc")) {
+                                                        if (logResponses) {
+                                                            log.info("Response: " + responseString);
+                                                        }
+                                                        operationHandler.handle(node);
+                                                        return;
+                                                    }
+                                                } catch (JsonProcessingException ignored) {
+                                                }
+                                            }
                                             future.completeExceptionally(
                                                     new RuntimeException(
                                                             "Unexpected status code: " + response.result().statusCode()
@@ -285,6 +354,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
      * Opens the subsidiary SSE channel by issuing an HTTP GET to the MCP endpoint.
      * This allows the server to send notifications and requests to the client
      * without the client first sending data via HTTP POST.
+     * Only used with the legacy MCP protocol (versions up to 2025-11-25).
      *
      * @param firstAttempt if true, failures will not trigger reconnection
      * @return a future that completes when the channel setup attempt finishes
@@ -606,6 +676,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
          * will open an HTTP GET-based SSE stream after initialization, allowing the
          * server to send notifications and requests to the client without the client
          * first sending data via HTTP POST.
+         * Only used with the legacy MCP protocol (versions up to 2025-11-25).
          * Defaults to {@code false}.
          */
         public Builder subsidiaryChannel(boolean subsidiaryChannelEnabled) {

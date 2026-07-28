@@ -25,8 +25,9 @@ public class McpHealthCheckTest {
                             new StringAsset(
                                     """
                                             quarkus.langchain4j.openai.api-key=whatever
-                                            quarkus.langchain4j.mcp.client1.transport-type=http
-                                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
+                                            quarkus.langchain4j.mcp.client1.transport-type=streamable-http
+                                            quarkus.langchain4j.mcp.client1.protocol-version=2025-11-25
+                                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/mcp
                                             quarkus.langchain4j.mcp.client1.log-requests=true
                                             quarkus.langchain4j.mcp.client1.log-responses=true
                                             # short timeout so we can quickly test the health check

@@ -141,6 +141,10 @@ public class McpRecorder {
                         openTelemetryEnabled != null &&
                                 openTelemetryEnabled.getValue() &&
                                 mcpRuntimeConfiguration.getValue().tracingEnabled());
+                runtimeConfig.protocolVersion().ifPresent(builder::protocolVersion);
+                builder.subscribeToToolListChanges(runtimeConfig.subscribeToToolListChanges());
+                builder.subscribeToPromptListChanges(runtimeConfig.subscribeToPromptListChanges());
+                builder.subscribeToResourceListChanges(runtimeConfig.subscribeToResourceListChanges());
                 DefaultMcpClient client = builder
                         .key(key)
                         .transport(transport)
@@ -163,21 +167,12 @@ public class McpRecorder {
     }
 
     private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing) {
-        List<McpClientListener> listeners = new ArrayList<>();
         if (addMetrics) {
-            listeners.add(createMetricsListener(key));
+            builder.addListener(createMetricsListener(key));
         }
         if (addTracing) {
-            listeners.add(createTracingListener());
+            builder.addListener(createTracingListener());
             builder.metaSupplier(createTracingMetaSupplier());
-        }
-        // FIXME: this CompositeMcpClientListener thing is a temporary solution until we have a langchain4j version
-        // that supports multiple listeners directly (https://github.com/langchain4j/langchain4j/issues/4904).
-        // After that, just call builder.addListener multiple times
-        if (listeners.size() == 1) {
-            builder.listener(listeners.get(0));
-        } else if (listeners.size() > 1) {
-            builder.listener(new CompositeMcpClientListener(listeners));
         }
     }
 

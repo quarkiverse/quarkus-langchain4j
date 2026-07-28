@@ -50,12 +50,15 @@ public class MultipleMcpClientsTest {
                             SingleToolService.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever
-                            quarkus.langchain4j.mcp.client1.transport-type=http
-                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
-                            quarkus.langchain4j.mcp.client2.transport-type=http
-                            quarkus.langchain4j.mcp.client2.url=http://localhost:8081/mock2-mcp/sse
-                            quarkus.langchain4j.mcp.client3.transport-type=http
-                            quarkus.langchain4j.mcp.client3.url=http://localhost:8081/mock3-mcp/sse
+                            quarkus.langchain4j.mcp.client1.transport-type=streamable-http
+                            quarkus.langchain4j.mcp.client1.protocol-version=2025-11-25
+                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/mcp
+                            quarkus.langchain4j.mcp.client2.transport-type=streamable-http
+                            quarkus.langchain4j.mcp.client2.protocol-version=2025-11-25
+                            quarkus.langchain4j.mcp.client2.url=http://localhost:8081/mock2-mcp/mcp
+                            quarkus.langchain4j.mcp.client3.transport-type=streamable-http
+                            quarkus.langchain4j.mcp.client3.protocol-version=2025-11-25
+                            quarkus.langchain4j.mcp.client3.url=http://localhost:8081/mock3-mcp/mcp
                             quarkus.log.category."dev.langchain4j".level=DEBUG
                             quarkus.log.category."io.quarkiverse".level=DEBUG
                             quarkus.langchain4j.mcp.client1.tool-execution-timeout=1s
