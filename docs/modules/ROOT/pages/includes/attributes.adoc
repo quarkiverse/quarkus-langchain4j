@@ -1,4 +1,4 @@
-:project-version: 1.2.5
-:langchain4j-version: 1.5.1
-:langchain4j-embeddings-version: 1.5.1-beta11
+:project-version: 1.2.6
+:langchain4j-version: 1.5.2
+:langchain4j-embeddings-version: 1.5.2-beta11
 :examples-dir: ./../examples/
