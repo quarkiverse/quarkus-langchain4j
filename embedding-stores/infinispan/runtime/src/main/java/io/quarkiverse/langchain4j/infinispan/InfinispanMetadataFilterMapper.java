@@ -138,8 +138,14 @@ class InfinispanMetadataFilterMapper {
     }
 
     private static String formatCollection(Collection<?> values, boolean numeric) {
+        boolean hasNumeric = values.stream().anyMatch(v -> v instanceof Number);
+        boolean hasNonNumeric = values.stream().anyMatch(v -> !(v instanceof Number));
+        if (hasNumeric && hasNonNumeric) {
+            throw new IllegalArgumentException(
+                    "Infinispan metadata filter IN/NOT IN cannot mix numeric and non-numeric values");
+        }
         return values.stream()
-                .map(v -> numeric ? v.toString() : stringLiteral(String.valueOf(v)))
+                .map(v -> v instanceof Number ? v.toString() : stringLiteral(String.valueOf(v)))
                 .collect(Collectors.joining(", "));
     }
 
