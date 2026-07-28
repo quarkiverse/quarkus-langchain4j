@@ -1,8 +1,8 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.31.1}@pom
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-stdio:1.9.0
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-sse:1.9.0
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-websocket:1.9.0
+//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.33.2.1}@pom
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-stdio:2.0.0.Beta3
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-http:2.0.0.Beta3
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-websocket:2.0.0.Beta3
 
 import io.quarkiverse.mcp.server.Cancellation;
 import io.quarkiverse.mcp.server.ImageContent;

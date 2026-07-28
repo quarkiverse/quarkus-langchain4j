@@ -1,8 +1,8 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.25.0}@pom
+//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.33.2.1}@pom
 //DEPS io.quarkus:quarkus-smallrye-health
 //DEPS io.quarkus:quarkus-oidc
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-sse:1.4.0
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-http:2.0.0.Beta3
 //Q:CONFIG quarkus.mcp.server.client-logging.default-level=DEBUG
 //Q:CONFIG quarkus.http.auth.permission.mcp.paths=/mcp/*
 //Q:CONFIG quarkus.http.auth.permission.mcp.policy=authenticated

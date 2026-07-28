@@ -35,8 +35,9 @@ class SecureMcpWithMicroprofileHealthTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class)
                     .addAsResource("privateKey.pem"))
-            .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "http")
-            .overrideConfigKey("quarkus.langchain4j.mcp.client1.url", "http://localhost:8082/mcp/sse")
+            .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "streamable-http")
+            .overrideConfigKey("quarkus.langchain4j.mcp.client1.protocol-version", "2025-11-25")
+            .overrideConfigKey("quarkus.langchain4j.mcp.client1.url", "http://localhost:8082/mcp")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.microprofile-health-check", "true")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.log-requests", "true")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.log-responses", "true")
@@ -82,7 +83,7 @@ class SecureMcpWithMicroprofileHealthTest {
 
     @Test
     void testAuthenticationFailedWithRestAssured() throws Exception {
-        RestAssured.when().get("http://localhost:8082/mcp/sse")
+        RestAssured.when().get("http://localhost:8082/mcp")
                 .then()
                 .statusCode(401);
     }
