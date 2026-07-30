@@ -196,6 +196,96 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++512+++`
 
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-prefill-decode]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-prefill-decode[`+++quarkus.langchain4j.gpu-llama3.chat-model.prefill-decode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3.chat-model.prefill-decode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path, which significantly speeds up prompt processing on the GPU.
+
+Note: this maps to the JVM-global engine flags `llama.withPrefillDecode` / `llama.prefillBatchSize`, so when multiple models are configured the first one to initialize wins.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_PREFILL_DECODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_PREFILL_DECODE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-prefill-batch-size]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-prefill-batch-size[`+++quarkus.langchain4j.gpu-llama3.chat-model.prefill-batch-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3.chat-model.prefill-batch-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of prompt tokens processed per batch during the prefill phase. Only used when `prefill-decode()` is `true`: a value greater than 1 enables the batched prefill path, while 1 falls back to sequential prefill/decode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_PREFILL_BATCH_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_PREFILL_BATCH_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++32+++`
+
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-enable-thinking]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-enable-thinking[`+++quarkus.langchain4j.gpu-llama3.chat-model.enable-thinking+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3.chat-model.enable-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the model's thinking/reasoning phase. Only models with a thinking mode (e.g. Qwen3) honor this; for other models it has no effect.
+
+When `true`, the model reasons inside `<think>…</think>` before answering, which tends to improve tool-calling decisions. Set to `false` for faster responses by skipping the reasoning phase.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_ENABLE_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_ENABLE_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-device-memory]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-device-memory[`+++quarkus.langchain4j.gpu-llama3.chat-model.device-memory+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3.chat-model.device-memory+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Amount of GPU memory TornadoVM is allowed to allocate e.g. `"7GB"`, `"512MB"`.
+
+Note: this maps to the JVM-global engine flag `tornado.device.memory`, so when multiple models are configured the first one to initialize wins.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_DEVICE_MEMORY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_DEVICE_MEMORY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++4GB+++`
+
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-enable-integration]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-enable-integration[`+++quarkus.langchain4j.gpu-llama3.enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.gpu-llama3.enable-integration+++[]
@@ -388,6 +478,96 @@ endif::add-copy-button-to-env-var[]
 --
 |int
 |`+++512+++`
+
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-prefill-decode]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-prefill-decode[`+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.prefill-decode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.prefill-decode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path, which significantly speeds up prompt processing on the GPU.
+
+Note: this maps to the JVM-global engine flags `llama.withPrefillDecode` / `llama.prefillBatchSize`, so when multiple models are configured the first one to initialize wins.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_PREFILL_DECODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_PREFILL_DECODE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-prefill-batch-size]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-prefill-batch-size[`+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.prefill-batch-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.prefill-batch-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of prompt tokens processed per batch during the prefill phase. Only used when `prefill-decode()` is `true`: a value greater than 1 enables the batched prefill path, while 1 falls back to sequential prefill/decode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_PREFILL_BATCH_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_PREFILL_BATCH_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++32+++`
+
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-enable-thinking]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-enable-thinking[`+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.enable-thinking+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.enable-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the model's thinking/reasoning phase. Only models with a thinking mode (e.g. Qwen3) honor this; for other models it has no effect.
+
+When `true`, the model reasons inside `<think>…</think>` before answering, which tends to improve tool-calling decisions. Set to `false` for faster responses by skipping the reasoning phase.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_ENABLE_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_ENABLE_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-device-memory]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-device-memory[`+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.device-memory+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.device-memory+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Amount of GPU memory TornadoVM is allowed to allocate e.g. `"7GB"`, `"512MB"`.
+
+Note: this maps to the JVM-global engine flag `tornado.device.memory`, so when multiple models are configured the first one to initialize wins.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_DEVICE_MEMORY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL_DEVICE_MEMORY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++4GB+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-enable-integration[`+++quarkus.langchain4j.gpu-llama3."model-name".enable-integration+++`]##
 ifdef::add-copy-button-to-config-props[]
