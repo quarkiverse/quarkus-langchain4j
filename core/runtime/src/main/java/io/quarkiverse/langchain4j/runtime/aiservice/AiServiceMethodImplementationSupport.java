@@ -342,6 +342,10 @@ public class AiServiceMethodImplementationSupport {
         } else {
             messagesToSend = createMessagesToSendForNoMemory(systemMessage, userMessage, needsMemorySeed, context,
                     methodCreateInfo);
+            // Seed the local memory so the tool-execution loop can read back the conversation history
+            for (ChatMessage msg : messagesToSend) {
+                committableChatMemory.add(msg);
+            }
         }
 
         if (skillsSystemMessage != null) {
@@ -1385,7 +1389,7 @@ public class AiServiceMethodImplementationSupport {
             ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
         CommittableChatMemory committableChatMemory;
         if (chatMemory == null) {
-            committableChatMemory = new NoopChatMemory();
+            committableChatMemory = new LocalCommittableChatMemory();
         } else {
             if (chatMemoryFlushStrategy == ChatMemoryFlushStrategy.IMMEDIATE) {
                 committableChatMemory = new ImmediateFlushChatMemory(chatMemory);
