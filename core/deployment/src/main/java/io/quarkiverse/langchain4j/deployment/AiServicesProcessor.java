@@ -406,6 +406,7 @@ public class AiServicesProcessor {
     public void findDeclarativeServices(CombinedIndexBuildItem indexBuildItem,
             CustomScopeAnnotationsBuildItem customScopes,
             List<AnnotationsImpliesAiServiceBuildItem> annotationsImpliesAiServiceItems,
+            List<ExcludeFromImpliedAiServiceBuildItem> excludedFromImpliedItems,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
             BuildProducer<RequestImageModelBeanBuildItem> requestImageModelBeanProducer,
@@ -430,8 +431,12 @@ public class AiServicesProcessor {
         Collection<AnnotationInstance> registerAiServicesInstances = new ArrayList<>(
                 index.getAnnotations(REGISTER_AI_SERVICES));
 
+        Set<DotName> excludedFromImplied = excludedFromImpliedItems.stream()
+                .map(ExcludeFromImpliedAiServiceBuildItem::getClassName)
+                .collect(Collectors.toSet());
+
         Set<AnnotationInstance> impliedRegisterAiServiceInstance = determinedImpliedRegisterAiService(
-                annotationsThatImplyAiService, index);
+                annotationsThatImplyAiService, index, excludedFromImplied);
         Set<DotName> impliedRegisterAiServiceTarget = impliedRegisterAiServiceInstance.stream()
                 .map(ai -> ai.target().asClass().name()).collect(Collectors.toSet());
         registerAiServicesInstances.addAll(impliedRegisterAiServiceInstance);
@@ -669,7 +674,7 @@ public class AiServicesProcessor {
     }
 
     private static Set<AnnotationInstance> determinedImpliedRegisterAiService(Set<DotName> annotationsThatImplyAiService,
-            IndexView index) {
+            IndexView index, Set<DotName> excludedClasses) {
         Set<AnnotationInstance> impliedDefaultRegisterAiService = new HashSet<>();
         for (DotName ann : annotationsThatImplyAiService) {
             index.getAnnotations(ann).forEach(instance -> {
@@ -695,6 +700,9 @@ public class AiServicesProcessor {
                     return;
                 }
                 if (!ci.isInterface()) {
+                    return;
+                }
+                if (excludedClasses.contains(ci.name())) {
                     return;
                 }
                 if (ci.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
