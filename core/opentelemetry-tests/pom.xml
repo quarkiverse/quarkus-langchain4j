@@ -52,6 +52,11 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-vertx</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

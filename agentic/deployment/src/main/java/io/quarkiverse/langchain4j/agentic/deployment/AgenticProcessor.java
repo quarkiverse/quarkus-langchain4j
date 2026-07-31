@@ -63,6 +63,7 @@ import io.quarkiverse.langchain4j.deployment.SkipToolBoxProcessingBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
@@ -692,6 +693,7 @@ public class AgenticProcessor {
             InterceptorResolverBuildItem interceptorResolverBuildItem,
             BeanDiscoveryFinishedBuildItem beanDiscovery,
             CombinedIndexBuildItem indexBuildItem,
+            CustomScopeAnnotationsBuildItem customScopes,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
@@ -728,6 +730,7 @@ public class AgenticProcessor {
                 beanConfigurator = SyntheticBeanBuildItem
                         .configure(detectedAiAgentBuildItem.getIface().name());
             }
+
             beanConfigurator
                     .forceApplicationClass()
                     .unremovable()
@@ -736,7 +739,8 @@ public class AgenticProcessor {
                                     new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,
                                             hasInterceptorBindings, hasMcpToolBox)))
                     .setRuntimeInit()
-                    .scope(ApplicationScoped.class);
+                    .scope(findScope(customScopes, detectedAiAgentBuildItem));
+
             if (hasInterceptorBindings) {
                 beanConfigurator.injectInterceptionProxy();
             }
@@ -782,6 +786,21 @@ public class AgenticProcessor {
         }
 
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
+    }
+
+    private static Class findScope(CustomScopeAnnotationsBuildItem customScopes,
+            DetectedAiAgentBuildItem detectedAiAgentBuildItem) {
+        return customScopes
+                .getScope(detectedAiAgentBuildItem.getIface().annotations())
+                .map(AnnotationInstance::name)
+                .map(scopeDotName -> {
+                    try {
+                        return Class.forName(scopeDotName.toString(), true, Thread.currentThread().getContextClassLoader());
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException("Unable to load scope annotation: " + scopeDotName, e);
+                    }
+                })
+                .orElse((Class) ApplicationScoped.class);
     }
 
     private static boolean isInterceptorBindingAnnotation(AnnotationInstance ann, IndexView index) {
