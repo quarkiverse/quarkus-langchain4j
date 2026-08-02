@@ -73,6 +73,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
+import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.ChatMemory;
@@ -81,7 +82,6 @@ import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
-import dev.langchain4j.service.output.JsonSchemas;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
 import dev.langchain4j.service.tool.ToolErrorContext;
@@ -2105,11 +2105,24 @@ public class AiServicesProcessor {
         List<MethodParameterInfo> params = method.parameters();
 
         // TODO give user ability to provide custom OutputParser
+        // Prefer ServiceOutputParser.jsonSchema over JsonSchemas.jsonSchemaFrom so collection
+        // return types (List/Set of POJO, String, enum, …) get a proper JSON schema (#943).
+        Optional<JsonSchema> structuredOutputSchema = jsonSchemaFrom(returnType);
         String outputFormatInstructions = "";
-        if (!skipOutputFormatInstructionsPredicate.test(method)) {
-            Optional<JsonSchema> structuredOutputSchema = Optional.empty();
-            if (!returnType.equals(Multi.class)) {
+        if (!skipOutputFormatInstructionsPredicate.test(method) && !returnType.equals(Multi.class)) {
+            try {
                 outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
+            } catch (RuntimeException e) {
+                // e.g. List/Set of POJO: formatInstructions() is unsupported upstream; JSON schema is.
+                if (structuredOutputSchema.isEmpty()) {
+                    throw illegalConfigurationForMethod(
+                            "AI service method return type '" + returnType
+                                    + "' cannot produce output format instructions or a JSON schema. "
+                                    + "Wrap the collection in a record/POJO (e.g. record Items(List<Item> values) {}) "
+                                    + "or use a supported return type",
+                            method);
+                }
+                outputFormatInstructions = "";
             }
         }
 
@@ -2123,7 +2136,7 @@ public class AiServicesProcessor {
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
                 systemMessageInfo,
-                userMessageInfo.template(), outputFormatInstructions, jsonSchemaFrom(returnType));
+                userMessageInfo.template(), outputFormatInstructions, structuredOutputSchema);
 
         if (!generateResponseSchema && responseSchemaInfo.isInSystemMessage())
             throw new RuntimeException(
@@ -2231,7 +2244,14 @@ public class AiServicesProcessor {
         if (isMulti(returnType)) {
             return Optional.empty();
         }
-        return JsonSchemas.jsonSchemaFrom(returnType);
+        // ServiceOutputParser supports collections; JsonSchemas.jsonSchemaFrom only handles POJOs.
+        // Some AI-service return types (e.g. agentic AgenticScope) are not schema-mappable — treat
+        // that as "no schema" rather than failing the whole build (#943 must not break agentic/mcp).
+        try {
+            return SERVICE_OUTPUT_PARSER.jsonSchema(returnType);
+        } catch (UnsupportedFeatureException | IllegalArgumentException | IllegalStateException e) {
+            return Optional.empty();
+        }
     }
 
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
