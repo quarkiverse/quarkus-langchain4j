@@ -132,6 +132,11 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     }
 
     @Override
+    public boolean requiresCancellationNotification() {
+        return false;
+    }
+
+    @Override
     public void onFailure(Runnable actionOnFailure) {
         this.onFailure = actionOnFailure;
     }
