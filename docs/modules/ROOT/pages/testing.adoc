@@ -106,7 +106,6 @@ Or, you can use the `@Evaluate` annotation:
 [source,java]
 ----
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import io.quarkiverse.langchain4j.evaluation.junit5.Evaluate;
 
 @Evaluate
@@ -814,8 +813,8 @@ public class SuiteReportingTest {
 
 This generates:
 
-* `target/evaluation-suite-report.md`: Aggregated test suite report
-* `target/evaluation-suite-report.json`: Aggregated test suite JSON report
+* `target/test-suite-report.md`: Aggregated test suite report
+* `target/test-suite-report.json`: Aggregated test suite JSON report
 
 == Built-in Evaluation Strategies
 
