@@ -167,7 +167,13 @@ public interface McpClientRuntimeConfig {
     /**
      * The MCP protocol version to use. If not set, the client will auto-detect
      * the server's protocol version, preferring 2026-07-28 over 2025-11-25.
-     * Set to "2026-07-28" to force modern protocol, or "2025-11-25" to force legacy.
+     * Set to "2026-07-28" to force modern stateless protocol,
+     * or "2025-11-25" to force legacy stateful protocol.
+     *
+     * Links to the protocol specifications:
+     * <a href="https://modelcontextprotocol.io/specification/2025-11-25">2025-11-25</a>
+     * <a href="https://modelcontextprotocol.io/specification/2026-07-28">2026-07-28</a>
+     *
      */
     Optional<String> protocolVersion();
 
