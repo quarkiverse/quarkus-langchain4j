@@ -266,10 +266,16 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                     String contentType = response.result().getHeader("Content-Type");
                                     if (id != null && contentType != null && contentType.contains("text/event-stream")) {
                                         // the server has started an SSE channel
-                                        response.result().handler(createSseBufferHandler(eventStr -> {
+                                        var httpResponse = response.result();
+                                        httpResponse.handler(createSseBufferHandler(eventStr -> {
                                             SseEvent<String> sseEvent = parseSseEvent(eventStr);
                                             sseSubscriber.accept(sseEvent);
                                         }));
+                                        future.whenComplete((r, t) -> {
+                                            if (future.isCancelled()) {
+                                                httpResponse.request().reset();
+                                            }
+                                        });
                                     } else {
                                         // the server has sent a single regular response
                                         if (id == null) {
