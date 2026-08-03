@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
+import dev.langchain4j.mcp.client.transport.McpHeaderEncoding;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.protocol.McpClientMessage;
@@ -211,12 +212,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                 if ("tools/call".equals(method) || "prompts/get".equals(method)) {
                     String name = params.path("name").asText(null);
                     if (name != null) {
-                        options.addHeader("Mcp-Name", name);
+                        options.addHeader("Mcp-Name", McpHeaderEncoding.encode(name));
                     }
                 } else if ("resources/read".equals(method)) {
                     String uri = params.path("uri").asText(null);
                     if (uri != null) {
-                        options.addHeader("Mcp-Name", uri);
+                        options.addHeader("Mcp-Name", McpHeaderEncoding.encode(uri));
                     }
                 }
             } catch (JsonProcessingException e) {
