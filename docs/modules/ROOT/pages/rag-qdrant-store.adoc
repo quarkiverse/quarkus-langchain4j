@@ -3,12 +3,8 @@
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-Qdrant is a high-performance vector database optimized for semantic search and Retrieval-Augmented Generation (RAG) workloads.
-This guide explains how to use Qdrant as a vector-capable document store in Quarkus LangChain4j.
-
-== Overview
-
-The `quarkus-langchain4j-qdrant` extension allows you to connect to a Qdrant instance, manage collections, and perform vector similarity search using embedded text segments.
+Qdrant is an open-source vector database for embedding-based search.
+The `quarkus-langchain4j-qdrant` extension allows you to use Qdrant as an embedding store for Retrieval-Augmented Generation (RAG) with Quarkus LangChain4j.
 
 == Dependency
 
@@ -19,52 +15,80 @@ include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 == Dev Services Support
 
-The extension includes Dev Services support for Qdrant.
-In dev and test modes, a containerized Qdrant instance is automatically started and initialized with a default or user-defined collection.
+Dev Services for Qdrant are provided by the `quarkus-qdrant` extension, which is pulled in transitively.
+In dev and test modes, a containerized Qdrant instance is automatically started.
 
-To configure Dev Services for Qdrant, you must set the following properties:
-
-[source,properties]
-----
-# Required: collection name
-quarkus.langchain4j.qdrant.devservices.service-name=my-collection
-
-# Required: vector size (depends on embedding model)
-quarkus.langchain4j.qdrant.devservices.collection.vector-params.size=384
-
-# Required: distance metric (e.g., Cosine, Dot, Euclidean)
-quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance=Cosine
-----
-
-TIP: The vector size must match the output dimension of your embedding model (e.g., 384 for BGE, 1536 for OpenAI’s ada-002).
-
-Dev Services will use the `qdrant/qdrant` Docker image by default and expose the gRPC endpoint.
-
-== Connecting to an External Qdrant Instance
-
-If you want to use a remote Qdrant instance instead of Dev Services, disable it and provide the connection parameters:
+You can pre-create collections at startup via dev services configuration:
 
 [source,properties]
 ----
-quarkus.langchain4j.qdrant.host=localhost
-quarkus.langchain4j.qdrant.port=6334
-quarkus.langchain4j.qdrant.use-grpc=true
-quarkus.langchain4j.qdrant.collection.name=my-collection
-quarkus.langchain4j.qdrant.collection.vector-params.size=384
-quarkus.langchain4j.qdrant.collection.vector-params.distance=Cosine
+# Pre-create a collection (name is the map key)
+quarkus.qdrant.devservices.collections.my-collection.vector-size=384
+quarkus.qdrant.devservices.collections.my-collection.distance=Cosine
 ----
+
+TIP: The vector size must match the output dimension of your embedding model (e.g., 384 for all-MiniLM-L6-v2, 1536 for OpenAI text-embedding-ada-002).
+
+== Migrating from 1.12.x and earlier
+
+Prior to 1.13.x, this extension used the langchain4j gRPC client and exposed connection settings under the `quarkus.langchain4j.qdrant.*` namespace.
+These properties no longer exist. Connection to Qdrant is now handled by the `quarkus-qdrant` extension using its own namespace.
+
+[cols="1,1"]
+|===
+|Old property |Replacement
+
+|`quarkus.langchain4j.qdrant.host`
+|`quarkus.qdrant.host`
+
+|`quarkus.langchain4j.qdrant.port`
+|`quarkus.qdrant.port`
+
+|`quarkus.langchain4j.qdrant.api-key`
+|`quarkus.qdrant.api-key`
+
+|`quarkus.langchain4j.qdrant.use-tls`
+|`quarkus.qdrant.use-tls`
+
+|`quarkus.langchain4j.qdrant.collection.name`
+|`quarkus.langchain4j.qdrant.collection-name`
+
+|`quarkus.langchain4j.qdrant.devservices.enabled`
+|`quarkus.qdrant.devservices.enabled`
+
+|`quarkus.langchain4j.qdrant.devservices.qdrant-image-name`
+|`quarkus.qdrant.devservices.image-name`
+
+|`quarkus.langchain4j.qdrant.devservices.port`
+|`quarkus.qdrant.devservices.port`
+
+|`quarkus.langchain4j.qdrant.devservices.shared`
+|`quarkus.qdrant.devservices.shared`
+
+|`quarkus.langchain4j.qdrant.devservices.service-name`
+|`quarkus.qdrant.devservices.service-name`
+
+|`quarkus.langchain4j.qdrant.devservices.collection.vector-params.size`
+|`quarkus.qdrant.devservices.collections.<name>.vector-size`
+
+|`quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance`
+|`quarkus.qdrant.devservices.collections.<name>.distance`
+|===
+
+IMPORTANT: The default port changed from **6334** (gRPC) to **6333** (REST). Update or remove any explicit port configuration.
+
+NOTE: Per-store connection settings (host, port, api-key) are now handled by the `quarkus-qdrant` extension via the `client-name` property (see <<Per-store Qdrant client>>).
 
 == Named Stores
 
 You can configure multiple named Qdrant stores, each using a different collection.
-This is useful when your application needs to manage embeddings for different domains or tenants in separate collections within the same Qdrant instance.
+This is useful when your application needs to manage embeddings for different domains or tenants in separate collections.
 
 To configure a named store:
 
 [source,properties]
 ----
 quarkus.langchain4j.qdrant.products.collection-name=product_embeddings
-quarkus.langchain4j.qdrant.products.host=qdrant.example.com
 ----
 
 To inject a named store, use the `@EmbeddingStoreName` qualifier:
@@ -84,9 +108,33 @@ If you only need named stores, disable the default store:
 quarkus.langchain4j.qdrant.default-store-enabled=false
 ----
 
+=== Per-store Qdrant client
+
+Individual stores can point to different Qdrant instances via the `client-name` property, which references a named client from the `quarkus-qdrant` extension:
+
+[source,properties]
+----
+# Default Qdrant client
+quarkus.qdrant.host=qdrant-primary
+quarkus.qdrant.port=6333
+
+# A second Qdrant client named "secondary"
+quarkus.qdrant."secondary".host=qdrant-secondary
+quarkus.qdrant."secondary".port=6333
+
+# Default store uses the default client (no client-name needed)
+quarkus.langchain4j.qdrant.collection-name=documents
+
+# Named store uses the secondary client
+quarkus.langchain4j.qdrant.products.collection-name=product_embeddings
+quarkus.langchain4j.qdrant.products.client-name=secondary
+----
+
+NOTE: Only `distance=Cosine` collections produce correct relevance scores. Other distance metrics are not supported.
+
 == Configuration
 
-You can customize the behavior of the Qdrant extension using the following configuration options:
+The Qdrant extension can be configured using the following options:
 
 include::includes/quarkus-langchain4j-qdrant.adoc[leveloffset=+1,opts=optional]
 
@@ -96,7 +144,7 @@ include::includes/quarkus-langchain4j-qdrant.adoc[leveloffset=+1,opts=optional]
 To use Qdrant with Quarkus LangChain4j:
 
 1. Add the `quarkus-langchain4j-qdrant` extension
-2. Choose between Dev Services or external Qdrant
-3. Define the collection name, vector size...
-4. Ingest and retrieve documents via the `QdrantEmbeddingStore`
+2. Use Dev Services (automatic) or configure an external Qdrant instance via `quarkus.qdrant.*`
+3. Set the collection name via `quarkus.langchain4j.qdrant.collection-name`
+4. Inject `EmbeddingStore<TextSegment>` and start ingesting and retrieving documents
 

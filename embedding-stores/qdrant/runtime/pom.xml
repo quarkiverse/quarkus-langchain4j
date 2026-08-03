@@ -14,17 +14,14 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-grpc-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-qdrant</artifactId>
+            <groupId>io.quarkiverse.qdrant</groupId>
+            <artifactId>quarkus-qdrant</artifactId>
+            <version>${quarkus-qdrant.version}</version>
         </dependency>
     </dependencies>
     <build>
