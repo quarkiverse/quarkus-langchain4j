@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.chatscopes.internal;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.interceptor.Interceptor;
 
 import io.quarkiverse.langchain4j.chatscopes.ChatScopeEnded;
 import io.quarkiverse.langchain4j.chatscopes.ChatScopeStarted;
@@ -18,13 +20,13 @@ import io.quarkiverse.langchain4j.runtime.conversation.ConversationContext;
 @ApplicationScoped
 public class ChatScopeConversationBridge {
 
-    void onStarted(@Observes ChatScopeStarted event) {
+    void onStarted(@Observes @Priority(Interceptor.Priority.LIBRARY_BEFORE) ChatScopeStarted event) {
         if (event.scope().parent() == null) {
             ConversationContext.begin(event.scope().getId());
         }
     }
 
-    void onEnded(@Observes ChatScopeEnded event) {
+    void onEnded(@Observes @Priority(Interceptor.Priority.LIBRARY_AFTER) ChatScopeEnded event) {
         if (event.scope().parent() == null) {
             ConversationContext.end();
         }

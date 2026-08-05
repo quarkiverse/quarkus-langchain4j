@@ -18,12 +18,6 @@ import io.quarkus.arc.ArcContainer;
  */
 public final class ConversationContext {
 
-    /**
-     * The OpenTelemetry attribute key for the conversation ID, following the
-     * <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/">GenAI semantic conventions</a>.
-     */
-    public static final String OTEL_ATTRIBUTE = "gen_ai.conversation.id";
-
     static final String CONTEXT_KEY = "langchain4j.conversation.id";
 
     private static final ThreadLocal<String> FALLBACK = new ThreadLocal<>();
