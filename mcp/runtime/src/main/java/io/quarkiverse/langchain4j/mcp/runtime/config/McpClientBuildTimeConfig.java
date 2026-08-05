@@ -33,7 +33,10 @@ public interface McpClientBuildTimeConfig {
      * {@code langchain4j-oidc-client-mcp-auth-provider} extension to acquire access tokens
      * (e.g. via the {@code client_credentials} grant) for this MCP client.
      * Has no effect when that extension is not on the classpath.
+     *
+     * @deprecated Use {@code quarkus.langchain4j.mcp."client-name".extra-params.oidc-client-name} instead.
      */
+    @Deprecated(forRemoval = true)
     Optional<String> oidcClientName();
 
 }

@@ -19,7 +19,6 @@ import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.oidc.client.OidcClient;
 import io.quarkus.oidc.client.OidcClients;
 
 @BuildSteps(onlyIf = OidcClientMcpAuthProviderProcessor.IsEnabled.class)
@@ -41,17 +40,7 @@ public class OidcClientMcpAuthProviderProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             OidcClientMcpAuthProviderRecorder recorder) {
 
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(MCP_CLIENT_AUTH_PROVIDER)
-                .setRuntimeInit()
-                .defaultBean()
-                .unremovable()
-                .scope(ApplicationScoped.class)
-                .addInjectionPoint(ClassType.create(DotName.createSimple(OidcClient.class)))
-                .createWith(recorder.defaultProvider())
-                .done());
-
-        mcpConfig.clients().forEach((clientName, clientConfig) -> clientConfig.oidcClientName().ifPresent(oidcClientName -> {
+        mcpConfig.clients().forEach((clientName, clientConfig) -> {
             AnnotationInstance qualifier = AnnotationInstance.builder(MCP_CLIENT_NAME)
                     .add("value", clientName)
                     .build();
@@ -62,9 +51,10 @@ public class OidcClientMcpAuthProviderProcessor {
                     .unremovable()
                     .scope(ApplicationScoped.class)
                     .addInjectionPoint(ClassType.create(DotName.createSimple(OidcClients.class)))
-                    .createWith(recorder.namedProvider(oidcClientName))
+                    .createWith(recorder.provider(clientName,
+                            clientConfig.oidcClientName().orElse(null)))
                     .done());
-        }));
+        });
     }
 
     public static class IsEnabled implements BooleanSupplier {
