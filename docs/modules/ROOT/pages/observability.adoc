@@ -191,6 +191,8 @@ try {
 }
 ----
 
+`ConversationContext` works both on Vert.x event loop / worker threads and on plain threads (servlet containers, `@Scheduled` methods, message listeners). When using it outside a Vert.x duplicated context, always call `end()` in a `finally` block to prevent the conversation ID from leaking to subsequent requests on pooled threads.
+
 ==== Lifecycle events
 
 `ConversationStarted` and `ConversationEnded` CDI events are fired when a conversation begins and ends. Observe these events to trigger downstream actions, such as Langfuse conversation scoring:

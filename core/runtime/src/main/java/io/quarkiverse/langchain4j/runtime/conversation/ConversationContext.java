@@ -26,6 +26,8 @@ public final class ConversationContext {
 
     static final String CONTEXT_KEY = "langchain4j.conversation.id";
 
+    private static final ThreadLocal<String> FALLBACK = new ThreadLocal<>();
+
     private ConversationContext() {
     }
 
@@ -36,11 +38,19 @@ public final class ConversationContext {
      * If a conversation is already active, it is ended first (firing a {@link ConversationEnded}
      * event for the previous conversation) before starting the new one.
      *
-     * @param conversationId the conversation identifier
+     * @param conversationId the conversation identifier (must not be {@code null})
+     * @throws IllegalArgumentException if conversationId is null
      */
     public static void begin(String conversationId) {
+        if (conversationId == null) {
+            throw new IllegalArgumentException("conversationId must not be null");
+        }
         end();
-        ContextLocals.put(CONTEXT_KEY, conversationId);
+        if (ContextLocals.duplicatedContextActive()) {
+            ContextLocals.put(CONTEXT_KEY, conversationId);
+        } else {
+            FALLBACK.set(conversationId);
+        }
         fireEvent(new ConversationStarted(conversationId));
     }
 
@@ -48,7 +58,10 @@ public final class ConversationContext {
      * Returns the current conversation ID, or {@code null} if no conversation is active.
      */
     public static String current() {
-        return ContextLocals.get(CONTEXT_KEY);
+        if (ContextLocals.duplicatedContextActive()) {
+            return ContextLocals.get(CONTEXT_KEY);
+        }
+        return FALLBACK.get();
     }
 
     /**
@@ -65,7 +78,11 @@ public final class ConversationContext {
     public static void end() {
         String id = current();
         if (id != null) {
-            ContextLocals.remove(CONTEXT_KEY);
+            if (ContextLocals.duplicatedContextActive()) {
+                ContextLocals.remove(CONTEXT_KEY);
+            } else {
+                FALLBACK.remove();
+            }
             fireEvent(new ConversationEnded(id));
         }
     }
@@ -73,14 +90,19 @@ public final class ConversationContext {
     // Package-private: used by ConversationThreadContextProvider for raw set/clear without events
     static void set(String conversationId) {
         if (conversationId != null) {
-            ContextLocals.put(CONTEXT_KEY, conversationId);
+            if (ContextLocals.duplicatedContextActive()) {
+                ContextLocals.put(CONTEXT_KEY, conversationId);
+            } else {
+                FALLBACK.set(conversationId);
+            }
         } else {
-            ContextLocals.remove(CONTEXT_KEY);
+            clear();
         }
     }
 
     static void clear() {
         ContextLocals.remove(CONTEXT_KEY);
+        FALLBACK.remove();
     }
 
     @SuppressWarnings("unchecked")

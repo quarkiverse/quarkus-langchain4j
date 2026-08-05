@@ -12,6 +12,7 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -114,6 +115,53 @@ public class ConversationContextTest {
             assertThat(collector.events().get(0)).isInstanceOf(ConversationEnded.class);
             assertThat(((ConversationEnded) collector.events().get(0)).getConversationId()).isEqualTo("evt-end");
         });
+    }
+
+    @Test
+    void beginAndEndWorkWithoutVertxContext() {
+        ConversationContext.begin("no-dc-123");
+        assertThat(ConversationContext.current()).isEqualTo("no-dc-123");
+        assertThat(ConversationContext.isActive()).isTrue();
+
+        ConversationContext.end();
+        assertThat(ConversationContext.current()).isNull();
+        assertThat(ConversationContext.isActive()).isFalse();
+    }
+
+    @Test
+    void firesEventsWithoutVertxContext() {
+        ConversationContext.begin("no-dc-evt");
+        assertThat(collector.events()).hasSize(1);
+        assertThat(collector.events().get(0)).isInstanceOf(ConversationStarted.class);
+        assertThat(((ConversationStarted) collector.events().get(0)).getConversationId()).isEqualTo("no-dc-evt");
+
+        collector.clear();
+        ConversationContext.end();
+        assertThat(collector.events()).hasSize(1);
+        assertThat(collector.events().get(0)).isInstanceOf(ConversationEnded.class);
+        assertThat(((ConversationEnded) collector.events().get(0)).getConversationId()).isEqualTo("no-dc-evt");
+    }
+
+    @Test
+    void beginAutoEndsPreviousWithoutVertxContext() {
+        ConversationContext.begin("first");
+        collector.clear();
+
+        ConversationContext.begin("second");
+        assertThat(ConversationContext.current()).isEqualTo("second");
+
+        assertThat(collector.events()).hasSize(2);
+        assertThat(collector.events().get(0)).isInstanceOf(ConversationEnded.class);
+        assertThat(((ConversationEnded) collector.events().get(0)).getConversationId()).isEqualTo("first");
+        assertThat(collector.events().get(1)).isInstanceOf(ConversationStarted.class);
+        assertThat(((ConversationStarted) collector.events().get(1)).getConversationId()).isEqualTo("second");
+
+        ConversationContext.end();
+    }
+
+    @Test
+    void beginWithNullThrows() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> ConversationContext.begin(null));
     }
 
     @ApplicationScoped
