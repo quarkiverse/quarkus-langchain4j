@@ -396,11 +396,11 @@ public class AgenticConversationTrackingTest extends OpenAiBaseTest {
         private final List<String> ended = new CopyOnWriteArrayList<>();
 
         public void onStarted(@Observes ConversationStarted event) {
-            started.add(event.getConversationId());
+            started.add(event.conversationId());
         }
 
         public void onEnded(@Observes ConversationEnded event) {
-            ended.add(event.getConversationId());
+            ended.add(event.conversationId());
         }
 
         public List<String> started() {

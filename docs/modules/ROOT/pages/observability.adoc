@@ -205,7 +205,7 @@ import io.quarkiverse.langchain4j.runtime.conversation.ConversationEnded;
 @ApplicationScoped
 public class ConversationObserver {
     void onStarted(@Observes ConversationStarted event) {
-        // event.getConversationId()
+        // event.conversationId()
     }
 
     void onEnded(@Observes ConversationEnded event) {

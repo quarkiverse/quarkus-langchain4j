@@ -84,9 +84,9 @@ public class ConversationContextTest {
             // The previous conversation was auto-ended before the new one started
             assertThat(collector.events()).hasSize(2);
             assertThat(collector.events().get(0)).isInstanceOf(ConversationEnded.class);
-            assertThat(((ConversationEnded) collector.events().get(0)).getConversationId()).isEqualTo("first");
+            assertThat(((ConversationEnded) collector.events().get(0)).conversationId()).isEqualTo("first");
             assertThat(collector.events().get(1)).isInstanceOf(ConversationStarted.class);
-            assertThat(((ConversationStarted) collector.events().get(1)).getConversationId()).isEqualTo("second");
+            assertThat(((ConversationStarted) collector.events().get(1)).conversationId()).isEqualTo("second");
 
             ConversationContext.end();
         });
@@ -99,7 +99,7 @@ public class ConversationContextTest {
             ConversationContext.begin("evt-start");
             assertThat(collector.events()).hasSize(1);
             assertThat(collector.events().get(0)).isInstanceOf(ConversationStarted.class);
-            assertThat(((ConversationStarted) collector.events().get(0)).getConversationId()).isEqualTo("evt-start");
+            assertThat(((ConversationStarted) collector.events().get(0)).conversationId()).isEqualTo("evt-start");
             ConversationContext.end();
         });
     }
@@ -113,7 +113,7 @@ public class ConversationContextTest {
             ConversationContext.end();
             assertThat(collector.events()).hasSize(1);
             assertThat(collector.events().get(0)).isInstanceOf(ConversationEnded.class);
-            assertThat(((ConversationEnded) collector.events().get(0)).getConversationId()).isEqualTo("evt-end");
+            assertThat(((ConversationEnded) collector.events().get(0)).conversationId()).isEqualTo("evt-end");
         });
     }
 
@@ -133,13 +133,13 @@ public class ConversationContextTest {
         ConversationContext.begin("no-dc-evt");
         assertThat(collector.events()).hasSize(1);
         assertThat(collector.events().get(0)).isInstanceOf(ConversationStarted.class);
-        assertThat(((ConversationStarted) collector.events().get(0)).getConversationId()).isEqualTo("no-dc-evt");
+        assertThat(((ConversationStarted) collector.events().get(0)).conversationId()).isEqualTo("no-dc-evt");
 
         collector.clear();
         ConversationContext.end();
         assertThat(collector.events()).hasSize(1);
         assertThat(collector.events().get(0)).isInstanceOf(ConversationEnded.class);
-        assertThat(((ConversationEnded) collector.events().get(0)).getConversationId()).isEqualTo("no-dc-evt");
+        assertThat(((ConversationEnded) collector.events().get(0)).conversationId()).isEqualTo("no-dc-evt");
     }
 
     @Test
@@ -152,9 +152,9 @@ public class ConversationContextTest {
 
         assertThat(collector.events()).hasSize(2);
         assertThat(collector.events().get(0)).isInstanceOf(ConversationEnded.class);
-        assertThat(((ConversationEnded) collector.events().get(0)).getConversationId()).isEqualTo("first");
+        assertThat(((ConversationEnded) collector.events().get(0)).conversationId()).isEqualTo("first");
         assertThat(collector.events().get(1)).isInstanceOf(ConversationStarted.class);
-        assertThat(((ConversationStarted) collector.events().get(1)).getConversationId()).isEqualTo("second");
+        assertThat(((ConversationStarted) collector.events().get(1)).conversationId()).isEqualTo("second");
 
         ConversationContext.end();
     }
