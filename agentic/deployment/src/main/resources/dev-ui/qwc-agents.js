@@ -54,12 +54,18 @@ export class QwcAgents extends LitElement {
             font-size: 0.9em;
         }
         .detail-section dt { font-weight: bold; margin-top: 8px; }
-        .detail-section dd { margin-left: 15px; margin-bottom: 4px; }
+        .detail-section dd {
+            margin-left: 15px;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
         .detail-section code {
             background-color: var(--lumo-contrast-10pct);
             padding: 1px 4px;
             border-radius: 3px;
             font-size: 0.9em;
+            white-space: normal;
+            overflow-wrap: anywhere;
         }
     `;
 
@@ -108,7 +114,7 @@ export class QwcAgents extends LitElement {
                 <vaadin-grid-column auto-width header="Sub-Agents"
                     ${columnBodyRenderer(this._subAgentsRenderer, [])}>
                 </vaadin-grid-column>
-                <vaadin-grid-column auto-width header="Details"
+                <vaadin-grid-column width="260px" flex-grow="0" header="Details"
                     ${columnBodyRenderer(this._detailsRenderer, [])}>
                 </vaadin-grid-column>
             </vaadin-grid>
