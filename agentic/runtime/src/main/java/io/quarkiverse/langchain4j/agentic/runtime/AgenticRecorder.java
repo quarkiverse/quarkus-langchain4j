@@ -19,8 +19,6 @@ import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.declarative.DeclarativeUtil;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
-import dev.langchain4j.agentic.observability.AgentMonitor;
-import dev.langchain4j.agentic.observability.MonitoredAgent;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -42,7 +40,6 @@ public class AgenticRecorder {
     private static volatile Map<String, List<String>> agentsWithToolBox = Map.of();
     private static volatile Map<String, List<String>> agentsWithSkills = Map.of();
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
-    private static volatile boolean devModeMonitoringEnabled = false;
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
 
     private static final Function<InternalAgent, Object> AGENT_INSTANCE_FACTORY = internalAgent -> {
@@ -97,13 +94,17 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
+    public void setDevUIAgentTypes(Map<String, String> agentTypesByClassName) {
+        DevAgentMonitorHolder.agentTypesByClassName = Collections.unmodifiableMap(agentTypesByClassName);
+    }
+
+    @RuntimeInit
     public void enableDevModeMonitoring(Set<String> rootAgentClassNames) {
         DevAgentMonitorHolder.reset();
-        AgenticRecorder.devModeMonitoringEnabled = true;
         for (String className : rootAgentClassNames) {
             try {
                 Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
-                ClientProxy.unwrap(Arc.container().select(clazz).get());
+                DevAgentMonitorHolder.registerRootAgent(ClientProxy.unwrap(Arc.container().select(clazz).get()));
             } catch (Exception e) {
                 log.warn("Failed to eagerly initialize root agent for dev mode topology: " + className, e);
             }
@@ -143,13 +144,6 @@ public class AgenticRecorder {
                     }
                 }
 
-                if (devModeMonitoringEnabled && agent instanceof MonitoredAgent monitoredAgent) {
-                    AgentMonitor monitor = monitoredAgent.agentMonitor();
-                    if (monitor != null) {
-                        DevAgentMonitorHolder.register(monitor);
-                        DevAgentMonitorHolder.registerRootAgent(agent);
-                    }
-                }
                 return agent;
             }
         };
