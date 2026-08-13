@@ -18,8 +18,14 @@ import com.ibm.watsonx.ai.detection.DetectionService;
 import com.ibm.watsonx.ai.embedding.EmbeddingService;
 import com.ibm.watsonx.ai.file.FileService;
 import com.ibm.watsonx.ai.foundationmodel.FoundationModelService;
+import com.ibm.watsonx.ai.gateway.catalog.ModelGatewayCatalogService;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayService;
 import com.ibm.watsonx.ai.rerank.RerankService;
 import com.ibm.watsonx.ai.textgeneration.TextGenerationService;
+import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 import com.ibm.watsonx.ai.timeseries.TimeSeriesService;
@@ -30,12 +36,18 @@ import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusBatchRestCl
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCP4DIAMRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCP4DLegacyRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusChatRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusClusterSchemaRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCreateSchemaRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusDeploymentRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusDetectionRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusEmbeddingRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusFileRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusFoundationModelRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusIBMCloudRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusImproveSchemaRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusMergeSchemaRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayCatalogRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusRerankRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusTextClassificationRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusTextExtractionRestClient;
@@ -157,6 +169,37 @@ public class QuarkusCustomRestClientTest {
     }
 
     @Test
+    public void model_gateway_client() throws Exception {
+
+        ModelGatewayService modelGatewayService = ModelGatewayService.builder()
+                .apiKey("test")
+                .modelId("openai/gpt-4o-mini")
+                .baseUrl("http://localhost")
+                .build();
+
+        Class<ModelGatewayService> clazz = ModelGatewayService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(modelGatewayService);
+        assertThat(client).isInstanceOf(QuarkusModelGatewayRestClient.class);
+    }
+
+    @Test
+    public void model_gateway_catalog_client() throws Exception {
+
+        ModelGatewayCatalogService modelGatewayCatalogService = ModelGatewayCatalogService.builder()
+                .apiKey("test")
+                .baseUrl("http://localhost")
+                .build();
+
+        Class<ModelGatewayCatalogService> clazz = ModelGatewayCatalogService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(modelGatewayCatalogService);
+        assertThat(client).isInstanceOf(QuarkusModelGatewayCatalogRestClient.class);
+    }
+
+    @Test
     public void rerank_client() throws Exception {
 
         RerankService rerankService = RerankService.builder()
@@ -208,6 +251,72 @@ public class QuarkusCustomRestClientTest {
         clientField.setAccessible(true);
         var client = clientField.get(textClassificationService);
         assertThat(client).isInstanceOf(QuarkusTextClassificationRestClient.class);
+    }
+
+    @Test
+    public void create_schema_client() throws Exception {
+
+        CreateSchemaService createSchemaService = CreateSchemaService.builder()
+                .apiKey("test")
+                .cosUrl("http://localhost")
+                .baseUrl("http://localhost")
+                .documentReference("test", "test")
+                .projectId("project-id")
+                .build();
+
+        Class<CreateSchemaService> clazz = CreateSchemaService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(createSchemaService);
+        assertThat(client).isInstanceOf(QuarkusCreateSchemaRestClient.class);
+    }
+
+    @Test
+    public void improve_schema_client() throws Exception {
+
+        ImproveSchemaService improveSchemaService = ImproveSchemaService.builder()
+                .apiKey("test")
+                .baseUrl("http://localhost")
+                .projectId("project-id")
+                .build();
+
+        Class<ImproveSchemaService> clazz = ImproveSchemaService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(improveSchemaService);
+        assertThat(client).isInstanceOf(QuarkusImproveSchemaRestClient.class);
+    }
+
+    @Test
+    public void merge_schema_client() throws Exception {
+
+        MergeSchemaService mergeSchemaService = MergeSchemaService.builder()
+                .apiKey("test")
+                .baseUrl("http://localhost")
+                .projectId("project-id")
+                .build();
+
+        Class<MergeSchemaService> clazz = MergeSchemaService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(mergeSchemaService);
+        assertThat(client).isInstanceOf(QuarkusMergeSchemaRestClient.class);
+    }
+
+    @Test
+    public void cluster_schema_client() throws Exception {
+
+        ClusterSchemaService clusterSchemaService = ClusterSchemaService.builder()
+                .apiKey("test")
+                .baseUrl("http://localhost")
+                .projectId("project-id")
+                .build();
+
+        Class<ClusterSchemaService> clazz = ClusterSchemaService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(clusterSchemaService);
+        assertThat(client).isInstanceOf(QuarkusClusterSchemaRestClient.class);
     }
 
     @Test

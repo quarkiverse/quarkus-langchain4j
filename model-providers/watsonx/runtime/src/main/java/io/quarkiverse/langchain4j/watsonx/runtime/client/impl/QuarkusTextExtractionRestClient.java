@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.runtime.client.impl;
 
 import static io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils.retryOn;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -9,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import com.ibm.watsonx.ai.core.auth.Authenticator;
 import com.ibm.watsonx.ai.textprocessing.DeleteFileRequest;
 import com.ibm.watsonx.ai.textprocessing.ReadFileRequest;
 import com.ibm.watsonx.ai.textprocessing.UploadRequest;
@@ -31,26 +33,29 @@ public final class QuarkusTextExtractionRestClient extends TextExtractionRestCli
         super(builder);
         try {
 
-            var logCurl = QuarkusRestClientConfig.isLogCurl();
-            var textExtractionClientBuilder = QuarkusRestClientBuilder.newBuilder()
-                    .clientHeadersFactory(new BearerTokenHeaderFactory(authenticator))
-                    .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
-                    .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);
-
-            if (logRequests || logResponses || logCurl) {
-                textExtractionClientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                textExtractionClientBuilder.clientLogger(new WatsonxClientLogger(logRequests, logResponses, logCurl));
-            }
-
-            textExtractionClient = textExtractionClientBuilder.baseUrl(URI.create(baseUrl).toURL())
-                    .build(TextExtractionRestApi.class);
-
-            cosClient = textExtractionClientBuilder.baseUrl(URI.create(cosUrl).toURL())
-                    .build(TextExtractionRestApi.class);
+            textExtractionClient = createClient(baseUrl, authenticator);
+            cosClient = createClient(cosUrl, cosAuthenticator);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private TextExtractionRestApi createClient(String url, Authenticator authenticator) throws MalformedURLException {
+
+        var logCurl = QuarkusRestClientConfig.isLogCurl();
+        var clientBuilder = QuarkusRestClientBuilder.newBuilder()
+                .baseUrl(URI.create(url).toURL())
+                .clientHeadersFactory(new BearerTokenHeaderFactory(authenticator))
+                .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);
+
+        if (logRequests || logResponses || logCurl) {
+            clientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
+            clientBuilder.clientLogger(new WatsonxClientLogger(logRequests, logResponses, logCurl));
+        }
+
+        return clientBuilder.build(TextExtractionRestApi.class);
     }
 
     @Override

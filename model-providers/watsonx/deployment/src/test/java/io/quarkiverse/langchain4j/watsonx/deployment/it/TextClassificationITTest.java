@@ -19,7 +19,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
-import com.ibm.watsonx.ai.textprocessing.ExtendedSemanticConfig;
+import com.ibm.watsonx.ai.textprocessing.ExtendedSemanticConfig.SchemaMergeStrategy;
 import com.ibm.watsonx.ai.textprocessing.KvpFields;
 import com.ibm.watsonx.ai.textprocessing.KvpFields.KvpField;
 import com.ibm.watsonx.ai.textprocessing.Language;
@@ -208,7 +208,7 @@ public class TextClassificationITTest {
                 .build();
 
         var semanticConfig = TextClassificationSemanticConfig.builder()
-                .schemasMergeStrategy(ExtendedSemanticConfig.SchemaMergeStrategy.REPLACE)
+                .schemasMergeStrategy(SchemaMergeStrategy.REPLACE)
                 .schemas(
                         Schema.builder()
                                 .documentDescription(

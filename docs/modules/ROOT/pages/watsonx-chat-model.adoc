@@ -16,12 +16,12 @@ To use watsonx.ai models, configure the following required values in your `appli
 
 The `base-url` depends on the region of your service instance:
 
-* Dallas: https://us-south.ml.cloud.ibm.com
-* Frankfurt: https://eu-de.ml.cloud.ibm.com
-* London: https://eu-gb.ml.cloud.ibm.com
-* Tokyo: https://jp-tok.ml.cloud.ibm.com
-* Sydney: https://au-syd.ml.cloud.ibm.com
-* Toronto: https://ca-tor.ml.cloud.ibm.com
+* Dallas - https://us-south.ml.cloud.ibm.com
+* Frankfurt - https://eu-de.ml.cloud.ibm.com
+* London - https://eu-gb.ml.cloud.ibm.com
+* Tokyo - https://jp-tok.ml.cloud.ibm.com
+* Sydney - https://au-syd.ml.cloud.ibm.com
+* Toronto - https://ca-tor.ml.cloud.ibm.com
 * Mumbai - https://ap-south-1.aws.wxai.ibm.com
 
 [source,properties,subs=attributes+]
@@ -73,8 +73,8 @@ Quarkus integrates the LangChain4j `WatsonxChatModel`, exposing it as `ChatModel
 
 See the full model catalog:
 
-- IBM foundation models: link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-ibm.html?context=wx&audience=wdp[Model Catalog – IBM]  
-- Third-party / community foundation models: link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-details.html?context=wx&audience=wdp[Model Catalog – Third-Party]  
+- link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-ibm.html?context=wx&audience=wdp[Model Catalog - IBM] for the IBM foundation models
+- link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-details.html?context=wx&audience=wdp[Model Catalog - Third-Party] for the third-party and community foundation models
 
 === Configuration
 
@@ -82,18 +82,7 @@ Configure the chat model in your `application.properties`:
 
 [source,properties]
 ----
-quarkus.langchain4j.watsonx.mode=chat
-----
-
-Each mode has its own configuration namespace:
-
-- chat: `quarkus.langchain4j.watsonx.chat-model`
-- generation: `quarkus.langchain4j.watsonx.generation-model`
-
-=== Chat Mode Example
-
-[source,properties]
-----
+# Base Watsonx configuration
 quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
@@ -108,9 +97,31 @@ quarkus.langchain4j.watsonx.chat-model.temperature=0.2
 
 If a chat model is configured, Quarkus automatically registers a `ChatModel` / `StreamingChatModel` bean.
 
+=== Choosing the chat backend
+
+watsonx.ai can serve a chat request in three different ways, each one with its own configuration namespace:
+
+|===
+|Namespace |watsonx.ai API |Selected when
+
+|`quarkus.langchain4j.watsonx.chat-model`
+|Foundation models (`/ml/v1/text/chat`)
+|no other namespace is configured (default)
+
+|`quarkus.langchain4j.watsonx.deployment-chat-model`
+|A model deployed in watsonx.ai (`/ml/v1/deployments/{deployment_id}/text/chat`)
+|`deployment-chat-model.deployment-id` is set
+
+|`quarkus.langchain4j.watsonx.gateway-chat-model`
+|Model Gateway (`/ml/gateway/v1/chat/completions`)
+|`gateway-chat-model.model-name` is set
+|===
+
+Only one backend can be used per configuration, so setting both `deployment-chat-model.deployment-id` and `gateway-chat-model.model-name` fails at startup. To use more than one backend in the same application, declare each of them under its own named configuration (`quarkus.langchain4j.watsonx."<name>".*`) and select it with the `@ModelName` qualifier.
+
 === Using a Deployment
 
-As an alternative to `model-name`, you can target a model deployed in watsonx.ai by specifying its `deployment-id`. When set, the deployment ID takes precedence over `model-name`, and neither `project-id` nor `space-id` is required.
+To target a model deployed in watsonx.ai, set its `deployment-id`. Neither `project-id` nor `space-id` is required, and `chat-model.model-name` is not used.
 
 [source,properties]
 ----
@@ -118,8 +129,115 @@ quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 
 # Use a deployed model instead of a foundation model
-quarkus.langchain4j.watsonx.chat-model.deployment-id=${DEPLOYMENT_ID}
+quarkus.langchain4j.watsonx.deployment-chat-model.deployment-id=${DEPLOYMENT_ID}
 ----
+
+NOTE: `quarkus.langchain4j.watsonx.deployment-chat-model` supports the same generation parameters as
+`quarkus.langchain4j.watsonx.chat-model`, with the exception of `model-name`, `project-id` and `space-id`.
+
+=== Using the Model Gateway
+
+The link:https://cloud.ibm.com/apidocs/watsonx-ai#model-gateway[watsonx.ai Model Gateway] exposes an OpenAI-compatible chat endpoint that can route requests to models hosted by multiple providers (for example OpenAI, Anthropic, Mistral, or any third-party provider registered in the gateway) behind a single watsonx.ai entry point. To use it, set `gateway-chat-model.model-name`. Neither `project-id` nor `space-id` is required, and `chat-model.model-name` is not used.
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+
+# Route the requests through the Model Gateway
+quarkus.langchain4j.watsonx.gateway-chat-model.model-name=gpt-4o-mini
+----
+
+IMPORTANT: The gateway must be configured by an administrator before use. The value of `model-name` must be a model identifier that is already registered in the gateway, which means the alias defined by the administrator or, when there is no alias, the provider-side model identifier. The link:https://cloud.ibm.com/apidocs/watsonx-ai#gateway-models-list[model catalog of the gateway] returns the identifiers that can be used.
+
+Besides the generation parameters shared with `chat-model`, the gateway supports a set of provider-agnostic routing options:
+
+[source,properties]
+----
+# Latency tier used to serve the request: auto, default, flex or priority
+quarkus.langchain4j.watsonx.gateway-chat-model.service-tier=default
+
+# Reasoning budget for reasoning models: low, medium or high
+quarkus.langchain4j.watsonx.gateway-chat-model.reasoning-effort=low
+
+# Semantic cache (honored on non-streaming requests only)
+quarkus.langchain4j.watsonx.gateway-chat-model.cache.enabled=true
+quarkus.langchain4j.watsonx.gateway-chat-model.cache.threshold=0.95
+
+# Output types the model is asked to generate
+quarkus.langchain4j.watsonx.gateway-chat-model.modalities=text
+
+# Whether the provider should persist the request/response
+quarkus.langchain4j.watsonx.gateway-chat-model.store=false
+
+# Whether the model is allowed to run tool calls in parallel
+quarkus.langchain4j.watsonx.gateway-chat-model.parallel-tool-calls=true
+
+# Stable identifier of the end user, used by the provider to detect abuse
+quarkus.langchain4j.watsonx.gateway-chat-model.user=user-1234
+
+# Arbitrary key/value pairs attached to the request and returned with the response
+quarkus.langchain4j.watsonx.gateway-chat-model.metadata.my-key=my-value
+----
+
+NOTE: The foundation-model only parameters (`guided-choice`, `guided-grammar`, `guided-regex`,
+`length-penalty`, `repetition-penalty` and `thinking`) are not supported by the Model Gateway and are
+therefore not available under `quarkus.langchain4j.watsonx.gateway-chat-model`.
+
+==== Overriding the routing options per request
+
+The gateway parameters can also be set on a single request through `WatsonxGatewayChatRequestParameters`.
+
+[source,java]
+----
+ChatRequest request = ChatRequest.builder()
+    .messages(UserMessage.from("Solve this step by step."))
+    .parameters(WatsonxGatewayChatRequestParameters.builder()
+        .serviceTier(ServiceTier.FLEX)
+        .reasoningEffort(ReasoningEffort.HIGH)
+        .build())
+    .build();
+
+String answer = chatModel.chat(request).aiMessage().text();
+----
+
+WARNING: Each watsonx.ai chat service has its own `ChatRequestParameters` implementation, exposing the parameters that service accepts and nothing else. `WatsonxChatRequestParameters` covers the foundation-model and deployment backends, `WatsonxGatewayChatRequestParameters` covers the Model Gateway. Passing the parameters of one service to the other only contributes what `DefaultChatRequestParameters` covers (`modelName`, `temperature`, `topP`, `maxOutputTokens`, ...), and every watsonx.ai-specific parameter they carry is silently ignored. Always use the class matching the configured backend.
+
+==== Response metadata
+
+The metadata of a gateway response is a `WatsonxChatResponseMetadata` exposing three fields that only the Model Gateway populates.
+
+[source,java]
+----
+ChatResponse response = chatModel.chat(request);
+var metadata = (WatsonxChatResponseMetadata) response.metadata();
+
+metadata.getServiceTier();       // service tier that served the request
+metadata.getSystemFingerprint(); // provider system fingerprint
+metadata.getCached();            // whether the response was served from the cache
+----
+
+NOTE: The Model Gateway does not return the resolved model identifier, so `response.metadata().modelName()` is `null` on this backend. The model that was requested is the one configured in `gateway-chat-model.model-name`.
+
+=== Structured Outputs
+
+Setting `response-format` to `json_schema` declares that the model supports the `RESPONSE_FORMAT_JSON_SCHEMA` capability. An AI service then derives a JSON Schema from the return type of the method and asks the model to return a response that follows it.
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.chat-model.response-format=json_schema
+----
+
+The schema is sent in *strict* mode by default: the model is constrained to return a response that matches it exactly. To satisfy the restrictions of the strict mode, all the properties of the schema are marked as required, the optional ones are made nullable and `additionalProperties` is set to `false`.
+
+Set `strict-json-schema` to `false` to let the model treat the schema as a hint instead of a constraint:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.chat-model.strict-json-schema=false
+----
+
+NOTE: `response-format` and `strict-json-schema` are available on the three chat backends (`chat-model`, `deployment-chat-model` and `gateway-chat-model`), and the strict mode is the default on all of them.
 
 === Injection
 
@@ -373,9 +491,9 @@ Quarkus integrates the LangChain4j `WatsonxModerationModel`, exposing each detec
 
 Supported detector types include:
 
-* *PII* – Detects Personally Identifiable Information
-* *HAP* – Detects hate, abuse, or profanity
-* *Granite Guardian* – Detects harmful or risky content
+* *PII* - Detects Personally Identifiable Information
+* *HAP* - Detects hate, abuse, or profanity
+* *Granite Guardian* - Detects harmful or risky content
 
 Each detector can be enabled individually.
 
@@ -751,6 +869,369 @@ classificationService.deleteRequest(requestId,
 // Delete a file from the bucket
 classificationService.deleteFile("bucket-name", "filename.pdf");
 ----
+
+== Schema Services
+
+A `Schema` describes, in key-value pair form, the information to extract from a document. It is the input of the semantic configuration used by <<_text_extraction,Text Extraction>> and <<_text_classification,Text Classification>>. Instead of writing it by hand, the `Schema` services let watsonx.ai generate, refine and combine schemas for you:
+
+|===
+|Service |CDI bean |What it does
+
+|Create schema
+|`CreateSchemaService`
+|Automatically generates a schema from a document stored in (or uploaded to) IBM Cloud Object Storage.
+
+|Improve schema
+|`ImproveSchemaService`
+|Refines and enriches an existing schema with better field descriptions, missing fields and a more comprehensive document description.
+
+|Merge schema
+|`MergeSchemaService`
+|Combines multiple schemas into a single unified schema covering all the input document types.
+
+|Cluster schema
+|`ClusterSchemaService`
+|Groups a set of document schemas into clusters of semantically similar documents.
+|===
+
+The main benefit of this approach is that no schema has to be written by hand, because a representative sample document is enough to obtain a schema that can then be reused, unchanged, to process every document of the same type.
+
+=== Configuration
+
+`ImproveSchemaService`, `MergeSchemaService` and `ClusterSchemaService` only need the common watsonx.ai properties:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+----
+
+`CreateSchemaService` reads its input document from IBM Cloud Object Storage, so it additionally requires:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.schema.create.cos-url=<base-url>
+quarkus.langchain4j.watsonx.schema.create.document-reference.connection=<connection-id>
+quarkus.langchain4j.watsonx.schema.create.document-reference.bucket-name=<bucket-name>
+----
+
+- **`cos-url`**: The endpoint where the IBM Cloud Object Storage instance is deployed. To find the appropriate value, refer to the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints#regionalendpointtable1[IBM Cloud Object Storage endpoint table].
+- **`document-reference.connection`**: The connection asset ID containing credentials to access the source storage.
+- **`document-reference.bucket-name`**: The bucket where documents to be processed will be uploaded (or are already stored).
+
+NOTE: These three properties are only validated when `CreateSchemaService` is actually injected. Injecting it without them fails at startup with a message listing every missing property.
+
+=== Injection
+
+Each service is exposed as an `@ApplicationScoped` bean. If multiple configurations are defined, select the appropriate one with the `@ModelName` qualifier.
+
+[source,java]
+----
+@Inject
+CreateSchemaService createSchemaService;
+
+@Inject
+ImproveSchemaService improveSchemaService;
+
+@Inject
+MergeSchemaService mergeSchemaService;
+
+@Inject
+ClusterSchemaService clusterSchemaService;
+
+@Inject
+@ModelName("custom")
+CreateSchemaService customCreateSchemaService;
+----
+
+=== Creating a Schema
+
+The simplest way to obtain a schema is to upload a local file and wait for the result in a single call:
+
+[source,java]
+----
+File file = new File("path/to/invoice.pdf");
+CreateSchemaResult result = createSchemaService.uploadCreateSchemaAndFetch(file);
+
+Schema schema = result.schema();
+System.out.println(schema.documentType());        // Invoice
+System.out.println(schema.documentDescription()); // A vendor-issued invoice listing purchased items, ...
+System.out.println(schema.fields());              // The generated key-value pair fields
+----
+
+If the document is already stored in IBM Cloud Object Storage, the same result can be obtained from its path in the bucket:
+
+[source,java]
+----
+CreateSchemaResult result = createSchemaService.createSchemaAndFetch("path/to/invoice.pdf");
+----
+
+Both methods are synchronous and poll the request until it completes. To submit it and poll it yourself, use the `start*` methods and `fetchRequest`:
+
+[source,java]
+----
+// The document is already in Cloud Object Storage
+CreateSchemaResponse response = createSchemaService.startCreateSchema("path/to/invoice.pdf");
+
+// Or upload it first
+CreateSchemaResponse response = createSchemaService.uploadAndStartCreateSchema(new File("path/to/invoice.pdf"));
+
+String id = response.metadata().id();
+
+// Later on
+CreateSchemaResult result = createSchemaService.fetchRequest(id).entity().results();
+String status = result.status(); // submitted, running, completed or failed
+----
+
+All the methods above accept a `CreateSchemaParameters` object to customize the request:
+
+[source,java]
+----
+var parameters = CreateSchemaParameters.builder()
+    .mode(Mode.HIGH_QUALITY)
+    .languages(Language.ENGLISH)
+    .ocrMode(OcrMode.AUTO)
+    .autoRotationCorrection(true)
+    .additionalPromptInstructions("Focus on the payment section.")
+    .enableGrounding(true)
+    .maxPagesToProcess(5)
+    .semanticConfig(CreateSchemaSemanticConfig.builder()
+        .defaultModelName("mistralai/mistral-medium-2505")
+        .build())
+    .removeUploadedFile(true)
+    .timeout(Duration.ofMinutes(10))
+    .build();
+
+CreateSchemaResult result = createSchemaService.uploadCreateSchemaAndFetch(file, parameters);
+----
+
+- **`mode`**: `Mode.STANDARD` for faster processing, `Mode.HIGH_QUALITY` for a slower but more accurate field detection.
+- **`ocrMode`**: `OcrMode.DISABLED` (the default, the document must contain native text), `ENABLED`, `FORCED` or `AUTO` to let the service decide.
+- **`additionalPromptInstructions`**: Free-form instructions used to guide the generation of the schema.
+- **`maxPagesToProcess`**: Maximum number of pages analyzed to build the schema.
+- **`semanticConfig`**: Overrides the foundation model used to generate the schema (`mistral-small-3-1-24b-instruct-2503` by default).
+- **`removeUploadedFile`**: Deletes the uploaded file from the bucket once the schema has been created.
+- **`timeout`**: Overrides the timeout of this request.
+
+NOTE: `removeUploadedFile` and `timeout` are only honored by the synchronous methods (`createSchemaAndFetch` and `uploadCreateSchemaAndFetch`). When using `startCreateSchema` or `uploadAndStartCreateSchema`, delete the file yourself with `deleteFile` once the request has completed.
+
+==== Grounding Hints
+
+When `enableGrounding(true)` is set, the result also contains, for each generated field, the page and the normalized bounding box where the value was found:
+
+[source,java]
+----
+var parameters = CreateSchemaParameters.builder()
+    .mode(Mode.HIGH_QUALITY)
+    .enableGrounding(true)
+    .build();
+
+CreateSchemaResult result = createSchemaService.uploadCreateSchemaAndFetch(file, parameters);
+
+GroundingHints hints = result.groundingHints();
+List<Double> bbox = hints.bbox("invoice_number"); // [x1, y1, x2, y2], from top-left to bottom-right
+Integer page = hints.pageNumber("invoice_number");
+----
+
+NOTE: `Mode.HIGH_QUALITY` is required to obtain the grounding hints. With `Mode.STANDARD` the request still succeeds, but `result.groundingHints()` contains no field.
+
+=== Improving a Schema
+
+`ImproveSchemaService` takes an existing schema and returns an enriched version of it, with more accurate field and document descriptions:
+
+[source,java]
+----
+Schema schema = Schema.builder()
+    .documentType("Passport")
+    .documentDescription("Passport document")
+    .fields(KvpFields.builder()
+        .add("name", KvpField.of("name of the user", "Alan"))
+        .add("lastname", KvpField.of("lastname of the user", "Wake"))
+        .build())
+    .build();
+
+Schema improved = improveSchemaService.improveSchemaAndFetch(schema).schema();
+
+System.out.println(improved.documentDescription());
+// A Passport document serves as an official government-issued identification for
+// international travel, verifying the holder's identity and nationality...
+----
+
+The `additionalPromptInstructions` of the input schema are used to guide the improvement and are preserved in the result:
+
+[source,java]
+----
+Schema schema = Schema.builder()
+    .documentType("Invoice")
+    .documentDescription("Invoice document")
+    .additionalPromptInstructions("Focus on European VAT formats")
+    .fields(KvpFields.builder()
+        .add("invoice_number", KvpField.of("Invoice number", "INV-001"))
+        .build())
+    .build();
+
+Schema improved = improveSchemaService.improveSchemaAndFetch(schema).schema();
+System.out.println(improved.additionalPromptInstructions()); // Focus on European VAT formats
+----
+
+As for the creation, an asynchronous variant and the polling method are available, and an `ImproveSchemaParameters` object can be passed to override the foundation model, the timeout or the target project:
+
+[source,java]
+----
+ImproveSchemaResponse response = improveSchemaService.startImproveSchema(schema);
+String status = improveSchemaService.fetchRequest(response.metadata().id()).entity().results().status();
+----
+
+=== Merging Schemas
+
+`MergeSchemaService` combines multiple schemas into a single one that covers all of them, unifying the fields and producing a description encompassing every input document type:
+
+[source,java]
+----
+List<Schema> schemas = List.of(
+    Schema.builder()
+        .documentType("Passport")
+        .documentDescription("Passport document")
+        .fields(KvpFields.builder()
+            .add("name", KvpField.of("Holder's name", "John"))
+            .build())
+        .build(),
+    Schema.builder()
+        .documentType("National ID Card")
+        .documentDescription("National ID Card document")
+        .fields(KvpFields.builder()
+            .add("id", KvpField.of("ID number", "ABC123"))
+            .build())
+        .build());
+
+Schema merged = mergeSchemaService.mergeSchemaAndFetch(schemas).schema();
+
+System.out.println(merged.documentType()); // Identification Document
+----
+
+The asynchronous variant behaves like the other services:
+
+[source,java]
+----
+MergeSchemaResponse response = mergeSchemaService.startMergeSchema(schemas);
+String status = mergeSchemaService.fetchRequest(response.metadata().id()).entity().results().status();
+----
+
+=== Clustering Schemas
+
+`ClusterSchemaService` groups a set of document schemas into clusters of semantically similar documents. Every input schema is paired with the name of the document it describes:
+
+[source,java]
+----
+List<ClusterSchemas> schemas = List.of(
+    new ClusterSchemas("passport.pdf", Schema.builder()
+        .documentType("Passport")
+        .documentDescription("Passport document")
+        .build()),
+    new ClusterSchemas("id-card.pdf", Schema.builder()
+        .documentType("National ID Card")
+        .documentDescription("National ID Card document")
+        .build()),
+    new ClusterSchemas("invoice.pdf", Schema.builder()
+        .documentType("Invoice")
+        .documentDescription("Invoice document")
+        .build()));
+
+List<List<ClusterSchemas>> clusters = clusterSchemaService.clusterSchemaAndFetch(schemas);
+
+// The two identification documents are grouped together, the invoice is alone in its own cluster
+clusters.forEach(cluster -> System.out.println(cluster.stream().map(ClusterSchemas::documentName).toList()));
+// [passport.pdf, id-card.pdf]
+// [invoice.pdf]
+----
+
+Each cluster can then be collapsed into a single schema with <<_merging_schemas, `MergeSchemaService`>>, obtaining one schema per group of similar documents.
+
+A `ClusterSchemaParameters` object can be passed to change the foundation model used to compute the clusters or to target a different project or space:
+
+[source,java]
+----
+var parameters = ClusterSchemaParameters.builder()
+    .semanticConfig(ClusterSchemaSemanticConfig.builder()
+        .defaultModelName("ibm/granite-4-h-small")
+        .build())
+    .build();
+
+List<List<ClusterSchemas>> clusters = clusterSchemaService.clusterSchemaAndFetch(parameters, schemas);
+----
+
+The asynchronous variant behaves like the other services:
+
+[source,java]
+----
+ClusterSchemaResponse response = clusterSchemaService.startClusterSchema(schemas);
+String status = clusterSchemaService.fetchRequest(response.metadata().id()).entity().results().status();
+----
+
+=== Using a Generated Schema
+
+A generated schema is a regular `Schema`, so it can be passed straight to the semantic configuration of <<_text_extraction,Text Extraction>> or <<_text_classification,Text Classification>>:
+
+[source,java]
+----
+@Inject
+CreateSchemaService createSchemaService;
+
+@Inject
+TextExtractionService textExtractionService;
+
+public String extract(File document) {
+
+    // 1. Generate the schema from a representative sample document
+    Schema schema = createSchemaService.uploadCreateSchemaAndFetch(document,
+        CreateSchemaParameters.builder()
+            .mode(Mode.HIGH_QUALITY)
+            .languages(Language.ENGLISH)
+            .removeUploadedFile(true)
+            .build())
+        .schema();
+
+    // 2. Use it to extract the key-value pairs of every document of the same type
+    var parameters = TextExtractionParameters.builder()
+        .languages(Language.ENGLISH)
+        .mode(Mode.HIGH_QUALITY)
+        .kvpMode(KvpMode.GENERIC_WITH_SEMANTIC)
+        .semanticConfig(TextExtractionSemanticConfig.builder()
+            .schemas(schema)
+            .build())
+        .removeUploadedFile(true)
+        .build();
+
+    return textExtractionService.uploadExtractAndFetch(document, parameters);
+}
+----
+
+TIP: Generate the schema once, from a document containing all the expected fields, then store it and reuse it for the batch processing of the other documents. Enabling grounding during the generation makes it easy to verify that every field was located where it was expected.
+
+=== Managing Requests and Files
+
+All three services can delete the history of a request. Passing `hardDelete(true)` also removes its metadata. `deleteRequest` returns `false` when the request does not exist.
+
+[source,java]
+----
+createSchemaService.deleteRequest(requestId,
+    CreateSchemaDeleteParameters.builder().hardDelete(true).build());
+
+improveSchemaService.deleteRequest(requestId);
+mergeSchemaService.deleteRequest(requestId);
+----
+
+`CreateSchemaService` can also upload and delete files in the configured bucket:
+
+[source,java]
+----
+createSchemaService.uploadFile(new File("path/to/document.pdf"));
+createSchemaService.deleteFile("bucket-name", "document.pdf");
+----
+
+For the complete list of parameters and result fields, see the link:https://cloud.ibm.com/apidocs/watsonx-ai#create-schema[watsonx.ai Schema API reference].
+
 == Configuration
 
 include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]

@@ -246,13 +246,8 @@ public class AiServiceToolChoiceNameTest extends WireMockAbstract {
         String projectId = watsonxConfig.projectId().orElse(null);
 
         TextChatRequest.Builder request = TextChatRequest.builder()
-                .frequencyPenalty(0.0)
-                .logprobs(false)
                 .maxCompletionTokens(1024)
-                .presencePenalty(0.0)
                 .temperature(1.0)
-                .topP(1.0)
-                .stop(List.of())
                 .timeLimit(DEFAULT_TIME_LIMIT.toMillis());
 
         if (withToolChoice)
