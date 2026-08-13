@@ -28597,53 +28597,320 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name[`+++quarkus.langchain4j.watsonx.chat-model.model-name+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-cos-url[`+++quarkus.langchain4j.watsonx.schema.create.cos-url+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.model-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.create.cos-url+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-Specifies the model to use for the chat completion.
-
-A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[this link].
-
-To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
+Base URL of the Cloud Object Storage API.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_COS_URL+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_COS_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++ibm/granite-4-h-small+++`
+|required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-deployment-id[`+++quarkus.langchain4j.watsonx.chat-model.deployment-id+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-document-reference-connection[`+++quarkus.langchain4j.watsonx.schema.create.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.deployment-id+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.create.document-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The deployment ID of a model deployed in watsonx.ai.
-
-Use this when targeting a custom model deployment instead of a foundation model. When set, it takes precedence over `modelName`, and neither `projectId` nor `spaceId` is required.
+The id of the connection asset that contains the credentials required to access the data.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_DEPLOYMENT_ID+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_DOCUMENT_REFERENCE_CONNECTION+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_DEPLOYMENT_ID+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_DOCUMENT_REFERENCE_CONNECTION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-document-reference-bucket-name[`+++quarkus.langchain4j.watsonx.schema.create.document-reference.bucket-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.create.document-reference.bucket-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the bucket containing the input document.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_DOCUMENT_REFERENCE_BUCKET_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_DOCUMENT_REFERENCE_BUCKET_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-log-requests[`+++quarkus.langchain4j.watsonx.schema.create.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.create.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether create schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-log-responses[`+++quarkus.langchain4j.watsonx.schema.create.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.create.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether create schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-create-log-requests-curl[`+++quarkus.langchain4j.watsonx.schema.create.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.create.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CREATE_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-improve-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-improve-log-requests[`+++quarkus.langchain4j.watsonx.schema.improve.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.improve.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether improve schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_IMPROVE_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_IMPROVE_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-improve-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-improve-log-responses[`+++quarkus.langchain4j.watsonx.schema.improve.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.improve.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether improve schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_IMPROVE_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_IMPROVE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-improve-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-improve-log-requests-curl[`+++quarkus.langchain4j.watsonx.schema.improve.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.improve.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_IMPROVE_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_IMPROVE_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-merge-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-merge-log-requests[`+++quarkus.langchain4j.watsonx.schema.merge.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.merge.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether merge schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_MERGE_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_MERGE_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-merge-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-merge-log-responses[`+++quarkus.langchain4j.watsonx.schema.merge.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.merge.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether merge schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_MERGE_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_MERGE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-merge-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-merge-log-requests-curl[`+++quarkus.langchain4j.watsonx.schema.merge.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.merge.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_MERGE_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_MERGE_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-cluster-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-cluster-log-requests[`+++quarkus.langchain4j.watsonx.schema.cluster.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.cluster.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether cluster schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CLUSTER_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CLUSTER_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-cluster-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-cluster-log-responses[`+++quarkus.langchain4j.watsonx.schema.cluster.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.cluster.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether cluster schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CLUSTER_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CLUSTER_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-cluster-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-schema-cluster-log-requests-curl[`+++quarkus.langchain4j.watsonx.schema.cluster.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.schema.cluster.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CLUSTER_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_SCHEMA_CLUSTER_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx.chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -28710,6 +28977,8 @@ endif::add-copy-button-to-config-props[]
 --
 Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
 
+The parameter is sent to the model only when it is set.
+
 *Possible values:* `-2 < value < 2`
 
 
@@ -28721,7 +28990,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_FREQUENCY_PENAL
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++0+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs[`+++quarkus.langchain4j.watsonx.chat-model.logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -28735,6 +29004,8 @@ Specifies whether to return the log probabilities of the output tokens.
 
 If set to `true`, the response will include the log probability of each output token in the content of the message.
 
+The parameter is sent to the model only when it is set.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOGPROBS+++[]
@@ -28744,7 +29015,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOGPROBS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`+++false+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx.chat-model.top-logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -28800,6 +29071,8 @@ endif::add-copy-button-to-config-props[]
 --
 Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
 
+The parameter is sent to the model only when it is set.
+
 *Possible values:* `-2 < value < 2`
 
 
@@ -28811,7 +29084,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_PRESENCE_PENALT
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++0+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed[`+++quarkus.langchain4j.watsonx.chat-model.seed+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -28894,6 +29167,8 @@ endif::add-copy-button-to-config-props[]
 --
 An alternative to sampling with `temperature`, called nucleus sampling, where the model considers the results of the tokens with `top_p` probability mass. So `0.1` means only the tokens comprising the top 10% probability mass are considered.
 
+The parameter is sent to the model only when it is set.
+
 *Possible values:* `0 < value < 1`
 
 
@@ -28905,7 +29180,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOP_P+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++1+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format[`+++quarkus.langchain4j.watsonx.chat-model.response-format+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -28929,6 +29204,94 @@ endif::add-copy-button-to-env-var[]
 --
 a|`text`, `json`, `json-schema`
 |
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-strict-json-schema]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-strict-json-schema[`+++quarkus.langchain4j.watsonx.chat-model.strict-json-schema+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.strict-json-schema+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the JSON Schema sent to the model should use the strict mode.
+
+When enabled, the model is constrained to return a response that exactly matches the given JSON Schema. To satisfy the restrictions of the strict mode, all the properties of the schema are marked as required, the optional ones are made nullable and `additionalProperties` is set to `false`.
+
+Set this property to `false` to let the model treat the schema as a hint instead of a constraint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_STRICT_JSON_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_STRICT_JSON_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests[`+++quarkus.langchain4j.watsonx.chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses[`+++quarkus.langchain4j.watsonx.chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.chat-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-guided-choice[`+++quarkus.langchain4j.watsonx.chat-model.guided-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -29044,69 +29407,6 @@ endif::add-copy-button-to-env-var[]
 --
 |double
 |
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests[`+++quarkus.langchain4j.watsonx.chat-model.log-requests+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-requests+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Whether chat model requests should be logged.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS+++`
-endif::add-copy-button-to-env-var[]
---
-|boolean
-|`+++false+++`
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses[`+++quarkus.langchain4j.watsonx.chat-model.log-responses+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-responses+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Whether chat model responses should be logged.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_RESPONSES+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_RESPONSES+++`
-endif::add-copy-button-to-env-var[]
---
-|boolean
-|`+++false+++`
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.chat-model.log-requests-curl+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-requests-curl+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Whether the watsonx.ai client should log requests as cURL commands.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS_CURL+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS_CURL+++`
-endif::add-copy-button-to-env-var[]
---
-|boolean
-|`+++false+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-thinking-enabled[`+++quarkus.langchain4j.watsonx.chat-model.thinking.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -29255,6 +29555,1300 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_THINKING_INCLUD
 endif::add-copy-button-to-env-var[]
 --
 |boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name[`+++quarkus.langchain4j.watsonx.chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the model to use for the chat completion.
+
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[this link].
+
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++ibm/granite-4-h-small+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx.deployment-chat-model.tool-choice+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.tool-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies how the model should choose which tool to call during a request.
+
+This value can be:
+
+ - *auto*: The model decides whether and which tool to call automatically.
+ - *required*: The model must call one of the available tools.
+
+
+
+If `toolChoiceName` is set, this value is ignored.
+
+Setting this value influences the tool-calling behavior of the model when no specific tool is required.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `required`, `none`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-tool-choice-name[`+++quarkus.langchain4j.watsonx.deployment-chat-model.tool-choice-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.tool-choice-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the name of a specific tool that the model must call.
+
+When set, the model will be forced to call the specified tool. The name must exactly match one of the available tools defined for the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-frequency-penalty[`+++quarkus.langchain4j.watsonx.deployment-chat-model.frequency-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.frequency-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_FREQUENCY_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_FREQUENCY_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-logprobs[`+++quarkus.langchain4j.watsonx.deployment-chat-model.logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies whether to return the log probabilities of the output tokens.
+
+If set to `true`, the response will include the log probability of each output token in the content of the message.
+
+The parameter is sent to the model only when it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx.deployment-chat-model.top-logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An integer specifying the number of most likely tokens to return at each token position, each with an associated log probability. The option `logprobs` must be set to `true` if this parameter is used.
+
+*Possible values:* `0 ≤ value ≤ 20`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOP_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOP_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-max-output-tokens[`+++quarkus.langchain4j.watsonx.deployment-chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model's context length. Set to 0 for the model's configured max generated tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-presence-penalty[`+++quarkus.langchain4j.watsonx.deployment-chat-model.presence-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.presence-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_PRESENCE_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_PRESENCE_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-seed[`+++quarkus.langchain4j.watsonx.deployment-chat-model.seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Random number generator seed to use in sampling mode for experimental repeatability.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-stop[`+++quarkus.langchain4j.watsonx.deployment-chat-model.stop+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Defines one or more stop sequences that will cause the model to stop generating further tokens if any of them are encountered in the output.
+
+This allows control over where the model should end its response. If a stop sequence is encountered before the minimum number of tokens has been generated, it will be ignored.
+
+*Possible values:* `0 ≤ number of items ≤ 4`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-temperature[`+++quarkus.langchain4j.watsonx.deployment-chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the sampling temperature to use in the generation process.
+
+Higher values (e.g. `0.8`) make the output more random and diverse, while lower values (e.g. `0.2`) make the output more focused and deterministic.
+
+*Possible values:* `0 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-top-p[`+++quarkus.langchain4j.watsonx.deployment-chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An alternative to sampling with `temperature`, called nucleus sampling, where the model considers the results of the tokens with `top_p` probability mass. So `0.1` means only the tokens comprising the top 10% probability mass are considered.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `0 < value < 1`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-response-format[`+++quarkus.langchain4j.watsonx.deployment-chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json, json_schema++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`text`, `json`, `json-schema`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-strict-json-schema]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-strict-json-schema[`+++quarkus.langchain4j.watsonx.deployment-chat-model.strict-json-schema+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.strict-json-schema+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the JSON Schema sent to the model should use the strict mode.
+
+When enabled, the model is constrained to return a response that exactly matches the given JSON Schema. To satisfy the restrictions of the strict mode, all the properties of the schema are marked as required, the optional ones are made nullable and `additionalProperties` is set to `false`.
+
+Set this property to `false` to let the model treat the schema as a hint instead of a constraint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_STRICT_JSON_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_STRICT_JSON_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-log-requests[`+++quarkus.langchain4j.watsonx.deployment-chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-log-responses[`+++quarkus.langchain4j.watsonx.deployment-chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.deployment-chat-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-guided-choice[`+++quarkus.langchain4j.watsonx.deployment-chat-model.guided-choice+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.guided-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies a set of allowed output choices.
+
+When this parameter is set, the model is constrained to return exactly one of the provided choices.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_GUIDED_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_GUIDED_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-guided-grammar]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-guided-grammar[`+++quarkus.langchain4j.watsonx.deployment-chat-model.guided-grammar+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.guided-grammar+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the model output to follow a context-free grammar.
+
+If specified, the generated output will conform to the defined grammar.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_GUIDED_GRAMMAR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_GUIDED_GRAMMAR+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-guided-regex]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-guided-regex[`+++quarkus.langchain4j.watsonx.deployment-chat-model.guided-regex+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.guided-regex+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the model output to match a regular expression pattern.
+
+If specified, the generated output must conform to the provided regex.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_GUIDED_REGEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_GUIDED_REGEX+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-length-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-length-penalty[`+++quarkus.langchain4j.watsonx.deployment-chat-model.length-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.length-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the length penalty to be applied during text generation. This penalty influences the length of the generated text. A length penalty discourages the model from generating overly long responses, or conversely, it can encourage more extended outputs.
+
+When the penalty value is greater than 1.0, it discourages generating longer responses. Conversely, a value less than 1.0 incentivizes the model to generate longer text. A value of 1.0 means no penalty, and the length of the output will be determined by other factors, such as the input prompt and model's natural completion behavior.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LENGTH_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_LENGTH_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-repetition-penalty[`+++quarkus.langchain4j.watsonx.deployment-chat-model.repetition-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.repetition-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the repetition penalty to be applied during text generation. This penalty helps to discourage the model from repeating the same words or phrases too often.
+
+The penalty value should be greater than 1.0 for repetition discouragement. A value of 1.0 means no penalty, and values above 1.0 increase the strength of the penalty.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_REPETITION_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_REPETITION_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-enabled[`+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables or disables reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-think-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-think-opening[`+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.think.opening+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.think.opening+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The opening delimiter for the model's internal reasoning section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-think-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-think-closing[`+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.think.closing+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.think.closing+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The closing delimiter for the model's internal reasoning section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-response-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-response-opening[`+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.response.opening+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.response.opening+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The opening delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-response-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-tags-response-closing[`+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.response.closing+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.tags.response.closing+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The closing delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-effort[`+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls the reasoning effort level for models that separate reasoning and response automatically.
+
+Example values: `LOW`, `MEDIUM`, `HIGH`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-include-reasoning]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-thinking-include-reasoning[`+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.include-reasoning+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.thinking.include-reasoning+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Determines whether the reasoning portion returned by the model should be included in the final response provided to the application.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_INCLUDE_REASONING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_THINKING_INCLUDE_REASONING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-deployment-id[`+++quarkus.langchain4j.watsonx.deployment-chat-model.deployment-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.deployment-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The deployment ID of the model deployed in watsonx.ai.
+
+Setting this property routes all chat requests to the deployment chat API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_DEPLOYMENT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_DEPLOYMENT_CHAT_MODEL_DEPLOYMENT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx.gateway-chat-model.tool-choice+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.tool-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies how the model should choose which tool to call during a request.
+
+This value can be:
+
+ - *auto*: The model decides whether and which tool to call automatically.
+ - *required*: The model must call one of the available tools.
+
+
+
+If `toolChoiceName` is set, this value is ignored.
+
+Setting this value influences the tool-calling behavior of the model when no specific tool is required.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOOL_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `required`, `none`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-tool-choice-name[`+++quarkus.langchain4j.watsonx.gateway-chat-model.tool-choice-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.tool-choice-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the name of a specific tool that the model must call.
+
+When set, the model will be forced to call the specified tool. The name must exactly match one of the available tools defined for the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOOL_CHOICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOOL_CHOICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-frequency-penalty[`+++quarkus.langchain4j.watsonx.gateway-chat-model.frequency-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.frequency-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_FREQUENCY_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_FREQUENCY_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-logprobs[`+++quarkus.langchain4j.watsonx.gateway-chat-model.logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies whether to return the log probabilities of the output tokens.
+
+If set to `true`, the response will include the log probability of each output token in the content of the message.
+
+The parameter is sent to the model only when it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx.gateway-chat-model.top-logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An integer specifying the number of most likely tokens to return at each token position, each with an associated log probability. The option `logprobs` must be set to `true` if this parameter is used.
+
+*Possible values:* `0 ≤ value ≤ 20`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOP_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOP_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-max-output-tokens[`+++quarkus.langchain4j.watsonx.gateway-chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model's context length. Set to 0 for the model's configured max generated tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-presence-penalty[`+++quarkus.langchain4j.watsonx.gateway-chat-model.presence-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.presence-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_PRESENCE_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_PRESENCE_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-seed[`+++quarkus.langchain4j.watsonx.gateway-chat-model.seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Random number generator seed to use in sampling mode for experimental repeatability.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-stop[`+++quarkus.langchain4j.watsonx.gateway-chat-model.stop+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Defines one or more stop sequences that will cause the model to stop generating further tokens if any of them are encountered in the output.
+
+This allows control over where the model should end its response. If a stop sequence is encountered before the minimum number of tokens has been generated, it will be ignored.
+
+*Possible values:* `0 ≤ number of items ≤ 4`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-temperature[`+++quarkus.langchain4j.watsonx.gateway-chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the sampling temperature to use in the generation process.
+
+Higher values (e.g. `0.8`) make the output more random and diverse, while lower values (e.g. `0.2`) make the output more focused and deterministic.
+
+*Possible values:* `0 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-top-p[`+++quarkus.langchain4j.watsonx.gateway-chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An alternative to sampling with `temperature`, called nucleus sampling, where the model considers the results of the tokens with `top_p` probability mass. So `0.1` means only the tokens comprising the top 10% probability mass are considered.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `0 < value < 1`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-response-format[`+++quarkus.langchain4j.watsonx.gateway-chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json, json_schema++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`text`, `json`, `json-schema`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-strict-json-schema]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-strict-json-schema[`+++quarkus.langchain4j.watsonx.gateway-chat-model.strict-json-schema+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.strict-json-schema+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the JSON Schema sent to the model should use the strict mode.
+
+When enabled, the model is constrained to return a response that exactly matches the given JSON Schema. To satisfy the restrictions of the strict mode, all the properties of the schema are marked as required, the optional ones are made nullable and `additionalProperties` is set to `false`.
+
+Set this property to `false` to let the model treat the schema as a hint instead of a constraint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_STRICT_JSON_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_STRICT_JSON_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-log-requests[`+++quarkus.langchain4j.watsonx.gateway-chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-log-responses[`+++quarkus.langchain4j.watsonx.gateway-chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.gateway-chat-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-model-name[`+++quarkus.langchain4j.watsonx.gateway-chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The identifier of the model to use, as configured in the Model Gateway (for example `openai/gpt-4o-mini`).
+
+Setting this property routes all chat requests to the Model Gateway.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-service-tier]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-service-tier[`+++quarkus.langchain4j.watsonx.gateway-chat-model.service-tier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.service-tier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the latency tier used to serve the request.
+
+*Allowable values:* `++[++auto, default, flex, priority++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_SERVICE_TIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_SERVICE_TIER+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `default`, `flex`, `priority`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-reasoning-effort[`+++quarkus.langchain4j.watsonx.gateway-chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the effort spent on reasoning for reasoning models.
+
+Reducing the reasoning effort can result in faster responses and fewer tokens used on reasoning.
+
+*Allowable values:* `++[++low, medium, high++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-cache-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-cache-enabled[`+++quarkus.langchain4j.watsonx.gateway-chat-model.cache.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.cache.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the semantic cache is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_CACHE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_CACHE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-cache-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-cache-threshold[`+++quarkus.langchain4j.watsonx.gateway-chat-model.cache.threshold+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.cache.threshold+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The similarity threshold a cached entry must reach to be served instead of calling the model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_CACHE_THRESHOLD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_CACHE_THRESHOLD+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++provider specific+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-modalities]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-modalities[`+++quarkus.langchain4j.watsonx.gateway-chat-model.modalities+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.modalities+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The output types that the model is requested to generate.
+
+Most models are only able to generate `text`, which is the default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_MODALITIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_MODALITIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-store]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-store[`+++quarkus.langchain4j.watsonx.gateway-chat-model.store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the generated output should be stored for model distillation or evaluations.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-parallel-tool-calls]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-parallel-tool-calls[`+++quarkus.langchain4j.watsonx.gateway-chat-model.parallel-tool-calls+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.parallel-tool-calls+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model is allowed to run tool calls in parallel.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_PARALLEL_TOOL_CALLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_PARALLEL_TOOL_CALLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-user]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-user[`+++quarkus.langchain4j.watsonx.gateway-chat-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier of the end user issuing the request, used by the backing provider to detect and prevent abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-metadata-metadata-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-chat-model-metadata-metadata-key[`+++quarkus.langchain4j.watsonx.gateway-chat-model.metadata."metadata-key"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-chat-model.metadata."metadata-key"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A set of key/value pairs that is attached to the request and returned with the response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_METADATA__METADATA_KEY_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_CHAT_MODEL_METADATA__METADATA_KEY_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name[`+++quarkus.langchain4j.watsonx.embedding-model.model-name+++`]##
@@ -30353,53 +31947,320 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".chat-model.model-name+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-cos-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-cos-url[`+++quarkus.langchain4j.watsonx."model-name".schema.create.cos-url+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.model-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.create.cos-url+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-Specifies the model to use for the chat completion.
-
-A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[this link].
-
-To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
+Base URL of the Cloud Object Storage API.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_COS_URL+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_COS_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++ibm/granite-4-h-small+++`
+|required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-deployment-id[`+++quarkus.langchain4j.watsonx."model-name".chat-model.deployment-id+++`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-document-reference-connection[`+++quarkus.langchain4j.watsonx."model-name".schema.create.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.deployment-id+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.create.document-reference.connection+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The deployment ID of a model deployed in watsonx.ai.
-
-Use this when targeting a custom model deployment instead of a foundation model. When set, it takes precedence over `modelName`, and neither `projectId` nor `spaceId` is required.
+The id of the connection asset that contains the credentials required to access the data.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_DEPLOYMENT_ID+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_DOCUMENT_REFERENCE_CONNECTION+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_DEPLOYMENT_ID+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_DOCUMENT_REFERENCE_CONNECTION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-document-reference-bucket-name[`+++quarkus.langchain4j.watsonx."model-name".schema.create.document-reference.bucket-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.create.document-reference.bucket-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the bucket containing the input document.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_DOCUMENT_REFERENCE_BUCKET_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_DOCUMENT_REFERENCE_BUCKET_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-log-requests[`+++quarkus.langchain4j.watsonx."model-name".schema.create.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.create.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether create schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-log-responses[`+++quarkus.langchain4j.watsonx."model-name".schema.create.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.create.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether create schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-create-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".schema.create.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.create.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CREATE_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-improve-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-improve-log-requests[`+++quarkus.langchain4j.watsonx."model-name".schema.improve.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.improve.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether improve schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_IMPROVE_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_IMPROVE_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-improve-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-improve-log-responses[`+++quarkus.langchain4j.watsonx."model-name".schema.improve.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.improve.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether improve schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_IMPROVE_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_IMPROVE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-improve-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-improve-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".schema.improve.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.improve.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_IMPROVE_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_IMPROVE_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-merge-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-merge-log-requests[`+++quarkus.langchain4j.watsonx."model-name".schema.merge.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.merge.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether merge schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_MERGE_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_MERGE_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-merge-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-merge-log-responses[`+++quarkus.langchain4j.watsonx."model-name".schema.merge.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.merge.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether merge schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_MERGE_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_MERGE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-merge-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-merge-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".schema.merge.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.merge.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_MERGE_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_MERGE_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-cluster-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-cluster-log-requests[`+++quarkus.langchain4j.watsonx."model-name".schema.cluster.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.cluster.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether cluster schema requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CLUSTER_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CLUSTER_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-cluster-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-cluster-log-responses[`+++quarkus.langchain4j.watsonx."model-name".schema.cluster.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.cluster.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether cluster schema responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CLUSTER_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CLUSTER_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-cluster-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-schema-cluster-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".schema.cluster.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".schema.cluster.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CLUSTER_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__SCHEMA_CLUSTER_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -30466,6 +32327,8 @@ endif::add-copy-button-to-config-props[]
 --
 Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
 
+The parameter is sent to the model only when it is set.
+
 *Possible values:* `-2 < value < 2`
 
 
@@ -30477,7 +32340,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_FR
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++0+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs[`+++quarkus.langchain4j.watsonx."model-name".chat-model.logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -30491,6 +32354,8 @@ Specifies whether to return the log probabilities of the output tokens.
 
 If set to `true`, the response will include the log probability of each output token in the content of the message.
 
+The parameter is sent to the model only when it is set.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOGPROBS+++[]
@@ -30500,7 +32365,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LO
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`+++false+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx."model-name".chat-model.top-logprobs+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -30556,6 +32421,8 @@ endif::add-copy-button-to-config-props[]
 --
 Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
 
+The parameter is sent to the model only when it is set.
+
 *Possible values:* `-2 < value < 2`
 
 
@@ -30567,7 +32434,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_PR
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++0+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed[`+++quarkus.langchain4j.watsonx."model-name".chat-model.seed+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -30650,6 +32517,8 @@ endif::add-copy-button-to-config-props[]
 --
 An alternative to sampling with `temperature`, called nucleus sampling, where the model considers the results of the tokens with `top_p` probability mass. So `0.1` means only the tokens comprising the top 10% probability mass are considered.
 
+The parameter is sent to the model only when it is set.
+
 *Possible values:* `0 < value < 1`
 
 
@@ -30661,7 +32530,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TO
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++1+++`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format[`+++quarkus.langchain4j.watsonx."model-name".chat-model.response-format+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -30685,6 +32554,94 @@ endif::add-copy-button-to-env-var[]
 --
 a|`text`, `json`, `json-schema`
 |
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-strict-json-schema]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-strict-json-schema[`+++quarkus.langchain4j.watsonx."model-name".chat-model.strict-json-schema+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.strict-json-schema+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the JSON Schema sent to the model should use the strict mode.
+
+When enabled, the model is constrained to return a response that exactly matches the given JSON Schema. To satisfy the restrictions of the strict mode, all the properties of the schema are marked as required, the optional ones are made nullable and `additionalProperties` is set to `false`.
+
+Set this property to `false` to let the model treat the schema as a hint instead of a constraint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_STRICT_JSON_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_STRICT_JSON_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-guided-choice[`+++quarkus.langchain4j.watsonx."model-name".chat-model.guided-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -30800,69 +32757,6 @@ endif::add-copy-button-to-env-var[]
 --
 |double
 |
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Whether chat model requests should be logged.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
-endif::add-copy-button-to-env-var[]
---
-|boolean
-|`+++false+++`
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-responses+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-responses+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Whether chat model responses should be logged.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
-endif::add-copy-button-to-env-var[]
---
-|boolean
-|`+++false+++`
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests-curl+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests-curl+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Whether the watsonx.ai client should log requests as cURL commands.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS_CURL+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS_CURL+++`
-endif::add-copy-button-to-env-var[]
---
-|boolean
-|`+++false+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-thinking-enabled[`+++quarkus.langchain4j.watsonx."model-name".chat-model.thinking.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -31011,6 +32905,1300 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TH
 endif::add-copy-button-to-env-var[]
 --
 |boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the model to use for the chat completion.
+
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[this link].
+
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++ibm/granite-4-h-small+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.tool-choice+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.tool-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies how the model should choose which tool to call during a request.
+
+This value can be:
+
+ - *auto*: The model decides whether and which tool to call automatically.
+ - *required*: The model must call one of the available tools.
+
+
+
+If `toolChoiceName` is set, this value is ignored.
+
+Setting this value influences the tool-calling behavior of the model when no specific tool is required.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `required`, `none`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-tool-choice-name[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.tool-choice-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.tool-choice-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the name of a specific tool that the model must call.
+
+When set, the model will be forced to call the specified tool. The name must exactly match one of the available tools defined for the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOOL_CHOICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-frequency-penalty[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.frequency-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.frequency-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_FREQUENCY_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_FREQUENCY_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-logprobs[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies whether to return the log probabilities of the output tokens.
+
+If set to `true`, the response will include the log probability of each output token in the content of the message.
+
+The parameter is sent to the model only when it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.top-logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An integer specifying the number of most likely tokens to return at each token position, each with an associated log probability. The option `logprobs` must be set to `true` if this parameter is used.
+
+*Possible values:* `0 ≤ value ≤ 20`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOP_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOP_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-max-output-tokens[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model's context length. Set to 0 for the model's configured max generated tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-presence-penalty[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.presence-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.presence-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_PRESENCE_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_PRESENCE_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-seed[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Random number generator seed to use in sampling mode for experimental repeatability.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-stop[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.stop+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Defines one or more stop sequences that will cause the model to stop generating further tokens if any of them are encountered in the output.
+
+This allows control over where the model should end its response. If a stop sequence is encountered before the minimum number of tokens has been generated, it will be ignored.
+
+*Possible values:* `0 ≤ number of items ≤ 4`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-temperature[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the sampling temperature to use in the generation process.
+
+Higher values (e.g. `0.8`) make the output more random and diverse, while lower values (e.g. `0.2`) make the output more focused and deterministic.
+
+*Possible values:* `0 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-top-p[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An alternative to sampling with `temperature`, called nucleus sampling, where the model considers the results of the tokens with `top_p` probability mass. So `0.1` means only the tokens comprising the top 10% probability mass are considered.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `0 < value < 1`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-response-format[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json, json_schema++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`text`, `json`, `json-schema`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-strict-json-schema]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-strict-json-schema[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.strict-json-schema+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.strict-json-schema+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the JSON Schema sent to the model should use the strict mode.
+
+When enabled, the model is constrained to return a response that exactly matches the given JSON Schema. To satisfy the restrictions of the strict mode, all the properties of the schema are marked as required, the optional ones are made nullable and `additionalProperties` is set to `false`.
+
+Set this property to `false` to let the model treat the schema as a hint instead of a constraint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_STRICT_JSON_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_STRICT_JSON_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-guided-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-guided-choice[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.guided-choice+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.guided-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies a set of allowed output choices.
+
+When this parameter is set, the model is constrained to return exactly one of the provided choices.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_GUIDED_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_GUIDED_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-guided-grammar]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-guided-grammar[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.guided-grammar+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.guided-grammar+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the model output to follow a context-free grammar.
+
+If specified, the generated output will conform to the defined grammar.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_GUIDED_GRAMMAR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_GUIDED_GRAMMAR+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-guided-regex]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-guided-regex[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.guided-regex+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.guided-regex+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the model output to match a regular expression pattern.
+
+If specified, the generated output must conform to the provided regex.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_GUIDED_REGEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_GUIDED_REGEX+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-length-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-length-penalty[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.length-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.length-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the length penalty to be applied during text generation. This penalty influences the length of the generated text. A length penalty discourages the model from generating overly long responses, or conversely, it can encourage more extended outputs.
+
+When the penalty value is greater than 1.0, it discourages generating longer responses. Conversely, a value less than 1.0 incentivizes the model to generate longer text. A value of 1.0 means no penalty, and the length of the output will be determined by other factors, such as the input prompt and model's natural completion behavior.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LENGTH_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_LENGTH_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-repetition-penalty[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.repetition-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.repetition-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Sets the repetition penalty to be applied during text generation. This penalty helps to discourage the model from repeating the same words or phrases too often.
+
+The penalty value should be greater than 1.0 for repetition discouragement. A value of 1.0 means no penalty, and values above 1.0 increase the strength of the penalty.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_REPETITION_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_REPETITION_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-enabled[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables or disables reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-think-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-think-opening[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.think.opening+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.think.opening+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The opening delimiter for the model's internal reasoning section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_OPENING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-think-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-think-closing[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.think.closing+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.think.closing+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The closing delimiter for the model's internal reasoning section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_THINK_CLOSING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-response-opening]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-response-opening[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.response.opening+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.response.opening+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The opening delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_OPENING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-response-closing]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-tags-response-closing[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.response.closing+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.tags.response.closing+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The closing delimiter for the model's final response section.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_TAGS_RESPONSE_CLOSING+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-effort[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls the reasoning effort level for models that separate reasoning and response automatically.
+
+Example values: `LOW`, `MEDIUM`, `HIGH`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-include-reasoning]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-thinking-include-reasoning[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.include-reasoning+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.thinking.include-reasoning+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Determines whether the reasoning portion returned by the model should be included in the final response provided to the application.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_INCLUDE_REASONING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_THINKING_INCLUDE_REASONING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-deployment-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-deployment-id[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.deployment-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.deployment-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The deployment ID of the model deployed in watsonx.ai.
+
+Setting this property routes all chat requests to the deployment chat API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_DEPLOYMENT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__DEPLOYMENT_CHAT_MODEL_DEPLOYMENT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.tool-choice+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.tool-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies how the model should choose which tool to call during a request.
+
+This value can be:
+
+ - *auto*: The model decides whether and which tool to call automatically.
+ - *required*: The model must call one of the available tools.
+
+
+
+If `toolChoiceName` is set, this value is ignored.
+
+Setting this value influences the tool-calling behavior of the model when no specific tool is required.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOOL_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `required`, `none`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-tool-choice-name[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.tool-choice-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.tool-choice-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the name of a specific tool that the model must call.
+
+When set, the model will be forced to call the specified tool. The name must exactly match one of the available tools defined for the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOOL_CHOICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOOL_CHOICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-frequency-penalty[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.frequency-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.frequency-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_FREQUENCY_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_FREQUENCY_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-logprobs[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies whether to return the log probabilities of the output tokens.
+
+If set to `true`, the response will include the log probability of each output token in the content of the message.
+
+The parameter is sent to the model only when it is set.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-top-logprobs[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.top-logprobs+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An integer specifying the number of most likely tokens to return at each token position, each with an associated log probability. The option `logprobs` must be set to `true` if this parameter is used.
+
+*Possible values:* `0 ≤ value ≤ 20`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOP_LOGPROBS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOP_LOGPROBS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-max-output-tokens[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model's context length. Set to 0 for the model's configured max generated tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-presence-penalty[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.presence-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.presence-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `-2 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_PRESENCE_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_PRESENCE_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-seed[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Random number generator seed to use in sampling mode for experimental repeatability.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-stop[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.stop+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Defines one or more stop sequences that will cause the model to stop generating further tokens if any of them are encountered in the output.
+
+This allows control over where the model should end its response. If a stop sequence is encountered before the minimum number of tokens has been generated, it will be ignored.
+
+*Possible values:* `0 ≤ number of items ≤ 4`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-temperature[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the sampling temperature to use in the generation process.
+
+Higher values (e.g. `0.8`) make the output more random and diverse, while lower values (e.g. `0.2`) make the output more focused and deterministic.
+
+*Possible values:* `0 < value < 2`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-top-p[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An alternative to sampling with `temperature`, called nucleus sampling, where the model considers the results of the tokens with `top_p` probability mass. So `0.1` means only the tokens comprising the top 10% probability mass are considered.
+
+The parameter is sent to the model only when it is set.
+
+*Possible values:* `0 < value < 1`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-response-format[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json, json_schema++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`text`, `json`, `json-schema`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-strict-json-schema]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-strict-json-schema[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.strict-json-schema+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.strict-json-schema+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the JSON Schema sent to the model should use the strict mode.
+
+When enabled, the model is constrained to return a response that exactly matches the given JSON Schema. To satisfy the restrictions of the strict mode, all the properties of the schema are marked as required, the optional ones are made nullable and `additionalProperties` is set to `false`.
+
+Set this property to `false` to let the model treat the schema as a hint instead of a constraint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_STRICT_JSON_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_STRICT_JSON_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The identifier of the model to use, as configured in the Model Gateway (for example `openai/gpt-4o-mini`).
+
+Setting this property routes all chat requests to the Model Gateway.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-service-tier]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-service-tier[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.service-tier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.service-tier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the latency tier used to serve the request.
+
+*Allowable values:* `++[++auto, default, flex, priority++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_SERVICE_TIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_SERVICE_TIER+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `default`, `flex`, `priority`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-reasoning-effort[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains the effort spent on reasoning for reasoning models.
+
+Reducing the reasoning effort can result in faster responses and fewer tokens used on reasoning.
+
+*Allowable values:* `++[++low, medium, high++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-cache-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-cache-enabled[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.cache.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.cache.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the semantic cache is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_CACHE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_CACHE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-cache-threshold]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-cache-threshold[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.cache.threshold+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.cache.threshold+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The similarity threshold a cached entry must reach to be served instead of calling the model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_CACHE_THRESHOLD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_CACHE_THRESHOLD+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++provider specific+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-modalities]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-modalities[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.modalities+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.modalities+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The output types that the model is requested to generate.
+
+Most models are only able to generate `text`, which is the default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_MODALITIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_MODALITIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-store]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-store[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the generated output should be stored for model distillation or evaluations.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-parallel-tool-calls]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-parallel-tool-calls[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.parallel-tool-calls+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.parallel-tool-calls+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model is allowed to run tool calls in parallel.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_PARALLEL_TOOL_CALLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_PARALLEL_TOOL_CALLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-user]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-user[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier of the end user issuing the request, used by the backing provider to detect and prevent abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-metadata-metadata-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-chat-model-metadata-metadata-key[`+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.metadata."metadata-key"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-chat-model.metadata."metadata-key"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A set of key/value pairs that is attached to the request and returned with the response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_METADATA__METADATA_KEY_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_CHAT_MODEL_METADATA__METADATA_KEY_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++`]##

@@ -18,7 +18,7 @@ import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ibm.watsonx.ai.chat.ChatResponse;
+import com.ibm.watsonx.ai.chat.TextChatResponse;
 import com.ibm.watsonx.ai.chat.model.TextChatRequest;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.deployment.DeploymentResource;
@@ -72,7 +72,7 @@ public interface DeploymentRestApi {
     @Path("/ml/v1/deployments/{deployment_id}/text/chat")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    ChatResponse chat(
+    TextChatResponse chat(
             @PathParam("deployment_id") String deploymentId,
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,

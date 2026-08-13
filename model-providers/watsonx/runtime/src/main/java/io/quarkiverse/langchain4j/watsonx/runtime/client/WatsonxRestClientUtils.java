@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.watsonx.runtime.client;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 import java.time.Duration;
@@ -38,8 +39,11 @@ public final class WatsonxRestClientUtils {
         MediaType mediaType = response.getMediaType();
         String body = response.readEntity(String.class);
 
-        if (body.isEmpty())
+        if (isNull(body) || body.isEmpty())
             return new WatsonxException("Status code: " + response.getStatus(), response.getStatus(), null);
+
+        if (isNull(mediaType))
+            return new WatsonxException(body, response.getStatus(), null);
 
         var error = HttpUtils.parseErrorBody(response.getStatus(), body, mediaType.toString());
         var joiner = new StringJoiner("\n");

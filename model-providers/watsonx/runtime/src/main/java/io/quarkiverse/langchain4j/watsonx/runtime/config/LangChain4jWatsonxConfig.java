@@ -131,9 +131,24 @@ public interface LangChain4jWatsonxConfig {
         Optional<TextClassificationConfig> textClassification();
 
         /**
+         * Schema services related settings.
+         */
+        SchemaConfig schema();
+
+        /**
          * Chat model related settings.
          */
         ChatModelConfig chatModel();
+
+        /**
+         * Deployment chat model related settings.
+         */
+        DeploymentChatModelConfig deploymentChatModel();
+
+        /**
+         * Gateway chat model related settings.
+         */
+        GatewayChatModelConfig gatewayChatModel();
 
         /**
          * Embedding model related settings.
