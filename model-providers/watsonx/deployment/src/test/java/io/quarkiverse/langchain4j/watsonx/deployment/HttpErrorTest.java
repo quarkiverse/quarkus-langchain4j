@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 
+import dev.langchain4j.exception.InternalServerException;
 import dev.langchain4j.exception.InvalidRequestException;
 import dev.langchain4j.exception.LangChain4jException;
 import dev.langchain4j.exception.ModelNotFoundException;
@@ -67,7 +68,8 @@ public class HttpErrorTest extends WireMockAbstract {
                         """)
                 .build();
 
-        LangChain4jException ex = assertThrowsExactly(LangChain4jException.class, () -> chatModel.chat("message"));
+        // An error code that is not part of WatsonxError.Code is mapped on the http status code.
+        InternalServerException ex = assertThrowsExactly(InternalServerException.class, () -> chatModel.chat("message"));
         assertEquals("yyyy", ex.getMessage());
         var watsonxEx = assertInstanceOf(WatsonxException.class, ex.getCause());
         var details = watsonxEx.details().orElseThrow();
@@ -292,7 +294,8 @@ public class HttpErrorTest extends WireMockAbstract {
                         """)
                 .build();
 
-        LangChain4jException ex = assertThrowsExactly(LangChain4jException.class, () -> chatModel.chat("message"));
+        // "BXNIM0415E" is not part of WatsonxError.Code, so the exception is mapped on the http status code.
+        InvalidRequestException ex = assertThrowsExactly(InvalidRequestException.class, () -> chatModel.chat("message"));
         assertEquals("Provided API key could not be found.", ex.getMessage());
         var watsonxEx = assertInstanceOf(WatsonxException.class, ex.getCause());
         var detail = watsonxEx.details().orElseThrow().errors().get(0);

@@ -270,7 +270,7 @@ public class AiChatServiceTest extends WireMockAbstract {
         var messages = memory.getMessages("no_streaming");
         assertEquals("This is a systemMessage", ((dev.langchain4j.data.message.SystemMessage) messages.get(0)).text());
         assertEquals("Execute the sum of 1 + 1", ((dev.langchain4j.data.message.UserMessage) messages.get(1)).singleText());
-        assertEquals("The result is 2", ((dev.langchain4j.data.message.AiMessage) messages.get(4)).text());
+        assertEquals("The result is 2", ((AiMessage) messages.get(4)).text());
 
         if (messages.get(2) instanceof AiMessage aiMessage) {
             assertTrue(aiMessage.hasToolExecutionRequests());
@@ -356,7 +356,7 @@ public class AiChatServiceTest extends WireMockAbstract {
         var messages = memory.getMessages("streaming");
         assertEquals("This is a systemMessage", ((dev.langchain4j.data.message.SystemMessage) messages.get(0)).text());
         assertEquals("Execute the sum of 1 + 1", ((dev.langchain4j.data.message.UserMessage) messages.get(1)).singleText());
-        assertEquals("The result is 2", ((dev.langchain4j.data.message.AiMessage) messages.get(4)).text());
+        assertEquals("The result is 2", ((AiMessage) messages.get(4)).text());
 
         if (messages.get(2) instanceof AiMessage aiMessage) {
             assertTrue(aiMessage.hasToolExecutionRequests());
@@ -385,13 +385,8 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .spaceId(spaceId)
                 .messages(messages)
                 .tools(tools)
-                .frequencyPenalty(0.0)
-                .logprobs(false)
                 .maxCompletionTokens(1024)
-                .presencePenalty(0.0)
                 .temperature(1.0)
-                .topP(1.0)
-                .stop(List.of())
                 .timeLimit(60000l)
                 .build();
     }

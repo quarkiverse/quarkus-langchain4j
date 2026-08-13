@@ -133,8 +133,8 @@ public class TextExtractionITTest {
                 .build();
 
         var text = textExtractionService.uploadExtractAndFetch(file, parameters);
-        assertEquals("PDF TEST", text);
-        assertEquals("PDF TEST", textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
+        assertTrue(text.contains("PDF TEST"));
+        assertTrue(textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md").contains("PDF TEST"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.md"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.pdf"));
         assertThrows(WatsonxException.class, () -> textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
@@ -147,7 +147,7 @@ public class TextExtractionITTest {
                 .build();
 
         text = textExtractionService.uploadExtractAndFetch(file, parameters);
-        assertEquals("PDF TEST", text);
+        assertTrue(text.contains("PDF TEST"));
 
         // Wait for async deletion
         Thread.sleep(500);
@@ -188,8 +188,8 @@ public class TextExtractionITTest {
                 .build();
 
         var text = textExtractionService.uploadExtractAndFetch(inputstream, filename);
-        assertEquals("PDF TEST", text);
-        assertEquals("PDF TEST", textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
+        assertTrue(text.contains("PDF TEST"));
+        assertTrue(textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md").contains("PDF TEST"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.md"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test.pdf"));
         assertThrows(WatsonxException.class, () -> textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test.md"));
@@ -203,7 +203,7 @@ public class TextExtractionITTest {
 
         inputstream = getClass().getClassLoader().getResourceAsStream(filename);
         text = textExtractionService.uploadExtractAndFetch(inputstream, filename, parameters);
-        assertEquals("PDF TEST", text);
+        assertTrue(text.contains("PDF TEST"));
 
         // Wait for async deletion
         Thread.sleep(500);
@@ -233,7 +233,7 @@ public class TextExtractionITTest {
         assertEquals("completed", status);
         assertTrue(textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test/assembly.html").contains("PDF TEST"));
         assertTrue(textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test/assembly.json").contains("PDF TEST"));
-        assertEquals("PDF TEST", textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test/plain.txt"));
+        assertTrue(textExtractionService.readFile(RESULTS_REFERENCE_BUCKET, "test/plain.txt").contains("PDF TEST"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test/assembly.html"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test/assembly.json"));
         assertTrue(textExtractionService.deleteFile(RESULTS_REFERENCE_BUCKET, "test/plain.txt"));

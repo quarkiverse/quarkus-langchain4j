@@ -7,7 +7,10 @@ import static java.util.Objects.nonNull;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
@@ -17,10 +20,16 @@ import com.ibm.watsonx.ai.chat.model.ExtractionTags;
 import com.ibm.watsonx.ai.chat.model.ExtractionTags.Response;
 import com.ibm.watsonx.ai.chat.model.ExtractionTags.Think;
 import com.ibm.watsonx.ai.chat.model.Thinking;
+import com.ibm.watsonx.ai.core.auth.Authenticator;
 import com.ibm.watsonx.ai.detection.detector.BaseDetector;
 import com.ibm.watsonx.ai.detection.detector.GraniteGuardian;
 import com.ibm.watsonx.ai.detection.detector.Hap;
 import com.ibm.watsonx.ai.detection.detector.Pii;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayParameters.Cache;
+import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
+import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 
@@ -36,7 +45,11 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.scoring.ScoringModel;
 import dev.langchain4j.model.watsonx.WatsonxChatModel;
+import dev.langchain4j.model.watsonx.WatsonxDeploymentChatModel;
+import dev.langchain4j.model.watsonx.WatsonxDeploymentStreamingChatModel;
 import dev.langchain4j.model.watsonx.WatsonxEmbeddingModel;
+import dev.langchain4j.model.watsonx.WatsonxGatewayChatModel;
+import dev.langchain4j.model.watsonx.WatsonxGatewayStreamingChatModel;
 import dev.langchain4j.model.watsonx.WatsonxModerationModel;
 import dev.langchain4j.model.watsonx.WatsonxScoringModel;
 import dev.langchain4j.model.watsonx.WatsonxStreamingChatModel;
@@ -44,11 +57,20 @@ import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.QuarkusRestClientConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig.ExtractionTagsConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig.ThinkingConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ClusterSchemaConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.CommonChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.CreateSchemaConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.DeploymentChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.FoundationChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.FoundationChatModelConfig.ExtractionTagsConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.FoundationChatModelConfig.ThinkingConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.GatewayChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.GatewayChatModelConfig.CacheConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ImproveSchemaConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig.WatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.MergeSchemaConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig.GraniteGuardianConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig.HapConfig;
@@ -70,6 +92,14 @@ public class WatsonxRecorder {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxStreamingChatModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxDeploymentChatModel.Builder>>> DEPLOYMENT_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxDeploymentStreamingChatModel.Builder>>> DEPLOYMENT_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxGatewayChatModel.Builder>>> GATEWAY_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxGatewayStreamingChatModel.Builder>>> GATEWAY_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<WatsonxScoringModel.Builder>>> SCORING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
@@ -79,6 +109,14 @@ public class WatsonxRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<TextExtractionService.Builder>>> TEXT_EXTRACTION_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<TextClassificationService.Builder>>> TEXT_CLASSIFICATION_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<CreateSchemaService.Builder>>> CREATE_SCHEMA_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<ImproveSchemaService.Builder>>> IMPROVE_SCHEMA_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<MergeSchemaService.Builder>>> MERGE_SCHEMA_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<ClusterSchemaService.Builder>>> CLUSTER_SCHEMA_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private final RuntimeValue<LangChain4jWatsonxConfig> runtimeConfig;
@@ -90,138 +128,7 @@ public class WatsonxRecorder {
     public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
 
-        if (watsonxConfig.enableIntegration()) {
-
-            var configProblems = checkConfigurations(configName);
-
-            if (!configProblems.isEmpty())
-                throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
-
-            WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
-            WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
-            ChatModelConfig chatModelConfig = specificConfig.chatModel();
-
-            URI url = specificConfig.baseUrl()
-                    .or(() -> defaultConfig.baseUrl())
-                    .map(URI::create)
-                    .orElseThrow();
-
-            String deploymentId = chatModelConfig.deploymentId().orElse(null);
-            String modelName = specificConfig.chatModel().modelName();
-            String projectId = firstOrDefault(defaultConfig.projectId().orElse(null), specificConfig.projectId());
-            String spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), specificConfig.spaceId());
-
-            if (nonNull(deploymentId)) {
-                modelName = null;
-                projectId = null;
-                spaceId = null;
-            }
-
-            WatsonxChatModel.Builder builder = WatsonxChatModel.builder()
-                    .baseUrl(url)
-                    .version(specificConfig.version().orElse(null))
-                    .modelName(modelName)
-                    .frequencyPenalty(chatModelConfig.frequencyPenalty())
-                    .logprobs(chatModelConfig.logprobs())
-                    .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
-                    .maxOutputTokens(chatModelConfig.maxOutputTokens())
-                    .presencePenalty(chatModelConfig.presencePenalty())
-                    .seed(chatModelConfig.seed().orElse(null))
-                    .stopSequences(chatModelConfig.stop().orElse(null))
-                    .temperature(chatModelConfig.temperature())
-                    .topP(chatModelConfig.topP())
-                    .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
-                    .timeout(specificConfig.timeout().orElse(null))
-                    .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
-                    .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
-                    .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
-                    .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
-                    .deploymentId(deploymentId);
-
-            if (chatModelConfig.guidedChoice().isPresent())
-                builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
-
-            if (chatModelConfig.responseFormat().isPresent()) {
-                switch (chatModelConfig.responseFormat().get()) {
-                    case JSON -> builder.responseFormat(ResponseFormat.JSON);
-                    case JSON_SCHEMA -> builder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
-                    case TEXT -> builder.responseFormat(ResponseFormat.TEXT);
-                    default -> throw new IllegalArgumentException(
-                            "Unknown response format: " + chatModelConfig.responseFormat().get()
-                                    + ", must be one of: [json_object, json_schema, text]");
-                }
-            }
-
-            if (chatModelConfig.thinking().isPresent()) {
-                ThinkingConfig config = chatModelConfig.thinking().get();
-                ExtractionTags extractionTags = config.tags()
-                        .map(new Function<ExtractionTagsConfig, ExtractionTags>() {
-                            @Override
-                            public ExtractionTags apply(ExtractionTagsConfig extractionTagsConfig) {
-                                Think think = new Think(extractionTagsConfig.think().opening(),
-                                        extractionTagsConfig.think().closing());
-                                Response response = extractionTagsConfig.response()
-                                        .map(r -> new Response(r.opening(), r.closing())).orElse(null);
-                                return new ExtractionTags(think, response);
-                            }
-                        }).orElse(null);
-
-                Thinking thinking = Thinking.builder()
-                        .enabled(config.enabled().orElse(null))
-                        .extractionTags(extractionTags)
-                        .includeReasoning(config.includeReasoning().orElse(null))
-                        .thinkingEffort(config.effort().orElse(null))
-                        .build();
-
-                builder.thinking(thinking);
-            }
-
-            ToolChoice toolChoice = chatModelConfig.toolChoiceName()
-                    .map(toolChoiceName -> ToolChoice.REQUIRED)
-                    .orElse(chatModelConfig.toolChoice().orElse(null));
-
-            builder.toolChoice(toolChoice);
-
-            builder.logRequests(
-                    firstOrDefault(
-                            defaultConfig.logRequests().orElse(false),
-                            chatModelConfig.logRequests(),
-                            specificConfig.logRequests()));
-
-            builder.logResponses(
-                    firstOrDefault(
-                            defaultConfig.logResponses().orElse(false),
-                            chatModelConfig.logResponses(),
-                            specificConfig.logResponses()));
-
-            builder.spaceId(spaceId);
-            builder.projectId(projectId);
-
-            String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
-                    watsonxConfig.apiKey());
-
-            return new Function<>() {
-                @Override
-                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
-                    var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
-                    QuarkusRestClientConfig.setLogCurl(
-                            firstOrDefault(
-                                    defaultConfig.logRequestsCurl().orElse(false),
-                                    chatModelConfig.logRequestsCurl(),
-                                    specificConfig.logRequestsCurl()));
-                    try {
-                        builder.authenticator(authenticator)
-                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
-                        ModelBuilderCustomizer.applyCustomizers(
-                                context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
-                                builder, configName);
-                        return builder.build();
-                    } finally {
-                        QuarkusRestClientConfig.clear();
-                    }
-                }
-            };
-        } else {
+        if (!watsonxConfig.enableIntegration()) {
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
@@ -229,143 +136,24 @@ public class WatsonxRecorder {
                 }
             };
         }
+
+        ChatBackend backend = resolveChatBackend(configName);
+        var configProblems = checkConfigurations(configName, backend);
+
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
+        return switch (backend) {
+            case STANDARD -> standardChatModel(configName);
+            case DEPLOYMENT -> deploymentChatModel(configName);
+            case GATEWAY -> gatewayChatModel(configName);
+        };
     }
 
     public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
 
-        if (watsonxConfig.enableIntegration()) {
-            var configProblems = checkConfigurations(configName);
-
-            if (!configProblems.isEmpty())
-                throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
-
-            WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
-            WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
-            ChatModelConfig chatModelConfig = specificConfig.chatModel();
-
-            URI url = specificConfig.baseUrl()
-                    .or(() -> defaultConfig.baseUrl())
-                    .map(URI::create)
-                    .orElseThrow();
-
-            String deploymentId = chatModelConfig.deploymentId().orElse(null);
-            String modelName = specificConfig.chatModel().modelName();
-            String projectId = firstOrDefault(defaultConfig.projectId().orElse(null), specificConfig.projectId());
-            String spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), specificConfig.spaceId());
-
-            if (nonNull(deploymentId)) {
-                modelName = null;
-                projectId = null;
-                spaceId = null;
-            }
-
-            WatsonxStreamingChatModel.Builder builder = WatsonxStreamingChatModel.builder()
-                    .baseUrl(url)
-                    .version(specificConfig.version().orElse(null))
-                    .modelName(modelName)
-                    .frequencyPenalty(chatModelConfig.frequencyPenalty())
-                    .logprobs(chatModelConfig.logprobs())
-                    .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
-                    .maxOutputTokens(chatModelConfig.maxOutputTokens())
-                    .presencePenalty(chatModelConfig.presencePenalty())
-                    .seed(chatModelConfig.seed().orElse(null))
-                    .stopSequences(chatModelConfig.stop().orElse(null))
-                    .temperature(chatModelConfig.temperature())
-                    .topP(chatModelConfig.topP())
-                    .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
-                    .timeout(specificConfig.timeout().orElse(null))
-                    .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
-                    .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
-                    .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
-                    .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
-                    .deploymentId(deploymentId);
-
-            if (chatModelConfig.guidedChoice().isPresent())
-                builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
-
-            if (chatModelConfig.responseFormat().isPresent()) {
-                switch (chatModelConfig.responseFormat().get()) {
-                    case JSON -> builder.responseFormat(ResponseFormat.JSON);
-                    case JSON_SCHEMA -> builder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
-                    case TEXT -> builder.responseFormat(ResponseFormat.TEXT);
-                    default -> throw new IllegalArgumentException(
-                            "Unknown response format: " + chatModelConfig.responseFormat().get()
-                                    + ", must be one of: [json_object, json_schema, text]");
-                }
-            }
-
-            if (chatModelConfig.thinking().isPresent()) {
-                ThinkingConfig config = chatModelConfig.thinking().get();
-                ExtractionTags extractionTags = config.tags()
-                        .map(new Function<ExtractionTagsConfig, ExtractionTags>() {
-                            @Override
-                            public ExtractionTags apply(ExtractionTagsConfig extractionTagsConfig) {
-                                Think think = new Think(extractionTagsConfig.think().opening(),
-                                        extractionTagsConfig.think().closing());
-                                Response response = extractionTagsConfig.response()
-                                        .map(r -> new Response(r.opening(), r.closing())).orElse(null);
-                                return new ExtractionTags(think, response);
-                            }
-                        }).orElse(null);
-
-                Thinking thinking = Thinking.builder()
-                        .enabled(config.enabled().orElse(null))
-                        .extractionTags(extractionTags)
-                        .includeReasoning(config.includeReasoning().orElse(null))
-                        .thinkingEffort(config.effort().orElse(null))
-                        .build();
-
-                builder.thinking(thinking);
-            }
-
-            ToolChoice toolChoice = chatModelConfig.toolChoiceName()
-                    .map(toolChoiceName -> ToolChoice.REQUIRED)
-                    .orElse(chatModelConfig.toolChoice().orElse(null));
-
-            builder.toolChoice(toolChoice);
-
-            builder.logRequests(
-                    firstOrDefault(
-                            defaultConfig.logRequests().orElse(false),
-                            chatModelConfig.logRequests(),
-                            specificConfig.logRequests()));
-
-            builder.logResponses(
-                    firstOrDefault(
-                            defaultConfig.logResponses().orElse(false),
-                            chatModelConfig.logResponses(),
-                            specificConfig.logResponses()));
-
-            builder.spaceId(spaceId);
-            builder.projectId(projectId);
-
-            String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
-                    watsonxConfig.apiKey());
-
-            return new Function<>() {
-                @Override
-                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
-                    var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
-                    QuarkusRestClientConfig.setLogCurl(
-                            firstOrDefault(
-                                    defaultConfig.logRequestsCurl().orElse(false),
-                                    chatModelConfig.logRequestsCurl(),
-                                    specificConfig.logRequestsCurl()));
-                    try {
-                        builder.authenticator(authenticator)
-                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
-                        ModelBuilderCustomizer.applyCustomizers(
-                                context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
-                                        Any.Literal.INSTANCE),
-                                builder, configName);
-                        return builder.build();
-                    } finally {
-                        QuarkusRestClientConfig.clear();
-                    }
-                }
-            };
-        } else {
+        if (!watsonxConfig.enableIntegration()) {
             return new Function<>() {
                 @Override
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
@@ -373,6 +161,558 @@ public class WatsonxRecorder {
                 }
             };
         }
+
+        ChatBackend backend = resolveChatBackend(configName);
+        var configProblems = checkConfigurations(configName, backend);
+
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
+        return switch (backend) {
+            case STANDARD -> standardStreamingChatModel(configName);
+            case DEPLOYMENT -> deploymentStreamingChatModel(configName);
+            case GATEWAY -> gatewayStreamingChatModel(configName);
+        };
+    }
+
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> standardChatModel(String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        ChatModelConfig chatModelConfig = specificConfig.chatModel();
+
+        WatsonxChatModel.Builder builder = WatsonxChatModel.builder()
+                .modelName(chatModelConfig.modelName())
+                .projectId(firstOrDefault(defaultConfig.projectId().orElse(null), specificConfig.projectId()))
+                .spaceId(firstOrDefault(defaultConfig.spaceId().orElse(null), specificConfig.spaceId()))
+                .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
+                .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
+                .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
+                .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
+                .baseUrl(resolveBaseUrl(specificConfig, defaultConfig))
+                .version(specificConfig.version().orElse(null))
+                .timeout(specificConfig.timeout().orElse(null))
+                .frequencyPenalty(chatModelConfig.frequencyPenalty().orElse(null))
+                .logprobs(chatModelConfig.logprobs().orElse(null))
+                .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
+                .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                .presencePenalty(chatModelConfig.presencePenalty().orElse(null))
+                .seed(chatModelConfig.seed().orElse(null))
+                .stopSequences(chatModelConfig.stop().orElse(null))
+                .temperature(chatModelConfig.temperature())
+                .topP(chatModelConfig.topP().orElse(null))
+                .toolChoice(resolveToolChoice(chatModelConfig))
+                .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
+                .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
+                .logRequests(resolveLogRequests(defaultConfig, specificConfig, chatModelConfig))
+                .logResponses(resolveLogResponses(defaultConfig, specificConfig, chatModelConfig));
+
+        if (chatModelConfig.guidedChoice().isPresent())
+            builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
+
+        Thinking thinking = resolveThinking(chatModelConfig);
+        if (nonNull(thinking))
+            builder.thinking(thinking);
+
+        ResponseFormat responseFormat = resolveResponseFormat(chatModelConfig);
+        if (nonNull(responseFormat))
+            builder.responseFormat(responseFormat);
+
+        Capability capability = resolveCapability(chatModelConfig);
+        if (nonNull(capability))
+            builder.supportedCapabilities(capability);
+
+        return chatModelFunction(configName, chatModelConfig,
+                new BiFunction<SyntheticCreationalContext<ChatModel>, Authenticator, ChatModel>() {
+                    @Override
+                    public ChatModel apply(SyntheticCreationalContext<ChatModel> context, Authenticator authenticator) {
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
+                    }
+                });
+    }
+
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> standardStreamingChatModel(
+            String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        ChatModelConfig chatModelConfig = specificConfig.chatModel();
+
+        WatsonxStreamingChatModel.Builder builder = WatsonxStreamingChatModel.builder()
+                .modelName(chatModelConfig.modelName())
+                .projectId(firstOrDefault(defaultConfig.projectId().orElse(null), specificConfig.projectId()))
+                .spaceId(firstOrDefault(defaultConfig.spaceId().orElse(null), specificConfig.spaceId()))
+                .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
+                .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
+                .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
+                .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
+                .baseUrl(resolveBaseUrl(specificConfig, defaultConfig))
+                .version(specificConfig.version().orElse(null))
+                .timeout(specificConfig.timeout().orElse(null))
+                .frequencyPenalty(chatModelConfig.frequencyPenalty().orElse(null))
+                .logprobs(chatModelConfig.logprobs().orElse(null))
+                .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
+                .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                .presencePenalty(chatModelConfig.presencePenalty().orElse(null))
+                .seed(chatModelConfig.seed().orElse(null))
+                .stopSequences(chatModelConfig.stop().orElse(null))
+                .temperature(chatModelConfig.temperature())
+                .topP(chatModelConfig.topP().orElse(null))
+                .toolChoice(resolveToolChoice(chatModelConfig))
+                .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
+                .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
+                .logRequests(resolveLogRequests(defaultConfig, specificConfig, chatModelConfig))
+                .logResponses(resolveLogResponses(defaultConfig, specificConfig, chatModelConfig));
+
+        if (chatModelConfig.guidedChoice().isPresent())
+            builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
+
+        Thinking thinking = resolveThinking(chatModelConfig);
+        if (nonNull(thinking))
+            builder.thinking(thinking);
+
+        ResponseFormat responseFormat = resolveResponseFormat(chatModelConfig);
+        if (nonNull(responseFormat))
+            builder.responseFormat(responseFormat);
+
+        Capability capability = resolveCapability(chatModelConfig);
+        if (nonNull(capability))
+            builder.supportedCapabilities(capability);
+
+        return streamingChatModelFunction(configName, chatModelConfig,
+                new BiFunction<SyntheticCreationalContext<StreamingChatModel>, Authenticator, StreamingChatModel>() {
+                    @Override
+                    public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context,
+                            Authenticator authenticator) {
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
+                    }
+                });
+    }
+
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> deploymentChatModel(String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        DeploymentChatModelConfig chatModelConfig = specificConfig.deploymentChatModel();
+
+        WatsonxDeploymentChatModel.Builder builder = WatsonxDeploymentChatModel.builder()
+                .deploymentId(chatModelConfig.deploymentId().orElseThrow())
+                .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
+                .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
+                .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
+                .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
+                .baseUrl(resolveBaseUrl(specificConfig, defaultConfig))
+                .version(specificConfig.version().orElse(null))
+                .timeout(specificConfig.timeout().orElse(null))
+                .frequencyPenalty(chatModelConfig.frequencyPenalty().orElse(null))
+                .logprobs(chatModelConfig.logprobs().orElse(null))
+                .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
+                .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                .presencePenalty(chatModelConfig.presencePenalty().orElse(null))
+                .seed(chatModelConfig.seed().orElse(null))
+                .stopSequences(chatModelConfig.stop().orElse(null))
+                .temperature(chatModelConfig.temperature())
+                .topP(chatModelConfig.topP().orElse(null))
+                .toolChoice(resolveToolChoice(chatModelConfig))
+                .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
+                .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
+                .logRequests(resolveLogRequests(defaultConfig, specificConfig, chatModelConfig))
+                .logResponses(resolveLogResponses(defaultConfig, specificConfig, chatModelConfig));
+
+        if (chatModelConfig.guidedChoice().isPresent())
+            builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
+
+        Thinking thinking = resolveThinking(chatModelConfig);
+        if (nonNull(thinking))
+            builder.thinking(thinking);
+
+        ResponseFormat responseFormat = resolveResponseFormat(chatModelConfig);
+        if (nonNull(responseFormat))
+            builder.responseFormat(responseFormat);
+
+        Capability capability = resolveCapability(chatModelConfig);
+        if (nonNull(capability))
+            builder.supportedCapabilities(capability);
+
+        return chatModelFunction(configName, chatModelConfig,
+                new BiFunction<SyntheticCreationalContext<ChatModel>, Authenticator, ChatModel>() {
+                    @Override
+                    public ChatModel apply(SyntheticCreationalContext<ChatModel> context, Authenticator authenticator) {
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(DEPLOYMENT_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
+                    }
+                });
+    }
+
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> deploymentStreamingChatModel(
+            String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        DeploymentChatModelConfig chatModelConfig = specificConfig.deploymentChatModel();
+
+        WatsonxDeploymentStreamingChatModel.Builder builder = WatsonxDeploymentStreamingChatModel.builder()
+                .deploymentId(chatModelConfig.deploymentId().orElseThrow())
+                .guidedGrammar(chatModelConfig.guidedGrammar().orElse(null))
+                .guidedRegex(chatModelConfig.guidedRegex().orElse(null))
+                .lengthPenalty(chatModelConfig.lengthPenalty().orElse(null))
+                .repetitionPenalty(chatModelConfig.repetitionPenalty().orElse(null))
+                .baseUrl(resolveBaseUrl(specificConfig, defaultConfig))
+                .version(specificConfig.version().orElse(null))
+                .timeout(specificConfig.timeout().orElse(null))
+                .frequencyPenalty(chatModelConfig.frequencyPenalty().orElse(null))
+                .logprobs(chatModelConfig.logprobs().orElse(null))
+                .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
+                .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                .presencePenalty(chatModelConfig.presencePenalty().orElse(null))
+                .seed(chatModelConfig.seed().orElse(null))
+                .stopSequences(chatModelConfig.stop().orElse(null))
+                .temperature(chatModelConfig.temperature())
+                .topP(chatModelConfig.topP().orElse(null))
+                .toolChoice(resolveToolChoice(chatModelConfig))
+                .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
+                .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
+                .logRequests(resolveLogRequests(defaultConfig, specificConfig, chatModelConfig))
+                .logResponses(resolveLogResponses(defaultConfig, specificConfig, chatModelConfig));
+
+        if (chatModelConfig.guidedChoice().isPresent())
+            builder.guidedChoice(chatModelConfig.guidedChoice().orElseThrow());
+
+        Thinking thinking = resolveThinking(chatModelConfig);
+        if (nonNull(thinking))
+            builder.thinking(thinking);
+
+        ResponseFormat responseFormat = resolveResponseFormat(chatModelConfig);
+        if (nonNull(responseFormat))
+            builder.responseFormat(responseFormat);
+
+        Capability capability = resolveCapability(chatModelConfig);
+        if (nonNull(capability))
+            builder.supportedCapabilities(capability);
+
+        return streamingChatModelFunction(configName, chatModelConfig,
+                new BiFunction<SyntheticCreationalContext<StreamingChatModel>, Authenticator, StreamingChatModel>() {
+                    @Override
+                    public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context,
+                            Authenticator authenticator) {
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(DEPLOYMENT_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
+                    }
+                });
+    }
+
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> gatewayChatModel(String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        GatewayChatModelConfig chatModelConfig = specificConfig.gatewayChatModel();
+
+        WatsonxGatewayChatModel.Builder builder = WatsonxGatewayChatModel.builder()
+                .modelName(chatModelConfig.modelName().orElseThrow())
+                .serviceTier(chatModelConfig.serviceTier().orElse(null))
+                .reasoningEffort(chatModelConfig.reasoningEffort().orElse(null))
+                .cache(resolveCache(chatModelConfig))
+                .modalities(chatModelConfig.modalities().orElse(null))
+                .store(chatModelConfig.store().orElse(null))
+                .parallelToolCalls(chatModelConfig.parallelToolCalls().orElse(null))
+                .user(chatModelConfig.user().orElse(null))
+                .metadata(chatModelConfig.metadata().isEmpty() ? null : chatModelConfig.metadata())
+                .baseUrl(resolveBaseUrl(specificConfig, defaultConfig))
+                .version(specificConfig.version().orElse(null))
+                .timeout(specificConfig.timeout().orElse(null))
+                .frequencyPenalty(chatModelConfig.frequencyPenalty().orElse(null))
+                .logprobs(chatModelConfig.logprobs().orElse(null))
+                .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
+                .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                .presencePenalty(chatModelConfig.presencePenalty().orElse(null))
+                .seed(chatModelConfig.seed().orElse(null))
+                .stopSequences(chatModelConfig.stop().orElse(null))
+                .temperature(chatModelConfig.temperature())
+                .topP(chatModelConfig.topP().orElse(null))
+                .toolChoice(resolveToolChoice(chatModelConfig))
+                .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
+                .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
+                .logRequests(resolveLogRequests(defaultConfig, specificConfig, chatModelConfig))
+                .logResponses(resolveLogResponses(defaultConfig, specificConfig, chatModelConfig));
+
+        ResponseFormat responseFormat = resolveResponseFormat(chatModelConfig);
+        if (nonNull(responseFormat))
+            builder.responseFormat(responseFormat);
+
+        Capability capability = resolveCapability(chatModelConfig);
+        if (nonNull(capability))
+            builder.supportedCapabilities(capability);
+
+        return chatModelFunction(configName, chatModelConfig,
+                new BiFunction<SyntheticCreationalContext<ChatModel>, Authenticator, ChatModel>() {
+                    @Override
+                    public ChatModel apply(SyntheticCreationalContext<ChatModel> context, Authenticator authenticator) {
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(GATEWAY_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
+                    }
+                });
+    }
+
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> gatewayStreamingChatModel(
+            String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        GatewayChatModelConfig chatModelConfig = specificConfig.gatewayChatModel();
+
+        WatsonxGatewayStreamingChatModel.Builder builder = WatsonxGatewayStreamingChatModel.builder()
+                .modelName(chatModelConfig.modelName().orElseThrow())
+                .serviceTier(chatModelConfig.serviceTier().orElse(null))
+                .reasoningEffort(chatModelConfig.reasoningEffort().orElse(null))
+                .cache(resolveCache(chatModelConfig))
+                .modalities(chatModelConfig.modalities().orElse(null))
+                .store(chatModelConfig.store().orElse(null))
+                .parallelToolCalls(chatModelConfig.parallelToolCalls().orElse(null))
+                .user(chatModelConfig.user().orElse(null))
+                .metadata(chatModelConfig.metadata().isEmpty() ? null : chatModelConfig.metadata())
+                .baseUrl(resolveBaseUrl(specificConfig, defaultConfig))
+                .version(specificConfig.version().orElse(null))
+                .timeout(specificConfig.timeout().orElse(null))
+                .frequencyPenalty(chatModelConfig.frequencyPenalty().orElse(null))
+                .logprobs(chatModelConfig.logprobs().orElse(null))
+                .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
+                .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                .presencePenalty(chatModelConfig.presencePenalty().orElse(null))
+                .seed(chatModelConfig.seed().orElse(null))
+                .stopSequences(chatModelConfig.stop().orElse(null))
+                .temperature(chatModelConfig.temperature())
+                .topP(chatModelConfig.topP().orElse(null))
+                .toolChoice(resolveToolChoice(chatModelConfig))
+                .toolChoiceName(chatModelConfig.toolChoiceName().orElse(null))
+                .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
+                .logRequests(resolveLogRequests(defaultConfig, specificConfig, chatModelConfig))
+                .logResponses(resolveLogResponses(defaultConfig, specificConfig, chatModelConfig));
+
+        ResponseFormat responseFormat = resolveResponseFormat(chatModelConfig);
+        if (nonNull(responseFormat))
+            builder.responseFormat(responseFormat);
+
+        Capability capability = resolveCapability(chatModelConfig);
+        if (nonNull(capability))
+            builder.supportedCapabilities(capability);
+
+        return streamingChatModelFunction(configName, chatModelConfig,
+                new BiFunction<SyntheticCreationalContext<StreamingChatModel>, Authenticator, StreamingChatModel>() {
+                    @Override
+                    public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context,
+                            Authenticator authenticator) {
+                        builder.authenticator(authenticator)
+                                .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList());
+                        ModelBuilderCustomizer.applyCustomizers(
+                                context.getInjectedReference(GATEWAY_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                        Any.Literal.INSTANCE),
+                                builder, configName);
+                        return builder.build();
+                    }
+                });
+    }
+
+    /**
+     * Wraps the creation of a {@link ChatModel} so that the authenticator is resolved lazily and the cURL logging flag is
+     * only visible to the REST client built by {@code builderFunction}.
+     */
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModelFunction(String configName,
+            CommonChatModelConfig chatModelConfig,
+            BiFunction<SyntheticCreationalContext<ChatModel>, Authenticator, ChatModel> builderFunction) {
+
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        String apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), specificConfig.apiKey());
+
+        return new Function<>() {
+            @Override
+            public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                var authenticator = getOrCreateTokenGenerator(specificConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(
+                                defaultConfig.logRequestsCurl().orElse(false),
+                                chatModelConfig.logRequestsCurl(),
+                                specificConfig.logRequestsCurl()));
+                try {
+                    return builderFunction.apply(context, authenticator);
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    /**
+     * Streaming counterpart of {@link #chatModelFunction(String, CommonChatModelConfig, BiFunction)}.
+     */
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModelFunction(
+            String configName,
+            CommonChatModelConfig chatModelConfig,
+            BiFunction<SyntheticCreationalContext<StreamingChatModel>, Authenticator, StreamingChatModel> builderFunction) {
+
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig specificConfig = correspondingWatsonxRuntimeConfig(configName);
+        String apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), specificConfig.apiKey());
+
+        return new Function<>() {
+            @Override
+            public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                var authenticator = getOrCreateTokenGenerator(specificConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(
+                                defaultConfig.logRequestsCurl().orElse(false),
+                                chatModelConfig.logRequestsCurl(),
+                                specificConfig.logRequestsCurl()));
+                try {
+                    return builderFunction.apply(context, authenticator);
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    /**
+     * Deduces which watsonx.ai chat service must serve the requests of the given configuration.
+     * <p>
+     * Only one of the three chat configuration groups may be used at a time: {@code deployment-chat-model} selects the
+     * deployment API, {@code gateway-chat-model} selects the Model Gateway and, when neither is configured, the
+     * foundation-model API of {@code chat-model} is used.
+     */
+    private ChatBackend resolveChatBackend(String configName) {
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+
+        if (watsonxConfig.deploymentChatModel().deploymentId().isPresent())
+            return ChatBackend.DEPLOYMENT;
+
+        if (watsonxConfig.gatewayChatModel().modelName().isPresent())
+            return ChatBackend.GATEWAY;
+
+        return ChatBackend.STANDARD;
+    }
+
+    private static URI resolveBaseUrl(WatsonxConfig specificConfig, WatsonxConfig defaultConfig) {
+        return specificConfig.baseUrl()
+                .or(new Supplier<Optional<String>>() {
+                    @Override
+                    public Optional<String> get() {
+                        return defaultConfig.baseUrl();
+                    }
+                })
+                .map(URI::create)
+                .orElseThrow();
+    }
+
+    private static Boolean resolveLogRequests(WatsonxConfig defaultConfig, WatsonxConfig specificConfig,
+            CommonChatModelConfig chatModelConfig) {
+        return firstOrDefault(
+                defaultConfig.logRequests().orElse(false),
+                chatModelConfig.logRequests(),
+                specificConfig.logRequests());
+    }
+
+    private static Boolean resolveLogResponses(WatsonxConfig defaultConfig, WatsonxConfig specificConfig,
+            CommonChatModelConfig chatModelConfig) {
+        return firstOrDefault(
+                defaultConfig.logResponses().orElse(false),
+                chatModelConfig.logResponses(),
+                specificConfig.logResponses());
+    }
+
+    private static ToolChoice resolveToolChoice(CommonChatModelConfig chatModelConfig) {
+        return chatModelConfig.toolChoiceName()
+                .map(toolChoiceName -> ToolChoice.REQUIRED)
+                .orElse(chatModelConfig.toolChoice().orElse(null));
+    }
+
+    private static Thinking resolveThinking(FoundationChatModelConfig chatModelConfig) {
+        if (chatModelConfig.thinking().isEmpty())
+            return null;
+
+        ThinkingConfig config = chatModelConfig.thinking().get();
+        ExtractionTags extractionTags = config.tags()
+                .map(new Function<ExtractionTagsConfig, ExtractionTags>() {
+                    @Override
+                    public ExtractionTags apply(ExtractionTagsConfig extractionTagsConfig) {
+                        Think think = new Think(extractionTagsConfig.think().opening(),
+                                extractionTagsConfig.think().closing());
+                        Response response = extractionTagsConfig.response()
+                                .map(r -> new Response(r.opening(), r.closing())).orElse(null);
+                        return new ExtractionTags(think, response);
+                    }
+                }).orElse(null);
+
+        return Thinking.builder()
+                .enabled(config.enabled().orElse(null))
+                .extractionTags(extractionTags)
+                .includeReasoning(config.includeReasoning().orElse(null))
+                .thinkingEffort(config.effort().orElse(null))
+                .build();
+    }
+
+    private static Cache resolveCache(GatewayChatModelConfig chatModelConfig) {
+        return chatModelConfig.cache()
+                .map(new Function<CacheConfig, Cache>() {
+                    @Override
+                    public Cache apply(CacheConfig cacheConfig) {
+                        return new Cache(cacheConfig.enabled().orElse(true), null, cacheConfig.threshold().orElse(null));
+                    }
+                }).orElse(null);
+    }
+
+    /**
+     * Returns the {@link ResponseFormat} to set on the builder, or {@code null} when the configured response format is
+     * expressed as a {@link Capability} instead.
+     */
+    private static ResponseFormat resolveResponseFormat(CommonChatModelConfig chatModelConfig) {
+        if (chatModelConfig.responseFormat().isEmpty())
+            return null;
+
+        return switch (chatModelConfig.responseFormat().get()) {
+            case JSON -> ResponseFormat.JSON;
+            case TEXT -> ResponseFormat.TEXT;
+            case JSON_SCHEMA -> null;
+            default -> throw new IllegalArgumentException(
+                    "Unknown response format: " + chatModelConfig.responseFormat().get()
+                            + ", must be one of: [text, json, json_schema]");
+        };
+    }
+
+    /**
+     * Returns the {@link Capability} required by the configured response format, or {@code null} when the response format
+     * is set directly on the builder.
+     */
+    private static Capability resolveCapability(CommonChatModelConfig chatModelConfig) {
+        if (chatModelConfig.responseFormat().isEmpty())
+            return null;
+
+        return switch (chatModelConfig.responseFormat().get()) {
+            case JSON_SCHEMA -> Capability.RESPONSE_FORMAT_JSON_SCHEMA;
+            case JSON, TEXT -> null;
+            default -> throw new IllegalArgumentException(
+                    "Unknown response format: " + chatModelConfig.responseFormat().get()
+                            + ", must be one of: [text, json, json_schema]");
+        };
     }
 
     public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
@@ -744,6 +1084,274 @@ public class WatsonxRecorder {
         };
     }
 
+    public Function<SyntheticCreationalContext<CreateSchemaService>, CreateSchemaService> createSchema(String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+
+        var configProblems = checkConfigurations(configName);
+        checkCreateSchemaConfigurations(configName, configProblems);
+
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
+        CreateSchemaConfig createSchemaConfig = watsonxConfig.schema().create().orElseThrow();
+
+        var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
+
+        URI baseUrl = watsonxConfig.baseUrl()
+                .or(() -> defaultConfig.baseUrl())
+                .map(URI::create)
+                .orElseThrow();
+
+        CreateSchemaService.Builder builder = CreateSchemaService.builder()
+                .baseUrl(baseUrl)
+                .timeout(watsonxConfig.timeout().orElse(null))
+                .documentReference(createSchemaConfig.documentReference().connection(),
+                        createSchemaConfig.documentReference().bucketName())
+                .cosUrl(createSchemaConfig.cosUrl());
+
+        builder.logRequests(
+                firstOrDefault(
+                        defaultConfig.logRequests().orElse(false),
+                        createSchemaConfig.logRequests(),
+                        watsonxConfig.logRequests()));
+
+        builder.logResponses(
+                firstOrDefault(
+                        defaultConfig.logResponses().orElse(false),
+                        createSchemaConfig.logResponses(),
+                        watsonxConfig.logResponses()));
+
+        builder.spaceId(
+                firstOrDefault(
+                        defaultConfig.spaceId().orElse(null),
+                        watsonxConfig.spaceId()));
+
+        builder.projectId(
+                firstOrDefault(
+                        defaultConfig.projectId().orElse(null),
+                        watsonxConfig.projectId()));
+
+        return new Function<>() {
+            @Override
+            public CreateSchemaService apply(SyntheticCreationalContext<CreateSchemaService> context) {
+                var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(
+                                defaultConfig.logRequestsCurl().orElse(false),
+                                createSchemaConfig.logRequestsCurl(),
+                                watsonxConfig.logRequestsCurl()));
+                try {
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CREATE_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    public Function<SyntheticCreationalContext<ImproveSchemaService>, ImproveSchemaService> improveSchema(String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+
+        var configProblems = checkConfigurations(configName);
+
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
+        ImproveSchemaConfig improveSchemaConfig = watsonxConfig.schema().improve();
+
+        var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
+
+        URI baseUrl = watsonxConfig.baseUrl()
+                .or(() -> defaultConfig.baseUrl())
+                .map(URI::create)
+                .orElseThrow();
+
+        ImproveSchemaService.Builder builder = ImproveSchemaService.builder()
+                .baseUrl(baseUrl)
+                .timeout(watsonxConfig.timeout().orElse(null));
+
+        builder.logRequests(
+                firstOrDefault(
+                        defaultConfig.logRequests().orElse(false),
+                        improveSchemaConfig.logRequests(),
+                        watsonxConfig.logRequests()));
+
+        builder.logResponses(
+                firstOrDefault(
+                        defaultConfig.logResponses().orElse(false),
+                        improveSchemaConfig.logResponses(),
+                        watsonxConfig.logResponses()));
+
+        builder.spaceId(
+                firstOrDefault(
+                        defaultConfig.spaceId().orElse(null),
+                        watsonxConfig.spaceId()));
+
+        builder.projectId(
+                firstOrDefault(
+                        defaultConfig.projectId().orElse(null),
+                        watsonxConfig.projectId()));
+
+        return new Function<>() {
+            @Override
+            public ImproveSchemaService apply(SyntheticCreationalContext<ImproveSchemaService> context) {
+                var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(
+                                defaultConfig.logRequestsCurl().orElse(false),
+                                improveSchemaConfig.logRequestsCurl(),
+                                watsonxConfig.logRequestsCurl()));
+                try {
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(IMPROVE_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    public Function<SyntheticCreationalContext<MergeSchemaService>, MergeSchemaService> mergeSchema(String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+
+        var configProblems = checkConfigurations(configName);
+
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
+        MergeSchemaConfig mergeSchemaConfig = watsonxConfig.schema().merge();
+
+        var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
+
+        URI baseUrl = watsonxConfig.baseUrl()
+                .or(() -> defaultConfig.baseUrl())
+                .map(URI::create)
+                .orElseThrow();
+
+        MergeSchemaService.Builder builder = MergeSchemaService.builder()
+                .baseUrl(baseUrl)
+                .timeout(watsonxConfig.timeout().orElse(null));
+
+        builder.logRequests(
+                firstOrDefault(
+                        defaultConfig.logRequests().orElse(false),
+                        mergeSchemaConfig.logRequests(),
+                        watsonxConfig.logRequests()));
+
+        builder.logResponses(
+                firstOrDefault(
+                        defaultConfig.logResponses().orElse(false),
+                        mergeSchemaConfig.logResponses(),
+                        watsonxConfig.logResponses()));
+
+        builder.spaceId(
+                firstOrDefault(
+                        defaultConfig.spaceId().orElse(null),
+                        watsonxConfig.spaceId()));
+
+        builder.projectId(
+                firstOrDefault(
+                        defaultConfig.projectId().orElse(null),
+                        watsonxConfig.projectId()));
+
+        return new Function<>() {
+            @Override
+            public MergeSchemaService apply(SyntheticCreationalContext<MergeSchemaService> context) {
+                var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(
+                                defaultConfig.logRequestsCurl().orElse(false),
+                                mergeSchemaConfig.logRequestsCurl(),
+                                watsonxConfig.logRequestsCurl()));
+                try {
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(MERGE_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
+    public Function<SyntheticCreationalContext<ClusterSchemaService>, ClusterSchemaService> clusterSchema(String configName) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+
+        var configProblems = checkConfigurations(configName);
+
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
+        ClusterSchemaConfig clusterSchemaConfig = watsonxConfig.schema().cluster();
+
+        var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
+
+        URI baseUrl = watsonxConfig.baseUrl()
+                .or(() -> defaultConfig.baseUrl())
+                .map(URI::create)
+                .orElseThrow();
+
+        ClusterSchemaService.Builder builder = ClusterSchemaService.builder()
+                .baseUrl(baseUrl)
+                .timeout(watsonxConfig.timeout().orElse(null));
+
+        builder.logRequests(
+                firstOrDefault(
+                        defaultConfig.logRequests().orElse(false),
+                        clusterSchemaConfig.logRequests(),
+                        watsonxConfig.logRequests()));
+
+        builder.logResponses(
+                firstOrDefault(
+                        defaultConfig.logResponses().orElse(false),
+                        clusterSchemaConfig.logResponses(),
+                        watsonxConfig.logResponses()));
+
+        builder.spaceId(
+                firstOrDefault(
+                        defaultConfig.spaceId().orElse(null),
+                        watsonxConfig.spaceId()));
+
+        builder.projectId(
+                firstOrDefault(
+                        defaultConfig.projectId().orElse(null),
+                        watsonxConfig.projectId()));
+
+        return new Function<>() {
+            @Override
+            public ClusterSchemaService apply(SyntheticCreationalContext<ClusterSchemaService> context) {
+                var authenticator = getOrCreateTokenGenerator(watsonxConfig.iam().baseUrl().orElse(null), apiKey);
+                QuarkusRestClientConfig.setLogCurl(
+                        firstOrDefault(
+                                defaultConfig.logRequestsCurl().orElse(false),
+                                clusterSchemaConfig.logRequestsCurl(),
+                                watsonxConfig.logRequestsCurl()));
+                try {
+                    builder.authenticator(authenticator);
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(CLUSTER_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                } finally {
+                    QuarkusRestClientConfig.clear();
+                }
+            }
+        };
+    }
+
     private LangChain4jWatsonxConfig.WatsonxConfig correspondingWatsonxRuntimeConfig(String configName) {
         LangChain4jWatsonxConfig.WatsonxConfig watsonxConfig;
         if (NamedConfigUtil.isDefault(configName)) {
@@ -755,6 +1363,32 @@ public class WatsonxRecorder {
     }
 
     private List<ConfigValidationException.Problem> checkConfigurations(String configName) {
+        List<ConfigValidationException.Problem> configProblems = checkConnectionConfigurations(configName);
+        checkProjectIdOrSpaceId(configName, configProblems);
+        return configProblems;
+    }
+
+    private List<ConfigValidationException.Problem> checkConfigurations(String configName, ChatBackend backend) {
+        List<ConfigValidationException.Problem> configProblems = checkConnectionConfigurations(configName);
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+
+        if (watsonxConfig.deploymentChatModel().deploymentId().isPresent()
+                && watsonxConfig.gatewayChatModel().modelName().isPresent()) {
+            var config = NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + ".");
+            var errorMessage = "The properties quarkus.langchain4j.watsonx%s%s and quarkus.langchain4j.watsonx%s%s cannot be configured at the same time, only one chat backend can be used for a given configuration";
+            configProblems.add(new ConfigValidationException.Problem(
+                    String.format(errorMessage, config, "deployment-chat-model.deployment-id", config,
+                            "gateway-chat-model.model-name")));
+        }
+
+        // Only the foundation model chat api requires the resource that contains the model.
+        if (backend == ChatBackend.STANDARD)
+            checkProjectIdOrSpaceId(configName, configProblems);
+
+        return configProblems;
+    }
+
+    private List<ConfigValidationException.Problem> checkConnectionConfigurations(String configName) {
         List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
         WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
@@ -765,6 +1399,27 @@ public class WatsonxRecorder {
         if (watsonxConfig.apiKey().isEmpty() && defaultConfig.apiKey().isEmpty())
             configProblems.add(createConfigProblem("api-key", configName));
 
+        return configProblems;
+    }
+
+    /**
+     * The {@code schema.create} group is optional, but the {@code CreateSchemaService} cannot work without the Cloud Object
+     * Storage coordinates. Report every missing property instead of letting the bean creation fail with a
+     * {@link NullPointerException}.
+     */
+    private void checkCreateSchemaConfigurations(String configName, List<ConfigValidationException.Problem> configProblems) {
+        if (correspondingWatsonxRuntimeConfig(configName).schema().create().isPresent())
+            return;
+
+        configProblems.add(createConfigProblem("schema.create.cos-url", configName));
+        configProblems.add(createConfigProblem("schema.create.document-reference.connection", configName));
+        configProblems.add(createConfigProblem("schema.create.document-reference.bucket-name", configName));
+    }
+
+    private void checkProjectIdOrSpaceId(String configName, List<ConfigValidationException.Problem> configProblems) {
+        WatsonxConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
+
         boolean noProjectId = watsonxConfig.projectId().isEmpty() && defaultConfig.projectId().isEmpty();
         boolean noSpaceId = watsonxConfig.spaceId().isEmpty() && defaultConfig.spaceId().isEmpty();
 
@@ -774,13 +1429,30 @@ public class WatsonxRecorder {
             configProblems.add(new ConfigValidationException.Problem(
                     String.format(errorMessage, config, "project-id", config, "space-id")));
         }
-
-        return configProblems;
     }
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.watsonx%s%s is required but it could not be found in any config source",
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    /**
+     * The watsonx.ai service used to serve the chat requests, deduced from the configuration.
+     */
+    private enum ChatBackend {
+        /**
+         * The foundation model chat api ({@code /ml/v1/text/chat}), configured via {@code chat-model}.
+         */
+        STANDARD,
+        /**
+         * The chat api of a model deployed in watsonx.ai ({@code /ml/v1/deployments/{deployment_id}/text/chat}),
+         * configured via {@code deployment-chat-model}.
+         */
+        DEPLOYMENT,
+        /**
+         * The Model Gateway ({@code /ml/gateway/v1/chat/completions}), configured via {@code gateway-chat-model}.
+         */
+        GATEWAY
     }
 }

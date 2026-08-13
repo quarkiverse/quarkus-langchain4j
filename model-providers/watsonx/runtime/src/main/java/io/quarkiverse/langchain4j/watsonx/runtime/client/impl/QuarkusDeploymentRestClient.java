@@ -17,7 +17,9 @@ import com.ibm.watsonx.ai.chat.ChatClientContext;
 import com.ibm.watsonx.ai.chat.ChatHandler;
 import com.ibm.watsonx.ai.chat.ChatResponse;
 import com.ibm.watsonx.ai.chat.SseEventProcessor;
+import com.ibm.watsonx.ai.chat.TextChatResponse;
 import com.ibm.watsonx.ai.chat.model.TextChatRequest;
+import com.ibm.watsonx.ai.deployment.DeploymentChatRequest;
 import com.ibm.watsonx.ai.deployment.DeploymentResource;
 import com.ibm.watsonx.ai.deployment.DeploymentRestClient;
 import com.ibm.watsonx.ai.deployment.FindByIdRequest;
@@ -116,11 +118,12 @@ public final class QuarkusDeploymentRestClient extends DeploymentRestClient {
     }
 
     @Override
-    public ChatResponse chat(String transactionId, String deploymentId, Duration timeout, TextChatRequest textChatRequest) {
+    public TextChatResponse chat(String transactionId, String deploymentId, Duration timeout,
+            TextChatRequest textChatRequest) {
         var requestId = UUID.randomUUID().toString();
-        return retryOn(requestId, new Callable<ChatResponse>() {
+        return retryOn(requestId, new Callable<TextChatResponse>() {
             @Override
-            public ChatResponse call() throws Exception {
+            public TextChatResponse call() throws Exception {
                 return client.chat(deploymentId, requestId, transactionId, version, textChatRequest);
             }
         });
@@ -131,11 +134,12 @@ public final class QuarkusDeploymentRestClient extends DeploymentRestClient {
             String transactionId,
             String deploymentId,
             TextChatRequest textChatRequest,
-            ChatClientContext context,
+            ChatClientContext<DeploymentChatRequest> context,
             ChatHandler handler) {
 
         var requestId = UUID.randomUUID().toString();
-        var subscriber = new QuarkusChatSubscriber(new SseEventProcessor(textChatRequest.tools(), context.extractionTags()),
+        var subscriber = new QuarkusChatSubscriber(
+                new SseEventProcessor(textChatRequest.tools(), context.extractionTags(), TextChatResponse::builder),
                 handler);
 
         CompletableFuture<ChatResponse> future = new CompletableFuture<>();
