@@ -70,6 +70,516 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-enabled[`+++quarkus.langchain4j.mistralai.chat-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-enabled[`+++quarkus.langchain4j.mistralai.embedding-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled[`+++quarkus.langchain4j.mistralai.moderation-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url[`+++quarkus.langchain4j.mistralai.base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of Mistral API
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.mistral.ai/v1/+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-api-key[`+++quarkus.langchain4j.mistralai.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Mistral API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-timeout[`+++quarkus.langchain4j.mistralai.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Mistral calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mistral-ai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`+++10s+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name[`+++quarkus.langchain4j.mistralai.chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-tiny+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-temperature[`+++quarkus.langchain4j.mistralai.chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++0.7+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-max-tokens[`+++quarkus.langchain4j.mistralai.chat-model.max-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-top-p[`+++quarkus.langchain4j.mistralai.chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++1.0+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-safe-prompt[`+++quarkus.langchain4j.mistralai.chat-model.safe-prompt+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.safe-prompt+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to inject a safety prompt before all conversations
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_SAFE_PROMPT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_SAFE_PROMPT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-random-seed[`+++quarkus.langchain4j.mistralai.chat-model.random-seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.random-seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The seed to use for random sampling. If set, different calls will generate deterministic results.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_RANDOM_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_RANDOM_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-requests[`+++quarkus.langchain4j.mistralai.chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-log-responses[`+++quarkus.langchain4j.mistralai.chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-model-name[`+++quarkus.langchain4j.mistralai.embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-embed+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-requests[`+++quarkus.langchain4j.mistralai.embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-embedding-model-log-responses[`+++quarkus.langchain4j.mistralai.embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name[`+++quarkus.langchain4j.mistralai.moderation-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-moderation-latest+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests[`+++quarkus.langchain4j.mistralai.moderation-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses[`+++quarkus.langchain4j.mistralai.moderation-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.moderation-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests[`+++quarkus.langchain4j.mistralai.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-responses[`+++quarkus.langchain4j.mistralai.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-log-requests-curl[`+++quarkus.langchain4j.mistralai.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-enable-integration[`+++quarkus.langchain4j.mistralai.enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url[`+++quarkus.langchain4j.mistralai.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mistralai.base-url+++[]
@@ -520,6 +1030,453 @@ endif::add-copy-button-to-env-var[]
 h|[[quarkus-langchain4j-mistral-ai_section_quarkus-langchain4j-mistralai]] [.section-name.section-level0]##link:#quarkus-langchain4j-mistral-ai_section_quarkus-langchain4j-mistralai[Named model config]##
 h|Type
 h|Default
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url[`+++quarkus.langchain4j.mistralai."model-name".base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of Mistral API
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.mistral.ai/v1/+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-api-key[`+++quarkus.langchain4j.mistralai."model-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Mistral API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-timeout[`+++quarkus.langchain4j.mistralai."model-name".timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Mistral calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mistral-ai_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`+++10s+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name[`+++quarkus.langchain4j.mistralai."model-name".chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-tiny+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-temperature[`+++quarkus.langchain4j.mistralai."model-name".chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++0.7+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-max-tokens[`+++quarkus.langchain4j.mistralai."model-name".chat-model.max-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-top-p[`+++quarkus.langchain4j.mistralai."model-name".chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++1.0+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-safe-prompt[`+++quarkus.langchain4j.mistralai."model-name".chat-model.safe-prompt+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.safe-prompt+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to inject a safety prompt before all conversations
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_SAFE_PROMPT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_SAFE_PROMPT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-random-seed[`+++quarkus.langchain4j.mistralai."model-name".chat-model.random-seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.random-seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The seed to use for random sampling. If set, different calls will generate deterministic results.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_RANDOM_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_RANDOM_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-requests[`+++quarkus.langchain4j.mistralai."model-name".chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-log-responses[`+++quarkus.langchain4j.mistralai."model-name".chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-model-name[`+++quarkus.langchain4j.mistralai."model-name".embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-embed+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-requests[`+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-embedding-model-log-responses[`+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name[`+++quarkus.langchain4j.mistralai."model-name".moderation-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".moderation-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-moderation-latest+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests[`+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses[`+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".moderation-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests[`+++quarkus.langchain4j.mistralai."model-name".log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-responses[`+++quarkus.langchain4j.mistralai."model-name".log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-log-requests-curl[`+++quarkus.langchain4j.mistralai."model-name".log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-enable-integration[`+++quarkus.langchain4j.mistralai."model-name".enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mistralai."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
 
 a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-base-url[`+++quarkus.langchain4j.mistralai."model-name".base-url+++`]##
 ifdef::add-copy-button-to-config-props[]

@@ -28,5 +28,26 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name[`+++quarkus.langchain4j.memorystore.redis.client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.memorystore.redis.client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Redis client to use. These clients are configured by means of the `redis-client` extension. If unspecified, it will use the default Redis client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_REDIS_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_REDIS_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 |===
 
