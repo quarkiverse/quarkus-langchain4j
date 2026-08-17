@@ -26,6 +26,9 @@ import io.restassured.response.Response;
 import io.smallrye.jwt.build.Jwt;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * TODO: create a variant that uses the new stateless MCP protocol
+ */
 class SecureMcpWithMicroprofileHealthTest {
 
     private static Process process;
