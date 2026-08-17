@@ -28,5 +28,26 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
+a| [[quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories]] [.property-path]##link:#quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories[`+++quarkus.langchain4j.skills.directories+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.skills.directories+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+List of directories from which skills should be loaded. Each entry is either an absolute or relative path in the filesystem, or, if it's prepended with "classpath:", is considered a classpath resource. A relative path is resolved against the current working directory at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_SKILLS_DIRECTORIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_SKILLS_DIRECTORIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
 |===
 
