@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.fail;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -41,6 +42,9 @@ class ToolExecutorTest {
         RELEVANCE,
         DATE,
         RATING
+    }
+
+    public record ArgObject(String name, SortBy sortBy) {
     }
 
     private static class DefaultValueTool {
@@ -116,6 +120,27 @@ class ToolExecutorTest {
         @Tool
         int noArgs() {
             return 1;
+        }
+
+        @Tool
+        String listOfEnum(List<SortBy> arg0) {
+            return arg0.get(0).name();
+        }
+
+        @Tool
+        String listOfString(List<String> arg0) {
+            return String.join(",", arg0);
+        }
+
+        @Tool
+        String listOfObject(List<ArgObject> arg0) {
+            ArgObject object = arg0.get(0);
+            return object.name() + ":" + object.sortBy();
+        }
+
+        @Tool
+        String mappedEnum(Map<String, SortBy> arg0) {
+            return arg0.get("first").name();
         }
     }
 
@@ -287,6 +312,25 @@ class ToolExecutorTest {
         String result = toolExecutor.execute(request, null);
 
         assertThat(result).isEqualTo("1");
+    }
+
+    @Test
+    void should_deserialize_generic_tool_arguments() {
+        executeAndAssert("{\"arg0\":[\"DATE\"]}", "listOfEnum", "\"DATE\"");
+
+        executeAndAssert("{\"arg0\":[\"A\",\"B\"]}", "listOfString", "\"A,B\"");
+
+        executeAndAssert("{\"arg0\":[{\"name\":\"ABC\",\"sortBy\":\"DATE\"}]}", "listOfObject", "\"ABC:DATE\"");
+
+        executeAndAssert("{\"arg0\":{\"first\":\"DATE\"}}", "mappedEnum", "\"DATE\"");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"arg0\":[\"INVALID\"]}"
+    })
+    void should_reject_invalid_generic_enum_argument_before_tool_invocation(String arguments) {
+        executeAndExpectFailure(arguments, "listOfEnum");
     }
 
     @Test
