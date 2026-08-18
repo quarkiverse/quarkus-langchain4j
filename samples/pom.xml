@@ -27,6 +27,7 @@
         <module>mcp-client-server</module>
         <module>movie-similarity-search</module>
         <module>movie-similarity-search-hibernate</module>
+        <module>multi-model</module>
         <module>secure-mcp-client-server</module>
         <module>secure-mcp-cmd-client-server</module>
         <module>review-triage</module>

@@ -145,7 +145,7 @@ public class RAGTest {
 
         @Override
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-            LOG.info("Message: " + data);
+            LOG.debug("Message: " + data);
             if (current == null) {
                 current = new StringBuilder();
             }
