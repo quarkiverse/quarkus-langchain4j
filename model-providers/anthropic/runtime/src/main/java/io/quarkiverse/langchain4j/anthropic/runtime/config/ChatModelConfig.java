@@ -48,7 +48,6 @@ public interface ChatModelConfig {
      * Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower
      * value (e.g. 10) will be more conservative
      */
-    @ConfigDocDefault("40")
     OptionalInt topK();
 
     /**

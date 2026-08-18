@@ -88,7 +88,9 @@ public class AnthropicRecorder {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
             }
 
-            builder.topK(chatModelConfig.topK().orElse(40));
+            if (chatModelConfig.topK().isPresent()) {
+                builder.topK(chatModelConfig.topK().getAsInt());
+            }
 
             if (chatModelConfig.topP().isPresent()) {
                 builder.topP(chatModelConfig.topP().getAsDouble());
@@ -232,8 +234,11 @@ public class AnthropicRecorder {
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), anthropicConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), anthropicConfig.logResponses()))
                     .timeout(anthropicConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .topK(chatModelConfig.topK().orElse(40))
                     .maxTokens(chatModelConfig.maxTokens());
+
+            if (chatModelConfig.topK().isPresent()) {
+                builder.topK(chatModelConfig.topK().getAsInt());
+            }
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());

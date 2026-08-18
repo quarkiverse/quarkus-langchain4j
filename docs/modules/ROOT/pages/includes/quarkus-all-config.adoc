@@ -2696,7 +2696,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_K+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`+++40+++`
+|
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-retries[`+++quarkus.langchain4j.anthropic.chat-model.max-retries+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3365,7 +3365,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`+++40+++`
+|
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-retries[`+++quarkus.langchain4j.anthropic."model-name".chat-model.max-retries+++`]##
 ifdef::add-copy-button-to-config-props[]
