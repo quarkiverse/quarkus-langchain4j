@@ -1,0 +1,261 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-base-url]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-base-url[`+++quarkus.base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the Tavily API
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.tavily.com+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-api-key]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-api-key[`+++quarkus.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+API key for the Tavily API
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-max-results]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-max-results[`+++quarkus.max-results+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.max-results+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of results to return
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MAX_RESULTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MAX_RESULTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++5+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-timeout]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-timeout[`+++quarkus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The timeout duration for Tavily requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-tavily_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++60S+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-log-requests]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-log-requests[`+++quarkus.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether requests to Tavily should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-log-responses]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-log-responses[`+++quarkus.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether responses from Tavily should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-search-depth]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-search-depth[`+++quarkus.search-depth+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.search-depth+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The search depth to use. This can be "basic" or "advanced". Basic is the default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SEARCH_DEPTH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SEARCH_DEPTH+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`basic`, `advanced`
+|`+++basic+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-include-answer]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-include-answer[`+++quarkus.include-answer+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.include-answer+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Include a short answer to original query. Default is false.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_INCLUDE_ANSWER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_INCLUDE_ANSWER+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-include-raw-content]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-include-raw-content[`+++quarkus.include-raw-content+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.include-raw-content+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Include the cleaned and parsed HTML content of each search result. Default is false.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_INCLUDE_RAW_CONTENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_INCLUDE_RAW_CONTENT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-include-domains]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-include-domains[`+++quarkus.include-domains+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.include-domains+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A list of domains to specifically include in the search results. By default all domains are included.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_INCLUDE_DOMAINS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_INCLUDE_DOMAINS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-tavily_quarkus-exclude-domains]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-exclude-domains[`+++quarkus.exclude-domains+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.exclude-domains+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A list of domains to specifically exclude from the search results. By default no domains are excluded.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EXCLUDE_DOMAINS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EXCLUDE_DOMAINS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-tavily_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

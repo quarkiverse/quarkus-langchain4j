@@ -1,0 +1,4203 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-enabled[`+++quarkus.chat-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-enabled[`+++quarkus.embedding-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-enable-integration]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-enable-integration[`+++quarkus.enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to Bedrock. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-log-requests[`+++quarkus.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Bedrock client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-log-responses[`+++quarkus.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Bedrock client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-log-body[`+++quarkus.log-body+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-body+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model body in request and response should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_BODY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_BODY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-aws-region[`+++quarkus.aws.region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.aws.region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Region used by the bedrock runtime api. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Regions Supported].
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AWS_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AWS_REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-aws-endpoint-override[`+++quarkus.aws.endpoint-override+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.aws.endpoint-override+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Override the endpoint used by the bedrock client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AWS_ENDPOINT_OVERRIDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AWS_ENDPOINT_OVERRIDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-aws-credentials-provider]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-aws-credentials-provider[`+++quarkus.aws.credentials-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.aws.credentials-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specify a custom credentials provider to use for the bedrock client. Identified by bean name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AWS_CREDENTIALS_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AWS_CREDENTIALS_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-aws-max-retries[`+++quarkus.aws.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.aws.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number retries the aws sdk client will attempt.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AWS_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AWS_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-aws-api-call-timeout[`+++quarkus.aws.api-call-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.aws.api-call-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configure the amount of time to allow the client to complete the execution of an API call. This timeout covers the entire client execution except for marshalling. This includes request handler execution, all HTTP requests including retries, unmarshalling, etc. This value should always be positive, if present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AWS_API_CALL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AWS_API_CALL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-connect-timeout[`+++quarkus.client.connect-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Connect Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-timeout[`+++quarkus.client.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Read Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-proxy-configuration-name[`+++quarkus.client.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-disable-contextual-error-messages]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-disable-contextual-error-messages[`+++quarkus.client.disable-contextual-error-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.disable-contextual-error-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true, the REST clients will not provide additional contextual information (like REST client class and method names) when exception occurs during a client invocation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-connection-ttl[`+++quarkus.client.connection-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.connection-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The time in ms for which a connection remains unused in the connection pool before being evicted and closed. A timeout of `0` means there is no timeout.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_CONNECTION_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_CONNECTION_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-connection-pool-size]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-connection-pool-size[`+++quarkus.client.connection-pool-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.connection-pool-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The size of the connection pool for this client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_CONNECTION_POOL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_CONNECTION_POOL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-keep-alive-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-keep-alive-enabled[`+++quarkus.client.keep-alive-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.keep-alive-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to false disables the keep alive completely.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_KEEP_ALIVE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_KEEP_ALIVE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-hostname-verifier[`+++quarkus.client.hostname-verifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.hostname-verifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The class name of the host name verifier. The class must have a public no-argument constructor.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_HOSTNAME_VERIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_HOSTNAME_VERIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-verify-host]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-verify-host[`+++quarkus.client.verify-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.verify-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Set whether hostname verification is enabled. Default is enabled. This setting should not be disabled in production as it makes the client vulnerable to MITM attacks.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_VERIFY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_VERIFY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-trust-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-trust-store[`+++quarkus.client.trust-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.trust-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_TRUST_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_TRUST_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-trust-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-trust-store-password[`+++quarkus.client.trust-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.trust-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_TRUST_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_TRUST_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-trust-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-trust-store-type[`+++quarkus.client.trust-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.trust-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the trust store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_TRUST_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_TRUST_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-key-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-key-store[`+++quarkus.client.key-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.key-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_KEY_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_KEY_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-key-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-key-store-password[`+++quarkus.client.key-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.key-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_KEY_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_KEY_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-key-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-key-store-type[`+++quarkus.client.key-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.key-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the key store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_KEY_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_KEY_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-tls-configuration-name[`+++quarkus.client.tls-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration to use.
+
+If not set and the default TLS configuration is configured (`quarkus.tls.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-log-requests[`+++quarkus.chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-log-responses[`+++quarkus.chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-log-body[`+++quarkus.chat-model.log-body+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-body+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model body in request and response should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_BODY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_BODY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-aws-region[`+++quarkus.chat-model.aws.region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.aws.region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Region used by the bedrock runtime api. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Regions Supported].
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_AWS_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_AWS_REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-aws-endpoint-override[`+++quarkus.chat-model.aws.endpoint-override+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.aws.endpoint-override+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Override the endpoint used by the bedrock client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_AWS_ENDPOINT_OVERRIDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_AWS_ENDPOINT_OVERRIDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-aws-credentials-provider]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-aws-credentials-provider[`+++quarkus.chat-model.aws.credentials-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.aws.credentials-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specify a custom credentials provider to use for the bedrock client. Identified by bean name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_AWS_CREDENTIALS_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_AWS_CREDENTIALS_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-aws-max-retries[`+++quarkus.chat-model.aws.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.aws.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number retries the aws sdk client will attempt.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_AWS_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_AWS_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-aws-api-call-timeout[`+++quarkus.chat-model.aws.api-call-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.aws.api-call-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configure the amount of time to allow the client to complete the execution of an API call. This timeout covers the entire client execution except for marshalling. This includes request handler execution, all HTTP requests including retries, unmarshalling, etc. This value should always be positive, if present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_AWS_API_CALL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_AWS_API_CALL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-model-id[`+++quarkus.chat-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model id to use. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Models Supported]
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-temperature[`+++quarkus.chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-max-tokens[`+++quarkus.chat-model.max-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-top-p[`+++quarkus.chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-top-k[`+++quarkus.chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-stop-sequences]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-stop-sequences[`+++quarkus.chat-model.stop-sequences+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.stop-sequences+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The custom text sequences that will cause the model to stop generating
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_STOP_SEQUENCES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_STOP_SEQUENCES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-response-format[`+++quarkus.chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-connect-timeout[`+++quarkus.chat-model.client.connect-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Connect Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-timeout[`+++quarkus.chat-model.client.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Read Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-configuration-name[`+++quarkus.chat-model.client.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-disable-contextual-error-messages]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-disable-contextual-error-messages[`+++quarkus.chat-model.client.disable-contextual-error-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.disable-contextual-error-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true, the REST clients will not provide additional contextual information (like REST client class and method names) when exception occurs during a client invocation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-connection-ttl[`+++quarkus.chat-model.client.connection-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.connection-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The time in ms for which a connection remains unused in the connection pool before being evicted and closed. A timeout of `0` means there is no timeout.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_CONNECTION_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_CONNECTION_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-connection-pool-size]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-connection-pool-size[`+++quarkus.chat-model.client.connection-pool-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.connection-pool-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The size of the connection pool for this client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_CONNECTION_POOL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_CONNECTION_POOL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-keep-alive-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-keep-alive-enabled[`+++quarkus.chat-model.client.keep-alive-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.keep-alive-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to false disables the keep alive completely.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-hostname-verifier[`+++quarkus.chat-model.client.hostname-verifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.hostname-verifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The class name of the host name verifier. The class must have a public no-argument constructor.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_HOSTNAME_VERIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_HOSTNAME_VERIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-verify-host]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-verify-host[`+++quarkus.chat-model.client.verify-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.verify-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Set whether hostname verification is enabled. Default is enabled. This setting should not be disabled in production as it makes the client vulnerable to MITM attacks.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_VERIFY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_VERIFY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-trust-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-trust-store[`+++quarkus.chat-model.client.trust-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.trust-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_TRUST_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_TRUST_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-trust-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-trust-store-password[`+++quarkus.chat-model.client.trust-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.trust-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_TRUST_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_TRUST_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-trust-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-trust-store-type[`+++quarkus.chat-model.client.trust-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.trust-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the trust store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_TRUST_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_TRUST_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-key-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-key-store[`+++quarkus.chat-model.client.key-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.key-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_KEY_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_KEY_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-key-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-key-store-password[`+++quarkus.chat-model.client.key-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.key-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_KEY_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_KEY_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-key-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-key-store-type[`+++quarkus.chat-model.client.key-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.key-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the key store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_KEY_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_KEY_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-tls-configuration-name[`+++quarkus.chat-model.client.tls-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration to use.
+
+If not set and the default TLS configuration is configured (`quarkus.tls.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-guardrail-guardrail-identifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-guardrail-guardrail-identifier[`+++quarkus.chat-model.guardrail.guardrail-identifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.guardrail.guardrail-identifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the guardrail that you want to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-guardrail-guardrail-version]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-guardrail-guardrail-version[`+++quarkus.chat-model.guardrail.guardrail-version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.guardrail.guardrail-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version number for the guardrail.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-guardrail-stream-processing-mode]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-guardrail-stream-processing-mode[`+++quarkus.chat-model.guardrail.stream-processing-mode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.guardrail.stream-processing-mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The processing mode for streaming requests. Possible values are `SYNC` or `ASYNC`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`async`, `sync`
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-prompt-caching[`+++quarkus.chat-model.prompt-caching+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.prompt-caching+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables prompt caching to reduce latency and costs for requests with repeated content. You can specify where to place the cache point in the prompt, possible values are `AFTER_SYSTEM`, `AFTER_USER_MESSAGE` or `AFTER_TOOLS`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_PROMPT_CACHING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_PROMPT_CACHING+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`after-last-user-message`, `after-system`, `after-tools`, `after-user-message`
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-reasoning[`+++quarkus.chat-model.reasoning+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.reasoning+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_REASONING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_REASONING+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-log-requests[`+++quarkus.embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-log-responses[`+++quarkus.embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-log-body[`+++quarkus.embedding-model.log-body+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.log-body+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model body in request and response should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_LOG_BODY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_LOG_BODY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-region[`+++quarkus.embedding-model.aws.region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.aws.region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Region used by the bedrock runtime api. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Regions Supported].
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_AWS_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_AWS_REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-endpoint-override[`+++quarkus.embedding-model.aws.endpoint-override+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.aws.endpoint-override+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Override the endpoint used by the bedrock client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_AWS_ENDPOINT_OVERRIDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_AWS_ENDPOINT_OVERRIDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-credentials-provider]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-credentials-provider[`+++quarkus.embedding-model.aws.credentials-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.aws.credentials-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specify a custom credentials provider to use for the bedrock client. Identified by bean name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_AWS_CREDENTIALS_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_AWS_CREDENTIALS_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-max-retries[`+++quarkus.embedding-model.aws.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.aws.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number retries the aws sdk client will attempt.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_AWS_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_AWS_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-aws-api-call-timeout[`+++quarkus.embedding-model.aws.api-call-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.aws.api-call-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configure the amount of time to allow the client to complete the execution of an API call. This timeout covers the entire client execution except for marshalling. This includes request handler execution, all HTTP requests including retries, unmarshalling, etc. This value should always be positive, if present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_AWS_API_CALL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_AWS_API_CALL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-model-id[`+++quarkus.embedding-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++cohere.embed-english-v3+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-titan-dimensions]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-titan-dimensions[`+++quarkus.embedding-model.titan.dimensions+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.titan.dimensions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of dimensions the output embedding should have
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_TITAN_DIMENSIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_TITAN_DIMENSIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-titan-normalize]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-titan-normalize[`+++quarkus.embedding-model.titan.normalize+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.titan.normalize+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Flag indicating whether to normalize the output embedding
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_TITAN_NORMALIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_TITAN_NORMALIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-cohere-input-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-cohere-input-type[`+++quarkus.embedding-model.cohere.input-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.cohere.input-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Prepends special tokens to differentiate each type from one another. You should not mix different types together, except when mixing types for search and retrieval. In this case, embed your corpus with the search_document type and embedded queries with type search_query type.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_COHERE_INPUT_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_COHERE_INPUT_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-cohere-truncate]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-cohere-truncate[`+++quarkus.embedding-model.cohere.truncate+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.cohere.truncate+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies how the API handles inputs longer than the maximum token length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_COHERE_TRUNCATE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_COHERE_TRUNCATE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-connect-timeout[`+++quarkus.embedding-model.client.connect-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Connect Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-timeout[`+++quarkus.embedding-model.client.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Read Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-configuration-name[`+++quarkus.embedding-model.client.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-disable-contextual-error-messages]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-disable-contextual-error-messages[`+++quarkus.embedding-model.client.disable-contextual-error-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.disable-contextual-error-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true, the REST clients will not provide additional contextual information (like REST client class and method names) when exception occurs during a client invocation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-connection-ttl[`+++quarkus.embedding-model.client.connection-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.connection-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The time in ms for which a connection remains unused in the connection pool before being evicted and closed. A timeout of `0` means there is no timeout.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_CONNECTION_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_CONNECTION_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-connection-pool-size]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-connection-pool-size[`+++quarkus.embedding-model.client.connection-pool-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.connection-pool-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The size of the connection pool for this client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_CONNECTION_POOL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_CONNECTION_POOL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-keep-alive-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-keep-alive-enabled[`+++quarkus.embedding-model.client.keep-alive-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.keep-alive-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to false disables the keep alive completely.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-hostname-verifier[`+++quarkus.embedding-model.client.hostname-verifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.hostname-verifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The class name of the host name verifier. The class must have a public no-argument constructor.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_HOSTNAME_VERIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_HOSTNAME_VERIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-verify-host]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-verify-host[`+++quarkus.embedding-model.client.verify-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.verify-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Set whether hostname verification is enabled. Default is enabled. This setting should not be disabled in production as it makes the client vulnerable to MITM attacks.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_VERIFY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_VERIFY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-trust-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-trust-store[`+++quarkus.embedding-model.client.trust-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.trust-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_TRUST_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_TRUST_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-trust-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-trust-store-password[`+++quarkus.embedding-model.client.trust-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.trust-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_TRUST_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_TRUST_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-trust-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-trust-store-type[`+++quarkus.embedding-model.client.trust-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.trust-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the trust store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_TRUST_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_TRUST_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-key-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-key-store[`+++quarkus.embedding-model.client.key-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.key-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEY_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEY_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-key-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-key-store-password[`+++quarkus.embedding-model.client.key-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.key-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEY_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEY_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-key-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-key-store-type[`+++quarkus.embedding-model.client.key-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.key-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the key store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEY_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_KEY_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-tls-configuration-name[`+++quarkus.embedding-model.client.tls-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration to use.
+
+If not set and the default TLS configuration is configured (`quarkus.tls.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-proxy-address[[.line-through]#`+++quarkus.client.proxy-address+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.proxy-address+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_PROXY_ADDRESS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_PROXY_ADDRESS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-proxy-user[[.line-through]#`+++quarkus.client.proxy-user+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.proxy-user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_PROXY_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_PROXY_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-proxy-password[[.line-through]#`+++quarkus.client.proxy-password+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.proxy-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_PROXY_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_PROXY_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-client-non-proxy-hosts[[.line-through]#`+++quarkus.client.non-proxy-hosts+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client.non-proxy-hosts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-address[[.line-through]#`+++quarkus.chat-model.client.proxy-address+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.proxy-address+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_ADDRESS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_ADDRESS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-user[[.line-through]#`+++quarkus.chat-model.client.proxy-user+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.proxy-user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-proxy-password[[.line-through]#`+++quarkus.chat-model.client.proxy-password+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.proxy-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_PROXY_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-chat-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-chat-model-client-non-proxy-hosts[[.line-through]#`+++quarkus.chat-model.client.non-proxy-hosts+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.client.non-proxy-hosts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-address[[.line-through]#`+++quarkus.embedding-model.client.proxy-address+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.proxy-address+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+A string value in the form of `:` that specifies the HTTP proxy server hostname (or IP address) and port for requests of clients to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_ADDRESS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-user]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-user[[.line-through]#`+++quarkus.embedding-model.client.proxy-user+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.proxy-user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy username, equivalent to the http.proxy or https.proxy JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-proxy-password[[.line-through]#`+++quarkus.embedding-model.client.proxy-password+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.proxy-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Proxy password, equivalent to the http.proxyPassword or https.proxyPassword JVM settings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_PROXY_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-embedding-model-client-non-proxy-hosts]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-embedding-model-client-non-proxy-hosts[[.line-through]#`+++quarkus.embedding-model.client.non-proxy-hosts+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.client.non-proxy-hosts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `proxy-configuration-name` with the Quarkus Proxy Registry instead._
+
+Hosts to access without proxy, similar to the http.nonProxyHosts or https.nonProxyHosts JVM settings. Please note that unlike the JVM settings, this property is empty by default.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_CLIENT_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+h|[[quarkus-langchain4j-bedrock_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-bedrock_section_quarkus[Named model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-enable-integration[`+++quarkus."model-name".enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to Bedrock. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-log-requests[`+++quarkus."model-name".log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Bedrock client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-log-responses[`+++quarkus."model-name".log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Bedrock client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-log-body[`+++quarkus."model-name".log-body+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-body+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model body in request and response should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_BODY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_BODY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-aws-region[`+++quarkus."model-name".aws.region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".aws.region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Region used by the bedrock runtime api. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Regions Supported].
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__AWS_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__AWS_REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-aws-endpoint-override[`+++quarkus."model-name".aws.endpoint-override+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".aws.endpoint-override+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Override the endpoint used by the bedrock client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__AWS_ENDPOINT_OVERRIDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__AWS_ENDPOINT_OVERRIDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-aws-credentials-provider]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-aws-credentials-provider[`+++quarkus."model-name".aws.credentials-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".aws.credentials-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specify a custom credentials provider to use for the bedrock client. Identified by bean name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__AWS_CREDENTIALS_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__AWS_CREDENTIALS_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-aws-max-retries[`+++quarkus."model-name".aws.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".aws.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number retries the aws sdk client will attempt.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__AWS_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__AWS_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-aws-api-call-timeout[`+++quarkus."model-name".aws.api-call-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".aws.api-call-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configure the amount of time to allow the client to complete the execution of an API call. This timeout covers the entire client execution except for marshalling. This includes request handler execution, all HTTP requests including retries, unmarshalling, etc. This value should always be positive, if present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__AWS_API_CALL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__AWS_API_CALL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-connect-timeout[`+++quarkus."model-name".client.connect-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Connect Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-timeout[`+++quarkus."model-name".client.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Read Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-proxy-configuration-name[`+++quarkus."model-name".client.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-disable-contextual-error-messages]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-disable-contextual-error-messages[`+++quarkus."model-name".client.disable-contextual-error-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.disable-contextual-error-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true, the REST clients will not provide additional contextual information (like REST client class and method names) when exception occurs during a client invocation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-connection-ttl[`+++quarkus."model-name".client.connection-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.connection-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The time in ms for which a connection remains unused in the connection pool before being evicted and closed. A timeout of `0` means there is no timeout.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_CONNECTION_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_CONNECTION_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-connection-pool-size]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-connection-pool-size[`+++quarkus."model-name".client.connection-pool-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.connection-pool-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The size of the connection pool for this client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_CONNECTION_POOL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_CONNECTION_POOL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-keep-alive-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-keep-alive-enabled[`+++quarkus."model-name".client.keep-alive-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.keep-alive-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to false disables the keep alive completely.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_KEEP_ALIVE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_KEEP_ALIVE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-hostname-verifier[`+++quarkus."model-name".client.hostname-verifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.hostname-verifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The class name of the host name verifier. The class must have a public no-argument constructor.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_HOSTNAME_VERIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_HOSTNAME_VERIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-verify-host]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-verify-host[`+++quarkus."model-name".client.verify-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.verify-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Set whether hostname verification is enabled. Default is enabled. This setting should not be disabled in production as it makes the client vulnerable to MITM attacks.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_VERIFY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_VERIFY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-trust-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-trust-store[`+++quarkus."model-name".client.trust-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.trust-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_TRUST_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_TRUST_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-trust-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-trust-store-password[`+++quarkus."model-name".client.trust-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.trust-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_TRUST_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_TRUST_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-trust-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-trust-store-type[`+++quarkus."model-name".client.trust-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.trust-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the trust store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_TRUST_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_TRUST_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-key-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-key-store[`+++quarkus."model-name".client.key-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.key-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_KEY_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_KEY_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-key-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-key-store-password[`+++quarkus."model-name".client.key-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.key-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_KEY_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_KEY_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-key-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-key-store-type[`+++quarkus."model-name".client.key-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.key-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the key store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_KEY_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_KEY_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-client-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-client-tls-configuration-name[`+++quarkus."model-name".client.tls-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".client.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration to use.
+
+If not set and the default TLS configuration is configured (`quarkus.tls.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CLIENT_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CLIENT_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-log-requests[`+++quarkus."model-name".chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-log-responses[`+++quarkus."model-name".chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-log-body[`+++quarkus."model-name".chat-model.log-body+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-body+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model body in request and response should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_BODY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_BODY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-region[`+++quarkus."model-name".chat-model.aws.region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.aws.region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Region used by the bedrock runtime api. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Regions Supported].
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-endpoint-override[`+++quarkus."model-name".chat-model.aws.endpoint-override+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.aws.endpoint-override+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Override the endpoint used by the bedrock client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_ENDPOINT_OVERRIDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_ENDPOINT_OVERRIDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-credentials-provider]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-credentials-provider[`+++quarkus."model-name".chat-model.aws.credentials-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.aws.credentials-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specify a custom credentials provider to use for the bedrock client. Identified by bean name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_CREDENTIALS_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_CREDENTIALS_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-max-retries[`+++quarkus."model-name".chat-model.aws.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.aws.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number retries the aws sdk client will attempt.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-aws-api-call-timeout[`+++quarkus."model-name".chat-model.aws.api-call-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.aws.api-call-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configure the amount of time to allow the client to complete the execution of an API call. This timeout covers the entire client execution except for marshalling. This includes request handler execution, all HTTP requests including retries, unmarshalling, etc. This value should always be positive, if present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_API_CALL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_AWS_API_CALL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-model-id[`+++quarkus."model-name".chat-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model id to use. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Models Supported]
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-temperature[`+++quarkus."model-name".chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-max-tokens[`+++quarkus."model-name".chat-model.max-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-top-p[`+++quarkus."model-name".chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-top-k[`+++quarkus."model-name".chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-stop-sequences]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-stop-sequences[`+++quarkus."model-name".chat-model.stop-sequences+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.stop-sequences+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The custom text sequences that will cause the model to stop generating
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_STOP_SEQUENCES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_STOP_SEQUENCES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-response-format[`+++quarkus."model-name".chat-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the desired format for the model's output.
+
+*Allowable values:* `++[++text, json++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-connect-timeout[`+++quarkus."model-name".chat-model.client.connect-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Connect Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-timeout[`+++quarkus."model-name".chat-model.client.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Read Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-proxy-configuration-name[`+++quarkus."model-name".chat-model.client.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-disable-contextual-error-messages]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-disable-contextual-error-messages[`+++quarkus."model-name".chat-model.client.disable-contextual-error-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.disable-contextual-error-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true, the REST clients will not provide additional contextual information (like REST client class and method names) when exception occurs during a client invocation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-connection-ttl[`+++quarkus."model-name".chat-model.client.connection-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.connection-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The time in ms for which a connection remains unused in the connection pool before being evicted and closed. A timeout of `0` means there is no timeout.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_CONNECTION_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_CONNECTION_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-connection-pool-size]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-connection-pool-size[`+++quarkus."model-name".chat-model.client.connection-pool-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.connection-pool-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The size of the connection pool for this client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_CONNECTION_POOL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_CONNECTION_POOL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-keep-alive-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-keep-alive-enabled[`+++quarkus."model-name".chat-model.client.keep-alive-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.keep-alive-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to false disables the keep alive completely.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-hostname-verifier[`+++quarkus."model-name".chat-model.client.hostname-verifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.hostname-verifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The class name of the host name verifier. The class must have a public no-argument constructor.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_HOSTNAME_VERIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_HOSTNAME_VERIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-verify-host]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-verify-host[`+++quarkus."model-name".chat-model.client.verify-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.verify-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Set whether hostname verification is enabled. Default is enabled. This setting should not be disabled in production as it makes the client vulnerable to MITM attacks.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_VERIFY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_VERIFY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-trust-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-trust-store[`+++quarkus."model-name".chat-model.client.trust-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.trust-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TRUST_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TRUST_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-trust-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-trust-store-password[`+++quarkus."model-name".chat-model.client.trust-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.trust-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TRUST_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TRUST_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-trust-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-trust-store-type[`+++quarkus."model-name".chat-model.client.trust-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.trust-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the trust store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TRUST_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TRUST_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-key-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-key-store[`+++quarkus."model-name".chat-model.client.key-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.key-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEY_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEY_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-key-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-key-store-password[`+++quarkus."model-name".chat-model.client.key-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.key-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEY_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEY_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-key-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-key-store-type[`+++quarkus."model-name".chat-model.client.key-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.key-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the key store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEY_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_KEY_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-client-tls-configuration-name[`+++quarkus."model-name".chat-model.client.tls-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.client.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration to use.
+
+If not set and the default TLS configuration is configured (`quarkus.tls.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-guardrail-guardrail-identifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-guardrail-guardrail-identifier[`+++quarkus."model-name".chat-model.guardrail.guardrail-identifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.guardrail.guardrail-identifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the guardrail that you want to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-guardrail-guardrail-version]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-guardrail-guardrail-version[`+++quarkus."model-name".chat-model.guardrail.guardrail-version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.guardrail.guardrail-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version number for the guardrail.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-guardrail-stream-processing-mode]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-guardrail-stream-processing-mode[`+++quarkus."model-name".chat-model.guardrail.stream-processing-mode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.guardrail.stream-processing-mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The processing mode for streaming requests. Possible values are `SYNC` or `ASYNC`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`async`, `sync`
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-prompt-caching[`+++quarkus."model-name".chat-model.prompt-caching+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.prompt-caching+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables prompt caching to reduce latency and costs for requests with repeated content. You can specify where to place the cache point in the prompt, possible values are `AFTER_SYSTEM`, `AFTER_USER_MESSAGE` or `AFTER_TOOLS`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`after-last-user-message`, `after-system`, `after-tools`, `after-user-message`
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-chat-model-reasoning[`+++quarkus."model-name".chat-model.reasoning+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.reasoning+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_REASONING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_REASONING+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-log-requests[`+++quarkus."model-name".embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-log-responses[`+++quarkus."model-name".embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-log-body[`+++quarkus."model-name".embedding-model.log-body+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.log-body+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model body in request and response should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_BODY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_BODY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-region[`+++quarkus."model-name".embedding-model.aws.region+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.aws.region+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Region used by the bedrock runtime api. See link:https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[Regions Supported].
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_REGION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_REGION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-endpoint-override[`+++quarkus."model-name".embedding-model.aws.endpoint-override+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.aws.endpoint-override+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Override the endpoint used by the bedrock client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_ENDPOINT_OVERRIDE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_ENDPOINT_OVERRIDE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-credentials-provider]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-credentials-provider[`+++quarkus."model-name".embedding-model.aws.credentials-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.aws.credentials-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specify a custom credentials provider to use for the bedrock client. Identified by bean name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_CREDENTIALS_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_CREDENTIALS_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-max-retries[`+++quarkus."model-name".embedding-model.aws.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.aws.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number retries the aws sdk client will attempt.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-aws-api-call-timeout[`+++quarkus."model-name".embedding-model.aws.api-call-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.aws.api-call-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configure the amount of time to allow the client to complete the execution of an API call. This timeout covers the entire client execution except for marshalling. This includes request handler execution, all HTTP requests including retries, unmarshalling, etc. This value should always be positive, if present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_API_CALL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_AWS_API_CALL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-model-id[`+++quarkus."model-name".embedding-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++cohere.embed-english-v3+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-titan-dimensions]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-titan-dimensions[`+++quarkus."model-name".embedding-model.titan.dimensions+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.titan.dimensions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of dimensions the output embedding should have
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TITAN_DIMENSIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TITAN_DIMENSIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-titan-normalize]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-titan-normalize[`+++quarkus."model-name".embedding-model.titan.normalize+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.titan.normalize+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Flag indicating whether to normalize the output embedding
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TITAN_NORMALIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TITAN_NORMALIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-cohere-input-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-cohere-input-type[`+++quarkus."model-name".embedding-model.cohere.input-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.cohere.input-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Prepends special tokens to differentiate each type from one another. You should not mix different types together, except when mixing types for search and retrieval. In this case, embed your corpus with the search_document type and embedded queries with type search_query type.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_COHERE_INPUT_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_COHERE_INPUT_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-cohere-truncate]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-cohere-truncate[`+++quarkus."model-name".embedding-model.cohere.truncate+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.cohere.truncate+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies how the API handles inputs longer than the maximum token length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_COHERE_TRUNCATE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_COHERE_TRUNCATE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-connect-timeout[`+++quarkus."model-name".embedding-model.client.connect-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Connect Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-timeout[`+++quarkus."model-name".embedding-model.client.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Read Timeout for Bedrock calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-proxy-configuration-name[`+++quarkus."model-name".embedding-model.client.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the proxy configuration to use, as registered in the Quarkus Proxy Registry.
+
+Precedence rules:
+
+ - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-disable-contextual-error-messages]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-disable-contextual-error-messages[`+++quarkus."model-name".embedding-model.client.disable-contextual-error-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.disable-contextual-error-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true, the REST clients will not provide additional contextual information (like REST client class and method names) when exception occurs during a client invocation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_DISABLE_CONTEXTUAL_ERROR_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-connection-ttl[`+++quarkus."model-name".embedding-model.client.connection-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.connection-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The time in ms for which a connection remains unused in the connection pool before being evicted and closed. A timeout of `0` means there is no timeout.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_CONNECTION_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_CONNECTION_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-connection-pool-size]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-connection-pool-size[`+++quarkus."model-name".embedding-model.client.connection-pool-size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.connection-pool-size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The size of the connection pool for this client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_CONNECTION_POOL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_CONNECTION_POOL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-keep-alive-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-keep-alive-enabled[`+++quarkus."model-name".embedding-model.client.keep-alive-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.keep-alive-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to false disables the keep alive completely.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEEP_ALIVE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-hostname-verifier[`+++quarkus."model-name".embedding-model.client.hostname-verifier+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.hostname-verifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The class name of the host name verifier. The class must have a public no-argument constructor.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_HOSTNAME_VERIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_HOSTNAME_VERIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-verify-host]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-verify-host[`+++quarkus."model-name".embedding-model.client.verify-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.verify-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Set whether hostname verification is enabled. Default is enabled. This setting should not be disabled in production as it makes the client vulnerable to MITM attacks.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_VERIFY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_VERIFY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-trust-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-trust-store[`+++quarkus."model-name".embedding-model.client.trust-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.trust-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TRUST_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TRUST_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-trust-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-trust-store-password[`+++quarkus."model-name".embedding-model.client.trust-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.trust-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The trust store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TRUST_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TRUST_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-trust-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-trust-store-type[`+++quarkus."model-name".embedding-model.client.trust-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.trust-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the trust store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TRUST_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TRUST_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-key-store]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-key-store[`+++quarkus."model-name".embedding-model.client.key-store+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.key-store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store location. Can point to either a classpath resource or a file.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEY_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEY_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-key-store-password]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-key-store-password[`+++quarkus."model-name".embedding-model.client.key-store-password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.key-store-password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The key store password.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEY_STORE_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEY_STORE_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-key-store-type]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-key-store-type[`+++quarkus."model-name".embedding-model.client.key-store-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.key-store-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of the key store. Defaults to "JKS".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEY_STORE_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_KEY_STORE_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-model-name-embedding-model-client-tls-configuration-name[`+++quarkus."model-name".embedding-model.client.tls-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.client.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration to use.
+
+If not set and the default TLS configuration is configured (`quarkus.tls.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_CLIENT_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-bedrock_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

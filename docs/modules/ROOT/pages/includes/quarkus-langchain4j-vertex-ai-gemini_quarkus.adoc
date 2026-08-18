@@ -1,0 +1,1167 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-enabled[`+++quarkus.chat-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-enabled[`+++quarkus.embedding-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-project-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-project-id[`+++quarkus.project-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.project-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the project
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PROJECT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PROJECT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-location]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-location[`+++quarkus.location+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+GCP location
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-publisher]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-publisher[`+++quarkus.publisher+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.publisher+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Publisher of model
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PUBLISHER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PUBLISHER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++google+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-base-url]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-base-url[`+++quarkus.base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Meant to be used for testing only in order to override the base URL used by the client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-enable-integration]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-enable-integration[`+++quarkus.enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Vertex AI Gemini provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-proxy-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-proxy-type[`+++quarkus.proxy-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.proxy-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy type
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PROXY_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PROXY_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++HTTP+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-proxy-host]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-proxy-host[`+++quarkus.proxy-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.proxy-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy host
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PROXY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PROXY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-proxy-port]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-proxy-port[`+++quarkus.proxy-port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.proxy-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy port
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PROXY_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PROXY_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++3128+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-log-requests[`+++quarkus.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-log-responses[`+++quarkus.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-timeout]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-timeout[`+++quarkus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for requests to gemini APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-vertex-ai-gemini_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-model-id[`+++quarkus.chat-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++gemini-2.5-flash+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-temperature[`+++quarkus.chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The temperature is used for sampling during response generation, which occurs when topP and topK are applied. Temperature controls the degree of randomness in token selection. Lower temperatures are good for prompts that require a less open-ended or creative response, while higher temperatures can lead to more diverse or creative results. A temperature of 0 means that the highest probability tokens are always selected. In this case, responses for a given prompt are mostly deterministic, but a small amount of variation is still possible.
+
+If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
+
+Range for gemini-2.5-flash: 0.0 - 2.0
+
+Default for gemini-2.5-flash: 1.0
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-max-output-tokens[`+++quarkus.chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of tokens that can be generated in the response. A token is approximately four characters. 100 tokens correspond to roughly 60-80 words. Specify a lower value for shorter responses and a higher value for potentially longer responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++8192+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-top-p[`+++quarkus.chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-P changes how the model selects tokens for output. Tokens are selected from the most (see top-K) to least probable until the sum of their probabilities equals the top-P value. For example, if tokens A, B, and C have a probability of 0.3, 0.2, and 0.1 and the top-P value is 0.5, then the model will select either A or B as the next token by using temperature and excludes C as a candidate.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+Range: 0.0 - 1.0
+
+Default for gemini-2.5-flash: 0.95
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-top-k[`+++quarkus.chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-K changes how the model selects tokens for output. A top-K of 1 means the next selected token is the most probable among all tokens in the model's vocabulary (also called greedy decoding), while a top-K of 3 means that the next token is selected from among the three most probable tokens by using temperature.
+
+For each token selection step, the top-K tokens with the highest probabilities are sampled. Then tokens are further filtered based on top-P with the final token selected using temperature sampling.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+Range: 1-40
+
+gemini-2.5-flash doesn't support topK
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-log-requests[`+++quarkus.chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-log-responses[`+++quarkus.chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-timeout]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-chat-model-timeout[`+++quarkus.chat-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Global timeout for requests to gemini APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-vertex-ai-gemini_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.VERTEXAI.GEMINI.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-model-id[`+++quarkus.embedding-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text-embedding-004+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-output-dimension[`+++quarkus.embedding-model.output-dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.output-dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reduced dimension for the output embedding
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_OUTPUT_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_OUTPUT_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-task-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-task-type[`+++quarkus.embedding-model.task-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.task-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_TASK_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_TASK_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-log-requests[`+++quarkus.embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-log-responses[`+++quarkus.embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-timeout]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-embedding-model-timeout[`+++quarkus.embedding-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Global timeout for requests to gemini APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-vertex-ai-gemini_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.VERTEXAI.GEMINI.TIMEOUT}+++`
+
+h|[[quarkus-langchain4j-vertex-ai-gemini_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-vertex-ai-gemini_section_quarkus[Named model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-project-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-project-id[`+++quarkus."model-name".project-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".project-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the project
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__PROJECT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__PROJECT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-location]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-location[`+++quarkus."model-name".location+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+GCP location
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-publisher]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-publisher[`+++quarkus."model-name".publisher+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".publisher+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Publisher of model
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__PUBLISHER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__PUBLISHER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++google+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-base-url[`+++quarkus."model-name".base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Meant to be used for testing only in order to override the base URL used by the client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-enable-integration[`+++quarkus."model-name".enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Vertex AI Gemini provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-proxy-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-proxy-type[`+++quarkus."model-name".proxy-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".proxy-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy type
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__PROXY_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__PROXY_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++HTTP+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-proxy-host]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-proxy-host[`+++quarkus."model-name".proxy-host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".proxy-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy host
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__PROXY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__PROXY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-proxy-port]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-proxy-port[`+++quarkus."model-name".proxy-port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".proxy-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy port
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__PROXY_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__PROXY_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++3128+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-log-requests[`+++quarkus."model-name".log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-log-responses[`+++quarkus."model-name".log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-timeout[`+++quarkus."model-name".timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for requests to gemini APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-vertex-ai-gemini_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-model-id[`+++quarkus."model-name".chat-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++gemini-2.5-flash+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-temperature[`+++quarkus."model-name".chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The temperature is used for sampling during response generation, which occurs when topP and topK are applied. Temperature controls the degree of randomness in token selection. Lower temperatures are good for prompts that require a less open-ended or creative response, while higher temperatures can lead to more diverse or creative results. A temperature of 0 means that the highest probability tokens are always selected. In this case, responses for a given prompt are mostly deterministic, but a small amount of variation is still possible.
+
+If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
+
+Range for gemini-2.5-flash: 0.0 - 2.0
+
+Default for gemini-2.5-flash: 1.0
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-max-output-tokens[`+++quarkus."model-name".chat-model.max-output-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of tokens that can be generated in the response. A token is approximately four characters. 100 tokens correspond to roughly 60-80 words. Specify a lower value for shorter responses and a higher value for potentially longer responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++8192+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-top-p[`+++quarkus."model-name".chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-P changes how the model selects tokens for output. Tokens are selected from the most (see top-K) to least probable until the sum of their probabilities equals the top-P value. For example, if tokens A, B, and C have a probability of 0.3, 0.2, and 0.1 and the top-P value is 0.5, then the model will select either A or B as the next token by using temperature and excludes C as a candidate.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+Range: 0.0 - 1.0
+
+Default for gemini-2.5-flash: 0.95
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-top-k[`+++quarkus."model-name".chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-K changes how the model selects tokens for output. A top-K of 1 means the next selected token is the most probable among all tokens in the model's vocabulary (also called greedy decoding), while a top-K of 3 means that the next token is selected from among the three most probable tokens by using temperature.
+
+For each token selection step, the top-K tokens with the highest probabilities are sampled. Then tokens are further filtered based on top-P with the final token selected using temperature sampling.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+Range: 1-40
+
+gemini-2.5-flash doesn't support topK
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-log-requests[`+++quarkus."model-name".chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-log-responses[`+++quarkus."model-name".chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-timeout]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-chat-model-timeout[`+++quarkus."model-name".chat-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Global timeout for requests to gemini APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-vertex-ai-gemini_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.VERTEXAI.GEMINI.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-model-id[`+++quarkus."model-name".embedding-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text-embedding-004+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-output-dimension[`+++quarkus."model-name".embedding-model.output-dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.output-dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reduced dimension for the output embedding
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_OUTPUT_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_OUTPUT_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-task-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-task-type[`+++quarkus."model-name".embedding-model.task-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.task-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TASK_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TASK_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-log-requests[`+++quarkus."model-name".embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-log-responses[`+++quarkus."model-name".embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-timeout]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-model-name-embedding-model-timeout[`+++quarkus."model-name".embedding-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Global timeout for requests to gemini APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-vertex-ai-gemini_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.VERTEXAI.GEMINI.TIMEOUT}+++`
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-vertex-ai-gemini_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

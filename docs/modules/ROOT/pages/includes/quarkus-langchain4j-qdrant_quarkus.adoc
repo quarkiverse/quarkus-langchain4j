@@ -1,0 +1,163 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-default-store-enabled[`+++quarkus.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Qdrant embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-client-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-client-name[`+++quarkus.client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Qdrant client to use. These clients are configured by means of the `quarkus-qdrant` extension. If not set, the default Qdrant client will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-collection-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-collection-name[`+++quarkus.collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Qdrant collection to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-payload-text-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-payload-text-key[`+++quarkus.payload-text-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.payload-text-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The field name of the text segment in the payload.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PAYLOAD_TEXT_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PAYLOAD_TEXT_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text_segment+++`
+
+h|[[quarkus-langchain4j-qdrant_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-qdrant_section_quarkus[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-store-name-client-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-store-name-client-name[`+++quarkus."store-name".client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Qdrant client to use. These clients are configured by means of the `quarkus-qdrant` extension. If not set, the default Qdrant client will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-store-name-collection-name[`+++quarkus."store-name".collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Qdrant collection to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-store-name-payload-text-key]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-store-name-payload-text-key[`+++quarkus."store-name".payload-text-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".payload-text-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The field name of the text segment in the payload.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__PAYLOAD_TEXT_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__PAYLOAD_TEXT_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text_segment+++`
+
+
+|===
+
