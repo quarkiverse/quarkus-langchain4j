@@ -50,7 +50,7 @@ public class MovieLoader {
 
     Log.info("Ingesting movies...");
     embeddingStore.addAllEntities(movies);
-    Log.info("Application initalized!");
+    Log.info("Application initialized!");
   }
 
 }
