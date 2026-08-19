@@ -145,7 +145,7 @@ class InfinispanMetadataFilterMapper {
                     "Infinispan metadata filter IN/NOT IN cannot mix numeric and non-numeric values");
         }
         return values.stream()
-                .map(v -> v instanceof Number ? v.toString() : stringLiteral(String.valueOf(v)))
+                .map(v -> v instanceof Number ? formatValue(v) : stringLiteral(String.valueOf(v)))
                 .collect(Collectors.joining(", "));
     }
 
