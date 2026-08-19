@@ -60,7 +60,7 @@ public class ChromaDevServicesProcessor {
             LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
 
-        Set<String> namedStoreNames = chromaBuildConfig.namedConfig().keySet();
+        Set<String> namedStoreNames = ChromaProcessor.discoverStoreNames(chromaBuildConfig);
 
         ChromaDevServiceCfg configuration = getConfiguration(chromaBuildConfig);
 

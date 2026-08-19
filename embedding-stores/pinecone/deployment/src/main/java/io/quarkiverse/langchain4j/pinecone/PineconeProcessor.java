@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.pinecone;
 
-import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -13,6 +13,8 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.NamedConfigDiscovery;
+import io.quarkiverse.langchain4j.pinecone.runtime.PineconeConfig;
 import io.quarkiverse.langchain4j.pinecone.runtime.PineconeRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -31,6 +33,8 @@ public class PineconeProcessor {
 
     public static final DotName PINECONE_EMBEDDING_STORE = DotName.createSimple(PineconeEmbeddingStore.class);
     private static final String FEATURE = "langchain4j-pinecone";
+
+    private static final String CONFIG_PREFIX = "quarkus.langchain4j.pinecone";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -59,10 +63,7 @@ public class PineconeProcessor {
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
 
-        Map<String, PineconeNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
-        for (Map.Entry<String, PineconeNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
-            String storeName = entry.getKey();
-
+        for (String storeName : discoverStoreNames(buildTimeConfig)) {
             AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
                     .add("value", storeName)
                     .build();
@@ -80,6 +81,15 @@ public class PineconeProcessor {
                     .done());
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
+    }
+
+    /**
+     * Named stores are only partially materialized by SmallRye Config, since the build-time config group holds a single
+     * property. Discovering them from the configured property names also covers stores configured at runtime only.
+     */
+    private static Set<String> discoverStoreNames(PineconeEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        return NamedConfigDiscovery.discoverNames(CONFIG_PREFIX, buildTimeConfig.namedConfig().keySet(),
+                PineconeEmbeddingStoreBuildTimeConfig.class, PineconeConfig.class);
     }
 
     /**

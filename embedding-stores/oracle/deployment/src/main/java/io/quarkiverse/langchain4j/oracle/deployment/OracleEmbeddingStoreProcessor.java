@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.oracle.deployment;
 
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
@@ -15,7 +16,9 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.agroal.api.AgroalDataSource;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.NamedConfigDiscovery;
 import io.quarkiverse.langchain4j.oracle.QuarkusOracleEmbeddingStore;
+import io.quarkiverse.langchain4j.oracle.runtime.OracleEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.oracle.runtime.OracleEmbeddingStoreRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.agroal.DataSource;
@@ -32,6 +35,8 @@ class OracleEmbeddingStoreProcessor {
     private static final DotName QUARKUS_ORACLE_EMBEDDING_STORE = DotName.createSimple(QuarkusOracleEmbeddingStore.class);
 
     private static final String FEATURE = "langchain4j-oracle";
+
+    private static final String CONFIG_PREFIX = "quarkus.langchain4j.oracle";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -73,9 +78,8 @@ class OracleEmbeddingStoreProcessor {
         }
 
         Map<String, OracleNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
-        for (Map.Entry<String, OracleNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
-            String storeName = entry.getKey();
-            OracleNamedStoreBuildTimeConfig storeBuildTimeConfig = entry.getValue();
+        for (String storeName : discoverStoreNames(buildTimeConfig)) {
+            OracleNamedStoreBuildTimeConfig storeBuildTimeConfig = namedStores.get(storeName);
 
             if (!storeBuildTimeConfig.enabled()) {
                 continue;
@@ -104,6 +108,15 @@ class OracleEmbeddingStoreProcessor {
 
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
+    }
+
+    /**
+     * Named stores are only partially materialized by SmallRye Config, since the build-time config group holds a couple
+     * of properties. Discovering them from the configured property names also covers stores configured at runtime only.
+     */
+    private static Set<String> discoverStoreNames(OracleEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        return NamedConfigDiscovery.discoverNames(CONFIG_PREFIX, buildTimeConfig.namedConfig().keySet(),
+                OracleEmbeddingStoreBuildTimeConfig.class, OracleEmbeddingStoreConfig.class);
     }
 
     private AnnotationInstance resolveDatasourceQualifier(String datasourceName) {

@@ -59,7 +59,7 @@ public class WeaviateDevServicesProcessor {
             LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
 
-        Set<String> namedStoreNames = weaviateBuildConfig.namedConfig().keySet();
+        Set<String> namedStoreNames = WeaviateProcessor.discoverStoreNames(weaviateBuildConfig);
 
         WeaviateDevServiceCfg configuration = getConfiguration(weaviateBuildConfig);
 

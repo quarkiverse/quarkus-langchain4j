@@ -20,8 +20,10 @@ import io.agroal.api.AgroalDataSource;
 import io.agroal.api.AgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.NamedConfigDiscovery;
 import io.quarkiverse.langchain4j.pgvector.PgVectorAgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
+import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.agroal.DataSource;
@@ -41,6 +43,8 @@ class PgVectorEmbeddingStoreProcessor {
     private static final DotName PG_VECTOR_AGROAL_POOL_INTERCEPTOR = DotName.createSimple(PgVectorAgroalPoolInterceptor.class);
 
     private static final String FEATURE = "langchain4j-pgvector";
+
+    private static final String CONFIG_PREFIX = "quarkus.langchain4j.pgvector";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -63,6 +67,7 @@ class PgVectorEmbeddingStoreProcessor {
 
         String defaultDatasourceName = buildTimeConfig.defaultConfig().datasource().orElse(null);
         AnnotationInstance defaultDatasourceQualifier = resolveDatasourceQualifier(defaultDatasourceName);
+        Set<String> alreadyHandledStoreInterceptors = new HashSet<>();
 
         if (buildTimeConfig.defaultConfig().defaultStoreEnabled()) {
             beanProducer.produce(SyntheticBeanBuildItem
@@ -89,15 +94,14 @@ class PgVectorEmbeddingStoreProcessor {
                     .qualifiers(defaultDatasourceQualifier)
                     .done());
 
+            alreadyHandledStoreInterceptors.add(resolveDatasourceName(defaultDatasourceName));
+
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
 
         Map<String, PgVectorNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
-        Set<String> alreadyHandledStoreInterceptors = new HashSet<>();
-        for (Map.Entry<String, PgVectorNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
-            String storeName = entry.getKey();
-            PgVectorNamedStoreBuildTimeConfig storeBuildTimeConfig = entry.getValue();
-            String storeDatasourceName = storeBuildTimeConfig.datasource().orElse(null);
+        for (String storeName : discoverStoreNames(buildTimeConfig)) {
+            String storeDatasourceName = namedStores.get(storeName).datasource().orElse(null);
 
             AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class).add("value", storeName)
                     .build();
@@ -118,7 +122,7 @@ class PgVectorEmbeddingStoreProcessor {
                             storeDatasourceQualifier)
                     .done());
 
-            if (!alreadyHandledStoreInterceptors.contains(storeDatasourceName)) {
+            if (alreadyHandledStoreInterceptors.add(resolveDatasourceName(storeDatasourceName))) {
                 beanProducer.produce(SyntheticBeanBuildItem
                         .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
                         .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
@@ -129,17 +133,34 @@ class PgVectorEmbeddingStoreProcessor {
                         .qualifiers(storeDatasourceQualifier)
                         .done());
             }
-            alreadyHandledStoreInterceptors.add(storeDatasourceName);
 
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
     }
 
+    /**
+     * Named stores are only partially materialized by SmallRye Config, since the build-time config group holds a single
+     * property. Discovering them from the configured property names also covers stores configured at runtime only.
+     */
+    private static Set<String> discoverStoreNames(PgVectorEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        return NamedConfigDiscovery.discoverNames(CONFIG_PREFIX, buildTimeConfig.namedConfig().keySet(),
+                PgVectorEmbeddingStoreBuildTimeConfig.class, PgVectorEmbeddingStoreConfig.class);
+    }
+
     private AnnotationInstance resolveDatasourceQualifier(String datasourceName) {
-        if (datasourceName != null && !NamedConfigUtil.isDefault(datasourceName)) {
-            return AnnotationInstance.builder(DataSource.class).add("value", datasourceName).build();
+        String resolvedName = resolveDatasourceName(datasourceName);
+        if (NamedConfigUtil.isDefault(resolvedName)) {
+            return AnnotationInstance.builder(Default.class).build();
         }
-        return AnnotationInstance.builder(Default.class).build();
+        return AnnotationInstance.builder(DataSource.class).add("value", resolvedName).build();
+    }
+
+    /**
+     * Normalizes an unset datasource name to {@link NamedConfigUtil#DEFAULT_NAME}, so that stores relying on the
+     * default datasource resolve to a single qualifier regardless of whether {@code datasource} was set explicitly.
+     */
+    private String resolveDatasourceName(String datasourceName) {
+        return datasourceName != null ? datasourceName : NamedConfigUtil.DEFAULT_NAME;
     }
 
     @BuildStep

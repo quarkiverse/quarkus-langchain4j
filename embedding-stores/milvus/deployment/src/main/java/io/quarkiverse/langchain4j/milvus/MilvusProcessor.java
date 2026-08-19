@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.milvus;
 
-import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -14,7 +14,9 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.milvus.MilvusEmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.NamedConfigDiscovery;
 import io.quarkiverse.langchain4j.milvus.runtime.MilvusRecorder;
+import io.quarkiverse.langchain4j.milvus.runtime.MilvusRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -27,6 +29,8 @@ public class MilvusProcessor {
 
     public static final DotName MILVUS_EMBEDDING_STORE = DotName.createSimple(MilvusEmbeddingStore.class);
     public static final String FEATURE = "langchain4j-milvus";
+
+    static final String CONFIG_PREFIX = "quarkus.langchain4j.milvus";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -55,9 +59,7 @@ public class MilvusProcessor {
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
 
-        Map<String, MilvusNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
-        for (Map.Entry<String, MilvusNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
-            String storeName = entry.getKey();
+        for (String storeName : discoverStoreNames(buildTimeConfig)) {
             AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
                     .add("value", storeName)
                     .build();
@@ -75,5 +77,14 @@ public class MilvusProcessor {
                     .done());
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
+    }
+
+    /**
+     * Named stores are only partially materialized by SmallRye Config, since the build-time config group holds a single
+     * property. Discovering them from the configured property names also covers stores configured at runtime only.
+     */
+    static Set<String> discoverStoreNames(MilvusBuildConfig buildTimeConfig) {
+        return NamedConfigDiscovery.discoverNames(CONFIG_PREFIX, buildTimeConfig.namedConfig().keySet(),
+                MilvusBuildConfig.class, MilvusRuntimeConfig.class);
     }
 }

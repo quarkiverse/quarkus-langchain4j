@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.chroma.deployment;
 
-import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -13,8 +13,10 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
+import io.quarkiverse.langchain4j.chroma.runtime.ChromaEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.chroma.runtime.ChromaRecorder;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.NamedConfigDiscovery;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -33,6 +35,8 @@ class ChromaProcessor {
     public static final DotName CHROMA_EMBEDDING_STORE = DotName.createSimple(ChromaEmbeddingStore.class);
 
     static final String FEATURE = "langchain4j-chroma";
+
+    static final String CONFIG_PREFIX = "quarkus.langchain4j.chroma";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -63,10 +67,7 @@ class ChromaProcessor {
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
 
-        Map<String, ChromaNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
-        for (Map.Entry<String, ChromaNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
-            String storeName = entry.getKey();
-
+        for (String storeName : discoverStoreNames(buildTimeConfig)) {
             AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
                     .add("value", storeName)
                     .build();
@@ -86,6 +87,15 @@ class ChromaProcessor {
 
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
+    }
+
+    /**
+     * Named stores are only partially materialized by SmallRye Config, since the build-time config group holds a single
+     * property. Discovering them from the configured property names also covers stores configured at runtime only.
+     */
+    static Set<String> discoverStoreNames(ChromaEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        return NamedConfigDiscovery.discoverNames(CONFIG_PREFIX, buildTimeConfig.namedConfig().keySet(),
+                ChromaEmbeddingStoreBuildTimeConfig.class, ChromaEmbeddingStoreConfig.class);
     }
 
     /**

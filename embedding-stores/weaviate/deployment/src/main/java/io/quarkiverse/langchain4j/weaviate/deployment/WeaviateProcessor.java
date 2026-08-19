@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.weaviate.deployment;
 
-import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -14,7 +14,9 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.weaviate.WeaviateEmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.NamedConfigDiscovery;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.weaviate.runtime.WeaviateEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.weaviate.runtime.WeaviateRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -30,6 +32,8 @@ class WeaviateProcessor {
     public static final DotName WEAVIATE_CLIENT = DotName.createSimple(WeaviateClient.class);
 
     static final String FEATURE = "langchain4j-weaviate";
+
+    static final String CONFIG_PREFIX = "quarkus.langchain4j.weaviate";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -70,10 +74,7 @@ class WeaviateProcessor {
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
 
-        Map<String, WeaviateNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
-        for (Map.Entry<String, WeaviateNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
-            String storeName = entry.getKey();
-
+        for (String storeName : discoverStoreNames(buildTimeConfig)) {
             AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
                     .add("value", storeName)
                     .build();
@@ -104,5 +105,14 @@ class WeaviateProcessor {
 
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
+    }
+
+    /**
+     * Named stores are only partially materialized by SmallRye Config, since the build-time config group holds a single
+     * property. Discovering them from the configured property names also covers stores configured at runtime only.
+     */
+    static Set<String> discoverStoreNames(WeaviateEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        return NamedConfigDiscovery.discoverNames(CONFIG_PREFIX, buildTimeConfig.namedConfig().keySet(),
+                WeaviateEmbeddingStoreBuildTimeConfig.class, WeaviateEmbeddingStoreConfig.class);
     }
 }

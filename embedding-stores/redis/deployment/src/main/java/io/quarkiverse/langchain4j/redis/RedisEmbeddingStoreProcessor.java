@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.redis;
 
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
@@ -14,6 +15,8 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.NamedConfigDiscovery;
+import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -33,6 +36,8 @@ public class RedisEmbeddingStoreProcessor {
 
     private static final String FEATURE = "langchain4j-redis";
 
+    private static final String CONFIG_PREFIX = "quarkus.langchain4j.redis";
+
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
@@ -44,8 +49,9 @@ public class RedisEmbeddingStoreProcessor {
         producer.produce(new RequestedRedisClientBuildItem(
                 config.defaultConfig().clientName().orElse(RedisConfig.DEFAULT_CLIENT_NAME)));
 
-        for (Map.Entry<String, RedisNamedStoreBuildTimeConfig> entry : config.namedConfig().entrySet()) {
-            String clientName = entry.getValue().clientName().orElse(null);
+        Map<String, RedisNamedStoreBuildTimeConfig> namedStores = config.namedConfig();
+        for (String storeName : discoverStoreNames(config)) {
+            String clientName = namedStores.get(storeName).clientName().orElse(null);
             if (clientName != null && !NamedConfigUtil.isDefault(clientName)) {
                 producer.produce(new RequestedRedisClientBuildItem(clientName));
             }
@@ -82,10 +88,8 @@ public class RedisEmbeddingStoreProcessor {
         }
 
         Map<String, RedisNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
-        for (Map.Entry<String, RedisNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
-            String storeName = entry.getKey();
-            RedisNamedStoreBuildTimeConfig storeBuildTimeConfig = entry.getValue();
-            String storeClientName = storeBuildTimeConfig.clientName().orElse(null);
+        for (String storeName : discoverStoreNames(buildTimeConfig)) {
+            String storeClientName = namedStores.get(storeName).clientName().orElse(null);
 
             AnnotationInstance storeNameQualifier = AnnotationInstance.builder(EmbeddingStoreName.class)
                     .add("value", storeName)
@@ -109,6 +113,15 @@ public class RedisEmbeddingStoreProcessor {
 
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }
+    }
+
+    /**
+     * Named stores are only partially materialized by SmallRye Config, since the build-time config group holds a single
+     * property. Discovering them from the configured property names also covers stores configured at runtime only.
+     */
+    private static Set<String> discoverStoreNames(RedisEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        return NamedConfigDiscovery.discoverNames(CONFIG_PREFIX, buildTimeConfig.namedConfig().keySet(),
+                RedisEmbeddingStoreBuildTimeConfig.class, RedisEmbeddingStoreConfig.class);
     }
 
     private AnnotationInstance resolveRedisClientQualifier(String clientName) {
