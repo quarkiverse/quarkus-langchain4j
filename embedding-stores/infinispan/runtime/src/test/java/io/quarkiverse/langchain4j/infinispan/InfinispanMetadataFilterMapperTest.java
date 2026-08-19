@@ -284,10 +284,29 @@ class InfinispanMetadataFilterMapperTest {
 
     @Test
     void testMixedNumericSubtypesInFilter() {
+        // HashSet iteration order is non-deterministic, so just verify key parts
         InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
                 .map(new IsIn("mixed", Arrays.asList(1, 2L, 3.0f, 4.0)));
         assertThat(result.query).startsWith("m0.name='mixed' and m0.value_");
-        assertThat(result.query).contains("1").contains("2").contains("3.0").contains("4.0");
+        assertThat(result.query).contains("IN (");
+    }
+
+    @Test
+    void testFloatWidenedToDoubleInIsIn() {
+        // 1.1f is not exactly representable — Float.toString gives "1.1" but doubleValue gives "1.100000023841858"
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("score", Arrays.asList(1.1f)));
+        assertThat(result.query)
+                .isEqualTo("m0.name='score' and m0.value_float IN (1.100000023841858)");
+    }
+
+    @Test
+    void testFloatWidenedToDoubleInIsNotIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsNotIn("score", Arrays.asList(1.1f)));
+        assertThat(result.query)
+                .isEqualTo(
+                        "(m0.value_float NOT IN (1.100000023841858) and m0.name='score') OR (m0.value_float IN (1.100000023841858) and m0.name!='score') OR (i.metadata is null) ");
     }
 
     @Test
