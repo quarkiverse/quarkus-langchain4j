@@ -55,7 +55,9 @@ public class ResponsesChatModelSmokeTest extends OpenAiBaseTest {
                 .containsEntry("model", "gpt-4o-mini")
                 .containsEntry("store", false)
                 .containsEntry("max_output_tokens", 100)
-                .containsKey("input");
+                .containsKey("input")
+                .doesNotContainKey("temperature")
+                .doesNotContainKey("top_p");
 
         wiremock().verifyThat(postRequestedFor(urlEqualTo("/v1/responses"))
                 .withHeader("Authorization", equalTo("Bearer my-key")));

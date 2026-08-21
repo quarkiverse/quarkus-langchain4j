@@ -126,7 +126,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .configName(configName)
                 .build();
 
-        this.temperature = getOrDefault(temperature, 0.7);
+        this.temperature = temperature;
         this.seed = seed;
         this.topP = topP;
         this.maxTokens = maxTokens;
