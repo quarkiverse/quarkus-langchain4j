@@ -823,9 +823,12 @@ public class OpenAiRecorder {
     }
 
     private ConfigValidationException.Problem createConfigProblem(String key, String configName) {
+        String propertyPath = "quarkus.langchain4j.openai"
+                + (NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + ".")) + key;
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j.openai%s%s is required but it could not be found in any config source",
-                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+                "SRCFG00014: The config property %s is required but it could not be found in any config source. "
+                        + "Please configure it in application.properties or pass it as a system property: -D%s=<value>",
+                propertyPath, propertyPath));
     }
 
     public void cleanUp(ShutdownContext shutdown) {
