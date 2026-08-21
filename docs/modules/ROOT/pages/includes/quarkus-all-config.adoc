@@ -12687,6 +12687,8 @@ The temperature is used for sampling during response generation, which occurs wh
 
 Range: 0.0 - 2.0
 
+If not set, the parameter is omitted from the request and the model's own default applies.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TEMPERATURE+++[]
@@ -12696,7 +12698,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_TEMPERATUR
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++${quarkus.langchain4j.temperature:1.0}+++`
+|`+++the model's default+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-max-output-tokens[`+++quarkus.langchain4j.google.genai.chat-model.max-output-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -13217,6 +13219,8 @@ The temperature is used for sampling during response generation, which occurs wh
 
 Range: 0.0 - 2.0
 
+If not set, the parameter is omitted from the request and the model's own default applies.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
@@ -13226,7 +13230,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MOD
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++${quarkus.langchain4j.temperature:1.0}+++`
+|`+++the model's default+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-max-output-tokens[`+++quarkus.langchain4j.google.genai."model-name".chat-model.max-output-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
