@@ -18,7 +18,7 @@ The demo is based on fictional random data generated when the application starts
 - 50 transactions
 - For each transaction, a random amount between 1 and 1000 is generated and assigned to a random user. A random city is also assigned to each transaction.
 
-The setup is defined in the [Setup.java](./src/main/java/io/quarkiverse/langchain4j/samples/Setup.java) class.
+The setup is defined in the [Setup.java](./src/main/java/io/quarkiverse/langchain4j/sample/Setup.java) class.
 
 The users and transactions are stored in a PostgreSQL database. When running the demo in dev mode (recommended), the database is automatically created and populated.
 
@@ -26,8 +26,8 @@ The users and transactions are stored in a PostgreSQL database. When running the
 
 To enable fraud detection, we provide the LLM with access to customer and transaction data through two Panache repositories:
 
-- [CustomerRepository.java](./src/main/java/io/quarkiverse/langchain4j/samples/CustomerRepository.java)
-- [TransactionRepository.java](./src/main/java/io/quarkiverse/langchain4j/samples/TransactionRepository.java)
+- [CustomerRepository.java](./src/main/java/io/quarkiverse/langchain4j/sample/CustomerRepository.java)
+- [TransactionRepository.java](./src/main/java/io/quarkiverse/langchain4j/sample/TransactionRepository.java)
 
 The following code snippet demonstrates how to help the LLM access the customer name from the ID:
 
