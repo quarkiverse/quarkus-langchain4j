@@ -42,6 +42,8 @@
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.19.0</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
+    <!-- versioned independently: langchain4j-community-lancedb (PR #710) does not exist at 1.6.0-beta12; pinned to the first snapshot that ships it until a release is published to Central -->
+    <langchain4j-community-lancedb.version>1.17.0-beta27-SNAPSHOT</langchain4j-community-lancedb.version>
     <quarkus-antora.version>3.25.0</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
     <assertj.version>3.27.7</assertj.version>
@@ -54,6 +56,7 @@
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
     <gpu-llama3.version>1.0.0-jdk21</gpu-llama3.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
+    <lancedb.version>0.30.0-final.0</lancedb.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -201,6 +204,12 @@
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-infinispan</artifactId>
+                        <version>${project.version}</version>
+                        <classifier>codestarts</classifier>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.quarkiverse.langchain4j</groupId>
+                        <artifactId>quarkus-langchain4j-lancedb</artifactId>
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
                     </dependency>
