@@ -27,14 +27,14 @@ public class QuarkusDefaultMcpLogHandler implements McpLogMessageHandler {
 
     private void logMessage(McpLogMessage message) {
         if (message.level() == null) {
-            log.warnf("Received MCP log message with unknown level: %s", message.data());
+            log.warnf("Received MCP log message with unknown level: %s", message.dataAsJson());
             return;
         }
         switch (message.level()) {
-            case DEBUG -> log.debugf("MCP logger: %s: %s", message.logger(), message.data());
-            case INFO, NOTICE -> log.infof("MCP logger: %s: %s", message.logger(), message.data());
-            case WARNING -> log.warnf("MCP logger: %s: %s", message.logger(), message.data());
-            case ERROR, CRITICAL, ALERT, EMERGENCY -> log.errorf("MCP logger: %s: %s", message.logger(), message.data());
+            case DEBUG -> log.debugf("MCP logger: %s: %s", message.logger(), message.dataAsJson());
+            case INFO, NOTICE -> log.infof("MCP logger: %s: %s", message.logger(), message.dataAsJson());
+            case WARNING -> log.warnf("MCP logger: %s: %s", message.logger(), message.dataAsJson());
+            case ERROR, CRITICAL, ALERT, EMERGENCY -> log.errorf("MCP logger: %s: %s", message.logger(), message.dataAsJson());
         }
     }
 
