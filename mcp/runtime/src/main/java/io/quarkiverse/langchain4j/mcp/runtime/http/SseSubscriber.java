@@ -6,16 +6,11 @@ import java.util.function.Consumer;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.SseEvent;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 
 public class SseSubscriber implements Consumer<SseEvent<String>> {
 
     private final McpOperationHandler operationHandler;
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger log = Logger.getLogger(SseSubscriber.class);
     private final boolean logEvents;
     // this will contain the POST url for sending commands to the server
@@ -47,10 +42,9 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
         }
         if (name.equals("message")) {
             try {
-                JsonNode jsonNode = OBJECT_MAPPER.readTree(data);
-                operationHandler.handle(jsonNode);
-            } catch (JsonProcessingException e) {
-                log.warn("Failed to parse JSON message: {}", data, e);
+                operationHandler.onMessage(data);
+            } catch (RuntimeException e) {
+                log.warn("Failed to handle MCP message: {}", data, e);
             }
         } else if (name.equals("endpoint")) {
             if (initializationFinished.isDone()) {

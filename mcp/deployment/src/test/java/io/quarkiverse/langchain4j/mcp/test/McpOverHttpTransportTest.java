@@ -155,7 +155,7 @@ public class McpOverHttpTransportTest {
         Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> receivedLogMessageForClient1 != null);
         assertThat(receivedLogMessageForClient1.level()).isEqualTo(McpLogLevel.INFO);
         assertThat(receivedLogMessageForClient1.logger()).isEqualTo("mock-mcp");
-        assertThat(receivedLogMessageForClient1.data().get("message").asText()).isEqualTo("This is a log message");
+        assertThat(receivedLogMessageForClient1.dataAsMap()).containsEntry("message", "This is a log message");
 
         // no client named 'client2' actually exists, so just make sure that no CDI event with this qualifier
         // was fired
