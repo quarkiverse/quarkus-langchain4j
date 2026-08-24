@@ -33,6 +33,8 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultTol
 
 NOTE: Use `@Timeout` carefully when using tools or multi-step function calls, as those may require more time to complete due to multiple background interactions with your application's tools or services.
 
+CAUTION: Use `@Retry` (and `@CircuitBreaker`) carefully when your AI service registers tools. Retrying the whole method call restarts the entire agent loop, so tool side effects that already completed (charges, emails, writes) may be executed again. Tools are expected to be idempotent — make sure your tool implementations tolerate being invoked multiple times for a single logical operation.
+
 == Example: Handling Disabled Integrations
 
 If model integrations are disabled (e.g. via `quarkus.langchain4j.openai.enable-integration=false`), calling the AI service will throw a `ModelDisabledException`. You can use `@Fallback` to gracefully recover:
