@@ -107,7 +107,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
      * Only used with the legacy MCP protocol (versions up to 2025-11-25).
      */
     @Override
-    public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
+    public CompletableFuture<String> sendInitializeRequest(McpInitializeRequest request) {
         this.initializeRequest = request;
         McpCallContext ctx = new McpCallContext(null, request);
         return execute(ctx, false, true)
@@ -150,39 +150,39 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     }
 
     @Override
-    public CompletableFuture<JsonNode> executeOperationWithResponse(McpClientMessage operation) {
+    public CompletableFuture<String> sendRequest(McpClientMessage operation) {
         McpCallContext context = new McpCallContext(null, operation);
         return execute(context, false, true).subscribeAsCompletionStage();
     }
 
     @Override
-    public CompletableFuture<JsonNode> executeOperationWithResponse(McpCallContext context) {
+    public CompletableFuture<String> sendRequest(McpCallContext context) {
         return execute(context, false, true).subscribeAsCompletionStage();
     }
 
     @Override
-    public void executeOperationWithoutResponse(McpClientMessage operation) {
+    public void sendMessage(McpClientMessage operation) {
         execute(new McpCallContext(null, operation), false, false).subscribe().with(ignored -> {
         });
     }
 
     @Override
-    public void executeOperationWithoutResponse(McpCallContext context) {
+    public void sendMessage(McpCallContext context) {
         execute(context, false, false).subscribe().with(ignored -> {
         });
     }
 
-    private Uni<JsonNode> execute(McpClientMessage operation, boolean isRetry, boolean expectsResponse) {
+    private Uni<String> execute(McpClientMessage operation, boolean isRetry, boolean expectsResponse) {
         return execute(new McpCallContext(null, operation), isRetry, expectsResponse);
     }
 
-    private Uni<JsonNode> execute(McpCallContext context, boolean isRetry, boolean expectsResponse) {
-        CompletableFuture<JsonNode> future = new CompletableFuture<>();
-        Uni<JsonNode> uni = Uni.createFrom().completionStage(future);
+    private Uni<String> execute(McpCallContext context, boolean isRetry, boolean expectsResponse) {
+        CompletableFuture<String> future = new CompletableFuture<>();
+        Uni<String> uni = Uni.createFrom().completionStage(future);
         Long id = context.message().getId();
         McpClientMessage request = context.message();
         if (expectsResponse && id != null) {
-            operationHandler.startOperation(id, future);
+            operationHandler.expectResponse(id, future);
         }
         String body;
         try {
@@ -293,12 +293,11 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         response.result().bodyHandler(bodyBuffer -> {
                                             try {
                                                 String responseString = bodyBuffer.toString();
-                                                JsonNode node = objectMapper.readTree(responseString);
                                                 if (logResponses) {
                                                     log.info("Response: " + responseString);
                                                 }
-                                                operationHandler.handle(node);
-                                            } catch (JsonProcessingException e) {
+                                                operationHandler.onMessage(responseString);
+                                            } catch (RuntimeException e) {
                                                 future.completeExceptionally(e);
                                             }
                                         });
@@ -313,7 +312,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                                 new IllegalStateException("Cannot retry 404: initializeRequest is null"));
                                         return;
                                     }
-                                    initialize(initReq).thenAccept(node -> {
+                                    sendInitializeRequest(initReq).thenAccept(ignored -> {
                                         execute(request, true, true)
                                                 .subscribeAsCompletionStage()
                                                 .thenAccept(future::complete)
@@ -342,7 +341,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                                         if (logResponses) {
                                                             log.info("Response: " + responseString);
                                                         }
-                                                        operationHandler.handle(node);
+                                                        operationHandler.onMessage(responseString);
                                                         return;
                                                     }
                                                 } catch (JsonProcessingException ignored) {
@@ -491,10 +490,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                     log.info("Subsidiary SSE event received: " + data);
                 }
                 try {
-                    JsonNode jsonNode = objectMapper.readTree(data);
-                    operationHandler.handle(jsonNode);
-                } catch (JsonProcessingException e) {
-                    log.warn("Failed to parse subsidiary SSE event: " + data, e);
+                    operationHandler.onMessage(data);
+                } catch (RuntimeException e) {
+                    log.warn("Failed to handle subsidiary SSE event: " + data, e);
                 }
             } else if (line.startsWith("id:")) {
                 subsidiaryLastEventId.set(line.substring(3).trim());
