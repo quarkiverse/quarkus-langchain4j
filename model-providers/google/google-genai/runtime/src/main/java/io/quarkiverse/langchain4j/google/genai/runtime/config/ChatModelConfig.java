@@ -26,8 +26,11 @@ public interface ChatModelConfig {
      * less open-ended or creative response, while higher temperatures can lead to more diverse or creative results.
      * <p>
      * Range: 0.0 - 2.0
+     * <p>
+     * If not set, the parameter is omitted from the request and the model's own default applies.
      */
-    @WithDefault("${quarkus.langchain4j.temperature:1.0}")
+    @ConfigDocDefault("the model's default")
+    @WithDefault("${quarkus.langchain4j.temperature}")
     Optional<Double> temperature();
 
     /**

@@ -22,8 +22,11 @@ public interface ChatModelConfig {
      * A value of 0.9 is good for more creative applications, while 0 (argmax sampling) is good for ones with a well-defined
      * answer.
      * It is recommended to alter this or topP, but not both.
+     * <p>
+     * If not set, the parameter is omitted from the request and the model's own default applies.
      */
-    @WithDefault("${quarkus.langchain4j.temperature:1.0}")
+    @ConfigDocDefault("the model's default")
+    @WithDefault("${quarkus.langchain4j.temperature}")
     Optional<Double> temperature();
 
     /**
@@ -31,8 +34,10 @@ public interface ChatModelConfig {
      * with topP probability mass.
      * 0.1 means only the tokens comprising the top 10% probability mass are considered.
      * It is recommended to alter this or temperature, but not both.
+     * <p>
+     * If not set, the parameter is omitted from the request and the model's own default applies.
      */
-    @WithDefault("1.0")
+    @ConfigDocDefault("the model's default")
     Optional<Double> topP();
 
     /**

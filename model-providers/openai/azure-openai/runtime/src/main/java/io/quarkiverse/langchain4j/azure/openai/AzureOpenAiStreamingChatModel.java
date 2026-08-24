@@ -127,7 +127,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .azureApiKey(apiKey)
                 .configName(configName)
                 .build();
-        this.temperature = getOrDefault(temperature, 0.7);
+        this.temperature = temperature;
         this.topP = topP;
         this.maxTokens = maxTokens;
         this.presencePenalty = presencePenalty;
