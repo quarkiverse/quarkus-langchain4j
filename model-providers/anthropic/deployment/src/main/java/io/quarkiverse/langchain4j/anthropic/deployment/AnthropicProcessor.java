@@ -74,6 +74,8 @@ public class AnthropicProcessor {
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(ANTHROPIC_CHAT_MODEL_BUILDER) }, null) },
                                 null), ANY)
@@ -89,6 +91,8 @@ public class AnthropicProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(ANTHROPIC_STREAMING_CHAT_MODEL_BUILDER) },

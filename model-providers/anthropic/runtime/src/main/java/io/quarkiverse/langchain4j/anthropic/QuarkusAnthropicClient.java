@@ -16,14 +16,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
@@ -51,8 +55,12 @@ import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.model.chat.response.PartialToolCallContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.chat.response.StreamingHandle;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -67,6 +75,8 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     private final String configuredBeta;
     private final Boolean disableBetaHeader;
     private final AnthropicRestApi restApi;
+
+    private final boolean hasModelAuthProvider;
 
     public QuarkusAnthropicClient(Builder builder) {
         this.apiKey = builder.apiKey;
@@ -84,6 +94,11 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                         new QuarkusAnthropicClient.AnthropicClientLogger(builder.logRequests, builder.logResponses,
                                 builder.logCurl));
             }
+
+            var modelAuthProvider = ModelAuthProvider.resolve(builder.configName);
+            this.hasModelAuthProvider = modelAuthProvider.isPresent();
+            modelAuthProvider.ifPresent(provider -> restApiBuilder
+                    .register(new AnthropicRestAPIFilter(provider)));
 
             this.restApi = restApiBuilder.build(AnthropicRestApi.class);
         } catch (URISyntaxException e) {
@@ -112,7 +127,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
     private AnthropicRestApi.ApiMetadata createMetadata(AnthropicCreateMessageRequest request) {
         var builder = AnthropicRestApi.ApiMetadata.builder()
-                .apiKey(apiKey)
+                .apiKey(hasModelAuthProvider ? null : apiKey)
                 .anthropicVersion(anthropicVersion);
 
         String betaHeader = buildBetaHeaderForRequest(request);
@@ -495,12 +510,25 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         return value != null && value;
     }
 
+    private static final ThreadLocal<String> CONFIG_NAME_HINT = new ThreadLocal<>();
+
+    public static void setConfigNameHint(String configName) {
+        CONFIG_NAME_HINT.set(configName);
+    }
+
+    static String getAndClearConfigNameHint() {
+        String value = CONFIG_NAME_HINT.get();
+        CONFIG_NAME_HINT.remove();
+        return value;
+    }
+
     public static class QuarkusAnthropicClientBuilderFactory implements AnthropicClientBuilderFactory {
         @Override
         public AnthropicClient.Builder get() {
             Builder builder = new Builder();
             builder.logCurl = getAndClearLogCurlHint();
             builder.disableBetaHeader = getAndClearDisableBetaHint();
+            builder.configName = getAndClearConfigNameHint();
             return builder;
         }
     }
@@ -508,6 +536,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     public static class Builder extends AnthropicClient.Builder<QuarkusAnthropicClient, Builder> {
         public boolean logCurl;
         public boolean disableBetaHeader;
+        public String configName;
 
         @Override
         public QuarkusAnthropicClient build() {
@@ -602,6 +631,51 @@ public class QuarkusAnthropicClient extends AnthropicClient {
             } catch (Exception e) {
                 return "Failed to mask the API key.";
             }
+        }
+    }
+
+    static class AnthropicRestAPIFilter implements ResteasyReactiveClientRequestFilter {
+        private final ModelAuthProvider authorizer;
+
+        AnthropicRestAPIFilter(ModelAuthProvider authorizer) {
+            this.authorizer = authorizer;
+        }
+
+        @Override
+        public void filter(ResteasyReactiveClientRequestContext requestContext) {
+            Executor executor = createExecutor();
+            requestContext.suspend();
+            executor.execute(() -> {
+                try {
+                    String authValue = authorizer.getAuthorization(new ModelAuthProvider.Input() {
+                        @Override
+                        public String method() {
+                            return requestContext.getMethod();
+                        }
+
+                        @Override
+                        public URI uri() {
+                            return requestContext.getUri();
+                        }
+
+                        @Override
+                        public Map<String, List<Object>> headers() {
+                            return requestContext.getHeaders();
+                        }
+                    });
+                    if (authValue != null) {
+                        requestContext.getHeaders().putSingle("Authorization", authValue);
+                    }
+                    requestContext.resume();
+                } catch (Exception e) {
+                    requestContext.resume(e);
+                }
+            });
+        }
+
+        private static Executor createExecutor() {
+            InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
+            return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
         }
     }
 }

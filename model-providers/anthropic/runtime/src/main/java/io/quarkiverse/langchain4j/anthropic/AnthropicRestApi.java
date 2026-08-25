@@ -76,10 +76,6 @@ public interface AnthropicRestApi {
         public final String beta;
 
         private ApiMetadata(String apiKey, String anthropicVersion, String beta) {
-            if ((apiKey == null) || apiKey.isBlank()) {
-                throw new IllegalArgumentException("apiKey cannot be null or blank");
-            }
-
             if ((anthropicVersion == null) || anthropicVersion.isBlank()) {
                 throw new IllegalArgumentException("anthropicVersion cannot be null or blank");
             }
