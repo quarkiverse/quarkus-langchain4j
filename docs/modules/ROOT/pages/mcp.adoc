@@ -714,13 +714,13 @@ import jakarta.enterprise.event.Observes;
 public class McpLogObserver {
 
     public void onGitHubLog(@Observes @McpClientName("github") McpLogMessage logMessage) {
-        System.out.println("GitHub MCP: [" + logMessage.level() + "] " + logMessage.data());
+        System.out.println("GitHub MCP: [" + logMessage.level() + "] " + logMessage.dataAsObject());
         // Custom handling: store in database, trigger alerts, etc.
     }
 
     public void onAnyMcpLog(@Observes McpLogMessage logMessage) {
         // Observe logs from all MCP clients (no @McpClientName qualifier)
-        System.out.println("MCP Log: [" + logMessage.level() + "] " + logMessage.data());
+        System.out.println("MCP Log: [" + logMessage.level() + "] " + logMessage.dataAsObject());
         // Custom handling: store in database, trigger alerts, etc.
     }
 }
@@ -728,9 +728,16 @@ public class McpLogObserver {
 
 The `McpLogMessage` includes:
 
-- `data()`: The log message as a `JsonNode`
 - `level()`: Log level as `McpLogLevel` enum (DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY)
 - `logger()`: Logger name from the MCP server
+- `dataAsObject()`: The log payload as an `Object`
+- `dataAsMap()`: The log payload as a `Map<String, Object>`, or `null` if it is not a JSON object
+- `dataAsJson()`: The log payload as JSON text
+
+MCP allows the payload to be any JSON value, so a server may send a plain string just as well as an
+object. `dataAsObject()` therefore returns whatever arrived - most often a `String` or a `Map`. Use
+`dataAsMap()` when you read named fields out of the payload, and `dataAsJson()` when you pass it on
+as JSON.
 
 === Observing MCP Resource Updates
 
