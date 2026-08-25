@@ -65,7 +65,7 @@ public class RAGTest {
         Awaitility.await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
             Assertions.assertFalse(answers.isEmpty());
         });
-        Assertions.assertEquals("Hello, I'm Bob, how can I help you?", answers.get(0));
+        Assertions.assertEquals("Hello, I'm Sam, how can I help you?", answers.get(0));
     }
 
     @Test

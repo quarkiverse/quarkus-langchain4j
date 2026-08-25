@@ -32,6 +32,7 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.GenericSignature;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
@@ -99,6 +100,7 @@ import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
 import io.quarkus.gizmo.ClassTransformer;
+import io.quarkus.gizmo.FieldCreator;
 import io.quarkus.gizmo.FieldDescriptor;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
@@ -958,7 +960,14 @@ public class ToolProcessor {
                 FieldDescriptor fieldDescriptor = FieldDescriptor.of(implClassName, parameter.name(),
                         parameter.type().name().toString());
                 fieldDescriptors.add(fieldDescriptor);
-                classCreator.getFieldCreator(fieldDescriptor).setModifiers(Modifier.PUBLIC);
+
+                FieldCreator field = classCreator.getFieldCreator(fieldDescriptor);
+                field.setModifiers(Modifier.PUBLIC);
+
+                String genericSignature = genericFieldSignature(parameter.type());
+                if (genericSignature != null) {
+                    field.setSignature(genericSignature);
+                }
             }
 
             MethodCreator mc = classCreator
@@ -1227,6 +1236,48 @@ public class ToolProcessor {
     private static class ObjectMapperHolder {
         private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
         private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
+        };
+    }
+
+    private static String genericFieldSignature(Type type) {
+        if (containsUnresolvedTypeVariable(type)) {
+            throw new IllegalArgumentException("Tool parameter type must not contain unresolved type variables: " + type);
+        }
+        if (!containsParameterizedType(type)) {
+            return null;
+        }
+
+        StringBuilder signature = new StringBuilder();
+        GenericSignature.forType(type, GenericSignature.NO_SUBSTITUTION, signature);
+        return signature.toString();
+    }
+
+    private static boolean containsParameterizedType(Type type) {
+        return switch (type.kind()) {
+            case PARAMETERIZED_TYPE -> true;
+            case ARRAY -> containsParameterizedType(type.asArrayType().constituent());
+            default -> false;
+        };
+    }
+
+    private static boolean containsUnresolvedTypeVariable(Type type) {
+        return switch (type.kind()) {
+            case TYPE_VARIABLE, UNRESOLVED_TYPE_VARIABLE, TYPE_VARIABLE_REFERENCE -> true;
+            case ARRAY -> containsUnresolvedTypeVariable(type.asArrayType().constituent());
+            case PARAMETERIZED_TYPE -> {
+                ParameterizedType parameterizedType = type.asParameterizedType();
+                if (parameterizedType.owner() != null && containsUnresolvedTypeVariable(parameterizedType.owner())) {
+                    yield true;
+                }
+                yield parameterizedType.arguments().stream().anyMatch(ToolProcessor::containsUnresolvedTypeVariable);
+            }
+            case WILDCARD_TYPE -> {
+                Type extendsBound = type.asWildcardType().extendsBound();
+                Type superBound = type.asWildcardType().superBound();
+                yield (extendsBound != null && containsUnresolvedTypeVariable(extendsBound))
+                        || (superBound != null && containsUnresolvedTypeVariable(superBound));
+            }
+            default -> false;
         };
     }
 }

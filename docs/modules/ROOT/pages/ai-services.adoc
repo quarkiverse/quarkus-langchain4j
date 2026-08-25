@@ -130,9 +130,9 @@ The system message can be set on the AI Service interface itself or on individua
 - `fromResource`: load message from a resource file.
 
 When the system message needs to be computed at runtime, implement a provider and reference it from `@RegisterAiService(systemMessageProviderSupplier = ...)`.
-Implement `SystemMessageProvider` when the message only depends on the memory ID, or `SystemMessageProviderWithContext` when it needs to inspect the model in use (provider and model name).
+Implement `SystemMessageProvider` when the message only depends on the memory ID, or `SystemMessageProviderWithContext` when it needs to inspect the model in use.
 
-To customize the system message for a specific model while keeping a default for all others, return the model-specific message in the matching branch and the default at the end (the fallback):
+`InvocationContext` exposes the model at two levels of granularity: `modelProvider()` gives the provider (e.g. `ModelProvider.OPEN_AI`), while `defaultRequestParameters().modelName()` gives the exact model name in use (e.g. `gpt-4o` vs `gpt-4o-mini`), which lets the system message vary per model, not just per provider:
 
 [source,java]
 ----
@@ -140,11 +140,25 @@ public class ModelAwareSystemMessageProvider implements SystemMessageProviderWit
 
     @Override
     public Optional<String> getSystemMessage(InvocationContext context) {
+        String modelName = context.defaultRequestParameters().modelName();
+        if ("gpt-4o-mini".equals(modelName)) {
+            return Optional.of("You are a helpful assistant. Be very concise, this model has a small context window.");
+        }
         if (context.modelProvider() == ModelProvider.OPEN_AI) {
             return Optional.of("You are a helpful assistant. Be concise.");
         }
         return Optional.of("You are a helpful assistant."); // fallback for every other model
     }
+}
+----
+
+Register it on the AI service with `systemMessageProviderSupplier`:
+
+[source,java]
+----
+@RegisterAiService(systemMessageProviderSupplier = ModelAwareSystemMessageProvider.class)
+public interface Assistant {
+    String chat(String message);
 }
 ----
 

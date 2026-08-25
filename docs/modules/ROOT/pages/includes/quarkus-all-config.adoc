@@ -1319,6 +1319,116 @@ endif::add-copy-button-to-env-var[]
 |`+++empty list+++`
 
 
+h|[.extension-name]##Quarkus LangChain4j - A2A Apicurio Registry - Runtime##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-enabled]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-enabled[`+++quarkus.langchain4j.a2a.apicurio-registry.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Apicurio Registry A2A agent discovery integration is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-url]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-url[`+++quarkus.langchain4j.a2a.apicurio-registry.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of the Apicurio Registry instance (e.g. http://localhost:8080/apis/registry/v3).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token[`+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional authentication token for the registry.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-group-id]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-group-id[`+++quarkus.langchain4j.a2a.apicurio-registry.group-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.group-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Group ID to use when publishing and searching agent cards.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_GROUP_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_GROUP_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-agent-url]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-agent-url[`+++quarkus.langchain4j.a2a.apicurio-registry.agent-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.agent-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of this application's A2A server endpoint, used when publishing the agent card.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AGENT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AGENT_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+
 h|[.extension-name]##Quarkus LangChain4j - AI Gemini##
 h|Type
 h|Default
@@ -2620,6 +2730,8 @@ What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 wi
 
 It is generally recommended to set this or the `top-k` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TEMPERATURE+++[]
@@ -2666,6 +2778,8 @@ Double (0.0-1.0). Nucleus sampling, where the model considers the results of the
 
 It is generally recommended to set this or the `temperature` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_P+++[]
@@ -2685,7 +2799,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.
+
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -3289,6 +3405,8 @@ What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 wi
 
 It is generally recommended to set this or the `top-k` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
@@ -3335,6 +3453,8 @@ Double (0.0-1.0). Nucleus sampling, where the model considers the results of the
 
 It is generally recommended to set this or the `temperature` property but not both.
 
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
@@ -3354,7 +3474,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.
+
+Not supported by `claude-opus-4-7`, `claude-opus-4-8`, `claude-sonnet-5`, `claude-fable-5`, and later models. See link:https://platform.claude.com/docs/en/about-claude/models/migration-guide[Anthropic's migration guide].
 
 
 ifdef::add-copy-button-to-env-var[]
