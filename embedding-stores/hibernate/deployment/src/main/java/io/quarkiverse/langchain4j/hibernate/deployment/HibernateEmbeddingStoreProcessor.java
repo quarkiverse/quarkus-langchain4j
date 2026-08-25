@@ -1,12 +1,13 @@
 package io.quarkiverse.langchain4j.hibernate.deployment;
 
-import static io.quarkiverse.langchain4j.hibernate.runtime.DynamicEmbeddingStoreAdditionalMappingContributor.DEFAULT_DYNAMIC_PU_NAME;
 import static io.quarkus.hibernate.orm.deployment.util.HibernateProcessorUtil.setDialectAndStorageEngine;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -23,6 +24,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.cfg.SchemaToolingSettings;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.tool.schema.Action;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -45,6 +47,7 @@ import dev.langchain4j.store.embedding.hibernate.HibernateEmbeddingStore;
 import dev.langchain4j.store.embedding.hibernate.MetadataAttribute;
 import dev.langchain4j.store.embedding.hibernate.UnmappedMetadata;
 import io.agroal.api.AgroalPoolInterceptor;
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.hibernate.runtime.DynamicEmbeddingStoreAdditionalMappingContributor;
 import io.quarkiverse.langchain4j.hibernate.runtime.HibernateEmbeddingStoreRecorder;
@@ -98,6 +101,7 @@ class HibernateEmbeddingStoreProcessor {
     private static final DotName UNMAPPED_METADATA = DotName.createSimple(UnmappedMetadata.class);
     private static final DotName METADATA_ATTRIBUTE = DotName.createSimple(MetadataAttribute.class);
 
+    private static final String DEFAULT_DYNAMIC_PU_NAME = "<langchain4j-hibernate-dynamic-default>";
     private static final String FEATURE = "langchain4j-hibernate";
     private static final String CREATE_SCRIPT = "META-INF/langchain4j-hibernate-dynamic-create-script.sql";
     private static final String LOAD_SCRIPT = "META-INF/langchain4j-hibernate-dynamic-load-script.sql";
@@ -115,6 +119,62 @@ class HibernateEmbeddingStoreProcessor {
 
     @BuildStep
     public void produceDynamicMappingBuildItem(
+            HibernateGenericBuildTimeConfig buildTimeConfig,
+            BuildProducer<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptors,
+            BuildProducer<HibernateEmbeddingStoreMappingBuildItem> mappingBuildItemProducer,
+            BuildProducer<JpaModelPersistenceUnitContributionBuildItem> puContributionBuildItemBuildProducer,
+            BuildProducer<ServiceProviderBuildItem> serviceProviderBuildItem,
+            BuildProducer<ReflectiveMethodBuildItem> reflectiveMethods,
+            BuildProducer<SystemPropertyBuildItem> systemProperties,
+            BuildProducer<GeneratedResourceBuildItem> generatedResourceBuildProducer,
+            HibernateOrmConfig hibernateOrmConfig,
+            List<DatabaseKindDialectBuildItem> dbKindMetadataBuildItems,
+            List<HibernateEmbeddingStoreDatabaseKindMappingBuildItem> databaseKindMappings,
+            List<PersistenceXmlDescriptorBuildItem> persistenceXmlDescriptors,
+            ImpliedBlockingPersistenceUnitTypeBuildItem impliedPU,
+            List<JdbcDataSourceBuildItem> jdbcDataSources) {
+        if (buildTimeConfig.defaultConfig().defaultStoreEnabled()) {
+            produceDynamicMappingBuildItem(
+                    null,
+                    buildTimeConfig.defaultConfig(),
+                    persistenceUnitDescriptors,
+                    mappingBuildItemProducer,
+                    puContributionBuildItemBuildProducer,
+                    serviceProviderBuildItem,
+                    reflectiveMethods,
+                    systemProperties,
+                    generatedResourceBuildProducer,
+                    hibernateOrmConfig,
+                    dbKindMetadataBuildItems,
+                    databaseKindMappings,
+                    persistenceXmlDescriptors,
+                    impliedPU,
+                    jdbcDataSources);
+        }
+
+        for (Map.Entry<String, HibernateGenericEmbeddingStoreBuildTimeConfig> entry : buildTimeConfig.namedConfig()
+                .entrySet()) {
+            produceDynamicMappingBuildItem(
+                    entry.getKey(),
+                    entry.getValue(),
+                    persistenceUnitDescriptors,
+                    mappingBuildItemProducer,
+                    puContributionBuildItemBuildProducer,
+                    serviceProviderBuildItem,
+                    reflectiveMethods,
+                    systemProperties,
+                    generatedResourceBuildProducer,
+                    hibernateOrmConfig,
+                    dbKindMetadataBuildItems,
+                    databaseKindMappings,
+                    persistenceXmlDescriptors,
+                    impliedPU,
+                    jdbcDataSources);
+        }
+    }
+
+    public void produceDynamicMappingBuildItem(
+            String storeName,
             HibernateGenericEmbeddingStoreBuildTimeConfig dynamicBuildTimeConfig,
             BuildProducer<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptors,
             BuildProducer<HibernateEmbeddingStoreMappingBuildItem> mappingBuildItemProducer,
@@ -125,6 +185,7 @@ class HibernateEmbeddingStoreProcessor {
             BuildProducer<GeneratedResourceBuildItem> generatedResourceBuildProducer,
             HibernateOrmConfig hibernateOrmConfig,
             List<DatabaseKindDialectBuildItem> dbKindMetadataBuildItems,
+            List<HibernateEmbeddingStoreDatabaseKindMappingBuildItem> databaseKindMappings,
             List<PersistenceXmlDescriptorBuildItem> persistenceXmlDescriptors,
             ImpliedBlockingPersistenceUnitTypeBuildItem impliedPU,
             List<JdbcDataSourceBuildItem> jdbcDataSources) {
@@ -164,19 +225,8 @@ class HibernateEmbeddingStoreProcessor {
                         case UPDATE -> Action.UPDATE;
                         case VALIDATE -> Action.VALIDATE;
                     });
-            DatabaseKind databaseKind = switch (jdbcDataSource.getDbKind()) {
-                case "db2" -> DatabaseKind.DB2;
-                case "mariadb" -> DatabaseKind.MARIADB;
-                case "mssql" -> DatabaseKind.MSSQL;
-                case "mysql" -> DatabaseKind.MYSQL;
-                case "postgresql" -> DatabaseKind.POSTGRESQL;
-                case "oracle" -> DatabaseKind.ORACLE;
-                default -> null;
-            };
-            if (databaseKind == null) {
-                throw new ConfigurationException(
-                        "Unsupported database kind for Langchain4j Hibernate EmbeddingStore: " + jdbcDataSource.getDbKind());
-            }
+            DatabaseKind databaseKind = resolveDatabaseKindMapping(databaseKindMappings, jdbcDataSource.getDbKind())
+                    .getDatabaseKind();
             final String setupSql = databaseKind.getSetupSql();
             if (setupSql != null) {
                 properties.put(SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SOURCE,
@@ -198,19 +248,22 @@ class HibernateEmbeddingStoreProcessor {
 
             properties.put(DynamicEmbeddingStoreAdditionalMappingContributor.DIMENSION_CONFIGURATION,
                     dynamicBuildTimeConfig.dimension().orElseThrow(() -> new ConfigurationException(
-                            "The config property quarkus.langchain4j.generic.dimension is required but it could not be found in any config source",
-                            Set.of("quarkus.langchain4j.generic.dimension"))));
+                            "The config property quarkus.langchain4j.generic" + (storeName == null ? "" : ("." + storeName))
+                                    + ".dimension is required but it could not be found in any config source",
+                            Set.of("quarkus.langchain4j.generic" + (storeName == null ? "" : ("." + storeName))
+                                    + ".dimension"))));
             properties.put(DynamicEmbeddingStoreAdditionalMappingContributor.TABLE_CONFIGURATION,
                     dynamicBuildTimeConfig.table());
+            final String puName = storeName == null ? DEFAULT_DYNAMIC_PU_NAME : storeName;
             puContributionBuildItemBuildProducer.produce(new JpaModelPersistenceUnitContributionBuildItem(
-                    DEFAULT_DYNAMIC_PU_NAME,
+                    puName,
                     null,
                     Collections.emptyList(),
                     List.of(MAPPINGS_FILE)));
 
             // Borrowed from HibernateOrmProcessor#collectDialectConfig
             Optional<io.quarkus.datasource.common.runtime.DatabaseKind.SupportedDatabaseKind> supportedDatabaseKind = setDialectAndStorageEngine(
-                    DEFAULT_DYNAMIC_PU_NAME,
+                    puName,
                     Optional.of(jdbcDataSource.getDbKind()),
                     Optional.empty(),
                     Optional.empty(),
@@ -231,7 +284,7 @@ class HibernateEmbeddingStoreProcessor {
             persistenceUnitDescriptors
                     .produce(new PersistenceUnitDescriptorBuildItem(
                             new QuarkusPersistenceUnitDescriptor(
-                                    DEFAULT_DYNAMIC_PU_NAME,
+                                    puName,
                                     new HibernateOrmPersistenceUnitProviderHelper(),
                                     PersistenceUnitTransactionType.JTA,
                                     Collections.emptyList(),
@@ -252,19 +305,41 @@ class HibernateEmbeddingStoreProcessor {
                             null,
                             List.of(xmlMapping),
                             false, false, Optional.of(FormatMapperKind.JACKSON), Optional.empty()));
+            Map<String, Object> queryHints = new HashMap<>();
+            List<String> databaseHints = new ArrayList<>();
+            dynamicBuildTimeConfig.consistencyLevel()
+                    .ifPresent(consistencyLevel -> databaseHints.add("consistencyLevel=" + consistencyLevel));
+            if (!databaseHints.isEmpty()) {
+                queryHints.put(HibernateHints.HINT_QUERY_DATABASE, databaseHints);
+            }
             mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
-                    DEFAULT_DYNAMIC_PU_NAME,
+                    storeName,
+                    jdbcDataSource.getDbKind(),
+                    puName,
                     EMBEDDING_ENTITY.toString(),
-                    dynamicBuildTimeConfig.distanceFunction()));
+                    dynamicBuildTimeConfig.distanceFunction(),
+                    queryHints));
         } else {
             mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
-                    null, null, null));
+                    storeName, null, null, null, null, null));
         }
     }
 
     private boolean isEmpty(HibernateGenericEmbeddingStoreBuildTimeConfig config) {
         return config.datasource().isEmpty()
                 && config.dimension().isEmpty();
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void produceDatabaseKindMappings(
+            HibernateEmbeddingStoreRecorder recorder,
+            BuildProducer<HibernateEmbeddingStoreDatabaseKindMappingBuildItem> databaseKindMappingProducer) {
+        for (String databaseKindName : List.of("db2", "mariadb", "mssql", "mysql", "postgresql", "oracle")) {
+            databaseKindMappingProducer.produce(new HibernateEmbeddingStoreDatabaseKindMappingBuildItem(
+                    databaseKindName, HibernateEmbeddingStoreRecorder.resolveDatabaseKind(databaseKindName),
+                    recorder.resolveDatabaseKindRuntimeValue(databaseKindName)));
+        }
     }
 
     @BuildStep
@@ -278,11 +353,13 @@ class HibernateEmbeddingStoreProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             HibernateEmbeddingStoreRecorder recorder,
             List<PersistenceUnitDescriptorBuildItem> pus,
+            List<HibernateEmbeddingStoreDatabaseKindMappingBuildItem> databaseKindMappings,
             List<HibernateEmbeddingStoreMappingBuildItem> mappings,
             JpaModelIndexBuildItem indexBuildItem,
             JpaModelPersistenceUnitMappingBuildItem persistenceUnitMappingBuildItem) {
         for (HibernateEmbeddingStoreMappingBuildItem mapping : mappings) {
-            createBean(beanProducer, recorder, mapping, pus, indexBuildItem, persistenceUnitMappingBuildItem);
+            createBean(beanProducer, recorder, mapping, pus, databaseKindMappings, indexBuildItem,
+                    persistenceUnitMappingBuildItem);
         }
     }
 
@@ -291,6 +368,7 @@ class HibernateEmbeddingStoreProcessor {
             HibernateEmbeddingStoreRecorder recorder,
             HibernateEmbeddingStoreMappingBuildItem mappingBuildItem,
             List<PersistenceUnitDescriptorBuildItem> pus,
+            List<HibernateEmbeddingStoreDatabaseKindMappingBuildItem> databaseKindMappings,
             JpaModelIndexBuildItem indexBuildItem,
             JpaModelPersistenceUnitMappingBuildItem persistenceUnitMappingBuildItem) {
 
@@ -381,7 +459,10 @@ class HibernateEmbeddingStoreProcessor {
                         "Unable to find entity classes containing @Embedding annotation for configured HibernateEmbeddingStore");
                 case 1 -> entityClassInfos.get(0);
                 default -> throw new IllegalArgumentException(
-                        "Multiple entity classes containing @Embedding annotation found. Please explicitly configure quarkus.langchain4j.hibernate-orm.entity-name");
+                        "Multiple entity classes containing @Embedding annotation found. Please explicitly configure quarkus.langchain4j.hibernate-orm"
+                                + (mappingBuildItem.getEmbeddingStoreName() == null ? ""
+                                        : ("." + mappingBuildItem.getEmbeddingStoreName()))
+                                + ".entity-name");
             };
         }
 
@@ -462,6 +543,30 @@ class HibernateEmbeddingStoreProcessor {
                         ? localDistanceFunction
                         : DistanceFunction.COSINE;
 
+        final AnnotationInstance[] qualifiers;
+        if (mappingBuildItem.getEmbeddingStoreName() == null) {
+            qualifiers = new AnnotationInstance[0];
+        } else {
+            qualifiers = new AnnotationInstance[] {
+                    AnnotationInstance.builder(EmbeddingStoreName.class)
+                            .add("value", mappingBuildItem.getEmbeddingStoreName())
+                            .build()
+            };
+        }
+        HibernateEmbeddingStoreDatabaseKindMappingBuildItem databaseKindMapping;
+        if (mappingBuildItem.getDatabaseKind() == null) {
+            databaseKindMapping = resolveDatabaseKindMapping(databaseKindMappings, databaseKind);
+        } else {
+            databaseKindMapping = resolveDatabaseKindMapping(databaseKindMappings, mappingBuildItem.getDatabaseKind());
+            HibernateEmbeddingStoreDatabaseKindMappingBuildItem persistenceUnitMapping = resolveDatabaseKindMapping(
+                    databaseKindMappings, databaseKind);
+            if (databaseKindMapping.getDatabaseKind() != persistenceUnitMapping.getDatabaseKind()) {
+                throw new IllegalArgumentException("Database kind on persistence unit [" + databaseKind
+                        + "] is incompatible with database kind of JDBC datasource [" + mappingBuildItem.getDatabaseKind()
+                        + "]");
+            }
+        }
+
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(HIBERNATE_EMBEDDING_STORE)
                 .types(ClassType.create(HibernateEmbeddingStore.class),
@@ -473,19 +578,21 @@ class HibernateEmbeddingStoreProcessor {
                 .unremovable()
                 .scope(ApplicationScoped.class)
                 .createWith(recorder.embeddingStoreFunction(
-                        databaseKind,
+                        databaseKindMapping.getDatabaseKindRuntimeValue(),
                         entityName,
                         embeddingAttributeName,
                         embeddedTextAttributeName,
                         unmappedMetadataAttributeName,
                         metadataAttributeNames,
                         "<default>".equals(persistenceUnitName) ? null : persistenceUnitName,
-                        distanceFunction))
+                        distanceFunction,
+                        mappingBuildItem.getQueryHints()))
                 .addInjectionPoint(ClassType.create(DotName.createSimple(EntityManagerFactory.class)),
                         entityManagerFactoryQualifier)
+                .qualifiers(qualifiers)
                 .done());
 
-        DatabaseKind langchain4jDatabaseKind = HibernateEmbeddingStoreRecorder.langchain4jDatabaseKind(databaseKind);
+        DatabaseKind langchain4jDatabaseKind = databaseKindMapping.getDatabaseKind();
         if (!DEFAULT_DYNAMIC_PU_NAME.equals(persistenceUnitName)
                 && langchain4jDatabaseKind != null && langchain4jDatabaseKind.getSetupSql() != null) {
             AnnotationInstance datasourceQualifier = persistenceUnitDescriptor.getConfig().getDataSource()
@@ -503,6 +610,20 @@ class HibernateEmbeddingStoreProcessor {
                     .qualifiers(datasourceQualifier)
                     .done());
         }
+    }
+
+    private HibernateEmbeddingStoreDatabaseKindMappingBuildItem resolveDatabaseKindMapping(
+            List<HibernateEmbeddingStoreDatabaseKindMappingBuildItem> databaseKindMappings,
+            String databaseKind) {
+        for (HibernateEmbeddingStoreDatabaseKindMappingBuildItem databaseKindMapping : databaseKindMappings) {
+            if (databaseKind.equals(databaseKindMapping.getDatabaseKindName())) {
+                return databaseKindMapping;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "Unsupported database kind for Langchain4j Hibernate EmbeddingStore: " + databaseKind
+                        + ". Available kinds are: " + databaseKindMappings);
     }
 
     private static List<ClassInfo> getEntityClassInfos(JpaModelIndexBuildItem indexBuildItem) {

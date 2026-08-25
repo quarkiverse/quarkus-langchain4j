@@ -13,6 +13,7 @@
     <modules>
         <module>chroma</module>
         <module>hibernate</module>
+        <module>hibernate-milvus</module>
         <module>infinispan</module>
         <module>milvus</module>
         <module>neo4j</module>
