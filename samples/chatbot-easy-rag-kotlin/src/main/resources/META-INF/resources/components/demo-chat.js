@@ -75,7 +75,7 @@ export class DemoChat extends LitElement {
       chatBot.sendMessage(null, {
         message: markdownMessage,
         right: false,
-        sender: {name: 'Bob', id: '007'}
+        sender: {name: 'Sam', id: '007'}
       });
     };
 
@@ -96,7 +96,7 @@ export class DemoChat extends LitElement {
 
         chatBot.sendMessage("", {
           right: false,
-          sender: {name: 'Bob', id: '007'},
+          sender: {name: 'Sam', id: '007'},
           loading: true
         });
       }
