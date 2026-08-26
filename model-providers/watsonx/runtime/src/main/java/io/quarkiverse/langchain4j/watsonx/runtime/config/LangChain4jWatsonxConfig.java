@@ -156,6 +156,16 @@ public interface LangChain4jWatsonxConfig {
         EmbeddingModelConfig embeddingModel();
 
         /**
+         * Gateway embedding model related settings.
+         */
+        GatewayEmbeddingModelConfig gatewayEmbeddingModel();
+
+        /**
+         * Gateway image model related settings.
+         */
+        GatewayImageModelConfig gatewayImageModel();
+
+        /**
          * Scoring model related settings.
          */
         ScoringModelConfig scoringModel();

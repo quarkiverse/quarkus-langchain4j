@@ -1,13 +1,10 @@
 package io.quarkiverse.langchain4j.watsonx.runtime.config;
 
-import java.util.Optional;
-
-import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public interface EmbeddingModelConfig {
+public interface EmbeddingModelConfig extends CommonEmbeddingModelConfig {
 
     /**
      * Specifies the ID of the model to be used.
@@ -21,22 +18,4 @@ public interface EmbeddingModelConfig {
      */
     @WithDefault("ibm/granite-embedding-278m-multilingual")
     String modelName();
-
-    /**
-     * Whether embedding model requests should be logged.
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> logRequests();
-
-    /**
-     * Whether embedding model responses should be logged.
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> logResponses();
-
-    /**
-     * Whether the watsonx.ai client should log requests as cURL commands.
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> logRequestsCurl();
 }
