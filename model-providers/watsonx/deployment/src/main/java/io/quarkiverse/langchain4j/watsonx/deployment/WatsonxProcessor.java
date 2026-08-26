@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
@@ -39,6 +40,8 @@ import dev.langchain4j.model.watsonx.WatsonxDeploymentChatModel;
 import dev.langchain4j.model.watsonx.WatsonxDeploymentStreamingChatModel;
 import dev.langchain4j.model.watsonx.WatsonxEmbeddingModel;
 import dev.langchain4j.model.watsonx.WatsonxGatewayChatModel;
+import dev.langchain4j.model.watsonx.WatsonxGatewayEmbeddingModel;
+import dev.langchain4j.model.watsonx.WatsonxGatewayImageModel;
 import dev.langchain4j.model.watsonx.WatsonxGatewayStreamingChatModel;
 import dev.langchain4j.model.watsonx.WatsonxModerationModel;
 import dev.langchain4j.model.watsonx.WatsonxScoringModel;
@@ -48,10 +51,12 @@ import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -97,6 +102,10 @@ public class WatsonxProcessor {
             .createSimple(WatsonxGatewayStreamingChatModel.Builder.class);
     private static final DotName WATSONX_EMBEDDING_MODEL_BUILDER = DotName
             .createSimple(WatsonxEmbeddingModel.Builder.class);
+    private static final DotName WATSONX_GATEWAY_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(WatsonxGatewayEmbeddingModel.Builder.class);
+    private static final DotName WATSONX_GATEWAY_IMAGE_MODEL_BUILDER = DotName
+            .createSimple(WatsonxGatewayImageModel.Builder.class);
     private static final DotName WATSONX_SCORING_MODEL_BUILDER = DotName
             .createSimple(WatsonxScoringModel.Builder.class);
     private static final DotName WATSONX_MODERATION_MODEL_BUILDER = DotName
@@ -125,6 +134,7 @@ public class WatsonxProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
             BuildProducer<ScoringModelProviderCandidateBuildItem> scoringProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             LangChain4jWatsonBuildConfig config) {
@@ -135,6 +145,10 @@ public class WatsonxProcessor {
 
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+        }
+
+        if (config.gatewayImageModel().enabled().isEmpty() || config.gatewayImageModel().enabled().get()) {
+            imageProducer.produce(new ImageModelProviderCandidateBuildItem(PROVIDER));
         }
 
         if (config.scoringModel().enabled().isEmpty() || config.scoringModel().enabled().get()) {
@@ -280,6 +294,7 @@ public class WatsonxProcessor {
     void generateBeans(WatsonxRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedImageModelProviderBuildItem> selectedImage,
             List<SelectedScoringModelProviderBuildItem> selectedScoring,
             List<SelectedModerationModelProviderBuildItem> selectedModeration,
             List<TextExtractionClassBuildItem> selectedTextExtraction,
@@ -493,7 +508,30 @@ public class WatsonxProcessor {
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(WATSONX_EMBEDDING_MODEL_BUILDER) }, null) },
                                 null), ANY)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(WATSONX_GATEWAY_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.embeddingModel(configName));
+                addQualifierIfNecessary(builder, configName);
+                beanProducer.produce(builder.done());
+            }
+        }
+
+        for (var selected : selectedImage) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String configName = selected.getConfigName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(IMAGE_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(WATSONX_GATEWAY_IMAGE_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.imageModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
