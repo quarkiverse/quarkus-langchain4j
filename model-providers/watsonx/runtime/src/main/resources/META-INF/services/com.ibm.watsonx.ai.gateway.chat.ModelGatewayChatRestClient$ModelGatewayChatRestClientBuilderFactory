@@ -1,1 +1,1 @@
-io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayRestClient$QuarkusModelGatewayRestClientBuilderFactory
+io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayChatRestClient$QuarkusModelGatewayChatRestClientBuilderFactory

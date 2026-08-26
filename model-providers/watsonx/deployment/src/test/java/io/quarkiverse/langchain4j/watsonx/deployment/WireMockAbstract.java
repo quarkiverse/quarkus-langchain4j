@@ -28,6 +28,7 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.VERSION
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +43,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
@@ -168,6 +170,8 @@ public abstract class WireMockAbstract {
         private String responseMediaType = MediaType.APPLICATION_JSON;
         private String response;
         private int status;
+        private Integer dribbleChunks;
+        private Duration dribbleDuration;
 
         protected ServerBuilder(RequestMethod method, String apiURL, int status, String version) {
             this.builder = switch (method.getName()) {
@@ -229,6 +233,24 @@ public abstract class WireMockAbstract {
         public ServerBuilder response(String response) {
             this.response = response;
             return this;
+        }
+
+        public ServerBuilder chunkedDribbleDelay(int chunks, Duration duration) {
+            this.dribbleChunks = chunks;
+            this.dribbleDuration = duration;
+            return this;
+        }
+
+        protected ResponseDefinitionBuilder responseDefinition() {
+            var responseDefinition = aResponse()
+                    .withStatus(status)
+                    .withHeader("Content-Type", responseMediaType)
+                    .withBody(response);
+
+            if (nonNull(dribbleChunks))
+                responseDefinition.withChunkedDribbleDelay(dribbleChunks, (int) dribbleDuration.toMillis());
+
+            return responseDefinition;
         }
 
         public abstract StubMapping build();
@@ -311,10 +333,7 @@ public abstract class WireMockAbstract {
             return watsonxServer.stubFor(
                     super.builder
                             .withHeader("Authorization", equalTo("Bearer %s".formatted(super.token)))
-                            .willReturn(aResponse()
-                                    .withStatus(super.status)
-                                    .withHeader("Content-Type", super.responseMediaType)
-                                    .withBody(super.response)));
+                            .willReturn(super.responseDefinition()));
         }
     }
 

@@ -28492,6 +28492,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-enabled[`+++quarkus.langchain4j.watsonx.gateway-image-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the gateway image model should be enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled[`+++quarkus.langchain4j.watsonx.scoring-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.enabled+++[]
@@ -30092,6 +30113,176 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-4-h-small+++`
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-hap-input]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-hap-input[`+++quarkus.langchain4j.watsonx.chat-model.moderations.hap.input+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.hap.input+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables HAP detection on the input text, using the given threshold score.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_HAP_INPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_HAP_INPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-hap-output]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-hap-output[`+++quarkus.langchain4j.watsonx.chat-model.moderations.hap.output+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.hap.output+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables HAP detection on the output text, using the given threshold score.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_HAP_OUTPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_HAP_OUTPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-hap-mask]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-hap-mask[`+++quarkus.langchain4j.watsonx.chat-model.moderations.hap.mask+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.hap.mask+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the detected entity value is removed from the text instead of being returned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_HAP_MASK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_HAP_MASK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-pii-input]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-pii-input[`+++quarkus.langchain4j.watsonx.chat-model.moderations.pii.input+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.pii.input+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether PII detection is applied to the input text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_PII_INPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_PII_INPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-pii-output]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-pii-output[`+++quarkus.langchain4j.watsonx.chat-model.moderations.pii.output+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.pii.output+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether PII detection is applied to the output text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_PII_OUTPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_PII_OUTPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-pii-mask]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-pii-mask[`+++quarkus.langchain4j.watsonx.chat-model.moderations.pii.mask+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.pii.mask+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the detected entity value is removed from the text instead of being returned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_PII_MASK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_PII_MASK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-granite-guardian-input]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-granite-guardian-input[`+++quarkus.langchain4j.watsonx.chat-model.moderations.granite-guardian.input+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.granite-guardian.input+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables Granite Guardian detection on the input text, using the given threshold score.
+
+Granite Guardian is only applied to the input text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_INPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_INPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-granite-guardian-mask]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-moderations-granite-guardian-mask[`+++quarkus.langchain4j.watsonx.chat-model.moderations.granite-guardian.mask+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.moderations.granite-guardian.mask+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the detected entity value is removed from the text instead of being returned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_MASK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_MASK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-deployment-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx.deployment-chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.deployment-chat-model.tool-choice+++[]
@@ -31361,31 +31552,6 @@ endif::add-copy-button-to-env-var[]
 |Map<String,String>
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name[`+++quarkus.langchain4j.watsonx.embedding-model.model-name+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.model-name+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Specifies the ID of the model to be used.
-
-A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[this link].
-
-To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_NAME+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_NAME+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|`+++ibm/granite-embedding-278m-multilingual+++`
-
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests[`+++quarkus.langchain4j.watsonx.embedding-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.log-requests+++[]
@@ -31444,6 +31610,477 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EM
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name[`+++quarkus.langchain4j.watsonx.embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the ID of the model to be used.
+
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[this link].
+
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++ibm/granite-embedding-278m-multilingual+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-log-requests[`+++quarkus.langchain4j.watsonx.gateway-embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-log-responses[`+++quarkus.langchain4j.watsonx.gateway-embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.gateway-embedding-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-embedding-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-model-name[`+++quarkus.langchain4j.watsonx.gateway-embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The identifier of the model to use, as configured in the Model Gateway (for example `openai/text-embedding-3-small`).
+
+Setting this property routes all embedding requests to the Model Gateway.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-dimensions]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-dimensions[`+++quarkus.langchain4j.watsonx.gateway-embedding-model.dimensions+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-embedding-model.dimensions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of dimensions of the returned embeddings.
+
+Only the models that support it accept this value.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_DIMENSIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_DIMENSIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-encoding-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-encoding-format[`+++quarkus.langchain4j.watsonx.gateway-embedding-model.encoding-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-embedding-model.encoding-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The wire format used to return the embeddings.
+
+Both formats produce the same vectors, `base64` is decoded for you.
+
+*Allowable values:* `++[++float, base64++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_ENCODING_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_ENCODING_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`float`, `base64`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-user]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-embedding-model-user[`+++quarkus.langchain4j.watsonx.gateway-embedding-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-embedding-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier of the end user issuing the request, used by the backing provider to detect and prevent abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_EMBEDDING_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-model-name[`+++quarkus.langchain4j.watsonx.gateway-image-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The identifier of the model to use, as configured in the Model Gateway.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-background]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-background[`+++quarkus.langchain4j.watsonx.gateway-image-model.background+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.background+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The background of the generated images.
+
+Transparency requires an output format that supports it, so `png` or `webp`.
+
+*Allowable values:* `++[++transparent, opaque, auto++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_BACKGROUND+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_BACKGROUND+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`transparent`, `opaque`, `auto`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-moderation]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-moderation[`+++quarkus.langchain4j.watsonx.gateway-image-model.moderation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.moderation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How strictly the generated images are filtered, `low` being the least restrictive.
+
+*Allowable values:* `++[++low, auto++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_MODERATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_MODERATION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `auto`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-output-compression]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-output-compression[`+++quarkus.langchain4j.watsonx.gateway-image-model.output-compression+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.output-compression+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The compression level of the generated images, from `0` to `100`.
+
+Only the `jpeg` and `webp` output formats accept it.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_OUTPUT_COMPRESSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_OUTPUT_COMPRESSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-output-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-output-format[`+++quarkus.langchain4j.watsonx.gateway-image-model.output-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.output-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The file format of the generated images.
+
+*Allowable values:* `++[++png, jpeg, webp, auto++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_OUTPUT_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_OUTPUT_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`png`, `jpeg`, `webp`, `auto`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-quality]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-quality[`+++quarkus.langchain4j.watsonx.gateway-image-model.quality+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.quality+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The quality of the generated images.
+
+*Allowable values:* `++[++auto, high, medium, low, hd, standard++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_QUALITY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_QUALITY+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `high`, `medium`, `low`, `hd`, `standard`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-response-format[`+++quarkus.langchain4j.watsonx.gateway-image-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How the generated images are returned, as a link with `url` or as Base64 data with `b64_json`.
+
+Only the models that support it accept this value.
+
+*Allowable values:* `++[++url, b64_json++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`url`, `b64-json`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-size]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-size[`+++quarkus.langchain4j.watsonx.gateway-image-model.size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimensions of the generated images, for example `1024x1024`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-style]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-style[`+++quarkus.langchain4j.watsonx.gateway-image-model.style+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.style+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The visual style of the generated images.
+
+*Allowable values:* `++[++vivid, natural++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_STYLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_STYLE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`vivid`, `natural`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-user]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-user[`+++quarkus.langchain4j.watsonx.gateway-image-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier of the end user issuing the request, used by the backing provider to detect and prevent abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-log-requests[`+++quarkus.langchain4j.watsonx.gateway-image-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether image model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-log-responses[`+++quarkus.langchain4j.watsonx.gateway-image-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether image model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-gateway-image-model-log-requests-curl[`+++quarkus.langchain4j.watsonx.gateway-image-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.gateway-image-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GATEWAY_IMAGE_MODEL_LOG_REQUESTS_CURL+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
@@ -33442,6 +34079,176 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ibm/granite-4-h-small+++`
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-hap-input]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-hap-input[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.hap.input+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.hap.input+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables HAP detection on the input text, using the given threshold score.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_HAP_INPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_HAP_INPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-hap-output]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-hap-output[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.hap.output+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.hap.output+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables HAP detection on the output text, using the given threshold score.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_HAP_OUTPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_HAP_OUTPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-hap-mask]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-hap-mask[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.hap.mask+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.hap.mask+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the detected entity value is removed from the text instead of being returned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_HAP_MASK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_HAP_MASK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-pii-input]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-pii-input[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.pii.input+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.pii.input+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether PII detection is applied to the input text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_PII_INPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_PII_INPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-pii-output]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-pii-output[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.pii.output+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.pii.output+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether PII detection is applied to the output text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_PII_OUTPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_PII_OUTPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-pii-mask]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-pii-mask[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.pii.mask+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.pii.mask+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the detected entity value is removed from the text instead of being returned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_PII_MASK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_PII_MASK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-granite-guardian-input]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-granite-guardian-input[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.granite-guardian.input+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.granite-guardian.input+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables Granite Guardian detection on the input text, using the given threshold score.
+
+Granite Guardian is only applied to the input text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_INPUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_INPUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-granite-guardian-mask]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-moderations-granite-guardian-mask[`+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.granite-guardian.mask+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.moderations.granite-guardian.mask+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the detected entity value is removed from the text instead of being returned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_MASK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODERATIONS_GRANITE_GUARDIAN_MASK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-deployment-chat-model-tool-choice[`+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.tool-choice+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".deployment-chat-model.tool-choice+++[]
@@ -34711,31 +35518,6 @@ endif::add-copy-button-to-env-var[]
 |Map<String,String>
 |
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Specifies the ID of the model to be used.
-
-A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[this link].
-
-To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|`+++ibm/granite-embedding-278m-multilingual+++`
-
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests+++[]
@@ -34794,6 +35576,477 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__M
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the ID of the model to be used.
+
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[this link].
+
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++ibm/granite-embedding-278m-multilingual+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The identifier of the model to use, as configured in the Model Gateway (for example `openai/text-embedding-3-small`).
+
+Setting this property routes all embedding requests to the Model Gateway.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-dimensions]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-dimensions[`+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.dimensions+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.dimensions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of dimensions of the returned embeddings.
+
+Only the models that support it accept this value.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_DIMENSIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_DIMENSIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-encoding-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-encoding-format[`+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.encoding-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.encoding-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The wire format used to return the embeddings.
+
+Both formats produce the same vectors, `base64` is decoded for you.
+
+*Allowable values:* `++[++float, base64++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_ENCODING_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_ENCODING_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`float`, `base64`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-user]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-embedding-model-user[`+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-embedding-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier of the end user issuing the request, used by the backing provider to detect and prevent abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_EMBEDDING_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-model-name[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The identifier of the model to use, as configured in the Model Gateway.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-background]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-background[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.background+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.background+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The background of the generated images.
+
+Transparency requires an output format that supports it, so `png` or `webp`.
+
+*Allowable values:* `++[++transparent, opaque, auto++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_BACKGROUND+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_BACKGROUND+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`transparent`, `opaque`, `auto`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-moderation]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-moderation[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.moderation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.moderation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How strictly the generated images are filtered, `low` being the least restrictive.
+
+*Allowable values:* `++[++low, auto++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_MODERATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_MODERATION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `auto`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-output-compression]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-output-compression[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.output-compression+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.output-compression+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The compression level of the generated images, from `0` to `100`.
+
+Only the `jpeg` and `webp` output formats accept it.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_OUTPUT_COMPRESSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_OUTPUT_COMPRESSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-output-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-output-format[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.output-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.output-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The file format of the generated images.
+
+*Allowable values:* `++[++png, jpeg, webp, auto++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_OUTPUT_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_OUTPUT_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`png`, `jpeg`, `webp`, `auto`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-quality]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-quality[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.quality+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.quality+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The quality of the generated images.
+
+*Allowable values:* `++[++auto, high, medium, low, hd, standard++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_QUALITY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_QUALITY+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `high`, `medium`, `low`, `hd`, `standard`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-response-format[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.response-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How the generated images are returned, as a link with `url` or as Base64 data with `b64_json`.
+
+Only the models that support it accept this value.
+
+*Allowable values:* `++[++url, b64_json++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`url`, `b64-json`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-size]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-size[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.size+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.size+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimensions of the generated images, for example `1024x1024`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-style]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-style[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.style+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.style+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The visual style of the generated images.
+
+*Allowable values:* `++[++vivid, natural++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_STYLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_STYLE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`vivid`, `natural`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-user]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-user[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A stable identifier of the end user issuing the request, used by the backing provider to detect and prevent abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-log-requests[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether image model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-log-responses[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether image model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-gateway-image-model-log-requests-curl[`+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".gateway-image-model.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GATEWAY_IMAGE_MODEL_LOG_REQUESTS_CURL+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

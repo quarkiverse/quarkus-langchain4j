@@ -80,6 +80,37 @@ var embeddings = embeddingModel.embedAll(
 );
 ----
 
+=== Using the Model Gateway
+
+The link:https://cloud.ibm.com/apidocs/watsonx-ai#model-gateway[watsonx.ai Model Gateway] exposes an OpenAI-compatible embeddings endpoint that can route requests to models hosted by multiple providers (for example OpenAI, Mistral, or any third-party provider registered in the gateway) behind a single watsonx.ai entry point. To use it, set `gateway-embedding-model.model-name`. Neither `project-id` nor `space-id` is required, and `embedding-model.model-name` is not used.
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+
+# Route the requests through the Model Gateway
+quarkus.langchain4j.watsonx.gateway-embedding-model.model-name=openai/text-embedding-3-small
+----
+
+IMPORTANT: The gateway must be configured by an administrator before use. The value of `model-name` must be a model identifier that is already registered in the gateway, which means the alias defined by the administrator or, when there is no alias, the provider-side model identifier. The link:https://cloud.ibm.com/apidocs/watsonx-ai#gateway-models-list[model catalog of the gateway] returns the identifiers that can be used.
+
+Besides `model-name`, the gateway supports a set of provider-agnostic options:
+
+[source,properties]
+----
+# Number of dimensions of the returned embeddings, only honored by the models that support it
+quarkus.langchain4j.watsonx.gateway-embedding-model.dimensions=512
+
+# Wire format used to return the embeddings: float or base64 (decoded into a vector for you)
+quarkus.langchain4j.watsonx.gateway-embedding-model.encoding-format=float
+
+# Stable identifier of the end user, used by the provider to detect abuse
+quarkus.langchain4j.watsonx.gateway-embedding-model.user=user-1234
+----
+
+`embed` and `embedAll` are unchanged: the same `EmbeddingModel` bean is used regardless of which backend is configured.
+
 == Scoring Model
 
 IBM watsonx.ai provides scoring (reranking) models that evaluate the relevance between a query and a piece of text.
