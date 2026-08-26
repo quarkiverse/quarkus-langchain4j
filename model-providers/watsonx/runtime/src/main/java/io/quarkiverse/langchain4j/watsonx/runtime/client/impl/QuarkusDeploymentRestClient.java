@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.watsonx.runtime.client.impl;
 
+import static io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils.cancelStreamOn;
 import static io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils.retryOn;
 import static java.util.Objects.nonNull;
 
@@ -144,7 +145,7 @@ public final class QuarkusDeploymentRestClient extends DeploymentRestClient {
 
         CompletableFuture<ChatResponse> future = new CompletableFuture<>();
 
-        client.chatStreaming(deploymentId, requestId, transactionId, version, textChatRequest)
+        var streamFuture = client.chatStreaming(deploymentId, requestId, transactionId, version, textChatRequest)
                 .onItem().invoke(new Consumer<String>() {
                     @Override
                     public void accept(String message) {
@@ -167,6 +168,7 @@ public final class QuarkusDeploymentRestClient extends DeploymentRestClient {
                 .collect().asList().replaceWithVoid()
                 .subscribeAsCompletionStage();
 
+        cancelStreamOn(future, subscriber, streamFuture);
         return future;
     }
 
