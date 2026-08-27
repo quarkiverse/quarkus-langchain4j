@@ -20,6 +20,7 @@ import dev.langchain4j.service.tool.ToolService;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.runtime.config.AiServiceConfig;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
@@ -43,11 +44,18 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public QuarkusAiServiceContext() {
         super(null);
         this.toolService = new ToolService();
+        this.toolService.maxToolCallingRoundTrips(AiServiceConfig.DEFAULT_MAX_TOOL_CALLING_ROUND_TRIPS);
     }
 
     public QuarkusAiServiceContext(Class<?> aiServiceClass) {
         super(aiServiceClass);
         this.toolService = new ToolService();
+        this.toolService.maxToolCallingRoundTrips(AiServiceConfig.DEFAULT_MAX_TOOL_CALLING_ROUND_TRIPS);
+    }
+
+    public void setMaxToolCallingRoundTrips(int value) {
+        this.maxToolCallingRoundTrips = value;
+        this.toolService.maxToolCallingRoundTrips(value);
     }
 
     /**
