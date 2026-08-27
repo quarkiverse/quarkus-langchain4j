@@ -80,7 +80,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     public QuarkusStreamableHttpMcpTransport(QuarkusStreamableHttpMcpTransport.Builder builder) {
         this.url = ensureNotNull(builder.url, "Missing MCP endpoint URL");
         this.timeout = getOrDefault(builder.timeout, Duration.ofSeconds(60));
-        this.httpClient = builder.httpClient;
+        this.httpClient = ensureNotNull(builder.httpClient, "Missing HTTP Client");
         this.logRequests = builder.logRequests;
         this.logResponses = builder.logResponses;
         this.subsidiaryChannelEnabled = builder.subsidiaryChannelEnabled;
