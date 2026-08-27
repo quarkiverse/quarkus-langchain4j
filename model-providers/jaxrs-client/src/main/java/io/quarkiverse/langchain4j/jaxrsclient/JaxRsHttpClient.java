@@ -1,9 +1,9 @@
 package io.quarkiverse.langchain4j.jaxrsclient;
 
-import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -12,25 +12,33 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.TlsConfig;
 import org.jboss.resteasy.reactive.client.impl.ClientBuilderImpl;
+import org.jboss.resteasy.reactive.client.impl.MultiInvoker;
 
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.http.client.HttpClient;
 import dev.langchain4j.http.client.HttpRequest;
 import dev.langchain4j.http.client.SuccessfulHttpResponse;
+import dev.langchain4j.http.client.sse.ServerSentEvent;
+import dev.langchain4j.http.client.sse.ServerSentEventContext;
 import dev.langchain4j.http.client.sse.ServerSentEventListener;
 import dev.langchain4j.http.client.sse.ServerSentEventParser;
-import io.quarkus.runtime.BlockingOperationControl;
+import dev.langchain4j.http.client.sse.ServerSentEventParsingHandle;
 import io.quarkus.tls.TlsConfiguration;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.SSLOptions;
 import io.vertx.core.net.TrustOptions;
 
 public class JaxRsHttpClient implements HttpClient {
+
+    private static final GenericType<SseEvent<String>> SSE_EVENT_TYPE = new GenericType<>() {
+    };
 
     private final Client delegate;
 
@@ -135,52 +143,70 @@ public class JaxRsHttpClient implements HttpClient {
 
     @Override
     public void execute(HttpRequest request, ServerSentEventParser parser, ServerSentEventListener listener) {
-        if (!BlockingOperationControl.isBlockingAllowed()) {
-            Infrastructure.getDefaultExecutor().execute(() -> executeBlocking(request, parser, listener));
-            return;
+        WebTarget target = delegate.target(request.url());
+        Invocation.Builder invocationBuilder = target.request();
+
+        for (var headers : request.headers().entrySet()) {
+            List<String> values = headers.getValue();
+            if ((values != null) && (!values.isEmpty())) {
+                for (String value : values) {
+                    invocationBuilder.header(headers.getKey(), value);
+                }
+            }
         }
-        executeBlocking(request, parser, listener);
-    }
 
-    private void executeBlocking(HttpRequest request, ServerSentEventParser parser, ServerSentEventListener listener) {
-        try {
-            WebTarget target = delegate.target(request.url());
-            Invocation.Builder invocationBuilder = target.request();
+        String method = request.method().name();
+        Entity<?> entity = (request.body() != null) ? Entity.json(request.body()) : null;
 
-            for (var headers : request.headers().entrySet()) {
-                List<String> values = headers.getValue();
-                if ((values != null) && (!values.isEmpty())) {
-                    for (String value : values) {
-                        invocationBuilder.header(headers.getKey(), value);
+        MultiInvoker multiInvoker = invocationBuilder.rx(MultiInvoker.class);
+
+        multiInvoker.method(method, entity, SSE_EVENT_TYPE)
+                .subscribe().withSubscriber(new MultiSubscriber<SseEvent<String>>() {
+
+                    private volatile Flow.Subscription subscription;
+
+                    private final ServerSentEventParsingHandle parsingHandle = new ServerSentEventParsingHandle() {
+                        private volatile boolean cancelled = false;
+
+                        @Override
+                        public void cancel() {
+                            cancelled = true;
+                            if (subscription != null) {
+                                subscription.cancel();
+                            }
+                        }
+
+                        @Override
+                        public boolean isCancelled() {
+                            return cancelled;
+                        }
+                    };
+
+                    private final ServerSentEventContext context = new ServerSentEventContext(parsingHandle);
+
+                    @Override
+                    public void onSubscribe(Flow.Subscription subscription) {
+                        this.subscription = subscription;
+                        subscription.request(Long.MAX_VALUE);
                     }
-                }
-            }
 
-            try (Response response = switch (request.method()) {
-                case GET -> invocationBuilder.get();
-                case POST -> invocationBuilder.post(Entity.json(request.body()));
-                case DELETE -> invocationBuilder.delete();
-            }) {
-                if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                    HttpException httpException = new HttpException(response.getStatus(), response.readEntity(String.class));
-                    listener.onError(httpException);
-                    return;
-                }
+                    @Override
+                    public void onItem(SseEvent<String> event) {
+                        if (!parsingHandle.isCancelled()) {
+                            listener.onEvent(new ServerSentEvent(event.name(), (String) event.data()), context);
+                        }
+                    }
 
-                listener.onOpen(SuccessfulHttpResponse.builder()
-                        .statusCode(response.getStatus())
-                        .headers(response.getStringHeaders())
-                        .body((byte[]) null)
-                        .build());
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        listener.onError(throwable);
+                        listener.onClose();
+                    }
 
-                try (InputStream inputStream = response.readEntity(InputStream.class)) {
-                    parser.parse(inputStream, listener);
-                }
-            }
-        } catch (Throwable t) {
-            listener.onError(t);
-        } finally {
-            listener.onClose();
-        }
+                    @Override
+                    public void onCompletion() {
+                        listener.onClose();
+                    }
+                });
     }
 }
