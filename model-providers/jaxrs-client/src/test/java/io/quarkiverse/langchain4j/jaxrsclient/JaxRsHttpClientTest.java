@@ -10,6 +10,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,8 +27,8 @@ import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.http.client.HttpClient;
 import dev.langchain4j.http.client.HttpRequest;
 import dev.langchain4j.http.client.SuccessfulHttpResponse;
+import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.http.client.sse.ServerSentEventListener;
-import dev.langchain4j.http.client.sse.ServerSentEventParser;
 import io.quarkus.runtime.BlockingOperationControl;
 import io.quarkus.runtime.IOThreadDetector;
 
@@ -95,7 +96,7 @@ class JaxRsHttpClientTest {
     }
 
     @Test
-    void executeSseShouldCallOpenParseAndClose() throws InterruptedException {
+    void executeSseShouldStreamEvents() throws InterruptedException {
         server.createContext("/sse", this::handleSse);
         server.start();
 
@@ -109,16 +110,15 @@ class JaxRsHttpClientTest {
                 .url(baseUrl + "/sse")
                 .build();
 
-        AtomicReference<SuccessfulHttpResponse> openResponse = new AtomicReference<>();
+        List<ServerSentEvent> events = new CopyOnWriteArrayList<>();
         AtomicReference<Throwable> error = new AtomicReference<>();
-        AtomicReference<String> parsedPayload = new AtomicReference<>();
         AtomicBoolean closed = new AtomicBoolean(false);
         CountDownLatch finished = new CountDownLatch(1);
 
         ServerSentEventListener listener = new ServerSentEventListener() {
             @Override
-            public void onOpen(SuccessfulHttpResponse response) {
-                openResponse.set(response);
+            public void onEvent(ServerSentEvent event) {
+                events.add(event);
             }
 
             @Override
@@ -133,23 +133,85 @@ class JaxRsHttpClientTest {
             }
         };
 
-        ServerSentEventParser parser = (inputStream, ignored) -> {
-            try {
-                parsedPayload.set(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        };
-
-        client.execute(request, parser, listener);
+        client.execute(request, listener);
         boolean completed = finished.await(3, TimeUnit.SECONDS);
 
         assertEquals(true, completed);
         assertEquals(null, error.get());
         assertEquals(true, closed.get());
-        assertEquals(200, openResponse.get().statusCode());
-        assertEquals(null, openResponse.get().body());
-        assertEquals("data: hello\n\n", parsedPayload.get());
+        assertEquals(1, events.size());
+        assertEquals("hello", events.get(0).data());
+    }
+
+    @Test
+    void executeSseShouldDeliverEventsBeforeResponseCompletes() throws InterruptedException {
+        // The server sends the first event immediately, then holds the connection open
+        // for 5 seconds before sending the second event.
+        // If the implementation buffers the entire response, no events arrive until
+        // after the 5-second hold — the 2-second latch timeout will expire.
+        // With true streaming, the first event arrives immediately.
+        CountDownLatch serverDone = new CountDownLatch(1);
+        server.createContext("/sse-slow", exchange -> {
+            exchange.getResponseHeaders().add("Content-Type", "text/event-stream");
+            exchange.sendResponseHeaders(200, 0);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write("data: first\n\n".getBytes(StandardCharsets.UTF_8));
+                os.flush();
+                Thread.sleep(5000);
+                os.write("data: second\n\n".getBytes(StandardCharsets.UTF_8));
+                os.flush();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                serverDone.countDown();
+            }
+        });
+        server.start();
+
+        HttpClient client = new JaxRsHttpClientBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .readTimeout(Duration.ofSeconds(10))
+                .build();
+
+        HttpRequest request = HttpRequest.builder()
+                .method(GET)
+                .url(baseUrl + "/sse-slow")
+                .build();
+
+        CountDownLatch firstEventReceived = new CountDownLatch(1);
+        List<String> receivedData = new CopyOnWriteArrayList<>();
+        AtomicReference<Throwable> error = new AtomicReference<>();
+
+        ServerSentEventListener listener = new ServerSentEventListener() {
+            @Override
+            public void onEvent(ServerSentEvent event) {
+                receivedData.add(event.data());
+                firstEventReceived.countDown();
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                error.set(throwable);
+            }
+
+            @Override
+            public void onClose() {
+            }
+        };
+
+        client.execute(request, listener);
+
+        // The first event must arrive within 2 seconds.
+        // With buffering this would fail because the server holds the connection for 5s.
+        boolean arrived = firstEventReceived.await(2, TimeUnit.SECONDS);
+
+        assertEquals(true, arrived, "First event should arrive before the server finishes responding");
+        assertEquals(null, error.get(), "No errors expected");
+        assertEquals("first", receivedData.get(0));
+
+        // The server is still holding the connection open at this point
+        assertEquals(false, serverDone.await(0, TimeUnit.SECONDS),
+                "Server should still be sending when the first event arrives");
     }
 
     private void handleOk(HttpExchange exchange) throws IOException {
@@ -183,4 +245,5 @@ class JaxRsHttpClientTest {
             exchange.close();
         }
     }
+
 }
