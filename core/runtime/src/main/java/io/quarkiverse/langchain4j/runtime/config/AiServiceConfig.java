@@ -4,6 +4,7 @@ import io.smallrye.config.WithDefault;
 
 public interface AiServiceConfig {
 
+    int DEFAULT_MAX_TOOL_CALLING_ROUND_TRIPS = 10;
     int DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE = 0;
 
     /**
@@ -29,6 +30,6 @@ public interface AiServiceConfig {
      * Maximum number of LLM request/response round trips while handling a single chat request.
      * If this number is exceeded, the chat request will fail.
      */
-    @WithDefault("10")
+    @WithDefault("" + DEFAULT_MAX_TOOL_CALLING_ROUND_TRIPS)
     int maxToolCallingRoundTrips();
 }

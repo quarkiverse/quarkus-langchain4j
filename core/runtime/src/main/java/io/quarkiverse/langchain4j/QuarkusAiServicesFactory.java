@@ -93,7 +93,7 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
         }
 
         public AiServices<T> maxToolCallingRoundTrips(int maxToolCallingRoundTrips) {
-            quarkusAiServiceContext().maxToolCallingRoundTrips = maxToolCallingRoundTrips;
+            quarkusAiServiceContext().setMaxToolCallingRoundTrips(maxToolCallingRoundTrips);
             return this;
         }
 
