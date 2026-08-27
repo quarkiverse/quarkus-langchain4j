@@ -92,6 +92,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final Object[] methodArgs;
     private final ExecutorService executor;
     private final AtomicBoolean cancelled;
+    private int toolCallingRoundTripsLeft;
     private volatile StreamingHandle streamingHandle = NoopStreamingHandle.INSTANCE;
 
     QuarkusAiServiceStreamingResponseHandler(ChatRequest chatRequest, QuarkusAiServiceContext context,
@@ -116,7 +117,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Context cxtx,
             AiServiceMethodCreateInfo methodCreateInfo,
             Object[] methodArgs,
-            AtomicBoolean cancelled) {
+            AtomicBoolean cancelled,
+            int toolCallingRoundTripsLeft) {
         this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = ensureNotNull(context, "context");
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
@@ -145,6 +147,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.methodCreateInfo = methodCreateInfo;
         this.methodArgs = methodArgs;
         this.cancelled = cancelled;
+        this.toolCallingRoundTripsLeft = toolCallingRoundTripsLeft;
         if (executionContext == null) {
             // We do not have a context, but we still need to make sure we are not blocking the event loop and ordered
             // is respected.
@@ -168,7 +171,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             ToolServiceContext toolSearchContext,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
             ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
-            AtomicBoolean cancelled) {
+            AtomicBoolean cancelled, int toolCallingRoundTripsLeft) {
         this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = context;
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
@@ -194,6 +197,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.methodCreateInfo = methodCreateInfo;
         this.methodArgs = methodArgs;
         this.cancelled = cancelled;
+        this.toolCallingRoundTripsLeft = toolCallingRoundTripsLeft;
     }
 
     private <T> void fireInvocationComplete(T result) {
@@ -382,6 +386,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         shutdown();
                         return;
                     }
+                    if (toolCallingRoundTripsLeft-- == 0) {
+                        throw new RuntimeException(
+                                "Something is wrong, exceeded the maximum number of tool calling round trips");
+                    }
                     addToMemory(aiMessage);
                     List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
                     List<ToolExecutionResult> rawToolResults = new ArrayList<>();
@@ -480,7 +488,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             nextToolSearchContext,
                             mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
                             methodArgs,
-                            cancelled);
+                            cancelled, toolCallingRoundTripsLeft);
 
                     fireRequestIssuedEvent(chatRequest);
                     effectiveStreamingChatModel.chat(chatRequest, handler);

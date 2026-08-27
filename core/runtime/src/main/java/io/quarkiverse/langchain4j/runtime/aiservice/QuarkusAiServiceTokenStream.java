@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -32,6 +34,7 @@ import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolServiceContext;
+import io.quarkiverse.langchain4j.runtime.config.AiServiceConfig;
 import io.vertx.core.Context;
 
 /**
@@ -213,6 +216,15 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                     .build();
         }
 
+        int maxToolCallingRoundTrips;
+        if (context.maxToolCallingRoundTrips != null && context.maxToolCallingRoundTrips > 0) {
+            maxToolCallingRoundTrips = context.maxToolCallingRoundTrips;
+        } else {
+            maxToolCallingRoundTrips = ConfigProvider.getConfig()
+                    .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calling-round-trips", Integer.class)
+                    .orElse(AiServiceConfig.DEFAULT_MAX_TOOL_CALLING_ROUND_TRIPS);
+        }
+
         this.handler = new QuarkusAiServiceStreamingResponseHandler(
                 chatRequest,
                 context,
@@ -235,7 +247,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 switchToWorkerThreadForToolExecution,
                 switchToWorkerForEmission,
                 cxtx, methodCreateInfo, methodArgs,
-                cancelled);
+                cancelled,
+                maxToolCallingRoundTrips);
 
         if (contentsHandler != null && retrievedContents != null) {
             contentsHandler.accept(retrievedContents);
