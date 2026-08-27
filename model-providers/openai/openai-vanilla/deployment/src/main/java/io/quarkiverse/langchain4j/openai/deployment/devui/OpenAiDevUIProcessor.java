@@ -32,10 +32,10 @@ public class OpenAiDevUIProcessor {
     @BuildStep
     void jsonRpcProviders(BuildProducer<JsonRPCProvidersBuildItem> rpcProviders,
             LangChain4jOpenAiBuildConfig config) {
-        if (config.imageModel().enabled().orElse(true)) {
+        if (config.defaultConfig().imageModel().enabled().orElse(true)) {
             rpcProviders.produce(new JsonRPCProvidersBuildItem(OpenAiImagesJsonRPCService.class));
         }
-        if (config.moderationModel().enabled().orElse(true)) {
+        if (config.defaultConfig().moderationModel().enabled().orElse(true)) {
             rpcProviders.produce(new JsonRPCProvidersBuildItem(OpenAiModerationModelsJsonRPCService.class));
         }
     }
@@ -56,7 +56,7 @@ public class OpenAiDevUIProcessor {
             // startup - the image page will show an error.
             configurations.add(NamedConfigUtil.DEFAULT_NAME);
         }
-        if (config.imageModel().enabled().orElse(true)) {
+        if (config.defaultConfig().imageModel().enabled().orElse(true)) {
             card.addBuildTimeData("imageModelConfigurations", configurations);
             card.addPage(Page.webComponentPageBuilder().title("Images")
                     .componentLink("qwc-images.js")
@@ -75,7 +75,7 @@ public class OpenAiDevUIProcessor {
         if (configurations.isEmpty()) {
             configurations.add(NamedConfigUtil.DEFAULT_NAME);
         }
-        if (config.moderationModel().enabled().orElse(true)) {
+        if (config.defaultConfig().moderationModel().enabled().orElse(true)) {
             card.addBuildTimeData("moderationModelConfigurations", configurations);
             card.addPage(Page.webComponentPageBuilder().title("Moderation model")
                     .componentLink("qwc-moderation.js")

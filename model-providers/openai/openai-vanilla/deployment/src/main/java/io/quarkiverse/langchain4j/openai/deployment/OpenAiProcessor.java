@@ -101,19 +101,21 @@ public class OpenAiProcessor {
             BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
             BuildProducer<AudioTranscriptionModelProviderCandidateBuildItem> audioTranscriptionProducer,
             LangChain4jOpenAiBuildConfig config) {
-        if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
+        var defaultConfig = config.defaultConfig();
+        if (defaultConfig.chatModel().enabled().isEmpty() || defaultConfig.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
-        if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
+        if (defaultConfig.embeddingModel().enabled().isEmpty() || defaultConfig.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
         }
-        if (config.moderationModel().enabled().isEmpty() || config.moderationModel().enabled().get()) {
+        if (defaultConfig.moderationModel().enabled().isEmpty() || defaultConfig.moderationModel().enabled().get()) {
             moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
         }
-        if (config.imageModel().enabled().isEmpty() || config.imageModel().enabled().get()) {
+        if (defaultConfig.imageModel().enabled().isEmpty() || defaultConfig.imageModel().enabled().get()) {
             imageProducer.produce(new ImageModelProviderCandidateBuildItem(PROVIDER));
         }
-        if (config.audioTranscriptionModel().enabled().isEmpty() || config.audioTranscriptionModel().enabled().get()) {
+        if (defaultConfig.audioTranscriptionModel().enabled().isEmpty()
+                || defaultConfig.audioTranscriptionModel().enabled().get()) {
             audioTranscriptionProducer.produce(new AudioTranscriptionModelProviderCandidateBuildItem(PROVIDER));
         }
     }
@@ -130,11 +132,11 @@ public class OpenAiProcessor {
             LangChain4jOpenAiBuildConfig buildConfig,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
-        boolean useResponseMode = buildConfig.chatModel().mode() == ChatModelBuildConfig.Mode.RESPONSES;
-
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
+                boolean useResponseMode = correspondingBuildConfig(buildConfig, configName)
+                        .chatModel().mode() == ChatModelBuildConfig.Mode.RESPONSES;
 
                 var chatBuilder = configureChatModelBean(CHAT_MODEL,
                         useResponseMode ? OPENAI_RESPONSES_CHAT_MODEL_BUILDER : OPENAI_CHAT_MODEL_BUILDER,
@@ -233,6 +235,14 @@ public class OpenAiProcessor {
                 beanProducer.produce(builder.done());
             }
         }
+    }
+
+    private static LangChain4jOpenAiBuildConfig.OpenAiBuildConfig correspondingBuildConfig(
+            LangChain4jOpenAiBuildConfig buildConfig, String configName) {
+        if (NamedConfigUtil.isDefault(configName)) {
+            return buildConfig.defaultConfig();
+        }
+        return buildConfig.namedConfig().get(configName);
     }
 
     private static SyntheticBeanBuildItem.ExtendedBeanConfigurator configureChatModelBean(
