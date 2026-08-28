@@ -8,7 +8,10 @@ import static java.util.stream.StreamSupport.stream;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -16,15 +19,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.http.client.sse.ServerSentEvent;
+import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
 import dev.langchain4j.internal.ToolCallBuilder;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import dev.langchain4j.model.mistralai.MistralAiChatResponseMetadata;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionChoice;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionResponse;
@@ -85,12 +94,33 @@ public class QuarkusMistralAiClient extends MistralAiClient {
         AtomicReference<StringBuffer> contentBuilder = new AtomicReference<>(new StringBuffer());
         AtomicReference<TokenUsage> tokenUsage = new AtomicReference<>();
         AtomicReference<FinishReason> finishReason = new AtomicReference<>();
+        AtomicReference<String> responseId = new AtomicReference<>();
+        AtomicReference<String> responseModel = new AtomicReference<>();
+        // Wraps the user handler so that, for each SSE frame, we can tell whether it mapped to a typed callback and,
+        // if not, forward it via onUnmappedRawEvent - mirroring langchain4j's own client.
+        MappingTrackingStreamingChatResponseHandler trackingHandler = new MappingTrackingStreamingChatResponseHandler(
+                handler);
+        Queue<ServerSentEvent> rawServerSentEvents = new ConcurrentLinkedQueue<>();
 
         ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
 
         restApi.streamingChatCompletion(request, apiKey).subscribe().with(new Consumer<>() {
             @Override
-            public void accept(MistralAiChatCompletionResponse response) {
+            public void accept(SseEvent<String> event) {
+                trackingHandler.resetMappingTracking();
+
+                ServerSentEvent rawEvent = new ServerSentEvent(event.name(), event.data());
+                rawServerSentEvents.add(rawEvent);
+
+                MistralAiChatCompletionResponse response;
+                try {
+                    response = MistralAiRestApi.ObjectMapperHolder.MAPPER.readValue(event.data(),
+                            MistralAiChatCompletionResponse.class);
+                } catch (JsonProcessingException e) {
+                    trackingHandler.onError(e);
+                    return;
+                }
+
                 MistralAiChatCompletionChoice choice = response.getChoices().get(0);
                 String chunk = null;
                 // TODO: this may be a MistralAiThinkingContent, add proper handling for it?
@@ -106,7 +136,7 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                 }
 
                 if (chunk != null) {
-                    handler.onPartialResponse(chunk);
+                    trackingHandler.onPartialResponse(chunk);
                 }
 
                 List<MistralAiToolCall> toolCalls = choice.getDelta().getToolCalls();
@@ -133,11 +163,23 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                 if (finishReasonString != null) {
                     finishReason.set(finishReasonFrom(finishReasonString));
                 }
+
+                if (response.getId() != null) {
+                    responseId.set(response.getId());
+                }
+                if (response.getModel() != null) {
+                    responseModel.set(response.getModel());
+                }
+
+                // A frame that did not map to a typed callback is surfaced as a raw event, matching langchain4j.
+                if (!trackingHandler.wasMapped()) {
+                    trackingHandler.onUnmappedRawEvent(rawEvent);
+                }
             }
         }, new Consumer<>() {
             @Override
             public void accept(Throwable t) {
-                handler.onError(t);
+                trackingHandler.onError(t);
             }
         }, new Runnable() {
             @Override
@@ -154,13 +196,22 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                         .text(contentBuilder.get().toString())
                         .toolExecutionRequests(toolExecutionRequests)
                         .build();
-                ChatResponse response = ChatResponse.builder()
-                        .aiMessage(aiMessage)
+
+                var metadataBuilder = MistralAiChatResponseMetadata.builder()
                         .tokenUsage(tokenUsage.get())
                         .finishReason(finishReason.get())
+                        .id(responseId.get())
+                        .modelName(responseModel.get());
+                if (!rawServerSentEvents.isEmpty()) {
+                    metadataBuilder.rawServerSentEvents(new ArrayList<>(rawServerSentEvents));
+                }
+
+                ChatResponse response = ChatResponse.builder()
+                        .aiMessage(aiMessage)
+                        .metadata(metadataBuilder.build())
                         .build();
 
-                handler.onCompleteResponse(response);
+                trackingHandler.onCompleteResponse(response);
             }
         });
     }
