@@ -13,8 +13,12 @@ import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class JsonProvider implements com.ibm.watsonx.ai.core.spi.json.JsonProvider {
 
-    public static final ObjectMapper MAPPER = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER
-            .copy().registerModule(new WatsonxJacksonModule());
+    private static class MapperHolder {
+        static final ObjectMapper INSTANCE = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER
+                .copy().registerModule(new WatsonxJacksonModule());
+    }
+
+    public static ObjectMapper MAPPER = MapperHolder.INSTANCE;
 
     @Override
     public <T> T fromJson(String json, Class<T> type) {
