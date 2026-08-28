@@ -4,6 +4,7 @@ import static dev.langchain4j.internal.Utils.isNotNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.REDACTED_THINKING_KEY;
+import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.SERVER_TOOL_RESULTS_KEY;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.THINKING_SIGNATURE_KEY;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.toFinishReason;
 import static java.util.Collections.synchronizedList;
@@ -16,18 +17,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.http.client.sse.ServerSentEvent;
+import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
 import dev.langchain4j.internal.ToolCallBuilder;
+import dev.langchain4j.model.anthropic.AnthropicChatResponseMetadata;
+import dev.langchain4j.model.anthropic.AnthropicServerToolResult;
 import dev.langchain4j.model.anthropic.AnthropicTokenUsage;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
@@ -162,10 +172,12 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         return false;
     }
 
-    private static class AnthropicStreamingSubscriber implements MultiSubscriber<AnthropicStreamingData> {
+    private static class AnthropicStreamingSubscriber implements MultiSubscriber<SseEvent<String>> {
         private static final Logger log = Logger.getLogger(AnthropicStreamingSubscriber.class);
 
-        private final StreamingChatResponseHandler handler;
+        // Wraps the user handler so that, for each SSE frame, we can tell whether it mapped to a typed callback and,
+        // if not, forward it via onUnmappedRawEvent - mirroring langchain4j's own DefaultAnthropicClient.
+        private final MappingTrackingStreamingChatResponseHandler handler;
         private Subscription subscription;
         private volatile AtomicReference<StringBuffer> contentBuilder = new AtomicReference<>(new StringBuffer());
         private volatile String stopReason;
@@ -174,6 +186,8 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final AtomicInteger outputTokenCount = new AtomicInteger();
         private final AtomicInteger cacheCreationInputTokens = new AtomicInteger();
         private final AtomicInteger cacheReadInputTokens = new AtomicInteger();
+        private volatile String responseId;
+        private volatile String responseModel;
 
         private volatile String currentContentBlockStartType;
         private final ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
@@ -182,12 +196,14 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final StringBuffer thinkingBuilder = new StringBuffer();
         private final List<String> thinkingSignatures = synchronizedList(new ArrayList<>());
         private final List<String> redactedThinkings = synchronizedList(new ArrayList<>());
+        private final List<AnthropicServerToolResult> serverToolResults = synchronizedList(new ArrayList<>());
+        private final Queue<ServerSentEvent> rawServerSentEvents = new ConcurrentLinkedQueue<>();
         private final AnthropicCreateMessageOptions options;
         private volatile boolean completionHandled = false;
         private final AnthropicStreamingHandle streamingHandle = new AnthropicStreamingHandle();
 
         private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler, AnthropicCreateMessageOptions options) {
-            this.handler = handler;
+            this.handler = new MappingTrackingStreamingChatResponseHandler(handler);
             this.options = options;
         }
 
@@ -210,41 +226,91 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         @Override
-        public void onItem(AnthropicStreamingData data) {
-            switch (data.type) {
-                case "message_start":
-                    handleMessageStart(data);
-                    break;
+        public void onItem(SseEvent<String> event) {
+            handler.resetMappingTracking();
 
-                case "content_block_start":
-                    handleContentBlockStart(data);
-                    break;
+            String eventData = event.data();
+            ServerSentEvent rawEvent = new ServerSentEvent(event.name(), eventData);
 
-                case "content_block_delta":
-                    handleContentBlockDelta(data);
-                    break;
+            // Keep-alive or gateway sentinel frames cannot be parsed into AnthropicStreamingData; record them as raw
+            // frames but do not attempt to map them to a typed callback.
+            if (isSkippableSseFrame(eventData)) {
+                rawServerSentEvents.add(rawEvent);
+                return;
+            }
 
-                case "content_block_stop":
-                    handleContentBlockStop();
-                    break;
+            AnthropicStreamingData data;
+            try {
+                data = AnthropicRestApi.ObjectMapperHolder.MAPPER.readValue(eventData, AnthropicStreamingData.class);
+            } catch (JsonProcessingException e) {
+                onFailure(e);
+                return;
+            }
 
-                case "message_delta":
-                    handleMessageDelta(data);
-                    break;
+            if (data.type != null) {
+                switch (data.type) {
+                    case "message_start":
+                        handleMessageStart(data);
+                        break;
 
-                case "message_stop":
-                    handleMessageStop();
-                    break;
+                    case "content_block_start":
+                        handleContentBlockStart(data);
+                        break;
 
-                case "error":
-                    handleError(data);
-                    break;
+                    case "content_block_delta":
+                        handleContentBlockDelta(data);
+                        break;
+
+                    case "content_block_stop":
+                        handleContentBlockStop();
+                        break;
+
+                    case "message_delta":
+                        handleMessageDelta(data);
+                        break;
+
+                    case "message_stop":
+                        handleMessageStop();
+                        break;
+
+                    case "error":
+                        handleError(data);
+                        break;
+                }
+            }
+
+            rawServerSentEvents.add(rawEvent);
+
+            // Any frame that did not map to a typed callback (e.g. ping, message_start, content_block_stop,
+            // server_tool_use, web_search_tool_result) is surfaced as a raw event, matching langchain4j's client.
+            if (!handler.wasMapped()) {
+                handler.onUnmappedRawEvent(rawEvent);
             }
         }
 
+        private static boolean isSkippableSseFrame(String eventData) {
+            if (eventData == null) {
+                return true;
+            }
+            String trimmed = eventData.trim();
+            if (trimmed.isEmpty() || "[DONE]".equals(trimmed)) {
+                return true;
+            }
+            // Anthropic SSE payloads are JSON objects; anything else cannot be deserialized into AnthropicStreamingData.
+            return !trimmed.startsWith("{");
+        }
+
         private void handleMessageStart(AnthropicStreamingData data) {
-            if ((data.message != null) && (data.message.usage != null)) {
-                handleUsage(data.message.usage);
+            if (data.message != null) {
+                if (data.message.usage != null) {
+                    handleUsage(data.message.usage);
+                }
+                if (data.message.id != null) {
+                    responseId = data.message.id;
+                }
+                if (data.message.model != null) {
+                    responseModel = data.message.model;
+                }
             }
         }
 
@@ -303,7 +369,17 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                 toolCallBuilder.updateIndex(toolCallBuilder.index() + 1);
                 toolCallBuilder.updateId(data.contentBlock.id);
                 toolCallBuilder.updateName(data.contentBlock.name);
+            } else if (isServerToolResultType(currentContentBlockStartType) && options.returnServerToolResults()) {
+                serverToolResults.add(AnthropicServerToolResult.builder()
+                        .type(data.contentBlock.type)
+                        .toolUseId(data.contentBlock.toolUseId)
+                        .content(data.contentBlock.content)
+                        .build());
             }
+        }
+
+        private static boolean isServerToolResultType(String type) {
+            return (type != null) && type.endsWith("_tool_result");
         }
 
         private void handleContentBlockDelta(AnthropicStreamingData data) {
@@ -425,6 +501,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
             if (!redactedThinkings.isEmpty()) {
                 attributes.put(REDACTED_THINKING_KEY, redactedThinkings);
             }
+            if (options.returnServerToolResults() && !serverToolResults.isEmpty()) {
+                attributes.put(SERVER_TOOL_RESULTS_KEY, serverToolResults);
+            }
 
             AiMessage aiMessage = AiMessage.builder()
                     .text(isNullOrEmpty(text) ? null : text)
@@ -433,15 +512,27 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                     .attributes(attributes.isEmpty() ? null : attributes)
                     .build();
 
-            return ChatResponse.builder()
-                    .aiMessage(aiMessage)
+            var metadataBuilder = AnthropicChatResponseMetadata.builder()
                     .tokenUsage(AnthropicTokenUsage.builder()
                             .inputTokenCount(inputTokenCount.get())
                             .outputTokenCount(outputTokenCount.get())
                             .cacheCreationInputTokens(cacheCreationInputTokens.get())
                             .cacheReadInputTokens(cacheReadInputTokens.get())
                             .build())
-                    .finishReason(toFinishReason(stopReason))
+                    .finishReason(toFinishReason(stopReason));
+            if (responseId != null) {
+                metadataBuilder.id(responseId);
+            }
+            if (responseModel != null) {
+                metadataBuilder.modelName(responseModel);
+            }
+            if (!rawServerSentEvents.isEmpty()) {
+                metadataBuilder.rawServerSentEvents(new ArrayList<>(rawServerSentEvents));
+            }
+
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(metadataBuilder.build())
                     .build();
         }
 
