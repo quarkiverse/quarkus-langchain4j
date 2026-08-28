@@ -17,7 +17,6 @@ import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.gemini.common.GeminiStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
-import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
@@ -70,7 +69,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
     }
 
     @Override
-    protected Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request) {
+    protected Multi<SseEvent<String>> generateStreamContext(GenerateContentRequest request) {
         return restApi.generateContentStream(request, apiMetadata, "sse");
     }
 
