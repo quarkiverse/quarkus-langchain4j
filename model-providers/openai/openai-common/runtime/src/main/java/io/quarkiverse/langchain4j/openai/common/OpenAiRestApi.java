@@ -137,6 +137,18 @@ public interface OpenAiRestApi {
     Multi<ChatCompletionResponse> streamingChatCompletion(ChatCompletionRequest request, @BeanParam ApiMetadata input);
 
     /**
+     * Performs a non-blocking request for a streaming chat completion request, exposing each response as a raw
+     * {@link SseEvent}. This is needed to give callers access to the original Server-Sent Event data (e.g. to populate
+     * {@code ParsedAndRawResponse#rawServerSentEvent()} so that {@code StreamingChatResponseHandler#onUnmappedRawEvent}
+     * receives the raw provider event).
+     */
+    @Path("chat/completions")
+    @POST
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    @SseEventFilter(DoneFilter.class)
+    Multi<SseEvent<String>> streamingChatCompletionRaw(ChatCompletionRequest request, @BeanParam ApiMetadata input);
+
+    /**
      * Perform a non-blocking request to get the embeddings of an input text
      */
     @Path("embeddings")

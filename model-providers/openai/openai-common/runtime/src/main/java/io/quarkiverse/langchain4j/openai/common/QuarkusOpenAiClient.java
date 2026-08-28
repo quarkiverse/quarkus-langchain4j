@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Instance;
@@ -24,9 +25,13 @@ import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientMultipartForm;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.model.openai.internal.AsyncResponseHandling;
 import dev.langchain4j.model.openai.internal.ErrorHandling;
@@ -268,15 +273,54 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             @Override
             public StreamingResponseHandling onRawPartialResponse(
                     Consumer<ParsedAndRawResponse<ChatCompletionResponse>> handler) {
-                return onPartialResponse(new Consumer<>() {
-                    @Override
-                    public void accept(ChatCompletionResponse chatCompletionResponse) {
-                        handler.accept(ParsedAndRawResponse.builder()
-                                .parsedResponse(chatCompletionResponse)
-                                .streamingHandle(new NoopStreamingHandle())
-                                .build());
-                    }
-                });
+                // Consume the raw Server-Sent Events so that the original event is preserved and passed along in the
+                // ParsedAndRawResponse. Without this, rawServerSentEvent() would be null and
+                // StreamingChatResponseHandler#onUnmappedRawEvent would always receive null.
+                return new StreamingResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Multi<ParsedAndRawResponse<ChatCompletionResponse>> get() {
+                                return restApi.streamingChatCompletionRaw(request,
+                                        OpenAiRestApi.ApiMetadata.builder()
+                                                .azureApiKey(azureApiKey)
+                                                .openAiApiKey(openaiApiKey)
+                                                .apiVersion(apiVersion)
+                                                .organizationId(organizationId)
+                                                .build())
+                                        .map(new Function<>() {
+                                            @Override
+                                            @SuppressWarnings("unchecked")
+                                            public ParsedAndRawResponse<ChatCompletionResponse> apply(
+                                                    SseEvent<String> event) {
+                                                return ParsedAndRawResponse.builder()
+                                                        .parsedResponse(parseChatCompletionResponse(event.data()))
+                                                        .rawServerSentEvent(
+                                                                new ServerSentEvent(event.name(), event.data()))
+                                                        .streamingHandle(new NoopStreamingHandle())
+                                                        .build();
+                                            }
+                                        });
+                            }
+                        }, handler);
+            }
+
+            /**
+             * Parses the raw data of a chat completion Server-Sent Event into a {@link ChatCompletionResponse}, applying the
+             * same validation as {@link OpenAiRestApi.OpenAiRestApiReaderInterceptor} (OpenAI sometimes returns HTTP 200 with
+             * an
+             * error object instead of a valid response).
+             */
+            private ChatCompletionResponse parseChatCompletionResponse(String data) {
+                ChatCompletionResponse response;
+                try {
+                    response = OpenAiRestApi.ObjectMapperHolder.MAPPER.readValue(data, ChatCompletionResponse.class);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+                if (response == null || response.id() == null) {
+                    throw new OpenAiApiException(ChatCompletionResponse.class);
+                }
+                return response;
             }
         };
     }
