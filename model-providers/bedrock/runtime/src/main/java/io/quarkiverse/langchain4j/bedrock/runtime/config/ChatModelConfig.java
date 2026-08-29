@@ -111,10 +111,31 @@ public interface ChatModelConfig extends AwsClientConfig {
 
     /**
      * Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
+     * <p>
+     * This uses the legacy budget-based reasoning configuration ({@code reasoning_config.type=enabled} with
+     * {@code budget_tokens}), which is not accepted by newer models such as Claude Opus 4.7+. For those models use
+     * {@code reasoning-effort} instead.
      *
      * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html">AWS Bedrock inference
      *      reasoning</a>.
      */
     OptionalInt reasoning();
+
+    /**
+     * Enables adaptive reasoning with the given effort level ({@code reasoning_config.type=adaptive} with
+     * {@code output_config.effort}). This is the only reasoning configuration accepted by newer models such as Claude
+     * Opus 4.7+, which reject the legacy budget-based {@code reasoning} configuration. When set, it takes precedence
+     * over the {@code reasoning} token budget.
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html">AWS Bedrock inference
+     *      reasoning</a>.
+     */
+    Optional<ReasoningEffort> reasoningEffort();
+
+    enum ReasoningEffort {
+        LOW,
+        MEDIUM,
+        HIGH
+    }
 
 }

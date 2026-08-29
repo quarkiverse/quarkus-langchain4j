@@ -8175,6 +8175,8 @@ endif::add-copy-button-to-config-props[]
 --
 Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
 
+This uses the legacy budget-based reasoning configuration (`reasoning_config.type=enabled` with `budget_tokens`), which is not accepted by newer models such as Claude Opus 4.7{plus}. For those models use `reasoning-effort` instead.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING+++[]
@@ -8184,6 +8186,27 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning-effort[`+++quarkus.langchain4j.bedrock.chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables adaptive reasoning with the given effort level (`reasoning_config.type=adaptive` with `output_config.effort`). This is the only reasoning configuration accepted by newer models such as Claude Opus 4.7{plus}, which reject the legacy budget-based `reasoning` configuration. When set, it takes precedence over the `reasoning` token budget.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-requests[`+++quarkus.langchain4j.bedrock.embedding-model.log-requests+++`]##
@@ -10380,6 +10403,8 @@ endif::add-copy-button-to-config-props[]
 --
 Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
 
+This uses the legacy budget-based reasoning configuration (`reasoning_config.type=enabled` with `budget_tokens`), which is not accepted by newer models such as Claude Opus 4.7{plus}. For those models use `reasoning-effort` instead.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING+++[]
@@ -10389,6 +10414,27 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_RE
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning-effort[`+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables adaptive reasoning with the given effort level (`reasoning_config.type=adaptive` with `output_config.effort`). This is the only reasoning configuration accepted by newer models such as Claude Opus 4.7{plus}, which reject the legacy budget-based `reasoning` configuration. When set, it takes precedence over the `reasoning` token budget.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-requests[`+++quarkus.langchain4j.bedrock."model-name".embedding-model.log-requests+++`]##

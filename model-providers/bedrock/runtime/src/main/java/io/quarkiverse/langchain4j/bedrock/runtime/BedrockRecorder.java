@@ -5,6 +5,7 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -14,6 +15,8 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
+
+import org.jboss.logging.Logger;
 
 import dev.langchain4j.model.bedrock.BedrockChatModel;
 import dev.langchain4j.model.bedrock.BedrockChatRequestParameters;
@@ -32,6 +35,7 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.AwsClientConfig;
+import io.quarkiverse.langchain4j.bedrock.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.GuardrailConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.LangChain4jBedrockConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -52,6 +56,8 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
 @Recorder
 public class BedrockRecorder {
+
+    private static final Logger log = Logger.getLogger(BedrockRecorder.class);
 
     private static final String DEFAULT_CHAT_MODEL_ID = "global.amazon.nova-2-lite-v1:0";
 
@@ -107,9 +113,7 @@ public class BedrockRecorder {
                 paramBuilder.promptCaching(modelConfig.promptCaching().get());
             }
 
-            if (modelConfig.reasoning().isPresent()) {
-                paramBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
-            }
+            configureReasoning(paramBuilder, modelConfig, configName);
 
             if (modelConfig.guardrail().guardrailIdentifier().isPresent()) {
                 paramBuilder.guardrailConfiguration(buildGuardrailConfiguration(modelConfig.guardrail()));
@@ -204,9 +208,7 @@ public class BedrockRecorder {
                 paramsBuilder.promptCaching(modelConfig.promptCaching().get());
             }
 
-            if (modelConfig.reasoning().isPresent()) {
-                paramsBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
-            }
+            configureReasoning(paramsBuilder, modelConfig, configName);
 
             if (modelConfig.guardrail().guardrailIdentifier().isPresent()) {
                 paramsBuilder.guardrailConfiguration(buildGuardrailConfiguration(modelConfig.guardrail()));
@@ -338,6 +340,21 @@ public class BedrockRecorder {
             config = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return config;
+    }
+
+    private static void configureReasoning(BedrockChatRequestParameters.Builder paramBuilder, ChatModelConfig modelConfig,
+            String configName) {
+        if (modelConfig.reasoningEffort().isPresent()) {
+            // Adaptive reasoning takes precedence: newer models (Claude Opus 4.7+) reject the legacy budget form.
+            if (modelConfig.reasoning().isPresent()) {
+                log.warnf("Both 'reasoning' (%d) and 'reasoning-effort' (%s) are set for model '%s'; "
+                        + "using adaptive reasoning and ignoring the legacy token budget.",
+                        modelConfig.reasoning().getAsInt(), modelConfig.reasoningEffort().get(), configName);
+            }
+            paramBuilder.enableAdaptiveReasoning(modelConfig.reasoningEffort().get().name().toLowerCase(Locale.ROOT));
+        } else if (modelConfig.reasoning().isPresent()) {
+            paramBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
+        }
     }
 
     private static BedrockGuardrailConfiguration buildGuardrailConfiguration(GuardrailConfig guardrailConfig) {
