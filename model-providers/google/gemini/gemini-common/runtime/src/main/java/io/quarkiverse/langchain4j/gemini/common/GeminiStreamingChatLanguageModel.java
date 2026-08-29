@@ -10,9 +10,13 @@ import java.util.function.Consumer;
 
 import org.jboss.resteasy.reactive.client.SseEvent;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.internal.ExceptionMapper;
+import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -25,6 +29,7 @@ import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.smallrye.mutiny.Multi;
 
 public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
@@ -80,11 +85,15 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         });
         try {
             GeminiStreamingResponseBuilder responseBuilder = new GeminiStreamingResponseBuilder();
-            Multi<SseEvent<GenerateContentResponse>> event = generateStreamContext(request);
+            // Wraps the user handler so that, for each SSE frame, we can tell whether it mapped to a typed callback
+            // and, if not, forward it via onUnmappedRawEvent - mirroring langchain4j's own client.
+            MappingTrackingStreamingChatResponseHandler trackingHandler = new MappingTrackingStreamingChatResponseHandler(
+                    aHandler);
+            Multi<SseEvent<String>> event = generateStreamContext(request);
             event.subscribe().with(
-                    new OnItemConsumer(responseBuilder, aHandler),
-                    new OnErrorConsumer(aHandler),
-                    new OnCompleteRunnable(responseBuilder, aHandler));
+                    new OnItemConsumer(responseBuilder, trackingHandler),
+                    new OnErrorConsumer(trackingHandler),
+                    new OnCompleteRunnable(responseBuilder, trackingHandler));
         } catch (RuntimeException e) {
             ChatModelErrorContext errorContext = new ChatModelErrorContext(
                     e,
@@ -104,7 +113,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         }
     }
 
-    protected abstract Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request);
+    protected abstract Multi<SseEvent<String>> generateStreamContext(GenerateContentRequest request);
 
     private ChatRequest createModelListenerRequest(GenerateContentRequest request,
             List<ChatMessage> messages,
@@ -157,19 +166,32 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         }
     }
 
-    private static class OnItemConsumer implements Consumer<SseEvent<GenerateContentResponse>> {
+    private static class OnItemConsumer implements Consumer<SseEvent<String>> {
 
         private final GeminiStreamingResponseBuilder responseBuilder;
-        private final StreamingChatResponseHandler handler;
+        private final MappingTrackingStreamingChatResponseHandler handler;
 
-        public OnItemConsumer(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler handler) {
+        public OnItemConsumer(GeminiStreamingResponseBuilder responseBuilder,
+                MappingTrackingStreamingChatResponseHandler handler) {
             this.responseBuilder = responseBuilder;
             this.handler = handler;
         }
 
         @Override
-        public void accept(SseEvent<GenerateContentResponse> t) {
-            GenerateContentResponse response = t.data();
+        public void accept(SseEvent<String> t) {
+            handler.resetMappingTracking();
+
+            ServerSentEvent rawEvent = new ServerSentEvent(t.name(), t.data());
+
+            GenerateContentResponse response;
+            try {
+                response = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(t.data(),
+                        GenerateContentResponse.class);
+            } catch (JsonProcessingException e) {
+                withLoggingExceptions(() -> handler.onError(e));
+                return;
+            }
+
             Optional<String> maybeText = responseBuilder.append(response);
             maybeText.ifPresent(text -> {
                 try {
@@ -178,6 +200,11 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
                     withLoggingExceptions(() -> handler.onError(ex));
                 }
             });
+
+            // A frame that did not map to a typed callback is surfaced as a raw event, matching langchain4j.
+            if (!handler.wasMapped()) {
+                handler.onUnmappedRawEvent(rawEvent);
+            }
         }
     }
 }

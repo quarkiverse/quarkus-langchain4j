@@ -42,10 +42,15 @@ public interface VertxAiGeminiRestApi {
     @POST
     GenerateContentResponse generateContent(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);
 
+    /**
+     * Streams content as raw {@link SseEvent}s. Access to the original Server-Sent Event (rather than only the parsed
+     * {@link GenerateContentResponse}) is required so that frames mapping to no typed callback can be surfaced via
+     * {@code StreamingChatResponseHandler#onUnmappedRawEvent}, matching langchain4j's own client.
+     */
     @Path("{modelId}:streamGenerateContent")
     @POST
     @Produces(MediaType.SERVER_SENT_EVENTS)
-    Multi<SseEvent<GenerateContentResponse>> generateContentStream(GenerateContentRequest request,
+    Multi<SseEvent<String>> generateContentStream(GenerateContentRequest request,
             @BeanParam ApiMetadata apiMetadata, @QueryParam("alt") String sse);
 
     @ClientObjectMapper
