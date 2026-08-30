@@ -162,6 +162,31 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++1000+++`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-clear-on-close]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-clear-on-close[`+++quarkus.langchain4j.chat-memory.clear-on-close+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.chat-memory.clear-on-close+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to delete chat memory from the underlying `dev.langchain4j.store.memory.chat.ChatMemoryStore` when the owning AI service bean is destroyed (typically at application shutdown, or at the end of each request for `jakarta.enterprise.context.RequestScoped` AI services).
+
+When `true` (the default), historical behavior is preserved: every known memory id is removed from the store. This is appropriate for the in-memory default store.
+
+When `false`, the in-memory bookkeeping is still released to avoid leaks, but the persistent store is left untouched, so conversations backed by a custom `dev.langchain4j.store.memory.chat.ChatMemoryStore` (e.g., Redis, Couchbase, JDBC) survive pod or application restarts.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHAT_MEMORY_CLEAR_ON_CLOSE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MEMORY_CLEAR_ON_CLOSE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests[`+++quarkus.langchain4j.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.log-requests+++[]
