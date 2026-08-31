@@ -76,6 +76,7 @@ public class AzureOpenAiChatModel implements ChatModel {
     private final Integer seed;
     private final Double topP;
     private final Integer maxTokens;
+    private final String reasoningEffort;
     private final Double presencePenalty;
     private final Double frequencyPenalty;
     private final Integer maxRetries;
@@ -93,6 +94,7 @@ public class AzureOpenAiChatModel implements ChatModel {
             Integer seed,
             Double topP,
             Integer maxTokens,
+            String reasoningEffort,
             Double presencePenalty,
             Double frequencyPenalty,
             Duration timeout,
@@ -130,6 +132,7 @@ public class AzureOpenAiChatModel implements ChatModel {
         this.seed = seed;
         this.topP = topP;
         this.maxTokens = maxTokens;
+        this.reasoningEffort = reasoningEffort;
         this.presencePenalty = presencePenalty;
         this.frequencyPenalty = frequencyPenalty;
         this.maxRetries = getOrDefault(maxRetries, 1);
@@ -154,6 +157,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .seed(seed)
                 .topP(topP)
                 .maxTokens(maxTokens)
+                .reasoningEffort(reasoningEffort)
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty)
                 .responseFormat(responseFormat);
@@ -286,6 +290,7 @@ public class AzureOpenAiChatModel implements ChatModel {
         private Integer seed;
         private Double topP;
         private Integer maxTokens;
+        private String reasoningEffort;
         private Double presencePenalty;
         private Double frequencyPenalty;
         private Duration timeout;
@@ -372,6 +377,11 @@ public class AzureOpenAiChatModel implements ChatModel {
             return this;
         }
 
+        public Builder reasoningEffort(String reasoningEffort) {
+            this.reasoningEffort = reasoningEffort;
+            return this;
+        }
+
         public Builder presencePenalty(Double presencePenalty) {
             this.presencePenalty = presencePenalty;
             return this;
@@ -433,6 +443,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                     seed,
                     topP,
                     maxTokens,
+                    reasoningEffort,
                     presencePenalty,
                     frequencyPenalty,
                     timeout,

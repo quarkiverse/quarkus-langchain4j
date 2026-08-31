@@ -31,6 +31,7 @@ public class AzureOpenAiChatModelExplicitSamplingParamsTest extends OpenAiBaseTe
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.temperature", "0.3")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.top-p", "0.8")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.reasoning-effort", "medium")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.endpoint",
                     WiremockAware.wiremockUrlForConfig("/v1"));
 
@@ -50,7 +51,10 @@ public class AzureOpenAiChatModelExplicitSamplingParamsTest extends OpenAiBaseTe
         chatModel.chat("hello");
 
         Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody).containsEntry("temperature", 0.3).containsEntry("top_p", 0.8);
+        assertThat(requestBody)
+                .containsEntry("temperature", 0.3)
+                .containsEntry("top_p", 0.8)
+                .containsEntry("reasoning_effort", "medium");
     }
 
     @Test
@@ -74,6 +78,9 @@ public class AzureOpenAiChatModelExplicitSamplingParamsTest extends OpenAiBaseTe
         latch.await(1, TimeUnit.MINUTES);
 
         Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody).containsEntry("temperature", 0.3).containsEntry("top_p", 0.8);
+        assertThat(requestBody)
+                .containsEntry("temperature", 0.3)
+                .containsEntry("top_p", 0.8)
+                .containsEntry("reasoning_effort", "medium");
     }
 }

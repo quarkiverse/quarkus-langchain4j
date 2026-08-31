@@ -4544,6 +4544,27 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-reasoning-effort[`+++quarkus.langchain4j.azure-openai.chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains effort on reasoning for reasoning models. Supported values depend on the model used. Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-presence-penalty[`+++quarkus.langchain4j.azure-openai.chat-model.presence-penalty+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.azure-openai.chat-model.presence-penalty+++[]
@@ -5977,6 +5998,27 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MOD
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-reasoning-effort[`+++quarkus.langchain4j.azure-openai."model-name".chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains effort on reasoning for reasoning models. Supported values depend on the model used. Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
 |
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-presence-penalty[`+++quarkus.langchain4j.azure-openai."model-name".chat-model.presence-penalty+++`]##
