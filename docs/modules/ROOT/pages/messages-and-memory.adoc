@@ -102,9 +102,11 @@ See <<configure-default-memory,Configuring the Default Memory>> for more details
 Memory is tied to the CDI scope of the AI service.
 For each exchange (a potential multi-turn conversation), memory is isolated based on the service’s scope:
 
-* `@ApplicationScoped` — all users share the same memory (dangerous, requires the usage of `@MemoryId` to isolate).
-* `@RequestScoped` — memory is isolated per request, usually not useful except in function calling scenarios.
+* `@RequestScoped` — memory is isolated per request and discarded when the request ends. Usually not useful except in function calling scenarios, where the memory accumulates the tool invocation messages during a single request.
 * `@SessionScoped` — memory per user/session (recommended for web apps, but limited to websocket-next for the moment).
+* `@ApplicationScoped` — the AI service lives for the whole application lifetime, so all users share the same memory (dangerous, requires the usage of `@MemoryId` to isolate).
+* `@ChatScoped` and `@PerChatScoped` — memory is tied to an explicitly managed conversation (a _chat scope_) that can span multiple requests and can be nested. The memory is evicted when the chat scope ends. These scopes are provided by the `quarkus-langchain4j-chat-scopes` extension; see xref:chat-scopes.adoc[Chat Scopes] for details.
+* `@InvocationScoped` — memory lives only for the duration of a single top-level method invocation and is discarded afterwards. This is a finer-grained scope than `@RequestScoped`, useful for one-off LLM invocations that involve multiple tool calls. It is also provided by the `quarkus-langchain4j-chat-scopes` extension; see xref:chat-scopes.adoc[Chat Scopes] for details.
 
 [IMPORTANT]
 ====
@@ -115,6 +117,62 @@ AI Services are `@RequestScoped` by default, meaning memory is isolated per requ
 ====
 Using `@ApplicationScoped` with memory enabled can result in users sharing conversations or overwriting each other’s prompts.
 It requires careful management of `@MemoryId` to ensure isolation.
+====
+
+[#_default_memory_id_management]
+== Default Memory ID Management
+
+Every `ChatMemory` instance is identified by a #memory ID#.
+When a method of an AI service is invoked, Quarkus LangChain4j needs a memory ID to locate (or create) the memory used for that exchange.
+
+If the method declares a parameter annotated with `@MemoryId`, the value passed by the application is used as-is (see <<_memoryid_multi_session_memory,`@MemoryId`: Multi-Session Memory>>).
+Otherwise, Quarkus LangChain4j generates a #default memory ID# based on the current context:
+
+1. If the AI service is `@ChatScoped` or `@PerChatScoped`, the ID of the current chat scope is used.
+2. If the AI service is `@InvocationScoped`, an ID unique to the current top-level method invocation is used.
+3. Otherwise, if the invocation happens within a WebSocket (websocket-next) session, the WebSocket connection ID is used, suffixed with `#<fully qualified interface name>.<method name>`.
+4. Otherwise, if a CDI request context is active, an ID derived from the current request is used, suffixed with `#<fully qualified interface name>.<method name>`.
+5. As a last resort, the literal value `default` is used, meaning all invocations share the same memory.
+
+The `#<fully qualified interface name>.<method name>` suffix ensures that, within the same context (request or WebSocket connection), each AI service method gets its own isolated memory.
+
+=== How each scope works with default memory IDs
+
+The lifetime of the default memory ID determines how long the conversation history survives:
+
+[cols="1,2,2",options="header"]
+|===
+| Scope | Default memory ID lifetime | Consequence
+
+| `@RequestScoped`
+| Changes on every request
+| Each request starts with a fresh memory; the memory is cleared when the request ends. Fine for stateless prompts and function calling, but no conversation continuity across requests.
+
+| `@SessionScoped`
+| Stable for the duration of the WebSocket session
+| The conversation continues across messages of the same session; the memory is cleared when the session closes. Recommended for chat applications using websocket-next.
+
+| `@ApplicationScoped`
+| Changes on every request (request-derived ID), but the service — and its memories — live until the application shuts down
+| Each request creates a new memory entry that is *never* cleaned up: the chat memory store grows until shutdown (a memory leak). Do not rely on default memory IDs with this scope; always use an explicit `@MemoryId` parameter and clean up with `ChatMemoryRemover` when the conversation is over.
+
+| `@ChatScoped` / `@PerChatScoped`
+| Stable for the duration of the chat scope (which can span multiple requests)
+| The conversation continues until the application explicitly ends the chat scope, at which point the memory is evicted. No need to juggle memory IDs yourself.
+
+| `@InvocationScoped`
+| Stable for the duration of a single top-level method invocation
+| Memory accumulates the messages (including tool call messages) of one invocation and is discarded afterwards. Useful for one-off LLM invocations.
+|===
+
+[TIP]
+====
+Recommended patterns:
+
+* REST applications without cross-request conversations — keep the default `@RequestScoped`.
+* REST applications with multi-turn conversations — use `@ChatScoped` (see xref:chat-scopes.adoc[Chat Scopes]), or `@ApplicationScoped` with an explicit `@MemoryId` parameter managed by the application.
+* WebSocket applications — use `@SessionScoped` with default memory IDs.
+* One-off invocations with tools — use `@InvocationScoped`.
 ====
 
 == Configuring the Default Memory
@@ -311,6 +369,7 @@ Compression is implemented using a `ChatModel` that summarizes the conversation 
 
 Your custom `ChatMemory` implementation can handle these strategies, or you can use the built-in `MessageWindowChatMemory` or `TokenWindowChatMemory` (eviction based on message count or token count, respectively).
 
+[#_memoryid_multi_session_memory]
 == `@MemoryId`: Multi-Session Memory
 
 To assign different memory instances to different users or conversations, annotate a method parameter with `@MemoryId`:
@@ -345,6 +404,7 @@ See xref:websockets.adoc[Websockets] for more details.
 | Memory store         | Allows external persistence and custom retention policies
 | Token                | Influences memory size, model limits, and cost
 | MemoryId             | Binds conversations to different memory instances
+| Default memory ID    | Generated from the active scope/context when no `@MemoryId` is provided
 | Compression          | Avoids hitting token limits via summarization or eviction
 |===
 
