@@ -1,8 +1,8 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.33.2.1}@pom
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-stdio:2.0.0.Beta3
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-http:2.0.0.Beta3
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-websocket:2.0.0.Beta3
+//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.33.3.1}@pom
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-stdio:2.0.0
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-http:2.0.0
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-websocket:2.0.0
 //Q:CONFIG quarkus.mcp.server.client-logging.default-level=DEBUG
 
 import java.util.List;
