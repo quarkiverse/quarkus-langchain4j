@@ -30,10 +30,13 @@ public class AzureOpenAiChatModelSamplingParamsOmittedTest extends OpenAiBaseTes
     ChatModel chatModel;
 
     @Test
-    void temperatureAndTopPAreNotSentWhenUnconfigured() throws IOException {
+    void samplingAndReasoningParametersAreNotSentWhenUnconfigured() throws IOException {
         chatModel.chat("hello");
 
         Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody).doesNotContainKey("temperature").doesNotContainKey("top_p");
+        assertThat(requestBody)
+                .doesNotContainKey("temperature")
+                .doesNotContainKey("top_p")
+                .doesNotContainKey("reasoning_effort");
     }
 }

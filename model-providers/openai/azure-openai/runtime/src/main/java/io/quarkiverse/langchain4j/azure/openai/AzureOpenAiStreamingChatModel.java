@@ -81,6 +81,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
     private final Double temperature;
     private final Double topP;
     private final Integer maxTokens;
+    private final String reasoningEffort;
     private final Double presencePenalty;
     private final Double frequencyPenalty;
     private final TokenCountEstimator tokenizer;
@@ -96,6 +97,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             Double temperature,
             Double topP,
             Integer maxTokens,
+            String reasoningEffort,
             Double presencePenalty,
             Double frequencyPenalty,
             Duration timeout,
@@ -130,6 +132,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         this.temperature = temperature;
         this.topP = topP;
         this.maxTokens = maxTokens;
+        this.reasoningEffort = reasoningEffort;
         this.presencePenalty = presencePenalty;
         this.frequencyPenalty = frequencyPenalty;
         this.tokenizer = tokenizer;
@@ -151,6 +154,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .temperature(temperature)
                 .topP(topP)
                 .maxTokens(maxTokens)
+                .reasoningEffort(reasoningEffort)
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty)
                 .responseFormat(responseFormat);
@@ -318,6 +322,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         private Double temperature;
         private Double topP;
         private Integer maxTokens;
+        private String reasoningEffort;
         private Double presencePenalty;
         private Double frequencyPenalty;
         private Duration timeout;
@@ -393,6 +398,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             return this;
         }
 
+        public Builder reasoningEffort(String reasoningEffort) {
+            this.reasoningEffort = reasoningEffort;
+            return this;
+        }
+
         public Builder presencePenalty(Double presencePenalty) {
             this.presencePenalty = presencePenalty;
             return this;
@@ -453,6 +463,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                     temperature,
                     topP,
                     maxTokens,
+                    reasoningEffort,
                     presencePenalty,
                     frequencyPenalty,
                     timeout,
