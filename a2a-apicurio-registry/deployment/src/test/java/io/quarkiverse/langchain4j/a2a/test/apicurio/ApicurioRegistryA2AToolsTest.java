@@ -36,11 +36,12 @@ import io.quarkus.test.QuarkusUnitTest;
  * Integration test verifying that ApicurioAgentsRegistry can connect to
  * a real Apicurio Registry and search for AGENT_CARD artifacts.
  *
- * Note: allAgents() returns empty because the registered agent card URLs
- * (localhost:9999, localhost:9998) are not reachable — the A2A client builder
- * fails to fetch /.well-known/agent-card.json. This is expected in tests
- * without live A2A servers. The registry connectivity itself is verified
- * by querying the search API directly.
+ * Note: allAgents() returns empty here because the registered agent card URLs
+ * (localhost:9999, localhost:9998) are not reachable, so the A2A client builder
+ * fails to fetch /.well-known/agent-card.json before an agent can be built. That
+ * is the only reason left: the input keys the builder requires are resolved by
+ * ApicurioAgentsRegistryInputKeysTest in the runtime module. The registry
+ * connectivity itself is verified by querying the search API directly.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ApicurioRegistryA2AToolsTest {
