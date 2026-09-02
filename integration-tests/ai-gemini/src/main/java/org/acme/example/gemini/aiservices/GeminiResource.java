@@ -7,6 +7,7 @@ import jakarta.ws.rs.Produces;
 
 import org.jboss.resteasy.reactive.RestQuery;
 
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -44,7 +45,7 @@ public class GeminiResource {
                          "totalTokenCount": 48
                        }
                      }
-                    """.formatted(toolRole);
+                    """.formatted(Json.encode(toolRole));
         } else {
             return """
                      {
