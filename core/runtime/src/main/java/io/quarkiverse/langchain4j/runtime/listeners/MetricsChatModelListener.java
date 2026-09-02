@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
@@ -118,34 +119,12 @@ public class MetricsChatModelListener implements ChatModelListener {
     public void onResponse(ChatModelResponseContext responseContext) {
         final long endTime = Clock.SYSTEM.monotonicTime();
 
-        ChatRequest request = responseContext.chatRequest();
         ChatResponse response = responseContext.chatResponse();
-        String requestModel = request.parameters().modelName() != null
-                ? request.parameters().modelName()
-                : "none";
         String responseModel = response.metadata().modelName() != null
                 ? response.metadata().modelName()
                 : "none";
 
-        String aiServiceClassName = "none";
-        String aiServiceMethodName = "none";
-        if (ContextLocals.duplicatedContextActive()) {
-            String cls = ContextLocals.get(AiServiceConstants.AI_SERVICE_CLASS_NAME);
-            if (cls != null) {
-                aiServiceClassName = cls;
-            }
-            String mtd = ContextLocals.get(AiServiceConstants.AI_SERVICE_METHODNAME);
-            if (mtd != null) {
-                aiServiceMethodName = mtd;
-            }
-        }
-
-        Tags tags = Tags.of("gen_ai.request.model", requestModel)
-                .and("gen_ai.response.model", responseModel)
-                .and("gen_ai.provider.name", responseContext.modelProvider().toString().toLowerCase(Locale.ROOT))
-                .and("ai_service.class_name", aiServiceClassName)
-                .and("ai_service.method_name", aiServiceMethodName)
-                .and("error.type", "none");
+        Tags tags = buildTags(responseContext.chatRequest(), responseModel, responseContext.modelProvider(), "none");
 
         recordTokenUsage(responseContext, tags);
         recordDuration(responseContext, endTime, tags);
@@ -162,20 +141,54 @@ public class MetricsChatModelListener implements ChatModelListener {
             return;
         }
 
-        String requestModel = errorContext.chatRequest().parameters().modelName() != null
-                ? errorContext.chatRequest().parameters().modelName()
-                : "none";
+        // The OpenTelemetry semantic conventions define error.type as a low-cardinality attribute
+        // (the exception class name), never the exception message, which may embed request-scoped values
+        // such as request ids or token counts.
         String errorType = errorContext.error() != null
-                ? errorContext.error().getMessage()
+                ? errorContext.error().getClass().getName()
                 : "none";
 
-        Tags tags = Tags.of("gen_ai.request.model", requestModel)
-                .and("gen_ai.response.model", "none")
-                .and("ai_service.class_name", "none")
-                .and("ai_service.method_name", "none")
-                .and("error.type", errorType);
+        // The tag keys must match the ones used in onResponse: registries such as Prometheus reject
+        // meters with the same name but a different set of tag keys.
+        Tags tags = buildTags(errorContext.chatRequest(), "none", errorContext.modelProvider(), errorType);
 
         duration.withTags(tags).record(endTime - startTime, TimeUnit.NANOSECONDS);
+    }
+
+    /**
+     * Builds the tag set shared by every meter recorded by this listener. Both the success and the error path must
+     * go through this method so that they always register the same tag keys.
+     */
+    private static Tags buildTags(ChatRequest request, String responseModel, ModelProvider modelProvider,
+            String errorType) {
+        String requestModel = request != null
+                && request.parameters() != null
+                && request.parameters().modelName() != null
+                        ? request.parameters().modelName()
+                        : "none";
+        String providerName = modelProvider != null
+                ? modelProvider.toString().toLowerCase(Locale.ROOT)
+                : "none";
+
+        String aiServiceClassName = "none";
+        String aiServiceMethodName = "none";
+        if (ContextLocals.duplicatedContextActive()) {
+            String cls = ContextLocals.get(AiServiceConstants.AI_SERVICE_CLASS_NAME);
+            if (cls != null) {
+                aiServiceClassName = cls;
+            }
+            String mtd = ContextLocals.get(AiServiceConstants.AI_SERVICE_METHODNAME);
+            if (mtd != null) {
+                aiServiceMethodName = mtd;
+            }
+        }
+
+        return Tags.of("gen_ai.request.model", requestModel)
+                .and("gen_ai.response.model", responseModel)
+                .and("gen_ai.provider.name", providerName)
+                .and("ai_service.class_name", aiServiceClassName)
+                .and("ai_service.method_name", aiServiceMethodName)
+                .and("error.type", errorType);
     }
 
     private void recordTokenUsage(ChatModelResponseContext responseContext, Tags tags) {
