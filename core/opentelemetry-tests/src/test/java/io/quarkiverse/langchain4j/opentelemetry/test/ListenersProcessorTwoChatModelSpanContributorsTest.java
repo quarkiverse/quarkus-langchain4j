@@ -50,7 +50,7 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
     void shouldHaveSpanChatModelListenerWitContributor() {
         assertThat(spanChatModelListener).isNotNull();
         assertThat(contributors)
-                .hasSize(4);
+                .hasSize(5);
     }
 
     @Test

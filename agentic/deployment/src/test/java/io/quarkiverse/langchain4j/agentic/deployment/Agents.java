@@ -10,12 +10,14 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.agentic.declarative.ChatMemoryProviderSupplier;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
 import dev.langchain4j.agentic.declarative.ExitCondition;
 import dev.langchain4j.agentic.declarative.LoopAgent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.agentic.declarative.SupervisorAgent;
 import dev.langchain4j.agentic.declarative.SupervisorRequest;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.agentic.supervisor.SupervisorResponseStrategy;
@@ -26,6 +28,8 @@ import dev.langchain4j.guardrail.InputGuardrailRequest;
 import dev.langchain4j.guardrail.InputGuardrailResult;
 import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.guardrail.OutputGuardrailResult;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -48,6 +52,13 @@ public class Agents {
         @Override
         public ChatResponse doChat(ChatRequest request) {
             return ChatResponse.builder().aiMessage(new AiMessage(response)).build();
+        }
+
+        @Override
+        public String toString() {
+            return "FixedResponseChatModel{" +
+                    "response='" + response + '\'' +
+                    '}';
         }
     }
 
@@ -90,8 +101,18 @@ public class Agents {
         RequestCategory classify(@V("request") String request);
 
         @ChatModelSupplier
-        static ChatModel chatModel() {
-            return new FixedResponseChatModel("MEDICAL");
+        static ChatModel chatModel(AgenticScope scope) {
+            String request = scope.readState("request", "");
+            if (request.contains("leg")) {
+                return new FixedResponseChatModel("MEDICAL");
+            }
+            if (request.contains("sue")) {
+                return new FixedResponseChatModel("LEGAL");
+            }
+            if (request.contains("computer")) {
+                return new FixedResponseChatModel("TECHNICAL");
+            }
+            return new FixedResponseChatModel("UNKNOWN");
         }
     }
 
@@ -129,20 +150,8 @@ public class Agents {
         @ChatModelSupplier
         static ChatModel chatModel() {
             return new FixedResponseChatModel("\"I'm sorry to hear that you've broken your leg." +
-                    "Here are the steps you should take: **Seek Medical Attention");
+                    "Here are the steps you should take: **Seek Legal Attention");
         }
-    }
-
-    public interface MedicalExpertWithMemory {
-
-        @UserMessage("""
-                You are a medical expert.
-                Analyze the following user request under a medical point of view and provide the best possible answer.
-                The user request is {{request}}.
-                """)
-        @Tool("A medical expert")
-        @Agent(description = "A medical expert", outputKey = "response")
-        String medical(@MemoryId String memoryId, @V("request") String request);
     }
 
     public interface LegalExpert {
@@ -155,18 +164,11 @@ public class Agents {
         @Tool("A legal expert")
         @Agent(description = "A legal expert", outputKey = "response")
         String legal(@V("request") String request);
-    }
 
-    public interface LegalExpertWithMemory {
-
-        @UserMessage("""
-                You are a legal expert.
-                Analyze the following user request under a legal point of view and provide the best possible answer.
-                The user request is {{request}}.
-                """)
-        @Tool("A legal expert")
-        @Agent(description = "A legal expert", outputKey = "response")
-        String legal(@MemoryId String memoryId, @V("request") String request);
+        @ChatModelSupplier
+        static ChatModel chatModel() {
+            return new FixedResponseChatModel("**Seek Legal Attention");
+        }
     }
 
     public interface TechnicalExpert {
@@ -179,6 +181,64 @@ public class Agents {
         @Tool("A technical expert")
         @Agent(description = "A technical expert", outputKey = "response")
         String technical(@V("request") String request);
+
+        @ChatModelSupplier
+        static ChatModel chatModel() {
+            return new FixedResponseChatModel("\"I'm sorry to hear that you've broken your computer." +
+                    "Here are the steps you should take: **Seek Technical Assistance");
+        }
+    }
+
+    public interface MedicalExpertWithMemory {
+
+        @UserMessage("""
+                You are a medical expert.
+                Analyze the following user request under a medical point of view and provide the best possible answer.
+                The user request is {{request}}.
+                """)
+        @Agent(description = "A medical expert", outputKey = "response")
+        String medical(@MemoryId String memoryId, @V("request") String request);
+
+        @ChatMemoryProviderSupplier
+        static ChatMemory chatMemory(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
+        }
+
+        @ChatModelSupplier
+        static ChatModel chatModel() {
+            return new FixedResponseChatModel("\"I'm sorry to hear that you've broken your leg." +
+                    "Here are the steps you should take: **Seek Medical Attention");
+        }
+    }
+
+    public interface LegalExpertWithMemory {
+
+        @UserMessage("""
+                You are a legal expert.
+                Analyze the following user request under a legal point of view and provide the best possible answer.
+                The user request is {{request}}.
+                """)
+        @Agent(description = "A legal expert", outputKey = "response")
+        String legal(@MemoryId String memoryId, @V("request") String request);
+
+        @ChatMemoryProviderSupplier
+        static ChatMemory chatMemory(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
+        }
+
+        @ChatModelSupplier
+        static ChatModel chatModel(AgenticScope scope) {
+            String response = scope.readState("response", "");
+            if (response.contains("leg")) {
+                return new FixedResponseChatModel("\"I'm sorry to hear that you've broken your leg." +
+                        "Here are the steps you should take: **Seek Legal Attention");
+            }
+            if (response.contains("computer")) {
+                return new FixedResponseChatModel("\"I'm sorry to hear that you've broken your computer." +
+                        "Here are the steps you should take: **Seek Legal Attention");
+            }
+            return new FixedResponseChatModel("**Seek Legal Attention");
+        }
     }
 
     public interface TechnicalExpertWithMemory {
@@ -188,9 +248,19 @@ public class Agents {
                 Analyze the following user request under a technical point of view and provide the best possible answer.
                 The user request is {{request}}.
                 """)
-        @Tool("A technical expert")
         @Agent(description = "A technical expert", outputKey = "response")
         String technical(@MemoryId String memoryId, @V("request") String request);
+
+        @ChatMemoryProviderSupplier
+        static ChatMemory chatMemory(Object memoryId) {
+            return MessageWindowChatMemory.withMaxMessages(10);
+        }
+
+        @ChatModelSupplier
+        static ChatModel chatModel() {
+            return new FixedResponseChatModel("\"I'm sorry to hear that you've broken your computer." +
+                    "Here are the steps you should take: **Seek Technical Assistance");
+        }
     }
 
     public interface CreativeWriter {

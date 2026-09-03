@@ -26,7 +26,7 @@ class ListenersProcessorSingleChatModelSpanContributorTest
     @Test
     void shouldHaveSpanChatModelListenerWitContributor() {
         assertThat(spanChatModelListener).isNotNull();
-        assertThat(contributors).hasSize(3).anyMatch(i -> i instanceof TestChatModelSpanContributor);
+        assertThat(contributors).hasSize(4).anyMatch(i -> i instanceof TestChatModelSpanContributor);
     }
 
     @Override

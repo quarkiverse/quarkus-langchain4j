@@ -17,6 +17,6 @@ class ListenersProcessorOnlySpanChatModelListenerTest
     @Test
     void shouldHaveSpanChatModelListenerWithoutContributors() {
         assertThat(spanChatModelListener).isNotNull();
-        assertThat(contributors).hasSize(2);
+        assertThat(contributors).hasSize(3);
     }
 }
