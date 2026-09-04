@@ -19,7 +19,7 @@ import com.ibm.watsonx.ai.chat.ChatResponse;
 import com.ibm.watsonx.ai.chat.SseEventProcessor;
 import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatRequest;
 import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatResponse;
-import com.ibm.watsonx.ai.gateway.chat.ModelGatewayRestClient;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatRestClient;
 import com.ibm.watsonx.ai.gateway.chat.ModelGatewayTextChatRequest;
 
 import io.quarkiverse.langchain4j.watsonx.runtime.QuarkusChatSubscriber;
@@ -30,7 +30,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.client.filter.BearerTokenHeade
 import io.quarkiverse.langchain4j.watsonx.runtime.client.logger.WatsonxClientLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
-public final class QuarkusModelGatewayRestClient extends ModelGatewayRestClient {
+public final class QuarkusModelGatewayRestClient extends ModelGatewayChatRestClient {
 
     private final GatewayRestApi client;
 
@@ -110,16 +110,16 @@ public final class QuarkusModelGatewayRestClient extends ModelGatewayRestClient 
         return future;
     }
 
-    public static final class QuarkusModelGatewayRestClientBuilderFactory implements ModelGatewayRestClientBuilderFactory {
+    public static final class QuarkusModelGatewayRestClientBuilderFactory implements ModelGatewayChatRestClientBuilderFactory {
         @Override
         public Builder get() {
             return new QuarkusModelGatewayRestClient.Builder();
         }
     }
 
-    static final class Builder extends ModelGatewayRestClient.Builder {
+    static final class Builder extends ModelGatewayChatRestClient.Builder {
         @Override
-        public ModelGatewayRestClient build() {
+        public ModelGatewayChatRestClient build() {
             return new QuarkusModelGatewayRestClient(this);
         }
     }

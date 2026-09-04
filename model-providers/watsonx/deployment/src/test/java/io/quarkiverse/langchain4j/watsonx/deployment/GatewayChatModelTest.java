@@ -34,10 +34,10 @@ import com.ibm.watsonx.ai.chat.model.ChatMessage;
 import com.ibm.watsonx.ai.chat.model.SystemMessage;
 import com.ibm.watsonx.ai.chat.model.UserMessage;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
-import com.ibm.watsonx.ai.gateway.chat.ModelGatewayParameters;
-import com.ibm.watsonx.ai.gateway.chat.ModelGatewayParameters.ReasoningEffort;
-import com.ibm.watsonx.ai.gateway.chat.ModelGatewayParameters.ServiceTier;
-import com.ibm.watsonx.ai.gateway.chat.ModelGatewayParameters.StreamOptions;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatParameters;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatParameters.ReasoningEffort;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatParameters.ServiceTier;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatParameters.StreamOptions;
 import com.ibm.watsonx.ai.gateway.chat.ModelGatewayTextChatRequest;
 
 import dev.langchain4j.exception.LangChain4jException;
@@ -155,9 +155,9 @@ public class GatewayChatModelTest extends WireMockAbstract {
 
         // Gateway specific metadata.
         var metadata = assertInstanceOf(WatsonxChatResponseMetadata.class, chatResponse.metadata());
-        assertEquals("default", metadata.getServiceTier());
-        assertEquals("fp_44709d6fcb", metadata.getSystemFingerprint());
-        assertEquals(false, metadata.getCached());
+        assertEquals("default", metadata.serviceTier());
+        assertEquals("fp_44709d6fcb", metadata.systemFingerprint());
+        assertEquals(false, metadata.cached());
     }
 
     @Test
@@ -175,8 +175,8 @@ public class GatewayChatModelTest extends WireMockAbstract {
                 .timeLimit(DEFAULT_TIME_LIMIT.toMillis())
                 .serviceTier("priority")
                 .reasoningEffort("low")
-                .router(new ModelGatewayParameters.Router(
-                        new ModelGatewayParameters.Cache(true, null, 0.9)))
+                .router(new ModelGatewayChatParameters.Router(
+                        new ModelGatewayChatParameters.Cache(true, null, 0.9)))
                 .modalities(List.of("text"))
                 .store(false)
                 .parallelToolCalls(true)
