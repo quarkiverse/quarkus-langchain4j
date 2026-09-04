@@ -92,6 +92,35 @@ xref:./function-calling.adoc[Function calling] is supported in Ollama since vers
 Not all models support function calling (tools).
 Refer to https://ollama.com/search?c=tools[this list] to find compatible ones.
 
+== Enabling the chat model vs disabling the integration
+
+`quarkus.langchain4j.ollama.chat-model.enabled` is a build-time switch.
+Leave it at the default (`true`) when Ollama is the only chat provider on the classpath.
+Set it to `false` when several provider extensions are present (Ollama, OpenAI, Mistral, Anthropic, and so on) and you want AI Services to use a different chat provider.
+Disabling the model here means Quarkus does not produce the Ollama chat model bean; it does not contact Ollama.
+
+`quarkus.langchain4j.ollama.embedding-model.enabled` does the same for the embedding model.
+
+`quarkus.langchain4j.ollama.enable-integration` is a runtime switch.
+When `false`, every call to the Ollama models throws `dev.langchain4j.model.ModelDisabledException` instead of contacting the Ollama server.
+The application still starts.
+Use this with xref:enable-disable-integrations.adoc[fault-tolerance fallbacks] so you can run without a local LLM (dev, CI) or return a canned response.
+
+The two properties are not interchangeable: `*.enabled` controls whether the bean exists, `enable-integration` controls whether calls are actually made.
+
+== Request logging
+
+Two layers exist:
+
+* `quarkus.langchain4j.ollama.log-requests` / `log-responses` — Ollama *client* logging for all HTTP calls (chat and embedding).
+* `quarkus.langchain4j.ollama.chat-model.log-requests` / `log-responses` — chat-model traffic only.
+
+If the chat-model properties are set, they take precedence for chat calls.
+Use the client properties when you want one switch for every Ollama request.
+Use the chat-model properties when you only want chat traffic logged.
+
+The same split exists for `embedding-model.log-requests` / `log-responses`.
+
 == Configuration Reference
 
 include::includes/quarkus-langchain4j-ollama.adoc[leveloffset=+1,opts=optional]
