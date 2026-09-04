@@ -10,6 +10,9 @@ You can disable any provider at runtime using the corresponding configuration pr
 - `quarkus.langchain4j.openai.enable-integration`
 - `quarkus.langchain4j.huggingface.enable-integration`
 - `quarkus.langchain4j.azure-openai.enable-integration`
+- `quarkus.langchain4j.ollama.enable-integration`
+
+Other providers follow the same `quarkus.langchain4j.<provider>.enable-integration` pattern.
 
 Setting this property to `false` will prevent any live call to the model, and a call to the provider will result in a `dev.langchain4j.model.ModelDisabledException` being thrown.
 

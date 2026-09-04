@@ -92,5 +92,15 @@ EmbeddingModel model;
 
 This allows for more flexibility and simplifies configuration in small applications.
 
+When another embedding provider is also on the classpath (for example `quarkus-langchain4j-ollama`), either inject the concrete type from the table above or select the in-process model with its fully qualified class name:
+
+[source,properties]
+----
+quarkus.langchain4j.embedding-model.provider=dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel
+----
+
+Use the *Injected Type* column that matches the dependency you added.
+If the class cannot be found, the matching `langchain4j-embeddings-*` artifact is missing from the classpath.
+
 TIP: In-process embedding models work well for local development, edge environments, and production use cases where low-latency and data privacy are critical.
 
