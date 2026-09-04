@@ -1,4 +1,4 @@
 :project-version: 1.13.0
-:langchain4j-version: 1.19.0
+:langchain4j-version: 1.20.0-SNAPSHOT
 :langchain4j-embeddings-version: ${langchain4j-embeddings.version}
 :examples-dir: ./../examples/

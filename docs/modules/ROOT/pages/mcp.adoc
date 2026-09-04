@@ -714,17 +714,22 @@ import jakarta.enterprise.event.Observes;
 public class McpLogObserver {
 
     public void onGitHubLog(@Observes @McpClientName("github") McpLogMessage logMessage) {
-        System.out.println("GitHub MCP: [" + logMessage.level() + "] " + logMessage.data());
+        System.out.println("GitHub MCP: [" + logMessage.level() + "] " + logMessage.dataAsObject());
         // Custom handling: store in database, trigger alerts, etc.
     }
 
     public void onAnyMcpLog(@Observes McpLogMessage logMessage) {
         // Observe logs from all MCP clients (no @McpClientName qualifier)
-        System.out.println("MCP Log: [" + logMessage.level() + "] " + logMessage.data());
+        System.out.println("MCP Log: [" + logMessage.level() + "] " + logMessage.dataAsObject());
         // Custom handling: store in database, trigger alerts, etc.
     }
 }
 ----
+
+MCP defines the log payload as any JSON-serializable value, so `dataAsObject()` returns whatever the
+server sent - commonly a `String`, sometimes a `Map`. Use `dataAsMap()` if you read named fields out
+of it, which returns `null` when the payload is not an object, or `dataAsJson()` to get it back as
+JSON text.
 
 The `McpLogMessage` includes:
 
