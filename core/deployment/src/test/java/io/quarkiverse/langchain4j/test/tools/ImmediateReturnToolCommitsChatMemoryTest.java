@@ -75,7 +75,7 @@ public class ImmediateReturnToolCommitsChatMemoryTest {
         assertNull(result.content());
         assertThat(result.finishReason()).isEqualTo(FinishReason.TOOL_EXECUTION);
         assertThat(result.toolExecutions()).hasSize(1);
-        assertThat(result.toolExecutions().get(0).result()).isEqualTo("\"immediate-result\"");
+        assertThat(result.toolExecutions().get(0).result()).isEqualTo("immediate-result");
 
         // The key assertion: the chat memory store must have received an update,
         // meaning committableChatMemory.commit() was called
