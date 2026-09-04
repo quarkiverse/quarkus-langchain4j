@@ -1319,7 +1319,7 @@ endif::add-copy-button-to-env-var[]
 |`+++empty list+++`
 
 
-h|[.extension-name]##Quarkus LangChain4j - A2A Apicurio Registry - Runtime##
+h|[.extension-name]##Quarkus LangChain4j - A2A Apicurio Registry##
 h|Type
 h|Default
 
@@ -16347,7 +16347,7 @@ endif::add-copy-button-to-env-var[]
 
 
 
-h|[.extension-name]##Quarkus LangChain4j - MCP Apicurio Registry - Runtime##
+h|[.extension-name]##Quarkus LangChain4j - MCP Apicurio Registry##
 h|Type
 h|Default
 
