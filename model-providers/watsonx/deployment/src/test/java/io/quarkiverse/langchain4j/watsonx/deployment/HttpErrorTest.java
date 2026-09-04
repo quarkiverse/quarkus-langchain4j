@@ -311,8 +311,8 @@ public class HttpErrorTest extends WireMockAbstract {
                 .responseMediaType(MediaType.TEXT_PLAIN)
                 .response("SUPER FATAL ERROR!")
                 .build();
-        RuntimeException ex = assertThrowsExactly(RuntimeException.class,
-                () -> chatModel.chat("message"));
+
+        LangChain4jException ex = assertThrowsExactly(LangChain4jException.class, () -> chatModel.chat("message"));
         assertTrue(ex.getMessage().contains("SUPER FATAL ERROR!"));
     }
 }

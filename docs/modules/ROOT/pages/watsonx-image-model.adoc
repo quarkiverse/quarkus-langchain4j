@@ -1,0 +1,125 @@
+= IBM watsonx.ai Image Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+IBM watsonx.ai does not host image models directly, but its link:https://cloud.ibm.com/apidocs/watsonx-ai#model-gateway[Model Gateway] can route image generation requests to models hosted by multiple providers (for example OpenAI) behind a single watsonx.ai entry point.
+
+IMPORTANT: This extension supports IBM watsonx as a service on IBM Cloud only.
+
+== Prerequisites
+
+include::./watsonx-chat-model.adoc[tags=watsonx-prerequisites]
+
+NOTE: The image model only uses the Model Gateway, so neither `project-id` nor `space-id` is required.
+
+== Dependency
+
+Add the following dependency to your project:
+
+:provider-artifact: quarkus-langchain4j-watsonx
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+If no other image model extension is installed, xref:ai-services.adoc[AI Services] will automatically use this provider.
+
+== Configuration
+
+Configure the image model by setting `gateway-image-model.model-name`:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+
+quarkus.langchain4j.watsonx.gateway-image-model.model-name=openai/gpt-image-1
+----
+
+If a `gateway-image-model.model-name` is configured, Quarkus automatically registers an `ImageModel` bean.
+
+IMPORTANT: The gateway must be configured by an administrator before use. The value of `model-name` must be a model identifier that is already registered in the gateway, which means the alias defined by the administrator or, when there is no alias, the provider-side model identifier. The link:https://cloud.ibm.com/apidocs/watsonx-ai#gateway-models-list[model catalog of the gateway] returns the identifiers that can be used.
+
+Besides `model-name`, the gateway supports a set of provider-agnostic options:
+
+[source,properties]
+----
+# Background of the generated images: transparent, opaque or auto
+quarkus.langchain4j.watsonx.gateway-image-model.background=opaque
+
+# How strictly the generated images are filtered: low or auto
+quarkus.langchain4j.watsonx.gateway-image-model.moderation=low
+
+# Compression level (0-100), only honored by the jpeg and webp output formats
+quarkus.langchain4j.watsonx.gateway-image-model.output-compression=80
+
+# File format of the generated images: png, jpeg, webp or auto
+quarkus.langchain4j.watsonx.gateway-image-model.output-format=png
+
+# Quality of the generated images: auto, high, medium, low, hd or standard
+quarkus.langchain4j.watsonx.gateway-image-model.quality=high
+
+# How the generated images are returned, only honored by the models that support it: url or b64_json
+quarkus.langchain4j.watsonx.gateway-image-model.response-format=b64_json
+
+# Dimensions of the generated images
+quarkus.langchain4j.watsonx.gateway-image-model.size=1024x1024
+
+# Visual style of the generated images: vivid or natural
+quarkus.langchain4j.watsonx.gateway-image-model.style=vivid
+
+# Stable identifier of the end user, used by the provider to detect abuse
+quarkus.langchain4j.watsonx.gateway-image-model.user=user-1234
+----
+
+NOTE: Not every option is supported by every model; a model ignores the options it does not support.
+
+include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]
+
+== Using Image Models
+
+Once the extension is configured, you can access image generation capabilities either via an AI service interface or directly through the `ImageModel` API.
+
+For example, to declare an AI service that generates images:
+
+[source,java]
+----
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+@RegisterAiService
+public interface MyImageService {
+
+    @UserMessage("Generate an image of a futuristic city at sunset")
+    Image generateFuturisticCity();
+}
+----
+
+To use the model programmatically:
+
+[source,java]
+----
+import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.data.image.Image;
+import jakarta.inject.Inject;
+
+@Inject
+ImageModel imageModel;
+
+// ...
+Image image = imageModel.generate("A majestic dragon flying over a medieval castle").content();
+----
+
+`Image` exposes `base64Data()` or `url()` depending on `response-format`, plus `mimeType()` and `revisedPrompt()` when the provider returns one.
+
+To generate more than one image at a time, pass the desired count:
+
+[source,java]
+----
+var images = imageModel.generate("A majestic dragon flying over a medieval castle", 3).content();
+----
+
+== Additional Resources
+
+[.lead]
+* Learn more about xref:models.adoc#_image_models[Image Models]
+* Explore xref:ai-services.adoc[AI Services] for orchestrating multiple models

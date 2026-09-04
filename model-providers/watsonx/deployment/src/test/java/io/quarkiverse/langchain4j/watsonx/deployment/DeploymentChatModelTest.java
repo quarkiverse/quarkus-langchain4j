@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.util.Date;
@@ -28,14 +29,18 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.ibm.watsonx.ai.chat.ChatModeration;
 import com.ibm.watsonx.ai.chat.model.ChatMessage;
 import com.ibm.watsonx.ai.chat.model.SystemMessage;
 import com.ibm.watsonx.ai.chat.model.TextChatRequest;
 import com.ibm.watsonx.ai.chat.model.UserMessage;
 
+import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.watsonx.WatsonxChatRequestParameters;
 import dev.langchain4j.model.watsonx.WatsonxDeploymentChatModel;
 import dev.langchain4j.model.watsonx.WatsonxDeploymentStreamingChatModel;
 import io.quarkus.arc.ClientProxy;
@@ -122,6 +127,25 @@ public class DeploymentChatModelTest extends WireMockAbstract {
         assertEquals("chatcmpl-5d8c131decbb6978cba5df10267aa3ff", metadata.id());
         assertEquals("meta-llama/llama-4-maverick-17b-128e-instruct-fp8", metadata.modelName());
         assertEquals(41, metadata.tokenUsage().totalTokenCount());
+    }
+
+    @Test
+    void chat_with_moderations_throws_unsupported_feature_exception() {
+
+        var moderations = ChatModeration.builder()
+                .hap(h -> h.input(0.8f))
+                .build();
+
+        var chatRequest = ChatRequest.builder()
+                .messages(
+                        dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
+                        dev.langchain4j.data.message.UserMessage.from("UserMessage"))
+                .parameters(WatsonxChatRequestParameters.builder()
+                        .moderations(moderations)
+                        .build())
+                .build();
+
+        assertThrows(UnsupportedFeatureException.class, () -> chatModel.chat(chatRequest));
     }
 
     private TextChatRequest defaultRequest() {

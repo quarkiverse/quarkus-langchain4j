@@ -1,0 +1,100 @@
+= IBM watsonx.ai Moderation Model
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+IBM watsonx.ai provides moderation capabilities through multiple detectors that can identify unsafe, sensitive, or policy-violating content.
+Quarkus integrates the LangChain4j `WatsonxModerationModel`, exposing each detector type as a dedicated configuration group.
+
+Supported detector types include:
+
+* *PII* - Detects Personally Identifiable Information
+* *HAP* - Detects hate, abuse, or profanity
+* *Granite Guardian* - Detects harmful or risky content
+
+Each detector can be enabled individually.
+
+== Prerequisites
+
+include::./watsonx-chat-model.adoc[tag=watsonx-prerequisites]
+
+== Dependency
+
+Add the following dependency to your project:
+
+:provider-artifact: quarkus-langchain4j-watsonx
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+== Configuration
+
+Enable detectors in `application.properties` using their dedicated flags:
+
+[source,properties]
+----
+# Base Watsonx configuration
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Enable specific moderation detectors
+quarkus.langchain4j.watsonx.moderation-model.hap.enabled=true
+quarkus.langchain4j.watsonx.moderation-model.pii.enabled=true
+quarkus.langchain4j.watsonx.moderation-model.granite-guardian.enabled=true
+----
+
+Each detector configuration group may also expose additional settings depending on its capabilities.
+If a moderation model is configured, Quarkus will automatically create and register a `ModerationModel` bean.
+
+== Injection
+
+[source,java]
+----
+@Inject
+ModerationModel moderationModel;
+----
+
+== Usage
+
+[source,java]
+----
+var response = moderationModel.moderate("Some text to analyze");
+
+boolean flagged = response.content().flagged();
+Map<String, Object> metadata = response.metadata();
+
+System.out.println("Flagged? " + flagged);
+System.out.println("Metadata: " + metadata);
+----
+
+== Metadata
+
+A moderation response includes metadata describing the detection:
+
+|===
+| Key | Description
+
+| detection
+| The assigned label for the detected content
+
+| detection_type
+| Detector that triggered the flag
+
+| start
+| Start index of the detected segment
+
+| end
+| End index of the detected segment
+
+| score
+| Confidence score
+|===
+
+Example:
+
+[source,java]
+----
+System.out.println(metadata.get("detection_type"));
+System.out.println(metadata.get("score"));
+----
+
+NOTE: For inline moderation within a chat request (without a second network call), see the xref:watsonx-chat-model.adoc#_inline_moderation[Inline moderation] section of the IBM watsonx.ai Chat Model page.

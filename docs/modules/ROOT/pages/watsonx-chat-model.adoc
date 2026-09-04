@@ -239,6 +239,61 @@ quarkus.langchain4j.watsonx.chat-model.strict-json-schema=false
 
 NOTE: `response-format` and `strict-json-schema` are available on the three chat backends (`chat-model`, `deployment-chat-model` and `gateway-chat-model`), and the strict mode is the default on all of them.
 
+=== Inline moderation
+
+IMPORTANT: Inline moderation is only available on the foundation backend (`chat-model`). Neither `deployment-chat-model` nor `gateway-chat-model` support it; configuring `moderations` on either of them fails at startup with `UnsupportedFeatureException`. For a standalone moderation call outside of chat, see <<_moderation_model,Moderation Model>>.
+
+While a chat request is served, watsonx.ai can run the same detectors described in <<_moderation_model,Moderation Model>> against the input and/or the output text, without a second network call. Each detector is opt-in: it is only sent to watsonx.ai when at least one of its `input`/`output` properties is set.
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Detect HAP in both the input and the output, masking the flagged text
+quarkus.langchain4j.watsonx.chat-model.moderations.hap.input=0.8
+quarkus.langchain4j.watsonx.chat-model.moderations.hap.output=0.8
+quarkus.langchain4j.watsonx.chat-model.moderations.hap.mask=true
+
+# Detect PII in the input only
+quarkus.langchain4j.watsonx.chat-model.moderations.pii.input=true
+
+# Granite Guardian only ever looks at the input
+quarkus.langchain4j.watsonx.chat-model.moderations.granite-guardian.input=0.85
+----
+
+If watsonx.ai blocks the input before it reaches the model, `chat()` throws a `ContentFilteredException` instead of returning a response. Otherwise, any detection made on the input or the output is reported on the response metadata:
+
+[source,java]
+----
+ChatResponse response = chatModel.chat(...);
+var metadata = (WatsonxChatResponseMetadata) response.metadata();
+
+metadata.moderations(); // flagged spans grouped by detector (hap, pii, granite_guardian)
+metadata.detections();  // the same detections grouped by input/output instead
+----
+
+==== Overriding moderation per request
+
+The detectors can also be set on a single request through `WatsonxChatRequestParameters`, overriding whatever is configured under `chat-model.moderations`:
+
+[source,java]
+----
+import com.ibm.watsonx.ai.chat.ChatModeration;
+
+ChatRequest request = ChatRequest.builder()
+    .messages(UserMessage.from("My phone number is 555-123-4567"))
+    .parameters(WatsonxChatRequestParameters.builder()
+        .moderations(ChatModeration.builder()
+            .pii(p -> p.input(true).mask(true))
+            .build())
+        .build())
+    .build();
+
+ChatResponse response = chatModel.chat(request);
+----
+
 === Injection
 
 [source,java]
@@ -484,91 +539,7 @@ var scores = scoringModel.scoreAll(
 System.out.println(scores); // list of relevance scores
 ----
 
-== Moderation Model
-
-IBM watsonx.ai provides moderation capabilities through multiple detectors that can identify unsafe, sensitive, or policy-violating content.
-Quarkus integrates the LangChain4j `WatsonxModerationModel`, exposing each detector type as a dedicated configuration group.
-
-Supported detector types include:
-
-* *PII* - Detects Personally Identifiable Information
-* *HAP* - Detects hate, abuse, or profanity
-* *Granite Guardian* - Detects harmful or risky content
-
-Each detector can be enabled individually.
-
-=== Configuration
-
-Enable detectors in `application.properties` using their dedicated flags:
-
-[source,properties]
-----
-# Base Watsonx configuration
-quarkus.langchain4j.watsonx.base-url=${BASE_URL}
-quarkus.langchain4j.watsonx.api-key=${API_KEY}
-quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
-
-# Enable specific moderation detectors
-quarkus.langchain4j.watsonx.moderation-model.hap.enabled=true
-quarkus.langchain4j.watsonx.moderation-model.pii.enabled=true
-quarkus.langchain4j.watsonx.moderation-model.granite-guardian.enabled=true
-----
-
-Each detector configuration group may also expose additional settings depending on its capabilities.
-If an score model is configured, Quarkus will automatically create and register
-a `ModerationModel` bean.
-
-=== Injection
-
-[source,java]
-----
-@Inject
-ModerationModel moderationModel;
-----
-
-=== Usage
-
-[source,java]
-----
-var response = moderationModel.moderate("Some text to analyze");
-
-boolean flagged = response.content().flagged();
-Map<String, Object> metadata = response.metadata();
-
-System.out.println("Flagged? " + flagged);
-System.out.println("Metadata: " + metadata);
-----
-
-=== Metadata
-
-A moderation response includes metadata describing the detection:
-
-|===
-| Key | Description
-
-| detection
-| The assigned label for the detected content
-
-| detection_type
-| Detector that triggered the flag
-
-| start
-| Start index of the detected segment
-
-| end
-| End index of the detected segment
-
-| score
-| Confidence score
-|===
-
-Example:
-
-[source,java]
-----
-System.out.println(metadata.get("detection_type"));
-System.out.println(metadata.get("score"));
-----
+For the standalone moderation model (PII, HAP, Granite Guardian detectors), see xref:watsonx-moderation-model.adoc[IBM watsonx.ai Moderation Model].
 
 == Text Extraction
 

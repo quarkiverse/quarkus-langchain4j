@@ -20,6 +20,11 @@ public interface LangChain4jWatsonBuildConfig {
     EmbeddingModelBuildConfig embeddingModel();
 
     /**
+     * Gateway image model related settings.
+     */
+    GatewayImageModelBuildConfig gatewayImageModel();
+
+    /**
      * Scoring model related settings.
      */
     ScoringModelBuildConfig scoringModel();

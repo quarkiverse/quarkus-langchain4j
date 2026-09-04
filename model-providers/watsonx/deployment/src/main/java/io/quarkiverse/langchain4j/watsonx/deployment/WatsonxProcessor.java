@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
@@ -39,6 +40,8 @@ import dev.langchain4j.model.watsonx.WatsonxDeploymentChatModel;
 import dev.langchain4j.model.watsonx.WatsonxDeploymentStreamingChatModel;
 import dev.langchain4j.model.watsonx.WatsonxEmbeddingModel;
 import dev.langchain4j.model.watsonx.WatsonxGatewayChatModel;
+import dev.langchain4j.model.watsonx.WatsonxGatewayEmbeddingModel;
+import dev.langchain4j.model.watsonx.WatsonxGatewayImageModel;
 import dev.langchain4j.model.watsonx.WatsonxGatewayStreamingChatModel;
 import dev.langchain4j.model.watsonx.WatsonxModerationModel;
 import dev.langchain4j.model.watsonx.WatsonxScoringModel;
@@ -48,10 +51,12 @@ import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -74,6 +79,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
 import io.smallrye.config.Priorities;
@@ -97,6 +103,10 @@ public class WatsonxProcessor {
             .createSimple(WatsonxGatewayStreamingChatModel.Builder.class);
     private static final DotName WATSONX_EMBEDDING_MODEL_BUILDER = DotName
             .createSimple(WatsonxEmbeddingModel.Builder.class);
+    private static final DotName WATSONX_GATEWAY_EMBEDDING_MODEL_BUILDER = DotName
+            .createSimple(WatsonxGatewayEmbeddingModel.Builder.class);
+    private static final DotName WATSONX_GATEWAY_IMAGE_MODEL_BUILDER = DotName
+            .createSimple(WatsonxGatewayImageModel.Builder.class);
     private static final DotName WATSONX_SCORING_MODEL_BUILDER = DotName
             .createSimple(WatsonxScoringModel.Builder.class);
     private static final DotName WATSONX_MODERATION_MODEL_BUILDER = DotName
@@ -125,6 +135,7 @@ public class WatsonxProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
             BuildProducer<ScoringModelProviderCandidateBuildItem> scoringProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             LangChain4jWatsonBuildConfig config) {
@@ -135,6 +146,10 @@ public class WatsonxProcessor {
 
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+        }
+
+        if (config.gatewayImageModel().enabled().isEmpty() || config.gatewayImageModel().enabled().get()) {
+            imageProducer.produce(new ImageModelProviderCandidateBuildItem(PROVIDER));
         }
 
         if (config.scoringModel().enabled().isEmpty() || config.scoringModel().enabled().get()) {
@@ -280,6 +295,7 @@ public class WatsonxProcessor {
     void generateBeans(WatsonxRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedImageModelProviderBuildItem> selectedImage,
             List<SelectedScoringModelProviderBuildItem> selectedScoring,
             List<SelectedModerationModelProviderBuildItem> selectedModeration,
             List<TextExtractionClassBuildItem> selectedTextExtraction,
@@ -493,7 +509,30 @@ public class WatsonxProcessor {
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(WATSONX_EMBEDDING_MODEL_BUILDER) }, null) },
                                 null), ANY)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(WATSONX_GATEWAY_EMBEDDING_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(recorder.embeddingModel(configName));
+                addQualifierIfNecessary(builder, configName);
+                beanProducer.produce(builder.done());
+            }
+        }
+
+        for (var selected : selectedImage) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String configName = selected.getConfigName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(IMAGE_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(WATSONX_GATEWAY_IMAGE_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.imageModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -535,6 +574,66 @@ public class WatsonxProcessor {
                 beanProducer.produce(builder.done());
             }
         }
+    }
+
+    @BuildStep
+    void registerServiceProviders(BuildProducer<ServiceProviderBuildItem> serviceProvider) {
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.core.auth.ibmcloud.IBMCloudRestClient$IBMCloudRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.core.auth.cp4d.CP4DRestClient$CP4DLegacyRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.core.auth.cp4d.CP4DRestClient$CP4DIAMRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.core.auth.cp4d.CP4DRestClient$CP4DZenRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.chat.ChatRestClient$ChatRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textgeneration.TextGenerationRestClient$TextGenerationRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.embedding.EmbeddingRestClient$EmbeddingRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.deployment.DeploymentRestClient$DeploymentRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.detection.DetectionRestClient$DetectionRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.rerank.RerankRestClient$RerankRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.tokenization.TokenizationRestClient$TokenizationRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.timeseries.TimeSeriesRestClient$TimeSeriesRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.foundationmodel.FoundationModelRestClient$FoundationModelRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.batch.BatchRestClient$BatchRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.file.FileRestClient$FileRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.tool.ToolRestClient$ToolRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatRestClient$ModelGatewayChatRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.gateway.embedding.ModelGatewayEmbeddingRestClient$ModelGatewayEmbeddingRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.gateway.image.ModelGatewayImageRestClient$ModelGatewayImageRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.gateway.catalog.ModelGatewayCatalogRestClient$ModelGatewayCatalogRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionRestClient$TextExtractionRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationRestClient$TextClassificationRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaRestClient$CreateSchemaRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaRestClient$ImproveSchemaRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaRestClient$MergeSchemaRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaRestClient$ClusterSchemaRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.core.spi.json.JsonProvider"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.fasterxml.jackson.databind.Module"));
     }
 
     private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
