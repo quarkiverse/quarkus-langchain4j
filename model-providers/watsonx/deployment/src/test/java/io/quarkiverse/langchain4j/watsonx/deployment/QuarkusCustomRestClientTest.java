@@ -19,7 +19,7 @@ import com.ibm.watsonx.ai.embedding.EmbeddingService;
 import com.ibm.watsonx.ai.file.FileService;
 import com.ibm.watsonx.ai.foundationmodel.FoundationModelService;
 import com.ibm.watsonx.ai.gateway.catalog.ModelGatewayCatalogService;
-import com.ibm.watsonx.ai.gateway.chat.ModelGatewayService;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatService;
 import com.ibm.watsonx.ai.rerank.RerankService;
 import com.ibm.watsonx.ai.textgeneration.TextGenerationService;
 import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
@@ -171,13 +171,13 @@ public class QuarkusCustomRestClientTest {
     @Test
     public void model_gateway_client() throws Exception {
 
-        ModelGatewayService modelGatewayService = ModelGatewayService.builder()
+        ModelGatewayChatService modelGatewayService = ModelGatewayChatService.builder()
                 .apiKey("test")
                 .modelId("openai/gpt-4o-mini")
                 .baseUrl("http://localhost")
                 .build();
 
-        Class<ModelGatewayService> clazz = ModelGatewayService.class;
+        Class<ModelGatewayChatService> clazz = ModelGatewayChatService.class;
         var clientField = clazz.getDeclaredField("client");
         clientField.setAccessible(true);
         var client = clientField.get(modelGatewayService);

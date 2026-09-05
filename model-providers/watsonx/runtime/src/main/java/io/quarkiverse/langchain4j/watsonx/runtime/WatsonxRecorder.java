@@ -25,7 +25,7 @@ import com.ibm.watsonx.ai.detection.detector.BaseDetector;
 import com.ibm.watsonx.ai.detection.detector.GraniteGuardian;
 import com.ibm.watsonx.ai.detection.detector.Hap;
 import com.ibm.watsonx.ai.detection.detector.Pii;
-import com.ibm.watsonx.ai.gateway.chat.ModelGatewayParameters.Cache;
+import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatParameters.Cache;
 import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
