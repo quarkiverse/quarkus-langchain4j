@@ -44,8 +44,6 @@ These concepts are foundational to any RAG-based application:
 |Concept |Description
 
 |Text Splitter |Divides documents into smaller overlapping or non-overlapping segments for processing.
-|Document |A unit of text you ingest (file, article, ticket). Documents are the source material, not the store.
-|Document Store |A store of documents. This is a broader idea than RAG: it does not have to use embeddings or vectors.
 |Embedding |A dense vector representation of a text segment computed by an embedding model.
 |Embedding Model |A model trained to convert text into embeddings preserving semantic meaning.
 |Embedding Store |The LangChain4j API (`EmbeddingStore`) these extensions implement. It stores embeddings of text segments for similarity search, and usually the original text as well.
@@ -55,10 +53,6 @@ These concepts are foundational to any RAG-based application:
 |Augmentor |Optional logic used to enhance the retrieved content (e.g., filtering, re-ranking, transformation).
 |Prompt Injection |Final step of merging query and retrieved content into a prompt for the model.
 |===
-
-Older pages in this guide sometimes called the same extensions *document stores*.
-That name is not wrong — most embedding stores also keep the original document text — but it is broader than what the code does.
-When you inject a store in Quarkus LangChain4j, you inject `EmbeddingStore` (or a provider type such as `PgVectorEmbeddingStore` or `ChromaEmbeddingStore`), not a separate document-store type.
 
 == Visual Overview
 
