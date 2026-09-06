@@ -1,0 +1,13 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: workload-identity-federation-spiffe
+  namespace: workload-identity-spiffe
+spec:
+  to:
+    kind: Service
+    name: workload-identity-federation-spiffe
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
