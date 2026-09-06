@@ -28,6 +28,7 @@ import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.mutiny.Uni;
 
 class ToolExecutorTest {
 
@@ -141,6 +142,30 @@ class ToolExecutorTest {
         @Tool
         String mappedEnum(Map<String, SortBy> arg0) {
             return arg0.get("first").name();
+        }
+
+        @Tool
+        String markdownDocument() {
+            return "# Title\nKind: file\n\nBody.";
+        }
+
+        @Tool
+        String nullDocument() {
+            return null;
+        }
+
+        @Tool
+        Uni<String> markdownDocumentUni() {
+            return Uni.createFrom().item("# Title\nKind: file\n\nBody.");
+        }
+
+        @Tool
+        ArgObject objectResult() {
+            return new ArgObject("ABC", SortBy.DATE);
+        }
+
+        @Tool
+        void voidResult() {
         }
     }
 
@@ -316,13 +341,13 @@ class ToolExecutorTest {
 
     @Test
     void should_deserialize_generic_tool_arguments() {
-        executeAndAssert("{\"arg0\":[\"DATE\"]}", "listOfEnum", "\"DATE\"");
+        executeAndAssert("{\"arg0\":[\"DATE\"]}", "listOfEnum", "DATE");
 
-        executeAndAssert("{\"arg0\":[\"A\",\"B\"]}", "listOfString", "\"A,B\"");
+        executeAndAssert("{\"arg0\":[\"A\",\"B\"]}", "listOfString", "A,B");
 
-        executeAndAssert("{\"arg0\":[{\"name\":\"ABC\",\"sortBy\":\"DATE\"}]}", "listOfObject", "\"ABC:DATE\"");
+        executeAndAssert("{\"arg0\":[{\"name\":\"ABC\",\"sortBy\":\"DATE\"}]}", "listOfObject", "ABC:DATE");
 
-        executeAndAssert("{\"arg0\":{\"first\":\"DATE\"}}", "mappedEnum", "\"DATE\"");
+        executeAndAssert("{\"arg0\":{\"first\":\"DATE\"}}", "mappedEnum", "DATE");
     }
 
     @ParameterizedTest
@@ -343,7 +368,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:10\"");
+        assertThat(result).isEqualTo("test:10");
     }
 
     @Test
@@ -356,7 +381,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:25\"");
+        assertThat(result).isEqualTo("test:25");
     }
 
     @Test
@@ -369,7 +394,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:USD\"");
+        assertThat(result).isEqualTo("test:USD");
     }
 
     @Test
@@ -382,7 +407,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:RELEVANCE\"");
+        assertThat(result).isEqualTo("test:RELEVANCE");
     }
 
     @Test
@@ -395,7 +420,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:true\"");
+        assertThat(result).isEqualTo("test:true");
     }
 
     @Test
@@ -408,7 +433,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"5:DESC\"");
+        assertThat(result).isEqualTo("5:DESC");
     }
 
     @Test
@@ -424,6 +449,35 @@ class ToolExecutorTest {
         JsonObjectSchema schema = withDefaultInt.toolSpecification().parameters();
         assertThat(schema.required()).containsExactly("query");
         assertThat(schema.properties().keySet()).containsExactlyInAnyOrder("query", "limit");
+    }
+
+    @Test
+    void should_return_string_result_as_is() {
+        executeAndAssert("{}", "markdownDocument", "# Title\nKind: file\n\nBody.");
+    }
+
+    @Test
+    void should_return_string_result_of_uni_as_is() {
+        executeAndAssert("{}", "markdownDocumentUni", "# Title\nKind: file\n\nBody.");
+    }
+
+    @Test
+    void should_render_null_string_result_as_null_literal() {
+        executeAndAssert("{}", "nullDocument", "null");
+    }
+
+    @Test
+    void should_json_encode_non_string_result() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder().arguments("{}").build();
+
+        String result = getToolExecutor("objectResult").execute(request, null);
+
+        assertThat(result.replaceAll("\\s", "")).isEqualTo("{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+    }
+
+    @Test
+    void should_report_success_for_void_result() {
+        executeAndAssert("{}", "voidResult", "Success");
     }
 
     private void executeAndAssert(String arguments, String methodName,

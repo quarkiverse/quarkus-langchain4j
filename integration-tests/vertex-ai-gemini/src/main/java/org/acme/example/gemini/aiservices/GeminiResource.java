@@ -7,6 +7,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -44,7 +45,7 @@ public class GeminiResource {
                          "totalTokenCount": 48
                        }
                      }
-                    """.formatted(toolRole);
+                    """.formatted(Json.encode(toolRole));
         } else {
             return """
                      {

@@ -53,7 +53,7 @@ public class StaticImmediateReturnToolTest {
         assertNull(result.content()); // No LLM-generated text
         assertThat(result.finishReason()).isEqualTo(FinishReason.TOOL_EXECUTION);
         assertThat(result.toolExecutions()).hasSize(1);
-        assertThat(result.toolExecutions().get(0).result()).isEqualTo("\"42\""); // Direct tool result
+        assertThat(result.toolExecutions().get(0).result()).isEqualTo("42"); // Direct tool result
 
         // LLM was called only once (to decide to use the tool)
         assertThat(SimpleChatModel.callCount).isEqualTo(1);
@@ -68,7 +68,7 @@ public class StaticImmediateReturnToolTest {
         Result<String> result = aiService.chat("call-processor");
 
         // The LLM processes the tool result and returns a final answer
-        assertThat(result.content()).isEqualTo("The processor returned: \"42\"");
+        assertThat(result.content()).isEqualTo("The processor returned: 42");
 
         // LLM was called twice:
         // 1st call: decide to use tool

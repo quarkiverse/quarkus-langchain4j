@@ -42,7 +42,7 @@ public class ExplicitToolsWhenBeanToolProviderExistsTest {
     @ActivateRequestContext
     void testCall() {
         String answer = service.chat("hello", 1);
-        assertEquals("\"EXPLICIT TOOL\"", answer);
+        assertEquals("EXPLICIT TOOL", answer);
     }
 
 }

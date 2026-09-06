@@ -144,9 +144,18 @@ public class QuarkusToolExecutor implements ToolExecutor {
         throw (E) e;
     }
 
+    /**
+     * Converts a tool invocation result into the text sent back to the model, mirroring
+     * {@code DefaultToolExecutor}: {@code void} becomes {@code "Success"}, a {@link String} is passed through
+     * unchanged, anything else is JSON-encoded. A {@code Uni<String>} is passed through as well, since it has
+     * already been resolved to its item by the time this is called.
+     */
     private static String handleResult(ToolInvoker invokerInstance, Object invocationResult) {
         if (invokerInstance.methodMetadata().isReturnsVoid()) {
             return "Success";
+        }
+        if (invocationResult instanceof String string) {
+            return string;
         }
         return Json.toJson(invocationResult);
     }
