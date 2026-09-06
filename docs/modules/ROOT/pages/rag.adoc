@@ -44,14 +44,21 @@ These concepts are foundational to any RAG-based application:
 |Concept |Description
 
 |Text Splitter |Divides documents into smaller overlapping or non-overlapping segments for processing.
+|Document |A unit of text you ingest (file, article, ticket). Documents are the source material, not the store.
+|Document Store |A store of documents. This is a broader idea than RAG: it does not have to use embeddings or vectors.
 |Embedding |A dense vector representation of a text segment computed by an embedding model.
 |Embedding Model |A model trained to convert text into embeddings preserving semantic meaning.
-|Vector Store |A database that allows similarity search over embeddings (e.g., PGVector, Chroma, Weaviate).
+|Embedding Store |The LangChain4j API (`EmbeddingStore`) these extensions implement. It stores embeddings of text segments for similarity search, and usually the original text as well.
+|Vector Store |A synonym for an embedding store; a database optimized for similarity search over embeddings (e.g., PGVector, Chroma, Weaviate).
 |Query Embedding |The embedding computed from the user’s question.
 |Retriever |A component responsible for finding relevant segments given a query embedding.
 |Augmentor |Optional logic used to enhance the retrieved content (e.g., filtering, re-ranking, transformation).
 |Prompt Injection |Final step of merging query and retrieved content into a prompt for the model.
 |===
+
+Older pages in this guide sometimes called the same extensions *document stores*.
+That name is not wrong — most embedding stores also keep the original document text — but it is broader than what the code does.
+When you inject a store in Quarkus LangChain4j, you inject `EmbeddingStore` (or a provider type such as `PgVectorEmbeddingStore` or `ChromaEmbeddingStore`), not a separate document-store type.
 
 == Visual Overview
 
@@ -70,4 +77,4 @@ To go deeper, visit the following sections:
 * xref:rag-query.adoc[Query-Time Augmentation]
 * xref:rag-easy-rag.adoc[EasyRAG]
 * xref:rag-contextual-rag.adoc[Contextual RAG (Advanced Techniques)]
-* You can see supported document and vector stores in the menu
+* You can see supported embedding stores in the menu
