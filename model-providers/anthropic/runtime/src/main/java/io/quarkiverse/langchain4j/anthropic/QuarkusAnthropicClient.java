@@ -13,6 +13,7 @@ import static java.util.stream.StreamSupport.stream;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -83,11 +84,12 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         this.anthropicVersion = builder.version;
         this.configuredBeta = builder.beta;
         this.disableBetaHeader = builder.disableBetaHeader;
+        Duration timeout = resolveTimeout(builder.timeout);
 
         try {
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder().baseUri(new URI(builder.baseUrl))
-                    .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
-                    .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
+                    .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                    .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);
 
             if (builder.logRequests || builder.logResponses || builder.logCurl) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE).clientLogger(
@@ -99,6 +101,10 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static Duration resolveTimeout(Duration timeout) {
+        return timeout != null ? timeout : Duration.ofSeconds(15);
     }
 
     @Override
