@@ -14,7 +14,7 @@
     <skipITs>true</skipITs>
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     <kotlin.compiler.release>${java.version}</kotlin.compiler.release>
-    <kotlin.version>2.3.10</kotlin.version>
+    <kotlin.version>2.3.21</kotlin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
