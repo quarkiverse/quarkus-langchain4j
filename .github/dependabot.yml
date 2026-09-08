@@ -14,6 +14,20 @@ updates:
       - dependency-name: io.quarkus:*
       # don't update LangChain4j as we need to do that manually
       - dependency-name: dev.langchain4j:*
+  # for the 1.13 branch which is used in Quarkus 3.40 LTS
+  - package-ecosystem: "maven" 
+    directory: "/" 
+    target-branch: "1.13"
+    allow:
+      - dependency-name: "*"
+        update-types: 
+          - "version-update:semver-patch"
+    commit-message:
+      prefix: "[1.13] "
+    schedule:
+      interval: "daily"
+    ignore:
+      - dependency-name: io.quarkus:*
   - package-ecosystem: "maven"
     directory: "/samples"
     schedule:
