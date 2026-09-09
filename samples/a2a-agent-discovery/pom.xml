@@ -17,7 +17,7 @@
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.version>3.33.2</quarkus.platform.version>
         <skipITs>true</skipITs>
-        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>1.14.0.CR2</quarkus-langchain4j.version>
     </properties>
 
     <dependencyManagement>
