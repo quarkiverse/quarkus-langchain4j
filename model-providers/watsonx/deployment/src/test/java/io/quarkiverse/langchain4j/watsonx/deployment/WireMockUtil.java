@@ -36,6 +36,8 @@ public class WireMockUtil {
     public static final String URL_WATSONX_GATEWAY_CHAT_API = "/ml/gateway/v1/chat/completions";
     public static final String URL_WATSONX_GATEWAY_MODELS_API = "/ml/gateway/v1/models";
     public static final String URL_WATSONX_GATEWAY_MODEL_API = "/ml/gateway/v1/models/%s";
+    public static final String URL_WATSONX_GATEWAY_EMBEDDING_API = "/ml/gateway/v1/embeddings";
+    public static final String URL_WATSONX_GATEWAY_IMAGE_API = "/ml/gateway/v1/images/generations";
     public static final String URL_WATSONX_DEPLOYMENT_CHAT_API = "/ml/v1/deployments/%s/text/chat";
     public static final String URL_WATSONX_DEPLOYMENT_CHAT_STREAMING_API = "/ml/v1/deployments/%s/text/chat_stream";
 
@@ -59,6 +61,8 @@ public class WireMockUtil {
     public static final String DEFAULT_GATEWAY_CHAT_MODEL = "openai/gpt-4o-mini";
     public static final String DEFAULT_DEPLOYMENT_ID = "my-deployment-id";
     public static final String DEFAULT_EMBEDDING_MODEL = "ibm/granite-embedding-278m-multilingual";
+    public static final String DEFAULT_GATEWAY_EMBEDDING_MODEL = "openai/text-embedding-3-small";
+    public static final String DEFAULT_GATEWAY_IMAGE_MODEL = "openai/gpt-image-1";
     public static final String DEFAULT_SCORING_MODEL = "cross-encoder/ms-marco-minilm-l-12-v2";
     public static final String IAM_200_RESPONSE = """
             {
@@ -208,6 +212,75 @@ public class WireMockUtil {
             event: message
             data: [DONE]
 
+            """;
+    public static String RESPONSE_WATSONX_GATEWAY_EMBEDDING_API = """
+            {
+                "object": "list",
+                "model": "openai/text-embedding-3-small",
+                "data": [
+                  {
+                    "object": "embedding",
+                    "index": 0,
+                    "embedding": [
+                      -0.006929283,
+                      -0.005336422,
+                      -0.024047505
+                    ]
+                  }
+                ],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "total_tokens": 10
+                }
+            }
+            """;
+    public static String RESPONSE_WATSONX_GATEWAY_IMAGE_API = """
+            {
+                "created": 1689958352,
+                "background": "opaque",
+                "output_format": "png",
+                "quality": "high",
+                "size": "1024x1024",
+                "data": [
+                  {
+                    "b64_json": "aGVsbG8gd29ybGQ=",
+                    "revised_prompt": "A futuristic city at sunset, revised"
+                  }
+                ],
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 20,
+                    "total_tokens": 30,
+                    "input_tokens_details": {
+                        "image_tokens": 0,
+                        "text_tokens": 10
+                    }
+                }
+            }
+            """;
+    public static String RESPONSE_WATSONX_GATEWAY_IMAGE_API_URL = """
+            {
+                "created": 1689958352,
+                "background": "opaque",
+                "output_format": "png",
+                "quality": "high",
+                "size": "1024x1024",
+                "data": [
+                  {
+                    "url": "https://example.com/image.png",
+                    "revised_prompt": "A futuristic city at sunset, revised"
+                  }
+                ],
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 20,
+                    "total_tokens": 30,
+                    "input_tokens_details": {
+                        "image_tokens": 0,
+                        "text_tokens": 10
+                    }
+                }
+            }
             """;
     public static final String RESPONSE_WATSONX_TOKENIZER_API = """
               {

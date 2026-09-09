@@ -6,6 +6,8 @@ import static java.util.Objects.nonNull;
 import java.time.Duration;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import jakarta.ws.rs.WebApplicationException;
@@ -19,6 +21,7 @@ import com.ibm.watsonx.ai.core.exception.model.WatsonxError;
 import com.ibm.watsonx.ai.core.http.BaseHttpClient;
 import com.ibm.watsonx.ai.core.http.interceptors.RetryInterceptor;
 
+import io.quarkiverse.langchain4j.watsonx.runtime.QuarkusChatSubscriber;
 import io.quarkus.logging.Log;
 
 public final class WatsonxRestClientUtils {
@@ -58,6 +61,22 @@ public final class WatsonxRestClientUtils {
 
     public static boolean shouldRetry(Throwable e) {
         return TOKEN_EXPIRED.test(e) || ON_RETRYABLE_STATUS_CODES.test(e);
+    }
+
+    public static void cancelStreamOn(
+            CompletableFuture<?> future,
+            QuarkusChatSubscriber subscriber,
+            CompletableFuture<Void> streamFuture) {
+
+        future.whenComplete(new BiConsumer<Object, Throwable>() {
+            @Override
+            public void accept(Object response, Throwable throwable) {
+                if (future.isCancelled()) {
+                    subscriber.cancel();
+                    streamFuture.cancel(true);
+                }
+            }
+        });
     }
 
     public static <T> T retryOn(String requestId, Callable<T> action) {

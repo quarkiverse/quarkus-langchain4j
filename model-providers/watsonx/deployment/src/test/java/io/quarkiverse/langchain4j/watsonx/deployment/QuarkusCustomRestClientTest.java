@@ -20,6 +20,8 @@ import com.ibm.watsonx.ai.file.FileService;
 import com.ibm.watsonx.ai.foundationmodel.FoundationModelService;
 import com.ibm.watsonx.ai.gateway.catalog.ModelGatewayCatalogService;
 import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatService;
+import com.ibm.watsonx.ai.gateway.embedding.ModelGatewayEmbeddingService;
+import com.ibm.watsonx.ai.gateway.image.ModelGatewayImageService;
 import com.ibm.watsonx.ai.rerank.RerankService;
 import com.ibm.watsonx.ai.textgeneration.TextGenerationService;
 import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
@@ -47,7 +49,9 @@ import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusIBMCloudRes
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusImproveSchemaRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusMergeSchemaRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayCatalogRestClient;
-import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayChatRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayEmbeddingRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusModelGatewayImageRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusRerankRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusTextClassificationRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusTextExtractionRestClient;
@@ -181,7 +185,39 @@ public class QuarkusCustomRestClientTest {
         var clientField = clazz.getDeclaredField("client");
         clientField.setAccessible(true);
         var client = clientField.get(modelGatewayService);
-        assertThat(client).isInstanceOf(QuarkusModelGatewayRestClient.class);
+        assertThat(client).isInstanceOf(QuarkusModelGatewayChatRestClient.class);
+    }
+
+    @Test
+    public void model_gateway_embedding_client() throws Exception {
+
+        ModelGatewayEmbeddingService modelGatewayEmbeddingService = ModelGatewayEmbeddingService.builder()
+                .apiKey("test")
+                .modelId("openai/text-embedding-3-small")
+                .baseUrl("http://localhost")
+                .build();
+
+        Class<ModelGatewayEmbeddingService> clazz = ModelGatewayEmbeddingService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(modelGatewayEmbeddingService);
+        assertThat(client).isInstanceOf(QuarkusModelGatewayEmbeddingRestClient.class);
+    }
+
+    @Test
+    public void model_gateway_image_client() throws Exception {
+
+        ModelGatewayImageService modelGatewayImageService = ModelGatewayImageService.builder()
+                .apiKey("test")
+                .modelId("openai/gpt-image-1")
+                .baseUrl("http://localhost")
+                .build();
+
+        Class<ModelGatewayImageService> clazz = ModelGatewayImageService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(modelGatewayImageService);
+        assertThat(client).isInstanceOf(QuarkusModelGatewayImageRestClient.class);
     }
 
     @Test

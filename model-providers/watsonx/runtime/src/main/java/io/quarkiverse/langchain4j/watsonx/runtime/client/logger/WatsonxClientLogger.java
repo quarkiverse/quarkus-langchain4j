@@ -28,7 +28,11 @@ public class WatsonxClientLogger implements ClientLogger {
     private static final Logger log = Logger.getLogger(WatsonxClientLogger.class);
     private static final Pattern AUTHORIZATION_PATTERN = Pattern.compile("(\\w+\\s)(\\w{4})(\\w+)(\\w{4})");
     private static final Pattern BASE64_IMAGE_PATTERN = Pattern.compile("(data:[\\w\\/+]+;base64,)(.{15})([^\"]+)");
-    private static final Pattern API_KEY_PATTERN = Pattern.compile("\"(api-key|apiKey)\"\\s*:\\s*\"([^\"]+\")",
+    private static final Pattern JSON_SECRET_PATTERN = Pattern.compile(
+            "\"([^\"]*(?:api[_-]?key|password|secret|access_token|refresh_token)[^\"]*)\"\\s*:\\s*\"[^\"]*\"",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern FORM_SECRET_PATTERN = Pattern.compile(
+            "(api[_-]?key|password|secret|access_token|refresh_token)=([^&\\s]*)",
             Pattern.CASE_INSENSITIVE);
 
     private final boolean logRequests;
@@ -70,8 +74,8 @@ public class WatsonxClientLogger implements ClientLogger {
                 if (nonNull(request.headers())) {
                     headers = inOneLine(request.headers());
                     joiner.add("- headers: " + headers);
-                    if (nonNull(body)) {
-                        body = maskApiKeysInJsonBody(body);
+                    if (nonNull(body) && !body.isBlank()) {
+                        body = maskSecrets(body);
 
                         var contentType = ofNullable(request.headers().get("Content-Type"));
                         if (contentType.isPresent() && contentType.get().contains("application/json"))
@@ -115,19 +119,15 @@ public class WatsonxClientLogger implements ClientLogger {
                     if (nonNull(response.headers())) {
                         joiner.add("- headers: " + inOneLine(response.headers()));
 
-                        var contentType = Optional.<String> empty();
-
-                        if (response.headers().contains("Content-Type"))
-                            contentType = ofNullable(response.headers().get("Content-Type"));
-                        else if (response.headers().contains("content-type"))
-                            contentType = ofNullable(response.headers().get("content-type"));
-
+                        var contentType = ofNullable(response.headers().get("Content-Type"));
                         if (contentType.isPresent() && contentType.get().contains("application/json"))
                             prettyPrint = true;
                     }
 
                     if (nonNull(bufferBody)) {
-                        var body = prettyPrint ? Json.prettyPrint(bodyToString(bufferBody)) : bodyToString(bufferBody);
+                        var body = bodyToString(bufferBody);
+                        body = maskSecrets(body);
+                        body = prettyPrint ? Json.prettyPrint(body) : body;
                         joiner.add("- body: " + body);
                     }
 
@@ -186,14 +186,12 @@ public class WatsonxClientLogger implements ClientLogger {
                 return body;
 
             Matcher matcher = BASE64_IMAGE_PATTERN.matcher(body);
-
             StringBuilder sb = new StringBuilder();
-            while (matcher.find()) {
-                matcher.appendReplacement(sb,
-                        matcher.group(1) + matcher.group(2) + "..." + matcher.group(4) + matcher.group(5));
-            }
+            while (matcher.find())
+                matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "...");
+            matcher.appendTail(sb);
+            return sb.toString();
 
-            return sb.isEmpty() ? body : sb.toString();
         } catch (Exception e) {
             return "Failed to format the base64 image value.";
         }
@@ -212,18 +210,23 @@ public class WatsonxClientLogger implements ClientLogger {
         }
     }
 
-    private String maskApiKeysInJsonBody(String body) {
+    private String maskSecrets(String body) {
 
         if (body == null || body.isBlank())
             return body;
 
-        Matcher matcher = API_KEY_PATTERN.matcher(body);
-
+        Matcher jsonMatcher = JSON_SECRET_PATTERN.matcher(body);
         StringBuilder sb = new StringBuilder();
-        while (matcher.find())
-            matcher.appendReplacement(sb, "\"" + matcher.group(1) + "\": \"***\"");
+        while (jsonMatcher.find())
+            jsonMatcher.appendReplacement(sb, Matcher.quoteReplacement("\"" + jsonMatcher.group(1) + "\": \"***\""));
+        jsonMatcher.appendTail(sb);
+        body = sb.toString();
 
-        matcher.appendTail(sb);
-        return sb.isEmpty() ? body : sb.toString();
+        Matcher formMatcher = FORM_SECRET_PATTERN.matcher(body);
+        sb = new StringBuilder();
+        while (formMatcher.find())
+            formMatcher.appendReplacement(sb, Matcher.quoteReplacement(formMatcher.group(1) + "=***"));
+        formMatcher.appendTail(sb);
+        return sb.toString();
     }
 }

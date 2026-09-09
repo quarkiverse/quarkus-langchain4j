@@ -26,7 +26,7 @@ import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 
 @Path("/ml/gateway/v1")
-public interface GatewayRestApi {
+public interface GatewayChatRestApi {
 
     @POST
     @Path("chat/completions")

@@ -59,6 +59,7 @@
 *** xref:podman.adoc[Podman AI Lab]
 ** Image Models
 *** xref:azure-openai-image-model.adoc[Azure OpenAI]
+*** xref:watsonx-image-model.adoc[IBM watsonx.ai]
 *** xref:openai-image-model.adoc[OpenAI]
 ** Embedding Models
 *** xref:azure-openai-embedding-model.adoc[Azure OpenAI]
@@ -73,6 +74,7 @@
 ** Moderation Models
 *** xref:mistral-moderation-model.adoc[Mistral AI]
 *** xref:openai-moderation-model.adoc[OpenAI]
+*** xref:watsonx-moderation-model.adoc[IBM watsonx.ai]
 ** Audio Transcription Models
 *** xref:azure-openai-audio-transcription-model.adoc[Azure OpenAI]
 *** xref:openai-audio-transcription-model.adoc[OpenAI]
