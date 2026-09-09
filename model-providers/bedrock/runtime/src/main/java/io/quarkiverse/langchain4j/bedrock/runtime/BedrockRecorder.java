@@ -109,9 +109,7 @@ public class BedrockRecorder {
                 }
             }
 
-            if (modelConfig.promptCaching().isPresent()) {
-                paramBuilder.promptCaching(modelConfig.promptCaching().get());
-            }
+            configurePromptCaching(paramBuilder, modelConfig, configName);
 
             configureReasoning(paramBuilder, modelConfig, configName);
 
@@ -204,9 +202,7 @@ public class BedrockRecorder {
                 paramsBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
             }
 
-            if (modelConfig.promptCaching().isPresent()) {
-                paramsBuilder.promptCaching(modelConfig.promptCaching().get());
-            }
+            configurePromptCaching(paramsBuilder, modelConfig, configName);
 
             configureReasoning(paramsBuilder, modelConfig, configName);
 
@@ -340,6 +336,23 @@ public class BedrockRecorder {
             config = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return config;
+    }
+
+    private static void configurePromptCaching(BedrockChatRequestParameters.Builder paramBuilder, ChatModelConfig modelConfig,
+            String configName) {
+        if (modelConfig.promptCaching().isEmpty()) {
+            if (modelConfig.promptCachingTtl().isPresent()) {
+                log.warnf("'prompt-caching-ttl' (%s) is set for model '%s' without 'prompt-caching'; it will be ignored.",
+                        modelConfig.promptCachingTtl().get(), configName);
+            }
+            return;
+        }
+
+        if (modelConfig.promptCachingTtl().isPresent()) {
+            paramBuilder.promptCaching(modelConfig.promptCaching().get(), modelConfig.promptCachingTtl().get());
+        } else {
+            paramBuilder.promptCaching(modelConfig.promptCaching().get());
+        }
     }
 
     private static void configureReasoning(BedrockChatRequestParameters.Builder paramBuilder, ChatModelConfig modelConfig,
