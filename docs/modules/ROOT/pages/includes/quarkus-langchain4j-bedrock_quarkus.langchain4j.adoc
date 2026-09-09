@@ -1335,6 +1335,29 @@ endif::add-copy-button-to-env-var[]
 a|`after-system`, `after-user-message`, `after-last-user-message`, `after-tools`
 |
 
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching-ttl[`+++quarkus.langchain4j.bedrock.chat-model.prompt-caching-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.prompt-caching-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long the prompt cache entries live. Only applies when `prompt-caching` is set.
+
+*Allowable values:* `++[++5m, 1h++]++` (the SDK constant names `VALUE_5_M` and `VALUE_1_H` are accepted as well)
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_PROMPT_CACHING_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_PROMPT_CACHING_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`VALUE_5_M`, `VALUE_1_H`, `UNKNOWN_TO_SDK_VERSION`
+|`+++5m+++`
+
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning[`+++quarkus.langchain4j.bedrock.chat-model.reasoning+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.reasoning+++[]
@@ -3562,6 +3585,29 @@ endif::add-copy-button-to-env-var[]
 --
 a|`after-system`, `after-user-message`, `after-last-user-message`, `after-tools`
 |
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching-ttl[`+++quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long the prompt cache entries live. Only applies when `prompt-caching` is set.
+
+*Allowable values:* `++[++5m, 1h++]++` (the SDK constant names `VALUE_5_M` and `VALUE_1_H` are accepted as well)
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`VALUE_5_M`, `VALUE_1_H`, `UNKNOWN_TO_SDK_VERSION`
+|`+++5m+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning[`+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning+++`]##
 ifdef::add-copy-button-to-config-props[]
