@@ -127,6 +127,197 @@ public String rephrase(@UserMessage String question);
 
 Because `chat_memory` is a `List<ChatMessage>`, you can use the same `extractDialogue` extensions as described above.
 
+[[prompt-registry]]
+== Loading Prompts from Apicurio Registry
+
+Prompts embedded in the application are convenient, but they can only change with a new deployment, and nothing prevents a
+prompt author from renaming a variable that the application relies on.
+The `quarkus-langchain4j-prompt-apicurio-registry` extension lets AI services load their `@SystemMessage` / `@UserMessage`
+templates from https://www.apicur.io/registry/[Apicurio Registry] at runtime, with governance enforced by the registry:
+
+- **Runtime resolution**: templates are fetched by artifact ID (and optionally group and version), cached, and refreshed in the background.
+- **Variable validation**: the registry's `PROMPT_TEMPLATE` artifact type declares the variables a template expects.
+  Required variables that are not bound by the AI service method are reported at startup (or on first use), with a clear error message.
+- **Compatibility enforcement**: configure a backward compatibility rule on the artifact in the registry, and breaking prompt changes
+  (such as a renamed or newly required variable) are rejected by the registry before they can reach the application.
+- **Versioning**: pin a method to a specific version, follow a branch, or use the latest version, with the same
+  version expressions used by other Apicurio Registry artifact references.
+
+This complements the MCP tool discovery (xref:mcp.adoc#apicurio-registry-mcp-discovery[`quarkus-langchain4j-mcp-apicurio-registry`]) and A2A agent
+discovery (`quarkus-langchain4j-a2a-apicurio-registry`) integrations.
+
+IMPORTANT: This feature is experimental and may change in future releases. It requires Apicurio Registry 3.1 or later, which
+introduced the `PROMPT_TEMPLATE` artifact type.
+
+=== Dependencies
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-prompt-apicurio-registry</artifactId>
+</dependency>
+----
+
+=== Configuration
+
+Point the extension at your registry:
+
+[source,properties]
+----
+quarkus.langchain4j.prompt.apicurio-registry.url=http://localhost:8080/apis/registry/v3
+# Optional (defaults shown)
+quarkus.langchain4j.prompt.apicurio-registry.default-group=default
+quarkus.langchain4j.prompt.apicurio-registry.default-version=branch=latest
+quarkus.langchain4j.prompt.apicurio-registry.cache-ttl=60s
+quarkus.langchain4j.prompt.apicurio-registry.validate-on-startup=true
+----
+
+If the registry requires authentication, use either HTTP basic authentication or OAuth2 client credentials:
+
+[source,properties]
+----
+quarkus.langchain4j.prompt.apicurio-registry.basic-auth.username=admin
+quarkus.langchain4j.prompt.apicurio-registry.basic-auth.password=secret
+# or
+quarkus.langchain4j.prompt.apicurio-registry.oauth2.token-endpoint=https://sso.example.com/realms/registry/protocol/openid-connect/token
+quarkus.langchain4j.prompt.apicurio-registry.oauth2.client-id=my-app
+quarkus.langchain4j.prompt.apicurio-registry.oauth2.client-secret=my-secret
+----
+
+=== Registering a Prompt Template
+
+Prompt templates are stored in Apicurio Registry as `PROMPT_TEMPLATE` artifacts. The artifact content declares the
+template and the variables it expects (the format is aligned with the https://prompty.ai/[Microsoft Prompty] specification):
+
+[source,json]
+----
+{
+  "templateId": "customer-support",
+  "template": "You are a support assistant for {{product}}. Always answer in a {{tone}} tone.",
+  "variables": {
+    "product": { "type": "string", "required": true, "description": "The product the user asks about" },
+    "tone": { "type": "string", "default": "friendly" }
+  }
+}
+----
+
+YAML documents with the same structure and Prompty-style documents (a YAML front matter followed by the template body)
+are supported as well. Plain text content is used as-is, without variable metadata.
+
+To have the registry reject breaking changes, enable a compatibility rule on the artifact (or on the group, or globally),
+for example with the REST API:
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/apis/registry/v3/groups/default/artifacts/customer-support/rules \
+     -H 'Content-Type: application/json' \
+     -d '{"ruleType": "COMPATIBILITY", "config": "BACKWARD"}'
+----
+
+With this rule in place, publishing a new version that renames `product` or turns `tone` into a required variable fails
+in the registry, so a running application keeps working.
+
+=== Using Registry Templates in an AI Service
+
+Use `@SystemMessageFromRegistry` and `@UserMessageFromRegistry` where you would otherwise use `@SystemMessage` and `@UserMessage`:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.SystemMessageFromRegistry;
+import io.quarkiverse.langchain4j.UserMessageFromRegistry;
+
+@RegisterAiService
+public interface Assistant {
+
+    @SystemMessageFromRegistry("customer-support")
+    String chat(@V("product") String product, @UserMessage String question);
+
+    @SystemMessageFromRegistry(value = "customer-support", groupId = "support-team", version = "2.1.0")
+    String chatWithPinnedPrompt(@V("product") String product, @UserMessage String question);
+
+    @UserMessageFromRegistry("summarize")
+    String summarize(String text);
+}
+----
+
+The template is rendered with the same Qute-based engine as inline templates, so `{{variable}}` and `{variable}` placeholders,
+`chat_memory`, and the other features described above work the same way. Method parameters (or `@V` names) are bound to the
+template variables by name. Variables declared with a `default` value in the registry are applied when the method does not bind them.
+
+`@SystemMessageFromRegistry` can also be placed on the interface, in which case it applies to every method that does not declare
+its own system message. It cannot be combined with `@SystemMessage` on the same element, and `@UserMessageFromRegistry`
+cannot be combined with `@UserMessage` on the same method.
+
+**Attributes:**
+
+- `value`: the artifact ID of the prompt template.
+- `groupId`: the artifact group. Defaults to `quarkus.langchain4j.prompt.apicurio-registry.default-group`.
+- `version`: a version (`2.1.0`) or version expression (`branch=latest`). Defaults to `quarkus.langchain4j.prompt.apicurio-registry.default-version`; `latest` is accepted as an alias for `branch=latest`.
+
+NOTE: Because the template content is only known at runtime, the build-time inference that maps the single remaining method
+parameter to the user message does not know the template variables. Methods with more than one parameter must therefore
+annotate the user message parameter with `@UserMessage`, as in the example above.
+
+=== Validation, Caching and Refresh
+
+When the application starts, every template referenced by an AI service is fetched and validated (`validate-on-startup=true`):
+if a template cannot be resolved, or declares a required variable that the AI service method does not bind, the application
+fails to start with a message like:
+
+----
+Prompt template 'default/customer-support@branch=latest' (version 3) declares the required variable(s) [product]
+which are not bound by AI service method org.acme.Assistant#chat. Add method parameters with matching names
+(or annotate parameters with @V("<name>")).
+----
+
+Set `validate-on-startup=false` to resolve templates lazily; the same checks then run on first use of each method.
+
+Resolved templates are cached for `cache-ttl`. When the TTL expires, the cached template keeps being used while the registry
+is queried in the background, so AI service invocations are never blocked by the registry once a template has been resolved.
+If the refresh fails, the cached template is kept and a warning is logged. Set `cache-ttl=0` to fetch each template only once.
+
+=== Programmatic Usage
+
+The registry is also available as a CDI bean implementing `io.quarkiverse.langchain4j.prompt.PromptTemplateRegistry`, so you can
+resolve templates yourself, force a refresh, or inspect the declared variables:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.prompt.PromptTemplateReference;
+import io.quarkiverse.langchain4j.prompt.PromptTemplateRegistry;
+import io.quarkiverse.langchain4j.prompt.ResolvedPromptTemplate;
+import io.quarkiverse.langchain4j.prompt.runtime.apicurio.ApicurioPromptTemplateRegistry;
+
+@Inject
+PromptTemplateRegistry registry;
+
+void example() {
+    ResolvedPromptTemplate template = registry.resolve(PromptTemplateReference.of("support-team", "customer-support", "latest"));
+    template.text();      // the template
+    template.version();   // the resolved version
+    template.variables(); // the declared variables
+
+    ((ApicurioPromptTemplateRegistry) registry).invalidate(); // drop the cache
+}
+----
+
+For cases where CDI is not available, or to talk to a different registry, use the builder:
+
+[source,java]
+----
+ApicurioPromptTemplateRegistry registry = ApicurioPromptTemplateRegistryBuilder.create()
+        .registryUrl("http://localhost:8080/apis/registry/v3")
+        .basicAuth("admin", "password") // optional
+        .cacheTtl(Duration.ofMinutes(5))
+        .build();
+----
+
+=== Configuration Reference
+
+include::includes/quarkus-langchain4j-prompt-apicurio-registry.adoc[leveloffset=+1,opts=optional]
+
 == Best Practices
 
 - Prefer concise, specific instructions.

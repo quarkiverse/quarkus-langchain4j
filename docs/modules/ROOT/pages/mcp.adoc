@@ -371,6 +371,7 @@ The registry client supports:
 - Verify registry availability
 - View server descriptions, repositories, packages, and transport information
 
+[[apicurio-registry-mcp-discovery]]
 == Apicurio Registry MCP Server Discovery
 
 https://www.apicur.io/registry/[Apicurio Registry] can be used as a centralized catalog of MCP server definitions, enabling dynamic discovery
