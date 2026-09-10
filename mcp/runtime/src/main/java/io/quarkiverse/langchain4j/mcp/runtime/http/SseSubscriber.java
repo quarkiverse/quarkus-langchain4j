@@ -47,6 +47,13 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
                 log.warn("Failed to handle MCP message: {}", data, e);
             }
         } else if (name.equals("endpoint")) {
+            if (initializationFinished == null) {
+                // The streamable HTTP transport does not use 'endpoint' events
+                // (they belong to the legacy HTTP+SSE transport), so there is
+                // nothing to complete here.
+                log.debug("Received unexpected 'endpoint' event, ignoring");
+                return;
+            }
             if (initializationFinished.isDone()) {
                 log.warn("Received endpoint event after initialization");
                 return;
