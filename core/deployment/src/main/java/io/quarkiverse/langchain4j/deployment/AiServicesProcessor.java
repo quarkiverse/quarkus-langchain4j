@@ -99,12 +99,15 @@ import io.quarkiverse.langchain4j.deployment.devui.ToolProviderInfo;
 import io.quarkiverse.langchain4j.deployment.items.AiServicesMethodBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotationsBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.PromptTemplateUsageBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ToolQualifierProvider;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
+import io.quarkiverse.langchain4j.prompt.PromptTemplateReference;
+import io.quarkiverse.langchain4j.prompt.PromptTemplateUsage;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
@@ -119,6 +122,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsCountedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
+import io.quarkiverse.langchain4j.runtime.aiservice.PromptTemplateRegistrySupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingEmitted;
@@ -1643,6 +1647,7 @@ public class AiServicesProcessor {
     AnnotationsImpliesAiServiceBuildItem implyAiService() {
         return new AnnotationsImpliesAiServiceBuildItem(
                 List.of(LangChain4jDotNames.SYSTEM_MESSAGE, LangChain4jDotNames.USER_MESSAGE,
+                        LangChain4jDotNames.SYSTEM_MESSAGE_FROM_REGISTRY, LangChain4jDotNames.USER_MESSAGE_FROM_REGISTRY,
                         LangChain4jDotNames.MODERATE));
     }
 
@@ -2389,8 +2394,20 @@ public class AiServicesProcessor {
     private Optional<AiServiceMethodCreateInfo.TemplateInfo> gatherSystemMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams) {
         AnnotationInstance instance = method.annotation(LangChain4jDotNames.SYSTEM_MESSAGE);
-        if (instance == null) { // try and see if the class is annotated with @SystemMessage
+        AnnotationInstance registryInstance = method.annotation(LangChain4jDotNames.SYSTEM_MESSAGE_FROM_REGISTRY);
+        if (instance == null && registryInstance == null) {
+            // try and see if the class is annotated with @SystemMessage or @SystemMessageFromRegistry
             instance = method.declaringClass().declaredAnnotation(LangChain4jDotNames.SYSTEM_MESSAGE);
+            registryInstance = method.declaringClass().declaredAnnotation(LangChain4jDotNames.SYSTEM_MESSAGE_FROM_REGISTRY);
+        }
+        if (instance != null && registryInstance != null) {
+            throw illegalConfigurationForMethod(
+                    "@SystemMessage and @SystemMessageFromRegistry cannot be used together on the same element", method);
+        }
+        if (registryInstance != null) {
+            return Optional.of(AiServiceMethodCreateInfo.TemplateInfo.fromRegistry(
+                    promptTemplateReference(registryInstance, method),
+                    TemplateParameterInfo.toNameToArgsPositionMap(templateParams)));
         }
         if (instance != null) {
             String systemMessageTemplate = TemplateUtil.getTemplateFromAnnotationInstance(instance);
@@ -2405,6 +2422,50 @@ public class AiServicesProcessor {
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)));
         }
         return Optional.empty();
+    }
+
+    private static PromptTemplateReference promptTemplateReference(AnnotationInstance instance, MethodInfo method) {
+        AnnotationValue value = instance.value();
+        String artifactId = value != null ? value.asString() : null;
+        if (artifactId == null || artifactId.isBlank()) {
+            throw illegalConfigurationForMethod(
+                    "@" + instance.name().withoutPackagePrefix() + "'s value (the artifact id) cannot be empty", method);
+        }
+        AnnotationValue groupIdValue = instance.value("groupId");
+        AnnotationValue versionValue = instance.value("version");
+        return new PromptTemplateReference(groupIdValue != null ? groupIdValue.asString() : "", artifactId,
+                versionValue != null ? versionValue.asString() : "");
+    }
+
+    /**
+     * Exposes every message loaded from a prompt template registry so that registry extensions can validate them eagerly.
+     */
+    @BuildStep
+    public void promptTemplateUsages(List<AiServicesMethodBuildItem> methods,
+            BuildProducer<PromptTemplateUsageBuildItem> producer) {
+        for (AiServicesMethodBuildItem method : methods) {
+            AiServiceMethodCreateInfo createInfo = method.getMethodCreateInfo();
+            String location = createInfo.getInterfaceName() + "#" + createInfo.getMethodName();
+            createInfo.getSystemMessageInfo()
+                    .filter(AiServiceMethodCreateInfo.TemplateInfo::isFromRegistry)
+                    .ifPresent(t -> producer.produce(new PromptTemplateUsageBuildItem(
+                            new PromptTemplateUsage(t.registryReference().get(), boundVariables(t), location))));
+            createInfo.getUserMessageInfo().template()
+                    .filter(AiServiceMethodCreateInfo.TemplateInfo::isFromRegistry)
+                    .ifPresent(t -> producer.produce(new PromptTemplateUsageBuildItem(
+                            new PromptTemplateUsage(t.registryReference().get(), boundVariables(t), location))));
+        }
+    }
+
+    private static List<String> boundVariables(AiServiceMethodCreateInfo.TemplateInfo templateInfo) {
+        Set<String> result = new LinkedHashSet<>();
+        for (String name : templateInfo.nameToParamPosition().keySet()) {
+            if (name != null) {
+                result.add(name);
+            }
+        }
+        result.addAll(PromptTemplateRegistrySupport.IMPLICIT_VARIABLES);
+        return new ArrayList<>(result);
     }
 
     private Optional<Integer> gatherMemoryIdParamPosition(MethodInfo method) {
@@ -2471,6 +2532,19 @@ public class AiServicesProcessor {
         }
 
         AnnotationInstance userMessageInstance = method.declaredAnnotation(LangChain4jDotNames.USER_MESSAGE);
+        AnnotationInstance userMessageFromRegistryInstance = method
+                .declaredAnnotation(LangChain4jDotNames.USER_MESSAGE_FROM_REGISTRY);
+        if (userMessageFromRegistryInstance != null) {
+            if (userMessageInstance != null) {
+                throw illegalConfigurationForMethod(
+                        "@UserMessage and @UserMessageFromRegistry cannot be used together on the same method", method);
+            }
+            return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
+                    AiServiceMethodCreateInfo.TemplateInfo.fromRegistry(
+                            promptTemplateReference(userMessageFromRegistryInstance, method),
+                            TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
+                    userNameParamPosition);
+        }
         if (userMessageInstance != null) {
             String userMessageTemplate = TemplateUtil.getTemplateFromAnnotationInstance(userMessageInstance);
 
