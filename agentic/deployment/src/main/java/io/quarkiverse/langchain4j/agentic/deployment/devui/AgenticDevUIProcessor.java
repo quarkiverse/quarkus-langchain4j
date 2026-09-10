@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.agentic.deployment.devui;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,12 +14,11 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.agentic.observability.MonitoredAgent;
 import io.quarkiverse.langchain4j.agentic.deployment.AgenticLangChain4jDotNames;
 import io.quarkiverse.langchain4j.agentic.deployment.DetectedAiAgentBuildItem;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.AgenticJsonRpcService;
-import io.quarkiverse.langchain4j.agentic.runtime.devui.DevModeAgentMonitor;
-import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeansRuntimeInitBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.IsDevelopment;
@@ -90,14 +88,9 @@ public class AgenticDevUIProcessor {
         return card;
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep
     void jsonRpcProvider(BuildProducer<JsonRPCProvidersBuildItem> producers) {
         producers.produce(new JsonRPCProvidersBuildItem(AgenticJsonRpcService.class));
-    }
-
-    @BuildStep(onlyIf = IsDevelopment.class)
-    AdditionalBeanBuildItem devModeAgentMonitor() {
-        return AdditionalBeanBuildItem.unremovableOf(DevModeAgentMonitor.class);
     }
 
     @BuildStep(onlyIf = IsDevelopment.class)
@@ -119,25 +112,16 @@ public class AgenticDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     @Record(ExecutionTime.RUNTIME_INIT)
-    void registerDevUIAgentTypes(List<DetectedAiAgentBuildItem> agents, AgenticRecorder recorder) {
-        Map<String, String> agentTypes = filterUserAgents(agents).stream()
-                .collect(Collectors.toMap(a -> a.getIface().name().toString(), AgenticDevUIProcessor::agentTypeOf,
-                        (a, b) -> a));
-        recorder.setDevUIAgentTypes(agentTypes);
-    }
-
-    @BuildStep(onlyIf = IsDevelopment.class)
-    @Record(ExecutionTime.RUNTIME_INIT)
     @Consume(SyntheticBeansRuntimeInitBuildItem.class)
     void enableDevModeMonitoring(List<DetectedAiAgentBuildItem> agents,
             AgenticRecorder recorder) {
-        Set<String> subAgentClassNames = collectAllSubAgentClassNames(agents);
-        Set<String> rootAgentClassNames = filterUserAgents(agents).stream()
+        DotName monitoredAgentName = DotName.createSimple(MonitoredAgent.class.getName());
+        Set<String> monitoredRootAgentClassNames = filterUserAgents(agents).stream()
+                .filter(a -> a.getIface().interfaceNames().stream().anyMatch(dn -> dn.equals(monitoredAgentName)))
                 .map(a -> a.getIface().name().toString())
-                .filter(name -> !subAgentClassNames.contains(name))
                 .collect(Collectors.toSet());
-        if (!rootAgentClassNames.isEmpty()) {
-            recorder.enableDevModeMonitoring(rootAgentClassNames);
+        if (!monitoredRootAgentClassNames.isEmpty()) {
+            recorder.enableDevModeMonitoring(monitoredRootAgentClassNames);
         }
     }
 
@@ -172,23 +156,12 @@ public class AgenticDevUIProcessor {
         return subAgentClassNames;
     }
 
-    private static String agentTypeOf(DetectedAiAgentBuildItem agent) {
-        for (MethodInfo method : agent.getAgenticMethods()) {
-            for (DotName annotationName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
-                if (method.annotation(annotationName) != null) {
-                    return annotationName.withoutPackagePrefix();
-                }
-            }
-        }
-        return "Agent";
-    }
-
     private AgentInfo buildAgentInfo(DetectedAiAgentBuildItem agent, Set<String> allSubAgentClassNames) {
         ClassInfo iface = agent.getIface();
         String className = iface.name().toString();
         String simpleName = iface.simpleName();
 
-        String agentType = agentTypeOf(agent);
+        String agentType = "Agent";
         String description = "";
         String outputKey = "";
         List<String> subAgents = new ArrayList<>();
@@ -199,6 +172,8 @@ public class AgenticDevUIProcessor {
                 if (instance == null) {
                     continue;
                 }
+
+                agentType = annotationName.withoutPackagePrefix();
 
                 AnnotationValue descValue = instance.value("description");
                 if (descValue != null) {
