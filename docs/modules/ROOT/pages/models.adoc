@@ -203,6 +203,49 @@ public class MyCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.Open
 
 This customizer applies to the _default_ (unnamed) model configuration.
 
+=== Customizing Streaming Chat Models
+
+Streaming and non-streaming chat models are distinct model types, each built with its own builder.
+When an AI service method returns `Multi<String>` (or `Multi<ChatEvent>`), Quarkus LangChain4j uses the provider's _streaming_ chat model, so a customizer targeting the non-streaming builder (for example `OpenAiChatModel.OpenAiChatModelBuilder`) has no effect on that call.
+
+To customize the streaming chat model, implement `ModelBuilderCustomizer` parameterized with the streaming builder type:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyStreamingCustomizer implements ModelBuilderCustomizer<OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder> {
+
+    @Override
+    public void customize(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder) {
+        builder.customHeaders(Map.of("X-Custom-Header", "value"));
+    }
+}
+----
+
+If your application uses both streaming and non-streaming AI services and the customization must apply to both, register two customizers, one per builder type.
+Since Java does not allow a class to implement the same generic interface twice with different type arguments, use two separate classes and share any common logic through a helper:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyChatCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
+
+    @Override
+    public void customize(OpenAiChatModel.OpenAiChatModelBuilder builder) {
+        builder.customHeaders(CommonHeaders.get());
+    }
+}
+
+@ApplicationScoped
+public class MyStreamingChatCustomizer implements ModelBuilderCustomizer<OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder> {
+
+    @Override
+    public void customize(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder) {
+        builder.customHeaders(CommonHeaders.get());
+    }
+}
+----
+
 === Targeting Named Model Configurations
 
 If you have multiple model configurations (e.g., `quarkus.langchain4j.openai.my-model.chat-model.model-name=...`), you can target a specific one using the `@ModelName` qualifier:

@@ -90,6 +90,13 @@ Quarkus uses https://smallrye.io/smallrye-mutiny/latest/[Mutiny] under the hood.
 In Quarkus, methods returning Multi are considered non-blocking.
 Do not use blocking code inside streaming pipelines. For details, refer to the https://quarkus.io/guides/quarkus-reactive-architecture[Quarkus Reactive Architecture].
 
+[NOTE]
+====
+Streaming AI services use the provider's _streaming_ chat model, which is a different model type from the one used by non-streaming services.
+If you customize the model with a `ModelBuilderCustomizer`, target the streaming builder type (for example `OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder`) rather than the non-streaming one.
+See xref:models.adoc#_customizing_streaming_chat_models[Customizing Streaming Chat Models] for details.
+====
+
 == Streaming with Server-Sent Events (SSE)
 
 SSE is a simple way to stream text over HTTP. Let’s expose an endpoint returning `Multi<String>` as an event stream:

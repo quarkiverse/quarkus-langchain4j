@@ -22,6 +22,11 @@ import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
  * Customizers are applied in priority order (higher priority values first).
  * Override {@link #priority()} to control ordering. The default priority is {@link #DEFAULT_PRIORITY} (0).
  * <p>
+ * Note that streaming and non-streaming chat models are distinct model types with distinct builders.
+ * A customizer for the non-streaming builder (e.g. {@code OpenAiChatModel.OpenAiChatModelBuilder}) does not apply
+ * to AI services returning {@code Multi}, which use the streaming chat model. To customize those, implement this
+ * interface with the streaming builder type (e.g. {@code OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder}).
+ * <p>
  * An example could be:
  *
  * <pre>
