@@ -28,6 +28,7 @@ updates:
       interval: "daily"
     ignore:
       - dependency-name: io.quarkus:*
+      - dependency-name: dev.langchain4j:*
   - package-ecosystem: "maven"
     directory: "/samples"
     schedule:
