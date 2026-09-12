@@ -34,8 +34,6 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.http.client.sse.ServerSentEvent;
@@ -78,6 +76,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import tools.jackson.core.JacksonException;
 
 public class QuarkusAnthropicClient extends AnthropicClient {
     public static final String BETA = "tools-2024-04-04";
@@ -264,7 +263,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
             AnthropicStreamingData data;
             try {
                 data = AnthropicRestApi.ObjectMapperHolder.MAPPER.readValue(eventData, AnthropicStreamingData.class);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 onFailure(e);
                 return;
             }

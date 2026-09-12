@@ -12,8 +12,6 @@ import java.util.Properties;
 
 import org.testcontainers.DockerClientFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;
@@ -32,8 +30,9 @@ import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
-import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
+import io.quarkus.devjsonrpc.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.buildtime.BuildTimeActionBuildItem;
+import tools.jackson.databind.ObjectMapper;
 
 public final class OpenWebUIDevUIProcessor {
     private static final String CONTAINER_NAME_PREFIX = "quarkus-open-webui-";
@@ -135,7 +134,7 @@ public final class OpenWebUIDevUIProcessor {
                     return true;
                 }
                 return null;
-            } catch (JsonProcessingException ex) {
+            } catch (Exception ex) {
                 throw new RuntimeException("Groot Kak", ex);
             }
         });

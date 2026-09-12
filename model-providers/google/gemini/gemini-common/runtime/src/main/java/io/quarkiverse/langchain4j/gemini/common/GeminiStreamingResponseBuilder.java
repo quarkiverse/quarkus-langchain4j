@@ -9,8 +9,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -170,15 +168,11 @@ class GeminiStreamingResponseBuilder {
     static List<ToolExecutionRequest> fromToolExecReqToGFunCall(List<FunctionCall> functionCalls) {
         return functionCalls.stream()
                 .map(functionCall -> {
-                    try {
-                        return ToolExecutionRequest.builder()
-                                .name(functionCall.name())
-                                .arguments(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
-                                        .writeValueAsString(functionCall.args()))
-                                .build();
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
+                    return ToolExecutionRequest.builder()
+                            .name(functionCall.name())
+                            .arguments(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
+                                    .writeValueAsString(functionCall.args()))
+                            .build();
                 })
                 .collect(Collectors.toList());
     }

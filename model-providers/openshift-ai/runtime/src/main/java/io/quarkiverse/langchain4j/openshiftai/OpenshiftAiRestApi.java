@@ -12,8 +12,6 @@ import jakarta.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.vertx.core.Handler;
@@ -37,7 +35,7 @@ public interface OpenshiftAiRestApi {
     TextGenerationResponse chat(TextGenerationRequest request);
 
     @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
+    static tools.jackson.databind.ObjectMapper objectMapper(tools.jackson.databind.ObjectMapper defaultObjectMapper) {
         return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
     }
 

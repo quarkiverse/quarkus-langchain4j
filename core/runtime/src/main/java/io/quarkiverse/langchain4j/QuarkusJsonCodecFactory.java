@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j;
 
-import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,25 +16,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.json.JsonReadFeature;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.module.SimpleDeserializers;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageType;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ContentType;
 import dev.langchain4j.data.message.CustomMessage;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.internal.Json;
@@ -44,6 +36,19 @@ import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalDateDeserializer;
 import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalDateTimeDeserializer;
 import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalTimeDeserializer;
 import io.quarkus.arc.Arc;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.json.JsonReadFeature;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleDeserializers;
+import tools.jackson.databind.module.SimpleModule;
 
 public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
@@ -60,8 +65,8 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
         public String toJson(Object o) {
             try {
                 return ObjectMapperHolder.WRITER.writeValueAsString(o);
-            } catch (JsonProcessingException e) {
-                throw new UncheckedIOException(e);
+            } catch (JacksonException e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -70,31 +75,37 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
             try {
                 String sanitizedJson = sanitize(json, type);
                 return ObjectMapperHolder.MAPPER.readValue(sanitizedJson, type);
-            } catch (JsonProcessingException e) {
-                if ((e instanceof JsonParseException) && (type.isEnum())) {
-                    // this is the case where LangChain4j simply passes the string value of the enum to Json.fromJson()
-                    // and Jackson does not handle it
-                    Class<? extends Enum> enumClass = type.asSubclass(Enum.class);
-                    return (T) Enum.valueOf(enumClass, json);
+            } catch (JacksonException e) {
+                // Check if this is a parse error for an enum - LangChain4j sometimes passes raw enum string values
+                if (type.isEnum()) {
+                    try {
+                        Class<? extends Enum> enumClass = type.asSubclass(Enum.class);
+                        return (T) Enum.valueOf(enumClass, json);
+                    } catch (IllegalArgumentException | NullPointerException enumEx) {
+                        // Not a valid enum value, rethrow original exception
+                    }
                 }
-                throw new UncheckedIOException(e);
+                throw new RuntimeException(e);
             }
         }
 
         @Override
         public <T> T fromJson(String json, Type type) {
-            JavaType javaType = ObjectMapperHolder.MAPPER.constructType(type);
+            JavaType javaType = ObjectMapperHolder.MAPPER.getTypeFactory().constructType(type);
             try {
                 String sanitizedJson = sanitize(json, javaType.getRawClass());
                 return ObjectMapperHolder.MAPPER.readValue(sanitizedJson, javaType);
-            } catch (JsonProcessingException e) {
-                if ((e instanceof JsonParseException) && (javaType.isEnumType())) {
-                    // this is the case where LangChain4j simply passes the string value of the enum to Json.fromJson()
-                    // and Jackson does not handle it
-                    Class<? extends Enum> enumClass = javaType.getRawClass().asSubclass(Enum.class);
-                    return (T) Enum.valueOf(enumClass, json);
+            } catch (JacksonException e) {
+                // Check if this is a parse error for an enum - LangChain4j sometimes passes raw enum string values
+                if (javaType.isEnumType()) {
+                    try {
+                        Class<? extends Enum> enumClass = javaType.getRawClass().asSubclass(Enum.class);
+                        return (T) Enum.valueOf(enumClass, json);
+                    } catch (IllegalArgumentException | NullPointerException enumEx) {
+                        // Not a valid enum value, rethrow original exception
+                    }
                 }
-                throw new UncheckedIOException(e);
+                throw new RuntimeException(e);
             }
         }
 
@@ -119,23 +130,27 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
         static {
             // Start with Arc container ObjectMapper to preserve Quarkus integration
-            MAPPER = Arc.container().instance(ObjectMapper.class).get()
-                    .copy()
-                    .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
-                    .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-                    .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
-
-            // Add chat message mixins to preserve thinking field deserialization
-            MAPPER.addMixIn(ChatMessage.class, ChatMessageMixin.class);
-            MAPPER.addMixIn(AiMessage.class, AiMessageMixin.class);
-            MAPPER.addMixIn(UserMessage.class, UserMessageMixin.class);
-            MAPPER.addMixIn(SystemMessage.class, SystemMessageMixin.class);
-            MAPPER.addMixIn(ToolExecutionResultMessage.class, ToolExecutionResultMessageMixin.class);
-            MAPPER.addMixIn(CustomMessage.class, CustomMessageMixin.class);
-            MAPPER.addMixIn(ToolExecutionRequest.class, ToolExecutionRequestMixin.class);
-
-            // Register Quarkus-specific module
-            MAPPER.registerModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE);
+            MAPPER = SnakeCaseObjectMapperHolder.baseBuilder()
+                    .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                    .changeDefaultVisibility(vc -> vc
+                            .withVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
+                            .withFieldVisibility(JsonAutoDetect.Visibility.ANY))
+                    .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
+                    // Add chat message mixins to preserve thinking field deserialization
+                    .addMixIn(ChatMessage.class, ChatMessageMixin.class)
+                    .addMixIn(AiMessage.class, AiMessageMixin.class)
+                    .addMixIn(UserMessage.class, UserMessageMixin.class)
+                    .addMixIn(SystemMessage.class, SystemMessageMixin.class)
+                    .addMixIn(ToolExecutionResultMessage.class, ToolExecutionResultMessageMixin.class)
+                    .addMixIn(CustomMessage.class, CustomMessageMixin.class)
+                    .addMixIn(ToolExecutionRequest.class, ToolExecutionRequestMixin.class)
+                    .addMixIn(Content.class, ContentMixin.class)
+                    .addMixIn(TextContent.class, TextContentMixin.class)
+                    .addMixIn(ImageContent.class, ImageContentMixin.class)
+                    .addMixIn(Image.class, ImageMixin.class)
+                    // Register Quarkus-specific module
+                    .addModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE)
+                    .build();
 
             WRITER = MAPPER.writerWithDefaultPrettyPrinter();
         }
@@ -196,16 +211,72 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
     private abstract static class ToolExecutionRequestMixin {
     }
 
-    public static class SnakeCaseObjectMapperHolder {
-        public static final ObjectMapper MAPPER = Arc.container().instance(ObjectMapper.class).get()
-                .copy()
-                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true)
-                .registerModule(QuarkusLangChain4jModule.INSTANCE);
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = TextContent.class, name = "TEXT"),
+            @JsonSubTypes.Type(value = ImageContent.class, name = "IMAGE"),
+    })
+    private abstract static class ContentMixin {
+        @JsonProperty
+        public abstract ContentType type();
+    }
 
-        private static class QuarkusLangChain4jModule extends SimpleModule {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private abstract static class TextContentMixin {
+        @JsonCreator
+        public TextContentMixin(@JsonProperty("text") String text) {
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private abstract static class ImageContentMixin {
+        @JsonCreator
+        public ImageContentMixin(
+                @JsonProperty("image") Image image,
+                @JsonProperty("detailLevel") ImageContent.DetailLevel detailLevel) {
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonDeserialize(builder = Image.Builder.class)
+    private abstract static class ImageMixin {
+    }
+
+    public static class SnakeCaseObjectMapperHolder {
+        public static final ObjectMapper MAPPER = baseBuilder()
+                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+                .changeDefaultPropertyInclusion(incl -> incl
+                        .withValueInclusion(JsonInclude.Include.NON_NULL))
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
+                .addModule(QuarkusLangChain4jModule.INSTANCE)
+                .build();
+
+        /** Quarkus 4 exposes a Jackson 3 mapper bean; fall back to Jackson 2 defaults for container-less tests. */
+        static JsonMapper.Builder baseBuilder() {
+            var handle = Arc.container().instance(ObjectMapper.class);
+            JsonMapper.Builder builder;
+            if (handle.isAvailable()) {
+                ObjectMapper mapper = handle.get();
+                // The mapper should be a JsonMapper in Quarkus 4
+                if (mapper instanceof JsonMapper) {
+                    builder = ((JsonMapper) mapper).rebuild();
+                } else {
+                    builder = JsonMapper.builderWithJackson2Defaults();
+                }
+            } else {
+                builder = JsonMapper.builderWithJackson2Defaults();
+            }
+            // Ensure Jackson 2 compatibility - Quarkus bean may already have these, but explicit is safer
+            return builder
+                    .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                    .enable(MapperFeature.ALLOW_FINAL_FIELDS_AS_MUTATORS)
+                    .enable(MapperFeature.USE_GETTERS_AS_SETTERS);
+        }
+
+        static class QuarkusLangChain4jModule extends SimpleModule {
 
             private static final QuarkusLangChain4jModule INSTANCE = new QuarkusLangChain4jModule();
 

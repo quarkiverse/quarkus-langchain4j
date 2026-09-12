@@ -23,8 +23,6 @@ import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.http.client.sse.ServerSentEvent;
@@ -58,6 +56,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import tools.jackson.core.JacksonException;
 
 public class QuarkusMistralAiClient extends MistralAiClient {
 
@@ -116,7 +115,7 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                 try {
                     response = MistralAiRestApi.ObjectMapperHolder.MAPPER.readValue(event.data(),
                             MistralAiChatCompletionResponse.class);
-                } catch (JsonProcessingException e) {
+                } catch (JacksonException e) {
                     trackingHandler.onError(e);
                     return;
                 }

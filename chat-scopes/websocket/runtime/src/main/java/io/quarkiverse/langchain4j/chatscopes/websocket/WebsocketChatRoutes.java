@@ -5,13 +5,12 @@ import java.util.HashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkiverse.langchain4j.chatscopes.websocket.internal.ChatRouteClient;
 import io.quarkus.arc.Arc;
 import io.quarkus.websockets.next.BasicWebSocketConnector;
 import io.vertx.mutiny.core.Promise;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Interfaces for making websocket chat route invocations.

@@ -19,7 +19,6 @@ import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
@@ -54,8 +53,10 @@ public interface VertxAiGeminiRestApi {
             @BeanParam ApiMetadata apiMetadata, @QueryParam("alt") String sse);
 
     @ClientObjectMapper
-    static ObjectMapper mapper(ObjectMapper defaultObjectMapper) {
-        return defaultObjectMapper.copy().setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    static tools.jackson.databind.ObjectMapper mapper(tools.jackson.databind.ObjectMapper defaultObjectMapper) {
+        return defaultObjectMapper.rebuild()
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
 
     class ApiMetadata {

@@ -15,17 +15,18 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+
 import com.ibm.watsonx.ai.batch.BatchCreateRequest;
 import com.ibm.watsonx.ai.batch.BatchData;
 import com.ibm.watsonx.ai.batch.BatchListResponse;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 
-import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 
 @Path("/ml/v1/batches")
+@RegisterProvider(WatsonxJacksonProviders.Reader.class)
+@RegisterProvider(WatsonxJacksonProviders.Writer.class)
 public interface BatchRestApi {
 
     @POST
@@ -70,11 +71,6 @@ public interface BatchRestApi {
             @HeaderParam("X-IBM-Project-ID") String projectId,
             @HeaderParam("X-IBM-Space-ID") String spaceId,
             @PathParam("batchId") String batchId);
-
-    @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
-    }
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

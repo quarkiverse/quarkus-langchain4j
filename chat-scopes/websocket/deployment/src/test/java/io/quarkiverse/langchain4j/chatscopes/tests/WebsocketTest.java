@@ -14,8 +14,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
 import io.quarkiverse.langchain4j.chatscopes.websocket.WebsocketChatRoutes;
@@ -23,6 +21,7 @@ import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.websockets.next.BasicWebSocketConnector;
 import io.smallrye.mutiny.Multi;
 import io.vertx.mutiny.core.Promise;
+import tools.jackson.databind.ObjectMapper;
 
 public class WebsocketTest {
     @RegisterExtension

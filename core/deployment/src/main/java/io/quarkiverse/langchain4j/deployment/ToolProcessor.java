@@ -43,9 +43,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
@@ -105,6 +102,8 @@ import io.quarkus.gizmo.FieldDescriptor;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class ToolProcessor {
 
@@ -426,7 +425,7 @@ public class ToolProcessor {
                                 Map<String, Object> toolMetadata = ObjectMapperHolder.OBJECT_MAPPER.readValue(metadataJson,
                                         ObjectMapperHolder.MAP_TYPE_REF);
                                 builder.metadata(toolMetadata);
-                            } catch (JsonProcessingException e) {
+                            } catch (Exception e) {
                                 throw new ValidationException("Invalid metadata JSON for tool " + toolName + " in " + className,
                                         e);
                             }

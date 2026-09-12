@@ -3,11 +3,10 @@ package io.quarkiverse.langchain4j.gemini.common;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import tools.jackson.core.JacksonException;
 
 public final class GenerateContentResponseHandler {
 
@@ -100,7 +99,7 @@ public final class GenerateContentResponseHandler {
                             .writeValueAsString(part.functionCall().args()))
                     .id(part.thoughtSignature())
                     .build();
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException("Unable to parse tool call response", e);
         }
     }
