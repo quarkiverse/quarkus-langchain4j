@@ -13,6 +13,7 @@ import static java.util.stream.StreamSupport.stream;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,6 +73,7 @@ import io.vertx.core.http.HttpClientResponse;
 
 public class QuarkusAnthropicClient extends AnthropicClient {
     public static final String BETA = "tools-2024-04-04";
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(15);
     private final String apiKey;
     private final String anthropicVersion;
     private final String configuredBeta;
@@ -83,11 +85,12 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         this.anthropicVersion = builder.version;
         this.configuredBeta = builder.beta;
         this.disableBetaHeader = builder.disableBetaHeader;
+        Duration timeout = timeoutOrDefault(builder.timeout);
 
         try {
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder().baseUri(new URI(builder.baseUrl))
-                    .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
-                    .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
+                    .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                    .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);
 
             if (builder.logRequests || builder.logResponses || builder.logCurl) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE).clientLogger(
@@ -99,6 +102,10 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static Duration timeoutOrDefault(Duration timeout) {
+        return timeout != null ? timeout : DEFAULT_TIMEOUT;
     }
 
     @Override
