@@ -512,6 +512,60 @@ public class AgenticProcessor {
     }
 
     @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerAgenticScopeDeserializationTypes(
+            DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
+            DetectedNonAiAgentAsMapBuildItem detectedNonAiAgentAsMapBuildItem,
+            AgenticRecorder recorder) {
+        Set<String> domainClassNames = new HashSet<>();
+
+        collectDomainTypes(detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap(), domainClassNames);
+        collectDomainTypes(detectedNonAiAgentAsMapBuildItem.getClassToNonAiAgentMethodsMap(), domainClassNames);
+
+        if (!domainClassNames.isEmpty()) {
+            recorder.registerAgenticScopeDeserializationTypes(domainClassNames);
+        }
+    }
+
+    private static void collectDomainTypes(Map<DotName, List<MethodInfo>> methodsMap, Set<String> domainClassNames) {
+        for (List<MethodInfo> methods : methodsMap.values()) {
+            for (MethodInfo method : methods) {
+                if (method.declaringClass().name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                    continue;
+                }
+                collectDomainType(method.returnType(), domainClassNames);
+                for (int i = 0; i < method.parametersCount(); i++) {
+                    collectDomainType(method.parameterType(i), domainClassNames);
+                }
+            }
+        }
+    }
+
+    private static void collectDomainType(Type type, Set<String> domainClassNames) {
+        if (type.kind() == Type.Kind.VOID || type.kind() == Type.Kind.PRIMITIVE) {
+            return;
+        }
+        if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            DotName name = type.name();
+            if (AgenticLangChain4jDotNames.RESULT_WITH_AGENTIC_SCOPE.equals(name)
+                    || DotNames.LIST.equals(name) || DotNames.SET.equals(name)
+                    || DotNames.OBJECT.equals(name)) {
+                for (Type arg : type.asParameterizedType().arguments()) {
+                    collectDomainType(arg, domainClassNames);
+                }
+                return;
+            }
+        }
+        String className = type.name().toString();
+        if (className.startsWith("java.") || className.startsWith("javax.")
+                || className.startsWith("jakarta.") || className.startsWith("dev.langchain4j.")
+                || className.startsWith("io.quarkiverse.langchain4j.")) {
+            return;
+        }
+        domainClassNames.add(className);
+    }
+
+    @BuildStep
     SkipToolBoxProcessingBuildItem skipToolBoxForAgents() {
         return new SkipToolBoxProcessingBuildItem(methodInfo -> {
             for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
