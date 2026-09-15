@@ -19,6 +19,7 @@ import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.declarative.DeclarativeUtil;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
+import dev.langchain4j.agentic.scope.AgenticScopeSerializer;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -80,6 +81,19 @@ public class AgenticRecorder {
     @StaticInit
     public void setAgentClassMetadata(Map<String, AgentClassCreateInfo> metadata) {
         AgenticRecorder.agentClassMetadata = Map.copyOf(metadata);
+    }
+
+    @RuntimeInit
+    public void registerAgenticScopeDeserializationTypes(Set<String> classNames) {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        AgenticScopeSerializer.withClassLoader(cl);
+        for (String className : classNames) {
+            try {
+                AgenticScopeSerializer.allowDeserializationType(Class.forName(className, true, cl));
+            } catch (ClassNotFoundException e) {
+                log.warnf("Unable to register class '%s' for AgenticScope deserialization", className);
+            }
+        }
     }
 
     @RuntimeInit
