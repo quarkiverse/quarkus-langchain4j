@@ -46,7 +46,8 @@ These concepts are foundational to any RAG-based application:
 |Text Splitter |Divides documents into smaller overlapping or non-overlapping segments for processing.
 |Embedding |A dense vector representation of a text segment computed by an embedding model.
 |Embedding Model |A model trained to convert text into embeddings preserving semantic meaning.
-|Vector Store |A database that allows similarity search over embeddings (e.g., PGVector, Chroma, Weaviate).
+|Embedding Store |The LangChain4j API (`EmbeddingStore`) these extensions implement. It stores embeddings of text segments for similarity search, and usually the original text as well.
+|Vector Store |A synonym for an embedding store; a database optimized for similarity search over embeddings (e.g., PGVector, Chroma, Weaviate).
 |Query Embedding |The embedding computed from the user’s question.
 |Retriever |A component responsible for finding relevant segments given a query embedding.
 |Augmentor |Optional logic used to enhance the retrieved content (e.g., filtering, re-ranking, transformation).
@@ -70,4 +71,4 @@ To go deeper, visit the following sections:
 * xref:rag-query.adoc[Query-Time Augmentation]
 * xref:rag-easy-rag.adoc[EasyRAG]
 * xref:rag-contextual-rag.adoc[Contextual RAG (Advanced Techniques)]
-* You can see supported document and vector stores in the menu
+* You can see supported embedding stores in the menu

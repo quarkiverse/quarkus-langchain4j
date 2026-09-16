@@ -1,10 +1,10 @@
-= Redis Document Store
+= Redis Embedding Store
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-Redis can serve as an efficient document store for Retrieval-Augmented Generation (RAG) applications using Quarkus LangChain4j.
-This guide explains how to configure and use Redis as a vector-capable document store.
+Redis can serve as an efficient embedding store for Retrieval-Augmented Generation (RAG) applications using Quarkus LangChain4j.
+This guide explains how to configure and use Redis as a vector-capable embedding store.
 
 [NOTE]
 ====
@@ -14,7 +14,7 @@ This page focuses on the integration of Redis as a vector store, allowing you to
 
 == Prerequisites
 
-To use Redis as a document store, the following conditions must be met:
+To use Redis as an embedding store, the following conditions must be met:
 
 * Redis must support both the **RedisJSON** and **RedisSearch** modules.
 * We recommend using **Redis Stack**, which bundles these modules.
@@ -72,7 +72,7 @@ If you switch to a different embedding model, ensure the `dimension` value is up
 
 == Usage Example
 
-Once the extension is installed and configured, you can use the Redis document store as shown below:
+Once the extension is installed and configured, you can use the Redis embedding store as shown below:
 
 [source,java]
 ----
@@ -99,7 +99,7 @@ Retrieval operations use `FT.SEARCH` combined with KNN (k-nearest neighbor) quer
 
 == Metadata Filtering
 
-The Redis document store supports limited metadata filtering with the following constraints:
+The Redis embedding store supports limited metadata filtering with the following constraints:
 
 * Only **numeric fields** can be used in filters.
 * Only **AND** conditions are supported (no `OR`, `NOT`, or nested logic).
