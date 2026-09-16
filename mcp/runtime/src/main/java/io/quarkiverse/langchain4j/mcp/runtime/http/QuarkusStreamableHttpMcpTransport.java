@@ -6,7 +6,7 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import jakarta.ws.rs.core.MultivaluedMap;
 
@@ -63,6 +62,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private final HttpClient httpClient;
     // Legacy protocol only (up to 2025-11-25) — stored for 404 reinitialize
     private McpInitializeRequest initializeRequest;
+    // SSE comment lines start with a colon, so their field name is the empty string
+    private static final String SSE_COMMENT_FIELD = "";
+
     private volatile SseSubscriber sseSubscriber;
 
     private volatile Runnable onFailure;
@@ -478,31 +480,30 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
      * Handles data, id, and retry fields.
      */
     private void processSubsidiarySseEvent(String eventStr) {
-        // Parse SSE fields from the raw event string
-        String[] lines = eventStr.split("\\R");
-        for (String line : lines) {
-            if (line.startsWith("data:")) {
-                String data = line.substring(5).trim();
-                if (data.isEmpty()) {
-                    continue;
-                }
-                if (logResponses) {
-                    log.info("Subsidiary SSE event received: " + data);
-                }
-                try {
-                    operationHandler.onMessage(data);
-                } catch (RuntimeException e) {
-                    log.warn("Failed to handle subsidiary SSE event: " + data, e);
-                }
-            } else if (line.startsWith("id:")) {
-                subsidiaryLastEventId.set(line.substring(3).trim());
-            } else if (line.startsWith("retry:")) {
-                try {
-                    subsidiaryRetryMs.set(Long.parseLong(line.substring(6).trim()));
-                } catch (NumberFormatException e) {
-                    log.warn("Failed to parse SSE retry value: " + line, e);
-                }
+        Map<String, String> fields = parseSseFields(eventStr);
+        String id = fields.get("id");
+        if (id != null && !id.isEmpty()) {
+            subsidiaryLastEventId.set(id);
+        }
+        String retry = fields.get("retry");
+        if (retry != null) {
+            try {
+                subsidiaryRetryMs.set(Long.parseLong(retry.trim()));
+            } catch (NumberFormatException e) {
+                log.warn("Failed to parse SSE retry value: " + retry, e);
             }
+        }
+        String data = fields.get("data");
+        if (data == null || data.isBlank()) {
+            return;
+        }
+        if (logResponses) {
+            log.info("Subsidiary SSE event received: " + data);
+        }
+        try {
+            operationHandler.onMessage(data);
+        } catch (RuntimeException e) {
+            log.warn("Failed to handle subsidiary SSE event: " + data, e);
         }
     }
 
@@ -562,31 +563,56 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         return map;
     }
 
-    // FIXME: this may be brittle, is there a more standard way to parse SSE events?
-    private SseEvent<String> parseSseEvent(String responseString) {
+    /**
+     * Parses a raw SSE event (the text between two blank-line separators) into a map of field name to value,
+     * following the SSE specification: each line is {@code field:value}, a single space after the colon is
+     * optional, lines starting with a colon are comments (stored under {@link #SSE_COMMENT_FIELD}), lines
+     * without a colon have an empty value and multiple {@code data} lines are joined with a newline.
+     */
+    static Map<String, String> parseSseFields(String responseString) {
+        Map<String, String> fields = new HashMap<>();
         // use \\R to match any line ending because some servers use \r\n and some use \n
-        Map<String, String> entries = Arrays.stream(responseString.split("\\R"))
-                .collect(Collectors.toMap(s -> s.substring(0, s.indexOf(":")),
-                        s -> s.substring(s.indexOf(":") + 2)));
+        for (String line : responseString.split("\\R")) {
+            if (line.isEmpty()) {
+                continue;
+            }
+            int colonIdx = line.indexOf(':');
+            String field = colonIdx < 0 ? line : line.substring(0, colonIdx);
+            String value = colonIdx < 0 ? "" : line.substring(colonIdx + 1);
+            if (value.startsWith(" ")) {
+                // both 'data:{}' and 'data: {}' are valid, only a single leading space is stripped
+                value = value.substring(1);
+            }
+            if (field.equals("data") || field.equals(SSE_COMMENT_FIELD)) {
+                fields.merge(field, value, (previous, current) -> previous + "\n" + current);
+            } else {
+                fields.put(field, value);
+            }
+        }
+        return fields;
+    }
+
+    static SseEvent<String> parseSseEvent(String responseString) {
+        Map<String, String> fields = parseSseFields(responseString);
         return new SseEvent<String>() {
             @Override
             public String id() {
-                return entries.get("id");
+                return fields.get("id");
             }
 
             @Override
             public String name() {
-                return entries.get("event");
+                return fields.get("event");
             }
 
             @Override
             public String comment() {
-                return null;
+                return fields.get(SSE_COMMENT_FIELD);
             }
 
             @Override
             public String data() {
-                return entries.get("data");
+                return fields.get("data");
             }
         };
     }
