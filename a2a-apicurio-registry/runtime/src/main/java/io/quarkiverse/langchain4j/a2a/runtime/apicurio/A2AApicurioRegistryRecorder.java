@@ -28,7 +28,7 @@ public class A2AApicurioRegistryRecorder {
             public ApicurioAgentsRegistry apply(SyntheticCreationalContext<ApicurioAgentsRegistry> context) {
                 A2AApicurioRegistryRuntimeConfig config = runtimeConfig.getValue();
                 RegistryClient registryClient = createRegistryClient(config);
-                return new ApicurioAgentsRegistry(registryClient);
+                return new ApicurioAgentsRegistry(registryClient, config.defaultInputKeys());
             }
         };
     }
