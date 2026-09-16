@@ -28,22 +28,22 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-oidc-client-name]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-oidc-client-name[`+++quarkus.langchain4j.workload-model-auth-provider.oidc-client-name+++`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-model-name]] [.property-path]##link:#quarkus-langchain4j-workload-model-auth-provider_quarkus-langchain4j-workload-model-auth-provider-model-name[`+++quarkus.langchain4j.workload-model-auth-provider.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.oidc-client-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.workload-model-auth-provider.model-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The name of the OIDC client to use for the token exchange. If not set, the default OIDC client is used.
+The model provider name to bind this model authentication provider to. When set, the provider is qualified with `io.quarkiverse.langchain4j.ModelName` and only used by the matching model provider. When not set, the provider is registered as a global default.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_OIDC_CLIENT_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_MODEL_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_OIDC_CLIENT_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_MODEL_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string

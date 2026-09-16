@@ -7,7 +7,6 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.oidc.client.OidcClient;
-import io.quarkus.oidc.client.OidcClients;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.vertx.core.Vertx;
@@ -30,19 +29,6 @@ public class WorkloadModelAuthProviderRecorder {
             return new WorkloadModelAuthProvider(
                     context.getInjectedReference(Vertx.class),
                     context.getInjectedReference(OidcClient.class),
-                    config.getValue().tokenPath(),
-                    tokenParamName);
-        };
-    }
-
-    public Function<SyntheticCreationalContext<ModelAuthProvider>, ModelAuthProvider> namedProvider(
-            String oidcClientName) {
-        return context -> {
-            String tokenParamName = deriveTokenParamName(
-                    "quarkus.oidc-client." + oidcClientName + ".grant.type");
-            return new WorkloadModelAuthProvider(
-                    context.getInjectedReference(Vertx.class),
-                    context.getInjectedReference(OidcClients.class).getClient(oidcClientName),
                     config.getValue().tokenPath(),
                     tokenParamName);
         };

@@ -18,7 +18,6 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.oidc.client.OidcClient;
-import io.quarkus.oidc.client.OidcClients;
 import io.vertx.core.Vertx;
 
 @BuildSteps(onlyIf = WorkloadModelAuthProviderProcessor.IsEnabled.class)
@@ -45,19 +44,13 @@ public class WorkloadModelAuthProviderProcessor {
                 .defaultBean()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .addInjectionPoint(ClassType.create(DotName.createSimple(Vertx.class)));
+                .addInjectionPoint(ClassType.create(DotName.createSimple(Vertx.class)))
+                .addInjectionPoint(ClassType.create(DotName.createSimple(OidcClient.class)))
+                .createWith(recorder.defaultProvider());
 
         if (buildConfig.modelName().isPresent()) {
             builder.addQualifier().annotation(ModelName.class)
                     .addValue("value", buildConfig.modelName().get()).done();
-        }
-
-        if (buildConfig.oidcClientName().isPresent()) {
-            builder.addInjectionPoint(ClassType.create(DotName.createSimple(OidcClients.class)))
-                    .createWith(recorder.namedProvider(buildConfig.oidcClientName().get()));
-        } else {
-            builder.addInjectionPoint(ClassType.create(DotName.createSimple(OidcClient.class)))
-                    .createWith(recorder.defaultProvider());
         }
 
         beanProducer.produce(builder.done());
