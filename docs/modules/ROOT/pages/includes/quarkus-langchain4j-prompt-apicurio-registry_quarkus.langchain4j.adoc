@@ -1,0 +1,290 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-enabled]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-enabled[`+++quarkus.langchain4j.prompt.apicurio-registry.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Apicurio Registry prompt template integration is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-url]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-url[`+++quarkus.langchain4j.prompt.apicurio-registry.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of the Apicurio Registry instance (e.g. http://localhost:8080/apis/registry/v3).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-default-group]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-default-group[`+++quarkus.langchain4j.prompt.apicurio-registry.default-group+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.default-group+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The group used for prompt templates referenced without an explicit `groupId`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_DEFAULT_GROUP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_DEFAULT_GROUP+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-default-version]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-default-version[`+++quarkus.langchain4j.prompt.apicurio-registry.default-version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.default-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version expression used for prompt templates referenced without an explicit `version`.
+
+Accepts anything the registry accepts as a version expression: a version number (e.g. `1.0.0`) or a branch reference (e.g. `branch=latest`). The alias `latest` is mapped to `branch=latest`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_DEFAULT_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_DEFAULT_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++branch=latest+++`
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-cache-ttl]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-cache-ttl[`+++quarkus.langchain4j.prompt.apicurio-registry.cache-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.cache-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long a resolved prompt template is considered fresh.
+
+Once the TTL expires, the next use of the template keeps rendering the cached content while a refresh from the registry happens in the background, so AI service invocations are never blocked by the registry after the first resolution. When the refresh fails, the cached content is kept and a warning is logged.
+
+Set to `0` (or a negative value) to never refresh templates: they are fetched once and cached for the lifetime of the application.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_CACHE_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_CACHE_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`+++60S+++`
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-validate-on-startup]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-validate-on-startup[`+++quarkus.langchain4j.prompt.apicurio-registry.validate-on-startup+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.validate-on-startup+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether every prompt template referenced by an AI service (`@SystemMessageFromRegistry` / `@UserMessageFromRegistry`) is fetched and validated when the application starts.
+
+When enabled, the application fails to start if a template cannot be resolved or if it declares required variables that are not bound by the AI service method using it. When disabled, templates are resolved lazily on first use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_VALIDATE_ON_STARTUP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_VALIDATE_ON_STARTUP+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-basic-auth-username]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-basic-auth-username[`+++quarkus.langchain4j.prompt.apicurio-registry.basic-auth.username+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.basic-auth.username+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The username to use to authenticate with the registry.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_BASIC_AUTH_USERNAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_BASIC_AUTH_USERNAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-basic-auth-password]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-basic-auth-password[`+++quarkus.langchain4j.prompt.apicurio-registry.basic-auth.password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.basic-auth.password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The password to use to authenticate with the registry.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_BASIC_AUTH_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_BASIC_AUTH_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-token-endpoint]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-token-endpoint[`+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.token-endpoint+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.token-endpoint+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The OAuth2 token endpoint used to obtain access tokens with the client credentials flow.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_TOKEN_ENDPOINT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_TOKEN_ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-client-id]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-client-id[`+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.client-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.client-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The OAuth2 client id.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_CLIENT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_CLIENT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-client-secret]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-client-secret[`+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.client-secret+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.client-secret+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The OAuth2 client secret.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_CLIENT_SECRET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_CLIENT_SECRET+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-scope]] [.property-path]##link:#quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j-prompt-apicurio-registry-oauth2-scope[`+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.scope+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.prompt.apicurio-registry.oauth2.scope+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The OAuth2 scope to request.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_SCOPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PROMPT_APICURIO_REGISTRY_OAUTH2_SCOPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-prompt-apicurio-registry_quarkus-langchain4j]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]
