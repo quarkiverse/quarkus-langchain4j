@@ -6,7 +6,6 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -14,13 +13,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.common.util.MultivaluedTreeMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,9 +36,7 @@ import io.quarkiverse.langchain4j.mcp.auth.McpAuthenticationException;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
@@ -62,9 +57,6 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private final HttpClient httpClient;
     // Legacy protocol only (up to 2025-11-25) — stored for 404 reinitialize
     private McpInitializeRequest initializeRequest;
-    // SSE comment lines start with a colon, so their field name is the empty string
-    private static final String SSE_COMMENT_FIELD = "";
-
     private volatile SseSubscriber sseSubscriber;
 
     private volatile Runnable onFailure;
@@ -275,10 +267,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                     if (id != null && contentType != null && contentType.contains("text/event-stream")) {
                                         // the server has started an SSE channel
                                         var httpResponse = response.result();
-                                        httpResponse.handler(createSseBufferHandler(eventStr -> {
-                                            SseEvent<String> sseEvent = parseSseEvent(eventStr);
-                                            sseSubscriber.accept(sseEvent);
-                                        }));
+                                        httpResponse.handler(new SseEventParser(sseSubscriber));
                                         future.whenComplete((r, t) -> {
                                             if (future.isCancelled()) {
                                                 httpResponse.request().reset();
@@ -439,8 +428,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                             log.debug("Subsidiary SSE channel established");
                             result.complete(null);
 
-                            response.result().handler(
-                                    createSseBufferHandler(this::processSubsidiarySseEvent));
+                            response.result().handler(new SseEventParser(this::processSubsidiarySseEvent));
                             response.result().endHandler(v -> {
                                 log.debug("Subsidiary SSE channel closed");
                                 if (!closed.get()) {
@@ -479,21 +467,15 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
      * Processes an SSE event received on the subsidiary channel.
      * Handles data, id, and retry fields.
      */
-    private void processSubsidiarySseEvent(String eventStr) {
-        Map<String, String> fields = parseSseFields(eventStr);
-        String id = fields.get("id");
+    private void processSubsidiarySseEvent(SseEventParser.Event event) {
+        String id = event.id();
         if (id != null && !id.isEmpty()) {
             subsidiaryLastEventId.set(id);
         }
-        String retry = fields.get("retry");
-        if (retry != null) {
-            try {
-                subsidiaryRetryMs.set(Long.parseLong(retry.trim()));
-            } catch (NumberFormatException e) {
-                log.warn("Failed to parse SSE retry value: " + retry, e);
-            }
+        if (event.retry() != null) {
+            subsidiaryRetryMs.set(event.retry());
         }
-        String data = fields.get("data");
+        String data = event.data();
         if (data == null || data.isBlank()) {
             return;
         }
@@ -521,100 +503,10 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                 });
     }
 
-    /**
-     * Creates a Handler that buffers incoming data and splits it into
-     * individual SSE events separated by {@code \r\n\r\n} or {@code \n\n},
-     * passing each complete raw event string to the provided consumer.
-     */
-    private Handler<Buffer> createSseBufferHandler(Consumer<String> eventConsumer) {
-        return new Handler<>() {
-            private StringBuffer sb = new StringBuffer();
-
-            @Override
-            public void handle(Buffer event) {
-                sb.append(event.toString());
-                String str = sb.toString();
-                while (true) {
-                    int sepIdx;
-                    int sepLen;
-                    int crlfIdx = str.indexOf("\r\n\r\n");
-                    int lfIdx = str.indexOf("\n\n");
-                    if (crlfIdx >= 0 && (lfIdx < 0 || crlfIdx <= lfIdx)) {
-                        sepIdx = crlfIdx;
-                        sepLen = 4;
-                    } else if (lfIdx >= 0) {
-                        sepIdx = lfIdx;
-                        sepLen = 2;
-                    } else {
-                        break;
-                    }
-                    String eventStr = str.substring(0, sepIdx);
-                    str = str.substring(sepIdx + sepLen);
-                    sb = new StringBuffer(str);
-                    eventConsumer.accept(eventStr);
-                }
-            }
-        };
-    }
-
     private MultivaluedMap<String, Object> toMultivaluedMap(MultiMap multiMap) {
         MultivaluedTreeMap<String, Object> map = new MultivaluedTreeMap<>();
         multiMap.forEach((key, value) -> map.add(key, value));
         return map;
-    }
-
-    /**
-     * Parses a raw SSE event (the text between two blank-line separators) into a map of field name to value,
-     * following the SSE specification: each line is {@code field:value}, a single space after the colon is
-     * optional, lines starting with a colon are comments (stored under {@link #SSE_COMMENT_FIELD}), lines
-     * without a colon have an empty value and multiple {@code data} lines are joined with a newline.
-     */
-    static Map<String, String> parseSseFields(String responseString) {
-        Map<String, String> fields = new HashMap<>();
-        // use \\R to match any line ending because some servers use \r\n and some use \n
-        for (String line : responseString.split("\\R")) {
-            if (line.isEmpty()) {
-                continue;
-            }
-            int colonIdx = line.indexOf(':');
-            String field = colonIdx < 0 ? line : line.substring(0, colonIdx);
-            String value = colonIdx < 0 ? "" : line.substring(colonIdx + 1);
-            if (value.startsWith(" ")) {
-                // both 'data:{}' and 'data: {}' are valid, only a single leading space is stripped
-                value = value.substring(1);
-            }
-            if (field.equals("data") || field.equals(SSE_COMMENT_FIELD)) {
-                fields.merge(field, value, (previous, current) -> previous + "\n" + current);
-            } else {
-                fields.put(field, value);
-            }
-        }
-        return fields;
-    }
-
-    static SseEvent<String> parseSseEvent(String responseString) {
-        Map<String, String> fields = parseSseFields(responseString);
-        return new SseEvent<String>() {
-            @Override
-            public String id() {
-                return fields.get("id");
-            }
-
-            @Override
-            public String name() {
-                return fields.get("event");
-            }
-
-            @Override
-            public String comment() {
-                return fields.get(SSE_COMMENT_FIELD);
-            }
-
-            @Override
-            public String data() {
-                return fields.get("data");
-            }
-        };
     }
 
     private boolean isExpectedStatusCode(int statusCode) {

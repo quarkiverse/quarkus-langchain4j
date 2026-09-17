@@ -4,11 +4,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.client.SseEvent;
 
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 
-public class SseSubscriber implements Consumer<SseEvent<String>> {
+public class SseSubscriber implements Consumer<SseEventParser.Event> {
 
     private final McpOperationHandler operationHandler;
     private static final Logger log = Logger.getLogger(SseSubscriber.class);
@@ -26,7 +25,7 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
     }
 
     @Override
-    public void accept(SseEvent<String> s) {
+    public void accept(SseEventParser.Event s) {
         // some servers send empty messages as pings
         String data = s.data();
         if (data == null || data.isEmpty() || data.isBlank()) {
