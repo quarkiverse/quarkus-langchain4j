@@ -49,9 +49,12 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName LOOP_AGENT = DotName.createSimple(LoopAgent.class.getName());
     public static final DotName CONDITIONAL_AGENT = DotName.createSimple(ConditionalAgent.class.getName());
     public static final DotName PLANNER_AGENT = DotName.createSimple(PlannerAgent.class.getName());
+    public static final DotName MCP_CLIENT_AGENT = DotName.createSimple(AGENTIC_PACKAGE + ".McpClientAgent");
+    public static final DotName MCP_CLIENT_SUPPLIER = DotName.createSimple(AGENTIC_PACKAGE + ".McpClientSupplier");
 
     public static final List<DotName> ALL_AGENT_ANNOTATIONS = List.of(AGENT, HUMAN_IN_THE_LOOP_AGENT, SUPERVISOR_AGENT,
-            SEQUENCE_AGENT, PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT, A2A_AGENT);
+            SEQUENCE_AGENT, PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT, A2A_AGENT,
+            MCP_CLIENT_AGENT);
     public static final List<DotName> AGENT_ANNOTATIONS_WITH_SUB_AGENTS = List.of(SUPERVISOR_AGENT, SEQUENCE_AGENT,
             PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT);
 
