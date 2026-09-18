@@ -102,7 +102,8 @@ public class AgenticProcessor {
             AgenticLangChain4jDotNames.PARALLEL_AGENT,
             AgenticLangChain4jDotNames.PARALLEL_MAPPER_AGENT,
             AgenticLangChain4jDotNames.LOOP_AGENT,
-            AgenticLangChain4jDotNames.CONDITIONAL_AGENT);
+            AgenticLangChain4jDotNames.CONDITIONAL_AGENT,
+            AgenticLangChain4jDotNames.MCP_CLIENT_AGENT);
 
     private static final List<DotName> ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS = List.of(
             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
@@ -112,7 +113,8 @@ public class AgenticProcessor {
             AgenticLangChain4jDotNames.RETRIEVAL_AUGMENTER_SUPPLIER,
             AgenticLangChain4jDotNames.TOOL_SUPPLIER,
             AgenticLangChain4jDotNames.TOOL_PROVIDER_SUPPLIER,
-            AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER
+            AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER,
+            AgenticLangChain4jDotNames.MCP_CLIENT_SUPPLIER
     // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
     );
 
@@ -183,6 +185,7 @@ public class AgenticProcessor {
         validateErrorHandler(iface);
         validateExitCondition(iface);
         validateHumanInTheLoop(iface);
+        validateMcpClientSupplier(iface);
         validateMcpToolBox(item);
         validateOutput(iface);
         validateParallelExecutor(iface);
@@ -360,6 +363,19 @@ public class AgenticProcessor {
         }
     }
 
+    private void validateMcpClientSupplier(ClassInfo iface) {
+        DotName annotationToValidate = AgenticLangChain4jDotNames.MCP_CLIENT_SUPPLIER;
+        List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
+        for (AnnotationInstance instance : instances) {
+            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                log.warnf("Unhandled '@%s' annotation: '%s'", annotationToValidate.withoutPackagePrefix(), instance.target());
+                continue;
+            }
+            MethodInfo method = instance.target().asMethod();
+            validateStaticMethod(method, annotationToValidate);
+        }
+    }
+
     private void validateMcpToolBox(DetectedAiAgentBuildItem item) {
         if (!item.getMcpToolBoxMethods().isEmpty()) {
             if ((item.getMcpToolBoxMethods().size() != 1) || (item.getAgenticMethods().size() > 1)) {
@@ -499,7 +515,9 @@ public class AgenticProcessor {
 
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
-    void resolveLeafAgents(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder) {
+    void resolveLeafAgents(List<DetectedAiAgentBuildItem> detectedAgentBuildItems,
+            DetectedNonAiAgentAsMapBuildItem detectedNonAiAgentAsMapBuildItem,
+            AgenticRecorder recorder) {
         Set<String> leafAgentClassNames = new HashSet<>();
         for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
             boolean hasAgentAnnotation = bi.getAgenticMethods().stream()
@@ -507,6 +525,9 @@ public class AgenticProcessor {
             if (hasAgentAnnotation) {
                 leafAgentClassNames.add(bi.getIface().name().toString());
             }
+        }
+        for (DotName className : detectedNonAiAgentAsMapBuildItem.getClassToNonAiAgentMethodsMap().keySet()) {
+            leafAgentClassNames.add(className.toString());
         }
         recorder.setLeafAgentClassNames(leafAgentClassNames);
     }
