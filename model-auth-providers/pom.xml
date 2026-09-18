@@ -12,6 +12,7 @@
 
     <modules>
         <module>oidc-model-auth-provider</module>
+        <module>workload-model-auth-provider</module>
     </modules>
     
 </project>

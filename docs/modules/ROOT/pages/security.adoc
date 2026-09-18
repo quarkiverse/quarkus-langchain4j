@@ -16,13 +16,37 @@ When you send a prompt to an LLM, the data within that prompt—including any se
 * *Data Minimization*: Before sending data to an LLM, remove any Personally Identifiable Information (PII) or other sensitive details that are not strictly necessary for the prompt.
 * *Anonymization and Pseudonymization*: Where possible, replace real data with placeholders or anonymized equivalents. Techniques like data masking can help protect sensitive information while preserving the data's utility for the LLM. For example, you can use the link:https://docs.quarkiverse.io/quarkus-presidio/dev/[Quarkus Presidio] extension to identify and anonymize PII in text before sending it to an LLM.
 
-== Secure Credential Management
+[[access_to_llms]]
+== Secure Access to LLMs
+
+To access LLMs that are hosted in the cloud, AI Services must submit API keys or access tokens as bearer access tokens using an HTTP Authorization header, for example: `Authorization: Bearer <API key>`.
+
+Quarkus LangChain4j supports three options for accessing LLMs:
+
+* <<api_keys,API keys>> — a long-lived key configured per model provider (see also <<best_practices_for_api_keys>>)
+* <<model_auth_provider>> — a custom `ModelAuthProvider` provider that returns a key or a token that is typically issued by the OpenId Connect provider
+* <<workload_identity_federation_provider>> — a more complex `ModelAuthProvider` that the agent workload can use to prove its identity with a platform-issued token and exchange it for a short-lived model API access token
+
+[[api_keys]]
+=== API Keys
+
+API key is the main token type that can be used to access remote LLMs and you can configure it for every supported model that must be accessed with an API key, for example:
+
+[source,properties]
+----
+# Access OpenAI with API key
+quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
+
+# Access AI Gemini with API key
+quarkus.langchain4j.ai.gemini.api-key=${AI_GEMINI_API_KEY}
+----
+
+[[best_practices_for_api_keys]]
+==== Best Practices for API key management
 
 Your interactions with LLM providers are typically authenticated using API keys or other secrets. Take extra care for these credentials as leaking them can lead to unauthorized access and abuse of your account.
 
-=== Best Practices
-
-* *Avoid Hardcoding Secrets*: Never embed API keys, tokens, or other credentials directly in your source code, prompts, or user-controlled inputs.
+* *Avoid Hardcoding Secrets*: Never embed API keys, or other credentials directly in your source code, prompts, or user-controlled inputs.
 * *Use Quarkus Vaults*: Store your secrets securely using Quarkus's built-in support for credential management. You can manage secrets in `application.properties` and protect them with the https://quarkus.io/guides/credentials-provider[Quarkus Credentials Provider].
 
 For example, store your OpenAI API key as property in `application.properties`:
@@ -35,7 +59,97 @@ quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
 Then, set the `OPENAI_API_KEY` environment variable in your deployment environment rather than committing it to version control.
 
 * *Limit Permissions*: Apply the principle of least privilege. The credentials used by your application should have the minimum required permissions to perform their intended function.
-* When using providers like Gemini or Azure OpenAI, also consider using short-lived access tokens obtained during login instead of long-lived API keys. See xref:models.adoc#_large_language_models_llms[Large Language Models (LLMs)].
+
+[[model_auth_provider]]
+=== Dynamic Credentials with `ModelAuthProvider`
+
+Model providers such as Google AI Gemini, Google Vertex Gemini and Azure OpenAI can also accept access tokens instead of API keys.
+
+You can register a custom `io.quarkiverse.langchain4j.auth.ModelAuthProvider` to load tokens or API keys from the database or other sources, for example:
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+
+@ApplicationScoped
+public static class AzureOpenAiAuthProvider implements ModelAuthProvider {
+
+    @Override
+    public String getAuthorization(Input input) { <1>
+        String token = getToken(input);
+        return "Bearer " + token;
+    }
+    private String getToken(Input input) {
+        // ...
+    }
+}
+----
+<1> Represents current HTTP request URI, method and headers
+
+Because the provider is invoked for every model request, it can return short-lived, rotated tokens.
+
+When your Quarkus LangChain4j AI service application that uses one of the model providers that can accept access tokens requires an OpenId Connect or OAuth2 authorization code flow login, for example, with Google or Azure, these model providers can propagate the acquired access token to access LLM on the authenticated user's behalf.
+
+All you need to do to achieve it is to add the `quarkus-langchain4j-oidc-model-auth-provider` dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-oidc-model-auth-provider</artifactId>
+</dependency>
+----
+
+[[workload_identity_federation_provider]]
+=== Workload Identity Federation with `ModelAuthProvider`
+
+Instead of presenting a shared API key, the workload proves its identity with a short-lived token issued by the platform it runs on — a Kubernetes projected service account token, or a SPIFFE JWT-SVID — and exchanges that token for a short-lived model API access token.
+
+The `quarkus-langchain4j-workload-model-auth-provider` extension implements this flow as a `ModelAuthProvider`. It reads the workload identity token from the file the platform projects it into, exchanges it for an access token using the Quarkus OIDC client, and sets the resulting token as the `Authorization` header of every model request.
+
+==== Dependency
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-workload-model-auth-provider</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+The extension brings in `quarkus-oidc-client`, which performs the token exchange.
+
+==== Configuration
+
+Two things must be configured: where the workload identity token is read from, and how it is exchanged.
+For example:
+
+[source,properties]
+----
+# The file the platform projects the workload identity token into
+quarkus.langchain4j.workload-model-auth-provider.token-path=/var/run/secrets/tokens/spiffe-jwt-svid
+
+# How the workload identity token is exchanged for a model API access token
+quarkus.oidc-client.client-id=none
+quarkus.oidc-client.token-path=https://api.anthropic.com/v1/oauth/token
+quarkus.oidc-client.grant.type=jwt
+quarkus.oidc-client.grant-options.jwt.federation_rule_id=${ANTHROPIC_FEDERATION_RULE_ID}
+quarkus.oidc-client.grant-options.jwt.organization_id=${ANTHROPIC_ORGANIZATION_ID}
+quarkus.oidc-client.grant-options.jwt.service_account_id=${ANTHROPIC_SERVICE_ACCOUNT_ID}
+----
+
+The example above targets Anthropic Workload Identity Federation, where `client-id` is not used, the token endpoint is the Anthropic OAuth token endpoint, and the federation rule, organization, and service account identifiers are passed as additional grant parameters.
+
+The workload identity token itself is added to the token exchange request by the extension:
+
+* with `quarkus.oidc-client.grant.type=jwt`, it is sent as the `assertion` parameter
+* with `quarkus.oidc-client.grant.type=exchange`, it is sent as the `subject_token` parameter
+
+==== Token Refresh
+
+Workload identity tokens are short-lived and rotated in place by the platform. The extension decodes the token's `exp` claim and reloads the file at 85% of the token's lifetime, matching Kubernetes token rotation conventions. If the cached token has expired by the time a request is made, it is reloaded from disk before the exchange.
 
 == Input and Output Validation
 

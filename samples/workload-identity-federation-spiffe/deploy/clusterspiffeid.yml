@@ -1,0 +1,13 @@
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: workload-identity-federation-spiffe
+spec:
+  spiffeIDTemplate: "spiffe://{{ .TrustDomain }}/ns/{{ .PodMeta.Namespace }}/sa/{{ .PodSpec.ServiceAccountName }}"
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: workload-identity-federation-spiffe
+  namespaceSelector:
+    matchNames:
+      - workload-identity-spiffe
+  jwtTTL: 5m
