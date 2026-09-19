@@ -1,4 +1,5 @@
 = Redis Document Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-redis
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

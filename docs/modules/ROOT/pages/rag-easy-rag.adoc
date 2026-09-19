@@ -1,4 +1,5 @@
 = Easy RAG: the easiest way to get started with Retrieval Augmented Generation
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-easy-rag
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

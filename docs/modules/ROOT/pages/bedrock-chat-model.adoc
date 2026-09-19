@@ -1,4 +1,5 @@
 = Amazon Bedrock Chat and Embedding Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-bedrock
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

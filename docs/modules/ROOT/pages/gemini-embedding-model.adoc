@@ -1,4 +1,5 @@
 = Gemini Embedding Model
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-ai-gemini
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

@@ -1,4 +1,5 @@
 = OpenAI Embedding Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-openai
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
