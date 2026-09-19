@@ -9,7 +9,8 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
  * @param methodMap the key is a methodId generated at build time
  */
 public record AiServiceClassCreateInfo(Map<String, AiServiceMethodCreateInfo> methodMap, String implClassName,
-        InputGuardrailsLiteral inputGuardrails, OutputGuardrailsLiteral outputGuardrails) {
+        InputGuardrailsLiteral inputGuardrails, OutputGuardrailsLiteral outputGuardrails,
+        String defaultMemoryIdProviderClassName) {
 
     @Override
     public String toString() {

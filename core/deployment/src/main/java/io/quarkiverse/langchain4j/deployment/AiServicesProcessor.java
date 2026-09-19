@@ -1998,8 +1998,14 @@ public class AiServicesProcessor {
                         .map(AiServicesProcessor::classOutputGuardrails)
                         .orElse(null);
 
+                var defaultMemoryIdProviderClassName = aiServiceBuildItem
+                        .map(DeclarativeAiServiceBuildItem::getDefaultMemoryIdProviderClassDotName)
+                        .map(DotName::toString)
+                        .orElse(null);
+
                 perClassMetadata.put(ifaceName,
-                        new AiServiceClassCreateInfo(perMethodMetadata, implClassName, inputGuardrails, outputGuardrails));
+                        new AiServiceClassCreateInfo(perMethodMetadata, implClassName, inputGuardrails, outputGuardrails,
+                                defaultMemoryIdProviderClassName));
                 // make the constructor accessible reflectively since that is how we create the instance
                 reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(implClassName).build());
             }

@@ -32,6 +32,6 @@ class ListenersProcessorNoOpentelemetryTest {
     @Test
     void shouldNotHaveSpanChatModelListenerWhenNoOtel() {
         assertThat(spanChatModelListeners).hasSize(1); // The Tracer is active if its on the classpath
-        assertThat(chatModelSpanContributors).hasSize(2); // the prompt and completion ones are always active
+        assertThat(chatModelSpanContributors).hasSize(3); // prompt, completion, and conversation-id contributors
     }
 }
