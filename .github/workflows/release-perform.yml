@@ -28,3 +28,4 @@ jobs:
     with:
       version: ${{github.event.inputs.tag || github.ref_name}}
       java_version: 23
+      maven_args: -Prag
