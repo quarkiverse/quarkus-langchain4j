@@ -700,10 +700,11 @@ public class AgenticProcessor {
     private static final DotName CDI_QUALIFIER = DotName.createSimple(jakarta.inject.Qualifier.class);
 
     /**
-     * Returns all {@code @CdiBean}-annotated parameters across all supplier methods in the
-     * transitive interface hierarchy of the given agents.
+     * Returns all CDI-resolvable parameters across all supplier methods in the
+     * transitive interface hierarchy of the given agents. A parameter is CDI-resolvable
+     * if it carries {@code @CdiBean} or any {@code @jakarta.inject.Qualifier}-annotated annotation.
      */
-    private static List<MethodParameterInfo> cdiBeanSupplierParams(
+    private static List<MethodParameterInfo> cdiResolvableSupplierParams(
             List<DetectedAiAgentBuildItem> agents, IndexView index) {
         List<MethodParameterInfo> result = new ArrayList<>();
         for (DetectedAiAgentBuildItem agent : agents) {
@@ -715,7 +716,8 @@ public class AgenticProcessor {
                         continue;
                     }
                     for (MethodParameterInfo param : method.parameters()) {
-                        if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)) {
+                        if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)
+                                || hasQualifierAnnotation(param, index)) {
                             result.add(param);
                         }
                     }
@@ -725,6 +727,16 @@ public class AgenticProcessor {
         return result;
     }
 
+    private static boolean hasQualifierAnnotation(MethodParameterInfo param, IndexView index) {
+        for (AnnotationInstance ann : param.declaredAnnotations()) {
+            ClassInfo annClass = index.getClassByName(ann.name());
+            if (annClass != null && annClass.hasAnnotation(CDI_QUALIFIER)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void registerSupplierParameterResolver(List<DetectedAiAgentBuildItem> agents,
@@ -732,7 +744,7 @@ public class AgenticProcessor {
             AgenticRecorder recorder) {
         IndexView index = indexBuildItem.getIndex();
         Set<String> qualifierNames = new HashSet<>();
-        for (MethodParameterInfo param : cdiBeanSupplierParams(agents, index)) {
+        for (MethodParameterInfo param : cdiResolvableSupplierParams(agents, index)) {
             for (AnnotationInstance ann : param.declaredAnnotations()) {
                 if (ann.name().equals(AgenticLangChain4jDotNames.CDI_BEAN)) {
                     continue;
@@ -756,7 +768,7 @@ public class AgenticProcessor {
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
             CombinedIndexBuildItem indexBuildItem,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
-        for (MethodParameterInfo param : cdiBeanSupplierParams(detectedAiAgentBuildItems, indexBuildItem.getIndex())) {
+        for (MethodParameterInfo param : cdiResolvableSupplierParams(detectedAiAgentBuildItems, indexBuildItem.getIndex())) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
         }
     }

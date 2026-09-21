@@ -33,6 +33,7 @@ public class CdiSupplierParameterResolverTest extends OpenAiBaseTest {
                                     ModelSelector.class,
                                     EchoAgent.class, ModelSelectingAgent.class, SequenceWrapper.class,
                                     MixedParamsAgent.class, MixedParamsSequenceWrapper.class,
+                                    ImplicitCdiAgent.class, ImplicitCdiSequenceWrapper.class,
                                     Agents.FixedResponseChatModel.class, Agents.EchoResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.echo.api-key", "echo")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.fixed.api-key", "fixed")
@@ -122,11 +123,32 @@ public class CdiSupplierParameterResolverTest extends OpenAiBaseTest {
         String run(String text);
     }
 
+    public interface ImplicitCdiAgent {
+
+        @UserMessage("Answer: {{text}}")
+        @Agent(description = "An agent using implicit CDI resolution via qualifier only", outputKey = "answer")
+        String answer(String text);
+
+        @ChatModelSupplier
+        static ChatModel chatModel(@ModelName("fixed") ChatModel model) {
+            return model;
+        }
+    }
+
+    public interface ImplicitCdiSequenceWrapper {
+
+        @SequenceAgent(outputKey = "answer", subAgents = { ImplicitCdiAgent.class })
+        String run(String text);
+    }
+
     @Inject
     SequenceWrapper sequenceWrapper;
 
     @Inject
     MixedParamsSequenceWrapper mixedParamsSequenceWrapper;
+
+    @Inject
+    ImplicitCdiSequenceWrapper implicitCdiSequenceWrapper;
 
     @Test
     void cdiResolvedBeanIsUsedInChatModelSupplier() {
@@ -143,6 +165,12 @@ public class CdiSupplierParameterResolverTest extends OpenAiBaseTest {
     @Test
     void mixedScopeAndCdiParamsWork() {
         String result = mixedParamsSequenceWrapper.run("cat");
+        assertThat(result).isEqualTo(SELECTED_RESPONSE);
+    }
+
+    @Test
+    void qualifierWithoutCdiBeanAnnotationIsResolved() {
+        String result = implicitCdiSequenceWrapper.run("test");
         assertThat(result).isEqualTo(SELECTED_RESPONSE);
     }
 }

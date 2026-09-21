@@ -18,7 +18,16 @@ public class CdiSupplierParameterResolver implements SupplierParameterResolver {
 
     @Override
     public boolean supports(Context context) {
-        return context.parameter().isAnnotationPresent(CdiBean.class);
+        Parameter parameter = context.parameter();
+        if (parameter.isAnnotationPresent(CdiBean.class)) {
+            return true;
+        }
+        for (Annotation ann : parameter.getAnnotations()) {
+            if (qualifierNames.contains(ann.annotationType().getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
