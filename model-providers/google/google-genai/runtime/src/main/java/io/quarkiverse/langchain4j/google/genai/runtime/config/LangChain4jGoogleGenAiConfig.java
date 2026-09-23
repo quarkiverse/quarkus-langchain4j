@@ -98,7 +98,8 @@ public interface LangChain4jGoogleGenAiConfig {
         Optional<Boolean> logResponses();
 
         /**
-         * Timeout for requests to Google GenAI APIs
+         * Timeout for requests to Google GenAI APIs, applied to connecting, reading and writing on each
+         * HTTP attempt
          */
         @ConfigDocDefault("10s")
         @WithDefault("${quarkus.langchain4j.timeout}")

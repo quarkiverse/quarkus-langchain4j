@@ -237,6 +237,13 @@ public class GoogleGenAiRecorder {
         OkHttpClient.Builder okHttpBuilder = new OkHttpClient.Builder()
                 .dispatcher(dispatcher);
 
+        // The GenAI SDK only applies HttpOptions.timeout to clients it builds itself; a custom client
+        // keeps OkHttp's 10s defaults unless the timeouts are set here.
+        config.timeout().ifPresent(timeout -> okHttpBuilder
+                .connectTimeout(timeout)
+                .readTimeout(timeout)
+                .writeTimeout(timeout));
+
         if (openTelemetryAvailable) {
             okHttpBuilder.addInterceptor(new OkHttpOpenTelemetryInterceptor());
         }
