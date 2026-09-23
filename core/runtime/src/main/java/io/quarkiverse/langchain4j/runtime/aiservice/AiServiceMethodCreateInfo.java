@@ -19,6 +19,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
+import io.quarkiverse.langchain4j.prompt.PromptTemplateReference;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
@@ -292,17 +293,30 @@ public final class AiServiceMethodCreateInfo {
     /**
      * @param methodParamPosition this is used to determine the position of the parameter that holds the template, and it is
      *        never set if 'text' is set
+     * @param registryReference this is used when the template is loaded from a prompt template registry at runtime, and it
+     *        is never set if 'text' or 'methodParamPosition' is set
      */
     public record TemplateInfo(Optional<String> text, Map<String, Integer> nameToParamPosition,
-            Optional<Integer> methodParamPosition) {
+            Optional<Integer> methodParamPosition, Optional<PromptTemplateReference> registryReference) {
 
         public static TemplateInfo fromText(String text, Map<String, Integer> nameToParamPosition) {
-            return new TemplateInfo(Optional.of(text), nameToParamPosition, Optional.empty());
+            return new TemplateInfo(Optional.of(text), nameToParamPosition, Optional.empty(), Optional.empty());
         }
 
         public static TemplateInfo fromMethodParam(Integer methodParamPosition,
                 Map<String, Integer> nameToParamPosition) {
-            return new TemplateInfo(Optional.empty(), nameToParamPosition, Optional.of(methodParamPosition));
+            return new TemplateInfo(Optional.empty(), nameToParamPosition, Optional.of(methodParamPosition),
+                    Optional.empty());
+        }
+
+        public static TemplateInfo fromRegistry(PromptTemplateReference registryReference,
+                Map<String, Integer> nameToParamPosition) {
+            return new TemplateInfo(Optional.empty(), nameToParamPosition, Optional.empty(),
+                    Optional.of(registryReference));
+        }
+
+        public boolean isFromRegistry() {
+            return registryReference.isPresent();
         }
     }
 

@@ -1051,6 +1051,11 @@ public class AiServiceMethodImplementationSupport {
         templateParams.put(ResponseSchemaUtil.templateParam(),
                 createInfo.getResponseSchemaInfo().outputFormatInstructions());
         templateParams.put("chat_memory", previousChatMessages);
+        if (systemMessageInfo.isFromRegistry()) {
+            String text = PromptTemplateRegistrySupport.resolveTemplateText(systemMessageInfo.registryReference().get(),
+                    templateParams, createInfo);
+            return Optional.of(PromptTemplate.from(text).apply(templateParams).toSystemMessage());
+        }
         Optional<String> maybeText = systemMessageInfo.text();
         if (maybeText.isPresent()) {
             return Optional.of(PromptTemplate.from(maybeText.get()).apply(templateParams).toSystemMessage());
@@ -1076,6 +1081,9 @@ public class AiServiceMethodImplementationSupport {
             String templateText;
             if (templateInfo.text().isPresent()) {
                 templateText = templateInfo.text().get();
+            } else if (templateInfo.isFromRegistry()) {
+                templateText = PromptTemplateRegistrySupport.resolveTemplateText(templateInfo.registryReference().get(),
+                        templateVariables, createInfo);
             } else {
                 templateText = (String) methodArgs[templateInfo.methodParamPosition().get()];
             }
