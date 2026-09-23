@@ -233,7 +233,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Timeout for requests to Google GenAI APIs
+Timeout for requests to Google GenAI APIs, applied to connecting, reading and writing on each HTTP attempt
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -765,7 +765,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Timeout for requests to Google GenAI APIs
+Timeout for requests to Google GenAI APIs, applied to connecting, reading and writing on each HTTP attempt
 
 
 ifdef::add-copy-button-to-env-var[]
