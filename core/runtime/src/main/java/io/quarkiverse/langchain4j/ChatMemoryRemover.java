@@ -63,4 +63,16 @@ public final class ChatMemoryRemover {
         }
         return Collections.emptyList();
     }
+
+    /**
+     * @param aiService The bean that implements the AI Service annotated with {@link RegisterAiService}
+     * @param memoryIds The objects used as memory IDs for which the corresponding {@link ChatMemory} should be managed
+     */
+    public static void manage(Object aiService, List<Object> memoryIds) {
+        var obj = ClientProxy.unwrap(aiService);
+        if (obj instanceof ChatMemoryRemovable r) {
+            r.manageChatMemory(memoryIds.toArray(EMPTY_OBJECT_ARRAY));
+        }
+    }
+
 }

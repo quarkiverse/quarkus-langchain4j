@@ -37,6 +37,10 @@ public interface ChatScope {
         ChatScopeManagedContext.INSTANCE.deactivate();
     }
 
+    static void deactivate(ChatScope scope) {
+        ChatScopeManagedContext.INSTANCE.deactivate(scope);
+    }
+
     /**
      * Get the current chat scope.
      *

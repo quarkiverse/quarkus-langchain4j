@@ -200,6 +200,8 @@ public class AiServicesProcessor {
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_MANAGE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
+            QuarkusAiServiceContext.class, "manageChatMemoryIds", void.class, Object[].class);
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_EVICT_CHAT_MEMORY = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "evictChatMemory", boolean.class, Object.class);
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_GET_CHAT_MEMORY = MethodDescriptor.ofMethod(
@@ -1937,7 +1939,7 @@ public class AiServicesProcessor {
                         mc.returnVoid();
                     }
 
-                    // methods from ChatMemoryRemovable
+                    // method from ChatMemoryRemovable
                     {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "remove", void.class, Object[].class));
@@ -1946,7 +1948,7 @@ public class AiServicesProcessor {
                                 mc.getMethodParam(0));
                         mc.returnVoid();
                     }
-                    // methods from ChatMemoryRemovable.removeAll()
+                    // method from ChatMemoryRemovable.removeAll()
                     {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "removeAll", void.class));
@@ -1954,7 +1956,7 @@ public class AiServicesProcessor {
                         mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_CLEAR_CHAT_MEMORY, contextHandle);
                         mc.returnVoid();
                     }
-                    // methods from ChatMemoryRemovable.getAllChatMemoryIds()
+                    // method from ChatMemoryRemovable.getAllChatMemoryIds()
                     {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "getAllChatMemoryIds", Collection.class));
@@ -1963,6 +1965,15 @@ public class AiServicesProcessor {
                                 QUARKUS_AI_SERVICES_CONTEXT_GET_ALL_CHAT_MEMORY_IDS,
                                 contextHandle);
                         mc.returnValue(result);
+                    }
+                    // method from ChatMemoryRemovable
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "manageChatMemory", void.class, Object[].class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_MANAGE_CHAT_MEMORY_IDS, contextHandle,
+                                mc.getMethodParam(0));
+                        mc.returnVoid();
                     }
 
                     // methods from ChatMemoryAccess

@@ -203,6 +203,98 @@ public MyBean {
 }
 ----
 
+=== Passivating Chat Scopes
+
+If you need your conversations to survive a server restart, both `@ChatScoped` and `@PerChatScoped` support passivation with some constraints.
+
+* Beans are serialized to/from JSON using Jackson.  You can use Jackson as needed to fine-tune serialization.
+* `transient` fields will be ignored.
+* Use `@io.quarkiverse.langchain4j.chatscopes.PrePassivate` and `@PostActivate` on bean methods to receive a callbacks before
+and after passivation/activate
+* `@PrePassivate` and `@PostActivate` annotations do not work on dependent bean instances.
+* The container creates bean instances, injects, and calls @PostConstruct before activating the bean and restoring state from the
+passivation store.  Use the `@PostActivate` annotation if you need to do things after deserialization.
+* Interceptor instances attached to the bean are NOT passivated. (decorator serialize DOES WORK!)
+* Works best if `@Inject` and qualifiers are only on fields.  Use setter and constructor injection at your own risk.  Container
+may not be able to ignore unserializable fields.
+* fields annotated with `@Inject` or injection qualifier annotations are ignored when serialization happens unless
+you annotate the field with `@io.quarkiverse.langchain4j.chatscopes.Passivate`
+* Do not use ``@JsonAnyGetter` and ``@JsonAnySetter` annotations.  This will screw up the deserializer processing.
+* The `ObjectMapper` used for passivation is in `io.quarkiverse.langchain4j.chatscopes.passivation.JsonPassivation.mapper`.  Use
+a startup method to add any configuration to it.
+* Make sure you test passivation in your testsuite!
+
+The following backends are supported:
+
+#### Flat File Passivation
+[source,xml]
+----
+<dependency>
+   <groupId>io.quarkiverse.langchain4j</groupId>
+   <artifactId>quarkus-chat-scopes-passivation-file</artifactId>
+</dependency>
+----
+
+By default, passivation files are created within `/tmp/chatscopes`.  This can be changed by:
+
+[source,properties,subs=attributes+]
+----
+quarkiverse.langchain4j.chatscopes.passivation.file.path=/home/mydir/.passivation
+----
+
+#### MongoDB Passivation
+
+[source,xml]
+----
+<dependency>
+   <groupId>io.quarkiverse.langchain4j</groupId>
+   <artifactId>quarkus-chat-scopes-passivation-mongo</artifactId>
+</dependency>
+----
+
+This extension builds on the https://quarkus.io/guides/mongodb[Quarkus MongoDB client]. Configure the MongoDB connection as described in that guide, for example:
+
+[source,properties,subs=attributes+]
+----
+quarkus.mongodb.connection-string=mongodb://localhost:27017
+----
+
+In dev and test mode, if no connection string is configured, the MongoDB Dev Services start a MongoDB container automatically.
+
+By default, the store uses the default MongoDB client. To use a named MongoDB client instead, set its name:
+[source,properties,subs=attributes+]
+----
+quarkus.mongodb.chatscopes.connection-string=mongodb://memory-host:27017
+quarkus.langchain4j.chatscopes.store.mongodb.client-name=chatscopes
+----
+
+#### Redis Passivation
+
+[source,xml]
+----
+<dependency>
+   <groupId>io.quarkiverse.langchain4j</groupId>
+   <artifactId>quarkus-chat-scopes-passivation-redis</artifactId>
+</dependency>
+----
+
+This extension builds on the https://quarkus.io/guides/redis-reference/#redis-configuration-reference[Quarkus Redis client]. Configure the Redis connection as described in that guide, for example:
+
+[source,properties,subs=attributes+]
+----
+quarkus.redis.hosts=redis://localhost:6379
+----
+
+By default, the store uses the default Redis client. To use a named MongoDB client instead, set its name:
+[source,properties,subs=attributes+]
+----
+quarkus.redis.chatscopes.hosts=redis://localhost:6379
+quarkus.langchain4j.chatscopes.store.redist.client-name=chatscopes
+----
+
+
+
+
 == Another new CDI scope: `@InvocationScoped`
 
 For `@InvocationScoped` beans, their lifecycle begins and ends with the top level method call on a `@InvocationScoped` bean.

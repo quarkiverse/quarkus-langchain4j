@@ -1305,16 +1305,16 @@ public class AiServiceMethodImplementationSupport {
         }
 
         if (hasChatMemoryProvider) {
+            String perServiceSuffix = memoryIdSuffix(createInfo.getInterfaceName(), createInfo.getMethodName());
             if (defaultMemoryIdProvider != null) {
                 Object memoryId = defaultMemoryIdProvider.getMemoryId();
                 if (memoryId != null) {
-                    return memoryId;
+                    return memoryId + perServiceSuffix;
                 }
             }
             for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
                 Object memoryId = provider.getMemoryId();
                 if (memoryId != null) {
-                    String perServiceSuffix = "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
                     return memoryId + perServiceSuffix;
                 }
             }
@@ -1322,6 +1322,10 @@ public class AiServiceMethodImplementationSupport {
 
         // fallback to the default since there is nothing else we can really use here
         return "default";
+    }
+
+    public static String memoryIdSuffix(String interfaceName, String methodName) {
+        return "#" + interfaceName + "." + methodName;
     }
 
     // TODO: share these methods with LangChain4j
