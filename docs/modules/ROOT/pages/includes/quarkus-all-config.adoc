@@ -1319,6 +1319,139 @@ endif::add-copy-button-to-env-var[]
 |`+++empty list+++`
 
 
+h|[.extension-name]##Quarkus LangChain4j - A2A Apicurio Registry - Runtime##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-enabled]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-enabled[`+++quarkus.langchain4j.a2a.apicurio-registry.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Apicurio Registry A2A agent discovery integration is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-url]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-url[`+++quarkus.langchain4j.a2a.apicurio-registry.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of the Apicurio Registry instance (e.g. http://localhost:8080/apis/registry/v3).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token[`+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional authentication token for the registry.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-group-id]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-group-id[`+++quarkus.langchain4j.a2a.apicurio-registry.group-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.group-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Group ID to use when publishing and searching agent cards.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_GROUP_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_GROUP_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-agent-url]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-agent-url[`+++quarkus.langchain4j.a2a.apicurio-registry.agent-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.agent-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of this application's A2A server endpoint, used when publishing the agent card.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AGENT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AGENT_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-default-input-keys]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-default-input-keys[`+++quarkus.langchain4j.a2a.apicurio-registry.default-input-keys+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.default-input-keys+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The input keys used for agents discovered from the registry whose agent card artifact does not declare an `a2a-input-keys` label.
+
+A2A agent cards carry no input schema, so discovered agents are built as untyped agents and these keys define both the arguments exposed to a supervisor or planner and the keys read from the `AgenticScope` when invoking the remote agent.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_DEFAULT_INPUT_KEYS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_DEFAULT_INPUT_KEYS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|`+++input+++`
+
+
 h|[.extension-name]##Quarkus LangChain4j - AI Gemini##
 h|Type
 h|Default
@@ -16283,6 +16416,74 @@ endif::add-copy-button-to-env-var[]
 
 
 
+h|[.extension-name]##Quarkus LangChain4j - MCP Apicurio Registry - Runtime##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-enabled[`+++quarkus.langchain4j.mcp.apicurio-registry.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Apicurio Registry MCP integration is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-url]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-url[`+++quarkus.langchain4j.mcp.apicurio-registry.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of the Apicurio Registry instance (e.g. http://localhost:8080/apis/registry/v3).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-tool-provider[`+++quarkus.langchain4j.mcp.apicurio-registry.tool-provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.tool-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional: name of the tool provider to target when the application uses multiple tool providers. If not set, the default tool provider is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_TOOL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_TOOL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+
 h|[.extension-name]##Quarkus Langchain4j - Memory Store - MongoDB##
 h|Type
 h|Default
@@ -23443,6 +23644,404 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++true+++`
+
+
+h|[.extension-name]##Quarkus LangChain4j - OpenSearch##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-default-store-enabled[`+++quarkus.langchain4j.opensearch.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) OpenSearch embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-enabled[`+++quarkus.langchain4j.opensearch.devservices.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If Dev Services has been explicitly enabled or disabled. Dev Services is generally enabled by default, unless there is an existing configuration present.
+
+When Dev Services is enabled Quarkus will attempt to automatically configure and start an OpenSearch instance when running in Dev or Test mode and when Docker is running.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-image-name[`+++quarkus.langchain4j.opensearch.devservices.image-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.devservices.image-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The container image name to use for the OpenSearch dev service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++opensearchproject/opensearch:2.10.0+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-port]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-port[`+++quarkus.langchain4j.opensearch.devservices.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.devservices.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the dev service will listen to.
+
+If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-shared]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-shared[`+++quarkus.langchain4j.opensearch.devservices.shared+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.devservices.shared+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Indicates if the OpenSearch instance managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for OpenSearch starts a new container.
+
+The discovery uses the `quarkus-dev-service-opensearch` label. The value is configured using the `service-name` property.
+
+Container sharing is only used in dev mode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-service-name[`+++quarkus.langchain4j.opensearch.devservices.service-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.devservices.service-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The value of the `quarkus-dev-service-opensearch` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for OpenSearch looks for a container with the `quarkus-dev-service-opensearch` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-opensearch` label set to the specified value.
+
+This property is used when you need multiple shared OpenSearch instances.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++opensearch+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-container-env-container-env]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-devservices-container-env-container-env[`+++quarkus.langchain4j.opensearch.devservices.container-env."container-env"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.devservices.container-env."container-env"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Environment variables that are passed to the container.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-server-url]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-server-url[`+++quarkus.langchain4j.opensearch.server-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.server-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+URL where the OpenSearch server is listening for requests. Required unless an OpenSearchClient has been configured programmatically.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_SERVER_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_SERVER_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-user-name]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-user-name[`+++quarkus.langchain4j.opensearch.user-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.user-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The user name used for basic authentication against the OpenSearch server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_USER_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_USER_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-password]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-password[`+++quarkus.langchain4j.opensearch.password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The password used for basic authentication against the OpenSearch server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-api-key]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-api-key[`+++quarkus.langchain4j.opensearch.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API key used to authenticate against Amazon OpenSearch Service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-index-name]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-index-name[`+++quarkus.langchain4j.opensearch.index-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch.index-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the index the embeddings are stored in.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_INDEX_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_INDEX_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+h|[[quarkus-langchain4j-opensearch_section_quarkus-langchain4j-opensearch]] [.section-name.section-level0]##link:#quarkus-langchain4j-opensearch_section_quarkus-langchain4j-opensearch[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-index-name_bt]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-index-name_bt[`+++quarkus.langchain4j.opensearch."store-name".index-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch."store-name".index-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The index name for this named store. This property serves as the build-time key that enables named store discovery. If not set, the index name from the runtime configuration will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__INDEX_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__INDEX_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-server-url]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-server-url[`+++quarkus.langchain4j.opensearch."store-name".server-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch."store-name".server-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+URL where the OpenSearch server is listening for requests. Required unless an OpenSearchClient has been configured programmatically.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__SERVER_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__SERVER_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-user-name]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-user-name[`+++quarkus.langchain4j.opensearch."store-name".user-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch."store-name".user-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The user name used for basic authentication against the OpenSearch server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__USER_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__USER_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-password]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-password[`+++quarkus.langchain4j.opensearch."store-name".password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch."store-name".password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The password used for basic authentication against the OpenSearch server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__PASSWORD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-api-key]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-api-key[`+++quarkus.langchain4j.opensearch."store-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch."store-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The API key used to authenticate against Amazon OpenSearch Service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-index-name]] [.property-path]##link:#quarkus-langchain4j-opensearch_quarkus-langchain4j-opensearch-store-name-index-name[`+++quarkus.langchain4j.opensearch."store-name".index-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.opensearch."store-name".index-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the index the embeddings are stored in.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__INDEX_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH__STORE_NAME__INDEX_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
 
 
 h|[.extension-name]##Quarkus LangChain4j - OpenShift AI##
