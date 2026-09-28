@@ -93,7 +93,7 @@
 ** xref:rag-easy-rag.adoc[EasyRAG]
 ** xref:rag-contextual-rag.adoc[Contextual RAG]
 ** xref:reranking.adoc[Reranking]
-** Document and Vector Stores
+** Embedding Stores
 *** xref:rag-chroma-store.adoc[Chroma]
 *** xref:rag-infinispan-store.adoc[Infinispan]
 *** xref:rag-milvus-store.adoc[Milvus]

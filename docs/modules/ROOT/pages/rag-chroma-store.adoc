@@ -1,12 +1,12 @@
-= Chroma Document Store
+= Chroma Embedding Store
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
 Chroma is a lightweight, open-source vector database designed for embedding-based search.
-It can be used as a document store in Retrieval-Augmented Generation (RAG) pipelines with Quarkus LangChain4j.
+It can be used as an embedding store in Retrieval-Augmented Generation (RAG) pipelines with Quarkus LangChain4j.
 
-This guide explains how to configure and use Chroma as an embedding-aware document store.
+This guide explains how to configure and use Chroma as an embedding store.
 
 == Dependency
 
@@ -31,7 +31,7 @@ Refer to the configuration section below for more options.
 
 == Usage Example
 
-Once the extension is installed and the dev service (or external Chroma instance) is available, you can use the Chroma document store as follows:
+Once the extension is installed and the dev service (or external Chroma instance) is available, you can use the Chroma embedding store as follows:
 
 [source,java]
 ----
