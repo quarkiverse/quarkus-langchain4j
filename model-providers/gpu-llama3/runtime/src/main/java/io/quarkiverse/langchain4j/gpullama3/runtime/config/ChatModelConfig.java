@@ -43,14 +43,13 @@ public interface ChatModelConfig {
     /**
      * Whether to use the prefill/decode inference path, which processes the prompt in a
      * dedicated prefill phase before single-token decoding. Combined with a
-     * {@link #prefillBatchSize()} greater than 1 this enables the batched prefill path,
-     * which significantly speeds up prompt processing on the GPU.
+     * {@link #prefillBatchSize()} greater than 1 this enables the batched prefill path.
      * <p>
-     * Note: this maps to the JVM-global engine flags {@code llama.withPrefillDecode} /
-     * {@code llama.prefillBatchSize}, so when multiple models are configured the first one
-     * to initialize wins.
+     * Off by default. Batched prefill is default-off in the engine on every backend, and
+     * enabling it is an opt-in that needs its own performance evidence for the model and
+     * device in question.
      */
-    @WithDefault("true")
+    @WithDefault("false")
     boolean prefillDecode();
 
     /**
@@ -58,7 +57,7 @@ public interface ChatModelConfig {
      * {@link #prefillDecode()} is {@code true}: a value greater than 1 enables the batched
      * prefill path, while 1 falls back to sequential prefill/decode.
      */
-    @WithDefault("32")
+    @WithDefault("1")
     int prefillBatchSize();
 
     /**

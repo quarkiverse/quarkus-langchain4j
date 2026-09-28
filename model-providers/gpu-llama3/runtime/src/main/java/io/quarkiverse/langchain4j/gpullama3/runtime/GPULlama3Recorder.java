@@ -16,6 +16,7 @@ import io.quarkiverse.langchain4j.gpullama3.runtime.config.LangChain4jGPULlama3F
 import io.quarkiverse.langchain4j.gpullama3.runtime.config.LangChain4jGPULlama3RuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.RuntimeValue;
+import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
@@ -33,6 +34,32 @@ public class GPULlama3Recorder {
             RuntimeValue<LangChain4jGPULlama3FixedRuntimeConfig> fixedRuntimeConfig) {
         this.runtimeConfig = runtimeConfig;
         this.fixedRuntimeConfig = fixedRuntimeConfig;
+    }
+
+    /**
+     * Closes every loaded model once, at application shutdown.
+     *
+     * <p>
+     * The holder is the owner: it loads the model and opens the one session both beans generate
+     * through, so it is the only thing entitled to close them. Requests borrow the session and do
+     * not own it.
+     *
+     * <p>
+     * Before the façade migration nothing closed anything here — the TornadoVM plan and its
+     * device copy of the weights leaked until the JVM exited.
+     */
+    public void closeModelsAtShutdown(ShutdownContext shutdown) {
+        shutdown.addLastShutdownTask(() -> {
+            modelHolders.values().forEach(holder -> {
+                try {
+                    holder.close();
+                } catch (RuntimeException e) {
+                    // One holder failing must not leave the others open.
+                    LOG.warn("Failed to close a GPULlama3 model at shutdown", e);
+                }
+            });
+            modelHolders.clear();
+        });
     }
 
     public Supplier<ChatModel> chatModel(String configName) {

@@ -35,6 +35,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
+import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
@@ -57,6 +58,20 @@ public class GPULlama3Processor {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
+    }
+
+    /**
+     * Closes the loaded models at application shutdown.
+     *
+     * <p>
+     * The holder owns the model and the session; nothing else may close them. Without this the
+     * device copy of the weights lived until the JVM exited, which was the behaviour before the
+     * façade migration.
+     */
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void closeModelsAtShutdown(GPULlama3Recorder recorder, ShutdownContextBuildItem shutdown) {
+        recorder.closeModelsAtShutdown(shutdown);
     }
 
     @BuildStep

@@ -41,7 +41,7 @@
 
         <dependency>
             <groupId>io.github.beehive-lab</groupId>
-            <artifactId>gpu-llama3</artifactId>
+            <artifactId>jitllm</artifactId>
             <version>${gpu-llama3.version}</version>
         </dependency>
 
@@ -66,11 +66,9 @@
                 <configuration>
                     <parentFirstArtifacts>
                         <parentFirstArtifact>org.graalvm:graal-sdk</parentFirstArtifact>
-                        <parentFirstArtifact>io.github.beehive-lab:gpu-llama3</parentFirstArtifact>
                     </parentFirstArtifacts>
                     <runnerParentFirstArtifacts>
                         <runnerParentFirstArtifact>org.graalvm:graal-sdk</runnerParentFirstArtifact>
-                        <runnerParentFirstArtifact>io.github.beehive-lab:gpu-llama3</runnerParentFirstArtifact>
                     </runnerParentFirstArtifacts>
                 </configuration>
             </plugin>

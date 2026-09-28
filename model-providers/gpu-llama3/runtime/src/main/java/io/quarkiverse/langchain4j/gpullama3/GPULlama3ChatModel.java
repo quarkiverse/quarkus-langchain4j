@@ -1,21 +1,19 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.beehive.gpullama3.model.format.ToolCallExtract;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.model.output.FinishReason;
 
 public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel {
 
@@ -45,34 +43,33 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
                 .anyMatch(m -> m.type() == dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT);
 
         try {
-            // Generate a raw response from the model
-            String rawResponse = modelResponse(chatRequest, null);
+            org.beehive.jitllm.api.GenerationResult result = modelResponse(chatRequest, null);
+            String rawResponse = result.text();
 
-            // Use extractAllToolCalls to handle batched tool calls (matches ToolCallingSession)
-            List<ToolCallExtract> toolCalls = holder.chatFormat.extractAllToolCalls(rawResponse);
-            LOG.debugf("extractAllToolCalls result: %d call(s)", toolCalls.size());
+            // Tool calls come from the engine now. It reports them only when a valid call was
+            // extracted and generation ended through the format's tool-call termination path, so
+            // tool-shaped text that did not parse arrives here as ordinary text -- which is what
+            // it is.
+            List<org.beehive.jitllm.api.ChatContent.ToolCall> toolCalls = result.toolCalls();
+            LOG.debugf("tool calls: %d", toolCalls.size());
             if (!toolCalls.isEmpty()) {
                 LOG.infof("[LLM → tool call]\n%s", rawResponse.strip());
                 GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
                 LOG.debugf("[Parsed tool turn] toolCalls=%d  thinking=>>>%s<<<",
                         toolCalls.size(), parsed.getThinkingContent());
-                List<ToolExecutionRequest> toolReqs = new ArrayList<>();
-                for (ToolCallExtract tc : toolCalls) {
-                    String callId = tc.id().orElseGet(() -> generateCallId());
-                    LOG.infof("[Tool call]  → %s(%s)", tc.name(),
-                            tc.argumentsJson().replace("\n", "").replaceAll("\\s+", " "));
-                    toolReqs.add(ToolExecutionRequest.builder()
-                            .id(callId)
-                            .name(tc.name())
-                            .arguments(tc.argumentsJson())
-                            .build());
+                List<ToolExecutionRequest> toolReqs = GPULlama3Conversions.toToolExecutionRequests(toolCalls);
+                for (ToolExecutionRequest req : toolReqs) {
+                    LOG.infof("[Tool call]  → %s(%s)", req.name(),
+                            req.arguments().replace("\n", "").replaceAll("\\s+", " "));
                 }
                 return ChatResponse.builder()
                         .aiMessage(AiMessage.builder()
                                 .thinking(parsed.getThinkingContent())
                                 .toolExecutionRequests(toolReqs)
                                 .build())
-                        .finishReason(FinishReason.TOOL_EXECUTION)
+                        .finishReason(GPULlama3Conversions.toLangChain4jFinishReason(
+                                result.finishReason()))
+                        .tokenUsage(GPULlama3Conversions.toTokenUsage(result))
                         .build();
             }
 
@@ -87,7 +84,11 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
                             .text(parsed.getActualResponse())
                             .thinking(parsed.getThinkingContent())
                             .build())
+                    .finishReason(GPULlama3Conversions.toLangChain4jFinishReason(result.finishReason()))
+                    .tokenUsage(GPULlama3Conversions.toTokenUsage(result))
                     .build();
+        } catch (UnsupportedFeatureException e) {
+            throw e; // a refusal of the request, not a generation failure
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate response from GPULlama3", e);
         }

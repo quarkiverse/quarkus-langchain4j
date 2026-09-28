@@ -204,9 +204,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path, which significantly speeds up prompt processing on the GPU.
+Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path.
 
-Note: this maps to the JVM-global engine flags `llama.withPrefillDecode` / `llama.prefillBatchSize`, so when multiple models are configured the first one to initialize wins.
+Off by default. Batched prefill is default-off in the engine on every backend, and enabling it is an opt-in that needs its own performance evidence for the model and device in question.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -217,7 +217,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_PREFILL_DECO
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`+++true+++`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-prefill-batch-size]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-prefill-batch-size[`+++quarkus.langchain4j.gpu-llama3.chat-model.prefill-batch-size+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -238,7 +238,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_PREFILL_BATC
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`+++32+++`
+|`+++1+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-enable-thinking]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-enable-thinking[`+++quarkus.langchain4j.gpu-llama3.chat-model.enable-thinking+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -487,9 +487,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path, which significantly speeds up prompt processing on the GPU.
+Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path.
 
-Note: this maps to the JVM-global engine flags `llama.withPrefillDecode` / `llama.prefillBatchSize`, so when multiple models are configured the first one to initialize wins.
+Off by default. Batched prefill is default-off in the engine on every backend, and enabling it is an opt-in that needs its own performance evidence for the model and device in question.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -500,7 +500,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`+++true+++`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-prefill-batch-size]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-prefill-batch-size[`+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.prefill-batch-size+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -521,7 +521,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`+++32+++`
+|`+++1+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-enable-thinking]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-enable-thinking[`+++quarkus.langchain4j.gpu-llama3."model-name".chat-model.enable-thinking+++`]##
 ifdef::add-copy-button-to-config-props[]
