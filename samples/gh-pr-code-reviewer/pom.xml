@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-sample-gh-pr-code-reviewer</artifactId>
+    <name>Quarkus LangChain4j - Sample - Code reviewer for GitHub pull requests</name>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <compiler-plugin.version>3.16.0</compiler-plugin.version>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+        <!-- JitLLM needs JDK 21 or newer -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+        <!-- quarkus-aesh needs Quarkus 3.38 or newer -->
+        <quarkus.platform.version>3.40.0</quarkus.platform.version>
+        <skipITs>true</skipITs>
+        <surefire-plugin.version>3.5.1</surefire-plugin.version>
+        <!-- 999-SNAPSHOT until a quarkus-langchain4j release contains the jitllm provider; the release
+             then replaces it, as for the other samples -->
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+        <quarkus-github-api.version>1.330.0</quarkus-github-api.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-aesh</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.githubapi</groupId>
+            <artifactId>quarkus-github-api</artifactId>
+            <version>${quarkus-github-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-jitllm</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Minimal dependencies to constrain the build -->
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-jitllm-deployment</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+            <scope>test</scope>
+            <type>pom</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <maven.home>${maven.home}</maven.home>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <!-- JitLLM runs the model inside the application, so dev mode needs the JVM arguments
+                 that enable TornadoVM, which the TornadoVM SDK ships, and the Vector API. Active
+                 whenever a TornadoVM SDK is set up; other model providers do not need it. -->
+            <id>tornadovm</id>
+            <activation>
+                <property>
+                    <name>env.TORNADOVM_HOME</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>quarkus-maven-plugin</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <configuration>
+                            <jvmArgs>@${env.TORNADOVM_HOME}/tornado-argfile --add-modules jdk.incubator.vector</jvmArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
