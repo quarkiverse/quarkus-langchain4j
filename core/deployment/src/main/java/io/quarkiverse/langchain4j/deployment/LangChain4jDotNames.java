@@ -49,6 +49,8 @@ import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
+import io.quarkiverse.langchain4j.SystemMessageFromRegistry;
+import io.quarkiverse.langchain4j.UserMessageFromRegistry;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
@@ -78,6 +80,8 @@ public class LangChain4jDotNames {
     static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
     public static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
     public static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
+    public static final DotName SYSTEM_MESSAGE_FROM_REGISTRY = DotName.createSimple(SystemMessageFromRegistry.class);
+    public static final DotName USER_MESSAGE_FROM_REGISTRY = DotName.createSimple(UserMessageFromRegistry.class);
     public static final DotName AI_MESSAGE = DotName.createSimple(AiMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
     static final DotName IMAGE_URL = DotName.createSimple(ImageUrl.class);
