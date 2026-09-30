@@ -292,10 +292,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -960,10 +960,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1729,10 +1729,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2543,10 +2543,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -3211,10 +3211,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -3980,10 +3980,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]

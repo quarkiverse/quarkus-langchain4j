@@ -229,11 +229,11 @@ endif::add-copy-button-to-config-props[]
 --
 The query to use when retrieving embeddings. This query has to return the following columns:
 
- - metadata
- - score
- - column of the same name as the 'id-property' value
- - column of the same name as the 'text-property' value
- - column of the same name as the 'embedding-property' value
+ * metadata
+ * score
+ * column of the same name as the 'id-property' value
+ * column of the same name as the 'text-property' value
+ * column of the same name as the 'embedding-property' value
 
 
 
@@ -478,11 +478,11 @@ endif::add-copy-button-to-config-props[]
 --
 The query to use when retrieving embeddings. This query has to return the following columns:
 
- - metadata
- - score
- - column of the same name as the 'id-property' value
- - column of the same name as the 'text-property' value
- - column of the same name as the 'embedding-property' value
+ * metadata
+ * score
+ * column of the same name as the 'id-property' value
+ * column of the same name as the 'text-property' value
+ * column of the same name as the 'embedding-property' value
 
 
 

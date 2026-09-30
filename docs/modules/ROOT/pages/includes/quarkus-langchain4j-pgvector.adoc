@@ -206,9 +206,9 @@ endif::add-copy-button-to-config-props[]
 --
 Metadata type:
 
- - COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
- - COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
- - COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
+ * COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
+ * COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+ * COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
 
 
 
@@ -262,9 +262,9 @@ Metadata Indexes, list of fields to use as index.
 
 For instance:
 
- - JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
- - JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
- - COLUMNS: key, name, age
+ * JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
+ * JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
+ * COLUMNS: key, name, age
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -287,9 +287,9 @@ endif::add-copy-button-to-config-props[]
 --
 Index Type:
 
- - BTREE (default)
- - GIN
- - Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
+ * BTREE (default)
+ * GIN
+ * Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -484,9 +484,9 @@ endif::add-copy-button-to-config-props[]
 --
 Metadata type:
 
- - COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
- - COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
- - COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
+ * COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
+ * COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+ * COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
 
 
 
@@ -540,9 +540,9 @@ Metadata Indexes, list of fields to use as index.
 
 For instance:
 
- - JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
- - JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
- - COLUMNS: key, name, age
+ * JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
+ * JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
+ * COLUMNS: key, name, age
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -565,9 +565,9 @@ endif::add-copy-button-to-config-props[]
 --
 Index Type:
 
- - BTREE (default)
- - GIN
- - Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
+ * BTREE (default)
+ * GIN
+ * Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
 
 
 ifdef::add-copy-button-to-env-var[]

@@ -80,9 +80,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the embedding table if it does not already exist, replace it, or do nothing.
 
- - `CREATE_NONE`: the table must already exist
- - `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the table
+ * `CREATE_NONE`: the table must already exist
+ * `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the table
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -277,9 +277,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the embedding table if it does not already exist, replace it, or do nothing.
 
- - `CREATE_NONE`: the table must already exist
- - `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the table
+ * `CREATE_NONE`: the table must already exist
+ * `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the table
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -411,9 +411,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the IVF vector index.
 
- - `CREATE_NONE`: do not create an index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create an index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -588,9 +588,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the metadata index.
 
- - `CREATE_NONE`: do not create the index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create the index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -682,9 +682,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the IVF vector index.
 
- - `CREATE_NONE`: do not create an index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create an index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -859,9 +859,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the metadata index.
 
- - `CREATE_NONE`: do not create the index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create the index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
