@@ -192,9 +192,9 @@ You can pass environment variables to the subprocess using the `environment` map
 === HTTP Transports
 
 HTTP-based transports connect to remote MCP servers via HTTP.
-Quarkus supports both streamable HTTP and the SSE (legacy) HTTP transports:
+Quarkus supports the Streamable HTTP transport.
+The legacy HTTP/SSE transport (`transport-type=http`) is no longer supported, because the MCP specification deprecated it in version 2025-03-26.
 
-**Streamable HTTP (Recommended):**
 [source,properties]
 ----
 quarkus.langchain4j.mcp.remote-server.transport-type=streamable-http
@@ -213,13 +213,6 @@ quarkus.langchain4j.mcp.remote-server.subsidiary-channel=true
 NOTE: If the server does not support the subsidiary channel, the transport logs a warning
 and continues without it. If the stream disconnects after being successfully established,
 the transport automatically attempts to reconnect.
-
-**HTTP/SSE (Legacy):**
-[source,properties]
-----
-quarkus.langchain4j.mcp.remote-server.transport-type=http
-quarkus.langchain4j.mcp.remote-server.url=https://mcp-server.example.com/mcp/sse
-----
 
 === WebSocket Transport
 
@@ -511,8 +504,8 @@ Quarkus can automatically expose these resources as callable tools, making them 
 # Enable resources-as-tools feature
 quarkus.langchain4j.mcp.expose-resources-as-tools=true
 
-quarkus.langchain4j.mcp.myserver.transport-type=http
-quarkus.langchain4j.mcp.myserver.url=https://mcp-server.example.com/mcp/sse
+quarkus.langchain4j.mcp.myserver.transport-type=streamable-http
+quarkus.langchain4j.mcp.myserver.url=https://mcp-server.example.com/mcp
 ----
 
 When enabled, two synthetic tools are automatically created:
@@ -618,7 +611,7 @@ When such bean exists, all Streamable HTTP-based MCP clients will be wired up to
 
 == Authorization
 
-If your MCP server uses the *Streamable HTTP* or *HTTP/SSE* transport, it may require client authorization using bearer tokens or API keys.
+If your MCP server uses the *Streamable HTTP* transport, it may require client authorization using bearer tokens or API keys.
 
 To support this, implement the `McpClientAuthProvider` interface to inject credentials dynamically:
 
