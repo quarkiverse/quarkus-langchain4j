@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.transport.McpHeaderEncoding;
@@ -342,8 +343,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                                 }
                                             }
                                             future.completeExceptionally(
-                                                    new RuntimeException(
-                                                            "Unexpected status code: " + response.result().statusCode()
+                                                    new HttpException(
+                                                            statusCode,
+                                                            "Unexpected status code: " + statusCode
                                                                     + ", body: " + responseString));
                                         });
                                     }
