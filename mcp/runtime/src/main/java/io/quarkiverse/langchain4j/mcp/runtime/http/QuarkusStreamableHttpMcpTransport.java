@@ -304,7 +304,10 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         return;
                                     }
                                     sendInitializeRequest(initReq).thenAccept(ignored -> {
-                                        execute(request, true, true)
+                                        // Preserve the original expectsResponse flag: a retried notification, or a
+                                        // reply to a server-initiated request (which carries the server's id), must
+                                        // not be registered as a pending operation on retry either.
+                                        execute(request, true, expectsResponse)
                                                 .subscribeAsCompletionStage()
                                                 .thenAccept(future::complete)
                                                 .exceptionally(t -> {
