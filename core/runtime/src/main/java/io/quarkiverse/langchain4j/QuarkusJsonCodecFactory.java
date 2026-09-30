@@ -137,7 +137,10 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
             // Register Quarkus-specific module
             MAPPER.registerModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE);
 
-            WRITER = MAPPER.writerWithDefaultPrettyPrinter();
+            // Json.toJson output (tool results in particular) is sent to the model and stays in the
+            // message history, so it must be compact like upstream JacksonJsonCodec regardless of
+            // any pretty-printing the container ObjectMapper is configured with
+            WRITER = MAPPER.writer().without(SerializationFeature.INDENT_OUTPUT);
         }
     }
 
