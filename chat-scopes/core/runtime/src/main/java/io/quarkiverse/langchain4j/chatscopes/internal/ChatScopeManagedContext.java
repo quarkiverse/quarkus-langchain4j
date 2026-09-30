@@ -206,11 +206,17 @@ public class ChatScopeManagedContext implements ContextState {
     }
 
     public boolean isActive() {
-        return currentScope.get() != null;
+        return currentContext() != null;
     }
 
     public ChatScopeImpl currentContext() {
-        return currentScope.get();
+        ChatScopeImpl scope = currentScope.get();
+        // On Vert.x duplicated contexts, remove() is a NOOP so a destroyed scope
+        // may linger as a stale reference. Treat it as absent.
+        if (scope != null && scope.destroyed) {
+            return null;
+        }
+        return scope;
     }
 
     public ChatScopeImpl begin() {
@@ -224,7 +230,7 @@ public class ChatScopeManagedContext implements ContextState {
     }
 
     public ChatScopeImpl begin(String route) {
-        if (currentScope.get() != null) {
+        if (currentContext() != null) {
             throw new ContextException("Existing scope already active");
         }
         ChatScopeImpl context = new ChatScopeImpl(route);
@@ -284,7 +290,7 @@ public class ChatScopeManagedContext implements ContextState {
         if (current.isTop()) {
             fireEvent(new ChatScopeDeactivated(current));
             current.destroy();
-            currentScope.set(null);
+            currentScope.remove();
             return;
         }
         ChatScopeImpl parent = current.parent;

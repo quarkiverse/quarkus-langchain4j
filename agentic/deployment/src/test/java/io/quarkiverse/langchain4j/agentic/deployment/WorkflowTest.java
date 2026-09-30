@@ -22,7 +22,9 @@ import dev.langchain4j.agentic.declarative.ExitCondition;
 import dev.langchain4j.agentic.declarative.LoopAgent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.agentic.scope.AgenticScope;
+import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
+import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents.*;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
@@ -219,5 +221,69 @@ public class WorkflowTest extends OpenAiBaseTest {
         assertThat(story).isNotNull();
         assertThat(violenceInputGuardrail.isInvoked()).isTrue();
         assertThat(lengthOutputGuardrail.isInvoked()).isTrue();
+    }
+
+    public interface ExpertsAgentWithMemory {
+
+        @ConditionalAgent(outputKey = "response", subAgents = { MedicalExpertWithMemory.class, TechnicalExpertWithMemory.class,
+                LegalExpertWithMemory.class
+        })
+        String askExpert(@V("request") String request);
+
+        @ActivationCondition(MedicalExpertWithMemory.class)
+        static boolean activateMedical(@V("category") RequestCategory category) {
+            return category == RequestCategory.MEDICAL;
+        }
+
+        @ActivationCondition(TechnicalExpertWithMemory.class)
+        static boolean activateTechnical(@V("category") RequestCategory category) {
+            return category == RequestCategory.TECHNICAL;
+        }
+
+        @ActivationCondition(LegalExpertWithMemory.class)
+        static boolean activateLegal(@V("category") RequestCategory category) {
+            return category == RequestCategory.LEGAL;
+        }
+    }
+
+    public interface ExpertRouterAgentWithMemory extends AgenticScopeAccess {
+
+        @SequenceAgent(outputKey = "response", subAgents = { CategoryRouter.class, ExpertsAgentWithMemory.class })
+        String ask(@MemoryId String memoryId, @V("request") String request);
+    }
+
+    @Inject
+    ExpertRouterAgentWithMemory expertRouterAgentWithMemory;
+
+    @Test
+    void declarative_memory_tests() {
+        String response1 = expertRouterAgentWithMemory.ask("1", "I broke my leg, what should I do?");
+
+        AgenticScope agenticScope1 = expertRouterAgentWithMemory.getAgenticScope("1");
+        assertThat(agenticScope1.readState("category", RequestCategory.UNKNOWN)).isEqualTo(RequestCategory.MEDICAL);
+
+        String response2 = expertRouterAgentWithMemory.ask("2", "My computer has liquid inside, what should I do?");
+
+        AgenticScope agenticScope2 = expertRouterAgentWithMemory.getAgenticScope("2");
+        assertThat(agenticScope2.readState("category", RequestCategory.UNKNOWN)).isEqualTo(RequestCategory.TECHNICAL);
+
+        String legalResponse1 = expertRouterAgentWithMemory.ask("1", "Should I sue my neighbor who caused this damage?");
+
+        String legalResponse2 = expertRouterAgentWithMemory.ask("2", "Should I sue my neighbor who caused this damage?");
+
+        assertThat(legalResponse1).containsIgnoringCase("leg").doesNotContain("computer");
+        assertThat(legalResponse2).containsIgnoringCase("computer").doesNotContain("leg");
+
+        // It is necessary to read again the agenticScope instances since they were evicted from the in-memory registry
+        // and reloaded from the persistence provider
+        agenticScope1 = expertRouterAgentWithMemory.getAgenticScope("1");
+        assertThat(agenticScope1.readState("category", RequestCategory.UNKNOWN)).isEqualTo(RequestCategory.LEGAL);
+        agenticScope2 = expertRouterAgentWithMemory.getAgenticScope("2");
+        assertThat(agenticScope2.readState("category", RequestCategory.UNKNOWN)).isEqualTo(RequestCategory.LEGAL);
+
+        assertThat(expertRouterAgentWithMemory.evictAgenticScope("1")).isTrue();
+        assertThat(expertRouterAgentWithMemory.evictAgenticScope("2")).isTrue();
+        assertThat(expertRouterAgentWithMemory.evictAgenticScope("1")).isFalse();
+        assertThat(expertRouterAgentWithMemory.evictAgenticScope("2")).isFalse();
     }
 }

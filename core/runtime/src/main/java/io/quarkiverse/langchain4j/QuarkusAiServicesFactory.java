@@ -21,6 +21,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
+import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
 
@@ -126,9 +127,24 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
             performBasicValidation();
 
+            if (quarkusAiServiceContext().defaultMemoryIdProvider == null
+                    && classCreateInfo.defaultMemoryIdProviderClassName() != null) {
+                try {
+                    quarkusAiServiceContext().defaultMemoryIdProvider = (DefaultMemoryIdProvider) Class
+                            .forName(classCreateInfo.defaultMemoryIdProviderClassName(), true,
+                                    Thread.currentThread().getContextClassLoader())
+                            .getConstructor().newInstance();
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Unable to instantiate DefaultMemoryIdProvider: "
+                                    + classCreateInfo.defaultMemoryIdProviderClassName(),
+                            e);
+                }
+            }
+
             Collection<AiServiceMethodCreateInfo> methodCreateInfos = classCreateInfo.methodMap().values();
             for (var methodCreateInfo : methodCreateInfos) {
-                if (methodCreateInfo.isRequiresModeration() && ((context.moderationModel == null))) {
+                if (methodCreateInfo.isRequiresModeration() && context.moderationModel == null) {
                     throw illegalConfiguration(
                             "The @Moderate annotation is present, but the moderationModel is not set up. " +
                                     "Please ensure a valid moderationModel is configured before using the @Moderate "

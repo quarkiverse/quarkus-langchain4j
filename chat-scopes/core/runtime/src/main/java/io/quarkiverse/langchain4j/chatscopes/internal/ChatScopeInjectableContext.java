@@ -15,7 +15,7 @@ public class ChatScopeInjectableContext extends CustomInjectableContext {
 
     @Override
     protected CustomContextState state() {
-        return ChatScopeManagedContext.currentScope.get();
+        return ChatScopeManagedContext.INSTANCE.currentContext();
     }
 
     @Override

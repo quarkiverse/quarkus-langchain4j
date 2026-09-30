@@ -167,6 +167,61 @@ public class CustomSpanDataContributor implements ChatModelSpanContributor {
 }
 ----
 
+=== Conversation Boundaries
+
+When `quarkus-opentelemetry` is present, a `gen_ai.conversation.id` attribute is automatically added to LLM call and tool execution spans, following the https://opentelemetry.io/docs/specs/semconv/gen-ai/[OpenTelemetry GenAI semantic conventions]. This attribute groups related AI interactions into a logical conversation, which observability backends like Langfuse use to organize traces and trigger scoring.
+
+==== Automatic with Chat Scopes
+
+When using xref:chat-scopes.adoc[Chat Scopes] (`@ChatScoped`, Chat Routes, or programmatic `ChatScope.begin()`/`end()`), the conversation ID is set on all spans automatically — no additional configuration needed. The conversation ID matches the Chat Scope's ID.
+
+==== Manual usage
+
+For REST endpoints, message listeners, or custom transports that don't use Chat Scopes, set the conversation boundary explicitly:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.runtime.conversation.ConversationContext;
+
+ConversationContext.begin("my-conversation-id");
+try {
+    // AI calls here get gen_ai.conversation.id on their spans
+} finally {
+    ConversationContext.end();
+}
+----
+
+`ConversationContext` works both on Vert.x event loop / worker threads and on plain threads (servlet containers, `@Scheduled` methods, message listeners). When using it outside a Vert.x duplicated context, always call `end()` in a `finally` block to prevent the conversation ID from leaking to subsequent requests on pooled threads.
+
+==== Lifecycle events
+
+`ConversationStarted` and `ConversationEnded` CDI events are fired when a conversation begins and ends. Observe these events to trigger downstream actions, such as Langfuse conversation scoring:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.runtime.conversation.ConversationStarted;
+import io.quarkiverse.langchain4j.runtime.conversation.ConversationEnded;
+
+@ApplicationScoped
+public class ConversationObserver {
+    void onStarted(@Observes ConversationStarted event) {
+        // event.conversationId()
+    }
+
+    void onEnded(@Observes ConversationEnded event) {
+        // trigger scoring, cleanup, etc.
+    }
+}
+----
+
+==== Incoming cross-service propagation
+
+When an upstream service sets the `gen_ai.conversation.id` in OTel Baggage (via W3C Baggage headers), the span contributor automatically picks it up as a fallback — even if `ConversationContext.begin()` was not called in the current service. This enables conversation correlation across service boundaries when the upstream service sets the baggage.
+
+==== Async support
+
+The conversation ID propagates across async boundaries when using MicroProfile Context Propagation (`ManagedExecutor`, `@Blocking` / `@NonBlocking` switches). No additional configuration is needed.
+
 === Langfuse
 
 The https://docs.quarkiverse.io/quarkus-langfuse/dev[Quarkus Langfuse] extension provides seamless integration with https://langfuse.com/[Langfuse] for tracing AI operations. When both `quarkus-opentelemetry` and `quarkus-langfuse` are present, all of the necessary OpenTelemetry configuration is handled automatically.
