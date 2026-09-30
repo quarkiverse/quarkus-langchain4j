@@ -16,7 +16,7 @@ The module distinguishes between two categories of agentic systems:
 * **Workflows**: deterministic orchestration patterns where the execution order is defined at design time (sequence, loop, parallel, conditional).
 * **Pure Agents**: LLM-driven orchestration where the model dynamically decides which agents to invoke (supervisor, planner).
 
-IMPORTANT: You do **not** need to implement agent interfaces. Quarkus LangChain4j automatically detects agent interfaces at build time, validates their configuration, and registers them as CDI beans.
+IMPORTANT: You do **NOT** need to implement agent interfaces. Quarkus LangChain4j automatically detects agent interfaces at build time, validates their configuration, and registers them as CDI beans.
 
 == Getting started
 
