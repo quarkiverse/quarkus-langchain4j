@@ -224,12 +224,14 @@
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
                     </dependency>
+                    <!-- TODO: temporarily removed as quarkus-langchain4j-neo4j does not build with Quarkus 4
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-neo4j</artifactId>
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
                     </dependency>
+                    -->
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-pinecone</artifactId>
