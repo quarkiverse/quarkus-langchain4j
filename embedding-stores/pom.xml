@@ -12,7 +12,8 @@
 
     <modules>
         <module>chroma</module>
-        <module>hibernate</module>
+        <!-- TODO: temporarily removed from the reactor as it does not build with Quarkus 4 -->
+        <!-- <module>hibernate</module> -->
         <module>infinispan</module>
         <module>milvus</module>
         <module>neo4j</module>

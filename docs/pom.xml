@@ -61,11 +61,13 @@
             <artifactId>quarkus-langchain4j-oracle</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- TODO: temporarily removed as quarkus-langchain4j-hibernate does not build with Quarkus 4
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hibernate</artifactId>
             <version>${project.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-pinecone</artifactId>
@@ -264,6 +266,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+<!-- TODO: temporarily removed as quarkus-langchain4j-hibernate does not build with Quarkus 4
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hibernate-deployment</artifactId>
@@ -277,6 +280,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+-->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hugging-face-deployment</artifactId>
@@ -715,6 +719,9 @@
                     <excludes>
                         <!-- TODO Quarkus 4: depends on the Neo4j store, excluded from the docs application until quarkus-neo4j targets Quarkus 4 -->
                         <exclude>**/IngestorExampleWithNeo4J.java</exclude>
+                        <!-- TODO: temporarily excluded as quarkus-langchain4j-hibernate does not build with Quarkus 4 -->
+                        <exclude>**/*Hibernate.java</exclude>
+                        <exclude>**/MyEmbeddingEntity.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

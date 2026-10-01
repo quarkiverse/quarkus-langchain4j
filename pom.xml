@@ -40,7 +40,7 @@
   </scm>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
-    <quarkus.version>999-SNAPSHOT</quarkus.version>
+    <quarkus.version>4.0.0.Beta1</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.21.0</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
