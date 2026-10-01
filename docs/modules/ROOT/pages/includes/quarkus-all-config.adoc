@@ -12455,6 +12455,28 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-decision-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-decision-model-provider[`+++quarkus.langchain4j.decision-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.decision-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DECISION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DECISION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider[`+++quarkus.langchain4j.embedding-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.embedding-model.provider+++[]
@@ -12580,6 +12602,28 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-decision-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-decision-model-provider[`+++quarkus.langchain4j."model-name".decision-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j."model-name".decision-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__DECISION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__DECISION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-embedding-model-provider[`+++quarkus.langchain4j."model-name".embedding-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -26609,6 +26653,395 @@ endif::add-copy-button-to-env-var[]
 --
 a|`flat`, `hnsw`
 |`+++hnsw+++`
+
+
+
+h|[.extension-name]##Quarkus LangChain4j - TypeSafe##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-enabled]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-enabled[`+++quarkus.langchain4j.typesafe.decision-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.decision-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the decision model should be enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-base-url]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-base-url[`+++quarkus.langchain4j.typesafe.base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the System One API endpoint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.typesafe.ai/+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-api-key]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-api-key[`+++quarkus.langchain4j.typesafe.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+TypeSafe API key (required for cloud endpoint, optional for self-hosted).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-model-name]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-model-name[`+++quarkus.langchain4j.typesafe.decision-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.decision-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Decision model to use (e.g. jev-latest, jev-1.13.0, devops-thiago/classone-gemma4-e2b).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++jev-latest+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-timeout]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-timeout[`+++quarkus.langchain4j.typesafe.decision-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.decision-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for TypeSafe calls.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++30S+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-max-retries[`+++quarkus.langchain4j.typesafe.decision-model.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.decision-model.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of retries.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++2+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-log-requests[`+++quarkus.langchain4j.typesafe.decision-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.decision-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether request bodies should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-log-responses[`+++quarkus.langchain4j.typesafe.decision-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.decision-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether response bodies should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-custom-headers-custom-headers]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-decision-model-custom-headers-custom-headers[`+++quarkus.langchain4j.typesafe.decision-model.custom-headers."custom-headers"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe.decision-model.custom-headers."custom-headers"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom headers to include in requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_CUSTOM_HEADERS__CUSTOM_HEADERS_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE_DECISION_MODEL_CUSTOM_HEADERS__CUSTOM_HEADERS_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+h|[[quarkus-langchain4j-typesafe_section_quarkus-langchain4j-typesafe]] [.section-name.section-level0]##link:#quarkus-langchain4j-typesafe_section_quarkus-langchain4j-typesafe[Named model config]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-base-url[`+++quarkus.langchain4j.typesafe."model-name".base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the System One API endpoint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.typesafe.ai/+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-api-key[`+++quarkus.langchain4j.typesafe."model-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+TypeSafe API key (required for cloud endpoint, optional for self-hosted).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-model-name]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-model-name[`+++quarkus.langchain4j.typesafe."model-name".decision-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".decision-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Decision model to use (e.g. jev-latest, jev-1.13.0, devops-thiago/classone-gemma4-e2b).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++jev-latest+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-timeout]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-timeout[`+++quarkus.langchain4j.typesafe."model-name".decision-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".decision-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for TypeSafe calls.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++30S+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-max-retries[`+++quarkus.langchain4j.typesafe."model-name".decision-model.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".decision-model.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of retries.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++2+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-log-requests[`+++quarkus.langchain4j.typesafe."model-name".decision-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".decision-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether request bodies should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-log-responses[`+++quarkus.langchain4j.typesafe."model-name".decision-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".decision-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether response bodies should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-custom-headers-custom-headers]] [.property-path]##link:#quarkus-langchain4j-typesafe_quarkus-langchain4j-typesafe-model-name-decision-model-custom-headers-custom-headers[`+++quarkus.langchain4j.typesafe."model-name".decision-model.custom-headers."custom-headers"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.typesafe."model-name".decision-model.custom-headers."custom-headers"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Custom headers to include in requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_CUSTOM_HEADERS__CUSTOM_HEADERS_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TYPESAFE__MODEL_NAME__DECISION_MODEL_CUSTOM_HEADERS__CUSTOM_HEADERS_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-all-config]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
 
 
 

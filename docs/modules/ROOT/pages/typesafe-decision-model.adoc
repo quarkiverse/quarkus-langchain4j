@@ -1,0 +1,66 @@
+= TypeSafe Decision Model
+
+include::./includes/attributes.adoc[]
+
+https://typesafe.ai[TypeSafe] provides System One decision models (such as Jev) designed for fast, single-pass probability judgments.
+
+== Using TypeSafe Decision Model
+
+To use the TypeSafe decision model extension, add the following dependency to your project:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-typesafe</artifactId>
+</dependency>
+----
+
+=== Configuration
+
+Configure your TypeSafe API key or a self-hosted endpoint in `application.properties`:
+
+[source,properties]
+----
+# Cloud TypeSafe Jev:
+quarkus.langchain4j.typesafe.api-key=your-api-key
+quarkus.langchain4j.typesafe.decision-model.model-name=jev-latest
+
+# Or Self-Hosted System One Server:
+# quarkus.langchain4j.typesafe.base-url=http://localhost:8000/
+# quarkus.langchain4j.typesafe.decision-model.model-name=devops-thiago/classone-gemma4-e2b
+----
+
+=== Usage Example
+
+Inject the `DecisionModel` directly into your application beans:
+
+[source,java]
+----
+import dev.langchain4j.model.decision.DecisionModel;
+import dev.langchain4j.model.decision.request.*;
+import dev.langchain4j.model.decision.response.*;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class TriageService {
+
+    @Inject
+    DecisionModel decisionModel;
+
+    public boolean isUrgent(String customerTicket) {
+        DecisionRequest request = DecisionRequest.builder()
+                .input(customerTicket)
+                .question("urgent", YesNoQuestion.of("Does this ticket require immediate attention?"))
+                .build();
+
+        DecisionResponse response = decisionModel.decide(request);
+        return response.yesNo("urgent").probability() > 0.5;
+    }
+}
+----
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-typesafe.adoc[]

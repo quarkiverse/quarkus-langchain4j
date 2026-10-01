@@ -62,6 +62,7 @@ public class LangChain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatModel.class);
     public static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatModel.class);
     public static final DotName SCORING_MODEL = DotName.createSimple(ScoringModel.class);
+    public static final DotName DECISION_MODEL = DotName.createSimple(dev.langchain4j.model.decision.DecisionModel.class);
     public static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);

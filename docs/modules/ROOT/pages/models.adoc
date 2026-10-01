@@ -38,6 +38,7 @@ The following table outlines common model types and the entities they manipulate
 |Moderation Models | Text or image inputs → moderation results (categories, scores, flags)
 |Image Models | Text prompts → images (URLs, streams, or base64)
 |Reasoning Models | Structured inputs/outputs (e.g. tool calls, JSON structures, action plans)
+|Decision Models | Input state + batch of typed questions → typed answers (probabilities, choices, scale scores)
 |===
 
 == Large Language Models (LLMs)

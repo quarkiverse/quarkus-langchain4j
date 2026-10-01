@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.AUDIO_TRANSCRIPTION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.DECISION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODEL_NAME;
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
@@ -35,6 +37,7 @@ import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.AudioTranscriptionModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.DecisionModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImplicitlyUserConfiguredChatProviderBuildItem;
@@ -44,6 +47,7 @@ import io.quarkiverse.langchain4j.deployment.items.ProviderHolder;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedAudioTranscriptionModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedDecisionModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
@@ -84,6 +88,7 @@ public class BeansProcessor {
     public void handleProviders(BeanDiscoveryFinishedBuildItem beanDiscoveryFinished,
             List<ChatModelProviderCandidateBuildItem> chatCandidateItems,
             List<ScoringModelProviderCandidateBuildItem> scoringCandidateItems,
+            List<DecisionModelProviderCandidateBuildItem> decisionCandidateItems,
             List<EmbeddingModelProviderCandidateBuildItem> embeddingCandidateItems,
             List<ModerationModelProviderCandidateBuildItem> moderationCandidateItems,
             List<ImageModelProviderCandidateBuildItem> imageCandidateItems,
@@ -96,6 +101,7 @@ public class BeansProcessor {
             Optional<AutoCreateEmbeddingModelBuildItem> autoCreateEmbeddingModelBuildItem,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
             BuildProducer<SelectedScoringModelProviderBuildItem> selectedScoringProducer,
+            BuildProducer<SelectedDecisionModelProviderBuildItem> selectedDecisionProducer,
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
             BuildProducer<SelectedModerationModelProviderBuildItem> selectedModerationProducer,
             BuildProducer<SelectedImageModelProviderBuildItem> selectedImageProducer,
@@ -105,6 +111,7 @@ public class BeansProcessor {
         Set<String> requestedChatModels = new HashSet<>();
         Set<String> requestedStreamingChatModels = new HashSet<>();
         Set<String> requestScoringModels = new HashSet<>();
+        Set<String> requestDecisionModels = new HashSet<>();
         Set<String> requestEmbeddingModels = new HashSet<>();
         Set<String> requestedModerationModels = new HashSet<>();
         Set<String> requestedImageModels = new HashSet<>();
@@ -114,6 +121,7 @@ public class BeansProcessor {
         // detection of injection points for default models
         boolean defaultChatModelRequested = false;
         boolean defaultScoringModelRequested = false;
+        boolean defaultDecisionModelRequested = false;
         boolean defaultEmbeddingModelRequested = false;
         boolean defaultModerationModelRequested = false;
         boolean defaultImageModelRequested = false;
@@ -123,6 +131,7 @@ public class BeansProcessor {
         final String chatModelConfigNamespace = "chat-model";
         final String embeddingModelConfigNamespace = "embedding-model";
         final String scoringModelConfigNamespace = "scoring-model";
+        final String decisionModelConfigNamespace = "decision-model";
         final String moderationModelConfigNamespace = "moderation-model";
         final String imageModelConfigNamespace = "image-model";
         final String audioTranscriptionModelConfigNamespace = "audio-transcription-model";
@@ -134,6 +143,7 @@ public class BeansProcessor {
         final String chatModelBeanType = "ChatModel or StreamingChatModel";
         final String embeddingModelBeanType = "EmbeddingModel";
         final String scoringModelBeanType = "ScoringModel";
+        final String decisionModelBeanType = "DecisionModel";
         final String moderationModelBeanType = "ModerationModel";
         final String imageModelBeanType = "ImageModel";
         final String audioTranscriptionModelBeanType = "AudioTranscriptionModel";
@@ -150,6 +160,8 @@ public class BeansProcessor {
                 requestedStreamingChatModels.add(modelName);
             } else if (SCORING_MODEL.equals(requiredName)) {
                 requestScoringModels.add(modelName);
+            } else if (DECISION_MODEL.equals(requiredName)) {
+                requestDecisionModels.add(modelName);
             } else if (EMBEDDING_MODEL.equals(requiredName)) {
                 requestEmbeddingModels.add(modelName);
             } else if (MODERATION_MODEL.equals(requiredName)) {
@@ -236,6 +248,33 @@ public class BeansProcessor {
                     configNamespace);
             if (provider != null) {
                 selectedScoringProducer.produce(new SelectedScoringModelProviderBuildItem(provider, modelName));
+            }
+        }
+
+        for (String modelName : requestDecisionModels) {
+            Optional<String> userSelectedProvider;
+            String configNamespace;
+            if (NamedConfigUtil.isDefault(modelName)) {
+                userSelectedProvider = buildConfig.defaultConfig().decisionModel().provider();
+                configNamespace = decisionModelConfigNamespace;
+                defaultDecisionModelRequested = true;
+            } else {
+                if (buildConfig.namedConfig().containsKey(modelName)) {
+                    userSelectedProvider = buildConfig.namedConfig().get(modelName).decisionModel().provider();
+                } else {
+                    userSelectedProvider = Optional.empty();
+                }
+                configNamespace = modelName + dot + decisionModelConfigNamespace;
+            }
+
+            String provider = selectProvider(
+                    decisionCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(DecisionModel.class),
+                    userSelectedProvider,
+                    decisionModelBeanType,
+                    configNamespace);
+            if (provider != null) {
+                selectedDecisionProducer.produce(new SelectedDecisionModelProviderBuildItem(provider, modelName));
             }
         }
 
@@ -409,6 +448,19 @@ public class BeansProcessor {
                         .produce(new SelectedScoringModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
             }
         }
+        if (!defaultDecisionModelRequested && !defaultConfig.decisionModel().provider().isEmpty()) {
+            Optional<String> userSelectedProvider = defaultConfig.decisionModel().provider();
+            String provider = selectProvider(
+                    decisionCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(DecisionModel.class),
+                    userSelectedProvider,
+                    decisionModelBeanType,
+                    decisionModelConfigNamespace);
+            if (provider != null) {
+                selectedDecisionProducer
+                        .produce(new SelectedDecisionModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+        }
         if (!defaultModerationModelRequested && !defaultConfig.moderationModel().provider().isEmpty()) {
             Optional<String> userSelectedProvider = defaultConfig.moderationModel().provider();
             String provider = selectProvider(
@@ -491,6 +543,19 @@ public class BeansProcessor {
                         configNamespace);
                 if (provider != null) {
                     selectedScoringProducer.produce(new SelectedScoringModelProviderBuildItem(provider, entry.getKey()));
+                }
+            }
+            if (!requestDecisionModels.contains(entry.getKey()) && !value.decisionModel().provider().isEmpty()) {
+                Optional<String> userSelectedProvider = value.decisionModel().provider();
+                String configNamespace = entry.getKey() + dot + decisionModelConfigNamespace;
+                String provider = selectProvider(
+                        decisionCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(DecisionModel.class),
+                        userSelectedProvider,
+                        decisionModelBeanType,
+                        configNamespace);
+                if (provider != null) {
+                    selectedDecisionProducer.produce(new SelectedDecisionModelProviderBuildItem(provider, entry.getKey()));
                 }
             }
             if (!requestedModerationModels.contains(entry.getKey()) && !value.moderationModel().provider().isEmpty()) {

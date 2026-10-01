@@ -483,6 +483,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-decision-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-decision-model-provider[`+++quarkus.langchain4j.decision-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.decision-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DECISION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DECISION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-embedding-model-provider[`+++quarkus.langchain4j.embedding-model.provider+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.embedding-model.provider+++[]
@@ -604,6 +625,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAM
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__SCORING_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-model-name-decision-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-model-name-decision-model-provider[`+++quarkus.langchain4j."model-name".decision-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j."model-name".decision-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__DECISION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__DECISION_MODEL_PROVIDER+++`
 endif::add-copy-button-to-env-var[]
 --
 |string

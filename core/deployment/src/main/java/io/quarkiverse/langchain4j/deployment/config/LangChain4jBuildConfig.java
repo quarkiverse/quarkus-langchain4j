@@ -55,6 +55,11 @@ public interface LangChain4jBuildConfig {
         ScoringModelConfig scoringModel();
 
         /**
+         * Decision model
+         */
+        DecisionModelConfig decisionModel();
+
+        /**
          * Embedding model
          */
         EmbeddingModelConfig embeddingModel();
