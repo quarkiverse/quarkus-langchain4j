@@ -74,7 +74,7 @@
       </property>
     </activation>
     <modules>
-      <module>gpu-llama3</module>
+      <module>jitllm</module>
     </modules>
   </profile>
   <profile>
@@ -145,7 +145,7 @@
                   </dependency>
                 <dependency>
                   <groupId>io.quarkiverse.langchain4j</groupId>
-                  <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
+                  <artifactId>quarkus-langchain4j-jitllm</artifactId>
                   <version>999-SNAPSHOT</version>
                 </dependency>
                   <dependency>

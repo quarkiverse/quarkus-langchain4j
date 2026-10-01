@@ -1,0 +1,14 @@
+name: LangChain4j JitLLM
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus LangChain4j with JitLLM, a Java-native LLM inference engine that runs on GPUs through TornadoVM
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - jitllm
+    - tornadovm
+    - gpu
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/jitllm-chat-model.html"
+  categories:
+    - "ai"
+  status: "preview"
