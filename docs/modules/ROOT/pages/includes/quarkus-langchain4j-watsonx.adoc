@@ -1012,8 +1012,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -1852,8 +1852,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -2520,8 +2520,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -4978,8 +4978,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -5818,8 +5818,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -6486,8 +6486,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 

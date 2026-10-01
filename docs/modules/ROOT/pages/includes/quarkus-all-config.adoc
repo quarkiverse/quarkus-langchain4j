@@ -7187,10 +7187,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -7855,10 +7855,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -8624,10 +8624,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -9438,10 +9438,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -10106,10 +10106,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -10875,10 +10875,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -18684,11 +18684,11 @@ endif::add-copy-button-to-config-props[]
 --
 The query to use when retrieving embeddings. This query has to return the following columns:
 
- - metadata
- - score
- - column of the same name as the 'id-property' value
- - column of the same name as the 'text-property' value
- - column of the same name as the 'embedding-property' value
+ * metadata
+ * score
+ * column of the same name as the 'id-property' value
+ * column of the same name as the 'text-property' value
+ * column of the same name as the 'embedding-property' value
 
 
 
@@ -18933,11 +18933,11 @@ endif::add-copy-button-to-config-props[]
 --
 The query to use when retrieving embeddings. This query has to return the following columns:
 
- - metadata
- - score
- - column of the same name as the 'id-property' value
- - column of the same name as the 'text-property' value
- - column of the same name as the 'embedding-property' value
+ * metadata
+ * score
+ * column of the same name as the 'id-property' value
+ * column of the same name as the 'text-property' value
+ * column of the same name as the 'embedding-property' value
 
 
 
@@ -20886,10 +20886,10 @@ Proxy configuration name.
 
 There are some rules for using Quarkus Proxy Registry configuration:
 
- - If `quarkus.langchain4j.openai.proxy-configuration-name` is set, it takes precedence over `proxy-host` configuration.
- - If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used.
- - If the proxy configuration name is set, the configuration from `quarkus.proxy.<name>.++*++` will be used.
- - If the proxy configuration name is set, but no proxy configuration is found with that name, then an error will be thrown at runtime.
+ * If `quarkus.langchain4j.openai.proxy-configuration-name` is set, it takes precedence over `proxy-host` configuration.
+ * If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used.
+ * If the proxy configuration name is set, the configuration from `quarkus.proxy.<name>.++*++` will be used.
+ * If the proxy configuration name is set, but no proxy configuration is found with that name, then an error will be thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -22449,10 +22449,10 @@ Proxy configuration name.
 
 There are some rules for using Quarkus Proxy Registry configuration:
 
- - If `quarkus.langchain4j.openai.proxy-configuration-name` is set, it takes precedence over `proxy-host` configuration.
- - If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used.
- - If the proxy configuration name is set, the configuration from `quarkus.proxy.<name>.++*++` will be used.
- - If the proxy configuration name is set, but no proxy configuration is found with that name, then an error will be thrown at runtime.
+ * If `quarkus.langchain4j.openai.proxy-configuration-name` is set, it takes precedence over `proxy-host` configuration.
+ * If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used.
+ * If the proxy configuration name is set, the configuration from `quarkus.proxy.<name>.++*++` will be used.
+ * If the proxy configuration name is set, but no proxy configuration is found with that name, then an error will be thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -24090,9 +24090,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the embedding table if it does not already exist, replace it, or do nothing.
 
- - `CREATE_NONE`: the table must already exist
- - `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the table
+ * `CREATE_NONE`: the table must already exist
+ * `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the table
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -24287,9 +24287,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the embedding table if it does not already exist, replace it, or do nothing.
 
- - `CREATE_NONE`: the table must already exist
- - `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the table
+ * `CREATE_NONE`: the table must already exist
+ * `CREATE_IF_NOT_EXISTS`: create the table if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the table
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -24421,9 +24421,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the IVF vector index.
 
- - `CREATE_NONE`: do not create an index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create an index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -24598,9 +24598,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the metadata index.
 
- - `CREATE_NONE`: do not create the index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create the index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -24692,9 +24692,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the IVF vector index.
 
- - `CREATE_NONE`: do not create an index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create an index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -24869,9 +24869,9 @@ endif::add-copy-button-to-config-props[]
 --
 Whether to create the metadata index.
 
- - `CREATE_NONE`: do not create the index
- - `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
- - `CREATE_OR_REPLACE`: drop and recreate the index
+ * `CREATE_NONE`: do not create the index
+ * `CREATE_IF_NOT_EXISTS`: create the index if it does not exist
+ * `CREATE_OR_REPLACE`: drop and recreate the index
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -25152,9 +25152,9 @@ endif::add-copy-button-to-config-props[]
 --
 Metadata type:
 
- - COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
- - COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
- - COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
+ * COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
+ * COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+ * COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
 
 
 
@@ -25208,9 +25208,9 @@ Metadata Indexes, list of fields to use as index.
 
 For instance:
 
- - JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
- - JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
- - COLUMNS: key, name, age
+ * JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
+ * JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
+ * COLUMNS: key, name, age
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -25233,9 +25233,9 @@ endif::add-copy-button-to-config-props[]
 --
 Index Type:
 
- - BTREE (default)
- - GIN
- - Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
+ * BTREE (default)
+ * GIN
+ * Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -25430,9 +25430,9 @@ endif::add-copy-button-to-config-props[]
 --
 Metadata type:
 
- - COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
- - COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
- - COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
+ * COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
+ * COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+ * COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
 
 
 
@@ -25486,9 +25486,9 @@ Metadata Indexes, list of fields to use as index.
 
 For instance:
 
- - JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
- - JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
- - COLUMNS: key, name, age
+ * JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
+ * JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
+ * COLUMNS: key, name, age
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -25511,9 +25511,9 @@ endif::add-copy-button-to-config-props[]
 --
 Index Type:
 
- - BTREE (default)
- - GIN
- - Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
+ * BTREE (default)
+ * GIN
+ * Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -29524,8 +29524,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -30364,8 +30364,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -31032,8 +31032,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -33490,8 +33490,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -34330,8 +34330,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
@@ -34998,8 +34998,8 @@ Specifies how the model should choose which tool to call during a request.
 
 This value can be:
 
- - *auto*: The model decides whether and which tool to call automatically.
- - *required*: The model must call one of the available tools.
+ * *auto*: The model decides whether and which tool to call automatically.
+ * *required*: The model must call one of the available tools.
 
 
 
