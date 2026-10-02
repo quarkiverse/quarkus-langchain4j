@@ -73,6 +73,11 @@ public interface LangChain4jBuildConfig {
          * Audio transcription model
          */
         AudioTranscriptionModelConfig audioTranscriptionModel();
+
+        /**
+         * Decision model
+         */
+        DecisionModelConfig decisionModel();
     }
 
     @ConfigGroup

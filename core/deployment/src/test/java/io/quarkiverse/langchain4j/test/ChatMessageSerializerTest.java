@@ -14,6 +14,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -25,6 +26,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageSerializer;
 import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -96,6 +98,22 @@ class ChatMessageSerializerTest {
     }
 
     @Test
+    void should_serialize_and_deserialize_system_message_with_attributes() {
+
+        List<ChatMessage> messages = singletonList(SystemMessage.builder()
+                .text("hello")
+                .attributes(Map.of("prompt_cache_breakpoint", "explicit"))
+                .build());
+
+        String json = messagesToJson(messages);
+        assertThat(json).isEqualTo(
+                "[{\"text\":\"hello\",\"attributes\":{\"prompt_cache_breakpoint\":\"explicit\"},\"type\":\"SYSTEM\"}]");
+
+        List<ChatMessage> deserializedMessages = messagesFromJson(json);
+        assertThat(deserializedMessages).isEqualTo(messages);
+    }
+
+    @Test
     void should_serialize_and_deserialize_list_with_all_types_of_messages() {
 
         List<ChatMessage> messages = asList(
@@ -110,7 +128,7 @@ class ChatMessageSerializerTest {
 
         String json = ChatMessageSerializer.messagesToJson(messages);
         assertThat(json).isEqualTo("[" +
-                "{\"text\":\"Hello from system\",\"type\":\"SYSTEM\"}," +
+                "{\"text\":\"Hello from system\",\"attributes\":{},\"type\":\"SYSTEM\"}," +
                 "{\"contents\":[{\"text\":\"Hello from user\",\"type\":\"TEXT\"}],\"attributes\":{},\"type\":\"USER\"}," +
                 "{\"name\":\"Klaus\",\"contents\":[{\"text\":\"Hello from Klaus\",\"type\":\"TEXT\"}],\"attributes\":{},\"type\":\"USER\"},"
                 +

@@ -13,6 +13,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -66,6 +67,7 @@ public class LangChain4jDotNames {
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     public static final DotName AUDIO_TRANSCRIPTION_MODEL = DotName.createSimple(AudioTranscriptionModel.class);
+    public static final DotName DECISION_MODEL = DotName.createSimple(DecisionModel.class);
     public static final DotName CHAT_MESSAGE = DotName.createSimple(ChatMessage.class);
     public static final DotName TOKEN_STREAM = DotName.createSimple(TokenStream.class);
     public static final DotName OUTPUT_GUARDRAILS = DotName.createSimple(OutputGuardrails.class);

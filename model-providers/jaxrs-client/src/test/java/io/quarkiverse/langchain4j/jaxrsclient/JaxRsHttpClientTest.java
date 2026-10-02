@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.jaxrsclient;
 
 import static dev.langchain4j.http.client.HttpMethod.GET;
+import static dev.langchain4j.http.client.HttpMethod.POST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
@@ -12,6 +14,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -93,6 +96,73 @@ class JaxRsHttpClientTest {
 
         assertEquals(400, exception.statusCode());
         assertEquals("bad-request", exception.getMessage());
+    }
+
+    @Test
+    void executeAsyncShouldReturnSuccessfulResponse() throws Exception {
+        server.createContext("/ok", this::handleOk);
+        server.start();
+
+        HttpClient client = new JaxRsHttpClientBuilder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .readTimeout(Duration.ofSeconds(2))
+                .build();
+
+        HttpRequest request = HttpRequest.builder()
+                .method(GET)
+                .url(baseUrl + "/ok")
+                .addHeader("X-Test", "value-1", "value-2")
+                .build();
+
+        SuccessfulHttpResponse response = client.executeAsync(request).get(3, TimeUnit.SECONDS);
+
+        assertEquals(200, response.statusCode());
+        assertEquals("ok-body", response.body());
+        assertEquals(List.of("present"), response.headers().get("x-server-header"));
+    }
+
+    @Test
+    void executeAsyncShouldSendRequestBody() throws Exception {
+        server.createContext("/echo", this::handleEcho);
+        server.start();
+
+        HttpClient client = new JaxRsHttpClientBuilder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .readTimeout(Duration.ofSeconds(2))
+                .build();
+
+        HttpRequest request = HttpRequest.builder()
+                .method(POST)
+                .url(baseUrl + "/echo")
+                .body("{\"hello\":\"world\"}")
+                .build();
+
+        SuccessfulHttpResponse response = client.executeAsync(request).get(3, TimeUnit.SECONDS);
+
+        assertEquals("{\"hello\":\"world\"}", response.body());
+    }
+
+    @Test
+    void executeAsyncShouldFailWithHttpExceptionForErrorResponse() {
+        server.createContext("/error", this::handleError);
+        server.start();
+
+        HttpClient client = new JaxRsHttpClientBuilder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .readTimeout(Duration.ofSeconds(2))
+                .build();
+
+        HttpRequest request = HttpRequest.builder()
+                .method(GET)
+                .url(baseUrl + "/error")
+                .build();
+
+        ExecutionException exception = assertThrows(ExecutionException.class,
+                () -> client.executeAsync(request).get(3, TimeUnit.SECONDS));
+
+        HttpException httpException = assertInstanceOf(HttpException.class, exception.getCause());
+        assertEquals(400, httpException.statusCode());
+        assertEquals("bad-request", httpException.getMessage());
     }
 
     @Test
@@ -217,6 +287,16 @@ class JaxRsHttpClientTest {
     private void handleOk(HttpExchange exchange) throws IOException {
         byte[] responseBody = "ok-body".getBytes();
         exchange.getResponseHeaders().add("X-Server-Header", "present");
+        exchange.sendResponseHeaders(200, responseBody.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(responseBody);
+        } finally {
+            exchange.close();
+        }
+    }
+
+    private void handleEcho(HttpExchange exchange) throws IOException {
+        byte[] responseBody = exchange.getRequestBody().readAllBytes();
         exchange.sendResponseHeaders(200, responseBody.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBody);

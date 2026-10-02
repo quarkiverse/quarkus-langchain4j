@@ -78,6 +78,8 @@
 ** Audio Transcription Models
 *** xref:azure-openai-audio-transcription-model.adoc[Azure OpenAI]
 *** xref:openai-audio-transcription-model.adoc[OpenAI]
+** Decision Models
+*** xref:typesafe-decision-model.adoc[TypeSafe]
 ** xref:enable-disable-integrations.adoc[Enabling and Disabling Integrations]
 * xref:testing.adoc[Testing & Evaluation]
 // 	Handling Model Errors and Timeouts
