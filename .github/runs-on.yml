@@ -3,4 +3,5 @@ runners:
     family: ["m6a.xlarge"]
     image: ubuntu24-full-x64
     spot: false
+    volume: 80gb:gp3
     extras: ["s3-cache"]
