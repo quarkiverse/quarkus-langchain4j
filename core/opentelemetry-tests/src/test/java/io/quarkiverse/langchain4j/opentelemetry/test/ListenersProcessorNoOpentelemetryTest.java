@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.test;
+package io.quarkiverse.langchain4j.opentelemetry.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

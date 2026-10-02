@@ -1,0 +1,14 @@
+name: Quarkus LangChain4j TypeSafe
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus LangChain4j with TypeSafe decision models
+metadata:
+   keywords:
+    - ai
+    - langchain4j
+    - typesafe
+    - decision
+    - classification
+   guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+   categories:
+     - "ai"
+   status: "experimental"

@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.jaxrsclient;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
@@ -130,6 +131,32 @@ public class JaxRsHttpClient implements HttpClient {
             case DELETE -> invocationBuilder.delete();
         };
 
+        return toSuccessfulHttpResponse(response);
+    }
+
+    @Override
+    public CompletableFuture<SuccessfulHttpResponse> executeAsync(HttpRequest request) {
+        WebTarget target = delegate.target(request.url());
+        Invocation.Builder invocationBuilder = target.request();
+
+        for (var headers : request.headers().entrySet()) {
+            List<String> values = headers.getValue();
+            if ((values != null) && (!values.isEmpty())) {
+                for (String value : values) {
+                    invocationBuilder.header(headers.getKey(), value);
+                }
+            }
+        }
+
+        String method = request.method().name();
+        Entity<?> entity = (request.body() != null) ? Entity.json(request.body()) : null;
+
+        return invocationBuilder.rx().method(method, entity)
+                .thenApply(JaxRsHttpClient::toSuccessfulHttpResponse)
+                .toCompletableFuture();
+    }
+
+    private static SuccessfulHttpResponse toSuccessfulHttpResponse(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
             throw new HttpException(response.getStatus(), response.readEntity(String.class));
         }

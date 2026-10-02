@@ -1,0 +1,71 @@
+= TypeSafe Decision Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+A decision model evaluates an input against a set of named, typed questions and returns one typed answer per question, instead of generated text.
+Typical uses are classification, routing, gating and grading.
+
+https://typesafe.ai[TypeSafe] provides decision models, such as Jev, through its System One API.
+
+WARNING: The `DecisionModel` API is experimental in LangChain4j and may change in future releases.
+
+== Prerequisites
+
+You must provide a valid TypeSafe API key.
+
+:provider-artifact: quarkus-langchain4j-typesafe
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+== Configuration
+
+[source,properties]
+----
+quarkus.langchain4j.typesafe.api-key=...
+quarkus.langchain4j.typesafe.decision-model.model-name=jev-latest
+----
+
+Other servers that implement the same API can be used by setting `quarkus.langchain4j.typesafe.base-url`, in which case the API key is optional.
+
+To use it programmatically:
+
+[source,java]
+----
+@Inject DecisionModel decisionModel;
+
+DecisionRequest request = DecisionRequest.builder()
+        .input("Help! My payouts have been failing for 3 days.")
+        .question("team", ChoiceQuestion.builder()
+                .text("Which team should handle this ticket?")
+                .option("billing", "Payments, payouts, invoices, refunds")
+                .option("support", "Problems using the product")
+                .build())
+        .question("urgent", YesNoQuestion.of("Does this need attention today?"))
+        .build();
+
+DecisionResponse response = decisionModel.decide(request);
+
+ChoiceAnswer team = response.choice("team");
+YesNoAnswer urgent = response.yesNo("urgent");
+----
+
+All CDI beans implementing `DecisionModelListener` are automatically registered with the model.
+
+=== Multiple models
+
+As with the other model types, multiple decision models can be configured by name and injected using `@ModelName`:
+
+[source,properties]
+----
+quarkus.langchain4j.typesafe.m1.api-key=...
+quarkus.langchain4j.typesafe.m1.decision-model.model-name=jev-1.13.0
+----
+
+[source,java]
+----
+@Inject @ModelName("m1") DecisionModel decisionModel;
+----
+
+When multiple extensions providing a `DecisionModel` are present, select one with `quarkus.langchain4j.decision-model.provider` (or `quarkus.langchain4j.m1.decision-model.provider` for a named model).
+
+include::includes/quarkus-langchain4j-typesafe.adoc[leveloffset=+1,opts=optional]
