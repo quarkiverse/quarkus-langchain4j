@@ -79,8 +79,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-opentelemetry</artifactId>
+            <!-- only the annotations: having quarkus-opentelemetry on the test classpath slows down every test, -->
+            <!-- so tests that need it belong in the opentelemetry-tests module -->
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-instrumentation-annotations</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
