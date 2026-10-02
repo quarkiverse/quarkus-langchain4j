@@ -17,6 +17,7 @@
         <module>milvus</module>
         <module>neo4j</module>
         <module>oracle</module>
+        <module>opensearch</module>
         <module>pgvector</module>
         <module>pinecone</module>
         <module>qdrant</module>
