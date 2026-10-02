@@ -44,6 +44,19 @@
         <module>workload-identity-federation-kubernetes</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <!-- Samples whose model provider needs Java 21 or newer -->
+            <id>jdk21-plus</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <modules>
+                <module>gh-pr-code-reviewer</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
