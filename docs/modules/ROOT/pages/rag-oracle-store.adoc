@@ -1,4 +1,5 @@
 = Oracle Database Document Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-oracle
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

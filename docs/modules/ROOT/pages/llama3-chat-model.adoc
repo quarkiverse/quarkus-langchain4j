@@ -1,4 +1,5 @@
 = Llama3.java Chat Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-llama3-java
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

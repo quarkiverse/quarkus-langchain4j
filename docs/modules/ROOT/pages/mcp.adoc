@@ -1,4 +1,5 @@
 = Model Context Protocol (MCP) Integration
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-mcp
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
