@@ -111,6 +111,7 @@
 
 * xref:function-calling.adoc[Function Calling]
 * xref:mcp.adoc[Model Context Protocol (MCP)]
+* xref:a2a-server.adoc[Agent2Agent (A2A) Server]
 * xref:guardrails.adoc[Guardrails]
 * xref:skills.adoc[Skills]
 * xref:dev-ui.adoc[Dev UI]

@@ -33,6 +33,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import dev.langchain4j.service.guardrail.InputGuardrails;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
+import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.service.tool.ToolErrorContext;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -169,7 +170,7 @@ public class LangChain4jDotNames {
     static final DotName AUDIO = DotName.createSimple(dev.langchain4j.data.audio.Audio.class);
     static final DotName PDF_FILE = DotName.createSimple(PdfFile.class);
     static final DotName VIDEO = DotName.createSimple(dev.langchain4j.data.video.Video.class);
-    static final DotName RESULT = DotName.createSimple(Result.class);
+    public static final DotName RESULT = DotName.createSimple(Result.class);
     public static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
     public static final DotName TOOL_SEARCH_STRATEGY = DotName
             .createSimple(ToolSearchStrategy.class);
@@ -181,4 +182,6 @@ public class LangChain4jDotNames {
     public static final DotName TOOL_ARGUMENTS_EXCEPTION = DotName.createSimple(ToolArgumentsException.class);
     public static final DotName TOOL_EXECUTION_EXCEPTION = DotName.createSimple(ToolExecutionException.class);
     public static final DotName TOOL_ERROR_CONTEXT = DotName.createSimple(ToolErrorContext.class);
+    public static final DotName CHAT_MEMORY_ACCESS = DotName.createSimple(
+            ChatMemoryAccess.class);
 }

@@ -1,0 +1,346 @@
+= Agent2Agent (A2A) Server
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The https://a2a-protocol.org/latest/specification/[Agent2Agent (A2A) protocol] is an open standard that lets independent AI agents discover each other and collaborate as peers.
+Where MCP connects an agent to _tools_, A2A connects an agent to _other agents_.
+
+This extension exposes a Quarkus LangChain4j AI Service, or a workflow of the agentic module, as an A2A agent: it publishes an Agent Card describing what the agent can do and serves the protocol endpoints that let other agents talk to it.
+
+[IMPORTANT]
+====
+This extension implements version `1.0` of the A2A protocol.
+It is experimental: the annotations and configuration properties described here may still change.
+====
+
+[NOTE]
+====
+This page is about the A2A *server* side — making your agent reachable by others.
+To *consume* a remote A2A agent, use the `@A2AClientAgent` annotation of the xref:agentic.adoc[agentic module], adding `dev.langchain4j:langchain4j-agentic-a2a` to your application yourself.
+====
+
+== Adding the extension
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-a2a-server</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+The extension brings the JSON-RPC transport, which is the one A2A clients are most likely to support.
+See <<transports>> to add the others.
+
+== Exposing an AI Service
+
+Annotate an AI Service with `@ExposeA2AAgent` and describe the skills it offers:
+
+[source,java]
+----
+@RegisterAiService
+@ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(
+        id = "weather_search",
+        name = "Search weather",
+        description = "Answers questions about the weather in a city or state",
+        tags = "weather",
+        examples = "weather in LA, CA"))
+public interface WeatherAgent {
+
+    @SystemMessage("You are a specialized weather forecast assistant.")
+    String chat(@UserMessage String question);
+}
+----
+
+That is all that is required. At build time the extension generates the `AgentExecutor` that the A2A runtime invokes, and produces the Agent Card served at `/.well-known/agent-card.json`:
+
+[source,json]
+----
+{
+  "name": "weather-app",
+  "description": "",
+  "version": "1.0.0",
+  "capabilities": { "streaming": false, "pushNotifications": false, "extendedAgentCard": false },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": [
+    {
+      "id": "weather_search",
+      "name": "Search weather",
+      "description": "Answers questions about the weather in a city or state",
+      "tags": ["weather"],
+      "examples": ["weather in LA, CA"]
+    }
+  ],
+  "supportedInterfaces": [
+    { "protocolBinding": "JSONRPC", "url": "http://localhost:8080", "protocolVersion": "1.0" }
+  ]
+}
+----
+
+[TIP]
+====
+Every skill must declare at least one tag — the A2A specification requires it, and the build fails with a clear message if one is missing.
+====
+
+== Describing the agent
+
+The identity of the agent belongs to the application, not to any single class, so it is configured rather than annotated:
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.server.name=Weather Agent
+quarkus.langchain4j.a2a.server.description=Answers questions about the weather
+quarkus.langchain4j.a2a.server.version=1.0.0
+----
+
+When `name` is not set it falls back to `quarkus.application.name`.
+
+The URL advertised on the card is derived from the address the HTTP server actually bound to, preferring HTTPS when both are enabled.
+Outside dev and test mode Quarkus binds to the wildcard address, which names no host a client can dial, so the card carries the address the host's own name resolves to in its place.
+That is not always one other machines can reach: some Linux distributions resolve the host name to a loopback address such as `127.0.1.1`, and behind a reverse proxy or an ingress the address is not the one clients should use. Declare the public one in those cases:
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.server.url=https://agents.example.com
+----
+
+== Exposing an agentic workflow
+
+`@ExposeA2AAgent` also works on a declarative workflow from the xref:agentic.adoc[agentic module], which lets a whole orchestration be reachable as a single agent:
+
+[source,java]
+----
+@ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(
+        id = "write_story",
+        name = "Write a story",
+        description = "Writes and polishes a story about a topic",
+        tags = "writing"))
+public interface StoryCreator {
+
+    @SequenceAgent(outputKey = "story", subAgents = { StoryWriter.class, StoryPolisher.class })
+    String create(@V("topic") String topic);
+}
+----
+
+The agentic module does not need to be present for the extension to work; it is detected when it is.
+
+== Supported method signatures
+
+The exposed type must be an interface with exactly one method to expose — for an AI Service, one abstract method; for an agentic workflow, one method carrying a workflow annotation. Every parameter has to be a `String`, and each is filled from the incoming A2A request:
+
+|===
+|Parameter |Filled with
+
+|The message parameter — annotated `@UserMessage`, or the only parameter that is not a memory id
+|The text the client sent
+
+|A parameter annotated `@MemoryId`
+|The A2A `contextId`, which groups the interactions belonging to one conversation
+|===
+
+A parameter that matches neither fails the build, since there would be nothing to fill it with, and so does one of any other type — including a `@MemoryId` that is not a `String`.
+The method also has to return the answer itself: its return value is what the client receives as an artifact, so a `void` method fails the build as well, and so does one returning `Multi`, `Uni`, `CompletionStage`, `Future`, `TokenStream` or `Result`.
+
+=== Holding a conversation
+
+Mapping the `contextId` onto the memory id is only half of what an agent needs to remember a conversation. The other half is the AI Service outliving the request that created it:
+
+[source,java]
+----
+@ApplicationScoped // <1>
+@RegisterAiService
+@ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(...))
+public interface WeatherAgent {
+
+    String chat(@MemoryId String conversationId, @UserMessage String question);
+}
+----
+<1> Without this the agent forgets every message the moment it answers it
+
+An AI Service left in the default request scope has its chat memory cleared when that request ends.
+Each A2A message arrives on a request of its own, so an agent in the default scope meets every message as if it were the first — no error, no warning, just an agent that never remembers.
+
+The return type decides how the answer travels back, and what the card advertises as an output mode:
+
+|===
+|Return type |Sent as |Output mode
+
+|`String`
+|A text part
+|`text/plain`
+
+|Any other type
+|A data part holding its JSON form
+|`application/json`
+
+|`ResultWithAgenticScope<T>`
+|As `T` above — the scope is internal bookkeeping and is not sent
+|Depends on `T`
+|===
+
+A data part holds a protobuf `Value`, whose numbers are 64-bit floating point, so a `BigDecimal` or a `long` beyond 2^53^ reaches the client rounded. Return such a value as a `String` field when its exact digits matter.
+
+== Protocol version negotiation
+
+Clients declare which version of the protocol they speak through the `A2A-Version` header, and
+https://a2a-protocol.org/latest/specification/#362-server-responsibilities[section 3.6.2] of the specification tells
+agents to assume `0.3` when it is absent.
+Since this extension serves `1.0` only, sending a message without the header fails with `VersionNotSupportedError`:
+
+[source,bash]
+----
+# rejected: no version header, so 0.3 is assumed
+curl -X POST http://localhost:8080/ -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":"1","method":"SendMessage","params":{...}}'
+
+# accepted
+curl -X POST http://localhost:8080/ -H 'Content-Type: application/json' -H 'A2A-Version: 1.0' \
+  -d '{"jsonrpc":"2.0","id":"1","method":"SendMessage","params":{...}}'
+----
+
+The check covers every operation, not only message sending, so a call without the header is refused whichever
+method it names.
+
+A proper A2A client sends the header on its own — including the one behind `@A2AClientAgent` — so this only shows
+up when calling the endpoints by hand, with `curl` or an HTTP test client.
+
+[[transports]]
+== Transports
+
+A2A defines three protocol bindings. Each is served by its own reference implementation, and the extension advertises on the Agent Card only the ones present on the classpath.
+
+JSON-RPC is included by default. To also serve REST or gRPC, add the corresponding dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>org.a2aproject.sdk</groupId>
+    <artifactId>a2a-java-sdk-reference-rest</artifactId>
+    <version>{a2a-version}</version>
+</dependency>
+<dependency>
+    <groupId>org.a2aproject.sdk</groupId>
+    <artifactId>a2a-java-sdk-reference-grpc</artifactId>
+    <version>{a2a-version}</version>
+</dependency>
+----
+
+Neither the Quarkus BOM nor this extension's BOM manages these artifacts, so the version has to be given.
+Use the one this extension was built against, shown above, since the reference implementations and the SDK core are released together.
+
+[WARNING]
+====
+These implementations register their HTTP routes as soon as they are on the classpath.
+Adding one exposes its endpoints, so add only the transports you intend to serve.
+====
+
+=== Serving gRPC
+
+This extension advertises the same URL for every interface it detects, so gRPC has to answer on the same port as the rest:
+
+[source,properties]
+----
+quarkus.grpc.server.use-separate-server=false
+----
+
+Left on its default, the gRPC server binds a port of its own and clients following the card reach the HTTP server instead.
+Set `quarkus.langchain4j.a2a.server.url` explicitly if you do want the two servers separated, and point it at the one your clients should use.
+
+The gRPC binding expects the `A2A-Version` metadata the same way the other two expect the header, so send the version on every call whichever transport you use.
+
+== Customizing the Agent Card
+
+Anything the annotation and the configuration do not cover — a provider, an icon, security schemes, signatures — can be contributed by implementing `AgentCardBuilderCustomizer` as a CDI bean:
+
+[source,java]
+----
+@ApplicationScoped
+public class ProviderCustomizer implements AgentCardBuilderCustomizer {
+
+    @Override
+    public void customize(AgentCard.Builder cardBuilder) {
+        cardBuilder.provider(new AgentProvider("Example Inc.", "https://example.com"));
+    }
+}
+----
+
+Customizers implement `Comparable` and are applied in descending priority order, so a later one can override what an earlier one set.
+The extension fills the card from the annotation and the configuration before any customizer of the application runs, so a customizer can override any of those fields without declaring a priority.
+
+== Security
+
+The endpoints are served by the A2A SDK's reference implementations as Vert.x routes on the application's HTTP
+server. The extension adds no authentication of its own, so an application that brings no security extension serves
+them anonymously: anyone who can reach the port can send a message, list every task the agent has worked on and
+read each of them, and continue any conversation whose `contextId` they know, along with the chat memory that
+belongs to it.
+
+Quarkus security applies to these routes like it does to any other. Adding an extension such as `quarkus-oidc` or
+`quarkus-elytron-security-properties-file`, and configuring it for the paths the transports serve, is what puts an
+identity in front of the agent.
+
+A2A clients discover authentication requirements from the Agent Card rather than by trial and error, so an
+application that protects the endpoints should also declare how, through
+<<Customizing the Agent Card,`AgentCardBuilderCustomizer`>>:
+
+[source,java]
+----
+@ApplicationScoped
+public class SecurityCustomizer implements AgentCardBuilderCustomizer {
+
+    @Override
+    public void customize(AgentCard.Builder cardBuilder) {
+        cardBuilder.securitySchemes(Map.of("bearer", new HTTPAuthSecurityScheme("JWT", "bearer", null)));
+        cardBuilder.securityRequirements(List.of(new SecurityRequirement(Map.of("bearer", List.of()))));
+    }
+}
+----
+
+The extension does not derive these from the application's security configuration: which scheme a deployment
+actually presents depends on how it is fronted, and a card that claims the wrong one is worse than a card that
+claims nothing.
+
+=== Task authorization
+
+The SDK refuses every task operation unless a `TaskAuthorizationProvider` tells it who owns which task, so that a
+server cannot hand one caller's task to another. This extension exposes a single agent and has no notion of task
+ownership, so it turns the check off, which lets any caller list and read every task:
+
+[source,properties]
+----
+a2a.authorization.required=false
+----
+
+Set it back to `true` and supply a `TaskAuthorizationProvider` bean when the application does know who owns a task.
+Without the bean the check denies everything, and a denial reaches the client as `TaskNotFoundError` rather than as
+an authorization failure, because the SDK does not reveal whether the task exists.
+
+== Slow agents
+
+A2A operations block by default: unless the client asks for `returnImmediately`, the server holds the request until the task reaches a terminal state.
+The SDK gives that wait a budget of 30 seconds, which an agent backed by a large model can exceed.
+Raise it through the SDK's own property, which is not namespaced under `quarkus.`:
+
+[source,properties]
+----
+a2a.blocking.agent.timeout.seconds=120
+----
+
+A client that asks for `returnImmediately` can cancel the task while the agent is still working on it. The task is reported as cancelled at once, but the call into the model is not interrupted: it runs to completion, and its answer is discarded rather than attached to the cancelled task.
+
+== Current limitations
+
+- *One agent per application.* The build fails if more than one interface carries `@ExposeA2AAgent`. The specification sanctions a `tenant` field for addressing several agents behind one host, and the SDK routes on it through the `AgentCardRouter` and `AgentExecutorRouter` interfaces, with CDI implementations in its `a2a-java-extras-multitenancy` module, but this extension produces no router.
+- *Streaming carries the task's lifecycle, not the answer as it is produced.* `@ExposeA2AAgent(streaming = true)` serves https://a2a-protocol.org/latest/specification/#312-send-streaming-message[`SendStreamingMessage`], so a client is told how the task progresses, but the exposed method returns once and its result reaches the client as a single artifact.
+- *Task ownership is not modelled.* The SDK can restrict each task to whoever created it, through a `TaskAuthorizationProvider`. The extension supplies none and turns the check off, so any caller reaching the endpoint can list and read every task. Conversations are not owned either: the `contextId` a client sends selects the chat memory, so a caller who knows another's `contextId` continues that conversation. See <<Task authorization>>.
+- *The Agent Card declares no security schemes.* An application that protects its endpoints has to say so on the card itself, through `AgentCardBuilderCustomizer`. See <<Security>>.
+- *Push notifications are not advertised, but the SDK still serves them.* `@ExposeA2AAgent(pushNotifications = true)` only sets the capability on the card; the SDK's push notification endpoints are enabled whatever the card says, through its own `a2a.push-notification.enabled` property. Its support is also known to diverge from the specification. See https://github.com/a2aproject/a2a-java/issues/952[a2a-java#952].
+- *The gRPC interface is advertised with an `http://` URL.* The specification asks for `hostname:port` on a gRPC interface, and the extension publishes the same URL for every interface it detects. A client that builds its channel from the card has to strip the scheme. Set `quarkus.langchain4j.a2a.server.url` if that matters to your clients.
+- *Agent Card signing* is not performed. The specification describes JWS signatures in https://a2a-protocol.org/latest/specification/#84-agent-card-signing[section 8.4]; the SDK models the field but does not sign or verify.
+
+== Configuration reference
+
+include::includes/quarkus-langchain4j-a2a-server.adoc[leveloffset=+1,opts=optional]
