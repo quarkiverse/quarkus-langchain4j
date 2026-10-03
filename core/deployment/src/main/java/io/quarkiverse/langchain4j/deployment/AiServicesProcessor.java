@@ -89,6 +89,8 @@ import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.spi.classloading.ClassInstanceFactory;
 import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
+import dev.langchain4j.spi.guardrail.config.InputGuardrailsConfigBuilderFactory;
+import dev.langchain4j.spi.guardrail.config.OutputGuardrailsConfigBuilderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
@@ -276,6 +278,10 @@ public class AiServicesProcessor {
                 ClassMetadataProviderFactory.class.getName()));
         serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 ClassInstanceFactory.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                InputGuardrailsConfigBuilderFactory.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                OutputGuardrailsConfigBuilderFactory.class.getName()));
 
         // needed because various LLMs use these, so let's be proactive
         // there isn't one great place to put this, so this is probably as good as any
