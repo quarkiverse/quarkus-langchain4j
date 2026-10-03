@@ -46,10 +46,14 @@
 
     <profiles>
         <profile>
-            <!-- Samples whose model provider needs Java 21 or newer -->
+            <!-- Samples whose model provider needs Java 21 or newer. Skipped in CI (-Dci=true) as
+                 the JitLLM provider downloads a 16 GB model at build time. -->
             <id>jdk21-plus</id>
             <activation>
                 <jdk>[21,)</jdk>
+                <property>
+                    <name>!ci</name>
+                </property>
             </activation>
             <modules>
                 <module>gh-pr-code-reviewer</module>
