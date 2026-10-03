@@ -75,7 +75,8 @@ public class JaxRsHttpClient implements HttpClient {
 
                 @Override
                 public SSLOptions getSSLOptions() {
-                    return tlsConfiguration.getSSLOptions();
+                    // Quarkus main split the options into client and server variants; this is a client
+                    return tlsConfiguration.getClientSSLOptions();
                 }
 
                 @Override

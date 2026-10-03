@@ -7,12 +7,10 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkus.test.QuarkusUnitTest;
+import tools.jackson.databind.ObjectMapper;
 
 public class JsonParsingTest {
 
@@ -21,7 +19,7 @@ public class JsonParsingTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Test
-    void testChatCompletion() throws JsonProcessingException {
+    void testChatCompletion() {
         ObjectMapper mapperToUse = OpenAiRestApi.ObjectMapperHolder.MAPPER;
 
         ChatCompletionResponse chatCompletionResponse = mapperToUse.readValue(

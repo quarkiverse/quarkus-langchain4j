@@ -139,7 +139,7 @@ public class OpenAiChatLanguageModelTlsConfigurationTest {
             serverOptions.setSsl(true);
             serverOptions.setPort(port);
             serverOptions.setKeyCertOptions(keyStoreOptions);
-            var other = bucket.getSSLOptions();
+            var other = bucket.getServerSSLOptions();
             serverOptions.setSslHandshakeTimeout(other.getSslHandshakeTimeout());
             serverOptions.setSslHandshakeTimeoutUnit(other.getSslHandshakeTimeoutUnit());
             for (String suite : other.getEnabledCipherSuites()) {

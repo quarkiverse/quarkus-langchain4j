@@ -61,11 +61,13 @@
             <artifactId>quarkus-langchain4j-oracle</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- TODO: temporarily removed as quarkus-langchain4j-hibernate does not build with Quarkus 4
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hibernate</artifactId>
             <version>${project.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-pinecone</artifactId>
@@ -96,11 +98,15 @@
             <artifactId>quarkus-langchain4j-tavily</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- TODO Quarkus 4: quarkus-neo4j still targets Quarkus 3 (uses the removed DevServicesResultBuildItem.RunningDevService),
+             so the Neo4j embedding store cannot be loaded into the docs application yet
+
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-neo4j</artifactId>
             <version>${project.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-easy-rag</artifactId>
@@ -260,6 +266,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+<!-- TODO: temporarily removed as quarkus-langchain4j-hibernate does not build with Quarkus 4
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hibernate-deployment</artifactId>
@@ -273,6 +280,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+-->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hugging-face-deployment</artifactId>
@@ -377,6 +385,9 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- TODO Quarkus 4: quarkus-neo4j still targets Quarkus 3 (uses the removed DevServicesResultBuildItem.RunningDevService),
+             so the Neo4j embedding store cannot be loaded into the docs application yet
+
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp-apicurio-registry-deployment</artifactId>
@@ -416,6 +427,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-tavily-deployment</artifactId>
@@ -520,6 +532,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+<!-- TODO: temporarily removed as quarkus-langchain4j-qdrant does not build with Quarkus 4
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-qdrant-deployment</artifactId>
@@ -533,6 +546,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+-->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-skills-deployment</artifactId>
@@ -701,6 +715,18 @@
     <build>
         <sourceDirectory>modules/ROOT/examples</sourceDirectory>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- TODO Quarkus 4: depends on the Neo4j store, excluded from the docs application until quarkus-neo4j targets Quarkus 4 -->
+                        <exclude>**/IngestorExampleWithNeo4J.java</exclude>
+                        <!-- TODO: temporarily excluded as quarkus-langchain4j-hibernate does not build with Quarkus 4 -->
+                        <exclude>**/*Hibernate.java</exclude>
+                        <exclude>**/MyEmbeddingEntity.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>

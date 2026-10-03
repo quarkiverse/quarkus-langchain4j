@@ -116,7 +116,7 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
                                     assertThat(chatMemoryStore.idsFromGetMessages).hasSize(1)
                                             .hasOnlyElementsOfType(String.class);
 
-                                    webSocket.writeTextMessage("what is your name?", (firstWriteResult -> {
+                                    webSocket.writeTextMessage("what is your name?").onComplete((firstWriteResult -> {
                                         if (firstWriteResult.succeeded()) {
                                             // the message has been written
                                             assertThat(chatMemoryStore.idsFromGetMessages).hasSize(1)

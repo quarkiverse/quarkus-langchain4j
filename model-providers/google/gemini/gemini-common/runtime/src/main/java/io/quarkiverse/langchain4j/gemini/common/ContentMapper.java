@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.audio.Audio;
@@ -29,6 +27,7 @@ import dev.langchain4j.internal.CustomMimeTypesFileTypeDetector;
 import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import tools.jackson.core.JacksonException;
 
 public final class ContentMapper {
 
@@ -121,7 +120,7 @@ public final class ContentMapper {
                             contents.add(new Content(role,
                                     List.of(Content.Part.ofText(am.text()))));
                         }
-                    } catch (JsonProcessingException e) {
+                    } catch (JacksonException e) {
                         throw new IllegalStateException("Unable to perform conversion of tool response", e);
                     }
                 } else if (message instanceof ToolExecutionResultMessage toolExecResult) {

@@ -18,9 +18,10 @@ import jakarta.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 public abstract class AbstractMockHttpMcpServer {
 
@@ -34,7 +35,7 @@ public abstract class AbstractMockHttpMcpServer {
     // value = future that will be completed when the ping response for that ID is received
     final Map<Long, CompletableFuture<Void>> pendingPings = new ConcurrentHashMap<>();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private volatile boolean initializationNotificationReceived = false;
 
     @Inject
@@ -103,7 +104,7 @@ public abstract class AbstractMockHttpMcpServer {
         ObjectNode pong = objectMapper.createObjectNode();
         pong.put("jsonrpc", "2.0");
         pong.put("id", operationId);
-        pong.put("result", objectMapper.createObjectNode());
+        pong.set("result", objectMapper.createObjectNode());
         return pong;
     }
 

@@ -28,11 +28,6 @@ import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
@@ -43,6 +38,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DatabindException;
 
 /**
  * This Microprofile REST client is used as the building block of all the API calls to HuggingFace.
@@ -69,7 +66,7 @@ public interface OllamaRestApi {
     EmbeddingResponse embeddings(EmbeddingRequest request);
 
     @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
+    static tools.jackson.databind.ObjectMapper objectMapper(tools.jackson.databind.ObjectMapper defaultObjectMapper) {
         return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
     }
 
@@ -84,12 +81,12 @@ public interface OllamaRestApi {
             try {
                 return context.proceed();
             } catch (ClientWebApplicationException | ProcessingException e) {
-                // Depending on the Quarkus version MismatchedInputException could be wrapped in ProcessingException
+                // Depending on the Quarkus version DatabindException could be wrapped in ProcessingException
                 // or in WebApplicationException with Status 400.
-                if ((e instanceof ProcessingException pe && pe.getCause() instanceof MismatchedInputException) ||
+                if ((e instanceof ProcessingException pe && pe.getCause() instanceof DatabindException) ||
                         (e instanceof WebApplicationException wae
-                                && ((wae.getCause() instanceof JsonParseException && wae.getResponse().getStatus() == 200) ||
-                                        (wae.getCause() instanceof MismatchedInputException
+                                && ((wae.getCause() instanceof JacksonException && wae.getResponse().getStatus() == 200) ||
+                                        (wae.getCause() instanceof DatabindException
                                                 && wae.getResponse().getStatus() == 400)))) {
                     Object invokedMethod = context.getProperty("org.eclipse.microprofile.rest.client.invokedMethod");
                     if ((invokedMethod != null) && invokedMethod.toString().contains("OllamaRestApi.streamingChat")) {
@@ -106,19 +103,19 @@ public interface OllamaRestApi {
                             // but in pieces (my guess is that it is a Vertx bug).
                             // There is nothing we can do in this case except for returning empty responses and in the meantime buffer the pieces
                             // by storing them in the Vertx Duplicated Context
-                            String existingBuffer = ctx.getLocal("buffer");
+                            String existingBuffer = ((io.vertx.core.internal.ContextInternal) ctx).getLocal("buffer");
                             if ((existingBuffer != null) && !existingBuffer.isEmpty()) {
                                 if (chunk.endsWith("}")) {
-                                    ctx.putLocal("buffer", "");
+                                    ((io.vertx.core.internal.ContextInternal) ctx).putLocal("buffer", "");
                                     String entireLine = existingBuffer + chunk;
                                     return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER.readValue(entireLine,
                                             ChatResponse.class);
                                 } else {
-                                    ctx.putLocal("buffer", existingBuffer + chunk);
+                                    ((io.vertx.core.internal.ContextInternal) ctx).putLocal("buffer", existingBuffer + chunk);
                                     return ChatResponse.emptyNotDone();
                                 }
                             } else {
-                                ctx.putLocal("buffer", chunk);
+                                ((io.vertx.core.internal.ContextInternal) ctx).putLocal("buffer", chunk);
                                 return ChatResponse.emptyNotDone();
                             }
                         }
@@ -229,7 +226,7 @@ public interface OllamaRestApi {
             String rawBody = body.toString();
             try {
                 return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER.readTree(rawBody).toPrettyString();
-            } catch (JsonProcessingException ignored) {
+            } catch (JacksonException ignored) {
                 return rawBody;
             }
         }

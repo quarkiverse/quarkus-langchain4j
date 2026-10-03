@@ -4,6 +4,7 @@ import io.smallrye.common.constraint.Assert;
 import io.smallrye.common.vertx.VertxContext;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
+import io.vertx.core.internal.ContextInternal;
 
 public final class ContextLocals {
 
@@ -17,7 +18,7 @@ public final class ContextLocals {
      * @param key the key, must not be {@code null}
      */
     public static <T> T get(String key) {
-        Context current = duplicatedContextOrNull();
+        ContextInternal current = duplicatedContextOrNull();
         if (current == null) {
             return null;
         }
@@ -34,7 +35,7 @@ public final class ContextLocals {
      * @param <T> the expected type of the associated value
      */
     public static <T> void put(String key, T value) {
-        Context current = duplicatedContextOrNull();
+        ContextInternal current = duplicatedContextOrNull();
         if (current == null) {
             return;
         }
@@ -51,7 +52,7 @@ public final class ContextLocals {
      * @return {@code true} if there were a value associated with the given key. {@code false} otherwise.
      */
     public static boolean remove(String key) {
-        Context current = duplicatedContextOrNull();
+        ContextInternal current = duplicatedContextOrNull();
         if (current == null) {
             return false;
         }
@@ -62,11 +63,11 @@ public final class ContextLocals {
         return duplicatedContextOrNull() != null;
     }
 
-    private static Context duplicatedContextOrNull() {
+    private static ContextInternal duplicatedContextOrNull() {
         Context current = Vertx.currentContext();
         if (current == null || !VertxContext.isDuplicatedContext(current)) {
             return null;
         }
-        return current;
+        return (ContextInternal) current;
     }
 }

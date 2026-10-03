@@ -10,9 +10,6 @@ import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteConstants;
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
 import io.quarkiverse.langchain4j.chatscopes.RouteNotFound;
@@ -22,6 +19,8 @@ import io.quarkiverse.langchain4j.chatscopes.internal.ServerChatRouteContext;
 import io.quarkus.websockets.next.OnTextMessage;
 import io.quarkus.websockets.next.WebSocket;
 import io.quarkus.websockets.next.WebSocketConnection;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @SessionScoped
 @WebSocket(path = "/_chat/routes")

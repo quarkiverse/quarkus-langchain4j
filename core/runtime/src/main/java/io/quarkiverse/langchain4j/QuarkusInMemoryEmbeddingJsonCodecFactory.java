@@ -1,12 +1,11 @@
 package io.quarkiverse.langchain4j;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.spi.store.embedding.inmemory.InMemoryEmbeddingStoreJsonCodecFactory;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStoreJsonCodec;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
 
 public class QuarkusInMemoryEmbeddingJsonCodecFactory implements InMemoryEmbeddingStoreJsonCodecFactory {
     @Override
@@ -23,7 +22,7 @@ public class QuarkusInMemoryEmbeddingJsonCodecFactory implements InMemoryEmbeddi
         public InMemoryEmbeddingStore<TextSegment> fromJson(String json) {
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(json, TYPE_REFERENCE);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -32,7 +31,7 @@ public class QuarkusInMemoryEmbeddingJsonCodecFactory implements InMemoryEmbeddi
         public String toJson(InMemoryEmbeddingStore<?> store) {
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(store);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }

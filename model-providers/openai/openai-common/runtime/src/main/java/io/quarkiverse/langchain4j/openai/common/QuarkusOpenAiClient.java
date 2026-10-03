@@ -29,8 +29,6 @@ import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientMultipartForm;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.model.openai.internal.AsyncResponseHandling;
@@ -312,11 +310,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
              */
             private ChatCompletionResponse parseChatCompletionResponse(String data) {
                 ChatCompletionResponse response;
-                try {
-                    response = OpenAiRestApi.ObjectMapperHolder.MAPPER.readValue(data, ChatCompletionResponse.class);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
+                response = OpenAiRestApi.ObjectMapperHolder.MAPPER.readValue(data, ChatCompletionResponse.class);
                 if (response == null || response.id() == null) {
                     throw new OpenAiApiException(ChatCompletionResponse.class);
                 }
@@ -481,7 +475,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             mimeType = MediaType.APPLICATION_OCTET_STREAM;
         }
         ClientMultipartForm form = ClientMultipartForm.create()
-                .binaryFileUpload("file", fileName, Buffer.buffer(Unpooled.wrappedBuffer(request.file().content())),
+                .binaryFileUpload("file", fileName,
+                        io.vertx.core.internal.buffer.BufferInternal.buffer(Unpooled.wrappedBuffer(request.file().content())),
                         mimeType)
                 .attribute("model", request.model(), null);
         if (request.language() != null) {

@@ -13,17 +13,18 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+
 import com.ibm.watsonx.ai.core.auth.cp4d.TokenRequest;
 import com.ibm.watsonx.ai.core.auth.cp4d.TokenResponse;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 
-import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Uni;
 
 @Path("")
+@RegisterProvider(WatsonxJacksonProviders.Reader.class)
+@RegisterProvider(WatsonxJacksonProviders.Writer.class)
 public interface CP4DAuthRestApi {
 
     @POST
@@ -69,11 +70,6 @@ public interface CP4DAuthRestApi {
     @Produces(MediaType.APPLICATION_JSON)
     Uni<JsonObject> iamValidationRequestAsync(@HeaderParam("username") String username,
             @HeaderParam("iam-token") String accessToken);
-
-    @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
-    }
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

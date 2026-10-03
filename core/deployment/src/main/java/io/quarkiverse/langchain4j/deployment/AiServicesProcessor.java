@@ -71,8 +71,6 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.invocation.InvocationParameters;
@@ -170,6 +168,7 @@ import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.qute.Expression;
 import io.quarkus.runtime.metrics.MetricsFactory;
 import io.smallrye.mutiny.Multi;
+import tools.jackson.databind.PropertyNamingStrategies;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AiServicesProcessor {

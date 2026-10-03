@@ -14,9 +14,6 @@ import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -35,8 +32,10 @@ import io.quarkus.redis.datasource.search.Document;
 import io.quarkus.redis.datasource.search.QueryArgs;
 import io.quarkus.redis.datasource.search.SearchQueryResponse;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.redis.client.Command;
-import io.vertx.mutiny.redis.client.Request;
+import io.vertx.redis.client.Command;
+import io.vertx.redis.client.Request;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 
 public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
 
@@ -206,7 +205,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             allMetadata.putAll(numericMetadata);
             TextSegment textSegment = embedded != null ? new TextSegment(embedded.asText(), Metadata.from(allMetadata)) : null;
             return new EmbeddingMatch<>(score, id, embedding, textSegment);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
 

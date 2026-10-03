@@ -39,17 +39,19 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <quarkus.version>3.40.0</quarkus.version>
+    <maven.compiler.release>21</maven.compiler.release>
+    <quarkus.version>4.0.0.Beta1</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.21.0</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
+    <langchain4j-jackson3.version>1.20.1-beta30</langchain4j-jackson3.version>
     <quarkus-antora.version>3.33.2</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
     <assertj.version>3.27.7</assertj.version>
     <sundrio.version>0.200.4</sundrio.version>
-    <quarkus-wiremock.version>1.5.1</quarkus-wiremock.version>
+    <quarkus-wiremock.version>1.7.0</quarkus-wiremock.version>
     <wiremock.version>3.13.1</wiremock.version>
-    <quarkus-neo4j.version>5.7.0</quarkus-neo4j.version>
+    <quarkus-neo4j.version>6.7.2</quarkus-neo4j.version>
     <quarkus-qdrant.version>0.2.0</quarkus-qdrant.version>
     <jlama.version>0.8.4</jlama.version>
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
@@ -72,6 +74,16 @@
         <version>${langchain4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>dev.langchain4j</groupId>
+        <artifactId>langchain4j-jackson3</artifactId>
+        <version>${langchain4j-jackson3.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.langchain4j</groupId>
+        <artifactId>langchain4j-core-jackson3</artifactId>
+        <version>${langchain4j-jackson3.version}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
@@ -212,12 +224,14 @@
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
                     </dependency>
+                    <!-- TODO: temporarily removed as quarkus-langchain4j-neo4j does not build with Quarkus 4
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-neo4j</artifactId>
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
                     </dependency>
+                    -->
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-pinecone</artifactId>

@@ -28,6 +28,7 @@ public class McpTracingStdioTransportTest extends McpTracingTestBase {
             .overrideConfigKey("quarkus.otel.bsp.schedule.delay", "PT0.001S")
             .overrideConfigKey("quarkus.otel.bsp.max.queue.size", "1")
             .overrideConfigKey("quarkus.otel.bsp.max.export.batch.size", "1")
+            .overrideConfigKey("quarkus.otel.traces.sampler", "always_on")
             .overrideConfigKey("quarkus.log.category.\"MCP\".level", "DEBUG");
 
     private static Process process;

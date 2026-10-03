@@ -8,10 +8,9 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import io.quarkus.devui.tests.DevUIJsonRPCTest;
 import io.quarkus.test.QuarkusDevModeTest;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Tests for the EmbeddingStoreJsonRPCService class that is used as the backend
