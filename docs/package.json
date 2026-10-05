@@ -3,8 +3,8 @@
     "diagrams": "bash diagrams/generate.sh"
   },
   "devDependencies": {
-    "@antora/cli": "3.1.10",
-    "@antora/site-generator": "3.1.10"
+    "@antora/cli": "3.2.0",
+    "@antora/site-generator": "3.2.0"
   },
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^11.6.0",
