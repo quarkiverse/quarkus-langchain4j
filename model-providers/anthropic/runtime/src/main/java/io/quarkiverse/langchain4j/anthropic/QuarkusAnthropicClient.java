@@ -26,7 +26,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
@@ -112,6 +116,16 @@ public class QuarkusAnthropicClient extends AnthropicClient {
             this.hasModelAuthProvider = modelAuthProvider.isPresent();
             modelAuthProvider.ifPresent(provider -> restApiBuilder
                     .register(new AnthropicRestAPIFilter(provider)));
+
+            if (builder.customHeadersSupplier != null) {
+                restApiBuilder.clientHeadersFactory(new ClientHeadersFactory() {
+                    @Override
+                    public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
+                            MultivaluedMap<String, String> clientOutgoingHeaders) {
+                        return new MultivaluedHashMap<>(builder.customHeadersSupplier.get());
+                    }
+                });
+            }
 
             this.restApi = restApiBuilder.build(AnthropicRestApi.class);
         } catch (URISyntaxException e) {
