@@ -4,7 +4,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.common.Metadata.metadata;
 
@@ -105,7 +104,7 @@ public abstract class McpMockServer<S extends McpMockServer<S>> {
      */
     public S requireAuthorization(String authorization) {
         this.requiredAuthorization = authorization;
-        register(post(urlPathEqualTo(path))
+        register(WireMock.post(urlPathEqualTo(path))
                 .atPriority(10)
                 .willReturn(aResponse().withStatus(401)));
         return self();
@@ -161,6 +160,15 @@ public abstract class McpMockServer<S extends McpMockServer<S>> {
         return self();
     }
 
+    /**
+     * Makes requests with the given method fail with the given HTTP status and an empty body from now on,
+     * overriding any stub registered for that method before.
+     */
+    public S stubError(String method, int httpStatus) {
+        register(request(method).atPriority(1).willReturn(aResponse().withStatus(httpStatus)));
+        return self();
+    }
+
     @SuppressWarnings("unchecked")
     protected S self() {
         return (S) this;
@@ -176,8 +184,15 @@ public abstract class McpMockServer<S extends McpMockServer<S>> {
      * Subclasses add the requirements specific to their protocol version.
      */
     protected MappingBuilder request(String method) {
-        MappingBuilder builder = post(urlPathEqualTo(path))
+        return post()
                 .withRequestBody(matchingJsonPath("$.method", equalTo(method)));
+    }
+
+    /**
+     * Creates a matcher for any POST sent to this server, honouring {@link #requireAuthorization(String)}.
+     */
+    protected MappingBuilder post() {
+        MappingBuilder builder = WireMock.post(urlPathEqualTo(path));
         if (requiredAuthorization != null) {
             builder.withHeader("Authorization", equalTo(requiredAuthorization));
         }

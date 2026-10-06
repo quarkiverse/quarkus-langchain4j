@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.mcp.test.mock;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 
@@ -68,8 +67,7 @@ public class ModernMcpMockServer extends McpMockServer<ModernMcpMockServer> {
 
     @Override
     public ModernMcpMockServer failHealthCheck() {
-        register(request("server/discover").atPriority(1).willReturn(aResponse().withStatus(500)));
-        return this;
+        return stubError("server/discover", 500);
     }
 
     private static ObjectNode discoverResult() {
