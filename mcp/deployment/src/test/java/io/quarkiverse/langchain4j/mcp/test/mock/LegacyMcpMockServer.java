@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.mcp.test.mock;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -57,7 +59,41 @@ public class LegacyMcpMockServer extends McpMockServer<LegacyMcpMockServer> {
 
     @Override
     public LegacyMcpMockServer failHealthCheck() {
-        register(request("ping").atPriority(1).willReturn(aResponse().withStatus(500)));
+        return stubError("ping", 500);
+    }
+
+    /**
+     * Accepts the JSON-RPC responses that the client sends back for requests initiated by the server
+     * (recognized by their {@code result}, which no client request has). The value pattern is needed,
+     * because without it WireMock doesn't match an empty result like the one of a ping response.
+     */
+    public LegacyMcpMockServer stubClientResponses() {
+        register(post()
+                .withRequestBody(matchingJsonPath("$.result", matching(".*")))
+                .withHeader("Mcp-Session-Id", equalTo(SESSION_ID))
+                .willReturn(aResponse().withStatus(202)));
+        return this;
+    }
+
+    /**
+     * Stubs a {@code tools/call} request for the given tool to stream a server-initiated {@code ping}
+     * request before the result. The ping deliberately reuses the JSON-RPC ID of the tool call: the client
+     * and the server number their requests independently, so the IDs may collide, and the client must not
+     * mistake its response to the ping for the still pending tool call.
+     * Use together with {@link #stubClientResponses()}.
+     */
+    public LegacyMcpMockServer stubToolCallWithServerPing(String toolName, String resultText) {
+        ObjectNode ping = MAPPER.createObjectNode();
+        ping.put("jsonrpc", "2.0");
+        ping.put("id", REQUEST_ID);
+        ping.put("method", "ping");
+
+        ObjectNode resultMessage = MAPPER.createObjectNode();
+        resultMessage.put("jsonrpc", "2.0");
+        resultMessage.put("id", REQUEST_ID);
+        resultMessage.set("result", textToolResult(resultText));
+
+        register(toolCall(toolName).willReturn(sseResponse(ping, resultMessage)));
         return this;
     }
 
