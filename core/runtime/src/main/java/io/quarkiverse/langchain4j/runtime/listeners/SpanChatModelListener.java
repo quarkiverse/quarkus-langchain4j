@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.listeners;
 
 import java.util.List;
-import java.util.Map;
 
 import jakarta.inject.Inject;
 
@@ -30,7 +29,6 @@ public class SpanChatModelListener implements ChatModelListener {
 
     private static final Logger log = Logger.getLogger(SpanChatModelListener.class);
 
-    private static final String OTEL_SCOPE_KEY_NAME = "OTelScope";
     private static final String OTEL_SPAN_KEY_NAME = "OTelSpan";
     public static final String OTEL_PARENT_SPAN_KEY_NAME = "OTelParentSpan";
 
@@ -60,12 +58,16 @@ public class SpanChatModelListener implements ChatModelListener {
                         request.parameters().temperature() != null ? request.parameters().temperature() : 0D)
                 .setAttribute("gen_ai.request.top_p", request.parameters().topP() != null ? request.parameters().topP() : 0D)
                 .startSpan();
-        Scope scope = span.makeCurrent();
 
         attributes.put(OTEL_PARENT_SPAN_KEY_NAME, parentSpan.getSpanContext().isValid() ? parentSpan : span);
-        attributes.put(OTEL_SCOPE_KEY_NAME, scope);
         attributes.put(OTEL_SPAN_KEY_NAME, span);
-        notifyContributorsOnRequest(requestContext, span);
+
+        // The span is made current only for the duration of this callback: for a streaming model
+        // onResponse/onError run on the thread that delivers the stream, where a scope opened here
+        // could neither be closed nor restore the caller's context.
+        try (Scope ignored = span.makeCurrent()) {
+            notifyContributorsOnRequest(requestContext, span);
+        }
     }
 
     @Override
@@ -73,31 +75,32 @@ public class SpanChatModelListener implements ChatModelListener {
         var attributes = responseContext.attributes();
         Span span = (Span) attributes.get(OTEL_SPAN_KEY_NAME);
         if (span != null) {
-            ChatResponse response = responseContext.chatResponse();
-            span.setAttribute("gen_ai.response.id", response.metadata().id());
-            if (response.metadata().modelName() != null) {
-                span.setAttribute("gen_ai.response.model", response.metadata().modelName());
-            }
-            if (response.finishReason() != null) {
-                span.setAttribute("gen_ai.response.finish_reasons", response.finishReason().toString());
-            }
-            TokenUsage tokenUsage = response.tokenUsage();
-            if (tokenUsage != null) {
-                span.setAttribute("gen_ai.usage.output_tokens", tokenUsage.outputTokenCount())
-                        .setAttribute("gen_ai.usage.input_tokens", tokenUsage.inputTokenCount());
-
-                Cost costEstimate = costEstimatorService.estimate(responseContext);
-                if (costEstimate != null) {
-                    span.setAttribute("gen_ai.client.estimated_cost", costEstimate.toString());
+            try (Scope ignored = span.makeCurrent()) {
+                ChatResponse response = responseContext.chatResponse();
+                span.setAttribute("gen_ai.response.id", response.metadata().id());
+                if (response.metadata().modelName() != null) {
+                    span.setAttribute("gen_ai.response.model", response.metadata().modelName());
                 }
+                if (response.finishReason() != null) {
+                    span.setAttribute("gen_ai.response.finish_reasons", response.finishReason().toString());
+                }
+                TokenUsage tokenUsage = response.tokenUsage();
+                if (tokenUsage != null) {
+                    span.setAttribute("gen_ai.usage.output_tokens", tokenUsage.outputTokenCount())
+                            .setAttribute("gen_ai.usage.input_tokens", tokenUsage.inputTokenCount());
+
+                    Cost costEstimate = costEstimatorService.estimate(responseContext);
+                    if (costEstimate != null) {
+                        span.setAttribute("gen_ai.client.estimated_cost", costEstimate.toString());
+                    }
+                }
+                notifyContributorsOnResponse(responseContext, span);
             }
-            notifyContributorsOnResponse(responseContext, span);
             span.end();
         } else {
             // should never happen
             log.warn("No Span found in response");
         }
-        safeCloseScope(attributes);
     }
 
     @Override
@@ -105,27 +108,14 @@ public class SpanChatModelListener implements ChatModelListener {
         var attributes = errorContext.attributes();
         Span span = (Span) attributes.get(OTEL_SPAN_KEY_NAME);
         if (span != null) {
-            span.recordException(errorContext.error());
-            notifyContributorsOnError(errorContext, span);
+            try (Scope ignored = span.makeCurrent()) {
+                span.recordException(errorContext.error());
+                notifyContributorsOnError(errorContext, span);
+            }
             span.end();
         } else {
             // should never happen
             log.warn("No Span found in response");
-        }
-        safeCloseScope(errorContext.attributes());
-    }
-
-    private void safeCloseScope(Map<Object, Object> attributes) {
-        Scope scope = (Scope) attributes.get(OTEL_SCOPE_KEY_NAME);
-        if (scope == null) {
-            // should never happen
-            log.warn("No Scope found in response");
-        } else {
-            try {
-                scope.close();
-            } catch (Exception e) {
-                log.warn("Error closing scope", e);
-            }
         }
     }
 
