@@ -102,9 +102,11 @@ See <<configure-default-memory,Configuring the Default Memory>> for more details
 Memory is tied to the CDI scope of the AI service.
 For each exchange (a potential multi-turn conversation), memory is isolated based on the service’s scope:
 
-* `@ApplicationScoped` — all users share the same memory (dangerous, requires the usage of `@MemoryId` to isolate).
+* `@ApplicationScoped` — memory is not retained between requests unless `@MemoryId` is used (see <<default-memory-ids,Default Memory IDs>>).
 * `@RequestScoped` — memory is isolated per request, usually not useful except in function calling scenarios.
 * `@SessionScoped` — memory per user/session (recommended for web apps, but limited to websocket-next for the moment).
+* `@ChatScoped` / `@PerChatScoped` — memory per chat scope: retained between requests within the same chat conversation and cleaned up when the chat scope ends (from the xref:chat-scopes.adoc[Chat Scopes Framework] extension).
+* `@InvocationScoped` — memory for the duration of a single top-level invocation, which is useful for AiService calls with multiple tool calls (from the xref:chat-scopes.adoc[Chat Scopes Framework] extension).
 
 [IMPORTANT]
 ====
@@ -113,10 +115,32 @@ AI Services are `@RequestScoped` by default, meaning memory is isolated per requ
 
 [NOTE]
 ====
-Using `@ApplicationScoped` with memory enabled can result in users sharing conversations or overwriting each other’s prompts.
-It requires careful management of `@MemoryId` to ensure isolation.
+Using `@ApplicationScoped` with memory enabled does not give you cross-request conversation history: without `@MemoryId`, each request starts a fresh conversation.
+Use `@MemoryId` to retain memory between requests.
 ====
 
+[#default-memory-ids]
+=== Default Memory IDs
+
+When an AI service method does not have a `@MemoryId` parameter, Quarkus LangChain4J generates a default memory ID based on the CDI scope of the AI service itself:
+
+* `@ChatScoped` / `@PerChatScoped` services use the current chat scope ID.
+* `@InvocationScoped` services use the ID of the current top-level invocation.
+
+These per-service IDs carry no suffix, so all methods of such a service share the same memory within a given scope.
+
+Every other AI service resolves the memory ID through the discovered `DefaultMemoryIdProvider` implementations (via `ServiceLoader`, in priority order):
+
+* the current WebSocket connection ID (`@SessionScoped` under websocket-next),
+* the request scope state, when the CDI request context is active.
+
+IDs resolved this way are suffixed with `#<FQN of Class>.<method-name>`, so each AI service method keeps its own history.
+
+If no provider yields an ID, all invocations share the single `default` memory. An explicit `@MemoryId` parameter always takes precedence and is used as-is.
+
+As a consequence, `@RequestScoped` (the default scope) and `@ApplicationScoped` services only retain conversation history between requests when they use `@MemoryId`. For memory that persists between requests without managing memory IDs yourself, see xref:chat-scopes.adoc[Chat Scopes Framework].
+
+[#configure-default-memory]
 == Configuring the Default Memory
 
 To configure the default memory behavior, you can set properties in `application.properties`:
