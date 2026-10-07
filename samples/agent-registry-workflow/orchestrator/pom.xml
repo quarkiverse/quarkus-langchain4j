@@ -11,6 +11,10 @@
 	<name>Quarkus LangChain4j - Sample - Registry Orchestrator</name>
 	<dependencies>
 		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-rest-client-jackson</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.quarkiverse.langchain4j</groupId>
 			<artifactId>quarkus-langchain4j-ollama</artifactId>
 		</dependency>
