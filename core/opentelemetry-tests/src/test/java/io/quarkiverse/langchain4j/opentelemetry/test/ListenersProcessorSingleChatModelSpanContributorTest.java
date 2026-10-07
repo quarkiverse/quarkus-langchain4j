@@ -30,22 +30,26 @@ class ListenersProcessorSingleChatModelSpanContributorTest
     }
 
     @Override
-    protected void verifySuccessfulSpan(SpanData actualSpan) {
-        assertThat(actualSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-request--"))))
+    protected void verifySuccessfulSpan(SpanData openingSpan, SpanData closingSpan) {
+        assertThat(openingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-request--"))))
                 .isEqualTo("--value-on-request--");
-        assertThat(actualSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-response--"))))
+        assertThat(closingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-response--"))))
                 .isEqualTo("--value-on-response--");
-        assertThat(actualSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-error--"))))
+        assertThat(openingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-response--"))))
+                .isNull();
+        assertThat(closingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-error--"))))
                 .isNull();
     }
 
     @Override
-    protected void verifyFailedSpan(SpanData actualSpan) {
-        assertThat(actualSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-request--"))))
+    protected void verifyFailedSpan(SpanData openingSpan, SpanData closingSpan) {
+        assertThat(openingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-request--"))))
                 .isEqualTo("--value-on-request--");
-        assertThat(actualSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-response--"))))
+        assertThat(openingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-error--"))))
                 .isNull();
-        assertThat(actualSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-error--"))))
+        assertThat(closingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-response--"))))
+                .isNull();
+        assertThat(closingSpan.getAttributes().get(AttributeKey.stringKey(("--custom-on-error--"))))
                 .isEqualTo("--value-on-error--");
     }
 
