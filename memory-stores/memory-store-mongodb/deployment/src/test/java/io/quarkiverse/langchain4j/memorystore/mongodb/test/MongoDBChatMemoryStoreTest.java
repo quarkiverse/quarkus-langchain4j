@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.memorystore.mongodb.test;
 
-import static dev.langchain4j.data.message.ChatMessageType.*;
-import static org.assertj.core.api.Assertions.*;
+import static dev.langchain4j.data.message.ChatMessageType.AI;
+import static dev.langchain4j.data.message.ChatMessageType.USER;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.io.IOException;
 import java.util.List;
