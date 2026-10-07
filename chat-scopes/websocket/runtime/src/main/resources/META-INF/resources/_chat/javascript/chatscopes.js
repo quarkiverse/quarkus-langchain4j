@@ -1,4 +1,4 @@
-class Session {
+export class Session {
     constructor(builder, id) {
         this.client = builder.client;
         this.id = id;
@@ -52,7 +52,7 @@ class Session {
 }
 
 
-class SessionBuilder {
+export class SessionBuilder {
 
     constructor(client) {
         this.client = client;
@@ -139,7 +139,7 @@ class SessionBuilder {
     }
 }
 
-class ChatScopesClient {
+export class ChatScopesClient {
 
     constructor() {
         this.sessions = new Map();

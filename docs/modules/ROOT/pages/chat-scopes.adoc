@@ -828,11 +828,31 @@ Websocket chat routes automatically come with a javascript client whose code liv
 
 `/_chat/javascript/chatscopes.js`
 
-Simply include it as a script:
+It is an ES module, so import what you need from it:
 
 [source,html]
 ----
-<script src="/_chat/javascript/chatscopes.js"></script>
+<script type="module">
+    import { ChatScopesClient } from '/_chat/javascript/chatscopes.js';
+</script>
+----
+
+The extension also publishes the module to the UI extensions in Quarkus
+(https://quarkus.io/guides/web-dependency-locator[Web Dependency Locator] and
+https://docs.quarkiverse.io/quarkus-web-bundler/dev/[Web Bundler]). If one of those is on the classpath,
+the specifier `@quarkiverse/chat-scopes` resolves to the URL above, so you don't have to hardcode it:
+
+[source,javascript]
+----
+import { ChatScopesClient } from '@quarkiverse/chat-scopes';
+----
+
+With the Web Dependency Locator that needs the generated import map on the page, before any module that
+uses the specifier:
+
+[source,html]
+----
+<script src="/_importmap/generated_importmap.js"></script>
 ----
 
 Here's how it looks:
