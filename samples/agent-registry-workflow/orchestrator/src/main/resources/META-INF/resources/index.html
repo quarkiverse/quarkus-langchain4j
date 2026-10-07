@@ -17,7 +17,7 @@
     </head>
     <body>
         <h1>A registry-backed multilingual briefing</h1>
-        <p>Check registered contracts → discover and call the Weather MCP server → summarize over A2A → translate over A2A.</p>
+        <p>Discover and call the Weather MCP server → summarize over A2A → translate over A2A.</p>
         <p>Endpoints come from Apicurio. Application code chooses the required roles and handoff order.</p>
         <form id="briefing">
             <label>
@@ -37,12 +37,13 @@
         <section>
             <h2>Try the governance story</h2>
             <p>While this page is running, use a second terminal from the repository root:</p>
-            <pre>python3 samples/agent-registry-workflow/scripts/run.py --governance
-python3 samples/agent-registry-workflow/scripts/run.py --deprecate
-# Try another briefing: blocked before MCP or A2A calls.
-python3 samples/agent-registry-workflow/scripts/run.py --restore
-# Try again: the workflow is available.</pre>
-            <small>Local unauthenticated demonstration. Weather is fictional. The lifecycle check is this application's policy, not runtime enforcement by Registry. Recorded contract versions are observations, not pinned remote deployments or an execution-replay log.</small>
+            <pre>python3 samples/agent-registry-workflow/scripts/run.py --governance</pre>
+            <p>Registry's BACKWARD compatibility rule rejects removal of the translation skill (HTTP 400).
+                The command verifies that the accepted content and version remain unchanged, then runs the complete
+                briefing again. It also publishes a compatible addition and demonstrates the new registration.</p>
+            <small>Local unauthenticated demonstration. Weather is fictional. Registry enforces compatibility on publication;
+                the application does not implement compatibility rules or a deprecation gate. Registered versions are observations,
+                not pinned remote deployments. Rejected metadata does not stop traffic to independently deployed code.</small>
         </section>
         <script>
     const form = document.getElementById('briefing');
@@ -62,7 +63,7 @@ python3 samples/agent-registry-workflow/scripts/run.py --restore
     event.preventDefault();
     button.disabled = true;
     result.replaceChildren();
-    status.textContent = 'Checking contracts and executing MCP → A2A → A2A…';
+    status.textContent = 'Reading Registry metadata and executing MCP → A2A → A2A…';
     try {
         const response = await fetch('/workflow/briefing', {
         method: 'POST', headers: {'Content-Type': 'application/json'},

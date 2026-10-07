@@ -61,23 +61,39 @@ def seed_weather():
 
 
 def check_governance():
-    base = REGISTRY + "/groups/default/artifacts/summarizer"
+    base = REGISTRY + "/groups/default/artifacts/translator"
     before = request(base + "/versions/branch=latest/content")
-    rules = request(base + "/rules")
-    if "COMPATIBILITY" not in rules:
-        request(base + "/rules", {"ruleType": "COMPATIBILITY", "config": "BACKWARD"}, expected=204)
-    changed = dict(before, skills=[])
+    before_metadata = request(base + "/versions/branch=latest")
+    baseline = briefing()
+    assert_translator_version(baseline, before_metadata)
+    rule = request(base + "/rules/COMPATIBILITY")
+    if rule.get("config") != "BACKWARD":
+        raise AssertionError(f"Expected the Registry BACKWARD compatibility rule: {rule}")
+    if not any(skill["id"] == "translator" for skill in before["skills"]):
+        raise AssertionError("Baseline card has no translation skill")
+    # Keep another skill so rejection is specifically compatibility, not an empty-card validity error.
+    suffix = str(time.time_ns())
+    replacement = dict(before["skills"][0], id="unrelated-" + suffix, name="Unrelated capability")
+    changed = dict(before, skills=[s for s in before["skills"] if s["id"] != "translator"] + [replacement])
+    rejected_version = "breaking-demo-" + suffix
     rejection = request(base + "/versions", {
-        "version": "breaking-demo", "content": {"contentType": "application/json", "content": json.dumps(changed)},
+        "version": rejected_version, "content": {"contentType": "application/json", "content": json.dumps(changed)},
     }, expected=400)
-    if "skill" not in json.dumps(rejection).lower():
-        raise AssertionError(f"Expected a removed-skill compatibility violation: {rejection}")
-    request(base + "/versions/breaking-demo", expected=404)
+    if rejection.get("name") != "RuleViolationException" or not any(
+            cause.get("description") == "Skill 'translator' was removed" and cause.get("context") == "/skills"
+            for cause in rejection.get("causes", [])):
+        raise AssertionError(f"Expected a translator-skill compatibility violation: {rejection}")
+    print("Registry rejected translator update (HTTP 400):", json.dumps(rejection), flush=True)
+    request(base + "/versions/" + rejected_version, expected=404)
     if request(base + "/versions/branch=latest/content") != before:
         raise AssertionError("Rejected change replaced accepted content")
+    retained = request(base + "/versions/branch=latest")
+    if (retained["version"], retained["globalId"]) != (before_metadata["version"], before_metadata["globalId"]):
+        raise AssertionError("Rejected change advanced the latest registered translator version")
+    assert_translator_version(briefing(), before_metadata)
+    print("PASS: connected briefing still works with the unchanged translator registration", flush=True)
     # Also exercise an accepted additive change, not just a failing request.
-    suffix = str(time.time_ns())
-    added = dict(before["skills"][0], id="additional-summary-" + suffix, name="Additional summary")
+    added = dict(before["skills"][0], id="additional-translation-" + suffix, name="Additional translation")
     compatible = dict(before, skills=before["skills"] + [added])
     request(base + "/versions", {
         "version": "compatible-demo-" + suffix,
@@ -86,13 +102,20 @@ def check_governance():
     current = request(base + "/versions/branch=latest/content")
     if len(current["skills"]) != len(before["skills"]) + 1:
         raise AssertionError("Compatible skill addition was not persisted")
-    print("PASS: removed skill rejected (400), accepted content retained, additive change accepted", flush=True)
+    accepted = request(base + "/versions/branch=latest")
+    if accepted["version"] != "compatible-demo-" + suffix or accepted["globalId"] == before_metadata["globalId"]:
+        raise AssertionError("Compatible change did not create the expected registered version")
+    assert_translator_version(briefing(), accepted)
+    print("PASS: Registry accepted additive translator version; connected briefing reports the new registration", flush=True)
 
 
-def translator_state(state):
-    base = REGISTRY + "/groups/default/artifacts/translator/versions/branch=latest"
-    request(base + "/state", {"state": state}, method="PUT", expected=204)
-    print(f"Translator contract is now {state}", flush=True)
+def assert_translator_version(result, metadata):
+    translator = next(c for c in result["contracts"] if c["artifactId"] == "translator" and c["groupId"] == "default")
+    if (translator["version"], translator["globalId"]) != (metadata["version"], metadata["globalId"]):
+        raise AssertionError(f"Briefing observed an unexpected translator registration: {translator}")
+    steps = result["steps"]
+    if len(steps) != 3 or steps[2]["input"] != steps[1]["output"] or not result["result"].strip():
+        raise AssertionError(f"Connected briefing did not complete: {result}")
 
 
 def briefing(expected=200):
@@ -133,20 +156,6 @@ def smoke():
         raise AssertionError(f"Expected three enabled contracts: {result['contracts']}")
     print("PASS: connected MCP → A2A summary → A2A translation", json.dumps(result, ensure_ascii=False), flush=True)
     check_governance()
-    briefing()  # The rejected update did not prevent the consumer from using accepted contracts.
-    log = ROOT / "target/run/weather.log"
-    before = log.read_text().count("Sample MCP getWeather invoked")
-    try:
-        translator_state("DEPRECATED")
-        blocked = briefing(expected=503)
-        if blocked.get("stage") != "contract-check" or "DEPRECATED" not in blocked.get("error", ""):
-            raise AssertionError(f"Expected an explicit lifecycle rejection: {blocked}")
-        if log.read_text().count("Sample MCP getWeather invoked") != before:
-            raise AssertionError("A blocked briefing still invoked MCP")
-    finally:
-        translator_state("ENABLED")
-    briefing()
-    print("PASS: rejected change retains working flow; deprecation blocks before calls; restore recovers", flush=True)
 
 
 def main():
@@ -154,17 +163,12 @@ def main():
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--smoke", action="store_true", help="run live assertions and stop all sample services")
     modes.add_argument("--governance", action="store_true", help="exercise compatible/incompatible updates on an already-running sample")
-    modes.add_argument("--deprecate", action="store_true", help="deprecate the running sample's translator contract")
-    modes.add_argument("--restore", action="store_true", help="restore the running sample's translator contract")
     args = parser.parse_args()
-    if args.governance or args.deprecate or args.restore:
+    if args.governance:
         if not subprocess.check_output(["docker", "compose", "-p", "langchain4j-agent-workflow", "-f",
                                         str(ROOT / "compose.yaml"), "ps", "-q", "registry"], text=True).strip():
             raise RuntimeError("Start this sample's isolated stack first")
-        if args.governance:
-            check_governance()
-        else:
-            translator_state("DEPRECATED" if args.deprecate else "ENABLED")
+        check_governance()
         return
     model = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
     ollama = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
@@ -206,6 +210,8 @@ def main():
         for port in (11010, 11030, 11040, 11020):
             wait_for(f"http://localhost:{port}/q/health/ready", processes)
         seed_weather()
+        request(REGISTRY + "/groups/default/artifacts/translator/rules",
+                {"ruleType": "COMPATIBILITY", "config": "BACKWARD"}, expected=204)
         print(f"Ready: {ORCHESTRATOR}/agents; logs: {logs}", flush=True)
         if args.smoke:
             smoke()

@@ -34,7 +34,7 @@ public class WorkflowResource {
     DiscoveredWeather discoveredWeather;
 
     @Inject
-    RequiredContracts contracts;
+    RegisteredContracts contracts;
 
     @POST
     @Path("/briefing")
@@ -48,23 +48,23 @@ public class WorkflowResource {
         if (!List.of("Amsterdam", "Paris", "Madrid").contains(request.city())) {
             throw new BadRequestException("Choose Amsterdam, Paris or Madrid");
         }
-        List<RequiredContracts.Contract> accepted;
+        List<RegisteredContracts.Contract> observed;
         try {
-            accepted = contracts.check();
+            observed = contracts.observe();
         } catch (ServiceUnavailableException e) {
             throw new ServiceUnavailableException(Response.status(503)
-                    .entity(Map.of("error", e.getMessage(), "stage", "contract-check")).build());
+                    .entity(Map.of("error", e.getMessage(), "stage", "registry-read")).build());
         }
         Map<String, AgentInstance> agents = registry.allAgents();
         UntypedAgent summarizer = requireAgent(agents, "summarizer");
         UntypedAgent translator = requireAgent(agents, "translator");
-        // All roles and lifecycle checks are resolved before the first MCP/A2A operation.
+        // Resolve roles before invocation. Registry enforces contract compatibility on publication.
         String forecast = discoveredWeather.weatherForCity(request.city());
         String summaryInput = "Prepare a short briefing using only these facts. State that weather is fictional.\n"
                 + "Weather: " + forecast + "\nContext: " + request.context();
         String summary = summarizer.invoke(Map.of("input", summaryInput)).toString();
         String translation = translator.invoke(Map.of("input", summary)).toString();
-        return new Briefing(accepted, List.of(
+        return new Briefing(observed, List.of(
                 new Step("MCP weather", "weather-tools/weather", request.city(), forecast),
                 new Step("A2A summarize", "default/summarizer", summaryInput, summary),
                 new Step("A2A translate", "default/translator", summary, translation)), translation);
@@ -125,6 +125,6 @@ public class WorkflowResource {
     public record Step(String operation, String artifact, String input, String output) {
     }
 
-    public record Briefing(List<RequiredContracts.Contract> contracts, List<Step> steps, String result) {
+    public record Briefing(List<RegisteredContracts.Contract> contracts, List<Step> steps, String result) {
     }
 }

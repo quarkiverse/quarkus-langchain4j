@@ -12,7 +12,7 @@ From the repository root:
 ./mvnw -f samples/agent-registry-workflow/pom.xml verify
 ```
 
-Passed: nine tests across `WorkflowResourceTest`, `RequiredContractsTest`, `DiscoveredWeatherTest` and `WeatherToolsTest`.
+Passed: nine tests across `WorkflowResourceTest`, `RegisteredContractsTest`, `DiscoveredWeatherTest` and `WeatherToolsTest`.
 The same build passed with `OLLAMA_URL=http://127.0.0.1:1`, demonstrating that the ordinary
 tests do not need a live model. All three applications packaged successfully.
 
@@ -30,8 +30,9 @@ Passed against a fresh ephemeral Registry and four real application processes:
 - MCP response: “The fictional weather data shows 16 degrees Celsius with light rain in Amsterdam.”
   The Weather server log confirmed `getWeather` actually executed; the result alone was not treated
   as proof of a tool call.
-- Removing a registered skill returned 400, the rejected version returned 404, and accepted content
-  was retained. Adding a skill created a new accepted version.
+- Removing the translator's translation skill returned a Registry COMPATIBILITY violation (400), the
+  rejected version returned 404, and accepted content and latest version/globalId were retained.
+  Adding a translation skill created a new accepted version.
 - Runner removed its application processes, Registry container and Compose network.
 
 ## Connected workflow follow-up
@@ -42,11 +43,12 @@ The enhanced live run also passed the single `/workflow/briefing` request:
 - Actual `getWeather` output included in the A2A summarizer input.
 - Actual summary passed unchanged into the A2A translator input.
 - Non-empty French final result returned with all step inputs/outputs.
-- Briefing remained operational after the rejected skill update.
-- Deprecating the translator returned 503 at `contract-check` and did not increase the Weather
-  server's invocation count. Restoring `ENABLED` recovered the complete flow.
+- The briefing executed before and after the rejected translator update and reported the same
+  registered translator version/globalId. After a compatible addition it executed and reported the new registration.
+- The sample no longer has a consumer-side deprecation or capability gate. `RegisteredContracts`
+  only observes metadata; a unit test confirms a deprecated state is reported rather than rejected.
 
-Automated tests additionally assert the ordering of preflight, discovery, MCP invocation and A2A
+Automated tests additionally assert the ordering of metadata reads, discovery, MCP invocation and A2A
 handoffs. The dashboard uses the same endpoint and renders returned values as text; browser visual
 testing is not part of the recorded automated checks.
 

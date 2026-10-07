@@ -5,13 +5,13 @@ Run a complete **Apicurio Registry + Quarkus LangChain4j** workflow:
 Create a multilingual weather briefing in **one connected request**:
 
 1. Two A2A servers publish their Agent Cards through the A2A Registry extension.
-2. The application checks its three required registered contracts are enabled and contain the required capabilities.
+2. The runner configures `COMPATIBILITY: BACKWARD` on the translator in Registry. The application reads registered version metadata for display.
 3. The MCP Registry extension discovers the weather endpoint, connects over Streamable HTTP and invokes `getWeather`.
 4. The orchestrator discovers the summarizer and translator through `ApicurioAgentsRegistry`.
    It passes the real weather result plus the user's context to the summarizer, then passes the summary to the translator.
 5. The dashboard displays the observed contract versions and each actual input/output handoff.
-6. Try a breaking contract update, then deprecate and restore the translator: rejection preserves
-   accepted content, while the application's lifecycle policy blocks new briefings for a deprecated contract.
+6. Try removing the translation skill: **Registry rejects the write**, preserves the accepted translator
+   version, and the connected workflow still runs. A compatible skill addition creates a new registered version.
 
 Based on [agent-discovery-demo](https://github.com/carlesarnal/agent-discovery-demo) and the
 existing [A2A discovery](../a2a-agent-discovery) and [MCP discovery](../apicurio-registry-mcp) samples.
@@ -25,7 +25,7 @@ input → orchestrator :11020 ← Registry :8180 │
                      └─ translator :11030 ──┘
                          summary → French
 
-briefing request → contract checks → MCP weather → A2A summary → A2A French translation
+briefing request → Registry discovery → MCP weather → A2A summary → A2A French translation
 ```
 
 The orchestrator knows application roles (`summarizer`, `translator`, `weather-tools/weather`),
@@ -96,8 +96,9 @@ curl -fsS http://localhost:11020/workflow/briefing \
 ```
 
 The response has `contracts`, ordered `steps` and the final French `result`.
-Only Amsterdam, Paris and Madrid have fixture weather. Required contracts are checked before
-any MCP or A2A invocation; a deprecated contract returns HTTP 503 with `stage: contract-check`.
+Only Amsterdam, Paris and Madrid have fixture weather. Registered version metadata is read before
+invocation for display; this observation does not validate compatibility or enforce lifecycle policy.
+If a registration cannot be read, the sample returns HTTP 503 with `stage: registry-read`.
 
 ### Explore the individual stages
 
@@ -140,7 +141,7 @@ omitted the connection key. A typed application tool avoids relying on prompt in
 The sample uses a named MCP group because default-group results currently format as `null/artifact`,
 while connection keys normalize to `default/artifact`.
 
-## Governance changes the consumer's behavior
+## Registry enforces the translator contract
 
 Leave the interactive runner and dashboard open. In a second terminal:
 
@@ -148,26 +149,21 @@ Leave the interactive runner and dashboard open. In a second terminal:
 python3 samples/agent-registry-workflow/scripts/run.py --governance
 ```
 
-This removes a skill from a candidate summarizer card: Registry rejects it and preserves the
-accepted definition. An additive update is accepted. Create another briefing: accepted contracts
-remain usable. These are metadata updates, not deployments of new agent code.
+The runner installs an artifact-level `COMPATIBILITY: BACKWARD` rule during startup.
+The governance command then:
 
-Next:
+1. Runs the connected briefing and records the translator's version/globalId and content.
+2. Submits a candidate translator card that removes the `translator` skill while retaining another skill.
+3. Verifies **Registry returns HTTP 400 with the removed translation skill's compatibility violation**.
+4. Verifies the rejected version does not exist (404), and both the accepted content and latest version/globalId are unchanged.
+5. Runs the complete MCP → summarizer → translator briefing again and checks it reports the retained translator registration.
+6. Publishes a compatible addition, verifies a new registered version, and reruns the briefing with that registration visible.
 
-```shell
-python3 samples/agent-registry-workflow/scripts/run.py --deprecate
-```
-
-Create a briefing again: the application refuses to start it because the translator's registered
-contract is `DEPRECATED`. No MCP or A2A invocation occurs for that request. Restore it:
-
-```shell
-python3 samples/agent-registry-workflow/scripts/run.py --restore
-```
-
-The next briefing succeeds. This is an explicit policy in `RequiredContracts`, not an automatic
-feature of the discovery extension, and not a gateway rule preventing direct calls to the agent.
-The independent diagnostic endpoints do not apply the briefing's lifecycle policy.
+Create briefings in the dashboard before and after the command to inspect the registered versions.
+No compatibility rules are implemented in the orchestrator: `RegisteredContracts` only reads metadata.
+These are metadata updates, not deployments of new agent code. Registry does not stop direct calls
+to a running agent or prevent someone independently deploying incompatible code at the same URL.
+Deprecation/invocation policy is a separate consumer or gateway concern and is not part of this example.
 
 ## Live smoke test, including governance
 
@@ -183,13 +179,13 @@ This creates a fresh stack and asserts:
 - The two remote A2A calls return non-empty results. Unit tests separately verify that the translator
   receives the summary, not the original input. Language quality is a human evaluation, not a substring test.
 - The MCP answer contains the fixture's city/temperature **and** the server log confirms real invocation.
-- Removing a skill from the registered summarizer card is rejected with HTTP 400; no rejected version
-  is created and accepted content remains unchanged.
+- Removing the translation skill is rejected by Registry with HTTP 400; no rejected version
+  is created and accepted content and latest version/globalId remain unchanged.
 - Adding a skill is accepted and persists as a new version.
 - A connected briefing passes the actual MCP output into summarization and the actual summary
   into translation, and reports three enabled contract versions.
-- The connected workflow still runs after the rejected update; deprecation blocks it before MCP
-  invocation, and restoring the contract recovers the flow. Unit tests verify preflight ordering.
+- The connected workflow runs before the rejected translator update, after rejection with the same
+  registered translator version, and after the accepted addition with the new registration visible.
 
 The runner always tears down its stack, including on failure. The smoke test requires a real Ollama model;
 it is an explicit live evaluation, not part of the no-infrastructure Maven test run. Model behavior can vary.
@@ -203,9 +199,8 @@ it is an explicit live evaluation, not part of the no-infrastructure Maven test 
   Registry-side `tools/list` ingestion.
 - Compatibility protects accepted **metadata**. The additive governance test edits Registry content,
   not the running agent. Rejected publication does not stop running traffic. The sample does not enforce
-  remote deployment pinning or contract drift checks. The connected briefing does enforce its own
-  enabled-contract preflight policy. Metadata and content are read using the observed version,
-  but endpoint resolution remains in the extensions; a concurrent change can occur after preflight.
+   remote deployment pinning, contract drift checks or deprecation-based routing. The briefing observes
+   registered metadata, while endpoint resolution remains in the extensions; changes can occur between those reads.
   The returned contract list is not a transactional snapshot or proof of the running deployment's version.
 - Publication is best-effort in the extension; the runner's discovery assertions detect missing cards.
 - There is no gateway, tenant/agent/tool authorization, credential broker, durable session isolation,

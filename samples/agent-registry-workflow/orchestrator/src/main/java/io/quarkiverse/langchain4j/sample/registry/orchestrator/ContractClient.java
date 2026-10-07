@@ -18,8 +18,4 @@ public interface ContractClient {
     @Path("/versions/branch=latest")
     JsonNode metadata(@PathParam("group") String group, @PathParam("artifact") String artifact);
 
-    @GET
-    @Path("/versions/{version}/content")
-    JsonNode content(@PathParam("group") String group, @PathParam("artifact") String artifact,
-            @PathParam("version") String version);
 }

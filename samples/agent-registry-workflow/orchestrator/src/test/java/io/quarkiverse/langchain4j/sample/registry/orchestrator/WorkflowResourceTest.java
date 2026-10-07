@@ -35,14 +35,14 @@ class WorkflowResourceTest {
     DiscoveredWeather discoveredWeather;
 
     @InjectMock
-    RequiredContracts contracts;
+    RegisteredContracts contracts;
 
     @Test
     void connectsMcpOutputToBothA2AHandoffs() throws Exception {
         UntypedAgent summarizer = mock(UntypedAgent.class, withSettings().extraInterfaces(AgentInstance.class));
         UntypedAgent translator = mock(UntypedAgent.class, withSettings().extraInterfaces(AgentInstance.class));
-        when(contracts.check())
-                .thenReturn(List.of(new RequiredContracts.Contract("default", "translator", "7", 12, "ENABLED")));
+        when(contracts.observe())
+                .thenReturn(List.of(new RegisteredContracts.Contract("default", "translator", "7", 12, "ENABLED")));
         when(registry.allAgents()).thenReturn(Map.of("summarizer", (AgentInstance) summarizer,
                 "translator", (AgentInstance) translator));
         when(discoveredWeather.weatherForCity("Amsterdam")).thenReturn("weather fixture");
@@ -58,7 +58,7 @@ class WorkflowResourceTest {
                 .body("steps[2].input", equalTo("brief summary"))
                 .body("result", equalTo("résumé"));
         var order = inOrder(contracts, registry, discoveredWeather, summarizer, translator);
-        order.verify(contracts).check();
+        order.verify(contracts).observe();
         order.verify(registry).allAgents();
         order.verify(discoveredWeather).weatherForCity("Amsterdam");
         order.verify(summarizer).invoke(Map.of("input", input));
@@ -66,12 +66,12 @@ class WorkflowResourceTest {
     }
 
     @Test
-    void deprecatedContractBlocksBeforeDiscoveryAndInvocation() {
-        doThrow(new ServiceUnavailableException("Translator contract is DEPRECATED")).when(contracts).check();
+    void unreadableRegistrationReportsRegistryFailureBeforeInvocation() {
+        doThrow(new ServiceUnavailableException("Cannot read required contract default/translator")).when(contracts).observe();
         RestAssured.given().contentType("application/json").body(Map.of("city", "Amsterdam", "context", "meeting"))
                 .post("/workflow/briefing").then().statusCode(503)
-                .body("stage", equalTo("contract-check"))
-                .body("error", equalTo("Translator contract is DEPRECATED"));
+                .body("stage", equalTo("registry-read"))
+                .body("error", equalTo("Cannot read required contract default/translator"));
         verifyNoInteractions(registry, discoveredWeather, weather);
     }
 
