@@ -30,7 +30,6 @@ import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.github.tjake.jlama.safetensors.SafeTensorSupport;
 import com.github.tjake.jlama.util.ProgressReporter;
 
@@ -65,6 +64,7 @@ import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.deployment.pkg.PackageConfig.JarConfig.JarType;
 import io.quarkus.deployment.pkg.builditem.ArtifactResultBuildItem;
 import io.quarkus.deployment.pkg.builditem.JarBuildItem;
+import tools.jackson.databind.PropertyNamingStrategies;
 
 public class JlamaProcessor {
 

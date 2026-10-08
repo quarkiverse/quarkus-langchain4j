@@ -24,9 +24,6 @@ import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.McpRoot;
@@ -60,6 +57,7 @@ import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.runtime.metrics.MetricsFactory;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
+import tools.jackson.core.type.TypeReference;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class McpProcessor {
@@ -89,8 +87,9 @@ public class McpProcessor {
         try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
                 configFileName)) {
             Map<String, LocalLaunchParams> claudeConfigContents = new HashMap<>();
-            Map<String, Map<String, Object>> configFileAsMap = new ObjectMapper().readValue(is, new TypeReference<>() {
-            });
+            Map<String, Map<String, Object>> configFileAsMap = tools.jackson.databind.json.JsonMapper.builder().build()
+                    .readValue(is, new TypeReference<>() {
+                    });
             configFileAsMap.getOrDefault("mcpServers", Collections.emptyMap()).forEach((serverName, serverConfig) -> {
                 if (serverConfig instanceof Map serverConfigMap) {
                     String command = (String) serverConfigMap.get("command");

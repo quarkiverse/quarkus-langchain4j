@@ -96,7 +96,7 @@ public class StreamTestUtils {
 
         private void checkDuplicatedContext() {
             if (DC_DATA != null) {
-                if (!DC_DATA.equals(Vertx.currentContext().getLocal("DC_DATA"))) {
+                if (!DC_DATA.equals(((io.vertx.core.internal.ContextInternal) Vertx.currentContext()).getLocal("DC_DATA"))) {
                     throw new AssertionError("Expected to be in the same context");
                 }
             }

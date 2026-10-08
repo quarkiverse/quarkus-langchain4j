@@ -12,17 +12,18 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.foundationmodel.FoundationModel;
 import com.ibm.watsonx.ai.foundationmodel.FoundationModelResponse;
 import com.ibm.watsonx.ai.foundationmodel.FoundationModelTask;
 
-import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 
 @Path("/ml/v1")
+@RegisterProvider(WatsonxJacksonProviders.Reader.class)
+@RegisterProvider(WatsonxJacksonProviders.Writer.class)
 public interface FoundationModelRestApi {
 
     @GET
@@ -46,11 +47,6 @@ public interface FoundationModelRestApi {
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
             @QueryParam("version") String version);
-
-    @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
-    }
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

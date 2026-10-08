@@ -21,8 +21,6 @@ import java.util.stream.Collectors;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.decision.DecisionModel;
@@ -68,6 +66,7 @@ import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.deployment.logging.LogCleanupFilterBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
+import tools.jackson.databind.ObjectMapper;
 
 public class BeansProcessor {
 

@@ -16,8 +16,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatModel;
@@ -30,6 +28,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
+import tools.jackson.databind.ObjectMapper;
 
 public class VertexAiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
 
@@ -46,7 +45,7 @@ public class VertexAiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
     ChatModel chatModel;
 
     @Test
-    void should_support_raw_json_schema() throws JsonProcessingException {
+    void should_support_raw_json_schema() {
         String rawSchema = """
                 {
                   "type": "object",

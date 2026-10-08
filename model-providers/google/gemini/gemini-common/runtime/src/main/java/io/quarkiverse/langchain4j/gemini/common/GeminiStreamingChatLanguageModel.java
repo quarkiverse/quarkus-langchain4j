@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 
 import org.jboss.resteasy.reactive.client.SseEvent;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.http.client.sse.ServerSentEvent;
@@ -31,6 +29,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.smallrye.mutiny.Multi;
+import tools.jackson.core.JacksonException;
 
 public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
 
@@ -187,7 +186,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
             try {
                 response = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(t.data(),
                         GenerateContentResponse.class);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 withLoggingExceptions(() -> handler.onError(e));
                 return;
             }

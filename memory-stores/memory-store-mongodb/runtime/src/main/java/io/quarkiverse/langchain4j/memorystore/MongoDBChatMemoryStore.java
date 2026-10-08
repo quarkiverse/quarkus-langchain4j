@@ -1,14 +1,10 @@
 package io.quarkiverse.langchain4j.memorystore;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -17,6 +13,7 @@ import com.mongodb.client.model.ReplaceOptions;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import tools.jackson.core.type.TypeReference;
 
 public class MongoDBChatMemoryStore implements ChatMemoryStore {
 
@@ -43,29 +40,21 @@ public class MongoDBChatMemoryStore implements ChatMemoryStore {
             return Collections.emptyList();
         }
 
-        try {
-            String messagesJson = document.getString(MESSAGES_FIELD);
-            return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
-                    messagesJson, MESSAGE_LIST_TYPE);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        String messagesJson = document.getString(MESSAGES_FIELD);
+        return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
+                messagesJson, MESSAGE_LIST_TYPE);
     }
 
     @Override
     public void updateMessages(Object memoryId, List<ChatMessage> messages) {
-        try {
-            String messagesJson = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(messages);
-            Document document = new Document()
-                    .append(ID_FIELD, memoryId.toString())
-                    .append(MESSAGES_FIELD, messagesJson);
+        String messagesJson = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(messages);
+        Document document = new Document()
+                .append(ID_FIELD, memoryId.toString())
+                .append(MESSAGES_FIELD, messagesJson);
 
-            collection.replaceOne(
-                    Filters.eq(ID_FIELD, memoryId.toString()),
-                    document,
-                    new ReplaceOptions().upsert(true));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
+        collection.replaceOne(
+                Filters.eq(ID_FIELD, memoryId.toString()),
+                document,
+                new ReplaceOptions().upsert(true));
     }
 }

@@ -29,6 +29,7 @@ import io.quarkus.tls.runtime.config.TlsConfigUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.PoolOptions;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PfxOptions;
 import io.vertx.core.net.ProxyOptions;
@@ -50,14 +51,27 @@ final class BedrockSdkHttpClientFactory {
         Duration readTimeout = firstOrDefault(Duration.ofSeconds(10),
                 modelConfig.timeout(), bedrockConfig.timeout(), rootConfig.timeout());
 
-        return new VertxSdkHttpClient(vertx.get().createHttpClient(options), readTimeout);
+        return new VertxSdkHttpClient(vertx.get().createHttpClient(options, buildPoolOptions(modelConfig, bedrockConfig)),
+                readTimeout);
     }
 
     static SdkAsyncHttpClient createAsync(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
             LangChain4jConfig rootConfig, Supplier<Vertx> vertx, ProxyConfigurationRegistry proxyRegistry) {
         HttpClientOptions options = buildHttpClientOptions(modelConfig, bedrockConfig, rootConfig, proxyRegistry);
 
-        return new VertxSdkAsyncHttpClient(vertx.get().createHttpClient(options));
+        return new VertxSdkAsyncHttpClient(
+                vertx.get().createHttpClient(options, buildPoolOptions(modelConfig, bedrockConfig)));
+    }
+
+    private static PoolOptions buildPoolOptions(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig) {
+        PoolOptions poolOptions = new PoolOptions();
+        Integer connectionPoolSize = firstOrDefault(null, modelConfig.connectionPoolSize(),
+                bedrockConfig.connectionPoolSize());
+        if (connectionPoolSize != null) {
+            // Vert.x 5 moved the pool size from HttpClientOptions to PoolOptions
+            poolOptions.setHttp1MaxSize(connectionPoolSize);
+        }
+        return poolOptions;
     }
 
     private static HttpClientOptions buildHttpClientOptions(HttpClientConfig modelConfig, HttpClientConfig bedrockConfig,
@@ -78,12 +92,6 @@ final class BedrockSdkHttpClientFactory {
         Integer connectionTtl = firstOrDefault(null, modelConfig.connectionTTL(), bedrockConfig.connectionTTL());
         if (connectionTtl != null) {
             options.setKeepAliveTimeout(connectionTtl / 1000);
-        }
-
-        Integer connectionPoolSize = firstOrDefault(null, modelConfig.connectionPoolSize(),
-                bedrockConfig.connectionPoolSize());
-        if (connectionPoolSize != null) {
-            options.setMaxPoolSize(connectionPoolSize);
         }
 
         Boolean verifyHost = firstOrDefault(null, modelConfig.verifyHost(), bedrockConfig.verifyHost());
@@ -235,9 +243,9 @@ final class BedrockSdkHttpClientFactory {
             String password = firstOrDefault(null, modelConfig.trustStorePassword(), bedrockConfig.trustStorePassword());
             Buffer storeBuffer = loadStoreAsBuffer(trustStore, "truststore");
             if ("PKCS12".equalsIgnoreCase(type) || "PFX".equalsIgnoreCase(type)) {
-                options.setPfxTrustOptions(new PfxOptions().setValue(storeBuffer).setPassword(password));
+                options.setTrustOptions(new PfxOptions().setValue(storeBuffer).setPassword(password));
             } else {
-                options.setTrustStoreOptions(new JksOptions().setValue(storeBuffer).setPassword(password));
+                options.setTrustOptions(new JksOptions().setValue(storeBuffer).setPassword(password));
             }
         }
 
@@ -247,9 +255,9 @@ final class BedrockSdkHttpClientFactory {
             String password = firstOrDefault(null, modelConfig.keyStorePassword(), bedrockConfig.keyStorePassword());
             Buffer storeBuffer = loadStoreAsBuffer(keyStore, "keystore");
             if ("PKCS12".equalsIgnoreCase(type) || "PFX".equalsIgnoreCase(type)) {
-                options.setPfxKeyCertOptions(new PfxOptions().setValue(storeBuffer).setPassword(password));
+                options.setKeyCertOptions(new PfxOptions().setValue(storeBuffer).setPassword(password));
             } else {
-                options.setKeyStoreOptions(new JksOptions().setValue(storeBuffer).setPassword(password));
+                options.setKeyCertOptions(new JksOptions().setValue(storeBuffer).setPassword(password));
             }
         }
     }
