@@ -50,13 +50,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<dependency>
-				<groupId>io.quarkiverse.langchain4j</groupId>
-				<artifactId>quarkus-langchain4j-bom</artifactId>
-				<version>${quarkus-langchain4j.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<build>

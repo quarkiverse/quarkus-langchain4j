@@ -13,10 +13,12 @@
 		<dependency>
 			<groupId>io.quarkiverse.langchain4j</groupId>
 			<artifactId>quarkus-langchain4j-ollama</artifactId>
+			<version>${quarkus-langchain4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkiverse.langchain4j</groupId>
 			<artifactId>quarkus-langchain4j-a2a-apicurio-registry</artifactId>
+			<version>${quarkus-langchain4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.a2aproject.sdk</groupId>
