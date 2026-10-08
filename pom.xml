@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse</groupId>
     <artifactId>quarkiverse-parent</artifactId>
-    <version>21</version>
+    <version>26</version>
   </parent>
   <groupId>io.quarkiverse.langchain4j</groupId>
   <artifactId>quarkus-langchain4j-parent</artifactId>
@@ -39,6 +39,7 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
+	<maven.compiler.release>17</maven.compiler.release>  
     <quarkus.version>3.40.0</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.21.0</langchain4j.version>
