@@ -1427,6 +1427,11 @@ public class AgenticProcessor {
                     if (AgenticLangChain4jDotNames.AGENTIC_SCOPE.equals(parameterType.name())) {
                         continue;
                     }
+                    // like the AgenticScope, langchain4j-agentic supplies it itself (from the scope's execution context),
+                    // so no agent has to provide it as an output key
+                    if (AgenticLangChain4jDotNames.INVOCATION_PARAMETERS.equals(parameterType.name())) {
+                        continue;
+                    }
                     if (parameter.annotation(AgenticLangChain4jDotNames.MEMORY_ID) != null) {
                         continue;
                     }
