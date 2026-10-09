@@ -11,7 +11,6 @@ Before configuring the extension:
 
 * Enable access to the model you intend to use in Amazon Bedrock.
 * Choose an AWS Region where that model is available.
-* Make AWS credentials available to the application. By default, the extension uses the AWS SDK default credentials provider chain. This supports, for example, local AWS profiles and credentials supplied by the runtime environment or workload identity.
 
 For the models and Regions supported by Bedrock, see the https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[AWS model catalog].
 
@@ -22,9 +21,17 @@ Add the following dependency to your project:
 :provider-artifact: quarkus-langchain4j-bedrock
 include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
-If no other chat model extension is selected, xref:ai-services.adoc[AI Services] automatically uses this provider.
+If no other chat model extension is selected, xref:ai-services.adoc[AI Services] will automatically use the configured Bedrock chat model.
 
-== Chat model
+== AWS Credentials
+
+The extension uses the AWS SDK default credentials provider chain. For local development, configure an AWS profile or set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
+
+When running on AWS, credentials can be supplied by the runtime, such as ECS task roles, EC2 instance profiles, or web identity tokens on EKS. Do not configure AWS credentials in `application.properties`.
+
+For the complete list and order of credential sources, see the https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html[AWS SDK default credentials provider chain documentation].
+
+== Chat Model
 
 Configure the Region and a Bedrock model ID in `application.properties`:
 
@@ -44,15 +51,18 @@ The extension registers both `ChatModel` and `StreamingChatModel` beans. You can
 ----
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
-import jakarta.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
 
-class AssistantResource {
+@ApplicationScoped
+class AssistantService {
 
-    @Inject
-    ChatModel chatModel;
+    private final ChatModel chatModel;
+    private final StreamingChatModel streamingChatModel;
 
-    @Inject
-    StreamingChatModel streamingChatModel;
+    AssistantService(ChatModel chatModel, StreamingChatModel streamingChatModel) {
+        this.chatModel = chatModel;
+        this.streamingChatModel = streamingChatModel;
+    }
 }
 ----
 
@@ -60,15 +70,24 @@ Or, declare an xref:ai-services.adoc[AI Service] and let Quarkus inject the conf
 
 [source,java]
 ----
+import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.smallrye.mutiny.Multi;
 
 @RegisterAiService
 public interface Assistant {
     String chat(String message);
+
+    @UserMessage("Answer the question: {message}")
+    Multi<String> stream(String message);
 }
 ----
 
-=== Named configurations
+When an AI Service method returns `Multi<String>`, Quarkus uses the configured `StreamingChatModel`. Each item emitted by the `Multi` is part of the response. For REST and WebSocket examples, see the xref:guide-streamed-responses.adoc[streamed responses guide].
+
+AI Services are request-scoped by default. Apply a CDI scope when your chat memory lifecycle requires it.
+
+=== Named Configurations
 
 Use named configurations when an application needs more than one Bedrock model. Select a named model in an AI service or inject it with `@ModelName`.
 
@@ -81,18 +100,25 @@ quarkus.langchain4j.bedrock."fast".chat-model.model-id=global.amazon.nova-2-lite
 [source,java]
 ----
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkiverse.langchain4j.ModelName;
-import jakarta.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
 
-class AssistantResource {
+@ApplicationScoped
+class AssistantService {
 
-    @Inject
-    @ModelName("fast")
-    ChatModel chatModel;
+    private final ChatModel chatModel;
+    private final StreamingChatModel streamingChatModel;
+
+    AssistantService(@ModelName("fast") ChatModel chatModel,
+            @ModelName("fast") StreamingChatModel streamingChatModel) {
+        this.chatModel = chatModel;
+        this.streamingChatModel = streamingChatModel;
+    }
 }
 ----
 
-== Embedding model
+== Embedding Model
 
 The extension also provides an `EmbeddingModel`. Configure it independently from the chat model:
 
@@ -104,12 +130,79 @@ quarkus.langchain4j.bedrock.embedding-model.model-id=cohere.embed-english-v3
 
 For Amazon Titan embedding models, use the `embedding-model.titan` configuration group. For Cohere embedding models, use `embedding-model.cohere`; the configuration reference lists the provider-specific options.
 
-== Bedrock features
+You can inject the configured `EmbeddingModel` directly:
 
-The chat model supports Bedrock guardrails, prompt caching, and reasoning configuration when the selected model supports them. Configure these capabilities through the `guardrail`, `prompt-caching`, `prompt-caching-ttl`, `reasoning`, and `reasoning-effort` properties.
+[source,java]
+----
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import jakarta.enterprise.context.ApplicationScoped;
 
-Prompt caching and reasoning are model-specific features. Consult the AWS documentation for the model selected by `model-id` before enabling them.
+@ApplicationScoped
+class EmbeddingService {
 
-== Configuration reference
+    private final EmbeddingModel embeddingModel;
+
+    EmbeddingService(EmbeddingModel embeddingModel) {
+        this.embeddingModel = embeddingModel;
+    }
+}
+----
+
+== Bedrock Features
+
+The chat model supports Bedrock guardrails, prompt caching, and reasoning when the selected model supports them. Verify model support and regional availability before enabling these capabilities.
+
+=== Guardrails
+
+Configure an existing Amazon Bedrock guardrail with its identifier and version:
+
+[source,properties]
+----
+quarkus.langchain4j.bedrock.chat-model.guardrail.guardrail-identifier=<guardrail-id>
+quarkus.langchain4j.bedrock.chat-model.guardrail.guardrail-version=<guardrail-version>
+
+# Optional for StreamingChatModel: sync or async
+quarkus.langchain4j.bedrock.chat-model.guardrail.stream-processing-mode=sync
+----
+
+For more information about creating and configuring guardrails, see the https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html[Amazon Bedrock Guardrails documentation].
+
+=== Prompt caching
+
+Prompt caching reduces latency and input token costs when a prompt contains repeated content. The following example uses Claude Opus 4.7, which supports explicit prompt caching and a one-hour cache TTL:
+
+[source,properties]
+----
+quarkus.langchain4j.bedrock.chat-model.model-id=us.anthropic.claude-opus-4-7
+quarkus.langchain4j.bedrock.chat-model.prompt-caching=AFTER_SYSTEM
+quarkus.langchain4j.bedrock.chat-model.prompt-caching-ttl=1h
+----
+
+`prompt-caching-ttl` applies only when `prompt-caching` is configured. The available cache placement options are `AFTER_SYSTEM`, `AFTER_USER_MESSAGE`, and `AFTER_TOOLS`.
+
+For supported models, regions, token requirements, and TTL options, see the https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html[Amazon Bedrock prompt caching documentation].
+
+=== Reasoning
+
+For models that support adaptive reasoning, configure the reasoning effort. The following example uses Claude Opus 4.7:
+
+[source,properties]
+----
+quarkus.langchain4j.bedrock.chat-model.model-id=us.anthropic.claude-opus-4-7
+quarkus.langchain4j.bedrock.chat-model.reasoning-effort=medium
+----
+
+For models that use a token budget instead of adaptive reasoning, configure `reasoning`:
+
+[source,properties]
+----
+quarkus.langchain4j.bedrock.chat-model.reasoning=1024
+----
+
+Do not configure `reasoning` and `reasoning-effort` together. When both are set, `reasoning-effort` takes precedence.
+
+For model-specific reasoning support, see the https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html[Amazon Bedrock reasoning documentation].
+
+== Configuration Reference
 
 include::includes/quarkus-langchain4j-bedrock.adoc[leveloffset=+1,opts=optional]
