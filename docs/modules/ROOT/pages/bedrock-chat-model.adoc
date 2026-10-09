@@ -1,0 +1,115 @@
+= Amazon Bedrock Chat and Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://aws.amazon.com/bedrock/[Amazon Bedrock] is a managed service that provides access to foundation models from AWS and other providers. The Quarkus LangChain4j extension integrates its chat, streaming chat, and embedding models.
+
+== Prerequisites
+
+Before configuring the extension:
+
+* Enable access to the model you intend to use in Amazon Bedrock.
+* Choose an AWS Region where that model is available.
+* Make AWS credentials available to the application. By default, the extension uses the AWS SDK default credentials provider chain. This supports, for example, local AWS profiles and credentials supplied by the runtime environment or workload identity.
+
+For the models and Regions supported by Bedrock, see the https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html[AWS model catalog].
+
+== Dependency
+
+Add the following dependency to your project:
+
+:provider-artifact: quarkus-langchain4j-bedrock
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+If no other chat model extension is selected, xref:ai-services.adoc[AI Services] automatically uses this provider.
+
+== Chat model
+
+Configure the Region and a Bedrock model ID in `application.properties`:
+
+[source,properties]
+----
+quarkus.langchain4j.bedrock.aws.region=us-east-1
+quarkus.langchain4j.bedrock.chat-model.model-id=global.amazon.nova-2-lite-v1:0
+
+# Optional generation parameters
+quarkus.langchain4j.bedrock.chat-model.temperature=0.2
+quarkus.langchain4j.bedrock.chat-model.max-tokens=1024
+----
+
+The extension registers both `ChatModel` and `StreamingChatModel` beans. You can inject them directly:
+
+[source,java]
+----
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
+import jakarta.inject.Inject;
+
+class AssistantResource {
+
+    @Inject
+    ChatModel chatModel;
+
+    @Inject
+    StreamingChatModel streamingChatModel;
+}
+----
+
+Or, declare an xref:ai-services.adoc[AI Service] and let Quarkus inject the configured model:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+@RegisterAiService
+public interface Assistant {
+    String chat(String message);
+}
+----
+
+=== Named configurations
+
+Use named configurations when an application needs more than one Bedrock model. Select a named model in an AI service or inject it with `@ModelName`.
+
+[source,properties]
+----
+quarkus.langchain4j.bedrock."fast".aws.region=us-east-1
+quarkus.langchain4j.bedrock."fast".chat-model.model-id=global.amazon.nova-2-lite-v1:0
+----
+
+[source,java]
+----
+import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.ModelName;
+import jakarta.inject.Inject;
+
+class AssistantResource {
+
+    @Inject
+    @ModelName("fast")
+    ChatModel chatModel;
+}
+----
+
+== Embedding model
+
+The extension also provides an `EmbeddingModel`. Configure it independently from the chat model:
+
+[source,properties]
+----
+quarkus.langchain4j.bedrock.aws.region=us-east-1
+quarkus.langchain4j.bedrock.embedding-model.model-id=cohere.embed-english-v3
+----
+
+For Amazon Titan embedding models, use the `embedding-model.titan` configuration group. For Cohere embedding models, use `embedding-model.cohere`; the configuration reference lists the provider-specific options.
+
+== Bedrock features
+
+The chat model supports Bedrock guardrails, prompt caching, and reasoning configuration when the selected model supports them. Configure these capabilities through the `guardrail`, `prompt-caching`, `prompt-caching-ttl`, `reasoning`, and `reasoning-effort` properties.
+
+Prompt caching and reasoning are model-specific features. Consult the AWS documentation for the model selected by `model-id` before enabling them.
+
+== Configuration reference
+
+include::includes/quarkus-langchain4j-bedrock.adoc[leveloffset=+1,opts=optional]
