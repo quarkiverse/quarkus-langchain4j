@@ -9,7 +9,7 @@ This guide explains how to configure and use Redis as a vector-capable embedding
 [NOTE]
 ====
 You can implement a custom `ContentRetriever` for Redis as well.
-This page focuses on the integration of Redis as a vector store, allowing you to store and retrieve documents enriched with vector embeddings for RAG scenarios.
+This page focuses on the integration of Redis as an embedding store, allowing you to store and retrieve documents enriched with vector embeddings for RAG scenarios.
 ====
 
 == Prerequisites
@@ -154,7 +154,7 @@ quarkus.langchain4j.redis.default-store-enabled=false
 
 == Summary
 
-To use Redis as a vector store with Quarkus LangChain4j:
+To use Redis as an embedding store with Quarkus LangChain4j:
 
 * Ensure Redis Stack (or Redis with RedisJSON and RedisSearch) is available
 * Add the required extension and configure the Redis client

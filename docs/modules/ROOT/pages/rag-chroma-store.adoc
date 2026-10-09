@@ -84,7 +84,7 @@ quarkus.langchain4j.chroma.default-store-enabled=false
 
 == Summary
 
-To use Chroma as a vector store for RAG with Quarkus LangChain4j:
+To use Chroma as an embedding store for RAG with Quarkus LangChain4j:
 
 * Add the Chroma extension to your project.
 * Ensure your embedding model's vector dimension matches your configuration.

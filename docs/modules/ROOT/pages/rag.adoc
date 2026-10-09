@@ -27,7 +27,7 @@ Benefits of RAG:
 
 At a high level, a RAG system follows this two-phase process:
 
-1.	#Ingestion#: Documents are ingested, segmented (chunked), embedded into vectors, and stored in a vector store.
+1.	#Ingestion#: Documents are ingested, segmented (chunked), embedded into vectors, and stored in an embedding store.
 2.	#Retrieval#: At query time, the question is embedded, relevant segments are retrieved via similarity search, and then sent to the LLM along with the query.
 
 == End-to-End Flow

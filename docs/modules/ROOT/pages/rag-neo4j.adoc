@@ -14,7 +14,7 @@ Ensure your Neo4j deployment supports this feature.
 
 == Dependency
 
-To enable Neo4j vector store support, add the following dependency:
+To enable Neo4j embedding store support, add the following dependency:
 
 :provider-artifact: quarkus-langchain4j-neo4j
 include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
@@ -67,7 +67,7 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithNe
 
 == Configuration
 
-You can configure the Neo4j connection and vector store behavior using these properties:
+You can configure the Neo4j connection and embedding store behavior using these properties:
 
 include::includes/quarkus-langchain4j-neo4j.adoc[leveloffset=+1,opts=optional]
 
@@ -193,7 +193,7 @@ Metadata filtering is fully supported using standard Cypher conditions alongside
 
 == Summary
 
-To use Neo4j as a vector store for RAG with Quarkus LangChain4j:
+To use Neo4j as an embedding store for RAG with Quarkus LangChain4j:
 
 1. Ensure Neo4j 5.11+ with vector indexing is available
 2. Add the `quarkus-langchain4j-neo4j` dependency

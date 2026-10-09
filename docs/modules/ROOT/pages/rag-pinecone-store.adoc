@@ -4,9 +4,9 @@ include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
 Pinecone is a fully managed, scalable vector database optimized for similarity search.
-With Quarkus LangChain4j, you can use Pinecone as a vector store to implement Retrieval-Augmented Generation (RAG) pipelines.
+With Quarkus LangChain4j, you can use Pinecone as an embedding store to implement Retrieval-Augmented Generation (RAG) pipelines.
 
-This guide explains how to configure and use Pinecone as an embedding store for embedded vectors.
+This guide explains how to configure and use Pinecone as an embedding store.
 
 == Prerequisites
 
@@ -58,7 +58,7 @@ Your Pinecone index must be created with the correct vector dimension ahead of t
 
 == Usage Example
 
-Once installed and configured, you can use the Pinecone vector store to ingest and retrieve embedded documents:
+Once installed and configured, you can use the Pinecone embedding store to ingest and retrieve embedded documents:
 
 [source,java]
 ----
@@ -124,7 +124,7 @@ quarkus.langchain4j.pinecone.default-store-enabled=false
 
 == Summary
 
-To use Pinecone as a vector store for RAG with Quarkus LangChain4j:
+To use Pinecone as an embedding store for RAG with Quarkus LangChain4j:
 
 * Create a Pinecone index with the correct vector dimension
 * Add the `quarkus-langchain4j-pinecone` dependency
