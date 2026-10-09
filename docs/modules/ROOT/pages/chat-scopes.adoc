@@ -828,31 +828,11 @@ Websocket chat routes automatically come with a javascript client whose code liv
 
 `/_chat/javascript/chatscopes.js`
 
-It is an ES module, so import what you need from it:
+Simply include it as a script:
 
 [source,html]
 ----
-<script type="module">
-    import { ChatScopesClient } from '/_chat/javascript/chatscopes.js';
-</script>
-----
-
-The extension also publishes the module to the UI extensions in Quarkus
-(https://quarkus.io/guides/web-dependency-locator[Web Dependency Locator] and
-https://docs.quarkiverse.io/quarkus-web-bundler/dev/[Web Bundler]). If one of those is on the classpath,
-the specifier `@quarkiverse/chat-scopes` resolves to the URL above, so you don't have to hardcode it:
-
-[source,javascript]
-----
-import { ChatScopesClient } from '@quarkiverse/chat-scopes';
-----
-
-With the Web Dependency Locator that needs the generated import map on the page, before any module that
-uses the specifier:
-
-[source,html]
-----
-<script src="/_importmap/generated_importmap.js"></script>
+<script src="/_chat/javascript/chatscopes.js"></script>
 ----
 
 Here's how it looks:
@@ -860,7 +840,7 @@ Here's how it looks:
 [source,javascript]
 ----
 client = new ChatScopesClient();
-await client.open();
+await client.open("ws://localhost:8080/_chat/routes");
 
 builder = client.builder();
 builder.messageHandler(handleMessage);
@@ -872,59 +852,6 @@ function handleMessage(data) {
     // output string message from server
     console.log("Message: " + data);
 }
-----
-
-`open()` connects to the chat routes of the server that served the page. Pass a url if you need to talk
-to a different one.
-
-==== Generated route module
-
-Spelling out route names as strings is easy to get wrong. The extension also generates a module from the
-`@ChatRoute` methods it finds, under the specifier `@quarkiverse/chat-scopes-api`, with one entry per route:
-
-[source,javascript]
-----
-import { theRoute } from '@quarkiverse/chat-scopes-api';
-
-const session = await theRoute.connect({ messageHandler: handleMessage });
-session.chat("hello world");
-----
-
-`connect()` opens the websocket on first use, so there is no `open()` call to remember. Its argument is an
-object of `SessionBuilder` handlers, and an unknown handler name fails loudly instead of being ignored. Use
-`eventHandlers` for your own event types:
-
-[source,javascript]
-----
-const session = await theRoute.connect({
-    messageHandler: handleMessage,
-    eventHandlers: {
-        PushPlaceholder: pushPlaceholder,
-        PopPlaceholder: popPlaceholder
-    }
-});
-----
-
-A route is only exported under its own name when that name can be used as one. Routes declared without an
-explicit name are called `<class>::<method>`, which cannot, so every route is also reachable through
-`routes`, along with the one annotated `@DefaultChatRoute`:
-
-[source,javascript]
-----
-import { routes, defaultRoute, client } from '@quarkiverse/chat-scopes-api';
-
-const session = await routes['com.acme.TravelAgent::book'].connect({ messageHandler: handleMessage });
-----
-
-Each route carries a `streaming` flag, true when the server method returns a `Multi<String>`. Those routes
-answer through `streamHandler` rather than `messageHandler`:
-
-[source,javascript]
-----
-import { ticker } from '@quarkiverse/chat-scopes-api';
-
-// ticker.streaming === true
-const session = await ticker.connect({ streamHandler: chunk => console.log(chunk) });
 ----
 
 Here's the full javascript API.  The API tries to mirror the local java one.
