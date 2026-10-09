@@ -63,7 +63,6 @@ import io.quarkus.vertx.deployment.VertxBuildConfig;
 public class ChatScopeProcessor {
     static Logger log = Logger.getLogger(ChatScopeProcessor.class);
     private static final DotName DEFAULT_CHAT_ROUTE = DotName.createSimple(DefaultChatRoute.class);
-    private static final DotName MULTI = DotName.createSimple("io.smallrye.mutiny.Multi");
     public static final DotName CHAT_ROUTE = DotName.createSimple(ChatRoute.class.getName());
     public static final DotName CHAT_SCOPED = DotName.createSimple(ChatScoped.class.getName());
     public static final DotName INVOCATION_SCOPED = DotName.createSimple(InvocationScoped.class.getName());
@@ -242,9 +241,8 @@ public class ChatScopeProcessor {
                 }
                 defaultRouteFound = true;
             }
-            boolean streaming = method.returnType().name().equals(MULTI);
             log.debugf("Create build item for chat route: %s::%s", className, methodName);
-            chatRouteProducer.produce(new ChatRouteBuildItem(routeName, className, methodName, defaultRoute, streaming));
+            chatRouteProducer.produce(new ChatRouteBuildItem(routeName, className, methodName, defaultRoute));
         }
         if (!beans.isEmpty()) {
             additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClasses(beans)

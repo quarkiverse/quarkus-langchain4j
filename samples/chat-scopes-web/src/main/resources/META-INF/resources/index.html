@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minimal Web Chat</title>
     <link rel="stylesheet" href="/_static/fontawesome-free/css/all.min.css">
-    <script src="/_importmap/generated_importmap.js"></script>
+    <script src="/_chat/javascript/chatscopes.js"></script>
     <script src="/_static/jquery/dist/jquery.min.js"></script>
     <style>
         * {
@@ -421,26 +421,25 @@
         </div>
     </div>
 
-    <script type="module">
-        import { defaultRoute } from '@quarkiverse/chat-scopes-api';
-
+    <script>
             $(document).ready(async function () {
             const $chatContainer = $('#chat-container');
             const $messageInput = $('#message-input');
 
+            var client = new ChatScopesClient();
+            const openResult = await client.open("ws://localhost:8080/_chat/routes");
+            var builder = client.builder();
+            builder.messageHandler(addJsonMessage);
+            builder.objectHandler(addJsonMessage);
+            builder.thinkingHandler(console.log);
+
+            // PushPlaceholder and PopPlaceholder are used to give a visual indication
+            // of what the current conversation is.
+            builder.eventHandler('PushPlaceholder', pushPlaceholder);
+            builder.eventHandler('PopPlaceholder', popPlaceholder);
             placeholderStack = [ "Book your vacation..." ];
 
-            session = await defaultRoute.connect({
-                messageHandler: addJsonMessage,
-                objectHandler: addJsonMessage,
-                thinkingHandler: console.log,
-                // PushPlaceholder and PopPlaceholder are used to give a visual indication
-                // of what the current conversation is.
-                eventHandlers: {
-                    PushPlaceholder: pushPlaceholder,
-                    PopPlaceholder: popPlaceholder
-                }
-            });
+            session = await builder.connect();
 
             function pushPlaceholder(data) {
                 console.log("pushPlaceholder: " + data);

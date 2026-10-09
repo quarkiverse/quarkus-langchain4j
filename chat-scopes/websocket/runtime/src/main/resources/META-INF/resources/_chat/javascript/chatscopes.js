@@ -1,15 +1,4 @@
-const CHAT_ROUTES_PATH = "/_chat/routes";
-
-/**
- * The websocket endpoint of the chat routes, on the server that served this page.
- * Pass a path if the application serves the chat routes somewhere else.
- */
-export function chatRoutesEndpoint(path = CHAT_ROUTES_PATH) {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return protocol + "//" + window.location.host + path;
-}
-
-export class Session {
+class Session {
     constructor(builder, id) {
         this.client = builder.client;
         this.id = id;
@@ -63,7 +52,7 @@ export class Session {
 }
 
 
-export class SessionBuilder {
+class SessionBuilder {
 
     constructor(client) {
         this.client = client;
@@ -150,14 +139,14 @@ export class SessionBuilder {
     }
 }
 
-export class ChatScopesClient {
+class ChatScopesClient {
 
     constructor() {
         this.sessions = new Map();
         this.counter = 0;
     }
 
-    open(endpoint = chatRoutesEndpoint()) {
+    open(endpoint) {
         this.websocket = new WebSocket(endpoint);
         this.websocket.onmessage = (event) => {
             this.onMessage(event);
