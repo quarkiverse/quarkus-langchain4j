@@ -93,8 +93,9 @@ public class AgenticProcessor {
 
     private static final Logger log = Logger.getLogger(AgenticProcessor.class);
 
-    private static final MethodDescriptor HANDLER_INVOKE = MethodDescriptor.ofMethod(
-            InvocationHandler.class, "invoke", Object.class, Object.class, Method.class, Object[].class);
+    private static final MethodDescriptor AGENT_INVOKE = MethodDescriptor.ofMethod(
+            AbstractQuarkusAgent.class, "invokeWithDeploymentClassLoader", Object.class,
+            InvocationHandler.class, Object.class, Method.class, Object[].class);
 
     private static final Set<DotName> CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS = Set.of(
             AgenticLangChain4jDotNames.A2A_AGENT,
@@ -997,7 +998,7 @@ public class AgenticProcessor {
      *         var5[2] = var8;
      *         String var9 = var4;
      *         var5[3] = var9;
-     *         return (CarConditions) var10.invoke(this, var11, var5);
+     *         return (CarConditions) invokeWithDeploymentClassLoader(var10, this, var11, var5);
      *     }
      * }
      * }
@@ -1200,7 +1201,7 @@ public class AgenticProcessor {
                 }
             }
 
-            ResultHandle result = mc.invokeInterfaceMethod(HANDLER_INVOKE,
+            ResultHandle result = mc.invokeStaticMethod(AGENT_INVOKE,
                     invocationHandler, mc.getThis(), methodHandle, argsArray);
 
             if ("void".equals(m.returnTypeName)) {
