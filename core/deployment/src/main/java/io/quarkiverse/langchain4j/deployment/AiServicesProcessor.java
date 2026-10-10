@@ -194,6 +194,15 @@ public class AiServicesProcessor {
     private static final MethodDescriptor SUPPORT_IMPLEMENT = MethodDescriptor.ofMethod(
             AiServiceMethodImplementationSupport.class,
             "implement", Object.class, AiServiceMethodImplementationSupport.Input.class);
+    private static final MethodDescriptor SUPPORT_INPUT_CONSTRUCTOR = MethodDescriptor.ofConstructor(
+            AiServiceMethodImplementationSupport.Input.class, QuarkusAiServiceContext.class,
+            AiServiceMethodCreateInfo.class, Object[].class, Object.class);
+
+    // Kotlin coroutines support: referenced by name only, so that no Kotlin dependency is required to build the extension
+    static final DotName KOTLIN_CONTINUATION = DotName.createSimple("kotlin.coroutines.Continuation");
+    static final DotName KOTLIN_FLOW = DotName.createSimple("kotlinx.coroutines.flow.Flow");
+    private static final String KOTLIN_FLOW_ADAPTER_CLASS = "kotlinx.coroutines.jdk9.ReactiveFlowKt";
+    private static final String KOTLIN_FLOW_ADAPTER_ARTIFACT = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk9";
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_CLOSE = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "close", void.class);
@@ -250,13 +259,23 @@ public class AiServicesProcessor {
                     .build());
         }
         Set<DotName> returnTypesToRegister = new HashSet<>();
+        boolean hasKotlinSuspend = false;
+        boolean hasKotlinFlow = false;
         for (AiServicesMethodBuildItem aiServicesMethodBuildItem : aiServicesMethodBuildItems) {
-            Type type = aiServicesMethodBuildItem.getMethodInfo().returnType();
+            MethodInfo methodInfo = aiServicesMethodBuildItem.getMethodInfo();
+            if (isKotlinSuspend(methodInfo)) {
+                hasKotlinSuspend = true;
+            }
+            Type type = kotlinEffectiveReturnType(methodInfo);
             if (type.kind() == Type.Kind.PRIMITIVE) {
                 continue;
             }
             DotName returnTypeName = type.name();
-            if (returnTypeName.toString().startsWith("java.")) {
+            if (isKotlinFlow(type)) {
+                hasKotlinFlow = true;
+                continue;
+            }
+            if (returnTypeName.toString().startsWith("java.") || returnTypeName.toString().startsWith("kotlin.")) {
                 continue;
             }
             returnTypesToRegister.add(returnTypeName);
@@ -266,6 +285,23 @@ public class AiServicesProcessor {
                     .builder(returnTypesToRegister.stream().map(DotName::toString).toArray(String[]::new))
                     .constructors().fields().methods()
                     .build());
+        }
+        if (hasKotlinSuspend) {
+            // the runtime accesses these reflectively to bridge Kotlin suspend functions (see KotlinCoroutineSupport)
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder("kotlin.coroutines.Continuation")
+                    .methods().build());
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder("kotlin.coroutines.intrinsics.CoroutineSingletons")
+                    .fields(true).build());
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder("kotlin.ResultKt").methods().build());
+        }
+        if (hasKotlinFlow) {
+            if (!isClassPresent(KOTLIN_FLOW_ADAPTER_CLASS)) {
+                throw new DeploymentException("AI service methods returning '" + KOTLIN_FLOW
+                        + "' require the '" + KOTLIN_FLOW_ADAPTER_ARTIFACT
+                        + "' dependency on the classpath, please add it to your project");
+            }
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(KOTLIN_FLOW_ADAPTER_CLASS)
+                    .methods().build());
         }
 
         serviceProviderProducer.produce(new ServiceProviderBuildItem(DefaultMemoryIdProvider.class.getName(),
@@ -1104,23 +1140,30 @@ public class AiServicesProcessor {
             // currently in one class either streaming or blocking model are supported, but not both
             // if we want to support it, the injectStreamingChatModelBean needs to be recorded per injection point
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
-                if (LangChain4jDotNames.TOKEN_STREAM.equals(method.returnType().name())) {
+                Type effectiveReturnType = kotlinEffectiveReturnType(method);
+                if (LangChain4jDotNames.TOKEN_STREAM.equals(effectiveReturnType.name())) {
                     injectStreamingChatModelBean = true;
                     continue;
                 }
 
-                if (!DotNames.MULTI.equals(method.returnType().name())) {
+                boolean kotlinFlow = KOTLIN_FLOW.equals(effectiveReturnType.name());
+                if (!DotNames.MULTI.equals(effectiveReturnType.name()) && !kotlinFlow) {
                     continue;
                 }
                 boolean isSupportedResponseType = false;
-                if (method.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
-                    Type multiType = method.returnType().asParameterizedType().arguments().get(0);
+                if (effectiveReturnType.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    Type multiType = effectiveReturnType.asParameterizedType().arguments().get(0);
                     if (DotNames.STRING.equals(multiType.name())
                             || LangChain4jDotNames.CHAT_EVENT.equals(multiType.name())) {
                         isSupportedResponseType = true;
                     }
                 }
                 if (!isSupportedResponseType) {
+                    if (kotlinFlow) {
+                        throw illegalConfiguration(
+                                "Only Flow<String> and Flow<ChatEvent> are supported as a Flow return type. Offending method is '"
+                                        + method.declaringClass().name().toString() + "#" + method.name() + "'");
+                    }
                     throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
                             + method.declaringClass().name().toString() + "#" + method.name() + "'");
                 }
@@ -1456,9 +1499,11 @@ public class AiServicesProcessor {
             DotName toolProviderClassDotName,
             List<String> mcpClientNames,
             IndexView index) {
-        boolean reactive = method.returnType().name().equals(DotNames.UNI)
-                || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
-                || method.returnType().name().equals(DotNames.MULTI);
+        DotName effectiveReturnType = kotlinEffectiveReturnType(method).name();
+        boolean reactive = effectiveReturnType.equals(DotNames.UNI)
+                || effectiveReturnType.equals(DotNames.COMPLETION_STAGE)
+                || effectiveReturnType.equals(DotNames.MULTI)
+                || effectiveReturnType.equals(KOTLIN_FLOW);
 
         boolean requireSwitchToWorkerThread = false;
 
@@ -1905,17 +1950,22 @@ public class AiServicesProcessor {
                             ResultHandle methodCreateInfoHandle = mc.invokeStaticMethod(RECORDER_METHOD_CREATE_INFO,
                                     mc.load(ifaceName),
                                     mc.load(methodId));
-                            ResultHandle paramsHandle = mc.newArray(Object.class, methodInfo.parametersCount());
-                            for (int i = 0; i < methodInfo.parametersCount(); i++) {
+                            // the trailing Continuation parameter of a Kotlin suspend function is not an AI service
+                            // method argument, it is passed separately to the support class
+                            boolean kotlinSuspend = methodCreateInfo.isKotlinSuspend();
+                            int argsCount = kotlinSuspend ? methodInfo.parametersCount() - 1
+                                    : methodInfo.parametersCount();
+                            ResultHandle paramsHandle = mc.newArray(Object.class, argsCount);
+                            for (int i = 0; i < argsCount; i++) {
                                 mc.writeArrayValue(paramsHandle, i, mc.getMethodParam(i));
                             }
+                            ResultHandle continuationHandle = kotlinSuspend
+                                    ? mc.getMethodParam(methodInfo.parametersCount() - 1)
+                                    : mc.loadNull();
 
                             ResultHandle supportHandle = getFromCDI(mc, AiServiceMethodImplementationSupport.class.getName());
-                            ResultHandle inputHandle = mc.newInstance(
-                                    MethodDescriptor.ofConstructor(AiServiceMethodImplementationSupport.Input.class,
-                                            QuarkusAiServiceContext.class, AiServiceMethodCreateInfo.class,
-                                            Object[].class),
-                                    contextHandle, methodCreateInfoHandle, paramsHandle);
+                            ResultHandle inputHandle = mc.newInstance(SUPPORT_INPUT_CONSTRUCTOR,
+                                    contextHandle, methodCreateInfoHandle, paramsHandle, continuationHandle);
 
                             ResultHandle resultHandle = mc.invokeVirtualMethod(SUPPORT_IMPLEMENT, supportHandle, inputHandle);
                             mc.returnValue(resultHandle);
@@ -2099,6 +2149,9 @@ public class AiServicesProcessor {
             Predicate<MethodInfo> skipToolBoxPredicate) {
         validateReturnType(method);
 
+        boolean kotlinSuspend = isKotlinSuspend(method);
+        boolean kotlinFlow = isKotlinFlow(kotlinEffectiveReturnType(method));
+
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
         java.lang.reflect.Type returnType = javaLangReturnType(method);
 
@@ -2107,9 +2160,10 @@ public class AiServicesProcessor {
         // TODO give user ability to provide custom OutputParser
         // Prefer ServiceOutputParser.jsonSchema over JsonSchemas.jsonSchemaFrom so collection
         // return types (List/Set of POJO, String, enum, …) get a proper JSON schema (#943).
-        Optional<JsonSchema> structuredOutputSchema = jsonSchemaFrom(returnType);
+        // Flow return types are handled like Multi ones: the stream is produced by the token stream machinery
+        Optional<JsonSchema> structuredOutputSchema = kotlinFlow ? Optional.empty() : jsonSchemaFrom(returnType);
         String outputFormatInstructions = "";
-        if (!skipOutputFormatInstructionsPredicate.test(method) && !returnType.equals(Multi.class)) {
+        if (!skipOutputFormatInstructionsPredicate.test(method) && !kotlinFlow && !returnType.equals(Multi.class)) {
             try {
                 outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
             } catch (RuntimeException e) {
@@ -2172,10 +2226,20 @@ public class AiServicesProcessor {
                 methodToolClassInfo.keySet(), methodMcpClientNames, index);
 
         TypeArgMapper typeArgMapper = new TypeArgMapper(method.declaringClass(), index);
-        var methodReturnTypeSignature = typeSignature(method.returnType(), typeArgMapper);
+        // Flow methods are mirrored as Multi<String>/Multi<ChatEvent> methods at runtime, the produced stream is
+        // converted back to a Flow by the runtime
+        var effectiveReturnType = kotlinFlow
+                ? org.jboss.jandex.ParameterizedType.create(DotName.createSimple(Multi.class),
+                        new Type[] { kotlinFlowElementType(method) }, null)
+                : kotlinEffectiveReturnType(method);
+        var methodReturnTypeSignature = typeSignature(effectiveReturnType, typeArgMapper);
 
         List<AiServiceMethodCreateInfo.ParameterInfo> parameterInfoList = new ArrayList<>();
         for (MethodParameterInfo p : method.parameters()) {
+            if (kotlinSuspend && p.position() == method.parametersCount() - 1) {
+                // the trailing Continuation parameter of a suspend function is not an AI service method argument
+                continue;
+            }
             parameterInfoList.add(new AiServiceMethodCreateInfo.ParameterInfo(p.name(),
                     typeSignature(p.type(), typeArgMapper),
                     p.declaredAnnotations().stream().map(an -> an.name().toString()).collect(
@@ -2189,7 +2253,7 @@ public class AiServicesProcessor {
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
                 accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
-                gatherOutputGuardrails(method, methodReturnTypeSignature));
+                gatherOutputGuardrails(method, methodReturnTypeSignature), kotlinSuspend, kotlinFlow);
     }
 
     private static InputGuardrailsLiteral gatherInputGuardrails(MethodInfo method) {
@@ -2296,11 +2360,92 @@ public class AiServicesProcessor {
             for (Type methodParamType : method.parameterTypes()) {
                 methodParamTypes.add(JandexUtil.load(methodParamType, Thread.currentThread().getContextClassLoader()));
             }
-            return declaringClass.getDeclaredMethod(method.name(), methodParamTypes.toArray(EMPTY_CLASS_ARRAY))
-                    .getGenericReturnType();
+            var declaredMethod = declaringClass.getDeclaredMethod(method.name(),
+                    methodParamTypes.toArray(EMPTY_CLASS_ARRAY));
+            if (isKotlinSuspend(method)) {
+                // the real return type of a suspend function is the type argument of the trailing Continuation parameter
+                return kotlinSuspendReturnType(declaredMethod);
+            }
+            return declaredMethod.getGenericReturnType();
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * A Kotlin {@code suspend} function is compiled to a method taking a trailing
+     * {@code kotlin.coroutines.Continuation} parameter and returning {@code java.lang.Object}.
+     */
+    static boolean isKotlinSuspend(MethodInfo method) {
+        int parametersCount = method.parametersCount();
+        return parametersCount > 0 && KOTLIN_CONTINUATION.equals(method.parameterType(parametersCount - 1).name())
+                && method.parameterType(parametersCount - 1).kind() == Type.Kind.PARAMETERIZED_TYPE;
+    }
+
+    /**
+     * Returns the type the method actually returns: for suspend functions this is the type argument of the trailing
+     * {@code Continuation} parameter, for other methods the declared return type.
+     */
+    private static Type kotlinEffectiveReturnType(MethodInfo method) {
+        return isKotlinSuspend(method) ? kotlinSuspendReturnType(method) : method.returnType();
+    }
+
+    private static Type kotlinSuspendReturnType(MethodInfo method) {
+        return unwrapWildcard(method.parameterType(method.parametersCount() - 1)
+                .asParameterizedType().arguments().get(0));
+    }
+
+    private static java.lang.reflect.Type kotlinSuspendReturnType(java.lang.reflect.Method method) {
+        java.lang.reflect.Type[] genericParameterTypes = method.getGenericParameterTypes();
+        java.lang.reflect.Type continuation = genericParameterTypes[genericParameterTypes.length - 1];
+        if (continuation instanceof java.lang.reflect.ParameterizedType parameterized
+                && parameterized.getActualTypeArguments().length == 1) {
+            return unwrapWildcard(parameterized.getActualTypeArguments()[0]);
+        }
+        return Object.class;
+    }
+
+    private static Type unwrapWildcard(Type type) {
+        if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            Type superBound = type.asWildcardType().superBound();
+            return superBound != null ? superBound : type.asWildcardType().extendsBound();
+        }
+        return type;
+    }
+
+    private static java.lang.reflect.Type unwrapWildcard(java.lang.reflect.Type type) {
+        if (type instanceof java.lang.reflect.WildcardType wildcardType) {
+            java.lang.reflect.Type[] lowerBounds = wildcardType.getLowerBounds();
+            return lowerBounds.length > 0 ? lowerBounds[0] : wildcardType.getUpperBounds()[0];
+        }
+        return type;
+    }
+
+    /**
+     * Kotlin {@code Flow} return types are handled like {@code Multi} ones, except that the value handed back to the
+     * caller is a {@code Flow} converted from the {@code Multi} produced by the runtime.
+     */
+    static boolean isKotlinFlow(Type returnType) {
+        return KOTLIN_FLOW.equals(returnType.name());
+    }
+
+    private static boolean isClassPresent(String className) {
+        try {
+            Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private static Type kotlinFlowElementType(MethodInfo method) {
+        Type returnType = kotlinEffectiveReturnType(method);
+        if (returnType.kind() != Type.Kind.PARAMETERIZED_TYPE
+                || returnType.asParameterizedType().arguments().get(0).kind() != Type.Kind.CLASS) {
+            throw illegalConfigurationForMethod(
+                    "Only Flow<String> and Flow<ChatEvent> are supported as a Flow return type", method);
+        }
+        return returnType.asParameterizedType().arguments().get(0);
     }
 
     private String typeSignature(Type returnType, TypeArgMapper typeArgMapper) {
@@ -2318,6 +2463,9 @@ public class AiServicesProcessor {
 
         List<TemplateParameterInfo> templateParams = new ArrayList<>();
         for (MethodParameterInfo param : method.parameters()) {
+            if (isKotlinContinuationParameter(method, param)) {
+                continue;
+            }
             if (chatRequestParametersParamPosition.isPresent()
                     && param.position() == chatRequestParametersParamPosition.get()) {
                 continue;
@@ -2344,12 +2492,23 @@ public class AiServicesProcessor {
 
         }
 
-        if ((templateParams.size() == 1) && (method.parameters().size() == 1)) {
+        if ((templateParams.size() == 1) && (effectiveParametersCount(method) == 1)) {
             // the special 'it' param is supported when the method only has one parameter
             templateParams.add(new TemplateParameterInfo(0, "it"));
         }
 
         return templateParams;
+    }
+
+    /**
+     * The trailing {@code Continuation} parameter of a Kotlin suspend function is not an AI service method argument.
+     */
+    static boolean isKotlinContinuationParameter(MethodInfo method, MethodParameterInfo param) {
+        return isKotlinSuspend(method) && param.position() == method.parametersCount() - 1;
+    }
+
+    static int effectiveParametersCount(MethodInfo method) {
+        return isKotlinSuspend(method) ? method.parametersCount() - 1 : method.parametersCount();
     }
 
     private boolean isParameterAllowedAsTemplateVariable(
@@ -2475,7 +2634,7 @@ public class AiServicesProcessor {
             String userMessageTemplate = TemplateUtil.getTemplateFromAnnotationInstance(userMessageInstance);
 
             if (userMessageTemplate.contains("{{it}}")) {
-                if (method.parametersCount() != 1) {
+                if (effectiveParametersCount(method) != 1) {
                     throw illegalConfigurationForMethod(
                             "Error: The {{it}} placeholder is present but the method does not have exactly one parameter. " +
                                     "Please ensure that methods using the {{it}} placeholder have exactly one parameter",
@@ -2518,6 +2677,9 @@ public class AiServicesProcessor {
                 int undefinedParams = 0;
                 for (int i = 0; i < method.parametersCount(); i++) {
                     MethodParameterInfo parameter = method.parameters().get(i);
+                    if (isKotlinContinuationParameter(method, parameter)) {
+                        continue;
+                    }
                     if (templateParamNames.contains(parameter.name())) {
                         continue;
                     } else if (userNameParamPosition.isPresent() && i == userNameParamPosition.get()) {
