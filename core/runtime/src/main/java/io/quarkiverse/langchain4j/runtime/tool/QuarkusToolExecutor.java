@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -157,7 +158,12 @@ public class QuarkusToolExecutor implements ToolExecutor {
         if (invocationResult instanceof String string) {
             return string;
         }
-        return Json.toJson(invocationResult);
+        try {
+            // Keep tool results compact without changing the general JSON codec's formatting.
+            return QuarkusJsonCodecFactory.ObjectMapperHolder.COMPACT_WRITER.writeValueAsString(invocationResult);
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     // TODO: cache
