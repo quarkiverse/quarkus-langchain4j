@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Registry-backed briefing</title>
+        <style>
+
+    body { font: 17px system-ui, sans-serif; max-width: 1000px; margin: 3rem auto; padding: 0 1rem; color: #182331; }
+    textarea, select, button { font: inherit; padding: .65rem; }
+    textarea { display: block; width: 95%; min-height: 6rem; margin: .8rem 0; }
+    section { border: 1px solid #b7c9d8; border-radius: .5rem; padding: 1rem; margin: 1rem 0; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f2f6fa; padding: .8rem; }
+    button { cursor: pointer; } #status { font-weight: bold; } small { display: block; }
+
+        </style>
+    </head>
+    <body>
+        <h1>A registry-backed multilingual briefing</h1>
+        <p>Discover and call the Weather MCP server → summarize over A2A → translate over A2A.</p>
+        <p>Endpoints come from Apicurio. Application code chooses the required roles and handoff order.</p>
+        <form id="briefing">
+            <label>
+                City
+                <select id="city">
+                    <option>Amsterdam</option>
+                    <option>Paris</option>
+                    <option>Madrid</option>
+                </select>
+            </label>
+            <label for="context">Briefing context</label>
+            <textarea id="context" required maxlength="8000">Our visitors will walk through the city and meet colleagues to discuss open standards.</textarea>
+            <button id="submit">Create briefing in French</button>
+        </form>
+        <p id="status" role="status"></p>
+        <div id="result"></div>
+        <section>
+            <h2>Try the governance story</h2>
+            <p>While this page is running, use a second terminal from the repository root:</p>
+            <pre>python3 samples/agent-registry-workflow/scripts/run.py --governance</pre>
+            <p>Registry's BACKWARD compatibility rule rejects removal of the translation skill (HTTP 400).
+                The command verifies that the accepted content and version remain unchanged, then runs the complete
+                briefing again. It also publishes a compatible addition and demonstrates the new registration.</p>
+            <small>Local unauthenticated demonstration. Weather is fictional. Registry enforces compatibility on publication;
+                the application does not implement compatibility rules or a deprecation gate. Registered versions are observations,
+                not pinned remote deployments. Rejected metadata does not stop traffic to independently deployed code.</small>
+        </section>
+        <script>
+    const form = document.getElementById('briefing');
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+    const button = document.getElementById('submit');
+    function section(title, text) {
+    const element = document.createElement('section');
+    const heading = document.createElement('h2');
+    heading.textContent = title;
+    const content = document.createElement('pre');
+    content.textContent = text;
+    element.append(heading, content);
+    result.append(element);
+    }
+    form.addEventListener('submit', async event => {
+    event.preventDefault();
+    button.disabled = true;
+    result.replaceChildren();
+    status.textContent = 'Reading Registry metadata and executing MCP → A2A → A2A…';
+    try {
+        const response = await fetch('/workflow/briefing', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({city: document.getElementById('city').value, context: document.getElementById('context').value})
+        });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error || `Request failed (${response.status}); inspect application logs.`);
+        section('Registered contracts observed before execution', JSON.stringify(body.contracts, null, 2));
+        body.steps.forEach(step => section(`${step.operation} · ${step.artifact}`, `Input:\n${step.input}\n\nOutput:\n${step.output}`));
+        status.textContent = 'Briefing completed. Each step below is an actual call result.';
+    } catch (error) {
+        status.textContent = error.message;
+    } finally { button.disabled = false; }
+    });
+</script>
+    </body>
+</html>
