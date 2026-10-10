@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -12,6 +13,7 @@ import java.util.function.Function;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.AgenticServices;
@@ -25,6 +27,7 @@ import dev.langchain4j.agentic.scope.AgenticScopeSerializer;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.spi.ExecutorProvider;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkus.arc.Arc;
@@ -103,6 +106,25 @@ public class AgenticRecorder {
     public void registerSupplierParameterResolver(Set<String> qualifierNames) {
         DeclarativeUtil.addSupplierParameterResolver(
                 new CdiSupplierParameterResolver(Collections.unmodifiableSet(qualifierNames)));
+    }
+
+    @RuntimeInit
+    public void registerDefaultExecutorProvider() {
+        // ExecutorProvider.get() only exposes the programmatic provider, not ServiceLoader providers.
+        // Match LangChain4j's context-classloader lookup and fallback without instantiating providers.
+        if (ExecutorProvider.get() != null
+                || ServiceLoader.load(ExecutorProvider.class).stream().findAny().isPresent()
+                || ServiceLoader.load(ExecutorProvider.class, ExecutorProvider.class.getClassLoader())
+                        .stream().findAny().isPresent()) {
+            return;
+        }
+        ManagedExecutor managedExecutor = Arc.container().instance(ManagedExecutor.class).get();
+        if (managedExecutor == null) {
+            log.warn("ManagedExecutor not available — parallel agents will use raw virtual threads "
+                    + "without CDI/OTel/Security context propagation");
+            return;
+        }
+        ExecutorProvider.set(() -> managedExecutor);
     }
 
     @RuntimeInit
