@@ -45,6 +45,7 @@
 * xref:agentic.adoc[Agentic AI]
 * xref:models.adoc[Models]
 ** Chat Models
+*** xref:bedrock-chat-model.adoc[Amazon Bedrock]
 *** xref:anthropic-chat-model.adoc[Anthropic (Claude)]
 *** xref:azure-openai-chat-model.adoc[Azure OpenAI]
 *** xref:gemini-chat-model.adoc[Google Gemini]
