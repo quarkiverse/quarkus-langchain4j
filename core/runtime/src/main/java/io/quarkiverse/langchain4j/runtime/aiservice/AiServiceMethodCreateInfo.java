@@ -67,6 +67,16 @@ public final class AiServiceMethodCreateInfo {
 
     private final LazyValue<Integer> quarkusGuardrailsMaxRetry;
     private final boolean switchToWorkerThreadForToolExecution;
+    private final AsyncReturnType asyncReturnType;
+
+    /**
+     * How the method wraps its result, the other attributes describing the wrapped type.
+     */
+    public enum AsyncReturnType {
+        NONE,
+        UNI,
+        COMPLETION_STAGE
+    }
 
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName,
@@ -87,6 +97,7 @@ public final class AiServiceMethodCreateInfo {
             List<String> mcpClientNames,
             List<String> skillNames,
             boolean switchToWorkerThreadForToolExecution,
+            AsyncReturnType asyncReturnType,
             String outputTokenAccumulatorClassName,
             String responseAugmenterClassName,
             InputGuardrailsLiteral inputGuardrails,
@@ -126,6 +137,7 @@ public final class AiServiceMethodCreateInfo {
             }
         });
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
+        this.asyncReturnType = asyncReturnType;
         this.responseAugmenterClassName = responseAugmenterClassName;
     }
 
@@ -269,6 +281,10 @@ public final class AiServiceMethodCreateInfo {
 
     public boolean isSwitchToWorkerThreadForToolExecution() {
         return switchToWorkerThreadForToolExecution;
+    }
+
+    public AsyncReturnType getAsyncReturnType() {
+        return asyncReturnType;
     }
 
     public void setResponseAugmenter(Class<? extends AiResponseAugmenter<?>> augmenter) {

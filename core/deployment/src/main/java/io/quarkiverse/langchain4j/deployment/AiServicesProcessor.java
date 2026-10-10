@@ -16,7 +16,7 @@ import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVar
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
 import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
-import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMulti;
+import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isStreamed;
 import static io.quarkus.arc.processor.DotNames.NAMED;
 import static io.quarkus.arc.processor.DotNames.SINGLETON;
 
@@ -525,7 +525,7 @@ public class AiServicesProcessor {
 
             // determine if the AiService returns an image
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
-                Type returnType = method.returnType();
+                Type returnType = resultType(method);
                 if (isImageOrImageResultResult(returnType)) {
                     imageModelNames.add(chatModelName);
                 }
@@ -1109,7 +1109,7 @@ public class AiServicesProcessor {
                     continue;
                 }
 
-                if (!DotNames.MULTI.equals(method.returnType().name())) {
+                if (!returnsStreamedResponse(method)) {
                     continue;
                 }
                 boolean isSupportedResponseType = false;
@@ -1121,7 +1121,8 @@ public class AiServicesProcessor {
                     }
                 }
                 if (!isSupportedResponseType) {
-                    throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
+                    throw illegalConfiguration("Only Multi<String>, Multi<ChatEvent> and Flow.Publisher<String> are supported "
+                            + "as streamed return types. Offending method is '"
                             + method.declaringClass().name().toString() + "#" + method.name() + "'");
                 }
                 injectStreamingChatModelBean = true;
@@ -1458,9 +1459,11 @@ public class AiServicesProcessor {
             IndexView index) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
-                || method.returnType().name().equals(DotNames.MULTI);
+                || returnsStreamedResponse(method)
+                || method.returnType().name().equals(LangChain4jDotNames.TOKEN_STREAM);
 
         boolean requireSwitchToWorkerThread = false;
+        boolean synchronousToolExecution = method.returnType().name().equals(LangChain4jDotNames.TOKEN_STREAM);
 
         if (!reactive) {
             // We are already on a thread we can block.
@@ -1493,7 +1496,10 @@ public class AiServicesProcessor {
             for (ToolMethodBuildItem tool : tools) {
                 if (isToolDeclaredInHierarchy(tool.getDeclaringClassName(), classname, index)) {
                     found = true;
-                    if (tool.requiresSwitchToWorkerThread()) {
+                    boolean toolRequiresSwitch = synchronousToolExecution
+                            ? tool.requiresSwitchToWorkerThreadForSynchronousExecution()
+                            : tool.requiresSwitchToWorkerThread();
+                    if (toolRequiresSwitch) {
                         requireSwitchToWorkerThread = true;
                         break;
                     }
@@ -1504,6 +1510,44 @@ public class AiServicesProcessor {
             }
         }
         return requireSwitchToWorkerThread;
+    }
+
+    private static AiServiceMethodCreateInfo.AsyncReturnType asyncReturnType(Type returnType) {
+        DotName name = returnType.name();
+        if (DotNames.UNI.equals(name)) {
+            return AiServiceMethodCreateInfo.AsyncReturnType.UNI;
+        }
+        if (DotNames.COMPLETION_STAGE.equals(name) || DotNames.COMPLETABLE_FUTURE.equals(name)) {
+            return AiServiceMethodCreateInfo.AsyncReturnType.COMPLETION_STAGE;
+        }
+        return AiServiceMethodCreateInfo.AsyncReturnType.NONE;
+    }
+
+    /**
+     * The type the model response is converted to: the type argument of an asynchronous return type, the return type
+     * otherwise.
+     */
+    private static Type resultType(MethodInfo method) {
+        Type returnType = method.returnType();
+        if (asyncReturnType(returnType) == AiServiceMethodCreateInfo.AsyncReturnType.NONE) {
+            return returnType;
+        }
+        if (returnType.kind() != Type.Kind.PARAMETERIZED_TYPE) {
+            throw illegalConfiguration("Return type of method '%s' must declare its type argument", method);
+        }
+        Type resultType = returnType.asParameterizedType().arguments().get(0);
+        DotName resultTypeName = resultType.name();
+        if (asyncReturnType(resultType) != AiServiceMethodCreateInfo.AsyncReturnType.NONE
+                || DotNames.MULTI.equals(resultTypeName) || DotNames.FLOW_PUBLISHER.equals(resultTypeName)
+                || LangChain4jDotNames.TOKEN_STREAM.equals(resultTypeName)) {
+            throw illegalConfiguration("Return type of method '%s' cannot wrap a streamed or asynchronous type", method);
+        }
+        return resultType;
+    }
+
+    private static boolean returnsStreamedResponse(MethodInfo method) {
+        DotName returnType = method.returnType().name();
+        return DotNames.MULTI.equals(returnType) || DotNames.FLOW_PUBLISHER.equals(returnType);
     }
 
     private static boolean isToolDeclaredInHierarchy(String declaringClassName, String toolClassName, IndexView index) {
@@ -1565,10 +1609,10 @@ public class AiServicesProcessor {
 
                 // Check that the accumulator is used on a method retuning a Multi
                 DotName returnedType = method.getMethodInfo().returnType().name();
-                if (!DotName.createSimple(Multi.class).equals(returnedType)) {
+                if (!DotNames.MULTI.equals(returnedType) && !DotNames.FLOW_PUBLISHER.equals(returnedType)) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
                             new DeploymentException("OutputGuardrailAccumulator can only be used on method returning a " +
-                                    "`Multi<X>`: found `%s` for method `%s.%s`".formatted(returnedType,
+                                    "`Multi<X>` or a `Flow.Publisher<X>`: found `%s` for method `%s.%s`".formatted(returnedType,
                                             method.getMethodInfo().declaringClass().toString(),
                                             method.getMethodInfo().name()))));
                 }
@@ -2100,7 +2144,11 @@ public class AiServicesProcessor {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
+        AiServiceMethodCreateInfo.AsyncReturnType asyncReturnType = asyncReturnType(method.returnType());
         java.lang.reflect.Type returnType = javaLangReturnType(method);
+        if (asyncReturnType != AiServiceMethodCreateInfo.AsyncReturnType.NONE) {
+            returnType = TypeUtil.typeArgument(returnType);
+        }
 
         List<MethodParameterInfo> params = method.parameters();
 
@@ -2172,7 +2220,7 @@ public class AiServicesProcessor {
                 methodToolClassInfo.keySet(), methodMcpClientNames, index);
 
         TypeArgMapper typeArgMapper = new TypeArgMapper(method.declaringClass(), index);
-        var methodReturnTypeSignature = typeSignature(method.returnType(), typeArgMapper);
+        var methodReturnTypeSignature = typeSignature(resultType(method), typeArgMapper);
 
         List<AiServiceMethodCreateInfo.ParameterInfo> parameterInfoList = new ArrayList<>();
         for (MethodParameterInfo p : method.parameters()) {
@@ -2188,7 +2236,7 @@ public class AiServicesProcessor {
                 overrideChatModelParamPosition, chatRequestParametersParamPosition,
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
-                accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
+                asyncReturnType, accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
                 gatherOutputGuardrails(method, methodReturnTypeSignature));
     }
 
@@ -2199,7 +2247,7 @@ public class AiServicesProcessor {
 
     private static OutputGuardrailsLiteral gatherOutputGuardrails(MethodInfo method, String methodReturnTypeSignature) {
         var annotationInstance = getGuardrailsAnnotation(method, LangChain4jDotNames.OUTPUT_GUARDRAILS);
-        var methodReturnsMulti = TypeUtil.isMulti(TypeSignatureParser.parse(methodReturnTypeSignature));
+        var methodReturnsMulti = TypeUtil.isStreamed(TypeSignatureParser.parse(methodReturnTypeSignature));
         var maxRetriesAsSetByConfig = annotationInstance
                 .map(v -> v.value("maxRetries"))
                 .map(AnnotationValue::asInt)
@@ -2241,7 +2289,7 @@ public class AiServicesProcessor {
     }
 
     private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {
-        if (isMulti(returnType)) {
+        if (isStreamed(returnType)) {
             return Optional.empty();
         }
         // ServiceOutputParser supports collections; JsonSchemas.jsonSchemaFrom only handles POJOs.

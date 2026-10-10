@@ -273,6 +273,18 @@ You can disable automatic schema insertion via configuration:
 quarkus.langchain4j.response-schema=false
 ----
 
+== Asynchronous Responses
+
+To avoid blocking the caller, an AI service method can return `Uni<T>` or `CompletionStage<T>` (including `CompletableFuture<T>`), where `T` is any type a blocking method can return:
+
+[source,java]
+----
+Uni<ReviewResponse> evaluate(String review);
+----
+
+The invocation runs on a worker thread, so these methods can be called from the event loop, for example in a reactive REST endpoint.
+A `Uni` is lazy: the model is called when the `Uni` is subscribed to.
+
 == Streaming Responses
 
 AI Services can stream responses from the LLM token-by-token. Define the method to return a reactive stream (`Multi<String>`):
@@ -281,6 +293,8 @@ AI Services can stream responses from the LLM token-by-token. Define the method 
 ----
 Multi<String> chat(@UserMessage String userMessage);
 ----
+
+`Flow.Publisher<String>` is supported as well, and behaves like `Multi<String>`.
 
 You can consume the stream internally:
 

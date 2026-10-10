@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -48,6 +49,29 @@ public class QuarkusToolExecutorFactory {
                 }
 
                 return funRef.get().apply(toolExecutionRequest, invocationContext);
+            }
+
+            @Override
+            public CompletableFuture<ToolExecutionResult> executeAsync(ToolExecutionRequest toolExecutionRequest,
+                    InvocationContext invocationContext) {
+                BiFunction<ToolExecutionRequest, InvocationContext, CompletableFuture<ToolExecutionResult>> fun = new BiFunction<>() {
+                    @Override
+                    public CompletableFuture<ToolExecutionResult> apply(ToolExecutionRequest request,
+                            InvocationContext context) {
+                        return originalTool.executeAsync(request, context);
+                    }
+                };
+                for (QuarkusToolExecutor.Wrapper wrapper : wrappers) {
+                    BiFunction<ToolExecutionRequest, InvocationContext, CompletableFuture<ToolExecutionResult>> next = fun;
+                    fun = new BiFunction<>() {
+                        @Override
+                        public CompletableFuture<ToolExecutionResult> apply(ToolExecutionRequest request,
+                                InvocationContext context) {
+                            return wrapper.wrapAsync(request, context, next, executor);
+                        }
+                    };
+                }
+                return fun.apply(toolExecutionRequest, invocationContext);
             }
         };
     }

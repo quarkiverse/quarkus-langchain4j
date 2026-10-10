@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.types;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.Flow;
 
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.service.Result;
@@ -19,6 +20,27 @@ public final class TypeUtil {
 
     public static boolean isMulti(Type returnType) {
         return isTypeOf(returnType, Multi.class);
+    }
+
+    public static boolean isFlowPublisher(Type returnType) {
+        return isTypeOf(returnType, Flow.Publisher.class);
+    }
+
+    /**
+     * Returns true for the return types implemented by streaming the response: {@code Multi} and {@code Flow.Publisher}.
+     */
+    public static boolean isStreamed(Type returnType) {
+        return isMulti(returnType) || isFlowPublisher(returnType);
+    }
+
+    /**
+     * Returns the type argument of a single-argument parameterized type, such as the {@code T} of {@code Uni<T>}.
+     */
+    public static Type typeArgument(Type type) {
+        if (!(type instanceof ParameterizedType parameterizedType)) {
+            throw new IllegalStateException("Expected a parameterized type but got " + type);
+        }
+        return parameterizedType.getActualTypeArguments()[0];
     }
 
     public static boolean isResult(Type returnType) {

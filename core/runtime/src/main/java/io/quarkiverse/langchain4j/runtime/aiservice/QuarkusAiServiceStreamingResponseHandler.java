@@ -9,9 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -53,6 +56,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolServiceContext;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
+import io.quarkiverse.langchain4j.runtime.tool.BlockingFallbackToolExecutor;
 import io.vertx.core.Context;
 
 /**
@@ -61,6 +65,13 @@ import io.vertx.core.Context;
  * receiving the `completion` event when there is tool execution requests.
  */
 public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatResponseHandler {
+
+    private static final Executor CALLER_THREAD = new Executor() {
+        @Override
+        public void execute(Runnable command) {
+            command.run();
+        }
+    };
 
     private final Logger log = Logger.getLogger(QuarkusAiServiceStreamingResponseHandler.class);
 
@@ -401,97 +412,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                                 .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
                                 .orElse(0);
                     }
-                    int toolCallsCount = 0;
-                    for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-                        if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
-                            throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
-                                    toolExecutionRequests.size());
-                        }
-                        toolCallsCount++;
-                        if (isCancelled()) {
-                            // Fill cancelled tools with error results to keep memory consistent:
-                            // every tool request must have a matching tool result
-                            ToolExecutionResultMessage cancelledResult = ToolExecutionResultMessage.from(
-                                    toolExecutionRequest, "Tool execution was cancelled");
-                            QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
-                            continue;
-                        }
-                        ToolExecutionResult toolExecutionResult = context.toolService.executeTool(
-                                invocationContext, toolExecutors, toolExecutionRequest,
-                                beforeToolExecutionHandler, toolExecuteHandler);
-
-                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
-                        rawToolResults.add(toolExecutionResult);
-
-                        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil
-                                .from(toolExecutionRequest, toolExecutionResult);
-
-                        QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
-                    }
-
-                    if (isCancelled()) {
-                        shutdown();
-                        return;
-                    }
-
-                    List<ToolSpecification> nextToolSpecifications = toolSpecifications;
-                    ToolServiceContext nextToolSearchContext = toolSearchContext;
-                    if (context.toolSearchService != null && toolSearchContext != null) {
-                        nextToolSearchContext = ToolSearchService.addFoundTools(toolSearchContext, rawToolResults);
-                        nextToolSpecifications = new ArrayList<>(nextToolSearchContext.effectiveTools());
-                    }
-
-                    DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
-                    parametersBuilder.toolSpecifications(nextToolSpecifications);
-
-                    StreamingChatModel effectiveStreamingChatModel = context.effectiveStreamingChatModel(methodCreateInfo,
-                            methodArgs);
-                    if (nonNull(effectiveStreamingChatModel.defaultRequestParameters())) {
-                        var toolChoice = effectiveStreamingChatModel.defaultRequestParameters().toolChoice();
-                        if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)) {
-                            // This code is needed to avoid a infinite-loop when using the AiService
-                            // in combination with the tool-choice option set to REQUIRED.
-                            // If the tool-choice option is not set to AUTO after calling the tool,
-                            // the model may continuously reselect the same tool in subsequent responses,
-                            // even though the tool has already been invoked.
-                            parametersBuilder.toolChoice(ToolChoice.AUTO);
-                        }
-                    }
-
-                    ChatRequestParameters defaultParams = parametersBuilder.build();
-                    var userParams = AiServiceMethodImplementationSupport
-                            .findChatRequestParameters(methodCreateInfo, methodArgs);
-                    ChatRequestParameters effectiveParams = effectiveChatRequestParameters(defaultParams, userParams);
-
-                    ChatRequest chatRequest = ChatRequest.builder()
-                            .messages(messagesToSend(memoryId))
-                            .parameters(effectiveParams)
-                            .build();
-                    QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
-                            chatRequest,
-                            context,
-                            invocationContext,
-                            memoryId,
-                            partialResponseHandler,
-                            partialThinkingHandler,
-                            partialToolCallHandler,
-                            beforeToolExecutionHandler,
-                            intermediateResponseHandler,
-                            toolExecuteHandler,
-                            completeResponseHandler,
-                            completionHandler,
-                            errorHandler,
-                            temporaryMemory,
-                            TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
-                            nextToolSpecifications,
-                            toolExecutors,
-                            nextToolSearchContext,
-                            mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
-                            methodArgs,
-                            cancelled, toolCallingRoundTripsLeft);
-
-                    fireRequestIssuedEvent(chatRequest);
-                    effectiveStreamingChatModel.chat(chatRequest, handler);
+                    executeToolsFrom(0, toolExecutionRequests, maxToolCallsPerResponse, rawToolResults,
+                            completeResponse);
                 }
             });
         } else {
@@ -557,6 +479,120 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         return context.hasChatMemory()
                 ? context.chatMemoryService.getChatMemory(memoryId).messages()
                 : temporaryMemory;
+    }
+
+    /**
+     * Executes the requested tools one after the other, each one starting when the previous one completes, then sends
+     * the tool results back to the model.
+     */
+    private void executeToolsFrom(int index, List<ToolExecutionRequest> toolExecutionRequests, int maxToolCallsPerResponse,
+            List<ToolExecutionResult> rawToolResults, ChatResponse completeResponse) {
+        if (index == toolExecutionRequests.size()) {
+            continueAfterTools(rawToolResults, completeResponse);
+            return;
+        }
+        if (maxToolCallsPerResponse > 0 && index >= maxToolCallsPerResponse) {
+            throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
+        }
+
+        ToolExecutionRequest toolExecutionRequest = toolExecutionRequests.get(index);
+        if (isCancelled()) {
+            // Fill cancelled tools with error results to keep memory consistent:
+            // every tool request must have a matching tool result
+            addToMemory(ToolExecutionResultMessage.from(toolExecutionRequest, "Tool execution was cancelled"));
+            executeToolsFrom(index + 1, toolExecutionRequests, maxToolCallsPerResponse, rawToolResults, completeResponse);
+            return;
+        }
+
+        Map<String, ToolExecutor> asyncToolExecutors = toolExecutors == null ? Map.of()
+                : BlockingFallbackToolExecutor.wrap(toolExecutors);
+        context.toolService.startTool(toolExecutionRequest, asyncToolExecutors, invocationContext,
+                beforeToolExecutionHandler, toolExecuteHandler, CALLER_THREAD)
+                .whenComplete(new BiConsumer<ToolExecutionResult, Throwable>() {
+                    @Override
+                    public void accept(ToolExecutionResult toolExecutionResult, Throwable error) {
+                        if (error != null) {
+                            onError(error instanceof CompletionException && error.getCause() != null ? error.getCause()
+                                    : error);
+                            return;
+                        }
+                        try {
+                            fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
+                            rawToolResults.add(toolExecutionResult);
+                            addToMemory(ToolExecutionResultMessageUtil.from(toolExecutionRequest, toolExecutionResult));
+                            executeToolsFrom(index + 1, toolExecutionRequests, maxToolCallsPerResponse, rawToolResults,
+                                    completeResponse);
+                        } catch (Exception e) {
+                            onError(e);
+                        }
+                    }
+                });
+    }
+
+    private void continueAfterTools(List<ToolExecutionResult> rawToolResults, ChatResponse completeResponse) {
+        if (isCancelled()) {
+            shutdown();
+            return;
+        }
+
+        List<ToolSpecification> nextToolSpecifications = toolSpecifications;
+        ToolServiceContext nextToolSearchContext = toolSearchContext;
+        if (context.toolSearchService != null && toolSearchContext != null) {
+            nextToolSearchContext = ToolSearchService.addFoundTools(toolSearchContext, rawToolResults);
+            nextToolSpecifications = new ArrayList<>(nextToolSearchContext.effectiveTools());
+        }
+
+        DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
+        parametersBuilder.toolSpecifications(nextToolSpecifications);
+
+        StreamingChatModel effectiveStreamingChatModel = context.effectiveStreamingChatModel(methodCreateInfo,
+                methodArgs);
+        if (nonNull(effectiveStreamingChatModel.defaultRequestParameters())) {
+            var toolChoice = effectiveStreamingChatModel.defaultRequestParameters().toolChoice();
+            if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)) {
+                // This code is needed to avoid a infinite-loop when using the AiService
+                // in combination with the tool-choice option set to REQUIRED.
+                // If the tool-choice option is not set to AUTO after calling the tool,
+                // the model may continuously reselect the same tool in subsequent responses,
+                // even though the tool has already been invoked.
+                parametersBuilder.toolChoice(ToolChoice.AUTO);
+            }
+        }
+
+        ChatRequestParameters defaultParams = parametersBuilder.build();
+        var userParams = AiServiceMethodImplementationSupport
+                .findChatRequestParameters(methodCreateInfo, methodArgs);
+        ChatRequestParameters effectiveParams = effectiveChatRequestParameters(defaultParams, userParams);
+
+        ChatRequest chatRequest = ChatRequest.builder()
+                .messages(messagesToSend(memoryId))
+                .parameters(effectiveParams)
+                .build();
+        QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
+                chatRequest,
+                context,
+                invocationContext,
+                memoryId,
+                partialResponseHandler,
+                partialThinkingHandler,
+                partialToolCallHandler,
+                beforeToolExecutionHandler,
+                intermediateResponseHandler,
+                toolExecuteHandler,
+                completeResponseHandler,
+                completionHandler,
+                errorHandler,
+                temporaryMemory,
+                TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
+                nextToolSpecifications,
+                toolExecutors,
+                nextToolSearchContext,
+                mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
+                methodArgs,
+                cancelled, toolCallingRoundTripsLeft);
+
+        fireRequestIssuedEvent(chatRequest);
+        effectiveStreamingChatModel.chat(chatRequest, handler);
     }
 
     @Override

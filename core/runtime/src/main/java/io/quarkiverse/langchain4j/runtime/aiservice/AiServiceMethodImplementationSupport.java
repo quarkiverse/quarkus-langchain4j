@@ -35,6 +35,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -123,6 +124,7 @@ import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.runtime.BlockingOperationControl;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
 
@@ -196,27 +198,55 @@ public class AiServiceMethodImplementationSupport {
                 .timestampNow()
                 .build();
 
+        if (createInfo.getAsyncReturnType() != AiServiceMethodCreateInfo.AsyncReturnType.NONE) {
+            return implementAsync(createInfo, invocationContext, context);
+        }
+
         // TODO: add validation
         try {
             var result = doImplement(createInfo, invocationContext, context);
 
             return result;
         } catch (Exception e) {
-
-            // New firing
-            context.eventListenerRegistrar.fireEvent(
-                    AiServiceErrorEvent.builder()
-                            .invocationContext(invocationContext)
-                            .error(e)
-                            .build());
-
+            fireErrorEvent(context, invocationContext, e);
             throw e;
         }
     }
 
+    /**
+     * Implements the methods returning {@code Uni} or {@code CompletionStage} by running the invocation on a worker
+     * thread, since most of what an invocation does is blocking.
+     */
+    private static Object implementAsync(AiServiceMethodCreateInfo createInfo, InvocationContext invocationContext,
+            QuarkusAiServiceContext context) {
+        Uni<Object> result = Uni.createFrom().item(new Supplier<Object>() {
+            @Override
+            public Object get() {
+                try {
+                    return doImplement0(createInfo, invocationContext, context);
+                } catch (RuntimeException e) {
+                    fireErrorEvent(context, invocationContext, e);
+                    throw e;
+                }
+            }
+        }).runSubscriptionOn(createExecutor());
+        if (createInfo.getAsyncReturnType() == AiServiceMethodCreateInfo.AsyncReturnType.UNI) {
+            return result;
+        }
+        return result.subscribeAsCompletionStage();
+    }
+
+    private static void fireErrorEvent(QuarkusAiServiceContext context, InvocationContext invocationContext, Exception e) {
+        context.eventListenerRegistrar.fireEvent(
+                AiServiceErrorEvent.builder()
+                        .invocationContext(invocationContext)
+                        .error(e)
+                        .build());
+    }
+
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, InvocationContext invocationContext,
             QuarkusAiServiceContext context) {
-        if (TypeUtil.isMulti(methodCreateInfo.getReturnType()) && !BlockingOperationControl.isBlockingAllowed()) {
+        if (TypeUtil.isStreamed(methodCreateInfo.getReturnType()) && !BlockingOperationControl.isBlockingAllowed()) {
             // this a special case where we can't block, so we need to delegate the to a worker pool
             // as so many of the things done in LangChain4j are blocking
             return Multi.createFrom().deferred(
@@ -246,7 +276,7 @@ public class AiServiceMethodImplementationSupport {
         Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
 
         Type returnType = methodCreateInfo.getReturnType();
-        boolean isMulti = TypeUtil.isMulti(returnType);
+        boolean isMulti = TypeUtil.isStreamed(returnType);
 
         final boolean isStringMulti = (isMulti && returnType instanceof ParameterizedType
                 && TypeUtil.isTypeOf(((ParameterizedType) returnType).getActualTypeArguments()[0], String.class));

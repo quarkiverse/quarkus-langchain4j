@@ -21,6 +21,7 @@ import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.config.AiServiceConfig;
+import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
@@ -182,13 +183,37 @@ public class QuarkusAiServiceContext extends AiServiceContext {
             // we have verified at build time that this is of type String
             return effectiveStreamingChatModel((String) methodArgs[createInfo.getOverrideChatModelParamPosition().get()]);
         }
+        return unwrappedStreamingChatModel();
+    }
+
+    /**
+     * Makes the upstream {@link dev.langchain4j.service.TokenStream} execute tools on a worker thread when a
+     * {@code TokenStream} method of this AI service needs one.
+     */
+    public void switchToWorkerThreadForTokenStreamToolExecution(Collection<AiServiceMethodCreateInfo> methodCreateInfos) {
+        if (streamingChatModel == null || streamingChatModel instanceof WorkerThreadToolExecutionStreamingChatModel) {
+            return;
+        }
+        for (AiServiceMethodCreateInfo methodCreateInfo : methodCreateInfos) {
+            if (methodCreateInfo.isSwitchToWorkerThreadForToolExecution()
+                    && TypeUtil.isTokenStream(methodCreateInfo.getReturnType())) {
+                streamingChatModel = new WorkerThreadToolExecutionStreamingChatModel(streamingChatModel);
+                return;
+            }
+        }
+    }
+
+    private StreamingChatModel unwrappedStreamingChatModel() {
+        if (streamingChatModel instanceof WorkerThreadToolExecutionStreamingChatModel wrapper) {
+            return wrapper.delegate();
+        }
         return streamingChatModel;
     }
 
     private StreamingChatModel effectiveStreamingChatModel(String modelName) {
         if (modelName == null) {
             // happens when @ModelName parameter exists but the caller passed null
-            return streamingChatModel;
+            return unwrappedStreamingChatModel();
         }
         InstanceHandle<StreamingChatModel> instance = Arc.container().instance(StreamingChatModel.class,
                 ModelName.Literal.of(modelName));

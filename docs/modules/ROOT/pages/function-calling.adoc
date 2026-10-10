@@ -192,7 +192,8 @@ The tool execution model determines how the tool is invoked:
 * `@NonBlocking`: runs on an _event loop_ and *must* not block
 * `@RunOnVirtualThread`: runs on a virtual thread
 
-If the return type is a `Uni` or a `CompletionStage`, it is treated as non-blocking
+If the return type is a `Uni` or a `CompletionStage`, it is treated as non-blocking.
+When the AI service method streams its response, such a tool does not hold a thread while it runs: the conversation continues when the `Uni` or `CompletionStage` completes.
 
 .Blocking example
 [source,java]
@@ -228,7 +229,7 @@ More details on virtual thread support in Quarkus can be found in the https://qu
 
 === Streaming Support
 
-When AI service methods return streams (`Multi<String>`), the model emits each token on the event loop.
+When AI service methods return streams (`Multi<String>`, `Flow.Publisher<String>` or `TokenStream`), the model emits each token on the event loop.
 
 Blocking tools cannot run on the event loop.
 Thus, Quarkus LangChain4j automatically shifts to a worker thread or virtual thread when required.

@@ -1,6 +1,9 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import jakarta.inject.Inject;
@@ -45,7 +48,64 @@ public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
             BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun, QuarkusToolExecutor executor) {
 
         var parentSpan = Span.current();
+        Span span = startSpan(toolExecutionRequest);
+        var requestContext = ToolExecutionRequestContext.builder()
+                .request(toolExecutionRequest)
+                .invocationContext(invocationContext)
+                .build();
 
+        try (Scope scope = span.makeCurrent()) {
+            requestContext = onRequest(requestContext, parentSpan, span, scope);
+            var result = fun.apply(toolExecutionRequest, invocationContext);
+            onResponse(requestContext, span, result);
+            return result;
+        } catch (Throwable t) {
+            onError(requestContext, span, t);
+            throw t;
+        } finally {
+            span.end();
+        }
+    }
+
+    @Override
+    public CompletableFuture<ToolExecutionResult> wrapAsync(ToolExecutionRequest toolExecutionRequest,
+            InvocationContext invocationContext,
+            BiFunction<ToolExecutionRequest, InvocationContext, CompletableFuture<ToolExecutionResult>> fun,
+            QuarkusToolExecutor executor) {
+
+        var parentSpan = Span.current();
+        Span span = startSpan(toolExecutionRequest);
+        var initialRequestContext = ToolExecutionRequestContext.builder()
+                .request(toolExecutionRequest)
+                .invocationContext(invocationContext)
+                .build();
+
+        ToolExecutionRequestContext requestContext;
+        CompletableFuture<ToolExecutionResult> result;
+        try (Scope scope = span.makeCurrent()) {
+            requestContext = onRequest(initialRequestContext, parentSpan, span, scope);
+            result = fun.apply(toolExecutionRequest, invocationContext);
+        } catch (Throwable t) {
+            onError(initialRequestContext, span, t);
+            span.end();
+            throw t;
+        }
+
+        return result.whenComplete(new BiConsumer<ToolExecutionResult, Throwable>() {
+            @Override
+            public void accept(ToolExecutionResult toolExecutionResult, Throwable error) {
+                if (error == null) {
+                    onResponse(requestContext, span, toolExecutionResult);
+                } else {
+                    onError(requestContext, span,
+                            error instanceof CompletionException && error.getCause() != null ? error.getCause() : error);
+                }
+                span.end();
+            }
+        });
+    }
+
+    private Span startSpan(ToolExecutionRequest toolExecutionRequest) {
         // from https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md#execute-tool-span
         Span span = tracer.spanBuilder("langchain4j.tools." + toolExecutionRequest.name())
                 .setSpanKind(SpanKind.INTERNAL)
@@ -58,47 +118,42 @@ public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
         if (includeArguments) {
             span.setAttribute("gen_ai.tool.call.arguments", toolExecutionRequest.arguments());
         }
+        return span;
+    }
 
-        var requestContext = ToolExecutionRequestContext.builder()
-                .request(toolExecutionRequest)
-                .invocationContext(invocationContext)
+    private ToolExecutionRequestContext onRequest(ToolExecutionRequestContext requestContext, Span parentSpan, Span span,
+            Scope scope) {
+        var result = requestContext.toBuilder()
+                .attribute(OTEL_PARENT_SPAN_KEY_NAME, parentSpan.getSpanContext().isValid() ? parentSpan : span)
+                .attribute(OTEL_SCOPE_KEY_NAME, scope)
+                .attribute(OTEL_SPAN_KEY_NAME, span)
+                .build();
+        notifyContributorsOnRequest(result, span);
+        return result;
+    }
+
+    private void onResponse(ToolExecutionRequestContext requestContext, Span span, ToolExecutionResult result) {
+        if (includeResult && result != null) {
+            span.setAttribute("gen_ai.tool.call.result", result.resultText());
+        }
+
+        var responseContext = ToolExecutionResponseContext.builder()
+                .requestContext(requestContext)
+                .result(result)
                 .build();
 
-        try (Scope scope = span.makeCurrent()) {
-            requestContext = requestContext.toBuilder()
-                    .attribute(OTEL_PARENT_SPAN_KEY_NAME, parentSpan.getSpanContext().isValid() ? parentSpan : span)
-                    .attribute(OTEL_SCOPE_KEY_NAME, scope)
-                    .attribute(OTEL_SPAN_KEY_NAME, span)
-                    .build();
-            notifyContributorsOnRequest(requestContext, span);
-            // TODO Handle async method here.
-            var result = fun.apply(toolExecutionRequest, invocationContext);
-            if (includeResult && result != null) {
-                span.setAttribute("gen_ai.tool.call.result", result.resultText());
-            }
+        notifyContributorsOnResponse(responseContext, span);
+    }
 
-            var responseContext = ToolExecutionResponseContext.builder()
-                    .requestContext(requestContext)
-                    .result(result)
-                    .build();
+    private void onError(ToolExecutionRequestContext requestContext, Span span, Throwable t) {
+        span.recordException(t);
 
-            notifyContributorsOnResponse(responseContext, span);
+        var errorContext = ToolExecutionErrorContext.builder()
+                .requestContext(requestContext)
+                .error(t)
+                .build();
 
-            return result;
-        } catch (Throwable t) {
-            span.recordException(t);
-
-            var errorContext = ToolExecutionErrorContext.builder()
-                    .requestContext(requestContext)
-                    .error(t)
-                    .build();
-
-            notifyContributorsOnError(errorContext, span);
-
-            throw t;
-        } finally {
-            span.end();
-        }
+        notifyContributorsOnError(errorContext, span);
     }
 
     private void notifyContributorsOnRequest(ToolExecutionRequestContext requestContext, Span span) {
