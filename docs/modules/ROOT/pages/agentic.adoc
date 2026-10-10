@@ -301,6 +301,56 @@ public interface BatchHoroscopeAgent {
 
 Each `Person` in the list is passed to a separate invocation of `PersonAstrologyAgent`, all running in parallel.
 
+=== Choosing the Parallel Executor
+
+Use a static `@ParallelExecutor` method to supply the executor for a `@ParallelAgent` or `@ParallelMapperAgent` workflow.
+The method can resolve CDI beans through parameters annotated with `@CdiBean` or a CDI qualifier.
+For example, use a `ManagedExecutor` to propagate the caller's CDI request context to parallel tasks.
+Add the context propagation extension:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-smallrye-context-propagation</artifactId>
+</dependency>
+----
+
+[source,java]
+----
+import java.util.List;
+import java.util.concurrent.Executor;
+
+import org.eclipse.microprofile.context.ManagedExecutor;
+
+import dev.langchain4j.agentic.declarative.ParallelExecutor;
+import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
+import io.quarkiverse.langchain4j.agentic.runtime.CdiBean;
+
+public interface BatchHoroscopeAgent {
+
+    @ParallelMapperAgent(subAgent = PersonAstrologyAgent.class)
+    List<String> generateHoroscopes(List<Person> persons);
+
+    @ParallelExecutor
+    static Executor executor(@CdiBean ManagedExecutor executor) {
+        return executor;
+    }
+}
+----
+
+CDI qualifiers on supplier parameters select the bean to resolve, and beans referenced only by these parameters are retained.
+The executor supplier is invoked when the agent is created, not for each workflow invocation; its parameters are resolved by supplier parameter resolvers, not from the `AgenticScope`.
+Existing no-argument suppliers and custom LangChain4j `SupplierParameterResolver` implementations remain supported.
+
+[IMPORTANT]
+====
+Context propagation is provided by the supplied executor, not by `@ParallelExecutor` itself.
+A raw executor, such as `Executors.newFixedThreadPool(...)`, is not automatically wrapped and does not propagate the caller's CDI request context.
+Use a `ManagedExecutor` configured to propagate CDI context, and keep the caller's request context active until the parallel tasks complete.
+Do not shut down the Quarkus-provided `ManagedExecutor`; its lifecycle is managed by Quarkus.
+====
+
 === Conditional Workflow
 
 The `@ConditionalAgent` annotation routes execution to different sub-agents based on conditions evaluated against the `AgenticScope`.
@@ -698,12 +748,14 @@ This is particularly useful when:
 
 Quarkus validates agent configurations at build time, catching errors before the application starts:
 
-* All supplier methods (`@ToolsSupplier`, etc.), except the `@ChatModelSupplier` one, must be `static` with correct return types and no parameters
+* Supplier methods (`@ToolsSupplier`, etc.) must be `static` with correct return types
 * `@ChatModelSupplier` methods must be `static` and return `ChatModel` (parameters are allowed for dynamic model selection)
 * `@ExitCondition` and `@ActivationCondition` methods must return `boolean`
 * `@ErrorHandler` methods must take `ErrorContext` and return `ErrorRecoveryResult`
-* `@ParallelExecutor` methods must return `Executor`
+* `@ParallelExecutor` methods must be `static` and return `Executor`; parameters are allowed and resolved when the agent is created
 * `@ModelName` and `@ChatModelSupplier` cannot be used on the same agent
+
+An unresolved `@ParallelExecutor` parameter is reported when the agent is created, rather than during build-time validation.
 
 == Annotations Reference
 
@@ -772,7 +824,11 @@ Quarkus validates agent configurations at build time, catching errors before the
 
 |`@ParallelExecutor`
 |static method
-|Provides `Executor` for parallel workflows.
+|Provides `Executor` for parallel workflows; supports CDI-resolvable parameters.
+
+|`@CdiBean`
+|supplier parameter
+|Resolves a CDI bean for an agentic supplier method.
 |===
 
 == Related Guides
