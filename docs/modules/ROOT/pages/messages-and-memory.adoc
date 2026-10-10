@@ -129,6 +129,10 @@ quarkus.langchain4j.chat-memory.type=MESSAGE_WINDOW|TOKEN_WINDOW
 quarkus.langchain4j.chat-memory.memory-window.max-messages=10
 # Maximum tokens in memory (for TOKEN_WINDOW)
 quarkus.langchain4j.chat-memory.token-window.max-tokens=1000
+# Whether to delete chat memory from the ChatMemoryStore when the
+# owning AI service bean is destroyed (default: true).
+# Set to false to keep conversations in a persistent store across restarts.
+quarkus.langchain4j.chat-memory.clear-on-close=true
 ----
 
 When using `MESSAGE_WINDOW`, the memory retains the most recent messages up to the specified limit.
@@ -137,6 +141,12 @@ Note that using `TOKEN_WINDOW` requires a `TokenCountEstimator` bean to be avail
 
 These memories are then stored in a `ChatMemoryStore`, which is an abstraction for storing and retrieving chat messages.
 By default, it uses an in-memory store, meaning messages are lost when the application stops or restarts.
+
+[NOTE]
+====
+When backing chat memory with a persistent `ChatMemoryStore` (Redis, Couchbase, JDBC, etc.), set `quarkus.langchain4j.chat-memory.clear-on-close=false` so that conversations are not wiped from the store when the AI service bean is destroyed.
+With the default `RequestScoped` AI service, the bean is destroyed at the end of every HTTP request; with `clear-on-close=true` this propagates a `deleteMessages` call to the store, which is rarely what you want for a persistent backend.
+====
 
 == Custom Memory Implementations
 
