@@ -45,6 +45,19 @@ public class AgenticRecorder {
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
+    private static volatile ClassLoader deploymentClassLoader;
+
+    /**
+     * The classloader that loaded the Quarkus application, captured while the runtime initialization
+     * of the recorder runs. Agent methods can be invoked from threads whose context classloader is not
+     * the deployment one (for example plain threads using the system classloader), so the deployment
+     * classloader is used to resolve agent classes and is normalized as the context classloader during
+     * agent creation and invocation.
+     */
+    public static ClassLoader deploymentClassLoader() {
+        ClassLoader current = AgenticRecorder.deploymentClassLoader;
+        return current != null ? current : AgenticRecorder.class.getClassLoader();
+    }
 
     private static final Function<InternalAgent, Object> AGENT_INSTANCE_FACTORY = internalAgent -> {
         AgentClassCreateInfo info = agentClassMetadata.get(internalAgent.type().getName());
@@ -136,37 +149,51 @@ public class AgenticRecorder {
 
     @RuntimeInit
     public Function<SyntheticCreationalContext<Object>, Object> createAiAgent(AiAgentCreateInfo info) {
-        return new Function<>() {
-            @Override
-            public Object apply(SyntheticCreationalContext<Object> cdiContext) {
-                ChatModel chatModel = info.chatModelInfo().resolve(cdiContext);
-
-                Class<?> agentClass = loadClassSafe(info);
-                Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
-                        new AgentConfigurator(new QuarkusAgenticContextConsumer(cdiContext, info),
-                                QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY));
-
-                if (info.hasInterceptorBindings()) {
-                    Object originalAgent = agent;
-                    agent = cdiContext.getInterceptionProxy().create(originalAgent);
-                    try {
-                        originalAgent.getClass().getMethod("setAgentProxy", Object.class)
-                                .invoke(originalAgent, agent);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to set agent proxy on " + originalAgent.getClass(), e);
-                    }
-                }
-
-                if (devModeMonitoringEnabled && agent instanceof MonitoredAgent monitoredAgent) {
-                    AgentMonitor monitor = monitoredAgent.agentMonitor();
-                    if (monitor != null) {
-                        DevAgentMonitorHolder.register(monitor);
-                        DevAgentMonitorHolder.registerRootAgent(agent);
-                    }
-                }
-                return agent;
+        // Captured on the thread performing the startup, so this is always the deployment classloader.
+        // Agent beans are created lazily, possibly on a thread whose context classloader is not the
+        // deployment one (for example a thread using the system classloader), and the agent classes
+        // must be resolved with the deployment classloader in that case too.
+        ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+        ClassLoader agentClassLoader = tccl != null ? tccl : AgenticRecorder.class.getClassLoader();
+        AgenticRecorder.deploymentClassLoader = agentClassLoader;
+        return cdiContext -> {
+            ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(agentClassLoader);
+            try {
+                return createAgentInstance(info, cdiContext);
+            } finally {
+                Thread.currentThread().setContextClassLoader(previousClassLoader);
             }
         };
+    }
+
+    private Object createAgentInstance(AiAgentCreateInfo info, SyntheticCreationalContext<Object> cdiContext) {
+        ChatModel chatModel = info.chatModelInfo().resolve(cdiContext);
+
+        Class<?> agentClass = loadClassSafe(info);
+        Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
+                new AgentConfigurator(new QuarkusAgenticContextConsumer(cdiContext, info),
+                        QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY));
+
+        if (info.hasInterceptorBindings()) {
+            Object originalAgent = agent;
+            agent = cdiContext.getInterceptionProxy().create(originalAgent);
+            try {
+                originalAgent.getClass().getMethod("setAgentProxy", Object.class)
+                        .invoke(originalAgent, agent);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to set agent proxy on " + originalAgent.getClass(), e);
+            }
+        }
+
+        if (devModeMonitoringEnabled && agent instanceof MonitoredAgent monitoredAgent) {
+            AgentMonitor monitor = monitoredAgent.agentMonitor();
+            if (monitor != null) {
+                DevAgentMonitorHolder.register(monitor);
+                DevAgentMonitorHolder.registerRootAgent(agent);
+            }
+        }
+        return agent;
     }
 
     private static final class QuarkusSubAgentResolver implements Function<Class<?>, Object> {
@@ -227,7 +254,15 @@ public class AgenticRecorder {
 
             // MCP ToolProvider support
             if (AgenticRecorder.agentsWithMcpToolBox.contains(agentClassName)) {
-                Instance<ToolProvider> toolProviderInstance = cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE);
+                Instance<ToolProvider> toolProviderInstance;
+                try {
+                    toolProviderInstance = cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE);
+                } catch (IllegalArgumentException e) {
+                    // Arc resolves the type of synthetic injection points with the context classloader of the
+                    // thread creating the bean, so the lookup above can fail when the bean is created from a
+                    // thread with a different context classloader; fall back to a programmatic lookup
+                    toolProviderInstance = Arc.container().select(ToolProvider.class);
+                }
                 if (toolProviderInstance.isResolvable()) {
                     agentBuilder.toolProvider(toolProviderInstance.get());
                 }
@@ -261,7 +296,14 @@ public class AgenticRecorder {
             }
 
             // AgentListener support (unconditional — build-time always adds the injection point)
-            Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
+            Instance<AgentListener> listeners;
+            try {
+                listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
+            } catch (IllegalArgumentException e) {
+                // same as above: the synthetic injection point lookup depends on the context classloader
+                // of the creating thread, so fall back to a programmatic lookup
+                listeners = Arc.container().select(AgentListener.class);
+            }
             for (AgentListener listener : listeners) {
                 agentBuilder.listener(listener);
             }
