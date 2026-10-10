@@ -83,6 +83,7 @@
 *** xref:typesafe-decision-model.adoc[TypeSafe]
 ** xref:enable-disable-integrations.adoc[Enabling and Disabling Integrations]
 * xref:testing.adoc[Testing & Evaluation]
+** xref:testing-model-mocking.adoc[Mocking model HTTP calls]
 // 	Handling Model Errors and Timeouts
 // 	Prompt Injection Protection
 // 	Multi-turn Conversations and Context Windows

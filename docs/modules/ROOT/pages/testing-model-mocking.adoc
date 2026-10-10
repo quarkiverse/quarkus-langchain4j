@@ -1,0 +1,226 @@
+= Mocking Model HTTP Calls with WireMock
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The https://docs.quarkiverse.io/quarkus-wiremock/dev/index.html[Quarkus WireMock extension] starts a local HTTP server as a Dev Service in dev and test mode.
+Use it to test request serialization, response handling, and application behavior without a real API key, model download, or paid model call.
+Unlike xref:testing.adoc[model evaluation], these tests do not measure the quality of a real model's answers.
+
+This guide mocks the non-streaming OpenAI Chat Completions API.
+Other HTTP model providers can use the same approach, but need mappings that match their own URLs and response formats.
+
+== Dependencies
+
+Start with a Quarkus application using the OpenAI extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+Add the following dependencies to `pom.xml`:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.wiremock</groupId>
+    <artifactId>quarkus-wiremock</artifactId>
+    <version>1.5.1</version>
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>io.quarkiverse.wiremock</groupId>
+    <artifactId>quarkus-wiremock-test</artifactId>
+    <version>1.5.1</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-junit</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+The Quarkus BOM manages the version of `quarkus-junit`.
+The `provided` scope makes WireMock available in dev mode as well as test mode; the extension only starts its server in these modes.
+The test dependency provides `@ConnectWireMock` and the WireMock client used for request verification.
+No internal Quarkus LangChain4j testing modules are required.
+
+== Redirect the model to the local server
+
+Put the following configuration in `src/main/resources/application.properties`:
+
+[source,properties]
+----
+%dev.quarkus.langchain4j.openai.base-url=http://localhost:${quarkus.wiremock.devservices.port}/v1
+%dev.quarkus.langchain4j.openai.api-key=not-a-real-key
+%dev.quarkus.langchain4j.openai.chat-model.model-name=gpt-4o-mini
+%test.quarkus.langchain4j.openai.base-url=http://localhost:${quarkus.wiremock.devservices.port}/v1
+%test.quarkus.langchain4j.openai.api-key=not-a-real-key
+%test.quarkus.langchain4j.openai.chat-model.model-name=gpt-4o-mini
+----
+
+WireMock chooses an available port and exposes it as `quarkus.wiremock.devservices.port`.
+Do not set a fixed port or use a fallback URL pointing to a real provider.
+Keep Dev Services enabled; the port property is supplied when the WireMock Dev Service starts.
+
+IMPORTANT: Starting WireMock does not automatically redirect model calls.
+The `base-url` setting above is required.
+It includes `/v1`, so the chat request reaches `/v1/chat/completions`.
+`@ConnectWireMock` connects the test's WireMock client; it does not configure the model's base URL.
+
+The `%dev` and `%test` prefixes keep the mock settings out of production.
+Configure production credentials separately, for example through environment variables.
+If testing a named model, apply the overrides to that model's configuration instead.
+
+== Provide a deterministic response
+
+Create `src/test/resources/mappings/chat-completions.json`:
+
+[source,json]
+----
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/v1/chat/completions",
+    "bodyPatterns": [
+      { "matchesJsonPath": "$[?(@.model == 'gpt-4o-mini')]" }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "id": "chatcmpl-mock",
+      "object": "chat.completion",
+      "created": 1710000000,
+      "model": "gpt-4o-mini",
+      "choices": [
+        {
+          "index": 0,
+          "message": { "role": "assistant", "content": "Hello from WireMock!" },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": { "prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2 }
+    }
+  }
+}
+----
+
+By default, `quarkus.wiremock.devservices.files-mapping` is `src/test/resources`.
+The extension reads the `mappings` directory in both dev and test mode, so the same fixture works for both.
+The model name is only a request-matching value: no real model is loaded.
+Requests that do not match a mapping receive a WireMock error response rather than being forwarded to a real provider.
+
+== Test the model call and verify the request
+
+Create `src/test/java/org/acme/ModelMockTest.java`:
+
+[source,java]
+----
+package org.acme;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import jakarta.inject.Inject;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
+
+import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.wiremock.devservice.ConnectWireMock;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+@ConnectWireMock
+class ModelMockTest {
+
+    @Inject
+    ChatModel model;
+
+    WireMock wiremock;
+
+    @BeforeEach
+    void resetRequests() {
+        wiremock.resetRequests();
+    }
+
+    @Test
+    void shouldUseLocalModel() {
+        assertEquals("Hello from WireMock!", model.chat("Hello"));
+
+        wiremock.verifyThat(1, postRequestedFor(urlPathEqualTo("/v1/chat/completions"))
+                .withHeader("Authorization", equalTo("Bearer not-a-real-key"))
+                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
+                .withRequestBody(matchingJsonPath("$.messages[0].role", equalTo("user")))
+                .withRequestBody(matchingJsonPath("$.messages[0].content", equalTo("Hello"))));
+    }
+}
+----
+
+Run the test with `./mvnw test`.
+`@ConnectWireMock` supplies the `WireMock` field; do not add CDI `@Inject` to that field.
+Resetting the request journal before each test keeps request counts independent without deleting the file-based mappings.
+The assertions check the parsed answer as well as the outgoing URL, fake authorization header, model, and user message.
+The same local model configuration also applies to AI Services using the default OpenAI chat model.
+
+== Use the mock in dev mode
+
+For a minimal HTTP endpoint, add `io.quarkus:quarkus-rest` (with its version managed by the Quarkus BOM) and create `src/main/java/org/acme/ChatResource.java`:
+
+[source,java]
+----
+package org.acme;
+
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+
+import dev.langchain4j.model.chat.ChatModel;
+
+@Path("/chat")
+public class ChatResource {
+
+    @Inject
+    ChatModel model;
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String chat(@QueryParam("message") String message) {
+        return model.chat(message);
+    }
+}
+----
+
+From the application directory, start `./mvnw quarkus:dev`, then call:
+
+[source,shell]
+----
+curl 'http://localhost:8080/chat?message=Hello'
+----
+
+The response is `Hello from WireMock!`.
+WireMock runs inside the local JVM and does not require Docker.
+Keep the JSON mapping available at the configured filesystem path when starting dev mode.
+
+== Scope of the mock
+
+This mapping only covers non-streaming chat completions.
+Streaming, tool calls, embeddings, and the OpenAI Responses API need their own protocol-appropriate mappings.
+To test failures, supply mappings with error statuses or delayed responses, and assert the application's error handling.
+Keep real-provider integration tests and model-quality evaluations separate from these deterministic HTTP tests.
