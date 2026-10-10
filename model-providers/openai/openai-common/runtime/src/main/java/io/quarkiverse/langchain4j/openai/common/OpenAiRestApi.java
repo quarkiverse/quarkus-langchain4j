@@ -64,6 +64,7 @@ import dev.langchain4j.model.openai.internal.moderation.ModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
@@ -452,40 +453,12 @@ public interface OpenAiRestApi {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        headerValue = switch (headerKey) {
-                            case "Authorization", "api-key" -> maskHeaderValue(headerValue);
-                            case "Set-Cookie" -> maskCookieHeaderValue(headerValue);
-                            default -> headerValue;
-                        };
+                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                            headerValue = SensitiveHeaderMasker.mask(headerValue);
+                        }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));
-        }
-
-        private static String maskHeaderValue(String apiKeyHeaderValue) {
-            try {
-                if (apiKeyHeaderValue.length() <= 4) {
-                    return apiKeyHeaderValue;
-                }
-                return apiKeyHeaderValue.substring(0, 2)
-                        + "..."
-                        + apiKeyHeaderValue.substring(apiKeyHeaderValue.length() - 2);
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
-        }
-
-        private static String maskCookieHeaderValue(String cookieHeaderValue) {
-            try {
-                if (cookieHeaderValue.length() <= 4) {
-                    return cookieHeaderValue;
-                }
-                return cookieHeaderValue.substring(0, 2)
-                        + "..."
-                        + cookieHeaderValue.substring(cookieHeaderValue.length() - 2);
-            } catch (Exception e) {
-                return "Failed to mask the cookie value.";
-            }
         }
     }
 

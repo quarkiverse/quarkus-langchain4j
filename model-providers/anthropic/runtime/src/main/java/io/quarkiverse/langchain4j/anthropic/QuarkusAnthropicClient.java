@@ -68,6 +68,7 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.chat.response.StreamingHandle;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -709,26 +710,13 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                         var headerKey = header.getKey();
                         var headerValue = header.getValue();
 
-                        if (headerKey.equals(AnthropicRestApi.API_KEY_HEADER)) {
-                            headerValue = maskApiKeyHeaderValue(headerValue);
+                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                            headerValue = SensitiveHeaderMasker.mask(headerValue);
                         }
 
                         return "[%s: %s]".formatted(headerKey, headerValue);
                     })
                     .collect(joining(", "));
-        }
-
-        private static String maskApiKeyHeaderValue(String apiKeyHeaderValue) {
-            try {
-                if (apiKeyHeaderValue.length() <= 4) {
-                    return apiKeyHeaderValue;
-                }
-                return apiKeyHeaderValue.substring(0, 2)
-                        + "..."
-                        + apiKeyHeaderValue.substring(apiKeyHeaderValue.length() - 2);
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
         }
     }
 
