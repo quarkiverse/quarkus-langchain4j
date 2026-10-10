@@ -44,6 +44,7 @@ import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.observability.api.listener.AiServiceResponseReceivedListener;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
@@ -55,6 +56,7 @@ import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.FallbackToDummyUserMessageBuildItem;
+import io.quarkiverse.langchain4j.deployment.ImpliedAiServiceWithoutChatMemoryBuildItem;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.PreventToolValidationErrorBuildItem;
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
@@ -484,6 +486,17 @@ public class AgenticProcessor {
         return new AnnotationsImpliesAiServiceBuildItem(annotations);
     }
 
+    /**
+     * Agents are stateless unless given a memory, so their implied AI service gets no default chat memory provider.
+     */
+    @BuildStep
+    void agentsWithoutDefaultChatMemory(List<DetectedAiAgentBuildItem> detectedAgentBuildItems,
+            BuildProducer<ImpliedAiServiceWithoutChatMemoryBuildItem> producer) {
+        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
+            producer.produce(new ImpliedAiServiceWithoutChatMemoryBuildItem(bi.getIface().name()));
+        }
+    }
+
     @BuildStep
     SkipOutputFormatInstructionsBuildItem skipOutputInstructions() {
         Set<DotName> skippedReturnTypes = Set.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE,
@@ -650,6 +663,30 @@ public class AgenticProcessor {
             }
         }
         recorder.setAgentsWithToolBox(agentsWithToolBox);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
+    void agentScopedMemorySupport(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer) {
+        Set<String> agentsWithAgentScopedMemory = new HashSet<>();
+        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
+            ClassInfo iface = bi.getIface();
+            boolean declaresMemoryId = bi.getAgenticMethods().stream()
+                    .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.AGENT)
+                            && m.hasAnnotation(AgenticLangChain4jDotNames.MEMORY_ID));
+            boolean declaresOwnMemory = iface.methods().stream()
+                    .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER)
+                            || m.hasAnnotation(AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER));
+            boolean registeredAsAiService = iface.hasDeclaredAnnotation(LangChain4jDotNames.REGISTER_AI_SERVICES);
+            if (declaresMemoryId && !declaresOwnMemory && !registeredAsAiService) {
+                agentsWithAgentScopedMemory.add(iface.name().toString());
+            }
+        }
+        if (!agentsWithAgentScopedMemory.isEmpty()) {
+            unremovableBeanProducer.produce(UnremovableBeanBuildItem.beanTypes(ChatMemoryProvider.class));
+        }
+        recorder.setAgentsWithAgentScopedMemory(agentsWithAgentScopedMemory);
     }
 
     @BuildStep

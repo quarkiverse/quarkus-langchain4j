@@ -299,7 +299,7 @@ public interface BatchHoroscopeAgent {
 }
 ----
 
-Each `Person` in the list is passed to a separate invocation of `PersonAstrologyAgent`, all running in parallel.
+Each `Person` in the list is passed to a separate invocation of `PersonAstrologyAgent`, all running in parallel. The sub-agent of a parallel mapper cannot have a chat memory, so it must not declare `@MemoryId` or a memory supplier.
 
 === Conditional Workflow
 
@@ -516,9 +516,11 @@ public interface StyledWriter extends AgenticScopeAccess {
 }
 ----
 
-=== Memory IDs
+=== Chat Memory
 
-Use `@MemoryId` for per-conversation isolation:
+Agents are stateless by default: every invocation starts from an empty conversation. Context flows between agents through the `AgenticScope`, using output keys and arguments, not through a shared chat memory.
+
+An agent that declares `@MemoryId` keeps one conversation per memory id in the configured `ChatMemoryStore`:
 
 [source,java]
 ----
@@ -532,6 +534,24 @@ public interface MedicalExpertWithMemory {
             """)
     @Agent(description = "A medical expert", outputKey = "response")
     String medical(@MemoryId String memoryId, String request);
+}
+----
+
+Sub-agents receive the memory id of the `AgenticScope`, which comes from the `@MemoryId` argument of the root agent. Each agent keeps its own conversation for that id, so agents of the same system never see each other's messages.
+
+To give an agent a memory of its own instead of the configured store, add a `@ChatMemoryProviderSupplier` method:
+
+[source,java]
+----
+public interface MedicalExpertWithMemory {
+
+    @Agent(description = "A medical expert", outputKey = "response")
+    String medical(@MemoryId String memoryId, String request);
+
+    @ChatMemoryProviderSupplier
+    static ChatMemory chatMemory(Object memoryId) {
+        return MessageWindowChatMemory.withMaxMessages(10);
+    }
 }
 ----
 
@@ -765,6 +785,10 @@ Quarkus validates agent configurations at build time, catching errors before the
 |`@ChatModelSupplier`
 |static method
 |Provides per-agent `ChatModel`.
+
+|`@ChatMemoryProviderSupplier`
+|static method
+|Provides a per-agent `ChatMemory` for each memory id.
 
 |`@SupervisorRequest`
 |static method
