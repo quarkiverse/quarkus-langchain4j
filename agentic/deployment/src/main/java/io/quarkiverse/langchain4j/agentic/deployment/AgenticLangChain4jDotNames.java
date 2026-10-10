@@ -32,6 +32,7 @@ import dev.langchain4j.agentic.declarative.ToolsSupplier;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.service.MemoryId;
 
 public final class AgenticLangChain4jDotNames {
@@ -60,6 +61,7 @@ public final class AgenticLangChain4jDotNames {
 
     public static final DotName CHAT_MODEL_SUPPLIER = DotName.createSimple(ChatModelSupplier.class.getName());
     public static final DotName AGENTIC_SCOPE = DotName.createSimple(AgenticScope.class);
+    public static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
     public static final DotName RESULT_WITH_AGENTIC_SCOPE = DotName.createSimple(ResultWithAgenticScope.class);
 
     public static final DotName ACTIVATION_CONDITION = DotName.createSimple(ActivationCondition.class.getName());
