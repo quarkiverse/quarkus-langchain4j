@@ -129,6 +129,20 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Validate guide metadata
+        run: |
+          MISSING=$(for f in docs/modules/ROOT/pages/*.adoc; do
+            awk '/^$/{exit} /^:extensions:/{found=1} END{exit !found}' "$f" || echo "$f"
+          done)
+          if [ -n "$MISSING" ]; then
+            echo "These guides have no :extensions: attribute in their header:"
+            echo "$MISSING"
+            echo "Add it right below the title, before the first blank line, e.g.:"
+            echo "  :extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core"
+            echo "It sets the source of the guide's chunks in the documentation RAG artifact."
+            exit 1
+          fi
+
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
 

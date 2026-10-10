@@ -1,4 +1,5 @@
 = Neo4j Embedding Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-neo4j
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

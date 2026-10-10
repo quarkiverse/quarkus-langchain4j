@@ -1,4 +1,5 @@
 = TypeSafe Decision Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-typesafe
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

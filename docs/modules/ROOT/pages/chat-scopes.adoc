@@ -1,4 +1,5 @@
 = Quarkus Chat Scopes
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-chat-scopes
 
 include::./includes/attributes.adoc[]
 

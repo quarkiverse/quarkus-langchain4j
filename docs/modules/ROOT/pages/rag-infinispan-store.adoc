@@ -1,4 +1,5 @@
 = Infinispan Embedding Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-infinispan
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

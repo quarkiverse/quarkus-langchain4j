@@ -1,4 +1,5 @@
 = Skills
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-skills
 
 include::./includes/attributes.adoc[]
 
