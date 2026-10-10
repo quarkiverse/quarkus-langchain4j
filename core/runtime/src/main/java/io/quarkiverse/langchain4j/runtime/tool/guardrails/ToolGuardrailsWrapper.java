@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.tool.guardrails;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -57,9 +58,7 @@ public class ToolGuardrailsWrapper implements QuarkusToolExecutor.Wrapper {
         ToolMethodCreateInfo methodCreateInfo = executor.getMethodCreateInfo();
 
         // If no metadata found or no guardrails configured, just proceed
-        if (methodCreateInfo == null
-                || (!guardrailService.hasInputGuardrails(methodCreateInfo)
-                        && !guardrailService.hasOutputGuardrails(methodCreateInfo))) {
+        if (!hasGuardrails(methodCreateInfo)) {
             return next.apply(toolExecutionRequest, invocationContext);
         }
 
@@ -74,6 +73,23 @@ public class ToolGuardrailsWrapper implements QuarkusToolExecutor.Wrapper {
 
         // Execute guardrails directly
         return executeWithGuardrails(toolExecutionRequest, invocationContext, next, methodCreateInfo);
+    }
+
+    @Override
+    public CompletableFuture<ToolExecutionResult> wrapAsync(ToolExecutionRequest toolExecutionRequest,
+            InvocationContext invocationContext,
+            BiFunction<ToolExecutionRequest, InvocationContext, CompletableFuture<ToolExecutionResult>> next,
+            QuarkusToolExecutor executor) {
+        if (!hasGuardrails(executor.getMethodCreateInfo())) {
+            return next.apply(toolExecutionRequest, invocationContext);
+        }
+        return QuarkusToolExecutor.Wrapper.super.wrapAsync(toolExecutionRequest, invocationContext, next, executor);
+    }
+
+    private boolean hasGuardrails(ToolMethodCreateInfo methodCreateInfo) {
+        return methodCreateInfo != null
+                && (guardrailService.hasInputGuardrails(methodCreateInfo)
+                        || guardrailService.hasOutputGuardrails(methodCreateInfo));
     }
 
     /**

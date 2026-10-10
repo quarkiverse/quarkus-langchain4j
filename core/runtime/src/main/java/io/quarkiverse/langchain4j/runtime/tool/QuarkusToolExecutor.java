@@ -5,8 +5,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
@@ -25,6 +30,7 @@ import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.Vertx;
 
 public class QuarkusToolExecutor implements ToolExecutor {
 
@@ -50,6 +56,55 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
         ToolExecutionResult wrap(ToolExecutionRequest toolExecutionRequest, InvocationContext invocationContext,
                 BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun, QuarkusToolExecutor executor);
+
+        /**
+         * Asynchronous counterpart of {@link #wrap}. By default, {@link #wrap} runs on a thread that is allowed to block,
+         * so wrappers that do not override this method keep their synchronous behavior.
+         */
+        default CompletableFuture<ToolExecutionResult> wrapAsync(ToolExecutionRequest toolExecutionRequest,
+                InvocationContext invocationContext,
+                BiFunction<ToolExecutionRequest, InvocationContext, CompletableFuture<ToolExecutionResult>> fun,
+                QuarkusToolExecutor executor) {
+            BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> blockingFun = new BiFunction<>() {
+                @Override
+                public ToolExecutionResult apply(ToolExecutionRequest request, InvocationContext context) {
+                    return await(fun.apply(request, context));
+                }
+            };
+            Wrapper wrapper = this;
+            return runBlocking(new Callable<ToolExecutionResult>() {
+                @Override
+                public ToolExecutionResult call() {
+                    return wrapper.wrap(toolExecutionRequest, invocationContext, blockingFun, executor);
+                }
+            });
+        }
+    }
+
+    /**
+     * Runs the given callable on a worker thread when called from the event loop, and on the caller thread otherwise.
+     */
+    public static <T> CompletableFuture<T> runBlocking(Callable<T> callable) {
+        if (io.vertx.core.Context.isOnEventLoopThread()) {
+            return Vertx.currentContext().executeBlocking(callable, false).toCompletionStage().toCompletableFuture();
+        }
+        try {
+            return CompletableFuture.completedFuture(callable.call());
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    /**
+     * Waits for the given stage, rethrowing its failure as is rather than wrapped in a {@link CompletionException}.
+     */
+    public static <T> T await(CompletionStage<T> stage) {
+        try {
+            return stage.toCompletableFuture().join();
+        } catch (CompletionException e) {
+            sneakyThrow(e.getCause() != null ? e.getCause() : e);
+            return null;
+        }
     }
 
     public QuarkusToolExecutor(Context context) {
@@ -112,32 +167,102 @@ public class QuarkusToolExecutor implements ToolExecutor {
         }
     }
 
+    @Override
+    public CompletableFuture<ToolExecutionResult> executeAsync(ToolExecutionRequest request,
+            InvocationContext invocationContext) {
+        log.debugv("About to execute {0} asynchronously", request);
+
+        ToolInvoker invokerInstance = createInvokerInstance();
+        Object[] params = prepareArguments(request, invokerInstance.methodMetadata(), invocationContext);
+        switch (context.executionModel) {
+            case NON_BLOCKING:
+                return invokeAsync(params, invokerInstance);
+            case BLOCKING:
+                return runBlocking(new Callable<ToolExecutionResult>() {
+                    @Override
+                    public ToolExecutionResult call() {
+                        return invoke(params, invokerInstance);
+                    }
+                });
+            case VIRTUAL_THREAD:
+                return CompletableFuture.supplyAsync(new Supplier<ToolExecutionResult>() {
+                    @Override
+                    public ToolExecutionResult get() {
+                        return invoke(params, invokerInstance);
+                    }
+                }, VirtualThreadsRecorder.getCurrent());
+            default:
+                throw new IllegalStateException("Unknown execution model: " + context.executionModel);
+        }
+    }
+
+    private CompletableFuture<ToolExecutionResult> invokeAsync(Object[] params, ToolInvoker invokerInstance) {
+        Object invocationResult;
+        try {
+            if (log.isDebugEnabled()) {
+                log.debugv("Attempting to invoke tool {0} with parameters {1}", context.tool, Arrays.toString(params));
+            }
+            invocationResult = invokerInstance.invoke(context.tool, params);
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+
+        CompletionStage<?> stage;
+        if (invocationResult instanceof Uni<?> uni) {
+            stage = uni.subscribeAsCompletionStage();
+        } else if (invocationResult instanceof CompletionStage<?> completionStage) {
+            stage = completionStage;
+        } else {
+            try {
+                return CompletableFuture.completedFuture(toToolExecutionResult(invokerInstance, invocationResult));
+            } catch (Exception e) {
+                return CompletableFuture.failedFuture(e);
+            }
+        }
+        return stage.toCompletableFuture().thenApply(new Function<Object, ToolExecutionResult>() {
+            @Override
+            public ToolExecutionResult apply(Object item) {
+                return toToolExecutionResult(invokerInstance, item);
+            }
+        });
+    }
+
     private ToolExecutionResult invoke(Object[] params, ToolInvoker invokerInstance) {
         try {
             if (log.isDebugEnabled()) {
                 log.debugv("Attempting to invoke tool {0} with parameters {1}", context.tool, Arrays.toString(params));
             }
             Object invocationResult = invokerInstance.invoke(context.tool, params);
-            if (invocationResult instanceof Uni<?>) { // TODO CS
+            if (invocationResult instanceof Uni<?>) {
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
                     throw new BlockingToolNotAllowedException(
                             "Cannot execute tools returning Uni on event loop thread due to a tool executor limitation");
                 }
                 invocationResult = ((Uni<?>) invocationResult).await().indefinitely();
+            } else if (invocationResult instanceof CompletionStage<?> completionStage) {
+                if (io.vertx.core.Context.isOnEventLoopThread()) {
+                    throw new BlockingToolNotAllowedException(
+                            "Cannot execute tools returning CompletionStage on event loop thread due to a tool executor limitation");
+                }
+                invocationResult = await(completionStage);
             }
-            if (invocationResult instanceof ToolExecutionResult ter) {
-                log.debugv("Tool execution result passed through. result: {0} | resultText: {1}", ter.result(),
-                        ter.resultText());
-                return ter;
-            }
-            String result = handleResult(invokerInstance, invocationResult);
-            log.debugv("Tool execution result: {0}", result);
-            return ToolExecutionResult.builder().result(invocationResult).resultText(result).build();
+            return toToolExecutionResult(invokerInstance, invocationResult);
         } catch (Exception e) {
             sneakyThrow(e);
             // keep the compiler happy
             return null;
         }
+    }
+
+    private static ToolExecutionResult toToolExecutionResult(ToolInvoker invokerInstance, Object invocationResult) {
+        if (invocationResult instanceof ToolExecutionResult ter) {
+            log.debugv("Tool execution result passed through. result: {0} | resultText: {1}", ter.result(),
+                    ter.resultText());
+            return ter;
+        }
+        String result = handleResult(invokerInstance, invocationResult);
+        log.debugv("Tool execution result: {0}", result);
+        return ToolExecutionResult.builder().result(invocationResult).resultText(result).build();
     }
 
     private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
@@ -147,8 +272,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
     /**
      * Converts a tool invocation result into the text sent back to the model, mirroring
      * {@code DefaultToolExecutor}: {@code void} becomes {@code "Success"}, a {@link String} is passed through
-     * unchanged, anything else is JSON-encoded. A {@code Uni<String>} is passed through as well, since it has
-     * already been resolved to its item by the time this is called.
+     * unchanged, anything else is JSON-encoded. A {@code Uni<String>} or {@code CompletionStage<String>} is passed through
+     * as well, since it has already been resolved to its item by the time this is called.
      */
     private static String handleResult(ToolInvoker invokerInstance, Object invocationResult) {
         if (invokerInstance.methodMetadata().isReturnsVoid()) {

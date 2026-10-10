@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -170,6 +172,14 @@ public class ToolExecutionModelTest {
         String uuid = UUID.randomUUID().toString();
         var r = aiService.hello("abc", "hiUni - " + uuid);
         assertThat(r).contains(uuid, Thread.currentThread().getName()); // We are invoked on the same thread
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testCompletionStageToolInvocationFromWorkerThread() {
+        String uuid = UUID.randomUUID().toString();
+        var r = aiService.hello("abc", "hiCompletionStage - " + uuid);
+        assertThat(r).contains(uuid, Thread.currentThread().getName());
     }
 
     @Test
@@ -395,6 +405,11 @@ public class ToolExecutionModelTest {
         @Tool
         public Uni<String> hiUni(String m) {
             return Uni.createFrom().item(() -> m + " " + Thread.currentThread());
+        }
+
+        @Tool
+        public CompletionStage<String> hiCompletionStage(String m) {
+            return CompletableFuture.completedFuture(m + " " + Thread.currentThread());
         }
 
         @Tool

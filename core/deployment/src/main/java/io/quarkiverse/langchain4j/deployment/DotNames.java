@@ -12,8 +12,10 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Flow;
 
 import jakarta.enterprise.inject.Instance;
 
@@ -61,10 +63,12 @@ public class DotNames {
     public static final DotName LIST = DotName.createSimple(List.class);
     public static final DotName SET = DotName.createSimple(Set.class);
     public static final DotName MULTI = DotName.createSimple(Multi.class);
+    public static final DotName FLOW_PUBLISHER = DotName.createSimple(Flow.Publisher.class);
     public static final DotName UNI = DotName.createSimple(Uni.class);
     public static final DotName BLOCKING = DotName.createSimple(Blocking.class);
     public static final DotName NON_BLOCKING = DotName.createSimple(NonBlocking.class);
     public static final DotName COMPLETION_STAGE = DotName.createSimple(CompletionStage.class);
+    public static final DotName COMPLETABLE_FUTURE = DotName.createSimple(CompletableFuture.class);
     public static final DotName RUN_ON_VIRTUAL_THREAD = DotName.createSimple(RunOnVirtualThread.class);
 
     public static final DotName INSTANT = DotName.createSimple(Instant.class);

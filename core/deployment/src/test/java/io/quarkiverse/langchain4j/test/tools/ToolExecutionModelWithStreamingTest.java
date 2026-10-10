@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -233,6 +235,40 @@ public class ToolExecutionModelWithStreamingTest {
 
     @Test
     @ActivateRequestContext
+    void testCompletionStageToolInvocationFromWorkerThread() {
+        String uuid = UUID.randomUUID().toString();
+        var r = aiService.helloCompletionStage("abc", "hiCompletionStage - " + uuid)
+                .collect().asList().map(l -> String.join(" ", l)).await().indefinitely();
+        assertThat(r).contains(uuid, Thread.currentThread().getName());
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testCompletionStageToolInvocationFromEventLoop() {
+        String uuid = UUID.randomUUID().toString();
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        AtomicReference<String> result = new AtomicReference<>();
+        vertx.getOrCreateContext().runOnContext(x -> {
+            try {
+                Arc.container().requestContext().activate();
+                aiService.helloCompletionStage("abc", "hiCompletionStage - " + uuid)
+                        .collect().asList().map(l -> String.join(" ", l))
+                        .subscribeAsCompletionStage()
+                        .thenAccept(result::set);
+            } catch (Exception e) {
+                failure.set(e);
+            } finally {
+                Arc.container().requestContext().deactivate();
+            }
+        });
+
+        Awaitility.await().until(() -> failure.get() != null || result.get() != null);
+        assertThat(failure.get()).isNull();
+        assertThat(result.get()).contains(uuid);
+    }
+
+    @Test
+    @ActivateRequestContext
     @EnabledForJreRange(min = JRE.JAVA_21)
     void testUniToolInvocationFromVirtualThread() throws ExecutionException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
@@ -323,6 +359,9 @@ public class ToolExecutionModelWithStreamingTest {
         @ToolBox(UniTool.class)
         Multi<String> helloUni(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
 
+        @ToolBox(CompletionStageTool.class)
+        Multi<String> helloCompletionStage(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
+
         @ToolBox(VirtualTool.class)
         Multi<String> helloVirtualTools(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
     }
@@ -349,6 +388,14 @@ public class ToolExecutionModelWithStreamingTest {
         @Tool
         public Uni<String> hiUni(String m) {
             return Uni.createFrom().item(() -> m + " " + Thread.currentThread());
+        }
+    }
+
+    @Singleton
+    public static class CompletionStageTool {
+        @Tool
+        public CompletionStage<String> hiCompletionStage(String m) {
+            return CompletableFuture.completedFuture(m + " " + Thread.currentThread());
         }
     }
 

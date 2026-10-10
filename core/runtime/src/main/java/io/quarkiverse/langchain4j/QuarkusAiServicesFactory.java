@@ -10,6 +10,7 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
 import dev.langchain4j.spi.services.AiServicesFactory;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
@@ -40,8 +41,13 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
     public static class QuarkusAiServices<T> extends AiServices<T> {
 
+        /**
+         * Tool argument errors fail the invocation unless a handler is configured. This is the upstream default for
+         * synchronous tool execution, while the asynchronous one sends the error to the model.
+         */
         public QuarkusAiServices(AiServiceContext context) {
             super(context);
+            context.toolService.argumentsErrorHandler(ToolArgumentsErrorHandler.failInvocation());
         }
 
         @Override
@@ -135,6 +141,8 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                                     + "annotation.");
                 }
             }
+
+            quarkusAiServiceContext().switchToWorkerThreadForTokenStreamToolExecution(methodCreateInfos);
 
             try {
                 return (T) Class.forName(classCreateInfo.implClassName(), true, Thread.currentThread()
