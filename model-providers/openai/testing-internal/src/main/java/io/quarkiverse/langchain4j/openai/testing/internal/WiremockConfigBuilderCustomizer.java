@@ -19,7 +19,7 @@ public class WiremockConfigBuilderCustomizer implements SmallRyeConfigBuilderCus
                         "quarkus.wiremock.devservices.extension-scanning-enabled",
                         "true",
                         "quarkus.wiremock.devservices.files-mapping",
-                        "classpath:/openai"),
+                        "classpath:openai"),
                         "quarkus-openai-testing-internal",
                         500));
     }
