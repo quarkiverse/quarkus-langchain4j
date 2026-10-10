@@ -67,6 +67,10 @@ public final class AiServiceMethodCreateInfo {
 
     private final LazyValue<Integer> quarkusGuardrailsMaxRetry;
     private final boolean switchToWorkerThreadForToolExecution;
+    // the method is a Kotlin suspend function (a trailing kotlin.coroutines.Continuation parameter)
+    private final boolean kotlinSuspend;
+    // the method returns a kotlinx.coroutines.flow.Flow, mirrored at runtime as a Multi until it is converted
+    private final boolean kotlinFlow;
 
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName,
@@ -90,7 +94,9 @@ public final class AiServiceMethodCreateInfo {
             String outputTokenAccumulatorClassName,
             String responseAugmenterClassName,
             InputGuardrailsLiteral inputGuardrails,
-            OutputGuardrailsLiteral outputGuardrails) {
+            OutputGuardrailsLiteral outputGuardrails,
+            boolean kotlinSuspend,
+            boolean kotlinFlow) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.parameterInfo = parameterInfo;
@@ -127,6 +133,16 @@ public final class AiServiceMethodCreateInfo {
         });
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
         this.responseAugmenterClassName = responseAugmenterClassName;
+        this.kotlinSuspend = kotlinSuspend;
+        this.kotlinFlow = kotlinFlow;
+    }
+
+    public boolean isKotlinSuspend() {
+        return kotlinSuspend;
+    }
+
+    public boolean isKotlinFlow() {
+        return kotlinFlow;
     }
 
     public String getInterfaceName() {

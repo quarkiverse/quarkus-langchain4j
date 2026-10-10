@@ -161,6 +161,16 @@ public class AiServiceMethodImplementationSupport {
      * This method is called by the implementations of each ai service method.
      */
     public Object implement(Input input) {
+        if (input.createInfo.isKotlinSuspend()) {
+            // a Kotlin suspend function: run the invocation on a worker thread and either return the result directly
+            // or resume the continuation once the invocation completes, so the calling coroutine is never blocked
+            return KotlinCoroutineSupport.suspend(createExecutor(), input.continuation,
+                    () -> implementInternal(input));
+        }
+        return implementInternal(input);
+    }
+
+    private Object implementInternal(Input input) {
         if (ContextLocals.duplicatedContextActive()) {
             ContextLocals.put(AiServiceConstants.AI_SERVICE_CLASS_NAME, input.context.aiServiceClass.getName());
             ContextLocals.put(AiServiceConstants.AI_SERVICE_METHODNAME, input.createInfo.getMethodName());
@@ -199,6 +209,11 @@ public class AiServiceMethodImplementationSupport {
         // TODO: add validation
         try {
             var result = doImplement(createInfo, invocationContext, context);
+
+            if (createInfo.isKotlinFlow()) {
+                // the method returns a Kotlin Flow, the Multi-shape stream needs to be converted
+                result = KotlinCoroutineSupport.toFlow((Multi<?>) result);
+            }
 
             return result;
         } catch (Exception e) {
@@ -1406,11 +1421,19 @@ public class AiServiceMethodImplementationSupport {
         final QuarkusAiServiceContext context;
         final AiServiceMethodCreateInfo createInfo;
         final Object[] methodArgs;
+        // the continuation of a Kotlin suspend function, null for other methods
+        final Object continuation;
 
         public Input(QuarkusAiServiceContext context, AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+            this(context, createInfo, methodArgs, null);
+        }
+
+        public Input(QuarkusAiServiceContext context, AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
+                Object continuation) {
             this.context = context;
             this.createInfo = createInfo;
             this.methodArgs = methodArgs;
+            this.continuation = continuation;
         }
     }
 
