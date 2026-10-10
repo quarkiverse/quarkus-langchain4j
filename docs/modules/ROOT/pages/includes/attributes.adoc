@@ -1,4 +1,5 @@
 :project-version: 1.15.0.CR1
 :langchain4j-version: 1.21.0
 :langchain4j-embeddings-version: ${langchain4j-embeddings.version}
+:a2a-version: 1.4.0.Final
 :examples-dir: ./../examples/

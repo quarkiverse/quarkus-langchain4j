@@ -17,6 +17,7 @@
     <module>embedding-stores</module>
     <module>mcp</module>
     <module>mcp-apicurio-registry</module>
+    <module>a2a</module>
     <module>memory-stores</module>
     <module>model-auth-providers</module>
     <module>model-providers</module>
@@ -57,6 +58,7 @@
     <jitllm.version>1.0.2-jdk21</jitllm.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
     <apicurio-registry-sdk.version>3.3.0</apicurio-registry-sdk.version>
+    <a2a.version>1.4.0.Final</a2a.version>
   </properties>
   <dependencyManagement>
     <dependencies>
