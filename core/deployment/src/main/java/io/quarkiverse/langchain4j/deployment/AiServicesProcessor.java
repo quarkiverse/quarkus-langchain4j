@@ -117,6 +117,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementatio
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.KotlinCoroutineSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsCountedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
@@ -156,6 +157,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
@@ -243,6 +245,7 @@ public class AiServicesProcessor {
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer,
             BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
         IndexView index = indexBuildItem.getIndex();
         Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.DESCRIPTION);
@@ -286,6 +289,10 @@ public class AiServicesProcessor {
                     .constructors().fields().methods()
                     .build());
         }
+        // the holder resolves the Kotlin classes by name, so it must only be initialized at run time; a build-time
+        // initialization would fail whenever Kotlin is not on the classpath of the native image
+        runtimeInitializedClassProducer.produce(
+                new RuntimeInitializedClassBuildItem(KotlinCoroutineSupport.class.getName() + "$KotlinReflections"));
         if (hasKotlinSuspend) {
             // the runtime accesses these reflectively to bridge Kotlin suspend functions (see KotlinCoroutineSupport)
             reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder("kotlin.coroutines.Continuation")
