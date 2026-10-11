@@ -116,6 +116,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
         public static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {
         };
         public static final ObjectWriter WRITER;
+        public static final ObjectWriter COMPACT_WRITER;
 
         static {
             // Start with Arc container ObjectMapper to preserve Quarkus integration
@@ -138,6 +139,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
             MAPPER.registerModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE);
 
             WRITER = MAPPER.writerWithDefaultPrettyPrinter();
+            COMPACT_WRITER = MAPPER.writer().without(SerializationFeature.INDENT_OUTPUT);
         }
     }
 
