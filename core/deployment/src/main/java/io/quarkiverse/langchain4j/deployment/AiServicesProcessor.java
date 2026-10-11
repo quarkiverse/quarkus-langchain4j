@@ -1458,7 +1458,8 @@ public class AiServicesProcessor {
             IndexView index) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
-                || method.returnType().name().equals(DotNames.MULTI);
+                || method.returnType().name().equals(DotNames.MULTI)
+                || method.returnType().name().equals(LangChain4jDotNames.TOKEN_STREAM);
 
         boolean requireSwitchToWorkerThread = false;
 
