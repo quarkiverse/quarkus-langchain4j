@@ -89,7 +89,8 @@ class PgVectorEmbeddingStoreProcessor {
                     .qualifiers(defaultDatasourceQualifier)
                     .done());
 
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(NamedConfigUtil.DEFAULT_NAME,
+                    "quarkus.langchain4j.pgvector.dimension"));
         }
 
         Map<String, PgVectorNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
@@ -131,7 +132,8 @@ class PgVectorEmbeddingStoreProcessor {
             }
             alreadyHandledStoreInterceptors.add(storeDatasourceName);
 
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(storeName,
+                    "quarkus.langchain4j.pgvector." + storeName + ".dimension"));
         }
     }
 

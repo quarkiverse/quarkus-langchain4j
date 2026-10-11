@@ -13,6 +13,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanEmbeddingStoreRecorder;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -75,7 +76,8 @@ public class InfinispanEmbeddingStoreProcessor {
                         infinispanClientQualifier)
                 .createWith(recorder.embeddingStoreFunction(clientName))
                 .done());
-        embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+        embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(NamedConfigUtil.DEFAULT_NAME,
+                "quarkus.langchain4j.infinispan.dimension"));
     }
 
 }

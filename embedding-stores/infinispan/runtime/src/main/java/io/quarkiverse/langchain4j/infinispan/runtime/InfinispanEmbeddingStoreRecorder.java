@@ -39,7 +39,7 @@ public class InfinispanEmbeddingStoreRecorder {
                 InfinispanEmbeddingStoreConfig config = runtimeConfig.getValue();
                 builder.schema(new InfinispanSchema(config.cacheName(), config.dimension(),
                         config.distance(), config.similarity(), config.createCache(),
-                        config.cacheConfig().orElse(null)));
+                        config.cacheConfig().orElse(null), "quarkus.langchain4j.infinispan.dimension"));
                 return builder.build();
             }
         };

@@ -60,7 +60,8 @@ public class Neo4jEmbeddingStoreProcessor {
                     .createWith(recorder.embeddingStoreFunction(NamedConfigUtil.DEFAULT_NAME))
                     .done());
 
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(NamedConfigUtil.DEFAULT_NAME,
+                    "quarkus.langchain4j.neo4j.dimension"));
         }
 
         Map<String, Neo4jNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
@@ -91,7 +92,8 @@ public class Neo4jEmbeddingStoreProcessor {
                     .createWith(recorder.embeddingStoreFunction(storeName))
                     .done());
 
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(storeName,
+                    "quarkus.langchain4j.neo4j." + storeName + ".dimension"));
         }
     }
 }

@@ -18,6 +18,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.configuration.StringConfiguration;
+import org.jboss.logging.Logger;
 
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
@@ -30,6 +31,7 @@ import dev.langchain4j.store.embedding.filter.Filter;
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanSchema;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainInfinispanItem;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainMetadata;
+import io.quarkiverse.langchain4j.runtime.embeddingstore.DimensionMismatchWarning;
 
 /**
  * Stores and retrieves embeddings using Infinispan Server as the backend.
@@ -38,9 +40,12 @@ import io.quarkiverse.langchain4j.infinispan.runtime.LangchainMetadata;
  */
 public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
 
+    private static final Logger LOG = Logger.getLogger(InfinispanEmbeddingStore.class);
+
     private final RemoteCache<String, LangchainInfinispanItem> remoteCache;
     private final InfinispanSchema schema;
     private final String langchainItemType;
+    private final DimensionMismatchWarning dimensionMismatchWarning;
     private static final String DEFAULT_CACHE_CONFIG = "<distributed-cache name=\"CACHE_NAME\">\n"
             + "<indexing storage=\"local-heap\">\n"
             + "<indexed-entities>\n"
@@ -56,6 +61,8 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
     public InfinispanEmbeddingStore(RemoteCacheManager cacheManager, InfinispanSchema schema) {
         this.schema = schema;
         this.langchainItemType = SchemaAndMarshallerProducer.LANGCHAIN_ITEM + schema.getDimension();
+        this.dimensionMismatchWarning = schema.getDimension() == null ? null
+                : new DimensionMismatchWarning(schema.getDimension().intValue(), schema.getDimensionConfigProperty());
         if (schema.isCreateCache()) {
             String cacheConfig = schema.getCacheConfig();
             if (cacheConfig == null) {
@@ -122,6 +129,10 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
         }
         ensureTrue(ids.size() == embeddings.size(), "ids size is not equal to embeddings size");
         ensureTrue(embedded == null || embeddings.size() == embedded.size(), "embeddings size is not equal to embedded size");
+
+        if (dimensionMismatchWarning != null) {
+            dimensionMismatchWarning.check(embeddings).ifPresent(message -> LOG.warn(message));
+        }
 
         int size = ids.size();
         Map<String, LangchainInfinispanItem> elements = new HashMap<>(size);

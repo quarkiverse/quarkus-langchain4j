@@ -28,6 +28,7 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.redis.runtime.RedisFilterMapper;
 import io.quarkiverse.langchain4j.redis.runtime.RedisSchema;
+import io.quarkiverse.langchain4j.runtime.embeddingstore.DimensionMismatchWarning;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.keys.KeyScanArgs;
 import io.quarkus.redis.datasource.search.CreateArgs;
@@ -46,7 +47,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
     private final RedisSchema schema;
     private final Logger LOG = Logger.getLogger(RedisEmbeddingStore.class);
     private final boolean indexCreated;
-    private boolean warnedAboutWrongDimension = false;
+    private final DimensionMismatchWarning dimensionMismatchWarning;
 
     private static final String SCORE_FIELD_NAME = "vector_score";
 
@@ -58,6 +59,8 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
         this.ds = ds;
         this.schema = schema;
         this.indexCreated = createIndexIfDoesNotExist();
+        this.dimensionMismatchWarning = new DimensionMismatchWarning(schema.getDimension().intValue(),
+                schema.getDimensionConfigProperty());
     }
 
     private boolean createIndexIfDoesNotExist() {
@@ -141,13 +144,8 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             TextSegment textSegment = embedded == null ? null : embedded.get(i);
             Map<String, Object> fields = new HashMap<>();
             fields.put(schema.getVectorFieldName(), embedding.vector());
-            if (!warnedAboutWrongDimension && indexCreated && embedding.vector().length != schema.getDimension()) {
-                LOG.warn("Creating an embedding with dimension " + embedding.vector().length + " but the index was " +
-                        "created with dimension " + schema.getDimension() + ". " +
-                        "This may result in embeddings not being found when they should be. " +
-                        "Please check the quarkus.langchain4j.redis.dimension property. " +
-                        "This warning will be shown only once.");
-                warnedAboutWrongDimension = true;
+            if (indexCreated) {
+                dimensionMismatchWarning.check(embedding).ifPresent(message -> LOG.warn(message));
             }
             if (textSegment != null) {
                 fields.put(schema.getScalarFieldName(), textSegment.text());

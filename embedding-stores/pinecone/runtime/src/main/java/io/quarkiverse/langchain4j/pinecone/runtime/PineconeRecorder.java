@@ -61,9 +61,15 @@ public class PineconeRecorder {
                         storeConfig.timeout().orElse(Duration.ofSeconds(5)),
                         storeConfig.dimension().orElse(null),
                         storeConfig.podType(),
-                        storeConfig.indexReadinessTimeout().orElse(Duration.ofMinutes(1)));
+                        storeConfig.indexReadinessTimeout().orElse(Duration.ofMinutes(1)),
+                        dimensionConfigProperty(storeName));
             }
         };
+    }
+
+    private String dimensionConfigProperty(String storeName) {
+        return NamedConfigUtil.isDefault(storeName) ? "quarkus.langchain4j.pinecone.dimension"
+                : "quarkus.langchain4j.pinecone." + storeName + ".dimension";
     }
 
     private PineconeStoreRuntimeConfig correspondingStoreConfig(String storeName) {

@@ -3,13 +3,18 @@ package io.quarkiverse.langchain4j.pgvector;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.jboss.logging.Logger;
+
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.pgvector.DefaultMetadataStorageConfig;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorStoreRuntimeConfig.MetadataConfig;
+import io.quarkiverse.langchain4j.runtime.embeddingstore.DimensionMismatchWarning;
 
 /**
  * Quarkus PGVector EmbeddingStore Implementation
@@ -20,6 +25,40 @@ import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorStoreRuntimeConfig.Me
  */
 public class PgVectorEmbeddingStore extends dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore
         implements EmbeddingStore<TextSegment> {
+
+    private static final Logger log = Logger.getLogger(PgVectorEmbeddingStore.class);
+
+    private static final String DEFAULT_DIMENSION_CONFIG_PROPERTY = "quarkus.langchain4j.pgvector.dimension";
+
+    private final DimensionMismatchWarning dimensionMismatchWarning;
+
+    /**
+     * Constructor used by quarkus deployment with quarkus datasource and config.
+     *
+     * @param datasource The datasource
+     * @param table The database table
+     * @param dimension The vector dimension
+     * @param useIndex Should use <a href="https://github.com/pgvector/pgvector#ivfflat">IVFFlat</a> index
+     * @param indexListSize The IVFFlat number of lists
+     * @param createTable Should create table automatically
+     * @param dropTableFirst Should drop table first, usually for testing
+     * @param metadataConfig The {@link MetadataConfig} config.
+     * @param dimensionConfigProperty The config property holding the configured dimension, used in the warning message.
+     */
+    public PgVectorEmbeddingStore(
+            DataSource datasource,
+            String table,
+            Integer dimension,
+            Boolean useIndex,
+            Integer indexListSize,
+            Boolean createTable,
+            Boolean dropTableFirst,
+            MetadataConfig metadataConfig,
+            String dimensionConfigProperty) {
+        super(datasource, table, dimension, useIndex, indexListSize, createTable, dropTableFirst,
+                toLangchainMetadataConfig(metadataConfig));
+        this.dimensionMismatchWarning = new DimensionMismatchWarning(dimension, dimensionConfigProperty);
+    }
 
     /**
      * Constructor used by quarkus deployment with quarkus datasource and config.
@@ -42,8 +81,8 @@ public class PgVectorEmbeddingStore extends dev.langchain4j.store.embedding.pgve
             Boolean createTable,
             Boolean dropTableFirst,
             MetadataConfig metadataConfig) {
-        super(datasource, table, dimension, useIndex, indexListSize, createTable, dropTableFirst,
-                toLangchainMetadataConfig(metadataConfig));
+        this(datasource, table, dimension, useIndex, indexListSize, createTable, dropTableFirst, metadataConfig,
+                DEFAULT_DIMENSION_CONFIG_PROPERTY);
     }
 
     /**
@@ -51,6 +90,49 @@ public class PgVectorEmbeddingStore extends dev.langchain4j.store.embedding.pgve
      */
     @SuppressWarnings("unused")
     protected PgVectorEmbeddingStore() {
+        this.dimensionMismatchWarning = null;
+    }
+
+    @Override
+    public String add(Embedding embedding) {
+        warnIfDimensionMismatch(embedding);
+        return super.add(embedding);
+    }
+
+    @Override
+    public void add(String id, Embedding embedding) {
+        warnIfDimensionMismatch(embedding);
+        super.add(id, embedding);
+    }
+
+    @Override
+    public String add(Embedding embedding, TextSegment embedded) {
+        warnIfDimensionMismatch(embedding);
+        return super.add(embedding, embedded);
+    }
+
+    @Override
+    public List<String> addAll(List<Embedding> embeddings) {
+        warnIfDimensionMismatch(embeddings);
+        return super.addAll(embeddings);
+    }
+
+    @Override
+    public void addAll(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
+        warnIfDimensionMismatch(embeddings);
+        super.addAll(ids, embeddings, embedded);
+    }
+
+    private void warnIfDimensionMismatch(Embedding embedding) {
+        if (dimensionMismatchWarning != null) {
+            dimensionMismatchWarning.check(embedding).ifPresent(log::warn);
+        }
+    }
+
+    private void warnIfDimensionMismatch(List<Embedding> embeddings) {
+        if (dimensionMismatchWarning != null) {
+            dimensionMismatchWarning.check(embeddings).ifPresent(log::warn);
+        }
     }
 
     // Needed for doc generation, ascii doctor generates twice the properties, one for each MetadataConfig

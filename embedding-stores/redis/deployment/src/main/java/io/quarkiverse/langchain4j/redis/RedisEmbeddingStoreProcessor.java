@@ -78,7 +78,8 @@ public class RedisEmbeddingStoreProcessor {
                     .createWith(recorder.embeddingStoreFunction(defaultClientName, NamedConfigUtil.DEFAULT_NAME))
                     .done());
 
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(NamedConfigUtil.DEFAULT_NAME,
+                    "quarkus.langchain4j.redis.dimension"));
         }
 
         Map<String, RedisNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
@@ -107,7 +108,8 @@ public class RedisEmbeddingStoreProcessor {
                     .createWith(recorder.embeddingStoreFunction(storeClientName, storeName))
                     .done());
 
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(storeName,
+                    "quarkus.langchain4j.redis." + storeName + ".dimension"));
         }
     }
 

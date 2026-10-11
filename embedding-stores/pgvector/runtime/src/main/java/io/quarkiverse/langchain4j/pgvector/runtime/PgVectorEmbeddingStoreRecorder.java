@@ -50,7 +50,8 @@ public class PgVectorEmbeddingStoreRecorder {
                         storeConfig.indexListSize(),
                         storeConfig.createTable(),
                         storeConfig.dropTableFirst(),
-                        storeConfig.metadata());
+                        storeConfig.metadata(),
+                        dimensionConfigProperty(storeName));
             }
         };
     }
@@ -69,6 +70,11 @@ public class PgVectorEmbeddingStoreRecorder {
         return new ConfigValidationException.Problem[] { new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.pgvector%sdimension is required but it could not be found in any config source",
                 NamedConfigUtil.isDefault(storeName) ? "." : ("." + storeName + "."))) };
+    }
+
+    private String dimensionConfigProperty(String storeName) {
+        return String.format("quarkus.langchain4j.pgvector%sdimension",
+                NamedConfigUtil.isDefault(storeName) ? "." : ("." + storeName + "."));
     }
 
     public Supplier<PgVectorAgroalPoolInterceptor> pgVectorAgroalPoolInterceptor(String storeName) {

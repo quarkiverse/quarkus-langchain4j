@@ -52,7 +52,8 @@ public class MilvusProcessor {
                     .scope(ApplicationScoped.class)
                     .createWith(recorder.embeddingStoreFunction(NamedConfigUtil.DEFAULT_NAME))
                     .done());
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(NamedConfigUtil.DEFAULT_NAME,
+                    "quarkus.langchain4j.milvus.dimension"));
         }
 
         Map<String, MilvusNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
@@ -73,7 +74,8 @@ public class MilvusProcessor {
                     .addQualifier(storeNameQualifier)
                     .createWith(recorder.embeddingStoreFunction(storeName))
                     .done());
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(storeName,
+                    "quarkus.langchain4j.milvus." + storeName + ".dimension"));
         }
     }
 }

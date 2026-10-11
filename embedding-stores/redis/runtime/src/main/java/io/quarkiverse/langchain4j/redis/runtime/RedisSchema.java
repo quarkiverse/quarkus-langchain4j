@@ -20,6 +20,7 @@ public class RedisSchema {
     private VectorAlgorithm vectorAlgorithm;
     private Long dimension;
     private DistanceMetric distanceMetric;
+    private String dimensionConfigProperty;
     private static final String JSON_PATH_PREFIX = "$.";
 
     public RedisSchema(String indexName,
@@ -30,7 +31,8 @@ public class RedisSchema {
             List<String> textualMetadataFields,
             VectorAlgorithm vectorAlgorithm,
             Long dimension,
-            DistanceMetric distanceMetric) {
+            DistanceMetric distanceMetric,
+            String dimensionConfigProperty) {
         this.indexName = indexName;
         this.prefix = prefix;
         this.vectorFieldName = vectorFieldName;
@@ -40,6 +42,7 @@ public class RedisSchema {
         this.vectorAlgorithm = vectorAlgorithm;
         this.dimension = dimension;
         this.distanceMetric = distanceMetric;
+        this.dimensionConfigProperty = dimensionConfigProperty;
     }
 
     public String getIndexName() {
@@ -76,6 +79,10 @@ public class RedisSchema {
 
     public DistanceMetric getDistanceMetric() {
         return distanceMetric;
+    }
+
+    public String getDimensionConfigProperty() {
+        return dimensionConfigProperty;
     }
 
     public void defineFields(CreateArgs args) {
@@ -121,6 +128,7 @@ public class RedisSchema {
         private VectorAlgorithm vectorAlgorithm;
         private Long dimension;
         private DistanceMetric metricType;
+        private String dimensionConfigProperty;
 
         public Builder indexName(String indexName) {
             this.indexName = indexName;
@@ -171,6 +179,11 @@ public class RedisSchema {
             return this;
         }
 
+        public Builder dimensionConfigProperty(String dimensionConfigProperty) {
+            this.dimensionConfigProperty = dimensionConfigProperty;
+            return this;
+        }
+
         public RedisSchema build() {
             return new RedisSchema(indexName,
                     prefix,
@@ -180,7 +193,8 @@ public class RedisSchema {
                     textualMetadataFields,
                     vectorAlgorithm,
                     dimension,
-                    metricType);
+                    metricType,
+                    dimensionConfigProperty);
         }
     }
 

@@ -11,15 +11,17 @@ public class InfinispanSchema {
     private final String similarity;
     private final boolean createCache;
     private final String cacheConfig;
+    private final String dimensionConfigProperty;
 
     public InfinispanSchema(String cacheName, Long dimension, Integer distance,
-            String similarity, boolean createCache, String cacheConfig) {
+            String similarity, boolean createCache, String cacheConfig, String dimensionConfigProperty) {
         this.cacheName = cacheName;
         this.dimension = dimension;
         this.distance = distance;
         this.similarity = similarity;
         this.createCache = createCache;
         this.cacheConfig = cacheConfig;
+        this.dimensionConfigProperty = dimensionConfigProperty;
     }
 
     public String getCacheName() {
@@ -44,5 +46,9 @@ public class InfinispanSchema {
 
     public String getCacheConfig() {
         return cacheConfig;
+    }
+
+    public String getDimensionConfigProperty() {
+        return dimensionConfigProperty;
     }
 }

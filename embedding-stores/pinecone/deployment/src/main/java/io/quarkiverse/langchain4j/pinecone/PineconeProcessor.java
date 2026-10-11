@@ -56,7 +56,8 @@ public class PineconeProcessor {
                     .scope(ApplicationScoped.class)
                     .createWith(recorder.embeddingStoreFunction(NamedConfigUtil.DEFAULT_NAME))
                     .done());
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(NamedConfigUtil.DEFAULT_NAME,
+                    "quarkus.langchain4j.pinecone.dimension"));
         }
 
         Map<String, PineconeNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
@@ -78,7 +79,8 @@ public class PineconeProcessor {
                     .addQualifier(storeNameQualifier)
                     .createWith(recorder.embeddingStoreFunction(storeName))
                     .done());
-            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
+            embeddingStoreProducer.produce(new EmbeddingStoreBuildItem(storeName,
+                    "quarkus.langchain4j.pinecone." + storeName + ".dimension"));
         }
     }
 

@@ -38,6 +38,7 @@ import io.quarkiverse.langchain4j.pinecone.runtime.QueryResponse;
 import io.quarkiverse.langchain4j.pinecone.runtime.UpsertRequest;
 import io.quarkiverse.langchain4j.pinecone.runtime.UpsertResponse;
 import io.quarkiverse.langchain4j.pinecone.runtime.UpsertVector;
+import io.quarkiverse.langchain4j.runtime.embeddingstore.DimensionMismatchWarning;
 import io.quarkus.arc.impl.LazyValue;
 import io.quarkus.logging.Log;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -50,6 +51,7 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
     private final String textFieldName;
     private final String indexName;
     private final Integer dimension;
+    private final DimensionMismatchWarning dimensionMismatchWarning;
     private final LazyValue<Object> indexExists;
 
     public PineconeEmbeddingStore(String apiKey,
@@ -62,8 +64,25 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
             Integer dimension,
             String podType,
             Duration indexReadinessTimeout) {
+        this(apiKey, indexName, projectId, environment, namespace, textFieldName, timeout, dimension, podType,
+                indexReadinessTimeout, "quarkus.langchain4j.pinecone.dimension");
+    }
+
+    public PineconeEmbeddingStore(String apiKey,
+            String indexName,
+            String projectId,
+            String environment,
+            String namespace,
+            String textFieldName,
+            Duration timeout,
+            Integer dimension,
+            String podType,
+            Duration indexReadinessTimeout,
+            String dimensionConfigProperty) {
         this.indexName = indexName;
         this.dimension = dimension;
+        this.dimensionMismatchWarning = dimension != null ? new DimensionMismatchWarning(dimension, dimensionConfigProperty)
+                : null;
         String baseUrl = "https://" + indexName + "-" + projectId + ".svc." + environment + ".pinecone.io";
         String baseUrlIndexOperations = "https://api.pinecone.io";
         try {
@@ -196,6 +215,9 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     private void addAllInternal(List<String> ids, List<Embedding> embeddings, List<TextSegment> textSegments) {
+        if (dimensionMismatchWarning != null) {
+            dimensionMismatchWarning.check(embeddings).ifPresent(message -> Log.warn(message));
+        }
         indexExists.get();
         Log.debug("Adding embeddings: " + embeddings);
         int count = ids.size();

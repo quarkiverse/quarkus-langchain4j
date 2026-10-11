@@ -49,6 +49,7 @@ import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.hibernate.runtime.DynamicEmbeddingStoreAdditionalMappingContributor;
 import io.quarkiverse.langchain4j.hibernate.runtime.HibernateEmbeddingStoreRecorder;
 import io.quarkiverse.langchain4j.hibernate.runtime.SetupVectorConfigAgroalPoolInterceptor;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.agroal.DataSource;
 import io.quarkus.agroal.spi.JdbcDataSourceBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -268,8 +269,9 @@ class HibernateEmbeddingStoreProcessor {
     }
 
     @BuildStep
-    EmbeddingStoreBuildItem embeddingStoreBuildItem() {
-        return new EmbeddingStoreBuildItem();
+    EmbeddingStoreBuildItem embeddingStoreBuildItem(HibernateGenericEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        return new EmbeddingStoreBuildItem(NamedConfigUtil.DEFAULT_NAME, "quarkus.langchain4j.generic.dimension",
+                buildTimeConfig.dimension().orElse(null));
     }
 
     @BuildStep

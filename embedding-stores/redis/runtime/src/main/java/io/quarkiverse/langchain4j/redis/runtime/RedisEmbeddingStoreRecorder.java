@@ -53,12 +53,20 @@ public class RedisEmbeddingStoreRecorder {
                         .vectorAlgorithm(storeConfig.vectorAlgorithm())
                         .dimension(storeConfig.dimension().get())
                         .metricType(storeConfig.distanceMetric())
+                        .dimensionConfigProperty(dimensionConfigProperty(storeName))
                         .build();
                 builder.schema(schema);
 
                 return builder.build();
             }
         };
+    }
+
+    private String dimensionConfigProperty(String storeName) {
+        if (NamedConfigUtil.isDefault(storeName)) {
+            return "quarkus.langchain4j.redis.dimension";
+        }
+        return "quarkus.langchain4j.redis." + storeName + ".dimension";
     }
 
     private RedisStoreRuntimeConfig correspondingStoreConfig(String storeName) {
