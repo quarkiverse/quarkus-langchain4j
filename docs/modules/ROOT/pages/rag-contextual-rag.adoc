@@ -62,11 +62,11 @@ Using a transformer ensures your retrievers work with more focused queries, impr
 
 === 2. Multiple Retrievers
 
-In general, the RAG uses a vector store to retrieve relevant content based on the query embedding.
+In general, the RAG uses an embedding store to retrieve relevant content based on the query embedding.
 But it's not the only source of information.
 You can combine multiple sources, such as:
 
-- vector store (e.g., PGVector, Chroma, Weaviate)
+- embedding store (e.g., PGVector, Chroma, Weaviate)
 - web search (e.g., Tavily, Bing, Google)
 - knowledge bases (e.g., SQL, NoSQL databases)
 - full-text search engines (e.g., Elasticsearch, OpenSearch)

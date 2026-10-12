@@ -1,10 +1,10 @@
-= Loading CSV Files into a Vector Store
+= Loading CSV Files into an Embedding Store
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
 When building a Retrieval-Augmented Generation (RAG) application, it's common to ingest structured tabular data such as CSV files.
-This guide walks you through the process of transforming CSV data into embeddings and storing them in a vector store.
+This guide walks you through the process of transforming CSV data into embeddings and storing them in an embedding store.
 
 You’ll learn how to:
 
@@ -73,7 +73,7 @@ NOTE: Each row is converted into a `Document` with structured metadata (like row
 
 == Step 2: Ingest the Documents
 
-To store the documents in a vector store, you need to embed and split them into smaller chunks.
+To store the documents in an embedding store, you need to embed and split them into smaller chunks.
 
 Use the `EmbeddingStoreIngestor` along with a `DocumentSplitter`. Here we use a recursive splitter for simplicity:
 
@@ -128,7 +128,7 @@ To use CSV data in a RAG pipeline:
 
 1. Parse each row into a `Document` with content and metadata
 2. Use a `DocumentSplitter` and `EmbeddingStoreIngestor` to embed and store the documents
-3. Implement a `RetrievalAugmentor` that performs semantic search against your vector store
+3. Implement a `RetrievalAugmentor` that performs semantic search against your embedding store
 
 This enables your application to ask and answer questions grounded in structured tabular data.
 

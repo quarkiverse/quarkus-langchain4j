@@ -37,7 +37,7 @@ When using a remote Weaviate instance, Dev Services are automatically disabled.
 
 == Usage Example
 
-Once configured, you can use the Weaviate embedding store like any other vector store:
+Once configured, you can use the Weaviate embedding store like any other embedding store:
 
 [source,java]
 ----

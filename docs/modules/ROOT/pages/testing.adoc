@@ -1614,7 +1614,7 @@ public interface LlmJudgeService { ... }
 ----
 
 
-2. **Reuse Vector Stores**
+2. **Reuse Embedding Stores**
 
 
 3. **Filter by Tags**

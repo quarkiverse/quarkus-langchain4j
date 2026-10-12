@@ -33,7 +33,7 @@ Query-time augmentation requires that documents were previously:
 
 - Split into meaningful chunks
 - Embedded using the same embedding model used at query time
-- Stored in a compatible vector store (embedding store)
+- Stored in a compatible embedding store
 - Optionally enriched with metadata that can be used for ranking, filtering, or context expansion
 
 **Consistency is key: If your embedding model or chunking strategy changes, you must re-ingest documents. Otherwise, retrieval accuracy will suffer.**
@@ -46,7 +46,7 @@ There are strong dependencies between the ingestion pipeline and the query-time 
 
 - the embedding model used for ingestion must be the same as the one used for query-time augmentation
 - the content format (text segments, metadata) must match what the retriever expects
-- the vector store is shared between ingestion and query-time augmentation, meaning that changing the schema or content format requires re-ingesting all documents
+- the embedding store is shared between ingestion and query-time augmentation, meaning that changing the schema or content format requires re-ingesting all documents
 - the metadata used for ranking or filtering must be consistent with what was stored during ingestion
 ====
 
