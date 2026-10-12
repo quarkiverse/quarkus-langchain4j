@@ -296,7 +296,14 @@ public class ChatJsonRPCService {
             }
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-                String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, currentMemoryId.get());
+                String toolExecutionResult;
+                try {
+                    toolExecutionResult = toolExecutor.execute(toolExecutionRequest, currentMemoryId.get());
+                } catch (Throwable t) {
+                    // Add tool execution result with error so it's visible in memory/UI
+                    toolExecutionResult = "Error: " + t.getMessage();
+                    Log.warn("Tool execution failed", t);
+                }
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
                         toolExecutionRequest,
                         toolExecutionResult);
@@ -324,32 +331,44 @@ public class ChatJsonRPCService {
             public void onCompleteResponse(ChatResponse response) {
                 // run on a worker thread because the tool might be blocking
                 Infrastructure.getDefaultExecutor().execute(() -> {
-                    AiMessage aiMessage = response.aiMessage();
-                    memory.add(aiMessage);
-                    if (!aiMessage.hasToolExecutionRequests()) {
-                        em.emit(new JsonObject().put("message", aiMessage.text()));
-                        em.complete();
-                    } else {
-                        for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
-                            ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-                            ToolExecutionRequestPojo toolExecutionRequestPojo = new ToolExecutionRequestPojo(
-                                    toolExecutionRequest.id(), toolExecutionRequest.name(), toolExecutionRequest.arguments());
-                            em.emit(new JsonObject().put("toolExecutionRequest", toolExecutionRequestPojo));
-                            String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, currentMemoryId.get());
-                            ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage
-                                    .from(toolExecutionRequest, toolExecutionResult);
-                            memory.add(toolExecutionResultMessage);
-                            ToolExecutionResultPojo toolExecutionResultPojo = new ToolExecutionResultPojo(
-                                    toolExecutionResultMessage.id(), toolExecutionResultMessage.toolName(),
-                                    toolExecutionResultMessage.text());
-                            em.emit(new JsonObject().put("toolExecutionResult", toolExecutionResultPojo));
+                    try {
+                        AiMessage aiMessage = response.aiMessage();
+                        memory.add(aiMessage);
+                        if (!aiMessage.hasToolExecutionRequests()) {
+                            em.emit(new JsonObject().put("message", aiMessage.text()));
+                            em.complete();
+                        } else {
+                            for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                                ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
+                                ToolExecutionRequestPojo toolExecutionRequestPojo = new ToolExecutionRequestPojo(
+                                        toolExecutionRequest.id(), toolExecutionRequest.name(),
+                                        toolExecutionRequest.arguments());
+                                em.emit(new JsonObject().put("toolExecutionRequest", toolExecutionRequestPojo));
+                                String toolExecutionResult;
+                                try {
+                                    toolExecutionResult = toolExecutor.execute(toolExecutionRequest, currentMemoryId.get());
+                                } catch (Throwable t) {
+                                    // Emit tool execution result with error so the UI can show it
+                                    toolExecutionResult = "Error: " + t.getMessage();
+                                    Log.warn("Tool execution failed", t);
+                                }
+                                ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage
+                                        .from(toolExecutionRequest, toolExecutionResult);
+                                memory.add(toolExecutionResultMessage);
+                                ToolExecutionResultPojo toolExecutionResultPojo = new ToolExecutionResultPojo(
+                                        toolExecutionResultMessage.id(), toolExecutionResultMessage.toolName(),
+                                        toolExecutionResultMessage.text());
+                                em.emit(new JsonObject().put("toolExecutionResult", toolExecutionResultPojo));
+                            }
+                            executeWithToolsAndStreaming(memory, em, finalToolExecutionsLeft);
                         }
-                        executeWithToolsAndStreaming(memory, em, finalToolExecutionsLeft);
-                    }
-                    // Remove toolProviderSupplier tools again
-                    if (toolProvider != null) {
-                        toolSpecifications.clear();
-                        toolExecutors.clear();
+                        // Remove toolProviderSupplier tools again
+                        if (toolProvider != null) {
+                            toolSpecifications.clear();
+                            toolExecutors.clear();
+                        }
+                    } catch (Throwable t) {
+                        em.fail(t);
                     }
                 });
             }
