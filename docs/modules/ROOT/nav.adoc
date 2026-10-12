@@ -40,6 +40,7 @@
 * xref:ai-services.adoc[AI Services]
 ** xref:prompt-and-template.adoc[Prompt and Template]
 ** xref:messages-and-memory.adoc[Messages and Memory]
+*** xref:memory-store-mongodb.adoc[MongoDB Chat Memory Store]
 ** xref:response-augmenter.adoc[Response Augmenter]
 ** xref:chat-scopes.adoc[Chat Scopes Framework]
 * xref:agentic.adoc[Agentic AI]

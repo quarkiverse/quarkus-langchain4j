@@ -258,6 +258,10 @@ This is useful for:
 * distributed services (e.g., multiple Quarkus pods/replicas)
 * external control over retention or eviction
 
+Instead of writing your own, you can use a ready-made store:
+
+* xref:memory-store-mongodb.adoc[MongoDB Chat Memory Store]
+
 [#_chat_memory_flush_strategy]
 == Chat Memory Flush Strategy
 
