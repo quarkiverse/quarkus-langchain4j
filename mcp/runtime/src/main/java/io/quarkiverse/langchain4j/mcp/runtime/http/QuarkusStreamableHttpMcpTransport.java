@@ -140,6 +140,14 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         this.modernProtocol = modernProtocol;
     }
 
+    /**
+     * The ID of the MCP session assigned by the server, or {@code null} if there is none.
+     * Sessions only exist with the legacy protocol (up to 2025-11-25).
+     */
+    public String mcpSessionId() {
+        return mcpSessionId.get();
+    }
+
     public void setProtocolVersion(String protocolVersion) {
         this.protocolVersionHeader = protocolVersion;
     }

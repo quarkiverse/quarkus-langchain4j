@@ -140,7 +140,8 @@ public class McpRecorder {
                 addObservability(builder, key, addMetrics,
                         openTelemetryEnabled != null &&
                                 openTelemetryEnabled.getValue() &&
-                                mcpRuntimeConfiguration.getValue().tracingEnabled());
+                                mcpRuntimeConfiguration.getValue().tracingEnabled(),
+                        mcpTransportType, runtimeConfig.url().orElse(null), transport);
                 runtimeConfig.protocolVersion().ifPresent(builder::protocolVersion);
                 builder.subscribeToToolListChanges(runtimeConfig.subscribeToToolListChanges());
                 builder.subscribeToPromptListChanges(runtimeConfig.subscribeToPromptListChanges());
@@ -166,13 +167,20 @@ public class McpRecorder {
         };
     }
 
-    private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing) {
+    private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing,
+            McpTransportType transportType, String url, McpTransport transport) {
         if (addMetrics) {
             builder.addListener(createMetricsListener(key));
         }
         if (addTracing) {
-            builder.addListener(createTracingListener());
-            builder.metaSupplier(createTracingMetaSupplier());
+            Supplier<String> sessionIdSupplier = transport instanceof QuarkusStreamableHttpMcpTransport httpTransport
+                    ? httpTransport::mcpSessionId
+                    : null;
+            Object tracingListener = createTracingListener(transportType,
+                    transportType == McpTransportType.STDIO ? null : url, sessionIdSupplier);
+            // the tracing listener also propagates the trace context of its spans in the _meta of MCP messages
+            builder.addListener((McpClientListener) tracingListener);
+            builder.metaSupplier((McpMetaSupplier) tracingListener);
         }
     }
 
@@ -188,33 +196,15 @@ public class McpRecorder {
         }
     }
 
-    private McpClientListener createTracingListener() {
+    private Object createTracingListener(McpTransportType transportType, String url, Supplier<String> sessionIdSupplier) {
         try {
             // avoid direct dependency on the TracingMcpClientListener class, it would break native
             // compilation if the optional OpenTelemetry dependency isn't present
-            Object tracer = Arc.container().select(
-                    Thread.currentThread().getContextClassLoader()
-                            .loadClass("io.opentelemetry.api.trace.Tracer"))
-                    .get();
-            return (McpClientListener) Thread.currentThread()
+            return Thread.currentThread()
                     .getContextClassLoader()
                     .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener")
-                    .getConstructor(Thread.currentThread().getContextClassLoader()
-                            .loadClass("io.opentelemetry.api.trace.Tracer"))
-                    .newInstance(tracer);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private McpMetaSupplier createTracingMetaSupplier() {
-        try {
-            // avoid direct dependency on the TracingMcpMetaSupplier class, it would break native
-            // compilation if the optional OpenTelemetry dependency isn't present
-            return (McpMetaSupplier) Thread.currentThread()
-                    .getContextClassLoader()
-                    .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpMetaSupplier")
-                    .getConstructor().newInstance();
+                    .getConstructor(McpTransportType.class, String.class, Supplier.class)
+                    .newInstance(transportType, url, sessionIdSupplier);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

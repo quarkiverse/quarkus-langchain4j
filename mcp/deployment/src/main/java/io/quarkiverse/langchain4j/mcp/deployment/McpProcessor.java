@@ -164,9 +164,6 @@ public class McpProcessor {
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem(
                             "io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener"));
-            runtimeInitializedClasses.produce(
-                    new RuntimeInitializedClassBuildItem(
-                            "io.quarkiverse.langchain4j.mcp.runtime.TracingMcpMetaSupplier"));
         }
         Map<String, McpClientBuildTimeConfig> rawConfiguredClients = mcpBuildTimeConfiguration.clients();
         final Map<String, McpClientBuildTimeConfig> configuredClients = rawConfiguredClients == null ? Collections.emptyMap()
