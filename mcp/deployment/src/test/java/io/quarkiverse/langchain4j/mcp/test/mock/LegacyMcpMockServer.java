@@ -45,7 +45,7 @@ public class LegacyMcpMockServer extends McpMockServer<LegacyMcpMockServer> {
                 .put("name", "mock-legacy-server")
                 .put("version", "1.0.0");
         register(request("initialize")
-                .willReturn(response(result).withHeader("Mcp-Session-Id", SESSION_ID)));
+                .willReturn(delayInitialization(response(result).withHeader("Mcp-Session-Id", SESSION_ID))));
         register(request("notifications/initialized").willReturn(aResponse().withStatus(202)));
         register(request("notifications/cancelled").willReturn(aResponse().withStatus(202)));
         return this;

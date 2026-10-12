@@ -93,6 +93,13 @@ public interface McpClientRuntimeConfig {
     Duration pingTimeout();
 
     /**
+     * Timeout for the MCP client initialization, which includes establishing the transport connection
+     * and performing the MCP protocol initialization handshake.
+     */
+    @WithDefault("30s")
+    Duration initializationTimeout();
+
+    /**
      * The initial list of MCP roots that the client can present to the server. The list can
      * be later updated programmatically during runtime. The list is formatted as key-value pairs
      * separated by commas. For example:

@@ -46,7 +46,7 @@ public class ModernMcpMockServer extends McpMockServer<ModernMcpMockServer> {
      */
     @Override
     public ModernMcpMockServer stubInitialization() {
-        register(request("server/discover").willReturn(response(discoverResult())));
+        register(request("server/discover").willReturn(delayInitialization(response(discoverResult()))));
 
         ObjectNode ackParams = MAPPER.createObjectNode();
         ackParams.putObject("_meta").put("io.modelcontextprotocol/subscriptionId", REQUEST_ID);
