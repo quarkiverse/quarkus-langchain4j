@@ -61,6 +61,7 @@ public abstract class McpMockServer<S extends McpMockServer<S>> {
     private final String path;
     private ResponseFormat responseFormat = ResponseFormat.JSON;
     private String requiredAuthorization;
+    private Duration initializationDelay = Duration.ZERO;
 
     protected McpMockServer(WireMock wireMock, String path) {
         this.wireMock = wireMock;
@@ -114,6 +115,26 @@ public abstract class McpMockServer<S extends McpMockServer<S>> {
      * Stubs whatever the protocol needs before the client can start sending regular requests.
      */
     public abstract S stubInitialization();
+
+    /**
+     * Like {@link #stubInitialization()}, but makes the server take at least the given duration to
+     * answer the initialization handshake, so tests can exercise the initialization timeout.
+     */
+    public S stubSlowInitialization(Duration delay) {
+        this.initializationDelay = delay;
+        return stubInitialization();
+    }
+
+    /**
+     * Applies the delay configured through {@link #stubSlowInitialization(Duration)}, if any,
+     * to an initialization response.
+     */
+    protected ResponseDefinitionBuilder delayInitialization(ResponseDefinitionBuilder response) {
+        if (initializationDelay.isZero() || initializationDelay.isNegative()) {
+            return response;
+        }
+        return response.withFixedDelay((int) initializationDelay.toMillis());
+    }
 
     /**
      * Stubs whatever the client sends when its health is checked.

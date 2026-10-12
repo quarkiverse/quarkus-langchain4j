@@ -151,6 +151,7 @@ public class McpRecorder {
                         .toolExecutionTimeout(runtimeConfig.toolExecutionTimeout())
                         .resourcesTimeout(runtimeConfig.resourcesTimeout())
                         .pingTimeout(runtimeConfig.pingTimeout())
+                        .initializationTimeout(runtimeConfig.initializationTimeout())
                         // TODO: it should be possible to choose a log handler class via configuration
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
                         .roots(initialRoots)
