@@ -100,4 +100,19 @@ public class RedisMetadataFilteringTest {
         Assertions.assertTrue(retrievedTextSegments.contains("Hello22x"));
     }
 
+    @Test
+    public void testKeyCannotInjectQuerySyntax() {
+        ingest("Hello0", Map.of("num1", 0, "num2", 0));
+        ingest("Hello1", Map.of("num1", 1, "num2", 1));
+        ingest("Hello2", Map.of("num1", 2, "num2", 2));
+
+        // unescaped, this key would turn the filter into "num1 >= 0 OR num2 == 0" and match every document
+        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                .queryEmbedding(embeddingModel.embed("Hello").content())
+                .filter(new IsEqualTo("num1:[0 inf] | @num2", 0))
+                .build();
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(request).matches();
+        Assertions.assertTrue(matches.isEmpty());
+    }
+
 }
