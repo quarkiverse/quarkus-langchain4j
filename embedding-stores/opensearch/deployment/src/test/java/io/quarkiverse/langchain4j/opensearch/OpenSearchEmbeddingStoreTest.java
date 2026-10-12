@@ -46,10 +46,9 @@ public class OpenSearchEmbeddingStoreTest extends EmbeddingStoreIT {
     private static EmbeddingModel embeddingModel;
 
     /**
-     * FIXME: This is a workaround to avoid loading the embedding model in this test class' static initializer,
-     * because otherwise we hit
-     * java.lang.UnsatisfiedLinkError: Native Library (/path/to/the/library) already loaded in another classloader
-     * because the test class is loaded by JUnit and by Quarkus in different class loaders.
+     * The embedding model is initialized in @BeforeAll rather than in a static initializer:
+     * the ONNX native library cannot be loaded twice by JUnit's and Quarkus' classloaders,
+     * which would otherwise raise an UnsatisfiedLinkError.
      */
     @BeforeAll
     public static void initEmbeddingModel() {
