@@ -20,7 +20,7 @@ import org.jboss.logging.Logger;
  * <p>
  * <a href="https://huggingface.co/beehive-lab">Beehive Lab</a> HuggingFace repository.
  * <p>
- * Reused implementation of {@link io.quarkiverse.langchain4j.llama3.Llama3ModelRegistry}
+ * Reused implementation of the former Llama3ModelRegistry
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class JitLLMModelRegistry {
@@ -146,7 +146,7 @@ public class JitLLMModelRegistry {
     /**
      * ModelInfo is a simple data class that represents a model's owner and name.
      * <p>
-     * Reused implementation of {@link io.quarkiverse.langchain4j.llama3.Llama3ModelRegistry}
+     * Reused implementation of the former Llama3ModelRegistry
      */
     public record ModelInfo(String owner, String name) {
 

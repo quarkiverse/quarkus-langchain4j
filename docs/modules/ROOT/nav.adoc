@@ -56,7 +56,7 @@
 *** xref:watsonx-chat-model.adoc[IBM watsonx.ai]
 *** xref:openai-chat-model.adoc[OpenAI]
 *** xref:ollama-chat-model.adoc[Ollama]
-*** xref:llama3-chat-model.adoc[Llama3.java]
+*** xref:jinfer.adoc[Jinfer (Qxotic)]
 *** xref:mistral-chat-model.adoc[Mistral AI]
 *** xref:podman.adoc[Podman AI Lab]
 ** Image Models

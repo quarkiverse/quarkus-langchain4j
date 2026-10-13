@@ -42,18 +42,15 @@
 
 
   <profiles>
-  <!-- Temporarily disable this as it causing issues with the release -->
-  <!--
   <profile>
-    <id>jdk22-plus</id>
+    <id>jdk25-plus</id>
     <activation>
-      <jdk>[22,)</jdk>
+      <jdk>[25,)</jdk>
     </activation>
     <modules>
-      <module>llama3-java</module>
+      <module>jinfer</module>
     </modules>
   </profile>
-  -->
   <profile>
     <id>TornadoVM</id>
     <activation>
@@ -123,7 +120,7 @@
                   </dependency>
                   <dependency>
                       <groupId>io.quarkiverse.langchain4j</groupId>
-                      <artifactId>quarkus-langchain4j-llama3-java</artifactId>
+                      <artifactId>quarkus-langchain4j-jinfer</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
                 <dependency>
