@@ -8,7 +8,7 @@ Retrieval-Augmented Generation (RAG) enhances LLM responses by allowing them to 
 
 RAG typically involves two main phases:
 
-- **Ingestion Phase**: Documents are indexed and stored as embeddings in a vector store.
+- **Ingestion Phase**: Documents are indexed and stored as embeddings in an embedding store.
 - **Retrieval Phase**: At runtime, relevant document segments are retrieved and provided to the LLM for generating enriched answers.
 
 The ingestion phase parses documents, splits them into manageable segments, and generates embeddings that capture their semantic meaning.
@@ -70,9 +70,9 @@ quarkus.langchain4j.openai.api-key=sk-...
 ----
 
 [NOTE]
-.Other Vector Stores
+.Other Embedding Stores
 ====
-Quarkus LangChain4j supports multiple vector stores. See the xref:index.adoc[supported vector stores] documentation for alternatives.
+Quarkus LangChain4j supports multiple embedding stores. See the xref:index.adoc[supported embedding stores] documentation for alternatives.
 // TODO Change link to the actual page when available
 ====
 

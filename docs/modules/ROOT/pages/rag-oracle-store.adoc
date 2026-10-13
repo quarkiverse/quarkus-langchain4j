@@ -1,4 +1,4 @@
-= Oracle Database Document Store
+= Oracle Database Embedding Store
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -8,7 +8,7 @@ It leverages https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse
 
 == Prerequisites
 
-To use Oracle Database as a document store:
+To use Oracle Database as an embedding store:
 
 * An Oracle Database 23ai (or later) instance is required, since AI Vector Search is only available from that version.
 * A Quarkus datasource must be configured.
@@ -157,7 +157,7 @@ quarkus.langchain4j.oracle.default-store-enabled=false
 
 == Summary
 
-To use Oracle Database as a document store with Quarkus LangChain4j:
+To use Oracle Database as an embedding store with Quarkus LangChain4j:
 
 * Use an Oracle Database 23ai instance, which provides AI Vector Search.
 * Add the extension dependency.
