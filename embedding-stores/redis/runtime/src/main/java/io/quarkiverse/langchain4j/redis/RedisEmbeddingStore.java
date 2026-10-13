@@ -187,7 +187,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             JsonNode embedded = jsonNode.get(schema.getScalarFieldName());
             Embedding embedding = new Embedding(
                     Json.fromJson(jsonNode.get(schema.getVectorFieldName()).toString(), float[].class));
-            double score = (2 - document.property(SCORE_FIELD_NAME).asDouble()) / 2;
+            double score = toRelevanceScore(document.property(SCORE_FIELD_NAME).asDouble());
             String id = document.key().substring(schema.getPrefix().length());
             Map<String, Object> textualMetadata = schema.getTextualMetadataFields().stream()
                     .filter(jsonNode::has)
@@ -212,6 +212,19 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             throw new RuntimeException(e);
         }
 
+    }
+
+    /**
+     * Converts the distance computed by Redis for the configured metric into a relevance score in the range [0, 1].
+     */
+    private double toRelevanceScore(double distance) {
+        return switch (schema.getDistanceMetric()) {
+            // COSINE distance is 1 - cosine similarity, IP distance is 1 - inner product
+            // (which equals cosine similarity for normalized vectors)
+            case COSINE, IP -> (2 - distance) / 2;
+            // L2 distance is unbounded
+            case L2 -> 1 / (1 + distance);
+        };
     }
 
     /**
