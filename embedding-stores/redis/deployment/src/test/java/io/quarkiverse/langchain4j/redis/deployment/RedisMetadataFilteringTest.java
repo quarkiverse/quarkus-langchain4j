@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.redis.deployment;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,6 +100,20 @@ public class RedisMetadataFilteringTest {
                 .collect(Collectors.toSet());
         Assertions.assertTrue(retrievedTextSegments.contains("Hello22"));
         Assertions.assertTrue(retrievedTextSegments.contains("Hello22x"));
+    }
+
+    @Test
+    public void testNumericMetadataTypes() {
+        ingest("Hello", Map.of("num1", 3, "num2", 1.5));
+
+        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                .queryEmbedding(embeddingModel.embed("Hello").content())
+                .build();
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(request).matches();
+        assertThat(matches).hasSize(1);
+        assertThat(matches.get(0).embedded().metadata().toMap())
+                .containsEntry("num1", 3)
+                .containsEntry("num2", 1.5);
     }
 
 }

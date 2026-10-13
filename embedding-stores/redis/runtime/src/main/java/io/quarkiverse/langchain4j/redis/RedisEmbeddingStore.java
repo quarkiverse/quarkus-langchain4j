@@ -196,13 +196,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             Map<String, Object> numericMetadata = schema.getNumericMetadataFields().stream()
                     .filter(jsonNode::has)
                     .collect(Collectors.toMap(metadataFieldName -> metadataFieldName,
-                            (name) -> {
-                                if (jsonNode.get(name).isLong()) {
-                                    return jsonNode.get(name).asLong();
-                                } else {
-                                    return jsonNode.get(name).asDouble();
-                                }
-                            }));
+                            (name) -> toNumber(jsonNode.get(name))));
             Map<String, Object> allMetadata = new HashMap<>();
             allMetadata.putAll(textualMetadata);
             allMetadata.putAll(numericMetadata);
@@ -212,6 +206,20 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             throw new RuntimeException(e);
         }
 
+    }
+
+    /**
+     * JSON does not preserve the original Java type of a number, so integral values are returned
+     * as {@code Integer} when they fit, {@code Long} otherwise, and other values as {@code Double}.
+     */
+    private static Number toNumber(JsonNode node) {
+        if (node.isIntegralNumber()) {
+            if (node.canConvertToInt()) {
+                return node.intValue();
+            }
+            return node.longValue();
+        }
+        return node.doubleValue();
     }
 
     /**
