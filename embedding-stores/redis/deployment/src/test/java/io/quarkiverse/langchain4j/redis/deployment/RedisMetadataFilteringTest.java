@@ -61,7 +61,7 @@ public class RedisMetadataFilteringTest {
 
     @AfterEach
     public void clearStore() {
-        embeddingStore.deleteAll();
+        embeddingStore.removeAll();
     }
 
     @Test
