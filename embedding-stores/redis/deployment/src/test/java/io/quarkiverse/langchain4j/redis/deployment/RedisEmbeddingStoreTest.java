@@ -68,7 +68,7 @@ public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
 
     @Override
     protected void clearStore() {
-        embeddingStore.deleteAll();
+        embeddingStore.removeAll();
     }
 
     @Override
