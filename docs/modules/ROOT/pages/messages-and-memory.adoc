@@ -261,6 +261,7 @@ This is useful for:
 Instead of writing your own, you can use a ready-made store:
 
 * xref:memory-store-mongodb.adoc[MongoDB Chat Memory Store]
+* xref:memory-store-redis.adoc[Redis Chat Memory Store]
 
 [#_chat_memory_flush_strategy]
 == Chat Memory Flush Strategy
