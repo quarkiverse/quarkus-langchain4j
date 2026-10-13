@@ -229,6 +229,8 @@ The temperature is used for sampling during response generation, which occurs wh
 
 If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
 
+Leave this unset to omit `temperature` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_TEMPERATURE+++[]
@@ -238,7 +240,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_TEMPERATURE++
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++${quarkus.langchain4j.temperature}+++`
+|
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-max-output-tokens[`+++quarkus.langchain4j.ai.gemini.chat-model.max-output-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -277,6 +279,8 @@ Range: 0.0 - 1.0
 
 Default for gemini-2.5-flash: 0.95
 
+Leave this unset to omit `topP` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_TOP_P+++[]
@@ -305,6 +309,8 @@ Specify a lower value for less random responses and a higher value for more rand
 Range: 1-40
 
 gemini-2.5-flash doesn't support topK
+
+Leave this unset to omit `topK` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -413,6 +419,8 @@ The thinkingBudget parameter guides the model on the number of thinking tokens t
 
 The thinkingBudget is only supported in Gemini 2.5 Flash, 2.5 Pro, and 2.5 Flash-Lite. Depending on the prompt, the model might overflow or underflow the token budget. See link:https://ai.google.dev/gemini-api/docs/thinking#set-budget[Gemini API docs] for more details.
 
+This remains for Gemini 2.5. Upcoming models return HTTP 400 if `thinking_budget` is sent. Do not set this together with `thinking-level()`.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_THINKING_BUDGET+++[]
@@ -422,6 +430,29 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_THIN
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-thinking-level]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-thinking-level[`+++quarkus.langchain4j.ai.gemini.chat-model.thinking.thinking-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini.chat-model.thinking.thinking-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How much thinking the model does before answering. Replaces `thinkingBudget` for Gemini 3 and later. Allowed values are `minimal`, `low`, `medium`, and `high`. Supported levels vary by model. Omit this property to use the model default. Gemini 3 Pro uses `low` and `high`, while other Gemini 3 models may also accept `minimal` and `medium`.
+
+Do not set this together with `thinkingBudget`. Upcoming models reject `thinking_budget`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_THINKING_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_THINKING_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`minimal`, `low`, `medium`, `high`
 |
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-model-id[`+++quarkus.langchain4j.ai.gemini.embedding-model.model-id+++`]##
@@ -734,6 +765,8 @@ The temperature is used for sampling during response generation, which occurs wh
 
 If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
 
+Leave this unset to omit `temperature` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
@@ -743,7 +776,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`+++${quarkus.langchain4j.temperature}+++`
+|
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-max-output-tokens[`+++quarkus.langchain4j.ai.gemini."model-name".chat-model.max-output-tokens+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -782,6 +815,8 @@ Range: 0.0 - 1.0
 
 Default for gemini-2.5-flash: 0.95
 
+Leave this unset to omit `topP` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
@@ -810,6 +845,8 @@ Specify a lower value for less random responses and a higher value for more rand
 Range: 1-40
 
 gemini-2.5-flash doesn't support topK
+
+Leave this unset to omit `topK` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -918,6 +955,8 @@ The thinkingBudget parameter guides the model on the number of thinking tokens t
 
 The thinkingBudget is only supported in Gemini 2.5 Flash, 2.5 Pro, and 2.5 Flash-Lite. Depending on the prompt, the model might overflow or underflow the token budget. See link:https://ai.google.dev/gemini-api/docs/thinking#set-budget[Gemini API docs] for more details.
 
+This remains for Gemini 2.5. Upcoming models return HTTP 400 if `thinking_budget` is sent. Do not set this together with `thinking-level()`.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_BUDGET+++[]
@@ -927,6 +966,29 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-thinking-level]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-thinking-level[`+++quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.thinking-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.thinking-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How much thinking the model does before answering. Replaces `thinkingBudget` for Gemini 3 and later. Allowed values are `minimal`, `low`, `medium`, and `high`. Supported levels vary by model. Omit this property to use the model default. Gemini 3 Pro uses `low` and `high`, while other Gemini 3 models may also accept `minimal` and `medium`.
+
+Do not set this together with `thinkingBudget`. Upcoming models reject `thinking_budget`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`minimal`, `low`, `medium`, `high`
 |
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-model-id[`+++quarkus.langchain4j.ai.gemini."model-name".embedding-model.model-id+++`]##

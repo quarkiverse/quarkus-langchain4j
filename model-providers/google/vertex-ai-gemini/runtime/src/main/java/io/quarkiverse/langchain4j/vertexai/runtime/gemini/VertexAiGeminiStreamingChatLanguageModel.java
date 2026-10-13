@@ -28,7 +28,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
     private VertexAiGeminiStreamingChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
-                builder.listeners, builder.useGoogleSearch);
+                builder.listeners, null, false, null, builder.useGoogleSearch);
 
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()

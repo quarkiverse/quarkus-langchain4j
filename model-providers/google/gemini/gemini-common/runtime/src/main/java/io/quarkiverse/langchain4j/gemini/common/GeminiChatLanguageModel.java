@@ -34,9 +34,9 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
 
     public GeminiChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
             Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
-            boolean includeThoughts, boolean useGoogleSearch) {
-        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, thinkingBudget, includeThoughts,
-                useGoogleSearch);
+            boolean includeThoughts, ThinkingLevel thinkingLevel, boolean useGoogleSearch) {
+        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, thinkingBudget,
+                includeThoughts, thinkingLevel, useGoogleSearch);
     }
 
     @Override
@@ -67,9 +67,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))
                 .topP(getOrDefault(requestParameters.topP(), this.topP));
-        if (thinkingBudget != null || includeThoughts) {
-            generationConfigBuilder.thinkingConfig(new ThinkingConfig(thinkingBudget, includeThoughts));
-        }
+        applyThinkingConfig(generationConfigBuilder);
         GenerationConfig generationConfig = generationConfigBuilder.build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
                 generationConfig, this.modelId, this.useGoogleSearch);

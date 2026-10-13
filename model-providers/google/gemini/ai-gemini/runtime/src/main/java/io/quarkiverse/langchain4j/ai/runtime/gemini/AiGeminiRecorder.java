@@ -186,10 +186,21 @@ public class AiGeminiRecorder {
 
     private void configureThinking(ChatModelConfig chatModelConfig,
             GoogleAiGeminiChatModel.GoogleAiGeminiChatModelBaseBuilder builder) {
+        ChatModelConfig.ThinkingConfig thinking = chatModelConfig.thinking();
+        if (thinking.thinkingBudget().isPresent() && thinking.thinkingLevel().isPresent()) {
+            throw new IllegalArgumentException(
+                    "Cannot configure both thinking-budget and thinking-level. "
+                            + "thinking-budget remains for Gemini 2.5 and upcoming models return 400 if it is sent. "
+                            + "Use thinking-level (minimal, low, medium, high) for Gemini 3 and later.");
+        }
         GeminiThinkingConfig.Builder geminiThinkingConfigBuilder = GeminiThinkingConfig.builder()
-                .includeThoughts(chatModelConfig.thinking().includeThoughts());
-        if (chatModelConfig.thinking().thinkingBudget().isPresent()) {
-            geminiThinkingConfigBuilder.thinkingBudget(chatModelConfig.thinking().thinkingBudget().getAsInt());
+                .includeThoughts(thinking.includeThoughts());
+        if (thinking.thinkingBudget().isPresent()) {
+            geminiThinkingConfigBuilder.thinkingBudget(thinking.thinkingBudget().getAsInt());
+        }
+        if (thinking.thinkingLevel().isPresent()) {
+            geminiThinkingConfigBuilder.thinkingLevel(
+                    GeminiThinkingConfig.GeminiThinkingLevel.valueOf(thinking.thinkingLevel().get().name()));
         }
         builder.thinkingConfig(geminiThinkingConfigBuilder.build());
     }

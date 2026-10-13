@@ -35,8 +35,10 @@ import io.smallrye.mutiny.Multi;
 public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
 
     public GeminiStreamingChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
-            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, boolean useGoogleSearch) {
-        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, null, false, useGoogleSearch);
+            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
+            boolean includeThoughts, ThinkingLevel thinkingLevel, boolean useGoogleSearch) {
+        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, thinkingBudget,
+                includeThoughts, thinkingLevel, useGoogleSearch);
     }
 
     @Override
@@ -58,7 +60,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         Schema schema = detectSchema(effectiveResponseFormat);
         Map<String, Object> rawSchema = detectRawSchema(effectiveResponseFormat);
 
-        GenerationConfig generationConfig = GenerationConfig.builder()
+        GenerationConfig.Builder generationConfigBuilder = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
                 .responseMimeType(computeMimeType(effectiveResponseFormat, schema, rawSchema))
                 .responseSchema(schema)
@@ -66,8 +68,9 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
                 .stopSequences(requestParameters.stopSequences())
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))
-                .topP(getOrDefault(requestParameters.topP(), this.topP))
-                .build();
+                .topP(getOrDefault(requestParameters.topP(), this.topP));
+        applyThinkingConfig(generationConfigBuilder);
+        GenerationConfig generationConfig = generationConfigBuilder.build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
                 generationConfig, this.modelId, this.useGoogleSearch);
 

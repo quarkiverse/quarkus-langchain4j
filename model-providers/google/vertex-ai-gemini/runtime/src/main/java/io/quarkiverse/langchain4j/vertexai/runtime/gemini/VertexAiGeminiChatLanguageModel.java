@@ -27,7 +27,7 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
     private VertexAiGeminiChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
-                builder.listeners, null, false, builder.useGoogleSearch);
+                builder.listeners, null, false, null, builder.useGoogleSearch);
 
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
