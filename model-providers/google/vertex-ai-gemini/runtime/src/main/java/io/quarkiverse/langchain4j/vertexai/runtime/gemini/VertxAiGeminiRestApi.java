@@ -3,9 +3,6 @@ package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -23,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
@@ -117,8 +115,6 @@ public interface VertxAiGeminiRestApi {
     class VertxAiClientLogger implements ClientLogger {
         private static final Logger log = Logger.getLogger(VertxAiClientLogger.class);
 
-        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{2})(\\w|\\.|-|_)+(\\w{2})");
-
         private final boolean logRequests;
         private final boolean logResponses;
 
@@ -182,29 +178,12 @@ public interface VertxAiGeminiRestApi {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (headerKey.equals("Authorization")) {
-                            headerValue = maskAuthorizationHeaderValue(headerValue);
+                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                            headerValue = SensitiveHeaderMasker.mask(headerValue);
                         }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));
-        }
-
-        private static String maskAuthorizationHeaderValue(String authorizationHeaderValue) {
-            try {
-
-                Matcher matcher = BEARER_PATTERN.matcher(authorizationHeaderValue);
-
-                StringBuilder sb = new StringBuilder();
-                while (matcher.find()) {
-                    matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "..." + matcher.group(4));
-                }
-                matcher.appendTail(sb);
-
-                return sb.toString();
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
         }
     }
 }

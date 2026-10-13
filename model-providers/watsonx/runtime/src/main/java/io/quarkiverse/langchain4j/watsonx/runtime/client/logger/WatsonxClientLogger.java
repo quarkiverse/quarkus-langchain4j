@@ -17,6 +17,7 @@ import com.ibm.watsonx.ai.core.Json;
 import com.ibm.watsonx.ai.core.http.BaseHttpClient;
 
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -26,7 +27,6 @@ import io.vertx.core.http.HttpClientResponse;
 public class WatsonxClientLogger implements ClientLogger {
 
     private static final Logger log = Logger.getLogger(WatsonxClientLogger.class);
-    private static final Pattern AUTHORIZATION_PATTERN = Pattern.compile("(\\w+\\s)(\\w{4})(\\w+)(\\w{4})");
     private static final Pattern BASE64_IMAGE_PATTERN = Pattern.compile("(data:[\\w\\/+]+;base64,)(.{15})([^\"]+)");
     private static final Pattern JSON_SECRET_PATTERN = Pattern.compile(
             "\"([^\"]*(?:api[_-]?key|password|secret|access_token|refresh_token)[^\"]*)\"\\s*:\\s*\"[^\"]*\"",
@@ -153,30 +153,12 @@ public class WatsonxClientLogger implements ClientLogger {
                 .map(header -> {
                     String headerKey = header.getKey();
                     String headerValue = header.getValue();
-                    if ("Authorization".equals(headerKey)) {
-                        headerValue = maskAuthorizationHeaderValue(headerValue);
-                    } else if ("api-key".equals(headerKey)) {
-                        headerValue = maskApiKeyHeaderValue(headerValue);
+                    if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                        headerValue = SensitiveHeaderMasker.mask(headerValue);
                     }
                     return String.format("[%s: %s]", headerKey, headerValue);
                 })
                 .collect(joining(", "));
-    }
-
-    private static String maskAuthorizationHeaderValue(String authorizationHeaderValue) {
-        try {
-
-            Matcher matcher = AUTHORIZATION_PATTERN.matcher(authorizationHeaderValue);
-
-            StringBuilder sb = new StringBuilder();
-            while (matcher.find()) {
-                matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "..." + matcher.group(4));
-            }
-
-            return sb.toString();
-        } catch (Exception e) {
-            return "Failed to mask the API key.";
-        }
     }
 
     private static String formatBase64ImageForLogging(String body) {
@@ -194,19 +176,6 @@ public class WatsonxClientLogger implements ClientLogger {
 
         } catch (Exception e) {
             return "Failed to format the base64 image value.";
-        }
-    }
-
-    private static String maskApiKeyHeaderValue(String apiKeyHeaderValue) {
-        try {
-            if (apiKeyHeaderValue.length() <= 4) {
-                return apiKeyHeaderValue;
-            }
-            return apiKeyHeaderValue.substring(0, 2)
-                    + "..."
-                    + apiKeyHeaderValue.substring(apiKeyHeaderValue.length() - 2);
-        } catch (Exception e) {
-            return "Failed to mask the API key.";
         }
     }
 
