@@ -55,6 +55,7 @@ import jakarta.interceptor.InterceptorBinding;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationInstanceBuilder;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
@@ -407,6 +408,7 @@ public class AiServicesProcessor {
             CustomScopeAnnotationsBuildItem customScopes,
             List<AnnotationsImpliesAiServiceBuildItem> annotationsImpliesAiServiceItems,
             List<ExcludeFromImpliedAiServiceBuildItem> excludedFromImpliedItems,
+            List<ImpliedAiServiceWithoutChatMemoryBuildItem> impliedWithoutChatMemoryItems,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
             BuildProducer<RequestImageModelBeanBuildItem> requestImageModelBeanProducer,
@@ -435,8 +437,12 @@ public class AiServicesProcessor {
                 .map(ExcludeFromImpliedAiServiceBuildItem::getClassName)
                 .collect(Collectors.toSet());
 
+        Set<DotName> impliedWithoutChatMemory = impliedWithoutChatMemoryItems.stream()
+                .map(ImpliedAiServiceWithoutChatMemoryBuildItem::getClassName)
+                .collect(Collectors.toSet());
+
         Set<AnnotationInstance> impliedRegisterAiServiceInstance = determinedImpliedRegisterAiService(
-                annotationsThatImplyAiService, index, excludedFromImplied);
+                annotationsThatImplyAiService, index, excludedFromImplied, impliedWithoutChatMemory);
         Set<DotName> impliedRegisterAiServiceTarget = impliedRegisterAiServiceInstance.stream()
                 .map(ai -> ai.target().asClass().name()).collect(Collectors.toSet());
         registerAiServicesInstances.addAll(impliedRegisterAiServiceInstance);
@@ -674,7 +680,7 @@ public class AiServicesProcessor {
     }
 
     private static Set<AnnotationInstance> determinedImpliedRegisterAiService(Set<DotName> annotationsThatImplyAiService,
-            IndexView index, Set<DotName> excludedClasses) {
+            IndexView index, Set<DotName> excludedClasses, Set<DotName> classesWithoutChatMemory) {
         Set<AnnotationInstance> impliedDefaultRegisterAiService = new HashSet<>();
         for (DotName ann : annotationsThatImplyAiService) {
             index.getAnnotations(ann).forEach(instance -> {
@@ -709,7 +715,11 @@ public class AiServicesProcessor {
                     // Agentic interfaces and annotations are checked in the agentic module
                     return;
                 }
-                impliedDefaultRegisterAiService.add(AnnotationInstance.builder(REGISTER_AI_SERVICES).buildWithTarget(ci));
+                AnnotationInstanceBuilder registerAiService = AnnotationInstance.builder(REGISTER_AI_SERVICES);
+                if (classesWithoutChatMemory.contains(ci.name())) {
+                    registerAiService.add("chatMemoryProviderSupplier", RegisterAiService.NoChatMemoryProviderSupplier.class);
+                }
+                impliedDefaultRegisterAiService.add(registerAiService.buildWithTarget(ci));
             });
         }
         return impliedDefaultRegisterAiService;
