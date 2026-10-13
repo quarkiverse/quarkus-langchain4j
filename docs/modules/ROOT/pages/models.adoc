@@ -51,7 +51,7 @@ They can perform a wide range of natural language tasks:
 * Classification
 * Translation
 
-Quarkus LangChain4j integrates LLMs through providers like OpenAI, Hugging Face, Ollama, and JLama.
+Quarkus LangChain4j integrates LLMs through providers like OpenAI, Hugging Face, and Ollama.
 
 [source,java]
 ----

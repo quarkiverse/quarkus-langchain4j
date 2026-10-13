@@ -649,19 +649,6 @@
             <dependencies>
                 <dependency>
                     <groupId>io.quarkiverse.langchain4j</groupId>
-                    <artifactId>quarkus-langchain4j-jlama-deployment</artifactId>
-                    <version>${project.version}</version>
-                    <type>pom</type>
-                    <scope>test</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>*</groupId>
-                            <artifactId>*</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>io.quarkiverse.langchain4j</groupId>
                     <artifactId>quarkus-langchain4j-jitllm-deployment</artifactId>
                     <version>${project.version}</version>
                     <type>pom</type>

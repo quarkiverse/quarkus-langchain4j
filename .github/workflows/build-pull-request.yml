@@ -79,13 +79,12 @@ jobs:
                 | jq -R -s -c 'split("\n")[:-1]')
 
           # Integration tests (without the in-process embedding models)
-          # Remove JLama, Llama3 and JitLLM from the list
+          # Remove Llama3 and JitLLM from the list
           cd integration-tests
           IT_MODULES=$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
-                | grep -v jlama \
                 | grep -v llama3-java \
                 | grep -v jitllm \
                 | grep -v mcp-conformance \
@@ -188,13 +187,6 @@ jobs:
         shell: bash
         run: |
           tar -xzf ../maven-repo.tgz -C ~
-
-      # Build Jlama if JDK >= 21
-      # It's not build by default as it requires Java 21+
-      - name: Build JLama extension
-        if: ${{ matrix.java >= 21 }}
-        run: |
-          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jlama/pom.xml
 
       # Build JitLLM if JDK >= 21
       # It's not build by default as it requires Java 21+

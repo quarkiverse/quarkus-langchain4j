@@ -42,18 +42,6 @@
 
 
   <profiles>
-    <!-- Temporarily disable this as it causing issues with the release -->
-    <!--
-    <profile>
-      <id>jdk21-plus</id>
-      <activation>
-        <jdk>[21,)</jdk>
-      </activation>
-      <modules>
-        <module>jlama</module>
-      </modules>
-    </profile>
-    -->
   <!-- Temporarily disable this as it causing issues with the release -->
   <!--
   <profile>
@@ -135,11 +123,6 @@
                   </dependency>
                   <dependency>
                       <groupId>io.quarkiverse.langchain4j</groupId>
-                      <artifactId>quarkus-langchain4j-jlama</artifactId>
-                      <version>999-SNAPSHOT</version>
-                  </dependency>
-                  <dependency>
-                      <groupId>io.quarkiverse.langchain4j</groupId>
                       <artifactId>quarkus-langchain4j-llama3-java</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
@@ -188,12 +171,6 @@
                       <artifactId>quarkus-langchain4j-watsonx</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
-                  <dependency>
-                      <groupId>com.github.tjake</groupId>
-                      <artifactId>jlama-native</artifactId>
-                      <classifier>${os.detected.classifier}</classifier>
-                      <version>${jlama.version}</version>
-                  </dependency>
               </dependencies>
           </dependencyManagement>
       </profile>
@@ -222,12 +199,6 @@
                       <version>${quarkus.platform.version}</version>
                       <type>pom</type>
                       <scope>import</scope>
-                  </dependency>
-                  <dependency>
-                      <groupId>com.github.tjake</groupId>
-                      <artifactId>jlama-native</artifactId>
-                      <classifier>${os.detected.classifier}</classifier>
-                      <version>${jlama.version}</version>
                   </dependency>
               </dependencies>
           </dependencyManagement>
