@@ -168,6 +168,8 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
         QueryArgs args = new QueryArgs()
                 .sortByAscending(SCORE_FIELD_NAME)
                 .param("BLOB", request.queryEmbedding().vector())
+                // without an explicit LIMIT, FT.SEARCH returns at most 10 documents
+                .limit(0, request.maxResults())
                 .dialect(2);
         Uni<SearchQueryResponse> search = ds.search()
                 .ftSearch(schema.getIndexName(), query, args);
