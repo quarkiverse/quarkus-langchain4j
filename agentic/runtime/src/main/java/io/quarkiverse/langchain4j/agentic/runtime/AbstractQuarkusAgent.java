@@ -88,7 +88,8 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
      * to the one that loaded the Quarkus application for the duration of the invocation. Agent methods
      * can be invoked from threads whose context classloader is not the deployment one (for example
      * plain threads using the system classloader), and class lookups performed while the invocation
-     * is in progress must be able to resolve application and generated classes.
+     * is in progress must be able to resolve application and generated classes. Threads that reject
+     * context classloader changes ({@code jdk.internal.misc.InnocuousThread}) are left untouched.
      */
     public static Object invokeWithDeploymentClassLoader(InvocationHandler handler, Object proxy, Method method,
             Object[] args) throws Throwable {
@@ -97,11 +98,13 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
         if (previousClassLoader == deploymentClassLoader) {
             return handler.invoke(proxy, method, args);
         }
-        Thread.currentThread().setContextClassLoader(deploymentClassLoader);
+        boolean normalized = AgenticRecorder.trySetContextClassLoader(deploymentClassLoader);
         try {
             return handler.invoke(proxy, method, args);
         } finally {
-            Thread.currentThread().setContextClassLoader(previousClassLoader);
+            if (normalized) {
+                Thread.currentThread().setContextClassLoader(previousClassLoader);
+            }
         }
     }
 

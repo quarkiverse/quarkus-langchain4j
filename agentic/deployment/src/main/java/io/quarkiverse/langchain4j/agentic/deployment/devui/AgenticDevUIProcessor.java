@@ -14,17 +14,14 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
 
-import dev.langchain4j.agentic.observability.MonitoredAgent;
 import io.quarkiverse.langchain4j.agentic.deployment.AgenticLangChain4jDotNames;
 import io.quarkiverse.langchain4j.agentic.deployment.DetectedAiAgentBuildItem;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.AgenticJsonRpcService;
-import io.quarkus.arc.deployment.SyntheticBeansRuntimeInitBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
@@ -108,21 +105,6 @@ public class AgenticDevUIProcessor {
                 .map(a -> a.getIface().name().toString())
                 .collect(Collectors.toSet());
         recorder.setDevUIAllowedAgentClassNames(classNames);
-    }
-
-    @BuildStep(onlyIf = IsDevelopment.class)
-    @Record(ExecutionTime.RUNTIME_INIT)
-    @Consume(SyntheticBeansRuntimeInitBuildItem.class)
-    void enableDevModeMonitoring(List<DetectedAiAgentBuildItem> agents,
-            AgenticRecorder recorder) {
-        DotName monitoredAgentName = DotName.createSimple(MonitoredAgent.class.getName());
-        Set<String> monitoredRootAgentClassNames = filterUserAgents(agents).stream()
-                .filter(a -> a.getIface().interfaceNames().stream().anyMatch(dn -> dn.equals(monitoredAgentName)))
-                .map(a -> a.getIface().name().toString())
-                .collect(Collectors.toSet());
-        if (!monitoredRootAgentClassNames.isEmpty()) {
-            recorder.enableDevModeMonitoring(monitoredRootAgentClassNames);
-        }
     }
 
     private static List<DetectedAiAgentBuildItem> filterUserAgents(List<DetectedAiAgentBuildItem> agents) {

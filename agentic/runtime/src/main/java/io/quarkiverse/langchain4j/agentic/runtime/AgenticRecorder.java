@@ -65,14 +65,31 @@ public class AgenticRecorder {
             throw new RuntimeException("No generated agent class for: " + internalAgent.type().getName());
         }
         try {
-            return Class.forName(info.implClassName(), true,
-                    Thread.currentThread().getContextClassLoader())
+            return Class.forName(info.implClassName(), true, deploymentClassLoader())
                     .getConstructor(InternalAgent.class)
                     .newInstance(internalAgent);
         } catch (Exception e) {
             throw new RuntimeException("Unable to create agent class '" + info.implClassName() + "'", e);
         }
     };
+
+    /**
+     * Normalizes the context classloader of the current thread when the thread allows it.
+     * Threads created by the JVM itself for internal purposes ({@code jdk.internal.misc.InnocuousThread},
+     * which runs for example {@code java.lang.ref.Cleaner} actions) reject any non-system context
+     * classloader with a {@code SecurityException}; on those threads class lookups must rely on
+     * direct classloader references instead of the context classloader.
+     *
+     * @return whether the context classloader was actually set
+     */
+    static boolean trySetContextClassLoader(ClassLoader classLoader) {
+        try {
+            Thread.currentThread().setContextClassLoader(classLoader);
+            return true;
+        } catch (SecurityException e) {
+            return false;
+        }
+    }
 
     @StaticInit
     public void setAgentsWithMcpToolBox(Set<String> agentsWithMcpToolBox) {
@@ -97,6 +114,60 @@ public class AgenticRecorder {
     @StaticInit
     public void setAgentClassMetadata(Map<String, AgentClassCreateInfo> metadata) {
         AgenticRecorder.agentClassMetadata = Map.copyOf(metadata);
+    }
+
+    /**
+     * Creates all agent beans at application startup, while the startup thread still has the
+     * deployment classloader as its context classloader. Agent creation relies on the context
+     * classloader of the creating thread (langchain4j resolves some of its factories through
+     * {@code ServiceLoader}, Arc resolves the injected references of synthetic beans against the
+     * types visible to it), so an agent bean created lazily by its first invocation fails when
+     * that invocation happens on a thread whose context classloader cannot be adopted, for
+     * example the {@code jdk.internal.misc.InnocuousThread} used by {@code java.lang.ref.Cleaner}.
+     * Agent beans are application-scoped systems, so creating them eagerly gives first
+     * invocations from any thread a ready instance.
+     */
+    @RuntimeInit
+    public void initializeAgents(Set<String> agentClassNames, boolean devMode) {
+        if (devMode) {
+            DevAgentMonitorHolder.reset();
+            AgenticRecorder.devModeMonitoringEnabled = true;
+        }
+        initializeInvocationTimeSpiClasses();
+        for (String className : agentClassNames) {
+            try {
+                Class<?> clazz = Class.forName(className, true, deploymentClassLoader());
+                ClientProxy.unwrap(Arc.container().select(clazz).get());
+            } catch (Exception e) {
+                log.warnf(e, "Unable to initialize agent '%s' at application startup; it will be created on first use",
+                        className);
+            }
+        }
+    }
+
+    /**
+     * langchain4j classes whose static initializers resolve SPI factories through the context
+     * classloader of the thread that first uses them. These classes are only touched when an AI
+     * service is invoked, so they are initialized explicitly during application startup, while the
+     * context classloader of the startup thread is the deployment one. A first invocation from a
+     * thread whose context classloader cannot be adopted (for example the
+     * {@code jdk.internal.misc.InnocuousThread} used by {@code java.lang.ref.Cleaner}) then finds
+     * them already initialized.
+     */
+    private static final List<String> INVOCATION_TIME_SPI_CLASSES = List.of(
+            "dev.langchain4j.model.input.PromptTemplate",
+            "dev.langchain4j.internal.DefaultExecutorProvider$SpiHolder",
+            "dev.langchain4j.service.ParameterNameResolver$Holder",
+            "dev.langchain4j.service.AiServiceContext$FactoryHolder");
+
+    private static void initializeInvocationTimeSpiClasses() {
+        for (String className : INVOCATION_TIME_SPI_CLASSES) {
+            try {
+                Class.forName(className, true, deploymentClassLoader());
+            } catch (ClassNotFoundException | LinkageError e) {
+                log.debugf(e, "Unable to initialize '%s' at application startup", className);
+            }
+        }
     }
 
     @RuntimeInit
@@ -124,20 +195,6 @@ public class AgenticRecorder {
     }
 
     @RuntimeInit
-    public void enableDevModeMonitoring(Set<String> rootAgentClassNames) {
-        DevAgentMonitorHolder.reset();
-        AgenticRecorder.devModeMonitoringEnabled = true;
-        for (String className : rootAgentClassNames) {
-            try {
-                Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
-                ClientProxy.unwrap(Arc.container().select(clazz).get());
-            } catch (Exception e) {
-                log.warn("Failed to eagerly initialize root agent for dev mode topology: " + className, e);
-            }
-        }
-    }
-
-    @RuntimeInit
     public void validateSkillNames(BeanContainer beanContainer, Set<String> skillNames) {
         SkillsConfigurator configurator = beanContainer.beanInstance(SkillsConfigurator.class);
         if (configurator == null) {
@@ -158,17 +215,26 @@ public class AgenticRecorder {
         AgenticRecorder.deploymentClassLoader = agentClassLoader;
         return cdiContext -> {
             ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
-            Thread.currentThread().setContextClassLoader(agentClassLoader);
+            boolean normalized = trySetContextClassLoader(agentClassLoader);
             try {
                 return createAgentInstance(info, cdiContext);
             } finally {
-                Thread.currentThread().setContextClassLoader(previousClassLoader);
+                if (normalized) {
+                    Thread.currentThread().setContextClassLoader(previousClassLoader);
+                }
             }
         };
     }
 
     private Object createAgentInstance(AiAgentCreateInfo info, SyntheticCreationalContext<Object> cdiContext) {
         ChatModel chatModel = info.chatModelInfo().resolve(cdiContext);
+        if (chatModel != null) {
+            // initialize the ChatModel bean right away instead of holding on to its client proxy: the
+            // first invocation of an agent dereferences the model on the invoking thread, which would
+            // create the bean (and run classloader-sensitive machinery) on that thread when agent
+            // creation happened at startup
+            chatModel = ClientProxy.unwrap(chatModel);
+        }
 
         Class<?> agentClass = loadClassSafe(info);
         Object agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
@@ -230,7 +296,7 @@ public class AgenticRecorder {
 
     private static Class<?> loadClassSafe(AiAgentCreateInfo info) {
         try {
-            return Class.forName(info.agentClassName(), true, Thread.currentThread().getContextClassLoader());
+            return Class.forName(info.agentClassName(), true, deploymentClassLoader());
         } catch (ClassNotFoundException e) {
             log.error("Unable to load agent class '" + info.agentClassName() + "'", e);
             throw new RuntimeException(e);
@@ -274,8 +340,7 @@ public class AgenticRecorder {
                 List<Object> tools = new ArrayList<>(toolClassNames.size());
                 for (String toolClassName : toolClassNames) {
                     try {
-                        Class<?> toolClass = Class.forName(toolClassName, true,
-                                Thread.currentThread().getContextClassLoader());
+                        Class<?> toolClass = Class.forName(toolClassName, true, deploymentClassLoader());
                         tools.add(Arc.container().select(toolClass).get());
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException("Unable to load @ToolBox class: " + toolClassName, e);

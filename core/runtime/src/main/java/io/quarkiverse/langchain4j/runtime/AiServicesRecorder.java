@@ -43,6 +43,7 @@ import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkiverse.langchain4j.runtime.tool.LoggingToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.ClientProxy;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.arc.runtime.BeanContainer;
@@ -290,8 +291,13 @@ public class AiServicesRecorder {
                     if (info.chatMemoryProviderSupplierClassName() != null) {
                         if (RegisterAiService.BeanChatMemoryProviderSupplier.class.getName()
                                 .equals(info.chatMemoryProviderSupplierClassName())) {
-                            quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
-                                    ChatMemoryProvider.class));
+                            ChatMemoryProvider chatMemoryProvider = creationalContext
+                                    .getInjectedReference(ChatMemoryProvider.class);
+                            // initialize the provider bean right away instead of holding on to its client proxy:
+                            // the first invocation of the AI service dereferences the provider on the invoking
+                            // thread, which would create the bean (and run classloader-sensitive machinery) on
+                            // that thread when the AI service was created at startup (e.g. an agent bean)
+                            quarkusAiServices.chatMemoryProvider(ClientProxy.unwrap(chatMemoryProvider));
                         } else {
                             Supplier<? extends ChatMemoryProvider> supplier = createSupplier(
                                     info.chatMemoryProviderSupplierClassName());
