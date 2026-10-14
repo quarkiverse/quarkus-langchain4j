@@ -16,7 +16,9 @@ import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +28,8 @@ import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -66,6 +70,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues;
 import io.opentelemetry.semconv.NetworkAttributes.NetworkTransportValues;
 import io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues;
 import io.opentelemetry.semconv.incubating.McpIncubatingAttributes.McpMethodNameIncubatingValues;
@@ -90,6 +95,13 @@ import io.quarkus.arc.Arc;
  */
 public class TracingMcpClientListener implements McpClientListener, McpMetaSupplier {
 
+    private static final int MAX_SUBSCRIPTION_CONTEXTS = 1000;
+
+    /**
+     * The longest time between two checks for abandoned spans.
+     */
+    private static final long MAX_ABANDONED_SPANS_CHECK_INTERVAL_NANOS = TimeUnit.MINUTES.toNanos(1);
+
     private static final String PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
 
     private final Tracer tracer;
@@ -109,20 +121,40 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
     private final Map<Long, ActiveSpan> activeSpans = new ConcurrentHashMap<>();
 
     /**
+     * Contexts of the spans of the subscriptions/listen requests of the active resource subscriptions, keyed by
+     * the subscription ID (the ID of the request). The span ends when the server acknowledges the subscription,
+     * but the notifications/cancelled notification that ends the subscription still belongs to it.
+     * <p>
+     * A subscription that ends without the client unsubscribing (because the server closes it, or the client is
+     * closed) is never removed, so the number of entries is limited, and the oldest ones are dropped.
+     */
+    private final Map<String, Context> subscriptionContexts = Collections.synchronizedMap(
+            new LinkedHashMap<>() {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Context> eldest) {
+                    return size() > MAX_SUBSCRIPTION_CONTEXTS;
+                }
+            });
+
+    /**
      * Spans of the operations started by the current thread. Some operations send more than one
      * message (list operations fetch every page with a separate request, and multi round-trip
      * requests are retried with a new request), each with its own context that the listener is not
      * told about. These messages are sent by the thread that started the operation, so they are
      * matched with the most recent span of this thread that has the same method.
      */
-    /**
-     * Contexts of the spans of the subscriptions/listen requests of the active resource subscriptions, keyed by
-     * the subscription ID (the ID of the request). The span ends when the server acknowledges the subscription,
-     * but the notifications/cancelled notification that ends the subscription still belongs to it.
-     */
-    private final Map<String, Context> subscriptionContexts = new ConcurrentHashMap<>();
-
     private final ThreadLocal<Deque<ActiveSpan>> spansStartedByThread = ThreadLocal.withInitial(ArrayDeque::new);
+
+    /**
+     * How long a span may stay in progress before it's considered abandoned. The MCP client doesn't report the
+     * end of an operation in some error cases, and such spans would otherwise never end.
+     */
+    private final long maxSpanAgeNanos;
+
+    /**
+     * When to next look for abandoned spans, in {@link System#nanoTime()}.
+     */
+    private final AtomicLong nextAbandonedSpansCheck;
 
     /**
      * The protocol version the client speaks with the server, for the messages that don't carry it
@@ -145,6 +177,7 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         final Set<String> sentRequestIds = ConcurrentHashMap.newKeySet();
         volatile String protocolVersion;
         volatile boolean ended;
+        final long startNanos = System.nanoTime();
 
         ActiveSpan(Span span, Context context, McpClientMethod method) {
             this.span = span;
@@ -160,16 +193,20 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
      * @param transportType the transport the MCP client uses
      * @param url the URL of the MCP server, or {@code null} for the stdio transport
      * @param sessionIdSupplier supplies the MCP session ID, or {@code null} if the transport has no sessions
+     * @param maxSpanAge how long a span may stay in progress before it's ended as abandoned
      */
-    public TracingMcpClientListener(McpTransportType transportType, String url, Supplier<String> sessionIdSupplier) {
+    public TracingMcpClientListener(McpTransportType transportType, String url, Supplier<String> sessionIdSupplier,
+            Duration maxSpanAge) {
         this(Arc.container().select(Tracer.class).get(),
                 Arc.container().select(OpenTelemetry.class).get().getPropagators().getTextMapPropagator(),
-                transportType, url, sessionIdSupplier);
+                transportType, url, sessionIdSupplier, maxSpanAge);
     }
 
     public TracingMcpClientListener(Tracer tracer, TextMapPropagator propagator, McpTransportType transportType,
-            String url, Supplier<String> sessionIdSupplier) {
+            String url, Supplier<String> sessionIdSupplier, Duration maxSpanAge) {
         this.tracer = tracer;
+        this.maxSpanAgeNanos = maxSpanAge.toNanos();
+        this.nextAbandonedSpansCheck = new AtomicLong(System.nanoTime() + abandonedSpansCheckIntervalNanos());
         this.propagator = propagator;
         this.sessionIdSupplier = sessionIdSupplier;
         if (transportType == McpTransportType.STDIO) {
@@ -187,6 +224,10 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
             this.serverAddress = null;
             this.serverPort = null;
         }
+    }
+
+    private long abandonedSpansCheckIntervalNanos() {
+        return Math.min(maxSpanAgeNanos, MAX_ABANDONED_SPANS_CHECK_INTERVAL_NANOS);
     }
 
     private static int defaultPort(String scheme) {
@@ -580,6 +621,7 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
             customizer.accept(builder);
         }
         Span span = builder.startSpan();
+        endAbandonedSpans();
         ActiveSpan activeSpan = new ActiveSpan(span, parentContext.with(span), message.method);
         activeSpan.requestId = requestId;
         if (requestId != null) {
@@ -645,7 +687,8 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         Long id = context.message().getId();
         ActiveSpan activeSpan = id != null ? activeSpans.remove(id) : null;
         if (activeSpan == null) {
-            log.warn("Unknown MCP call context: " + id);
+            // the span was ended as abandoned, see endAbandonedSpans()
+            log.debugf("No span in progress for the MCP request %s", id);
             return;
         }
         activeSpan.ended = true;
@@ -726,8 +769,33 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
     }
 
     private static void removeEndedSpans(Deque<ActiveSpan> threadSpans) {
-        while (!threadSpans.isEmpty() && threadSpans.peek().ended) {
-            threadSpans.pop();
+        // spans can end on other threads, so they may be anywhere in the stack
+        threadSpans.removeIf(activeSpan -> activeSpan.ended);
+    }
+
+    /**
+     * Ends the spans that have been in progress for longer than the maximum age. The MCP client doesn't report
+     * the end of an operation in some error cases (for example, when the thread is interrupted), and such spans
+     * would otherwise never end. Checks at most once per check interval.
+     */
+    private void endAbandonedSpans() {
+        long now = System.nanoTime();
+        long nextCheck = nextAbandonedSpansCheck.get();
+        if (now - nextCheck < 0
+                || !nextAbandonedSpansCheck.compareAndSet(nextCheck, now + abandonedSpansCheckIntervalNanos())) {
+            return;
+        }
+        for (Map.Entry<Long, ActiveSpan> entry : activeSpans.entrySet()) {
+            ActiveSpan activeSpan = entry.getValue();
+            // removing the entry atomically makes sure the span is ended only once, even if the operation ends now
+            if (now - activeSpan.startNanos > maxSpanAgeNanos && activeSpans.remove(entry.getKey(), activeSpan)) {
+                activeSpan.ended = true;
+                Span span = activeSpan.span;
+                setEndAttributes(span, activeSpan.protocolVersion);
+                span.setAttribute(ERROR_TYPE, ErrorTypeValues.OTHER);
+                span.setStatus(StatusCode.ERROR, "The MCP client did not report the end of the operation");
+                span.end();
+            }
         }
     }
 
