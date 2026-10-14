@@ -249,15 +249,22 @@ public abstract class McpTracingTestBase {
     }
 
     @Test
-    public void listedRequestIdIsTheIdOfTheSentRequest() {
-        // the tools/call is the next request after tools/list, so the ID of the tools/list request
-        // must be lower by one (if the span recorded the ID of a request that was never sent, it would be lower by two)
-        mcpClient.listTools();
-        mcpClient.executeTool(echoTraceparentRequest());
+    public void listSpanCoversEveryPage() {
+        // forget the tools/list requests made before this test
+        toolsListRequestsReceivedByServer();
 
-        long listRequestId = Long.parseLong(awaitSpan("tools/list").getAttributes().get(JSONRPC_REQUEST_ID));
-        long callRequestId = Long.parseLong(awaitSpan("tools/call echoMeta").getAttributes().get(JSONRPC_REQUEST_ID));
-        assertThat(callRequestId).isEqualTo(listRequestId + 1);
+        // the server returns the tools in pages, so the client sends more than one tools/list request
+        mcpClient.listTools();
+
+        SpanData span = awaitSpan("tools/list");
+        List<String[]> requests = toolsListRequestsReceivedByServer();
+        assertThat(requests).hasSizeGreaterThan(1);
+        // one span for the whole operation, not one per page
+        assertThat(spanExporter.getFinishedSpanItems()).filteredOn(s -> s.getName().equals("tools/list")).hasSize(1);
+        // the ID of the first request that was actually sent, not of the request in the context of the listener
+        assertThat(span.getAttributes().get(JSONRPC_REQUEST_ID)).isEqualTo(requests.get(0)[0]);
+        // the trace context of the span is propagated with the request for every page
+        assertThat(requests).allSatisfy(request -> assertThat(request[1]).isEqualTo(traceparentOf(span)));
     }
 
     // ===== resources =====
@@ -398,6 +405,17 @@ public abstract class McpTracingTestBase {
     }
 
     // ===== Helpers =====
+
+    /**
+     * The ID and the traceparent of every tools/list request that the server received since the last call.
+     */
+    List<String[]> toolsListRequestsReceivedByServer() {
+        String result = mcpClient.executeTool(ToolExecutionRequest.builder()
+                .name("toolsListRequests")
+                .arguments("{}")
+                .build()).resultText();
+        return result.isEmpty() ? List.of() : result.lines().map(line -> line.split(" ")).toList();
+    }
 
     static ToolExecutionRequest echoTraceparentRequest() {
         return ToolExecutionRequest.builder()

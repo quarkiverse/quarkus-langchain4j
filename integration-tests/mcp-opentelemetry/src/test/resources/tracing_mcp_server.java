@@ -3,16 +3,24 @@
 //DEPS io.quarkiverse.mcp:quarkus-mcp-server-stdio:2.0.3
 //DEPS io.quarkiverse.mcp:quarkus-mcp-server-http:2.0.3
 //Q:CONFIG quarkus.mcp.server.client-logging.default-level=DEBUG
+// a page size smaller than the number of tools, so that listing the tools takes more than one request
+//Q:CONFIG quarkus.mcp.server.tools.page-size=4
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import io.quarkiverse.mcp.server.FilterContext;
 import io.quarkiverse.mcp.server.McpException;
 import io.quarkiverse.mcp.server.McpLog;
+import io.quarkiverse.mcp.server.McpMethod;
 import io.quarkiverse.mcp.server.Meta;
 import io.quarkiverse.mcp.server.Notification;
 import io.quarkiverse.mcp.server.Notification.Type;
@@ -27,6 +35,7 @@ import io.quarkiverse.mcp.server.TextContent;
 import io.quarkiverse.mcp.server.TextResourceContents;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
+import io.quarkiverse.mcp.server.ToolFilter;
 import io.quarkiverse.mcp.server.ToolManager;
 import io.quarkiverse.mcp.server.ToolResponse;
 
@@ -37,6 +46,9 @@ public class tracing_mcp_server {
 
     @Inject
     ToolManager toolManager;
+
+    @Inject
+    ToolsListRequests toolsListRequests;
 
     private final AtomicReference<String> statusValue = new AtomicReference<>("initial");
     private final AtomicInteger registeredToolCounter = new AtomicInteger();
@@ -85,6 +97,12 @@ public class tracing_mcp_server {
         return "OK";
     }
 
+    @Tool(description = "Returns the ID and the traceparent of every tools/list request received since the last call,"
+            + " one request per line")
+    public String toolsListRequests() {
+        return toolsListRequests.getAndClear();
+    }
+
     @Resource(uri = "file:///greeting", description = "A greeting", mimeType = "text/plain")
     TextResourceContents greeting() {
         return TextResourceContents.create("file:///greeting", "Hello from resource");
@@ -103,6 +121,37 @@ public class tracing_mcp_server {
     @Prompt(description = "A simple greeting prompt")
     PromptMessage greeting_prompt() {
         return PromptMessage.withUserRole(new TextContent("Hello from prompt"));
+    }
+
+    /**
+     * Records the tools/list requests. The filter is applied to every tool for every request, so each request is
+     * recorded once, in the order in which they were received.
+     */
+    @Singleton
+    public static class ToolsListRequests implements ToolFilter {
+
+        private final Map<String, String> traceparentsByRequestId = new LinkedHashMap<>();
+
+        @Override
+        public boolean test(ToolManager.ToolInfo tool, FilterContext context) {
+            if (context.method() == McpMethod.TOOLS_LIST) {
+                Object traceparent = context.meta() != null ? context.meta().asJsonObject().getValue("traceparent") : null;
+                synchronized (traceparentsByRequestId) {
+                    traceparentsByRequestId.putIfAbsent(String.valueOf(context.requestId().value()), String.valueOf(traceparent));
+                }
+            }
+            return true;
+        }
+
+        String getAndClear() {
+            synchronized (traceparentsByRequestId) {
+                String result = traceparentsByRequestId.entrySet().stream()
+                        .map(e -> e.getKey() + " " + e.getValue())
+                        .collect(Collectors.joining("\n"));
+                traceparentsByRequestId.clear();
+                return result;
+            }
+        }
     }
 
     // asks the client for its roots, so that the client receives a server-initiated roots/list request
