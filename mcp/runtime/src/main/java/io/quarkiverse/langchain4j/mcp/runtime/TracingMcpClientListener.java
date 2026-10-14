@@ -578,9 +578,13 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
             return;
         }
         VertxContext.createNewDuplicatedContext(vertx.getOrCreateContext()).runOnContext(ignored -> {
-            try (Scope ignoredScope = context.makeCurrent()) {
-                send.run();
-            }
+            // The scope is deliberately never closed. The HTTP client starts the span of the request only when it
+            // sends the request, asynchronously, after send.run() returns, and closing the scope would remove the
+            // context of the MCP span from the duplicated context by then. The duplicated context exists only for
+            // this request, so leaving the context in it has no effect on anything else.
+            @SuppressWarnings({ "unused", "resource" })
+            Scope scope = context.makeCurrent();
+            send.run();
         });
     }
 
