@@ -166,6 +166,9 @@ public interface Assistant {
 
 An explicit `@SystemMessage` on the method takes precedence over the provider.
 
+To load the system message from Apicurio Registry at runtime, use the `ApicurioSystemMessageProvider` provider
+(see xref:prompt-and-template.adoc#prompt-registry[Loading Prompts from Apicurio Registry]).
+
 === @UserMessage
 
 The `@UserMessage` annotation defines user instructions or prompts sent to the LLM.
