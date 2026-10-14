@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -124,5 +125,28 @@ public abstract class McpTracingLegacyTestBase extends McpTracingTestBase {
         assertThat(span.getKind()).isEqualTo(SpanKind.SERVER);
         assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo("notifications/message");
         assertCommonAttributes(span);
+    }
+
+    // with the legacy protocol, the client always notifies the server when a request times out
+    @Test
+    @Disabled("langchain4j-mcp sends the notifications/cancelled of a timed out request without its McpCallContext,"
+            + " and only after notifying the listeners about the timeout")
+    public void timeoutCancellationIsChildOfTheCancelledToolCall() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .name("slowOperation")
+                .arguments("{}")
+                .build();
+        try {
+            mcpClient.executeTool(request);
+        } catch (Exception ignored) {
+            // the tool execution timeout is expected to trip
+        }
+
+        SpanData toolCallSpan = awaitSpan("tools/call slowOperation");
+        SpanData cancelSpan = awaitSpan("notifications/cancelled");
+
+        assertThat(cancelSpan.getKind()).isEqualTo(SpanKind.CLIENT);
+        assertThat(cancelSpan.getTraceId()).isEqualTo(toolCallSpan.getTraceId());
+        assertThat(cancelSpan.getParentSpanId()).isEqualTo(toolCallSpan.getSpanId());
     }
 }

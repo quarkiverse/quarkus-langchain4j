@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -133,7 +134,15 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         final Span span;
         final Context context;
         final McpClientMethod method;
+        /**
+         * The ID of the first request sent for the operation, recorded as the {@code jsonrpc.request.id} attribute.
+         */
         volatile String requestId;
+        /**
+         * The IDs of all requests sent for the operation (for every page of a list operation, and every retry of a
+         * multi round-trip request), so that a cancellation of any of them is attached to this span.
+         */
+        final Set<String> sentRequestIds = ConcurrentHashMap.newKeySet();
         volatile String protocolVersion;
         volatile boolean ended;
 
@@ -500,9 +509,13 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         if (message == null) {
             return;
         }
-        if (activeSpan.requestId == null && message instanceof McpClientRequest && message.getId() != null) {
-            activeSpan.requestId = String.valueOf(message.getId());
-            activeSpan.span.setAttribute(JSONRPC_REQUEST_ID, activeSpan.requestId);
+        if (message instanceof McpClientRequest && message.getId() != null) {
+            String id = String.valueOf(message.getId());
+            activeSpan.sentRequestIds.add(id);
+            if (activeSpan.requestId == null) {
+                activeSpan.requestId = id;
+                activeSpan.span.setAttribute(JSONRPC_REQUEST_ID, id);
+            }
         }
         String messageProtocolVersion = protocolVersionFromMeta(message);
         if (messageProtocolVersion != null) {
@@ -569,6 +582,9 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         Span span = builder.startSpan();
         ActiveSpan activeSpan = new ActiveSpan(span, parentContext.with(span), message.method);
         activeSpan.requestId = requestId;
+        if (requestId != null) {
+            activeSpan.sentRequestIds.add(requestId);
+        }
         if (message.getId() != null) {
             activeSpans.put(message.getId(), activeSpan);
         }
@@ -720,7 +736,7 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
             return null;
         }
         for (ActiveSpan activeSpan : activeSpans.values()) {
-            if (requestId.equals(activeSpan.requestId)) {
+            if (activeSpan.sentRequestIds.contains(requestId)) {
                 return activeSpan;
             }
         }
