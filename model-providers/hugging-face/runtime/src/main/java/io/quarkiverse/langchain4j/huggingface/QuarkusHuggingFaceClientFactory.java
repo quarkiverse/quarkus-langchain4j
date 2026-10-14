@@ -6,8 +6,6 @@ import static java.util.stream.StreamSupport.stream;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
@@ -18,6 +16,7 @@ import dev.langchain4j.model.huggingface.client.HuggingFaceClient;
 import dev.langchain4j.model.huggingface.client.TextGenerationRequest;
 import dev.langchain4j.model.huggingface.client.TextGenerationResponse;
 import dev.langchain4j.model.huggingface.spi.HuggingFaceClientFactory;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -91,8 +90,6 @@ public class QuarkusHuggingFaceClientFactory implements HuggingFaceClientFactory
     class HuggingFaceClientLogger implements ClientLogger {
         private static final Logger log = Logger.getLogger(HuggingFaceClientLogger.class);
 
-        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*sk-)(\\w{2})(\\w+)(\\w{2})");
-
         private final boolean logRequests;
         private final boolean logResponses;
 
@@ -156,44 +153,12 @@ public class QuarkusHuggingFaceClientFactory implements HuggingFaceClientFactory
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (headerKey.equals("Authorization")) {
-                            headerValue = maskAuthorizationHeaderValue(headerValue);
-                        } else if (headerKey.equals("api-key")) {
-                            headerValue = maskApiKeyHeaderValue(headerValue);
+                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                            headerValue = SensitiveHeaderMasker.mask(headerValue);
                         }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));
-        }
-
-        private static String maskAuthorizationHeaderValue(String authorizationHeaderValue) {
-            try {
-
-                Matcher matcher = BEARER_PATTERN.matcher(authorizationHeaderValue);
-
-                StringBuilder sb = new StringBuilder();
-                while (matcher.find()) {
-                    matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "..." + matcher.group(4));
-                }
-                matcher.appendTail(sb);
-
-                return sb.toString();
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
-        }
-
-        private static String maskApiKeyHeaderValue(String apiKeyHeaderValue) {
-            try {
-                if (apiKeyHeaderValue.length() <= 4) {
-                    return apiKeyHeaderValue;
-                }
-                return apiKeyHeaderValue.substring(0, 2)
-                        + "..."
-                        + apiKeyHeaderValue.substring(apiKeyHeaderValue.length() - 2);
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
         }
     }
 }
