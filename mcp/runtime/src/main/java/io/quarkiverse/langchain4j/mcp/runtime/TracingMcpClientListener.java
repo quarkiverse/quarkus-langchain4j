@@ -69,13 +69,18 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues;
 import io.opentelemetry.semconv.NetworkAttributes.NetworkTransportValues;
 import io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues;
 import io.opentelemetry.semconv.incubating.McpIncubatingAttributes.McpMethodNameIncubatingValues;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
+import io.quarkiverse.langchain4j.mcp.runtime.http.McpRequestSender;
 import io.quarkus.arc.Arc;
+import io.smallrye.common.vertx.VertxContext;
+import io.vertx.core.Vertx;
 
 /**
  * Creates OpenTelemetry spans for MCP client operations and propagates the trace context
@@ -89,11 +94,15 @@ import io.quarkus.arc.Arc;
  * on a different thread than the one that started it (for example with asynchronous tool
  * execution). Instead, as the {@link McpMetaSupplier} of the client, this class finds the span that
  * an outgoing message belongs to and injects its context into the message.
+ * <p>
+ * As the {@link McpRequestSender} of the HTTP transport, this class also sends the HTTP request of a message in
+ * the context of the span of the message, so that the span of the HTTP request (if HTTP client requests are traced)
+ * is its child.
  *
  * @see <a href="https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/mcp.md">
  *      Semantic conventions for MCP</a>
  */
-public class TracingMcpClientListener implements McpClientListener, McpMetaSupplier {
+public class TracingMcpClientListener implements McpClientListener, McpMetaSupplier, McpRequestSender {
 
     private static final int MAX_SUBSCRIPTION_CONTEXTS = 1000;
 
@@ -111,6 +120,7 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
     private final String serverAddress;
     private final Long serverPort;
     private final Supplier<String> sessionIdSupplier;
+    private final Vertx vertx;
     private final Logger log = Logger.getLogger(TracingMcpClientListener.class);
 
     /**
@@ -194,17 +204,22 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
      * @param url the URL of the MCP server, or {@code null} for the stdio transport
      * @param sessionIdSupplier supplies the MCP session ID, or {@code null} if the transport has no sessions
      * @param maxSpanAge how long a span may stay in progress before it's ended as abandoned
+     * @param vertx sends the HTTP requests of the HTTP transport, see {@link #send(McpClientMessage, Runnable)}
      */
     public TracingMcpClientListener(McpTransportType transportType, String url, Supplier<String> sessionIdSupplier,
-            Duration maxSpanAge) {
+            Duration maxSpanAge, Vertx vertx) {
         this(Arc.container().select(Tracer.class).get(),
                 Arc.container().select(OpenTelemetry.class).get().getPropagators().getTextMapPropagator(),
-                transportType, url, sessionIdSupplier, maxSpanAge);
+                transportType, url, sessionIdSupplier, maxSpanAge, vertx);
     }
 
+    /**
+     * @param vertx sends the HTTP requests of the HTTP transport, or {@code null} to send them directly
+     */
     public TracingMcpClientListener(Tracer tracer, TextMapPropagator propagator, McpTransportType transportType,
-            String url, Supplier<String> sessionIdSupplier, Duration maxSpanAge) {
+            String url, Supplier<String> sessionIdSupplier, Duration maxSpanAge, Vertx vertx) {
         this.tracer = tracer;
+        this.vertx = vertx;
         this.maxSpanAgeNanos = maxSpanAge.toNanos();
         this.nextAbandonedSpansCheck = new AtomicLong(System.nanoTime() + abandonedSpansCheckIntervalNanos());
         this.propagator = propagator;
@@ -546,6 +561,44 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         return meta;
     }
 
+    /**
+     * Sends the HTTP request of a message in a new duplicated Vert.x context, in which the context of the span of the
+     * message (which {@link #apply(McpCallContext)} injected into its {@code _meta}) is current. The Vert.x HTTP
+     * client takes the parent of the span of the request from the Vert.x context it sends the request in, so
+     * without this, the span of the request would be a root.
+     */
+    @Override
+    public void send(McpClientMessage message, Runnable send) {
+        Map<String, Object> meta = metaOf(message);
+        Context context = vertx != null && meta != null
+                ? propagator.extract(Context.root(), meta, MetaGetter.INSTANCE)
+                : null;
+        if (context == null || !Span.fromContext(context).getSpanContext().isValid()) {
+            send.run();
+            return;
+        }
+        VertxContext.createNewDuplicatedContext(vertx.getOrCreateContext()).runOnContext(ignored -> {
+            try (Scope ignoredScope = context.makeCurrent()) {
+                send.run();
+            }
+        });
+    }
+
+    private enum MetaGetter implements TextMapGetter<Map<String, Object>> {
+        INSTANCE;
+
+        @Override
+        public Iterable<String> keys(Map<String, Object> carrier) {
+            return carrier.keySet();
+        }
+
+        @Override
+        public String get(Map<String, Object> carrier, String key) {
+            Object value = carrier != null ? carrier.get(key) : null;
+            return value != null ? value.toString() : null;
+        }
+    }
+
     private void onMessageSent(ActiveSpan activeSpan, McpClientMessage message) {
         if (message == null) {
             return;
@@ -816,15 +869,19 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
     }
 
     private static String protocolVersionFromMeta(McpClientMessage message) {
+        Map<String, Object> meta = metaOf(message);
+        Object version = meta != null ? meta.get(PROTOCOL_VERSION_META_KEY) : null;
+        return version != null ? version.toString() : null;
+    }
+
+    private static Map<String, Object> metaOf(McpClientMessage message) {
         McpClientParams params = null;
         if (message instanceof McpClientRequest request) {
             params = request.getParams();
         } else if (message instanceof McpClientNotification notification) {
             params = notification.getParams();
         }
-        Map<String, Object> meta = params != null ? params.getMeta() : null;
-        Object version = meta != null ? meta.get(PROTOCOL_VERSION_META_KEY) : null;
-        return version != null ? version.toString() : null;
+        return params != null ? params.getMeta() : null;
     }
 
     static String methodName(McpClientMethod method) {

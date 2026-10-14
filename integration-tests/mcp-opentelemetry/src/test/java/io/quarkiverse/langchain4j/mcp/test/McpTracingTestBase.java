@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -128,6 +129,20 @@ public abstract class McpTracingTestBase {
         assertThat(span.getTraceId()).isEqualTo(parent.getSpanContext().getTraceId());
         assertThat(span.getParentSpanId()).isEqualTo(parent.getSpanContext().getSpanId());
         assertThat(result).isEqualTo(traceparentOf(span));
+    }
+
+    @Test
+    public void httpRequestSpanIsChildOfTheMcpSpan() {
+        Assumptions.assumeTrue(httpPort() != null, "only the HTTP transport sends HTTP requests");
+
+        mcpClient.executeTool(echoTraceparentRequest());
+
+        SpanData mcpSpan = awaitSpan("tools/call echoMeta");
+        // the span created by the instrumentation of the Vert.x HTTP client
+        SpanData httpSpan = awaitSpan(spanExporter.getFinishedSpanItems(),
+                s -> s.getKind() == SpanKind.CLIENT && s.getName().equals("POST")
+                        && s.getParentSpanId().equals(mcpSpan.getSpanId()));
+        assertThat(httpSpan.getTraceId()).isEqualTo(mcpSpan.getTraceId());
     }
 
     @Test

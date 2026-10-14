@@ -34,7 +34,7 @@ public class TracingMcpClientListenerAbandonedSpansTest {
             .addSpanProcessor(SimpleSpanProcessor.create(exporter))
             .build();
     final TracingMcpClientListener listener = new TracingMcpClientListener(tracerProvider.get("test"),
-            TextMapPropagator.noop(), McpTransportType.STDIO, null, null, MAX_SPAN_AGE);
+            TextMapPropagator.noop(), McpTransportType.STDIO, null, null, MAX_SPAN_AGE, null);
 
     @AfterEach
     void close() {
@@ -77,7 +77,7 @@ public class TracingMcpClientListenerAbandonedSpansTest {
     @Test
     public void spanInProgressForLessThanTheMaxAgeIsNotEnded() {
         TracingMcpClientListener patientListener = new TracingMcpClientListener(tracerProvider.get("test"),
-                TextMapPropagator.noop(), McpTransportType.STDIO, null, null, Duration.ofHours(1));
+                TextMapPropagator.noop(), McpTransportType.STDIO, null, null, Duration.ofHours(1), null);
 
         patientListener.beforeExecuteTool(toolCall(1, "slow"));
         patientListener.beforeExecuteTool(toolCall(2, "next"));
