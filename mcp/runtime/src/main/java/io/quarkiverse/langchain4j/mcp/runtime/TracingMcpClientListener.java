@@ -1,5 +1,20 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROMPT_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOOL_NAME;
+import static io.opentelemetry.semconv.incubating.JsonrpcIncubatingAttributes.JSONRPC_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_METHOD_NAME;
+import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_RESOURCE_URI;
+import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_SESSION_ID;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
+
 import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -45,7 +60,6 @@ import dev.langchain4j.mcp.protocol.McpSubscribeResourceParams;
 import dev.langchain4j.mcp.protocol.McpUnsubscribeResourceParams;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -53,6 +67,9 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.semconv.NetworkAttributes.NetworkTransportValues;
+import io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues;
+import io.opentelemetry.semconv.incubating.McpIncubatingAttributes.McpMethodNameIncubatingValues;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkus.arc.Arc;
 
@@ -73,21 +90,6 @@ import io.quarkus.arc.Arc;
  *      Semantic conventions for MCP</a>
  */
 public class TracingMcpClientListener implements McpClientListener, McpMetaSupplier {
-
-    static final AttributeKey<String> MCP_METHOD_NAME = AttributeKey.stringKey("mcp.method.name");
-    static final AttributeKey<String> MCP_PROTOCOL_VERSION = AttributeKey.stringKey("mcp.protocol.version");
-    static final AttributeKey<String> MCP_SESSION_ID = AttributeKey.stringKey("mcp.session.id");
-    static final AttributeKey<String> MCP_RESOURCE_URI = AttributeKey.stringKey("mcp.resource.uri");
-    static final AttributeKey<String> JSONRPC_REQUEST_ID = AttributeKey.stringKey("jsonrpc.request.id");
-    static final AttributeKey<String> GEN_AI_OPERATION_NAME = AttributeKey.stringKey("gen_ai.operation.name");
-    static final AttributeKey<String> GEN_AI_TOOL_NAME = AttributeKey.stringKey("gen_ai.tool.name");
-    static final AttributeKey<String> GEN_AI_PROMPT_NAME = AttributeKey.stringKey("gen_ai.prompt.name");
-    static final AttributeKey<String> ERROR_TYPE = AttributeKey.stringKey("error.type");
-    static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE = AttributeKey.stringKey("rpc.response.status_code");
-    static final AttributeKey<String> NETWORK_TRANSPORT = AttributeKey.stringKey("network.transport");
-    static final AttributeKey<String> NETWORK_PROTOCOL_NAME = AttributeKey.stringKey("network.protocol.name");
-    static final AttributeKey<String> SERVER_ADDRESS = AttributeKey.stringKey("server.address");
-    static final AttributeKey<Long> SERVER_PORT = AttributeKey.longKey("server.port");
 
     private static final String PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
 
@@ -156,10 +158,10 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         this.propagator = propagator;
         this.sessionIdSupplier = sessionIdSupplier;
         if (transportType == McpTransportType.STDIO) {
-            this.networkTransport = "pipe";
+            this.networkTransport = NetworkTransportValues.PIPE;
             this.networkProtocolName = null;
         } else {
-            this.networkTransport = "tcp";
+            this.networkTransport = NetworkTransportValues.TCP;
             this.networkProtocolName = transportType == McpTransportType.WEBSOCKET ? "websocket" : "http";
         }
         URI uri = url != null ? URI.create(url) : null;
@@ -222,7 +224,7 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
     public void beforeExecuteTool(McpCallContext context) {
         String toolName = requestParams(context) instanceof McpCallToolParams params ? params.getName() : null;
         startClientSpan(context, toolName, false, builder -> {
-            builder.setAttribute(GEN_AI_OPERATION_NAME, "execute_tool");
+            builder.setAttribute(GEN_AI_OPERATION_NAME, GenAiOperationNameIncubatingValues.EXECUTE_TOOL);
             if (toolName != null) {
                 builder.setAttribute(GEN_AI_TOOL_NAME, toolName);
             }
@@ -415,48 +417,51 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
 
     @Override
     public void onNotificationToolsListChanged() {
-        recordServerSpan("notifications/tools/list_changed", null, null);
+        recordServerSpan(McpMethodNameIncubatingValues.NOTIFICATIONS_TOOLS_LIST_CHANGED, null, null);
     }
 
     @Override
     public void onNotificationResourcesListChanged() {
-        recordServerSpan("notifications/resources/list_changed", null, null);
+        recordServerSpan(McpMethodNameIncubatingValues.NOTIFICATIONS_RESOURCES_LIST_CHANGED, null, null);
     }
 
     @Override
     public void onNotificationPromptsListChanged() {
-        recordServerSpan("notifications/prompts/list_changed", null, null);
+        recordServerSpan(McpMethodNameIncubatingValues.NOTIFICATIONS_PROMPTS_LIST_CHANGED, null, null);
     }
 
     @Override
     public void onNotificationResourceUpdated(String uri) {
-        recordServerSpan("notifications/resources/updated", null, builder -> setResourceUri(builder, uri));
+        recordServerSpan(McpMethodNameIncubatingValues.NOTIFICATIONS_RESOURCES_UPDATED, null,
+                builder -> setResourceUri(builder, uri));
     }
 
     @Override
     public void onNotificationMessage(McpLogMessage message) {
-        recordServerSpan("notifications/message", null, null);
+        recordServerSpan(McpMethodNameIncubatingValues.NOTIFICATIONS_MESSAGE, null, null);
     }
 
     @Override
     public void onNotificationProgress(McpProgressNotification notification) {
         // the client uses the ID of the request as its progress token
-        recordServerSpan("notifications/progress", findActiveSpanByRequestId(notification.progressToken()), null);
+        recordServerSpan(McpMethodNameIncubatingValues.NOTIFICATIONS_PROGRESS,
+                findActiveSpanByRequestId(notification.progressToken()), null);
     }
 
     @Override
     public void onNotificationCancelled(long requestId, String reason) {
-        recordServerSpan("notifications/cancelled", findActiveSpanByRequestId(String.valueOf(requestId)), null);
+        recordServerSpan(McpMethodNameIncubatingValues.NOTIFICATIONS_CANCELLED,
+                findActiveSpanByRequestId(String.valueOf(requestId)), null);
     }
 
     @Override
     public void onServerPing() {
-        recordServerSpan("ping", null, null);
+        recordServerSpan(McpMethodNameIncubatingValues.PING, null, null);
     }
 
     @Override
     public void onServerRootsList() {
-        recordServerSpan("roots/list", null, null);
+        recordServerSpan(McpMethodNameIncubatingValues.ROOTS_LIST, null, null);
     }
 
     // ========== trace context propagation ==========
@@ -736,20 +741,21 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
             return "unknown";
         }
         return switch (method) {
-            case INITIALIZE -> "initialize";
-            case TOOLS_CALL -> "tools/call";
-            case TOOLS_LIST -> "tools/list";
-            case NOTIFICATION_CANCELLED -> "notifications/cancelled";
-            case NOTIFICATION_INITIALIZED -> "notifications/initialized";
-            case PING -> "ping";
-            case RESOURCES_LIST -> "resources/list";
-            case RESOURCES_READ -> "resources/read";
-            case RESOURCES_TEMPLATES_LIST -> "resources/templates/list";
-            case PROMPTS_LIST -> "prompts/list";
-            case PROMPTS_GET -> "prompts/get";
-            case NOTIFICATION_ROOTS_LIST_CHANGED -> "notifications/roots/list_changed";
-            case RESOURCES_SUBSCRIBE -> "resources/subscribe";
-            case RESOURCES_UNSUBSCRIBE -> "resources/unsubscribe";
+            case INITIALIZE -> McpMethodNameIncubatingValues.INITIALIZE;
+            case TOOLS_CALL -> McpMethodNameIncubatingValues.TOOLS_CALL;
+            case TOOLS_LIST -> McpMethodNameIncubatingValues.TOOLS_LIST;
+            case NOTIFICATION_CANCELLED -> McpMethodNameIncubatingValues.NOTIFICATIONS_CANCELLED;
+            case NOTIFICATION_INITIALIZED -> McpMethodNameIncubatingValues.NOTIFICATIONS_INITIALIZED;
+            case PING -> McpMethodNameIncubatingValues.PING;
+            case RESOURCES_LIST -> McpMethodNameIncubatingValues.RESOURCES_LIST;
+            case RESOURCES_READ -> McpMethodNameIncubatingValues.RESOURCES_READ;
+            case RESOURCES_TEMPLATES_LIST -> McpMethodNameIncubatingValues.RESOURCES_TEMPLATES_LIST;
+            case PROMPTS_LIST -> McpMethodNameIncubatingValues.PROMPTS_LIST;
+            case PROMPTS_GET -> McpMethodNameIncubatingValues.PROMPTS_GET;
+            case NOTIFICATION_ROOTS_LIST_CHANGED -> McpMethodNameIncubatingValues.NOTIFICATIONS_ROOTS_LIST_CHANGED;
+            case RESOURCES_SUBSCRIBE -> McpMethodNameIncubatingValues.RESOURCES_SUBSCRIBE;
+            case RESOURCES_UNSUBSCRIBE -> McpMethodNameIncubatingValues.RESOURCES_UNSUBSCRIBE;
+            // methods of the 2026-07-28 protocol, which the semantic conventions don't define yet
             case SERVER_DISCOVER -> "server/discover";
             case SUBSCRIPTIONS_LISTEN -> "subscriptions/listen";
             default -> method.name().toLowerCase(Locale.ROOT);
