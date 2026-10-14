@@ -144,6 +144,7 @@ public class McpProcessor {
             Optional<MetricsCapabilityBuildItem> metricsCapability,
             CoreVertxBuildItem vertxBuildItem,
             BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClasses,
             CombinedIndexBuildItem combinedIndex,
             McpRecorder recorder,
             Optional<OpenTelemetrySdkBuildItem> openTelemetrySdkBuildItem,
@@ -157,6 +158,12 @@ public class McpProcessor {
             // to avoid breaking native compilation if Micrometer isn't present
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener"));
+        } else {
+            // the recorder creates the listener reflectively
+            reflectiveClasses.produce(ReflectiveClassBuildItem
+                    .builder("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener")
+                    .constructors(true)
+                    .build());
         }
         boolean openTelemetryPresent = openTelemetrySdkBuildItem.isPresent();
         if (!openTelemetryPresent) {
@@ -164,6 +171,12 @@ public class McpProcessor {
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem(
                             "io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener"));
+        } else {
+            // the recorder creates the listener reflectively
+            reflectiveClasses.produce(ReflectiveClassBuildItem
+                    .builder("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener")
+                    .constructors(true)
+                    .build());
         }
         Map<String, McpClientBuildTimeConfig> rawConfiguredClients = mcpBuildTimeConfiguration.clients();
         final Map<String, McpClientBuildTimeConfig> configuredClients = rawConfiguredClients == null ? Collections.emptyMap()
