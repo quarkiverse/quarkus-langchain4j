@@ -114,6 +114,13 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
      * told about. These messages are sent by the thread that started the operation, so they are
      * matched with the most recent span of this thread that has the same method.
      */
+    /**
+     * Contexts of the spans of the subscriptions/listen requests of the active resource subscriptions, keyed by
+     * the subscription ID (the ID of the request). The span ends when the server acknowledges the subscription,
+     * but the notifications/cancelled notification that ends the subscription still belongs to it.
+     */
+    private final Map<String, Context> subscriptionContexts = new ConcurrentHashMap<>();
+
     private final ThreadLocal<Deque<ActiveSpan>> spansStartedByThread = ThreadLocal.withInitial(ArrayDeque::new);
 
     /**
@@ -344,6 +351,10 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
 
     @Override
     public void afterResourcesSubscribe(McpCallContext context, long subscriptionId, List<String> uris) {
+        ActiveSpan activeSpan = activeSpans.get(context.message().getId());
+        if (activeSpan != null) {
+            subscriptionContexts.put(String.valueOf(subscriptionId), activeSpan.context);
+        }
         endSpan(context, null);
     }
 
@@ -352,9 +363,13 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         endSpan(context, error);
     }
 
-    // beforeResourcesUnsubscribe/afterResourcesUnsubscribe: unsubscribing sends a notifications/cancelled
-    // notification (or no message at all, if the transport closes the stream instead),
-    // which gets its span when its _meta is supplied, see apply()
+    // beforeResourcesUnsubscribe: unsubscribing sends a notifications/cancelled notification (or no message at all,
+    // if the transport closes the stream instead), which gets its span when its _meta is supplied, see apply()
+
+    @Override
+    public void afterResourcesUnsubscribe(McpCallContext context, long subscriptionId) {
+        subscriptionContexts.remove(String.valueOf(subscriptionId));
+    }
 
     // ========== prompts ==========
 
@@ -498,10 +513,17 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
 
     private Context recordNotificationSpan(McpClientNotification notification) {
         // a cancellation belongs to the span of the request it cancels
-        ActiveSpan parent = notification.getParams() instanceof McpCancellationParams params
-                ? findActiveSpanByRequestId(params.getRequestId() != null ? String.valueOf(params.getRequestId()) : null)
-                : null;
-        Context parentContext = parent != null ? parent.context : Context.current();
+        Context parentContext = Context.current();
+        if (notification.getParams() instanceof McpCancellationParams params && params.getRequestId() != null) {
+            String cancelledRequestId = String.valueOf(params.getRequestId());
+            ActiveSpan cancelledRequest = findActiveSpanByRequestId(cancelledRequestId);
+            Context subscriptionContext = subscriptionContexts.get(cancelledRequestId);
+            if (cancelledRequest != null) {
+                parentContext = cancelledRequest.context;
+            } else if (subscriptionContext != null) {
+                parentContext = subscriptionContext;
+            }
+        }
         String method = methodName(notification.method);
         String messageProtocolVersion = protocolVersionFromMeta(notification);
         if (messageProtocolVersion != null) {

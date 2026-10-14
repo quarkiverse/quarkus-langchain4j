@@ -6,6 +6,7 @@ import static org.awaitility.Awaitility.await;
 import java.time.Duration;
 import java.util.List;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -91,5 +92,20 @@ public abstract class McpTracingModernTestBase extends McpTracingTestBase {
             await().during(Duration.ofSeconds(2)).untilAsserted(() -> assertThat(spanExporter.getFinishedSpanItems())
                     .noneMatch(s -> s.getName().equals("notifications/cancelled")));
         }
+    }
+
+    @Test
+    public void cancellationIsChildOfTheCancelledRequest() {
+        Assumptions.assumeTrue(unsubscribeSendsCancellation());
+
+        long subscriptionId = mcpClient.subscribeToResources(List.of("file:///status"));
+        SpanData subscribeSpan = awaitSpan("subscriptions/listen");
+
+        mcpClient.unsubscribeFromResources(subscriptionId);
+        SpanData cancelSpan = awaitSpan("notifications/cancelled");
+
+        // "a cancellation belongs to the span of the request it cancels"
+        assertThat(cancelSpan.getTraceId()).isEqualTo(subscribeSpan.getTraceId());
+        assertThat(cancelSpan.getParentSpanId()).isEqualTo(subscribeSpan.getSpanId());
     }
 }
