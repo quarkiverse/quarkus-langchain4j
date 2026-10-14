@@ -393,22 +393,9 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         endSpan(context, error);
     }
 
-    // ========== ping (with the 2026-07-28 protocol, the client checks health with server/discover) ==========
-
-    @Override
-    public void beforePing(McpCallContext context) {
-        startClientSpan(context, null, false, null);
-    }
-
-    @Override
-    public void afterPing(McpCallContext context) {
-        endSpan(context, null);
-    }
-
-    @Override
-    public void onPingError(McpCallContext context, Throwable error) {
-        endSpan(context, error);
-    }
+    // beforePing/afterPing/onPingError: health checks (ping, or server/discover with the 2026-07-28 protocol,
+    // which the client also reports as a ping) are not traced. They are sent periodically and would produce
+    // a large number of spans of little value.
 
     // onRootsListChanged: the notification gets its span when its _meta is supplied, see apply()
 

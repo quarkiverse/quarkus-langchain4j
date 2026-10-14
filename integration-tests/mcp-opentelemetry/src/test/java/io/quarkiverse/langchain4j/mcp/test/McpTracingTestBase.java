@@ -375,16 +375,14 @@ public abstract class McpTracingTestBase {
     // ===== health check =====
 
     @Test
-    public void healthCheck() {
+    public void healthCheckIsNotTraced() {
         mcpClient.checkHealth();
+        // spans are exported in the order in which they end, so once the span of a later operation is exported,
+        // the span of the health check would have been exported too
+        mcpClient.listTools();
+        awaitSpan("tools/list");
 
-        SpanData span = awaitSpan(healthCheckMethod());
-
-        assertThat(span.getKind()).isEqualTo(SpanKind.CLIENT);
-        assertThat(span.getAttributes().get(MCP_METHOD_NAME)).isEqualTo(healthCheckMethod());
-        assertThat(span.getAttributes().get(JSONRPC_REQUEST_ID)).isNotNull();
-        assertThat(span.getStatus().getStatusCode()).isNotEqualTo(StatusCode.ERROR);
-        assertCommonAttributes(span);
+        assertThat(spanExporter.getFinishedSpanItems()).noneMatch(s -> s.getName().equals(healthCheckMethod()));
     }
 
     // ===== server-initiated notifications =====
