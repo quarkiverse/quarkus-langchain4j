@@ -17,15 +17,13 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RE
 
 import java.net.URI;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -103,10 +101,11 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
     private final Logger log = Logger.getLogger(TracingMcpClientListener.class);
 
     /**
-     * Spans of the operations in progress, keyed by the identity of the context the MCP client
-     * reports them with.
+     * Spans of the operations in progress, keyed by the JSON-RPC ID of the message in the context the
+     * MCP client reports them with. The ID is unique per client, even for the list operations, whose
+     * message is never sent.
      */
-    private final Map<McpCallContext, ActiveSpan> activeSpans = Collections.synchronizedMap(new IdentityHashMap<>());
+    private final Map<Long, ActiveSpan> activeSpans = new ConcurrentHashMap<>();
 
     /**
      * Spans of the operations started by the current thread. Some operations send more than one
@@ -479,7 +478,7 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
             // so this is the only chance to create their span in time to propagate it
             context = recordNotificationSpan(notification);
         } else {
-            ActiveSpan activeSpan = callContext != null ? activeSpans.get(callContext) : null;
+            ActiveSpan activeSpan = message != null && message.getId() != null ? activeSpans.get(message.getId()) : null;
             if (activeSpan == null && message != null) {
                 activeSpan = spanStartedByCurrentThread(message.method);
             }
@@ -561,7 +560,9 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         Span span = builder.startSpan();
         ActiveSpan activeSpan = new ActiveSpan(span, parentContext.with(span), message.method);
         activeSpan.requestId = requestId;
-        activeSpans.put(context, activeSpan);
+        if (message.getId() != null) {
+            activeSpans.put(message.getId(), activeSpan);
+        }
         Deque<ActiveSpan> threadSpans = spansStartedByThread.get();
         removeEndedSpans(threadSpans);
         threadSpans.push(activeSpan);
@@ -616,9 +617,10 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
     }
 
     private void endSpan(McpCallContext context, Throwable error, String errorType) {
-        ActiveSpan activeSpan = activeSpans.remove(context);
+        Long id = context.message().getId();
+        ActiveSpan activeSpan = id != null ? activeSpans.remove(id) : null;
         if (activeSpan == null) {
-            log.warn("Unknown MCP call context: " + context.message().getId());
+            log.warn("Unknown MCP call context: " + id);
             return;
         }
         activeSpan.ended = true;
@@ -708,11 +710,7 @@ public class TracingMcpClientListener implements McpClientListener, McpMetaSuppl
         if (requestId == null) {
             return null;
         }
-        List<ActiveSpan> spans;
-        synchronized (activeSpans) {
-            spans = new ArrayList<>(activeSpans.values());
-        }
-        for (ActiveSpan activeSpan : spans) {
+        for (ActiveSpan activeSpan : activeSpans.values()) {
             if (requestId.equals(activeSpan.requestId)) {
                 return activeSpan;
             }
