@@ -2131,7 +2131,7 @@ public class AiServicesProcessor {
         List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(method, allowedPredicates, ignoredPredicates,
                 chatRequestParametersParamPosition);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
-        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
+        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, index, templateParams,
                 systemMessageInfo, fallbackToDummyUserMessagePredicate, chatRequestParametersParamPosition);
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
@@ -2442,6 +2442,7 @@ public class AiServicesProcessor {
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
+            IndexView index,
             List<TemplateParameterInfo> templateParams,
             Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo,
             Predicate<MethodInfo> fallbackToDummyUserMesage,
@@ -2537,6 +2538,11 @@ public class AiServicesProcessor {
                         continue;
                     } else if (parameter.hasAnnotation(LangChain4jDotNames.MEMORY_ID)) {
                         continue;
+                    } else if (isContentParam(parameter, index)) {
+                        // Content arguments are appended to the user message as-is at runtime,
+                        // so they must not be stringified into the user message text.
+                        // This mirrors LangChain4j's findUserMessageTemplateFromTheOnlyArgument.
+                        continue;
                     }
                     undefinedParams++;
                     if (undefinedParams > 1) {
@@ -2613,6 +2619,33 @@ public class AiServicesProcessor {
                 .filter(pi -> pi.type().name().equals(LangChain4jDotNames.VIDEO)
                         || isListOf(pi.type(), LangChain4jDotNames.VIDEO))
                 .map(pi -> (int) pi.position()).findFirst();
+    }
+
+    /**
+     * Is the given parameter a {@link dev.langchain4j.data.message.Content} (or a {@code List} of them)?
+     * Such parameters are appended to the user message as content at runtime, so they must not be
+     * selected as the parameter whose {@code toString()} forms the user message text.
+     */
+    private static boolean isContentParam(MethodParameterInfo parameter, IndexView index) {
+        Type type = parameter.type();
+        if (isContentType(type.name(), index)) {
+            return true;
+        }
+        if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterizedType = type.asParameterizedType();
+            if (DotNames.LIST.equals(parameterizedType.name()) && parameterizedType.arguments().size() == 1) {
+                return isContentType(parameterizedType.arguments().get(0).name(), index);
+            }
+        }
+        return false;
+    }
+
+    private static boolean isContentType(DotName typeName, IndexView index) {
+        if (LangChain4jDotNames.CONTENT.equals(typeName)) {
+            return true;
+        }
+        return index.getAllKnownImplementors(LangChain4jDotNames.CONTENT).stream()
+                .anyMatch(classInfo -> classInfo.name().equals(typeName));
     }
 
     private static boolean isListOf(org.jboss.jandex.Type type, DotName elementType) {
