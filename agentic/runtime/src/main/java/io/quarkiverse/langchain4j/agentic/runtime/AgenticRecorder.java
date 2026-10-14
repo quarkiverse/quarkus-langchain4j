@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -113,9 +114,9 @@ public class AgenticRecorder {
         // ExecutorProvider.get() only exposes the programmatic provider, not ServiceLoader providers.
         // Match LangChain4j's context-classloader lookup and fallback without instantiating providers.
         if (ExecutorProvider.get() != null
-                || ServiceLoader.load(ExecutorProvider.class).stream().findAny().isPresent()
+                || ServiceLoader.load(ExecutorProvider.class).iterator().hasNext()
                 || ServiceLoader.load(ExecutorProvider.class, ExecutorProvider.class.getClassLoader())
-                        .stream().findAny().isPresent()) {
+                        .iterator().hasNext()) {
             return;
         }
         ManagedExecutor managedExecutor = Arc.container().instance(ManagedExecutor.class).get();
@@ -124,7 +125,10 @@ public class AgenticRecorder {
                     + "without CDI/OTel/Security context propagation");
             return;
         }
-        ExecutorProvider.set(() -> managedExecutor);
+        ExecutorProvider.set(new ManagedExecutorProvider(managedExecutor));
+    }
+
+    private record ManagedExecutorProvider(Executor executor) implements ExecutorProvider {
     }
 
     @RuntimeInit
