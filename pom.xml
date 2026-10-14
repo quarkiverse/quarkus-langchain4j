@@ -52,8 +52,8 @@
     <wiremock.version>3.13.1</wiremock.version>
     <quarkus-neo4j.version>5.7.0</quarkus-neo4j.version>
     <quarkus-qdrant.version>0.2.0</quarkus-qdrant.version>
-    <jlama.version>0.8.4</jlama.version>
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
+    <jinfer.version>0.3.1</jinfer.version>
     <jitllm.version>1.0.2-jdk21</jitllm.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
     <apicurio-registry-sdk.version>3.3.0</apicurio-registry-sdk.version>
@@ -71,6 +71,13 @@
         <groupId>dev.langchain4j</groupId>
         <artifactId>langchain4j-bom</artifactId>
         <version>${langchain4j.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.qxotic</groupId>
+        <artifactId>jinfer-bom</artifactId>
+        <version>${jinfer.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -330,12 +337,6 @@
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-watsonx</artifactId>
-                        <version>${project.version}</version>
-                        <classifier>codestarts</classifier>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.quarkiverse.langchain4j</groupId>
-                        <artifactId>quarkus-langchain4j-jlama</artifactId>
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
                     </dependency>

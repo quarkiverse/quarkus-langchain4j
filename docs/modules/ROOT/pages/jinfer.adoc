@@ -1,0 +1,54 @@
+= Jinfer (Qxotic) Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://qxotic.ai/[Qxotic] provides *jinfer*, an engine that runs Large Language Models (LLMs) *locally and purely in Java*, embedded in your Quarkus application.
+This extension integrates jinfer's LangChain4j support, exposing chat, streaming chat, embedding, scoring (rerank), audio transcription, and text-to-speech models backed by in-process GGUF inference.
+
+[#_prerequisites]
+== Prerequisites
+
+=== Java 25
+
+jinfer requires *Java 25 or later*. The extension is only built and active on JDK 25+.
+
+=== Vector API and native access
+
+jinfer uses the https://openjdk.org/jeps/508[Java Vector API] (incubator) and the Foreign Function & Memory API. The required JVM flags are:
+
+[source,shell]
+----
+--add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED
+----
+
+* In *dev mode* and *continuous testing*, the extension passes these flags automatically.
+* In a *production jar*, `--enable-native-access=ALL-UNNAMED` is written into the runnable jar manifest automatically, but `--add-modules jdk.incubator.vector` *cannot* be expressed in a manifest (a JDK limitation). You must pass it yourself:
++
+[source,shell]
+----
+java --add-modules jdk.incubator.vector -jar quarkus-run.jar
+----
++
+or via the `JAVA_OPTS_APPEND` environment variable (honored by the Quarkus container images). The `jdk.incubator.vector` module is *required*: if it is absent, creating a model fails fast at startup with a clear error (`jinfer needs the Vector API: start the JVM with --add-modules jdk.incubator.vector`).
+
+== Configuration
+
+Models are selected with a HuggingFace/ModelScope GGUF reference (for example `owner/repo:Q8_0`) via the `model` property, or a local file via `model-path`:
+
+[source,properties]
+----
+quarkus.langchain4j.jinfer.chat-model.model=LiquidAI/LFM2.5-8B-A1B-GGUF:Q8_0
+quarkus.langchain4j.jinfer.embedding-model.model=Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0
+----
+
+Models are downloaded by jinfer into its own resumable, sha256-verified cache on first use. Set the `JINFER_OFFLINE=1` environment variable to forbid network access.
+
+[WARNING]
+====
+Model files are large (often several GB) and may take time to download on first use.
+====
+
+Set `quarkus.langchain4j.jinfer.enable-integration=false` to disable the models (they then throw when used), which is useful for tests.
+
+include::includes/quarkus-langchain4j-jinfer.adoc[leveloffset=+1, opts=optional]

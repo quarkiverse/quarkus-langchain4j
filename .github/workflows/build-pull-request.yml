@@ -79,14 +79,13 @@ jobs:
                 | jq -R -s -c 'split("\n")[:-1]')
 
           # Integration tests (without the in-process embedding models)
-          # Remove JLama, Llama3 and JitLLM from the list
+          # Remove Jinfer and JitLLM from the list
           cd integration-tests
           IT_MODULES=$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
-                | grep -v jlama \
-                | grep -v llama3-java \
+                | grep -v jinfer \
                 | grep -v jitllm \
                 | grep -v mcp-conformance \
                 | grep -v in-process-embedding-models \
@@ -189,13 +188,6 @@ jobs:
         run: |
           tar -xzf ../maven-repo.tgz -C ~
 
-      # Build Jlama if JDK >= 21
-      # It's not build by default as it requires Java 21+
-      - name: Build JLama extension
-        if: ${{ matrix.java >= 21 }}
-        run: |
-          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jlama/pom.xml
-
       # Build JitLLM if JDK >= 21
       # It's not build by default as it requires Java 21+
       - name: Build JitLLM extension
@@ -203,11 +195,11 @@ jobs:
         run: |
           ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jitllm/pom.xml
 
-      # Build Llama3.java if JDK >= 22. See https://x.com/tjake/status/1849141171475399083?t=EpgVJCPLC17fCXio0FvnhA&s=19 for the reason
-      - name: Build Llama3-java extension
-        if: ${{ matrix.java >= 22 }}
+      # Build Jinfer if JDK >= 25. It requires Java 25 (Qxotic jinfer floor) and is not built by default.
+      - name: Build Jinfer extension
+        if: ${{ matrix.java >= 25 }}
         run: |
-          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/llama3-java/pom.xml
+          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jinfer/pom.xml
 
       - name: Run tests of ${{ matrix.module }} with JDK ${{ matrix.java }}
         run: |
