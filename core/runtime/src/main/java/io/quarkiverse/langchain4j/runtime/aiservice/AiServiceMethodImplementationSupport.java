@@ -1145,7 +1145,8 @@ public class AiServiceMethodImplementationSupport {
             Object methodArg = methodArgs[i];
             AiServiceMethodCreateInfo.ParameterInfo parameterInfo = createInfo.getParameterInfo().get(i);
             if (methodArg instanceof Content content) {
-                handleContent(content, parameterInfo, finalContents);
+                // no @UserMessage annotation is required, same as for Image/Audio/Video/PdfFile arguments below
+                finalContents.add(content);
             } else if (methodArg instanceof List<?> list) {
                 Type javaType = TypeSignatureParser.parse(parameterInfo.typeDescriptor());
                 if (javaType instanceof ParameterizedType pt) {
@@ -1153,7 +1154,7 @@ public class AiServiceMethodImplementationSupport {
                     Class<?> typeArg = loadClass(actualTypeArgument);
                     if (Content.class.isAssignableFrom(typeArg)) {
                         for (Object o : list) {
-                            handleContent((Content) o, parameterInfo, finalContents);
+                            finalContents.add((Content) o);
                         }
                     } else if (Image.class.isAssignableFrom(typeArg)) {
                         for (Object o : list) {
@@ -1263,13 +1264,6 @@ public class AiServiceMethodImplementationSupport {
                     .getContextClassLoader());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private static void handleContent(Content content, AiServiceMethodCreateInfo.ParameterInfo parameterInfo,
-            List<Content> finalContents) {
-        if (parameterInfo.annotationTypes().contains(dev.langchain4j.service.UserMessage.class.getName())) {
-            finalContents.add(content);
         }
     }
 
