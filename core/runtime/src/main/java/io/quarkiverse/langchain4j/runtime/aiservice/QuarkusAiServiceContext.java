@@ -113,6 +113,21 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         }
     }
 
+    /**
+     * This is called by the {@code manageChatMemory(Object... ids)} method of AiServices when a user manually requests that
+     * the AI service manage the lifecycle of chat memories provided
+     * via {@link io.quarkiverse.langchain4j.ChatMemoryRemover}
+     */
+    @SuppressWarnings("unused")
+    public void manageChatMemoryIds(Object... ids) {
+        if (!hasChatMemory()) {
+            return;
+        }
+        for (Object id : ids) {
+            chatMemoryService.getOrCreateChatMemory(id);
+        }
+    }
+
     @SuppressWarnings("unused")
     public Collection<Object> getAllChatMemoryIds() {
         if (!hasChatMemory()) {
