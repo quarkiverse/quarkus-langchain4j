@@ -191,4 +191,25 @@ class JsonReportFormatterTest {
         // Verify all tags are included
         assertThat(json).contains("\"tags\": [\"tag1\", \"tag2\", \"tag3\"]");
     }
+
+    @Test
+    void shouldReportTrialsAndConfidenceInterval() {
+        EvaluationSample<String> sample1 = new EvaluationSample<>("Sample1", new Parameters(), "expected", List.of());
+        EvaluationSample<String> sample2 = new EvaluationSample<>("Sample2", new Parameters(), "expected", List.of());
+        List<Scorer.EvaluationResult<String>> results = List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample1, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample1, "other", EvaluationResult.fromBoolean(false)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample2, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample2, "expected", EvaluationResult.fromBoolean(true)));
+        EvaluationReport<String> report = new EvaluationReport<>(results, 2);
+
+        String output = new JsonReportFormatter().format(report, Map.of("pretty", false));
+
+        assertThat(output).contains("\"globalScore\": 75.00");
+        assertThat(output).contains("\"trials\": 2");
+        assertThat(output).contains("\"standardError\": 25.00");
+        assertThat(output).contains("\"confidenceInterval\": {\"low\": 26.00,\"high\": 100.00}");
+        assertThat(output).contains("\"totalSamples\": 2");
+        assertThat(output).contains("\"totalEvaluations\": 4");
+    }
 }

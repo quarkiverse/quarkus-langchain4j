@@ -32,7 +32,11 @@ public class MarkdownReportFormatter implements ReportFormatter {
 
         StringBuilder buffer = new StringBuilder();
         buffer.append("# Evaluation Report\n\n");
-        buffer.append("**Global Score**: ").append(String.format("%.2f", report.score())).append("%\n\n");
+        buffer.append("**Global Score**: ").append(String.format("%.2f", report.score())).append("%")
+                .append(interval(report.confidenceInterval())).append("\n\n");
+        if (report.trials() > 1) {
+            buffer.append("**Trials per sample**: ").append(report.trials()).append("\n\n");
+        }
 
         // Extract all unique tags from evaluations
         List<String> tags = report.evaluations().stream()
@@ -46,7 +50,8 @@ public class MarkdownReportFormatter implements ReportFormatter {
             for (String tag : tags) {
                 double tagScore = report.scoreForTag(tag);
                 buffer.append("- **").append(tag).append("**: ")
-                        .append(String.format("%.2f", tagScore)).append("%\n");
+                        .append(String.format("%.2f", tagScore)).append("%")
+                        .append(interval(report.confidenceIntervalForTag(tag))).append("\n");
             }
             buffer.append("\n");
         }
@@ -54,6 +59,26 @@ public class MarkdownReportFormatter implements ReportFormatter {
         // Details section
         buffer.append("## Details\n\n");
         String detailHeader = includeDetails ? "### " : "- ";
+
+        if (report.trials() > 1) {
+            List<String> sampleNames = report.evaluations().stream()
+                    .map(e -> e.sample().name())
+                    .distinct()
+                    .toList();
+            for (String name : sampleNames) {
+                long total = report.evaluations().stream().filter(e -> e.sample().name().equals(name)).count();
+                long passed = report.evaluations().stream()
+                        .filter(e -> e.sample().name().equals(name) && e.passed()).count();
+                buffer.append("- ").append(name).append(": ")
+                        .append(passed).append("/").append(total).append(" evaluations passed")
+                        .append(" (" + String.format("%.2f", report.scoreForSample(name)) + "%)")
+                        .append("\n");
+            }
+            if (!includeDetails) {
+                return buffer.toString();
+            }
+            buffer.append("\n");
+        }
 
         for (Scorer.EvaluationResult<T> evaluation : report.evaluations()) {
             buffer.append(detailHeader)
@@ -72,5 +97,9 @@ public class MarkdownReportFormatter implements ReportFormatter {
         }
 
         return buffer.toString();
+    }
+
+    private static String interval(EvaluationReport.Interval interval) {
+        return String.format(" (95%% CI: %.2f%% - %.2f%%)", interval.low(), interval.high());
     }
 }
