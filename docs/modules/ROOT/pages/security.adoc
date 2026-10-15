@@ -106,7 +106,12 @@ All you need to do to achieve it is to add the `quarkus-langchain4j-oidc-model-a
 
 Instead of presenting a shared API key, the workload proves its identity with a short-lived token issued by the platform it runs on — a Kubernetes projected service account token, or a SPIFFE JWT-SVID — and exchanges that token for a short-lived model API access token.
 
-The `quarkus-langchain4j-workload-model-auth-provider` extension implements this flow as a `ModelAuthProvider`. It reads the workload identity token from the file the platform projects it into, exchanges it for an access token using the Quarkus OIDC client, and sets the resulting token as the `Authorization` header of every model request.
+The `quarkus-langchain4j-workload-model-auth-provider` extension implements this flow as a `ModelAuthProvider`. It acquires the workload identity token, exchanges it for an access token using the Quarkus OIDC client, and sets the resulting token as the `Authorization` header of every model request.
+
+The workload identity token is acquired in one of two ways:
+
+* from the file the platform projects it into, when `quarkus.langchain4j.workload-model-auth-provider.token-path` is set
+* from the SPIFFE Workload API, when that path is not set
 
 ==== Dependency
 
@@ -123,7 +128,7 @@ The extension brings in `quarkus-oidc-client`, which performs the token exchange
 
 ==== Configuration
 
-Two things must be configured: where the workload identity token is read from, and how it is exchanged.
+Two things must be configured: how the workload identity token is acquired, and how it is exchanged.
 For example:
 
 [source,properties]
@@ -147,9 +152,31 @@ The workload identity token itself is added to the token exchange request by the
 * with `quarkus.oidc-client.grant.type=jwt`, it is sent as the `assertion` parameter
 * with `quarkus.oidc-client.grant.type=exchange`, it is sent as the `subject_token` parameter
 
+==== Using the SPIFFE Workload API
+
+When the workload runs alongside a SPIFFE implementation such as SPIRE, the JWT-SVID can be requested directly from the SPIFFE Workload API instead of being projected into a file by a helper process. Leave `quarkus.langchain4j.workload-model-auth-provider.token-path` unset and add the SPIFFE client extension:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-spiffe-client</artifactId>
+</dependency>
+----
+
+[source,properties]
+----
+# Audience the JWT-SVID is requested for
+quarkus.spiffe-client.audiences=https://api.anthropic.com
+----
+
+The SPIFFE Workload Endpoint socket is taken from the standard `SPIFFE_ENDPOINT_SOCKET` environment variable, or from `quarkus.spiffe-client.endpoint-socket` if you prefer to configure it explicitly.
+
+The provider itself only depends on the `quarkus-spiffe-client-api` artifact, so adding `quarkus-spiffe-client` is what enables this path. If the token path is unset and no `SpiffeClient` is available, the application fails at startup.
+
 ==== Token Refresh
 
-Workload identity tokens are short-lived and rotated in place by the platform. The extension decodes the token's `exp` claim and reloads the file at 85% of the token's lifetime, matching Kubernetes token rotation conventions. If the cached token has expired by the time a request is made, it is reloaded from disk before the exchange.
+Workload identity tokens are short-lived and rotated by the platform. The extension uses the token's `exp` claim to reacquire it at 85% of its lifetime, matching Kubernetes token rotation conventions. If the cached token has expired by the time a request is made, it is reacquired before the exchange.
 
 == Input and Output Validation
 
