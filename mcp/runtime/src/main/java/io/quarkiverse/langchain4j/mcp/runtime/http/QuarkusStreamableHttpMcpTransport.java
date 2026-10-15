@@ -65,6 +65,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     private volatile boolean modernProtocol;
     private volatile String protocolVersionHeader;
+    private volatile McpRequestSender requestSender = McpRequestSender.DIRECT;
 
     // Subsidiary SSE channel fields
     private final boolean subsidiaryChannelEnabled;
@@ -138,6 +139,21 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     public void setModernProtocol(boolean modernProtocol) {
         this.modernProtocol = modernProtocol;
+    }
+
+    /**
+     * The ID of the MCP session assigned by the server, or {@code null} if there is none.
+     * Sessions only exist with the legacy protocol (up to 2025-11-25).
+     */
+    public String mcpSessionId() {
+        return mcpSessionId.get();
+    }
+
+    /**
+     * Sets how the HTTP requests carrying MCP messages are sent, see {@link McpRequestSender}.
+     */
+    public void setRequestSender(McpRequestSender requestSender) {
+        this.requestSender = requestSender;
     }
 
     public void setProtocolVersion(String protocolVersion) {
@@ -246,114 +262,128 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
             customHeaders.forEach((name, value) -> options.addHeader(name, value));
         }
         String finalBody = body;
-        httpClient.request(options)
-                .onComplete(result -> {
-                    if (result.failed()) {
-                        future.completeExceptionally(result.cause());
-                    } else {
-                        result.result().send(finalBody).onComplete(response -> {
-                            if (response.failed()) {
-                                future.completeExceptionally(response.cause());
-                            } else {
-                                if (isExpectedStatusCode(response.result().statusCode())) {
-                                    // did the server assign a session ID?
-                                    if (!modernProtocol) {
-                                        String mcpSessionId = response.result().getHeader("Mcp-Session-Id");
-                                        if (mcpSessionId != null && !mcpSessionId.isEmpty()) {
-                                            log.debug("Assigned MCP session ID: " + mcpSessionId);
-                                            this.mcpSessionId.set(mcpSessionId);
-                                        }
-                                    }
-                                    String contentType = response.result().getHeader("Content-Type");
-                                    if (id != null && contentType != null && contentType.contains("text/event-stream")) {
-                                        // the server has started an SSE channel
-                                        var httpResponse = response.result();
-                                        httpResponse.handler(new SseEventParser(sseSubscriber));
-                                        future.whenComplete((r, t) -> {
-                                            if (future.isCancelled()) {
-                                                httpResponse.request().reset();
-                                            }
-                                        });
-                                    } else {
-                                        // the server has sent a single regular response
-                                        if (id == null) {
-                                            // For operations with null ID, we don't expect
-                                            // a response, just mark the operation done when
-                                            // the server accepted it
-                                            future.complete(null);
-                                        }
-                                        response.result().bodyHandler(bodyBuffer -> {
-                                            try {
-                                                String responseString = bodyBuffer.toString();
-                                                if (logResponses) {
-                                                    log.info("Response: " + responseString);
-                                                }
-                                                operationHandler.onMessage(responseString);
-                                            } catch (RuntimeException e) {
-                                                future.completeExceptionally(e);
-                                            }
-                                        });
-                                    }
-                                    // Legacy protocol only (up to 2025-11-25) — 404 means session expired
-                                } else if (!(request instanceof McpInitializeRequest) && response.result().statusCode() == 404
-                                        && !modernProtocol && !isRetry) {
-                                    log.debug("Received 404 for operation, retrying after re-initialize");
-                                    McpInitializeRequest initReq = QuarkusStreamableHttpMcpTransport.this.initializeRequest;
-                                    if (initReq == null) {
-                                        future.completeExceptionally(
-                                                new IllegalStateException("Cannot retry 404: initializeRequest is null"));
-                                        return;
-                                    }
-                                    sendInitializeRequest(initReq).thenAccept(ignored -> {
-                                        // Preserve the original expectsResponse flag: a retried notification, or a
-                                        // reply to a server-initiated request (which carries the server's id), must
-                                        // not be registered as a pending operation on retry either.
-                                        execute(request, true, expectsResponse)
-                                                .subscribeAsCompletionStage()
-                                                .thenAccept(future::complete)
-                                                .exceptionally(t -> {
-                                                    future.completeExceptionally(t);
-                                                    return null;
-                                                });
-                                    })
-                                            .exceptionally(t -> {
-                                                future.completeExceptionally(t);
-                                                return null;
-                                            });
+        try {
+            requestSender.send(request, () -> {
+                try {
+                    httpClient.request(options)
+                            .onComplete(result -> {
+                                if (result.failed()) {
+                                    future.completeExceptionally(result.cause());
                                 } else {
-                                    int statusCode = response.result().statusCode();
-                                    if (statusCode == 401) {
-                                        String wwwAuth = response.result().getHeader("WWW-Authenticate");
-                                        future.completeExceptionally(new McpAuthenticationException(statusCode, wwwAuth));
-                                    } else {
-                                        response.result().bodyHandler(bodyBuffer -> {
-                                            String responseString = bodyBuffer.toString();
-                                            // Try to parse as JSON-RPC error response
-                                            if (id != null && responseString != null && !responseString.isEmpty()) {
-                                                try {
-                                                    JsonNode node = objectMapper.readTree(responseString);
-                                                    if (node.has("error") && node.has("jsonrpc")) {
-                                                        if (logResponses) {
-                                                            log.info("Response: " + responseString);
-                                                        }
-                                                        operationHandler.onMessage(responseString);
-                                                        return;
+                                    result.result().send(finalBody).onComplete(response -> {
+                                        if (response.failed()) {
+                                            future.completeExceptionally(response.cause());
+                                        } else {
+                                            if (isExpectedStatusCode(response.result().statusCode())) {
+                                                // did the server assign a session ID?
+                                                if (!modernProtocol) {
+                                                    String mcpSessionId = response.result().getHeader("Mcp-Session-Id");
+                                                    if (mcpSessionId != null && !mcpSessionId.isEmpty()) {
+                                                        log.debug("Assigned MCP session ID: " + mcpSessionId);
+                                                        this.mcpSessionId.set(mcpSessionId);
                                                     }
-                                                } catch (JsonProcessingException ignored) {
+                                                }
+                                                String contentType = response.result().getHeader("Content-Type");
+                                                if (id != null && contentType != null
+                                                        && contentType.contains("text/event-stream")) {
+                                                    // the server has started an SSE channel
+                                                    var httpResponse = response.result();
+                                                    httpResponse.handler(new SseEventParser(sseSubscriber));
+                                                    future.whenComplete((r, t) -> {
+                                                        if (future.isCancelled()) {
+                                                            httpResponse.request().reset();
+                                                        }
+                                                    });
+                                                } else {
+                                                    // the server has sent a single regular response
+                                                    if (id == null) {
+                                                        // For operations with null ID, we don't expect
+                                                        // a response, just mark the operation done when
+                                                        // the server accepted it
+                                                        future.complete(null);
+                                                    }
+                                                    response.result().bodyHandler(bodyBuffer -> {
+                                                        try {
+                                                            String responseString = bodyBuffer.toString();
+                                                            if (logResponses) {
+                                                                log.info("Response: " + responseString);
+                                                            }
+                                                            operationHandler.onMessage(responseString);
+                                                        } catch (RuntimeException e) {
+                                                            future.completeExceptionally(e);
+                                                        }
+                                                    });
+                                                }
+                                                // Legacy protocol only (up to 2025-11-25) — 404 means session expired
+                                            } else if (!(request instanceof McpInitializeRequest)
+                                                    && response.result().statusCode() == 404
+                                                    && !modernProtocol && !isRetry) {
+                                                log.debug("Received 404 for operation, retrying after re-initialize");
+                                                McpInitializeRequest initReq = QuarkusStreamableHttpMcpTransport.this.initializeRequest;
+                                                if (initReq == null) {
+                                                    future.completeExceptionally(
+                                                            new IllegalStateException(
+                                                                    "Cannot retry 404: initializeRequest is null"));
+                                                    return;
+                                                }
+                                                sendInitializeRequest(initReq).thenAccept(ignored -> {
+                                                    // Preserve the original expectsResponse flag: a retried notification, or a
+                                                    // reply to a server-initiated request (which carries the server's id), must
+                                                    // not be registered as a pending operation on retry either.
+                                                    execute(request, true, expectsResponse)
+                                                            .subscribeAsCompletionStage()
+                                                            .thenAccept(future::complete)
+                                                            .exceptionally(t -> {
+                                                                future.completeExceptionally(t);
+                                                                return null;
+                                                            });
+                                                })
+                                                        .exceptionally(t -> {
+                                                            future.completeExceptionally(t);
+                                                            return null;
+                                                        });
+                                            } else {
+                                                int statusCode = response.result().statusCode();
+                                                if (statusCode == 401) {
+                                                    String wwwAuth = response.result().getHeader("WWW-Authenticate");
+                                                    future.completeExceptionally(
+                                                            new McpAuthenticationException(statusCode, wwwAuth));
+                                                } else {
+                                                    response.result().bodyHandler(bodyBuffer -> {
+                                                        String responseString = bodyBuffer.toString();
+                                                        // Try to parse as JSON-RPC error response
+                                                        if (id != null && responseString != null && !responseString.isEmpty()) {
+                                                            try {
+                                                                JsonNode node = objectMapper.readTree(responseString);
+                                                                if (node.has("error") && node.has("jsonrpc")) {
+                                                                    if (logResponses) {
+                                                                        log.info("Response: " + responseString);
+                                                                    }
+                                                                    operationHandler.onMessage(responseString);
+                                                                    return;
+                                                                }
+                                                            } catch (JsonProcessingException ignored) {
+                                                            }
+                                                        }
+                                                        future.completeExceptionally(
+                                                                new HttpException(
+                                                                        statusCode,
+                                                                        "Unexpected status code: " + statusCode
+                                                                                + ", body: " + responseString));
+                                                    });
                                                 }
                                             }
-                                            future.completeExceptionally(
-                                                    new HttpException(
-                                                            statusCode,
-                                                            "Unexpected status code: " + statusCode
-                                                                    + ", body: " + responseString));
-                                        });
-                                    }
+                                        }
+                                    });
                                 }
-                            }
-                        });
-                    }
-                });
+                            });
+                } catch (RuntimeException e) {
+                    future.completeExceptionally(e);
+                }
+            });
+        } catch (RuntimeException e) {
+            future.completeExceptionally(e);
+        }
         return uni;
     }
 
