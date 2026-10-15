@@ -1,4 +1,5 @@
 = Mistral Moderation Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-mistral-ai
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

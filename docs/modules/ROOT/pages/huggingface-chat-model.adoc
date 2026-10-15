@@ -1,4 +1,5 @@
 = Hugging Face Chat Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-hugging-face
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
