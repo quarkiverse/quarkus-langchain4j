@@ -57,7 +57,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Path to the workload identity provider token file, for example, a SPIFFE JWT-SVID. The token is read from this path and periodically refreshed based on its expiry claim.
+Path to the workload identity provider token file, for example, a Kubernetes projected service account token or a SPIFFE JWT-SVID. The token is read from this path and periodically refreshed based on its expiry claim.
+
+When this path is not set, the SPIFFE JWT-SVID is requested directly from the SPIFFE Workload API.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -68,7 +70,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WORKLOAD_MODEL_AUTH_PROVIDER_TOKEN
 endif::add-copy-button-to-env-var[]
 --
 |string
-|required icon:exclamation-circle[title=Configuration property is required]
+|
 
 |===
 
