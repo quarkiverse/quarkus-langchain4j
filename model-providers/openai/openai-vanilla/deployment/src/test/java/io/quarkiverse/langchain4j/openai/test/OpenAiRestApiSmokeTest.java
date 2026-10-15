@@ -7,9 +7,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkiverse.langchain4j.openai.common.OpenAiApiException;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
@@ -103,6 +106,30 @@ public class OpenAiRestApiSmokeTest extends OpenAiBaseTest {
                 postRequestedFor(urlEqualTo("/v1/chat/completions"))
                         .withHeader("Authorization", equalTo("Bearer " + TOKEN))
                         .withoutHeader("OpenAI-Organization"));
+    }
+
+    @Test
+    @Order(4)
+    void server429ExposesResponseHeaders() throws URISyntaxException {
+        wiremock().register(
+                post(urlEqualTo("/v1/chat/completions"))
+                        .withHeader("Authorization", equalTo("Bearer " + TOKEN))
+                        .willReturn(aResponse()
+                                .withStatus(429)
+                                .withHeader("Retry-After", "7")
+                                .withHeader("retry-after-ms", "7000")
+                                .withBody("Rate limit exceeded")));
+
+        OpenAiRestApi restApi = createClient();
+
+        Throwable thrown = catchThrowable(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
+                OpenAiRestApi.ApiMetadata.builder().openAiApiKey(TOKEN).build()));
+
+        assertThat(thrown).isInstanceOf(QuarkusHttpException.class);
+        QuarkusHttpException exception = (QuarkusHttpException) thrown;
+        assertThat(exception.statusCode()).isEqualTo(429);
+        assertThat(exception.header("retry-after")).isEqualTo(Optional.of("7"));
+        assertThat(exception.header("retry-after-ms")).isEqualTo(Optional.of("7000"));
     }
 
     private OpenAiRestApi createClient() throws URISyntaxException {

@@ -21,7 +21,6 @@ import org.jboss.resteasy.reactive.client.TlsConfig;
 import org.jboss.resteasy.reactive.client.impl.ClientBuilderImpl;
 import org.jboss.resteasy.reactive.client.impl.MultiInvoker;
 
-import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.http.client.HttpClient;
 import dev.langchain4j.http.client.HttpRequest;
 import dev.langchain4j.http.client.SuccessfulHttpResponse;
@@ -30,6 +29,7 @@ import dev.langchain4j.http.client.sse.ServerSentEventContext;
 import dev.langchain4j.http.client.sse.ServerSentEventListener;
 import dev.langchain4j.http.client.sse.ServerSentEventParser;
 import dev.langchain4j.http.client.sse.ServerSentEventParsingHandle;
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkus.tls.TlsConfiguration;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.net.KeyCertOptions;
@@ -158,7 +158,8 @@ public class JaxRsHttpClient implements HttpClient {
 
     private static SuccessfulHttpResponse toSuccessfulHttpResponse(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            throw new HttpException(response.getStatus(), response.readEntity(String.class));
+            throw new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
+                    response.getStringHeaders());
         }
 
         return SuccessfulHttpResponse.builder()

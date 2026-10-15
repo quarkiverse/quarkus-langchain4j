@@ -32,9 +32,9 @@ import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMess
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.smallrye.mutiny.Multi;
@@ -66,7 +66,8 @@ public interface AnthropicRestApi {
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            return new HttpException(response.getStatus(), response.readEntity(String.class));
+            return new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
+                    response.getStringHeaders());
         }
         return null;
     }

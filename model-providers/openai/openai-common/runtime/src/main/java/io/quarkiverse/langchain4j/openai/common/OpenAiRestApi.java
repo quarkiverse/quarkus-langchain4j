@@ -49,7 +49,6 @@ import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMess
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.openai.internal.audio.transcription.OpenAiAudioTranscriptionResponse;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
@@ -61,6 +60,7 @@ import dev.langchain4j.model.openai.internal.image.GenerateImagesRequest;
 import dev.langchain4j.model.openai.internal.image.GenerateImagesResponse;
 import dev.langchain4j.model.openai.internal.moderation.ModerationRequest;
 import dev.langchain4j.model.openai.internal.moderation.ModerationResponse;
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
@@ -203,7 +203,8 @@ public interface OpenAiRestApi {
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            return new HttpException(response.getStatus(), response.readEntity(String.class));
+            return new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
+                    response.getStringHeaders());
         }
         return null;
     }
