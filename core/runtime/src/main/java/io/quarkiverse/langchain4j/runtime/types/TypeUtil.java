@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.types;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.concurrent.Flow;
 
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.service.Result;
@@ -19,6 +20,18 @@ public final class TypeUtil {
 
     public static boolean isMulti(Type returnType) {
         return isTypeOf(returnType, Multi.class);
+    }
+
+    public static boolean isFlowPublisher(Type returnType) {
+        return isTypeOf(returnType, Flow.Publisher.class);
+    }
+
+    /**
+     * Returns true for the return types implemented by the {@code Multi} path, as {@code Multi} implements
+     * {@code Flow.Publisher}.
+     */
+    public static boolean isMultiOrFlowPublisher(Type returnType) {
+        return isMulti(returnType) || isFlowPublisher(returnType);
     }
 
     public static boolean isResult(Type returnType) {

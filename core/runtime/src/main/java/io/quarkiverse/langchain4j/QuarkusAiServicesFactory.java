@@ -136,6 +136,8 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                 }
             }
 
+            quarkusAiServiceContext().dispatchTokenStreamToolExecution(methodCreateInfos);
+
             try {
                 return (T) Class.forName(classCreateInfo.implClassName(), true, Thread.currentThread()
                         .getContextClassLoader()).getConstructor(QuarkusAiServiceContext.class)

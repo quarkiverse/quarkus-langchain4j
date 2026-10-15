@@ -282,6 +282,8 @@ AI Services can stream responses from the LLM token-by-token. Define the method 
 Multi<String> chat(@UserMessage String userMessage);
 ----
 
+`Flow.Publisher<String>` and `Flow.Publisher<ChatEvent>` are supported as well, and behave like their `Multi` counterparts.
+
 You can consume the stream internally:
 
 [source,java]

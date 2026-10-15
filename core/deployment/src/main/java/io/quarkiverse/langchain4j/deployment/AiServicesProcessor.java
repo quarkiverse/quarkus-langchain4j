@@ -16,7 +16,7 @@ import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVar
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
 import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
-import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMulti;
+import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMultiOrFlowPublisher;
 import static io.quarkus.arc.processor.DotNames.NAMED;
 import static io.quarkus.arc.processor.DotNames.SINGLETON;
 
@@ -1109,7 +1109,7 @@ public class AiServicesProcessor {
                     continue;
                 }
 
-                if (!DotNames.MULTI.equals(method.returnType().name())) {
+                if (!returnsMultiOrFlowPublisher(method)) {
                     continue;
                 }
                 boolean isSupportedResponseType = false;
@@ -1121,7 +1121,8 @@ public class AiServicesProcessor {
                     }
                 }
                 if (!isSupportedResponseType) {
-                    throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
+                    throw illegalConfiguration("Only Multi<String>, Multi<ChatEvent>, Flow.Publisher<String> and "
+                            + "Flow.Publisher<ChatEvent> are supported as streamed return types. Offending method is '"
                             + method.declaringClass().name().toString() + "#" + method.name() + "'");
                 }
                 injectStreamingChatModelBean = true;
@@ -1444,6 +1445,9 @@ public class AiServicesProcessor {
      * tools returning `Uni`, `CompletionStage` or that are blocking.
      * Basically, for "reactive AI service method, the switch is necessary except if all the tools are imperative (return `T`)
      * and marked explicitly as blocking (using `@Blocking`).
+     * `Flow.Publisher` methods are implemented like `Multi` ones. `TokenStream` methods are implemented by the upstream
+     * LangChain4j `AiServiceTokenStream`, which executes the tools on the thread that delivers the model response rather
+     * than on the caller thread, and that thread is an event loop for the Vert.x based model clients.
      *
      * @param method the AI method
      * @param tools the tools
@@ -1458,7 +1462,8 @@ public class AiServicesProcessor {
             IndexView index) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
-                || method.returnType().name().equals(DotNames.MULTI);
+                || returnsMultiOrFlowPublisher(method)
+                || method.returnType().name().equals(LangChain4jDotNames.TOKEN_STREAM);
 
         boolean requireSwitchToWorkerThread = false;
 
@@ -1504,6 +1509,11 @@ public class AiServicesProcessor {
             }
         }
         return requireSwitchToWorkerThread;
+    }
+
+    private static boolean returnsMultiOrFlowPublisher(MethodInfo method) {
+        DotName returnType = method.returnType().name();
+        return DotNames.MULTI.equals(returnType) || DotNames.FLOW_PUBLISHER.equals(returnType);
     }
 
     private static boolean isToolDeclaredInHierarchy(String declaringClassName, String toolClassName, IndexView index) {
@@ -1564,11 +1574,11 @@ public class AiServicesProcessor {
                 }
 
                 // Check that the accumulator is used on a method retuning a Multi
-                DotName returnedType = method.getMethodInfo().returnType().name();
-                if (!DotName.createSimple(Multi.class).equals(returnedType)) {
+                if (!returnsMultiOrFlowPublisher(method.getMethodInfo())) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
                             new DeploymentException("OutputGuardrailAccumulator can only be used on method returning a " +
-                                    "`Multi<X>`: found `%s` for method `%s.%s`".formatted(returnedType,
+                                    "`Multi<X>` or a `Flow.Publisher<X>`: found `%s` for method `%s.%s`".formatted(
+                                            method.getMethodInfo().returnType().name(),
                                             method.getMethodInfo().declaringClass().toString(),
                                             method.getMethodInfo().name()))));
                 }
@@ -2199,7 +2209,7 @@ public class AiServicesProcessor {
 
     private static OutputGuardrailsLiteral gatherOutputGuardrails(MethodInfo method, String methodReturnTypeSignature) {
         var annotationInstance = getGuardrailsAnnotation(method, LangChain4jDotNames.OUTPUT_GUARDRAILS);
-        var methodReturnsMulti = TypeUtil.isMulti(TypeSignatureParser.parse(methodReturnTypeSignature));
+        var methodReturnsMulti = TypeUtil.isMultiOrFlowPublisher(TypeSignatureParser.parse(methodReturnTypeSignature));
         var maxRetriesAsSetByConfig = annotationInstance
                 .map(v -> v.value("maxRetries"))
                 .map(AnnotationValue::asInt)
@@ -2241,7 +2251,7 @@ public class AiServicesProcessor {
     }
 
     private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {
-        if (isMulti(returnType)) {
+        if (isMultiOrFlowPublisher(returnType)) {
             return Optional.empty();
         }
         // ServiceOutputParser supports collections; JsonSchemas.jsonSchemaFrom only handles POJOs.

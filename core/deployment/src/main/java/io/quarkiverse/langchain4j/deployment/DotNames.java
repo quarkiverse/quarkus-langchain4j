@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Flow;
 
 import jakarta.enterprise.inject.Instance;
 
@@ -61,6 +62,7 @@ public class DotNames {
     public static final DotName LIST = DotName.createSimple(List.class);
     public static final DotName SET = DotName.createSimple(Set.class);
     public static final DotName MULTI = DotName.createSimple(Multi.class);
+    public static final DotName FLOW_PUBLISHER = DotName.createSimple(Flow.Publisher.class);
     public static final DotName UNI = DotName.createSimple(Uni.class);
     public static final DotName BLOCKING = DotName.createSimple(Blocking.class);
     public static final DotName NON_BLOCKING = DotName.createSimple(NonBlocking.class);

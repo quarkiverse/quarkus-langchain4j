@@ -228,7 +228,7 @@ More details on virtual thread support in Quarkus can be found in the https://qu
 
 === Streaming Support
 
-When AI service methods return streams (`Multi<String>`), the model emits each token on the event loop.
+When AI service methods return streams (`Multi<String>`, `Flow.Publisher<String>` or `TokenStream`), the model emits each token on the event loop.
 
 Blocking tools cannot run on the event loop.
 Thus, Quarkus LangChain4j automatically shifts to a worker thread or virtual thread when required.
