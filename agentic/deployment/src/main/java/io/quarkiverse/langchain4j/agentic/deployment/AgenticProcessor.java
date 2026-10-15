@@ -78,6 +78,7 @@ import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.gizmo.CatchBlockCreator;
@@ -88,13 +89,15 @@ import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.gizmo.TryBlock;
+import io.quarkus.runtime.LaunchMode;
 
 public class AgenticProcessor {
 
     private static final Logger log = Logger.getLogger(AgenticProcessor.class);
 
-    private static final MethodDescriptor HANDLER_INVOKE = MethodDescriptor.ofMethod(
-            InvocationHandler.class, "invoke", Object.class, Object.class, Method.class, Object[].class);
+    private static final MethodDescriptor AGENT_INVOKE = MethodDescriptor.ofMethod(
+            AbstractQuarkusAgent.class, "invokeWithDeploymentClassLoader", Object.class,
+            InvocationHandler.class, Object.class, Method.class, Object[].class);
 
     private static final Set<DotName> CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS = Set.of(
             AgenticLangChain4jDotNames.A2A_AGENT,
@@ -119,6 +122,8 @@ public class AgenticProcessor {
     );
 
     private static final DotName INTERCEPTOR_BINDING = DotName.createSimple(jakarta.interceptor.InterceptorBinding.class);
+
+    private static final String INTERNAL_AGENT_PACKAGE_PREFIX = "dev.langchain4j.agentic.";
 
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
@@ -530,6 +535,29 @@ public class AgenticProcessor {
             leafAgentClassNames.add(className.toString());
         }
         recorder.setLeafAgentClassNames(leafAgentClassNames);
+    }
+
+    /**
+     * Creates all agent beans at application startup so that agent creation (which relies on the
+     * deployment classloader) happens on the startup thread, not on the first thread that invokes
+     * an agent. In dev mode this also enables the monitoring used by the Dev UI topology, which
+     * registers every agent as it is created.
+     */
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    @Consume(SyntheticBeansRuntimeInitBuildItem.class)
+    void initializeAgents(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, LaunchModeBuildItem launchMode,
+            AgenticRecorder recorder) {
+        Set<String> agentClassNames = new HashSet<>();
+        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
+            String className = bi.getIface().name().toString();
+            if (!className.startsWith(INTERNAL_AGENT_PACKAGE_PREFIX)) {
+                agentClassNames.add(className);
+            }
+        }
+        if (!agentClassNames.isEmpty()) {
+            recorder.initializeAgents(agentClassNames, launchMode.getLaunchMode() == LaunchMode.DEVELOPMENT);
+        }
     }
 
     @BuildStep
@@ -997,7 +1025,7 @@ public class AgenticProcessor {
      *         var5[2] = var8;
      *         String var9 = var4;
      *         var5[3] = var9;
-     *         return (CarConditions) var10.invoke(this, var11, var5);
+     *         return (CarConditions) invokeWithDeploymentClassLoader(var10, this, var11, var5);
      *     }
      * }
      * }
@@ -1200,7 +1228,7 @@ public class AgenticProcessor {
                 }
             }
 
-            ResultHandle result = mc.invokeInterfaceMethod(HANDLER_INVOKE,
+            ResultHandle result = mc.invokeStaticMethod(AGENT_INVOKE,
                     invocationHandler, mc.getThis(), methodHandle, argsArray);
 
             if ("void".equals(m.returnTypeName)) {

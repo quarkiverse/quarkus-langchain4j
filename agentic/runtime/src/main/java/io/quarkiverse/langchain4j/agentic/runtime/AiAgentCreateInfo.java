@@ -24,10 +24,20 @@ public record AiAgentCreateInfo(String agentClassName, ChatModelInfo chatModelIn
         record FromBeanWithName(String name) implements ChatModelInfo {
             @Override
             public ChatModel resolve(SyntheticCreationalContext<?> cdiContext) {
-                if (NamedConfigUtil.isDefault(name)) {
-                    return cdiContext.getInjectedReference(ChatModel.class);
+                try {
+                    if (NamedConfigUtil.isDefault(name)) {
+                        return cdiContext.getInjectedReference(ChatModel.class);
+                    }
+                    return cdiContext.getInjectedReference(ChatModel.class, ModelName.Literal.of(name));
+                } catch (IllegalArgumentException e) {
+                    // Arc resolves the type of synthetic injection points with the context classloader of the
+                    // thread creating the bean, so the lookup above can fail when an agent bean is created
+                    // from a thread with a different context classloader; fall back to a programmatic lookup
+                    if (NamedConfigUtil.isDefault(name)) {
+                        return Arc.container().instance(ChatModel.class).get();
+                    }
+                    return Arc.container().instance(ChatModel.class, ModelName.Literal.of(name)).get();
                 }
-                return cdiContext.getInjectedReference(ChatModel.class, ModelName.Literal.of(name));
             }
         }
 

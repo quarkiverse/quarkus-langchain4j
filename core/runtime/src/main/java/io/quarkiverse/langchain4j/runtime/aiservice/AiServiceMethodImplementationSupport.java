@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
+import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
@@ -142,8 +143,12 @@ public class AiServiceMethodImplementationSupport {
                                                                                                        // be improved
 
     static {
+        // resolve the providers with the classloader of this class instead of the context classloader
+        // of the current thread: ai service methods can be invoked from threads with a foreign context
+        // classloader, which would make ServiceLoader resolve providers that are not subtypes of the
+        // interface as loaded here
         var defaultMemoryIdProviders = ServiceHelper.loadFactories(
-                DefaultMemoryIdProvider.class);
+                DefaultMemoryIdProvider.class, AiServiceMethodImplementationSupport.class.getClassLoader());
         if (defaultMemoryIdProviders.isEmpty()) {
             DEFAULT_MEMORY_ID_PROVIDERS = Collections.emptyList();
         } else {
@@ -1354,15 +1359,25 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static int getMaxSequentialToolExecutions() {
-        return ConfigProvider.getConfig()
+        return config()
                 .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-executions", Integer.class)
                 .orElse(DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS);
     }
 
     private static int getMaxToolCallsPerResponse() {
-        return ConfigProvider.getConfig()
+        return config()
                 .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
                 .orElse(DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE);
+    }
+
+    /**
+     * The config must be looked up with the classloader of this class instead of the context
+     * classloader of the current thread: invocations can happen on threads whose context classloader
+     * cannot see the deployment's config factory, for example the
+     * {@code jdk.internal.misc.InnocuousThread} that runs {@code java.lang.ref.Cleaner} actions.
+     */
+    private static Config config() {
+        return ConfigProvider.getConfig(AiServiceMethodImplementationSupport.class.getClassLoader());
     }
 
     private static Executor createExecutor() {

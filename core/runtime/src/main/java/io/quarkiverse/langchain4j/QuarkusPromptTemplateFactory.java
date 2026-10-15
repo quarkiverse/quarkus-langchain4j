@@ -50,8 +50,13 @@ public class QuarkusPromptTemplateFactory implements PromptTemplateFactory {
         private static final List<Function<String, String>> customContentFilters;
         static {
             List<Function<String, String>> ccf = new ArrayList<>();
+            // resolve the providers with the classloader of this class instead of the context classloader
+            // of the current thread: templates can be rendered from threads with a foreign context
+            // classloader, which would make ServiceLoader resolve providers that are not subtypes of the
+            // interface as loaded here
             Collection<PromptTemplateFactoryContentFilterProvider> promptTemplateFactoryContentFilterProviders = ServiceHelper
-                    .loadFactories(PromptTemplateFactoryContentFilterProvider.class);
+                    .loadFactories(PromptTemplateFactoryContentFilterProvider.class,
+                            MustacheTemplateVariableStyleParserHook.class.getClassLoader());
             for (PromptTemplateFactoryContentFilterProvider p : promptTemplateFactoryContentFilterProviders) {
                 ccf.add(p.getContentFilter());
             }
