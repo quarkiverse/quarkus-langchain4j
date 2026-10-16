@@ -47,6 +47,7 @@ import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.observability.api.listener.AiServiceResponseReceivedListener;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
+import dev.langchain4j.spi.ExecutorProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.AgentClassCreateInfo;
@@ -80,6 +81,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.gizmo.CatchBlockCreator;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -756,6 +758,17 @@ public class AgenticProcessor {
             }
         }
         recorder.registerSupplierParameterResolver(qualifierNames);
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem registerExecutorProviders() {
+        return ServiceProviderBuildItem.allProvidersFromClassPath(ExecutorProvider.class.getName());
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void registerDefaultExecutorProvider(AgenticRecorder recorder) {
+        recorder.registerDefaultExecutorProvider();
     }
 
     /**
