@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
+import dev.langchain4j.model.openai.internal.decision.DecisionCreateRequest;
 import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkiverse.langchain4j.openai.common.OpenAiApiException;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
@@ -130,6 +131,36 @@ public class OpenAiRestApiSmokeTest extends OpenAiBaseTest {
         assertThat(exception.statusCode()).isEqualTo(429);
         assertThat(exception.header("retry-after")).isEqualTo(Optional.of("7"));
         assertThat(exception.header("retry-after-ms")).isEqualTo(Optional.of("7000"));
+    }
+
+    @Test
+    @Order(5)
+    void decisionsServer200ButAPIError() throws URISyntaxException {
+        wiremock().register(
+                post(urlEqualTo("/v1/decisions"))
+                        .withHeader("Authorization", equalTo("Bearer " + TOKEN))
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(
+                                        """
+                                                {
+                                                    "error": {
+                                                        "message": "The server had an error while processing your request. Sorry about that!",
+                                                        "type": "server_error",
+                                                        "param": null,
+                                                        "code": null
+                                                    }
+                                                }
+                                                """)));
+
+        OpenAiRestApi restApi = createClient();
+
+        DecisionCreateRequest request = new DecisionCreateRequest();
+        request.model = "gpt-6-luna";
+        request.input = "test";
+        assertThatThrownBy(() -> restApi.blockingDecision(request,
+                OpenAiRestApi.ApiMetadata.builder().openAiApiKey(TOKEN).build()))
+                .isInstanceOf(OpenAiApiException.class);
     }
 
     private OpenAiRestApi createClient() throws URISyntaxException {

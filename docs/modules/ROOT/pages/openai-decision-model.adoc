@@ -1,0 +1,100 @@
+= OpenAI Decision Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-openai
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+A decision model evaluates an input against a set of named, typed questions and returns one typed answer per question, instead of generated text.
+Typical uses are classification, routing, gating and grading.
+
+OpenAI provides decision models, such as `gpt-6-luna`, through its https://developers.openai.com/api/docs/guides/decisions[Decisions API].
+
+WARNING: The OpenAI Decisions API is in public beta and the `DecisionModel` API is experimental in LangChain4j. Both may change in future releases.
+
+== Prerequisites
+
+include::./openai-chat-model.adoc[tags=openai-prerequisites]
+
+=== OpenAI Quarkus Extension
+
+To use OpenAI decision models in your Quarkus application, add the `quarkus-langchain4j-openai` extension:
+
+:provider-artifact: quarkus-langchain4j-openai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+== Configuration
+
+include::includes/quarkus-langchain4j-openai.adoc[leveloffset=+1,opts=optional]
+
+The minimum configuration is the OpenAI API key (the model name defaults to `gpt-6-luna`):
+
+[source,properties]
+----
+quarkus.langchain4j.openai.api-key=sk-...
+quarkus.langchain4j.openai.decision-model.model-name=gpt-6-luna
+----
+
+Any server implementing the same API can be used by overriding `quarkus.langchain4j.openai.base-url`.
+
+== Using the Decision Model
+
+Inject the `DecisionModel` bean and call `decide(...)` with a `DecisionRequest`:
+
+[source,java]
+----
+import dev.langchain4j.model.decision.DecisionModel;
+import dev.langchain4j.model.decision.request.ChoiceQuestion;
+import dev.langchain4j.model.decision.request.DecisionRequest;
+import dev.langchain4j.model.decision.request.YesNoQuestion;
+import dev.langchain4j.model.decision.response.ChoiceAnswer;
+import dev.langchain4j.model.decision.response.DecisionResponse;
+import dev.langchain4j.model.decision.response.YesNoAnswer;
+
+@Inject DecisionModel decisionModel;
+
+DecisionRequest request = DecisionRequest.builder()
+        .input("Help! My payouts have been failing for 3 days.")
+        .question("team", ChoiceQuestion.builder()
+                .text("Which team should handle this ticket?")
+                .option("billing", "Payments, payouts, invoices, refunds")
+                .option("support", "Problems using the product")
+                .build())
+        .question("urgent", YesNoQuestion.of("Does this need attention today?"))
+        .build();
+
+DecisionResponse response = decisionModel.decide(request);
+
+ChoiceAnswer team = response.choice("team");      // team.value() is "billing", team.probabilities() has one entry per option
+YesNoAnswer urgent = response.yesNo("urgent");    // urgent.probability() is the probability of "yes"
+----
+
+The input can be a `String`, a `Map` of named values, or a list of `TextContent` and `ImageContent`.
+Images must be inline, as base64 data or `data:` URLs.
+The API can refuse to answer a single question: `response.isRefused("team")` tells it apart from a regular answer.
+
+`decideAsync(...)` returns a `CompletableFuture<DecisionResponse>` for non-blocking callers.
+
+All CDI beans implementing `DecisionModelListener` are automatically registered with the model, and
+`ModelBuilderCustomizer<OpenAiDecisionModel.OpenAiDecisionModelBuilder>` beans can tune the underlying builder.
+
+=== Multiple models
+
+As with the other model types, multiple decision models can be configured by name and injected using `@ModelName`:
+
+[source,properties]
+----
+quarkus.langchain4j.openai.m1.api-key=...
+quarkus.langchain4j.openai.m1.decision-model.model-name=gpt-6-luna
+----
+
+[source,java]
+----
+@Inject @ModelName("m1") DecisionModel decisionModel;
+----
+
+When multiple extensions providing a `DecisionModel` are present, select one with `quarkus.langchain4j.decision-model.provider=openai` (or `quarkus.langchain4j.m1.decision-model.provider` for a named model).
+
+=== Disabling the model
+
+Set `quarkus.langchain4j.openai.decision-model.enabled=false` at build time to stop the extension from providing a `DecisionModel` bean.
+Set `quarkus.langchain4j.openai.enable-integration=false` at runtime to keep the bean but make every call fail with a `ModelDisabledException`, as for the other OpenAI models.

@@ -29,6 +29,8 @@ import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.decision.DecisionModel;
+import dev.langchain4j.model.decision.listener.DecisionModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
@@ -38,6 +40,7 @@ import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.openai.OpenAiAudioTranscriptionModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
+import dev.langchain4j.model.openai.OpenAiDecisionModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
@@ -48,8 +51,10 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.openai.DisabledAudioTranscriptionModel;
+import io.quarkiverse.langchain4j.openai.DisabledDecisionModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiAudioTranscriptionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiDecisionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFactory;
@@ -58,6 +63,7 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.openai.runtime.config.AudioTranscriptionModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.DecisionModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
@@ -98,6 +104,10 @@ public class OpenAiRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<QuarkusOpenAiImageModel.Builder>>> IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiAudioTranscriptionModel.Builder>>> AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<DecisionModelListener>> DECISION_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiDecisionModel.OpenAiDecisionModelBuilder>>> DECISION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
@@ -750,6 +760,58 @@ public class OpenAiRecorder {
     }
 
     @SuppressWarnings({ "removal" })
+    public Function<SyntheticCreationalContext<DecisionModel>, DecisionModel> decisionModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
+            }
+            DecisionModelConfig decisionModelConfig = openAiConfig.decisionModel();
+            var builder = (QuarkusOpenAiDecisionModelBuilderFactory.Builder) OpenAiDecisionModel.builder();
+            builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
+            builder
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
+                    .configName(configName)
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .maxRetries(openAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, decisionModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, decisionModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(decisionModelConfig.modelName());
+
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
+
+            return new Function<>() {
+                @Override
+                public DecisionModel apply(SyntheticCreationalContext<DecisionModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
+                    builder.listeners(context.getInjectedReference(DECISION_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(DECISION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    Optional<Proxy> decisionProxy = resolveProxy(openAiConfig, proxyRegistry);
+                    if (decisionProxy.isPresent()) {
+                        builder.proxy(decisionProxy.get());
+                    }
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public DecisionModel apply(SyntheticCreationalContext<DecisionModel> context) {
+                    return new DisabledDecisionModel();
+                }
+            };
+        }
+    }
+
     private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
             ProxyConfigurationRegistry proxyRegistry) {
 
