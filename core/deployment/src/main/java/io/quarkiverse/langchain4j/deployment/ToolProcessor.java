@@ -454,7 +454,7 @@ public class ToolProcessor {
                     ToolMethodCreateInfo methodCreateInfo = new ToolMethodCreateInfo(
                             toolMethod.name(), invokerClassName,
                             toolSpecification, argumentMapperClassName, determineExecutionModel(toolMethod),
-                            returnBehaviorEnum,
+                            returnsAsyncResult(toolMethod), returnBehaviorEnum,
                             inputGuardrails,
                             outputGuardrails);
 
@@ -1173,6 +1173,11 @@ public class ToolProcessor {
             return ToolMethodCreateInfo.ExecutionModel.VIRTUAL_THREAD;
         }
         return ToolMethodCreateInfo.ExecutionModel.BLOCKING;
+    }
+
+    private static boolean returnsAsyncResult(MethodInfo methodInfo) {
+        DotName returnedType = methodInfo.returnType().name();
+        return UNI.equals(returnedType) || MULTI.equals(returnedType) || COMPLETION_STAGE.equals(returnedType);
     }
 
     /**

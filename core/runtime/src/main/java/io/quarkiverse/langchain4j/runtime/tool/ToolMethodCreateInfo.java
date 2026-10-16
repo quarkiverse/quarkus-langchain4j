@@ -11,6 +11,7 @@ public record ToolMethodCreateInfo(String methodName,
         ToolSpecification toolSpecification,
         String argumentMapperClassName,
         ExecutionModel executionModel,
+        boolean returnsAsyncResult,
         ReturnBehavior returnBehavior,
         ToolInputGuardrailsLiteral inputGuardrails,
         ToolOutputGuardrailsLiteral outputGuardrails) {
@@ -19,6 +20,14 @@ public record ToolMethodCreateInfo(String methodName,
         BLOCKING,
         NON_BLOCKING,
         VIRTUAL_THREAD
+    }
+
+    /**
+     * Whether the tool can be executed on an event loop: it must be non-blocking and not return an asynchronous result
+     * ({@code Uni}, {@code Multi} or {@code CompletionStage}), since the tool executor waits for the result.
+     */
+    public boolean canRunOnEventLoop() {
+        return executionModel == ExecutionModel.NON_BLOCKING && !returnsAsyncResult;
     }
 
     /**

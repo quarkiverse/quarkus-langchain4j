@@ -216,7 +216,8 @@ public class AiServiceMethodImplementationSupport {
 
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, InvocationContext invocationContext,
             QuarkusAiServiceContext context) {
-        if (TypeUtil.isMulti(methodCreateInfo.getReturnType()) && !BlockingOperationControl.isBlockingAllowed()) {
+        if (TypeUtil.isMultiOrFlowPublisher(methodCreateInfo.getReturnType())
+                && !BlockingOperationControl.isBlockingAllowed()) {
             // this a special case where we can't block, so we need to delegate the to a worker pool
             // as so many of the things done in LangChain4j are blocking
             return Multi.createFrom().deferred(
@@ -246,7 +247,7 @@ public class AiServiceMethodImplementationSupport {
         Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
 
         Type returnType = methodCreateInfo.getReturnType();
-        boolean isMulti = TypeUtil.isMulti(returnType);
+        boolean isMulti = TypeUtil.isMultiOrFlowPublisher(returnType);
 
         final boolean isStringMulti = (isMulti && returnType instanceof ParameterizedType
                 && TypeUtil.isTypeOf(((ParameterizedType) returnType).getActualTypeArguments()[0], String.class));

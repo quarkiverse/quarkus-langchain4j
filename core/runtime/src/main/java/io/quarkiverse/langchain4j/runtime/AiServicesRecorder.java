@@ -405,6 +405,9 @@ public class AiServicesRecorder {
                         aiServiceContext.classLevelSkillNames = info.skillNames();
                     }
 
+                    aiServiceContext.dispatchTokenStreamToolExecution(
+                            metadata.get(info.serviceClassName()).methodMap().values());
+
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);
