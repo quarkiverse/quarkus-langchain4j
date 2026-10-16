@@ -30,7 +30,6 @@ import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.chat.response.PartialResponse;
 import dev.langchain4j.model.chat.response.PartialResponseContext;
 import dev.langchain4j.model.chat.response.PartialThinking;
@@ -500,13 +499,14 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     @Override
                     public void run() {
                         try {
+                            // Copy the provider's own metadata instance instead of rebuilding a plain
+                            // ChatResponseMetadata, so provider-specific subclasses (and the extra fields
+                            // they carry) survive. Only the token usage is replaced, with the total
+                            // accumulated over all tool calling round trips.
                             ChatResponse finalChatResponse = ChatResponse.builder()
                                     .aiMessage(aiMessage)
-                                    .metadata(ChatResponseMetadata.builder()
-                                            .id(completeResponse.metadata().id())
-                                            .modelName(completeResponse.metadata().modelName())
+                                    .metadata(completeResponse.metadata().toBuilder()
                                             .tokenUsage(TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()))
-                                            .finishReason(completeResponse.metadata().finishReason())
                                             .build())
                                     .build();
                             fireInvocationComplete(finalChatResponse);
