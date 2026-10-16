@@ -248,6 +248,9 @@ Multi<Fraud> detectAmountFraudForCustomerStreamed(long customerId);
 When the request scope is active, tool invocations can inherit it, enabling propagation of transactional or security contexts.
 This applies even when running on virtual threads or worker threads.
 
+Security annotations such as `@RolesAllowed` on a tool method of a CDI bean are enforced against the identity of the caller of the AI service, provided the request scope is propagated as described above.
+When the check fails, the tool is not invoked and the failure is reported as a tool execution error: by default it is logged and returned to the model, and it can be customized with `@HandleToolExecutionError`.
+
 == Dynamically Providing Tools
 
 Instead of declaring tools statically, you can provide them dynamically using `ToolProvider`.
