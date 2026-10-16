@@ -1,0 +1,77 @@
+= Hibernate ORM Chat Memory Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The Hibernate ORM chat memory store persists ordered message snapshots in a relational database using a Quarkus-managed persistence unit.
+It registers a `ChatMemoryStore` bean, replacing the default in-memory store used by AI services.
+See xref:messages-and-memory.adoc[Messages and Memory] for memory windows and memory IDs.
+
+== Dependency and configuration
+
+:provider-artifact: quarkus-langchain4j-memory-store-hibernate
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+Add the Quarkus JDBC driver for your database, for example `io.quarkus:quarkus-jdbc-postgresql`.
+Configure the datasource and schema management through https://quarkus.io/guides/hibernate-orm[Quarkus Hibernate ORM]:
+
+[source,properties]
+----
+quarkus.datasource.db-kind=postgresql
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/app
+quarkus.datasource.username=app
+quarkus.datasource.password=${DATABASE_PASSWORD}
+quarkus.hibernate-orm.schema-management.strategy=validate
+----
+
+The extension registers its entity automatically in the default persistence unit.
+It uses the selected persistence unit's dialect and schema management; it does not run its own table-creation SQL.
+Provision the schema with your normal migration tooling before using `validate` in production.
+For a disposable development database, `drop-and-create` can create the table, but it deletes existing conversations on startup.
+
+== Named persistence unit
+
+By default, the store uses the default persistence unit.
+To select a named unit:
+
+[source,properties]
+----
+quarkus.datasource.memory.db-kind=postgresql
+quarkus.datasource.memory.jdbc.url=jdbc:postgresql://localhost:5432/memory
+quarkus.datasource.memory.username=app
+quarkus.datasource.memory.password=${DATABASE_PASSWORD}
+quarkus.hibernate-orm.memory.datasource=memory
+quarkus.hibernate-orm.memory.packages=io.quarkiverse.langchain4j.memorystore.hibernate.runtime.model
+quarkus.hibernate-orm.memory.schema-management.strategy=validate
+quarkus.langchain4j.memorystore.hibernate.persistence-unit-name=memory
+----
+
+When using multiple persistence units, Hibernate ORM requires package mappings for every unit.
+Include the chat memory model package in the selected unit, and keep application entity packages in their own units.
+The extension also explicitly assigns its entity to the selected unit.
+Selecting an unknown unit fails at build time.
+
+== Storage contract
+
+The `langchain4j_chat_memory` table contains `memory_id` (primary key, 255 characters), `messages_json` (large text) and `version` (optimistic lock).
+Column SQL types follow the Hibernate dialect and physical naming strategy.
+Messages are serialized with the existing Quarkus chat-message JSON codec, preserving order, tool call IDs and supported message contents.
+Each update replaces the full snapshot; this is not an append-only transcript.
+
+Memory IDs are converted with `toString()` and must be nonempty and at most 255 UTF-16 code units.
+Different ID objects with the same string refer to the same conversation, so use stable, unique IDs.
+Each operation opens a short independent transaction; it does not join a surrounding application transaction and never closes the Quarkus-managed session factory.
+
+Optimistic locking rejects overlapping updates to the same existing snapshot.
+Concurrent inserts of a new ID can fail with a primary-key conflict.
+These checks do not serialize an entire AI turn: applications must coordinate concurrent conversations sharing a memory ID.
+
+`deleteMessages` removes the persisted snapshot, including when called through `ChatMemoryRemover`.
+Database persistence alone does not change AI-service scope cleanup or implement persistent chat-scope passivation.
+Choose the appropriate xref:chat-scopes.adoc[chat-scope lifecycle] for your application; do not assume that a database-backed store prevents lifecycle-driven deletion.
+
+== Configuration reference
+
+The persistence unit selection is fixed at build time.
+
+include::includes/quarkus-langchain4j-memory-store-hibernate.adoc[leveloffset=+1,opts=optional]
