@@ -49,14 +49,19 @@ public class JsonReportFormatter implements ReportFormatter {
         json.append(",").append(newline);
         appendField(json, "trials", String.valueOf(report.trials()), indent, newline);
         json.append(",").append(newline);
+        appendField(json, "advisoryScore", String.format("%.2f", report.advisoryScore()), indent, newline);
+        json.append(",").append(newline);
 
-        long passed = report.evaluations().stream().filter(Scorer.EvaluationResult::passed).count();
-        long failed = report.evaluations().size() - passed;
+        long advisory = report.evaluations().stream().filter(Scorer.EvaluationResult::advisory).count();
+        long passed = report.evaluations().stream().filter(e -> !e.advisory() && e.passed()).count();
+        long failed = report.evaluations().size() - advisory - passed;
         long samples = report.evaluations().stream().map(e -> e.sample().name()).distinct().count();
 
         appendField(json, "totalSamples", String.valueOf(samples), indent, newline);
         json.append(",").append(newline);
         appendField(json, "totalEvaluations", String.valueOf(report.evaluations().size()), indent, newline);
+        json.append(",").append(newline);
+        appendField(json, "advisoryEvaluations", String.valueOf(advisory), indent, newline);
         json.append(",").append(newline);
         appendField(json, "passed", String.valueOf(passed), indent, newline);
         json.append(",").append(newline);
@@ -96,6 +101,8 @@ public class JsonReportFormatter implements ReportFormatter {
             appendField(json, "name", escapeJson(eval.sample().name()), indent + indent + indent, newline);
             json.append(",").append(newline);
             appendField(json, "passed", String.valueOf(eval.passed()), indent + indent + indent, newline);
+            json.append(",").append(newline);
+            appendField(json, "advisory", String.valueOf(eval.advisory()), indent + indent + indent, newline);
             json.append(",").append(newline);
             appendField(json, "expectedOutput", escapeJson(String.valueOf(eval.sample().expectedOutput())),
                     indent + indent + indent, newline);
