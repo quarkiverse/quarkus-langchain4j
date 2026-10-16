@@ -38,8 +38,13 @@ public class MarkdownReportFormatter implements ReportFormatter {
             buffer.append("**Trials per sample**: ").append(report.trials()).append("\n\n");
         }
 
-        // Extract all unique tags from evaluations
-        List<String> tags = report.evaluations().stream()
+        List<Scorer.EvaluationResult<T>> blockingResults = report.evaluations().stream().filter(e -> !e.advisory()).toList();
+        List<Scorer.EvaluationResult<T>> advisoryResults = report.evaluations().stream()
+                .filter(Scorer.EvaluationResult::advisory)
+                .toList();
+
+        // Extract all unique tags from the evaluations that count toward the score
+        List<String> tags = blockingResults.stream()
                 .flatMap(e -> e.sample().tags().stream())
                 .distinct()
                 .toList();
@@ -56,22 +61,39 @@ public class MarkdownReportFormatter implements ReportFormatter {
             buffer.append("\n");
         }
 
+        // Advisory section: reported, but not counted
+        if (!advisoryResults.isEmpty()) {
+            buffer.append("## Advisory\n\n");
+            buffer.append("**Advisory Score**: ").append(String.format("%.2f", report.advisoryScore()))
+                    .append("% (not counted in the global score)\n\n");
+            for (Scorer.EvaluationResult<T> evaluation : advisoryResults) {
+                buffer.append("- ").append(evaluation.sample().name()).append(": ")
+                        .append(evaluation.passed() ? "PASSED" : "FAILED").append(" (")
+                        .append(String.format("%.2f", evaluation.score() * 100)).append("%)");
+                if (evaluation.explanation() != null && !evaluation.explanation().isEmpty()) {
+                    buffer.append(" - ").append(evaluation.explanation());
+                }
+                buffer.append("\n");
+            }
+            buffer.append("\n");
+        }
+
         // Details section
         buffer.append("## Details\n\n");
         String detailHeader = includeDetails ? "### " : "- ";
 
         if (report.trials() > 1) {
-            List<String> sampleNames = report.evaluations().stream()
+            List<String> sampleNames = blockingResults.stream()
                     .map(e -> e.sample().name())
                     .distinct()
                     .toList();
             for (String name : sampleNames) {
-                long total = report.evaluations().stream().filter(e -> e.sample().name().equals(name)).count();
-                long passed = report.evaluations().stream()
+                long total = blockingResults.stream().filter(e -> e.sample().name().equals(name)).count();
+                long passed = blockingResults.stream()
                         .filter(e -> e.sample().name().equals(name) && e.passed()).count();
                 buffer.append("- ").append(name).append(": ")
-                        .append(passed).append("/").append(total).append(" evaluations passed")
-                        .append(" (" + String.format("%.2f", report.scoreForSample(name)) + "%)")
+                        .append(passed).append("/").append(total).append(" evaluations passed").append(" (")
+                        .append(String.format("%.2f", report.scoreForSample(name))).append("%)")
                         .append("\n");
             }
             if (!includeDetails) {
@@ -80,12 +102,12 @@ public class MarkdownReportFormatter implements ReportFormatter {
             buffer.append("\n");
         }
 
-        for (Scorer.EvaluationResult<T> evaluation : report.evaluations()) {
+        for (Scorer.EvaluationResult<T> evaluation : blockingResults) {
             buffer.append(detailHeader)
                     .append(evaluation.sample().name())
                     .append(": ")
-                    .append(evaluation.passed() ? "PASSED" : "FAILED")
-                    .append(" (" + String.format("%.2f", evaluation.score() * 100) + "%" + ")")
+                    .append(evaluation.passed() ? "PASSED" : "FAILED").append(" (")
+                    .append(String.format("%.2f", evaluation.score() * 100)).append("%").append(")")
                     .append("\n");
 
             if (includeDetails) {

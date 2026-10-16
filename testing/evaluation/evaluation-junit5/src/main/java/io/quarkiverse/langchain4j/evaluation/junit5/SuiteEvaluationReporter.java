@@ -212,8 +212,8 @@ public class SuiteEvaluationReporter implements BeforeEachCallback, AfterEachCal
         double totalScore = 0.0;
 
         for (EvaluationReport<?> report : SUITE_REPORTS.values()) {
-            int reportEvaluations = report.evaluations().size();
-            long reportPassed = report.evaluations().stream().filter(e -> e.passed()).count();
+            int reportEvaluations = (int) report.evaluations().stream().filter(e -> !e.advisory()).count();
+            long reportPassed = report.evaluations().stream().filter(e -> !e.advisory() && e.passed()).count();
 
             totalEvaluations += reportEvaluations;
             totalPassed += reportPassed;
@@ -252,8 +252,8 @@ public class SuiteEvaluationReporter implements BeforeEachCallback, AfterEachCal
         md.append("|------------|-------------|--------|--------|-------|\n");
 
         SUITE_REPORTS.forEach((key, report) -> {
-            int evals = report.evaluations().size();
-            long passed = report.evaluations().stream().filter(e -> e.passed()).count();
+            int evals = (int) report.evaluations().stream().filter(e -> !e.advisory()).count();
+            long passed = report.evaluations().stream().filter(e -> !e.advisory() && e.passed()).count();
             long failed = evals - passed;
 
             md.append(String.format("| %s | %d | %d | %d | %.2f%% |\n",
@@ -281,8 +281,8 @@ public class SuiteEvaluationReporter implements BeforeEachCallback, AfterEachCal
 
         List<String> reportEntries = new ArrayList<>();
         SUITE_REPORTS.forEach((key, report) -> {
-            int evals = report.evaluations().size();
-            long passed = report.evaluations().stream().filter(e -> e.passed()).count();
+            int evals = (int) report.evaluations().stream().filter(e -> !e.advisory()).count();
+            long passed = report.evaluations().stream().filter(e -> !e.advisory() && e.passed()).count();
             long failed = evals - passed;
 
             String entry = String.format(

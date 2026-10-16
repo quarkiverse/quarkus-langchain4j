@@ -152,4 +152,51 @@ class MarkdownReportFormatterTest {
         assertThat(output).contains("- Sample1: 1/2 evaluations passed (50.00%)");
         assertThat(output).contains("- Sample2: 2/2 evaluations passed (100.00%)");
     }
+
+    @Test
+    void shouldReportAdvisoryEvaluationsSeparately() {
+        EvaluationSample<String> sample1 = new EvaluationSample<>("Sample1", new Parameters(), "expected", List.of("tag1"));
+        EvaluationSample<String> sample2 = new EvaluationSample<>("Sample2", new Parameters(), "expected", List.of("tag1"));
+        List<Scorer.EvaluationResult<String>> results = List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample1, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample1, "expected", EvaluationResult.failed("too terse"),
+                        true),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample2, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample2, "expected", EvaluationResult.passed(1.0), true));
+        EvaluationReport<String> report = new EvaluationReport<>(results);
+
+        String output = new MarkdownReportFormatter().format(report, Map.of());
+
+        assertThat(output).contains("**Global Score**: 100.00%");
+        assertThat(output).contains("- **tag1**: 100.00%");
+        assertThat(output).contains("## Advisory\n\n**Advisory Score**: 50.00% (not counted in the global score)");
+        assertThat(output).contains("- Sample1: FAILED (0.00%) - too terse");
+        assertThat(output).contains("- Sample2: PASSED (100.00%)");
+        // the blocking details list only the blocking evaluations
+        assertThat(output.substring(output.indexOf("## Details"))).doesNotContain("FAILED");
+    }
+
+    @Test
+    void shouldNotReportAdvisorySectionWithoutAdvisoryEvaluations() {
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "expected", EvaluationResult.fromBoolean(true))));
+
+        assertThat(new MarkdownReportFormatter().format(report, Map.of())).doesNotContain("## Advisory");
+    }
+
+    @Test
+    void tagsOnlyOnAdvisoryEvaluationsShouldNotBeScored() {
+        EvaluationSample<String> blocking = new EvaluationSample<>("B", new Parameters(), "expected", List.of("core"));
+        EvaluationSample<String> advisory = new EvaluationSample<>("A", new Parameters(), "expected", List.of("tone"));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(blocking, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(advisory, "expected", EvaluationResult.fromBoolean(true),
+                        true)));
+
+        String output = new MarkdownReportFormatter().format(report, Map.of());
+
+        assertThat(output).contains("- **core**: 100.00%");
+        assertThat(output).doesNotContain("**tone**");
+    }
 }

@@ -187,6 +187,49 @@ class EvaluationReportTest {
     }
 
     @Test
+    void advisoryEvaluationsShouldNotAffectScores() {
+        EvaluationSample<String> a = new EvaluationSample<>("A", new Parameters(), "expected", List.of("t"));
+        EvaluationSample<String> b = new EvaluationSample<>("B", new Parameters(), "expected", List.of("t"));
+        List<Scorer.EvaluationResult<String>> results = List.of(
+                blocking(a, true), advisory(a, false),
+                blocking(b, true), advisory(b, true));
+        EvaluationReport<String> report = new EvaluationReport<>(results);
+
+        assertThat(report.score()).isEqualTo(100.0);
+        assertThat(report.scoreForTag("t")).isEqualTo(100.0);
+        assertThat(report.scoreForSample("A")).isEqualTo(100.0);
+        assertThat(report.standardError()).isEqualTo(0.0);
+        assertThat(report.confidenceInterval()).isEqualTo(new EvaluationReport.Interval(100.0, 100.0));
+        assertThat(report.advisoryScore()).isEqualTo(50.0);
+    }
+
+    @Test
+    void advisoryScoreShouldBeZeroWithoutAdvisoryEvaluations() {
+        EvaluationSample<String> a = new EvaluationSample<>("A", new Parameters(), "expected", List.of());
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(blocking(a, true)));
+
+        assertThat(report.advisoryScore()).isEqualTo(0.0);
+        assertThat(report.score()).isEqualTo(100.0);
+    }
+
+    @Test
+    void scoreShouldBeZeroWhenAllEvaluationsAreAdvisory() {
+        EvaluationSample<String> a = new EvaluationSample<>("A", new Parameters(), "expected", List.of());
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(advisory(a, true)));
+
+        assertThat(report.score()).isEqualTo(0.0);
+        assertThat(report.advisoryScore()).isEqualTo(100.0);
+    }
+
+    private static Scorer.EvaluationResult<String> blocking(EvaluationSample<String> sample, boolean passed) {
+        return Scorer.EvaluationResult.fromCompletedEvaluation(sample, "x", EvaluationResult.fromBoolean(passed));
+    }
+
+    private static Scorer.EvaluationResult<String> advisory(EvaluationSample<String> sample, boolean passed) {
+        return Scorer.EvaluationResult.fromCompletedEvaluation(sample, "x", EvaluationResult.fromBoolean(passed), true);
+    }
+
+    @Test
     void trialsMustBeAtLeastOne() {
         assertThatThrownBy(() -> new EvaluationReport<String>(List.of(), 0))
                 .isInstanceOf(IllegalArgumentException.class)

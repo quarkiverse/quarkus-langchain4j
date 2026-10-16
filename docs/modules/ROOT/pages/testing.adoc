@@ -23,6 +23,7 @@ The evaluation framework provides:
 
 - **Concurrent Evaluation** - Execute evaluations in parallel with configurable concurrency
 - **Repeated Trials** - Run each sample several times and get a confidence interval instead of a single, noisy score
+- **Advisory Strategies** - Report the verdict of a noisy check such as an AI judge without letting it fail the build
 - **Fluent Builder API** - Readable, chainable evaluation definitions (samples, evaluation strategy, reporting)
 - **Rich Evaluation Results** - Scores, explanations, and metadata for detailed analysis
 - **Multiple Evaluation Strategies** - Semantic similarity, AI judge, and custom strategies
@@ -468,6 +469,45 @@ Strategies return an `EvaluationResult` which can be created using:
         .withMetadata(Map.of("similarityScore", 0.95, "method", "cosine"));
 ----
 
+==== Advisory Strategies
+
+Not every check deserves to fail the build. An exact match or a JSON schema check is deterministic, but an AI judge
+gives a different verdict from one day to the next, and a build that goes red because the judge changed its mind
+teaches people to ignore red builds. The usual practice is to let deterministic checks block and to keep the judge
+advisory: it still runs on every sample and its verdicts are in the report, but they do not count toward the score,
+the confidence interval, the tag scores or the assertions.
+
+Wrap any strategy with `EvaluationStrategy.toAdvisory(...)` to make it advisory:
+
+[source,java]
+----
+EvaluationReport<String> report = scorer.evaluate(samples, function,
+        new ExactMatchStrategy(),                                  // blocks
+        EvaluationStrategy.toAdvisory(new AiJudgeStrategy(model)));  // reported only
+
+assertThat(report).hasScoreGreaterThanOrEqualTo(90.0);  // the judge cannot fail this
+double judgeAgreement = report.advisoryScore();          // but you can still see how it did
+----
+
+The wrapper works with the fluent builder's `using(...)` and with `@Evaluate` tests, since both forward strategies to
+the `Scorer`. A custom strategy can also override `isAdvisory()` directly. The report lists advisory results under their
+own heading, with their own pass rate:
+
+[source,markdown]
+----
+**Global Score**: 100.00% (95% CI: 100.00% - 100.00%)
+
+## Advisory
+
+**Advisory Score**: 62.50% (not counted in the global score)
+
+- greeting: PASSED (100.00%)
+- refund policy: FAILED (0.00%) - The answer omits the 30-day limit
+...
+----
+
+If every strategy is advisory, nothing counts toward the score and it is 0.
+
 === Evaluation Report
 
 The `EvaluationReport` aggregates the results of all evaluations.
@@ -477,6 +517,7 @@ It provides:
 * The standard error and 95% confidence interval of the score, overall and per tag
 * Scores per tag (for categorized evaluations)
 * Scores per sample across trials (see <<_trials_and_confidence_intervals>>)
+* The score of the advisory evaluations, kept apart from the global score (see <<_advisory_strategies>>)
 * Access to individual evaluation results with scores, explanations, and metadata
 * Report generation in multiple formats (Markdown, JSON, or custom formats)
 
