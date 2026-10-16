@@ -132,4 +132,24 @@ class MarkdownReportFormatterTest {
         assertThat(markdown).contains("## Details");
         assertThat(markdown).doesNotContain("## Score per tags");
     }
+
+    @Test
+    void shouldReportTrialsAndConfidenceInterval() {
+        EvaluationSample<String> sample1 = new EvaluationSample<>("Sample1", new Parameters(), "expected", List.of("tag1"));
+        EvaluationSample<String> sample2 = new EvaluationSample<>("Sample2", new Parameters(), "expected", List.of("tag1"));
+        List<Scorer.EvaluationResult<String>> results = List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample1, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample1, "other", EvaluationResult.fromBoolean(false)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample2, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample2, "expected", EvaluationResult.fromBoolean(true)));
+        EvaluationReport<String> report = new EvaluationReport<>(results, 2);
+
+        String output = new MarkdownReportFormatter().format(report, Map.of());
+
+        assertThat(output).contains("**Global Score**: 75.00% (95% CI: 26.00% - 100.00%)");
+        assertThat(output).contains("**Trials per sample**: 2");
+        assertThat(output).contains("- **tag1**: 75.00% (95% CI: 26.00% - 100.00%)");
+        assertThat(output).contains("- Sample1: 1/2 evaluations passed (50.00%)");
+        assertThat(output).contains("- Sample2: 2/2 evaluations passed (100.00%)");
+    }
 }

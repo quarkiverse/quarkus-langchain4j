@@ -53,6 +53,17 @@ public @interface EvaluationTest {
     double minScore() default 0.0;
 
     /**
+     * Number of times each sample is executed and evaluated (default: 1).
+     * <p>
+     * Running each sample several times makes the score and its confidence interval meaningful
+     * when the function under test is not deterministic.
+     * </p>
+     *
+     * @return the number of trials per sample
+     */
+    int trials() default 1;
+
+    /**
      * Whether to fail fast on the first evaluation failure.
      * <p>
      * When true, evaluation stops at the first failed sample.

@@ -22,6 +22,7 @@ The evaluation framework provides:
 **Core Capabilities:**
 
 - **Concurrent Evaluation** - Execute evaluations in parallel with configurable concurrency
+- **Repeated Trials** - Run each sample several times and get a confidence interval instead of a single, noisy score
 - **Fluent Builder API** - Readable, chainable evaluation definitions (samples, evaluation strategy, reporting)
 - **Rich Evaluation Results** - Scores, explanations, and metadata for detailed analysis
 - **Multiple Evaluation Strategies** - Semantic similarity, AI judge, and custom strategies
@@ -196,6 +197,60 @@ void testAiService(
     assertThat(report.score()).isGreaterThanOrEqualTo(70); // Assert the score
 }
 ----
+
+==== Trials and Confidence Intervals
+
+LLM output is not deterministic: the same sample can pass on one run and fail on the next, so a score computed from a single run per sample moves between runs even when nothing changed.
+Two runs of the same evaluation can easily report 62% and 87%, which makes a fixed `minScore` threshold fail or pass for no reason.
+
+To get a trustworthy score, run each sample several times with the `trials` setting.
+Every trial is executed and evaluated by every strategy, and the score becomes the average pass rate over all trials:
+
+[source,java]
+----
+@Test
+void testAiService(
+        @ScorerConfiguration(concurrency = 4, trials = 5) Scorer scorer, // <1>
+        @SampleLocation("src/test/resources/samples.yaml") Samples<String> samples) {
+
+    EvaluationReport<String> report = scorer.evaluate(samples, function, new SemanticSimilarityStrategy(0.8));
+
+    report.trials();                       // 5
+    report.scoreForSample("hard question"); // pass rate of one sample across its trials
+    report.standardError();                // uncertainty of the score, in percentage points
+    report.confidenceInterval();           // 95% interval of the score, e.g. [63.4, 96.6]
+    report.confidenceIntervalForTag("hard");
+}
+----
+<1> Each sample runs 5 times. The same setting is available as `new Scorer(concurrency, trials)` and `withTrials(5)` on the fluent builder.
+
+The report always carries a 95% confidence interval, even with a single trial.
+It is computed over the per-sample pass rates, so it reflects both the variation between samples and the variation between trials of the same sample.
+Treat two scores whose intervals overlap as indistinguishable.
+The interval collapses to the score itself when the report holds fewer than two samples.
+
+With more than one trial, the Markdown report lists how many evaluations (trials times strategies) passed for each sample, which points directly at the unreliable ones:
+
+[source,markdown]
+----
+**Global Score**: 80.00% (95% CI: 63.43% - 96.57%)
+
+**Trials per sample**: 5
+
+## Score per tags
+
+- **easy**: 100.00% (95% CI: 100.00% - 100.00%)
+- **hard**: 60.00% (95% CI: 44.00% - 76.00%)
+
+## Details
+
+- easy question 1: 5/5 evaluations passed (100.00%)
+- hard question 1: 3/5 evaluations passed (60.00%)
+- hard question 2: 2/5 evaluations passed (40.00%)
+----
+
+Going from one trial to two cuts the variance of the score by a third and going to four halves it, with diminishing returns beyond four to six trials.
+Each trial costs one model call per sample, so start with a small number for the suites that run on every change and use more trials for the suites that run nightly.
 
 ==== Fluent Builder API
 
@@ -419,7 +474,9 @@ The `EvaluationReport` aggregates the results of all evaluations.
 It provides:
 
 * A global score (percentage of passed evaluations, 0.0-100.0)
+* The standard error and 95% confidence interval of the score, overall and per tag
 * Scores per tag (for categorized evaluations)
+* Scores per sample across trials (see <<_trials_and_confidence_intervals>>)
 * Access to individual evaluation results with scores, explanations, and metadata
 * Report generation in multiple formats (Markdown, JSON, or custom formats)
 
@@ -558,10 +615,11 @@ public class DeclarativeEvaluationTest {
         samples = "customer-support-samples.yaml",
         strategy = AiJudgeStrategy.class,
         function = "chatbot",
-        minScore = 85.0
+        minScore = 85.0,
+        trials = 3
     )
     void criticalCustomerSupportEvaluation() {
-        // Higher threshold for critical evaluations
+        // Higher threshold for critical evaluations, each sample evaluated 3 times
     }
 }
 ----
@@ -571,7 +629,7 @@ When using `@EvaluationTest`, the framework automatically:
 - Loads samples from the specified location
 - Injects the evaluation function by name
 - Applies the specified evaluation strategy (the instance is created using a no-arg constructor)
-- Evaluates the samples and generates a report
+- Evaluates the samples, `trials` times each, and generates a report
 
 === Test Templates with @StrategyTest
 

@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.testing.evaluation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -139,5 +141,40 @@ class ScorerTest {
         assertThat(report.score()).isEqualTo(100.0); // Both strategies should pass for the sample.
         assertThat(report.evaluations()).hasSize(2); // One result per strategy.
         report.evaluations().forEach(e -> assertThat(e.passed()).isTrue());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void evaluateShouldRunEachSampleForTheConfiguredNumberOfTrials() {
+        scorer = new Scorer(2, 3);
+
+        EvaluationSample<String> flaky = new EvaluationSample<>(
+                "Flaky", new Parameters().add(new Parameter.UnnamedParameter("flaky")), "ok", List.of("flaky"));
+        EvaluationSample<String> stable = new EvaluationSample<>(
+                "Stable", new Parameters().add(new Parameter.UnnamedParameter("stable")), "ok", List.of("stable"));
+
+        // The flaky sample answers wrongly on every second call, the stable one always answers correctly.
+        AtomicInteger flakyCalls = new AtomicInteger();
+        Function<Parameters, String> function = params -> "flaky".equals(params.get(0))
+                && flakyCalls.incrementAndGet() % 2 == 0 ? "ko" : "ok";
+        EvaluationStrategy<String> strategy = (sample, actual) -> EvaluationResult
+                .fromBoolean(actual.equals(sample.expectedOutput()));
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(flaky, stable), function, strategy);
+
+        assertThat(report.trials()).isEqualTo(3);
+        assertThat(report.evaluations()).hasSize(6);
+        assertThat(report.evaluations().stream().map(e -> e.sample().name()).toList())
+                .containsExactly("Flaky", "Flaky", "Flaky", "Stable", "Stable", "Stable");
+        assertThat(report.scoreForSample("Flaky")).isCloseTo(66.67, within(0.01));
+        assertThat(report.scoreForSample("Stable")).isEqualTo(100.0);
+        assertThat(report.score()).isCloseTo(83.33, within(0.01));
+        assertThat(report.scoreForTag("flaky")).isCloseTo(66.67, within(0.01));
+    }
+
+    @Test
+    void trialsMustBeAtLeastOne() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new Scorer(1, 0))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
