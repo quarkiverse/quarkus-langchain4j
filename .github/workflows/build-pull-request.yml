@@ -37,15 +37,11 @@ jobs:
       all_modules: ${{ steps.matrices.outputs.all_modules }}
       it_modules: ${{ steps.matrices.outputs.it_modules }}
       in_process_embedding_modules: ${{ steps.matrices.outputs.in_process_embedding_modules }}
-      run_mcp_conformance: ${{ steps.matrices.outputs.run_mcp_conformance }}
 
     steps:
       - uses: runs-on/action@v2
 
       - uses: actions/checkout@v4
-        with:
-          # Full history so Scalpel and git diff can compare against the base branch
-          fetch-depth: 0
 
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
@@ -59,48 +55,6 @@ jobs:
 
       - name: Build with Maven
         run: ./mvnw -B clean install -DskipTests -Dno-format -ntp
-
-      - name: Compute impacted set
-        env:
-          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
-          BASE_REF: ${{ github.base_ref }}
-        run: |
-          set -uo pipefail
-          IMPACTED="$GITHUB_WORKSPACE/impacted.txt"
-          rm -f target/scalpel-report.json
-
-          # Escape hatch: ci/disable-scalpel label, or a release/backport base branch -> full build
-          DISABLE=false
-          if echo "$PR_LABELS" | jq -e 'index("ci/disable-scalpel")' >/dev/null 2>&1; then
-            DISABLE=true
-          fi
-          if [[ "$BASE_REF" =~ ^[0-9]+\.[0-9]+ ]] || [[ "$BASE_REF" == *backport* ]]; then
-            DISABLE=true
-          fi
-
-          if [ "$DISABLE" = "true" ]; then
-            echo "Scalpel disabled (label or release/backport base branch) -> full build"
-            echo "ALL" > "$IMPACTED"
-            exit 0
-          fi
-
-          # Run Scalpel in report mode (non-fatal: on error, leave no report so we fail safe to a full build)
-          ./mvnw -q -Dincremental -Dscalpel.mode=report \
-            -Dscalpel.baseBranch="origin/${BASE_REF}" \
-            -Dscalpel.reportFile=target/scalpel-report.json validate \
-            || echo "Scalpel report generation failed; will fail safe to a full build"
-
-          # Force-include jitllm/jinfer: they live in JDK 21+/25+ profiles, absent from the JDK 17 reactor Scalpel sees here
-          FORCED="$GITHUB_WORKSPACE/forced.txt"
-          : > "$FORCED"
-          git diff --name-only "origin/${BASE_REF}...HEAD" \
-            | grep -E '^model-providers/(jitllm|jinfer)/' \
-            | sed -E 's#^(model-providers/(jitllm|jinfer))/.*#\1#' \
-            | sort -u >> "$FORCED" || true
-
-          bash "$GITHUB_WORKSPACE/.github/scalpel/compute-impacted.sh" \
-            target/scalpel-report.json "$FORCED" > "$IMPACTED"
-          echo "Impacted set:"; cat "$IMPACTED"
 
       - name: Zip the Maven repo
         run: |
@@ -118,15 +72,11 @@ jobs:
       - name: Compute matrices
         id: matrices
         run: |
-          IMPACTED="$GITHUB_WORKSPACE/impacted.txt"
-          FILTER="$GITHUB_WORKSPACE/.github/scalpel/filter-modules.sh"
-
           # Compute the JVM tests
           ALL_MODULES=$(find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
                 | jq -R -s -c 'split("\n")[:-1]')
-          ALL_MODULES=$(bash "$FILTER" "$IMPACTED" "" "$ALL_MODULES")
 
           # Integration tests (without the in-process embedding models)
           # Remove Jinfer and JitLLM from the list
@@ -140,7 +90,6 @@ jobs:
                 | grep -v mcp-conformance \
                 | grep -v in-process-embedding-models \
                 | jq -R -s -c 'split("\n")[:-1]')
-          IT_MODULES=$(bash "$FILTER" "$IMPACTED" "integration-tests" "$IT_MODULES")
 
           # We extract in process embedding models as there are many modules and we want parallelism
           cd in-process-embedding-models
@@ -149,16 +98,10 @@ jobs:
                 | sed 's|^\./||' \
                 | sort -u \
                 | jq -R -s -c 'split("\n")[:-1]')
-          IN_PROCESS_EMBEDDING_MODULES=$(bash "$FILTER" "$IMPACTED" "integration-tests/in-process-embedding-models" "$IN_PROCESS_EMBEDDING_MODULES")
-
-          # MCP conformance: run when its module (or anything upstream of it) is impacted
-          MCP=$(bash "$FILTER" "$IMPACTED" "integration-tests" '["mcp-conformance"]')
-          if [ "$MCP" = "[]" ]; then RUN_MCP=false; else RUN_MCP=true; fi
 
           echo "all_modules=${ALL_MODULES}" >> $GITHUB_OUTPUT
           echo "it_modules=${IT_MODULES}" >> $GITHUB_OUTPUT
           echo "in_process_embedding_modules=${IN_PROCESS_EMBEDDING_MODULES}" >> $GITHUB_OUTPUT
-          echo "run_mcp_conformance=${RUN_MCP}" >> $GITHUB_OUTPUT
 
       # Publish build reports
       - name: Prepare build reports archive
@@ -399,7 +342,6 @@ jobs:
 
   mcp-conformance-tests:
     needs: quick-build
-    if: needs.quick-build.outputs.run_mcp_conformance == 'true'
     name: MCP Conformance tests
     runs-on: runs-on=${{ github.run_id }}/runner=linux
     steps:
