@@ -30,8 +30,11 @@ public interface ChatModelConfig {
      * <p>
      * If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the
      * temperature.
+     * <p>
+     * Leave this unset to omit {@code temperature} from the request. Setting it is for older models.
+     * Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those
+     * fields are present.
      */
-    @WithDefault("${quarkus.langchain4j.temperature}")
     OptionalDouble temperature();
 
     /**
@@ -53,6 +56,10 @@ public interface ChatModelConfig {
      * Range: 0.0 - 1.0
      * <p>
      * Default for gemini-2.5-flash: 0.95
+     * <p>
+     * Leave this unset to omit {@code topP} from the request. Setting it is for older models.
+     * Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those
+     * fields are present.
      */
     OptionalDouble topP();
 
@@ -69,6 +76,10 @@ public interface ChatModelConfig {
      * Range: 1-40
      * <p>
      * gemini-2.5-flash doesn't support topK
+     * <p>
+     * Leave this unset to omit {@code topK} from the request. Setting it is for older models.
+     * Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those
+     * fields are present.
      */
     OptionalInt topK();
 
@@ -117,7 +128,23 @@ public interface ChatModelConfig {
          * The thinkingBudget is only supported in Gemini 2.5 Flash, 2.5 Pro, and 2.5 Flash-Lite. Depending on the prompt, the
          * model might overflow or underflow the token budget.
          * See <a href="https://ai.google.dev/gemini-api/docs/thinking#set-budget">Gemini API docs</a> for more details.
+         * <p>
+         * This remains for Gemini 2.5. Upcoming models return HTTP 400 if {@code thinking_budget} is sent.
+         * Do not set this together with {@link #thinkingLevel()}.
          */
         OptionalInt thinkingBudget();
+
+        /**
+         * How much thinking the model does before answering. Replaces {@code thinkingBudget} for Gemini 3 and later.
+         * Allowed values are {@code minimal}, {@code low}, {@code medium}, and {@code high}.
+         * Supported levels vary by model. Omit this property to use the model default.
+         * Gemini 3 Pro uses {@code low} and {@code high}, while other Gemini 3 models may also accept
+         * {@code minimal} and {@code medium}.
+         * <p>
+         * Do not set this together with {@code thinkingBudget}. Upcoming models reject {@code thinking_budget}.
+         *
+         * @see <a href="https://ai.google.dev/gemini-api/docs/thinking">https://ai.google.dev/gemini-api/docs/thinking</a>
+         */
+        Optional<ThinkingLevel> thinkingLevel();
     }
 }

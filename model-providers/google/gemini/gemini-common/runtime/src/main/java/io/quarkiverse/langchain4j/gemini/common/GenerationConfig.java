@@ -3,6 +3,13 @@ package io.quarkiverse.langchain4j.gemini.common;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+/**
+ * Sampling parameters are omitted when null so upcoming Gemini models, which reject
+ * {@code temperature}, {@code topP}, and {@code topK}, can be called without those fields.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GenerationConfig {
 
     private final Double temperature;

@@ -31,7 +31,8 @@ public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true");
+            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.chat-model.thinking.thinking-level", "high");
 
     @Inject
     ChatModel chatLanguageModel;
@@ -106,6 +107,11 @@ public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
         assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("LangChain4j");
         String requestBody = new String(loggedRequest.getBody());
         assertThat(requestBody).contains("hello");
+        assertThat(requestBody).containsPattern("\"thinkingLevel\"\\s*:\\s*\"high\"");
+        assertThat(requestBody).doesNotContain("thinkingBudget");
+        assertThat(requestBody).doesNotContain("\"temperature\"");
+        assertThat(requestBody).doesNotContain("\"topP\"");
+        assertThat(requestBody).doesNotContain("\"topK\"");
     }
 
 }
