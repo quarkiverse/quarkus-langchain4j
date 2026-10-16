@@ -54,6 +54,8 @@ import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
 import dev.langchain4j.model.openai.internal.completion.CompletionResponse;
+import dev.langchain4j.model.openai.internal.decision.DecisionCreateRequest;
+import dev.langchain4j.model.openai.internal.decision.DecisionCreateResponse;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingResponse;
 import dev.langchain4j.model.openai.internal.image.GenerateImagesRequest;
@@ -176,6 +178,20 @@ public interface OpenAiRestApi {
     @Path("moderations")
     @POST
     ModerationResponse blockingModeration(ModerationRequest request, @BeanParam ApiMetadata input);
+
+    /**
+     * Perform a non-blocking request to the Decisions API
+     */
+    @Path("decisions")
+    @POST
+    Uni<DecisionCreateResponse> decision(DecisionCreateRequest request, @BeanParam ApiMetadata input);
+
+    /**
+     * Perform a blocking request to the Decisions API
+     */
+    @Path("decisions")
+    @POST
+    DecisionCreateResponse blockingDecision(DecisionCreateRequest request, @BeanParam ApiMetadata input);
 
     @Path("images/generations")
     @POST
@@ -342,6 +358,11 @@ public interface OpenAiRestApi {
             } else if (result instanceof ModerationResponse r) {
                 if (r.id() == null) {
                     throw new OpenAiApiException(ModerationResponse.class);
+                }
+            } else if (result instanceof DecisionCreateResponse r) {
+                // the response has no id, so the presence of the answers is the only sign of a valid response
+                if (r.answers == null) {
+                    throw new OpenAiApiException(DecisionCreateResponse.class);
                 }
             }
             return result;

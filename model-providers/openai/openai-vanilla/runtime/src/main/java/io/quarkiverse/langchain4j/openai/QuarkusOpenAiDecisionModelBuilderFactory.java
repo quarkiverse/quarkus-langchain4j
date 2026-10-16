@@ -1,0 +1,52 @@
+package io.quarkiverse.langchain4j.openai;
+
+import java.net.Proxy;
+
+import dev.langchain4j.model.openai.OpenAiDecisionModel;
+import dev.langchain4j.model.openai.spi.OpenAiDecisionModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
+
+public class QuarkusOpenAiDecisionModelBuilderFactory implements OpenAiDecisionModelBuilderFactory {
+
+    @Override
+    public OpenAiDecisionModel.OpenAiDecisionModelBuilder get() {
+        return new Builder();
+    }
+
+    public static class Builder extends OpenAiDecisionModel.OpenAiDecisionModelBuilder {
+
+        private String configName;
+        private String tlsConfigurationName;
+        private boolean logCurl;
+        private Proxy proxy;
+
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
+
+        public Builder tlsConfigurationName(String tlsConfigurationName) {
+            this.tlsConfigurationName = tlsConfigurationName;
+            return this;
+        }
+
+        public Builder proxy(Proxy proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+
+        public Builder logCurl(boolean logCurl) {
+            this.logCurl = logCurl;
+            return this;
+        }
+
+        @Override
+        public OpenAiDecisionModel build() {
+            AdditionalPropertiesHack.setConfigName(configName);
+            AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
+            AdditionalPropertiesHack.setLogCurl(logCurl);
+            AdditionalPropertiesHack.setProxy(proxy);
+            return super.build();
+        }
+    }
+}
