@@ -22,7 +22,6 @@ import com.ibm.watsonx.ai.textprocessing.schema.create.StartCreateSchemaRequest;
 
 import io.quarkiverse.langchain4j.watsonx.runtime.client.CreateSchemaRestApi;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.QuarkusRestClientConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.filter.BearerTokenHeaderFactory;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.logger.WatsonxClientLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -30,14 +29,14 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 public final class QuarkusCreateSchemaRestClient extends CreateSchemaRestClient {
 
     private final CreateSchemaRestApi createSchemaClient;
-    private final CreateSchemaRestApi cosClient;
+    private final CosClients cosClients;
 
     QuarkusCreateSchemaRestClient(Builder builder) {
         super(builder);
         try {
 
             createSchemaClient = createClient(baseUrl, authenticator);
-            cosClient = createClient(cosUrl, cosAuthenticator);
+            cosClients = new CosClients(cosUrl, authenticator, cosAuthenticator, timeout, logRequests, logResponses);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -63,32 +62,18 @@ public final class QuarkusCreateSchemaRestClient extends CreateSchemaRestClient 
 
     @Override
     public boolean deleteFile(DeleteFileRequest request) {
-        return retryOn(request.requestTrackingId(), new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                cosClient.deleteFile(request.bucketName(), request.fileName(), request.requestTrackingId());
-                return true;
-            }
-        });
+        return cosClients.forBucket(request.bucketName()).deleteFile(request);
     }
 
     @Override
     public CompletableFuture<Boolean> deleteFileAsync(DeleteFileRequest request) {
-        return cosClient.deleteFileAsync(request.bucketName(), request.fileName(), request.requestTrackingId())
-                .map(v -> true)
-                .onFailure(WatsonxRestClientUtils::shouldRetry).retry().atMost(10)
-                .subscribe().asCompletionStage();
+        return cosClients.forBucket(request.bucketName()).deleteFileAsync(request);
     }
 
     @Override
     public boolean uploadFile(UploadRequest request) {
-        return retryOn(request.requestTrackingId(), new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                cosClient.uploadFile(request.bucketName(), request.fileName(), request.requestTrackingId(), request.is());
-                return true;
-            }
-        });
+        return cosClients.forBucket(request.bucketName())
+                .upload(request.requestTrackingId(), request.is(), request.fileName());
     }
 
     @Override

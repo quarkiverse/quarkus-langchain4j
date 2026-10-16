@@ -38,6 +38,13 @@ public interface CosStorageRestApi {
 
     @DELETE
     @Path("{bucket_name}/{file_name}")
+    void deleteFile(
+            @PathParam("bucket_name") String bucketName,
+            @PathParam("file_name") String fileName,
+            @HeaderParam(REQUEST_ID_HEADER) String requestId);
+
+    @DELETE
+    @Path("{bucket_name}/{file_name}")
     Uni<Void> deleteFileAsync(
             @PathParam("bucket_name") String bucketName,
             @PathParam("file_name") String fileName,

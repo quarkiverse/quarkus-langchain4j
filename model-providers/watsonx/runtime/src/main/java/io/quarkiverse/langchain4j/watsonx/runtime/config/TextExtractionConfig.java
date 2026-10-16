@@ -10,25 +10,27 @@ public interface TextExtractionConfig {
 
     /**
      * Base URL of the Cloud Object Storage API.
+     * <p>
+     * Required only when {@code document-reference} or {@code results-reference} is set.
      */
-    String cosUrl();
+    Optional<String> cosUrl();
 
     /**
      * The reference to the document that needs to be processed.
      * <p>
-     * This reference includes the COS connection asset ID and the bucket where the document resides. It is required to locate
-     * and access the input
-     * document for extraction.
+     * This reference includes the COS connection asset ID and the bucket where the document resides. If not set, the input
+     * document is read from the watsonx.ai project's default storage container instead of an explicit COS bucket.
      */
-    DocumentReferenceConfig documentReference();
+    Optional<DocumentReferenceConfig> documentReference();
 
     /**
      * The reference where the extracted text results will be stored.
      * <p>
      * This reference defines the COS connection asset ID and the target bucket for storing the output of the text extraction
-     * process.
+     * process. If not set, the results are stored in the watsonx.ai project's default storage container instead of an
+     * explicit COS bucket.
      */
-    ResultReferenceConfig resultsReference();
+    Optional<ResultReferenceConfig> resultsReference();
 
     /**
      * Whether text extraction requests should be logged.

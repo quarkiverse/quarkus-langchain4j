@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static com.ibm.watsonx.ai.chat.model.UserMessage.text;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_CHAT_MODEL;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_TIME_LIMIT;
@@ -14,8 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
@@ -24,15 +28,21 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.ibm.watsonx.ai.chat.model.ChatMessage;
 import com.ibm.watsonx.ai.chat.model.SystemMessage;
 import com.ibm.watsonx.ai.chat.model.TextChatRequest;
-import com.ibm.watsonx.ai.chat.model.UserMessage;
 
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.PartialThinking;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import dev.langchain4j.model.watsonx.WatsonxChatRequestParameters;
 import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
 import io.quarkiverse.langchain4j.mockapi.ChatReply;
 import io.quarkus.test.QuarkusExtensionTest;
@@ -87,7 +97,7 @@ public class ChatDefaultPropertiesTest extends WatsonxMockTestBase {
 
         var messages = List.<ChatMessage> of(
                 SystemMessage.of("SystemMessage"),
-                UserMessage.text("UserMessage"));
+                text("UserMessage"));
 
         var body = TextChatRequest.builder()
                 .modelId(DEFAULT_CHAT_MODEL)
@@ -101,7 +111,7 @@ public class ChatDefaultPropertiesTest extends WatsonxMockTestBase {
         mock.chat().reply(ChatReply.text("AI Response").usage(59, 47));
 
         assertEquals("AI Response", chatModel.chat(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
-                dev.langchain4j.data.message.UserMessage.from("UserMessage")).aiMessage().text());
+                UserMessage.from("UserMessage")).aiMessage().text());
 
         CapturedRequest request = mock.chat().singleRequest();
         assertWatsonxRequest(request, URL_WATSONX_CHAT_API);
@@ -113,7 +123,7 @@ public class ChatDefaultPropertiesTest extends WatsonxMockTestBase {
 
         var messagesToSend = List.<ChatMessage> of(
                 SystemMessage.of("SystemMessage"),
-                UserMessage.text("UserMessage"));
+                text("UserMessage"));
 
         var body = TextChatRequest.builder()
                 .modelId(DEFAULT_CHAT_MODEL)
@@ -128,7 +138,7 @@ public class ChatDefaultPropertiesTest extends WatsonxMockTestBase {
 
         var messages = List.of(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
-                dev.langchain4j.data.message.UserMessage.from("UserMessage"));
+                UserMessage.from("UserMessage"));
 
         var streamingResponse = new AtomicReference<ChatResponse>();
         streamingChatModel.chat(messages, streamingChatResponseHandler(streamingResponse));
@@ -144,5 +154,73 @@ public class ChatDefaultPropertiesTest extends WatsonxMockTestBase {
         CapturedRequest request = mock.chat().singleRequest();
         assertWatsonxRequest(request, URL_WATSONX_CHAT_STREAMING_API);
         assertJsonBody(request, body);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "reasoning", "reasoning_content" })
+    void reasoning(String field) {
+        mock.raw().on("POST", URL_WATSONX_CHAT_API)
+                .reply(200, """
+                        {"id":"review","model_id":"openai/gpt-oss-120b","created":1,
+                         "choices":[{"index":0,"finish_reason":"stop","message":{
+                         "role":"assistant","content":"Hello","%s":"Thinking"}}]}
+                        """.formatted(field));
+        ChatRequest request = ChatRequest.builder()
+                .messages(UserMessage.from("Hello"))
+                .parameters(WatsonxChatRequestParameters.builder().thinking(true).build())
+                .build();
+        ChatResponse response = chatModel.chat(request);
+        assertThat(response.aiMessage().text()).isEqualTo("Hello");
+        assertThat(response.aiMessage().thinking()).isEqualTo("Thinking");
+        assertThat(requests("POST", URL_WATSONX_CHAT_API)).hasSize(1);
+        assertWatsonxRequest(requests("POST", URL_WATSONX_CHAT_API).get(0), URL_WATSONX_CHAT_API);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "reasoning", "reasoning_content" })
+    void streamingReasoning(String field) throws Exception {
+        mock.raw().on("POST", URL_WATSONX_CHAT_STREAMING_API)
+                .replies(sse(
+                        """
+                                data: {"id":"review","model_id":"openai/gpt-oss-120b","created":1,"choices":[{"index":0,"delta":{"role":"assistant","%s":"Thinking"}}]}
+
+                                data: {"id":"review","model_id":"openai/gpt-oss-120b","created":1,"choices":[{"index":0,"finish_reason":"stop","delta":{"content":"Hello"}}]}
+
+                                data: [DONE]
+
+                                """
+                                .formatted(field)));
+        ChatRequest request = ChatRequest.builder()
+                .messages(UserMessage.from("Hello"))
+                .parameters(WatsonxChatRequestParameters.builder().thinking(true).build())
+                .build();
+        CompletableFuture<ChatResponse> result = new CompletableFuture<>();
+        List<String> thinking = new ArrayList<>();
+        streamingChatModel.chat(request, new StreamingChatResponseHandler() {
+            @Override
+            public void onPartialResponse(String partialResponse) {
+            }
+
+            @Override
+            public void onPartialThinking(PartialThinking partialThinking) {
+                thinking.add(partialThinking.text());
+            }
+
+            @Override
+            public void onCompleteResponse(ChatResponse response) {
+                result.complete(response);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                result.completeExceptionally(error);
+            }
+        });
+        ChatResponse response = result.get(10, TimeUnit.SECONDS);
+        assertThat(response.aiMessage().text()).isEqualTo("Hello");
+        assertThat(response.aiMessage().thinking()).isEqualTo("Thinking");
+        assertThat(thinking).containsExactly("Thinking");
+        assertThat(requests("POST", URL_WATSONX_CHAT_STREAMING_API)).hasSize(1);
+        assertWatsonxRequest(requests("POST", URL_WATSONX_CHAT_STREAMING_API).get(0), URL_WATSONX_CHAT_STREAMING_API);
     }
 }

@@ -200,6 +200,17 @@ public class TextClassificationTest extends WatsonxMockTestBase {
     }
 
     @Test
+    void should_preserve_retry_backoff_when_deleting_file() throws Exception {
+        stubCosDeleteRetries(COS_FILE);
+        assertThat(classificationService.deleteFile(BUCKET_NAME, FILE_NAME)).isTrue();
+
+        long started = System.nanoTime();
+        assertThat(classificationService.deleteFile(BUCKET_NAME, FILE_NAME)).isTrue();
+
+        assertCosDeleteRetriedWithBackoff(COS_FILE, started);
+    }
+
+    @Test
     void should_delete_file() throws Exception {
 
         // the client retries a delete refused with access denied, sending the same token again
