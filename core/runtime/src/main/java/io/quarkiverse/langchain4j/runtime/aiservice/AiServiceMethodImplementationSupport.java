@@ -1127,6 +1127,14 @@ public class AiServiceMethodImplementationSupport {
             handleSpecialContentTypes(createInfo, methodArgs, finalContents);
             return toUserMessage(userName, finalContents);
         } else {
+            // There is no user message text, but there may still be multimodal arguments
+            // (Content, Image, Audio, Video, PdfFile, ...) that have to reach the model.
+            List<Content> finalContents = new ArrayList<>();
+            handleSpecialContentTypes(createInfo, methodArgs, finalContents);
+            if (!finalContents.isEmpty()) {
+                return toUserMessage(userName, finalContents);
+            }
+
             // create a user message that instructs the model to ignore it's content
             return EmptyUserMessage.INSTANCE;
         }
