@@ -58,6 +58,7 @@
     <jitllm.version>1.0.2-jdk21</jitllm.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
     <apicurio-registry-sdk.version>3.3.0</apicurio-registry-sdk.version>
+    <quarkus.config.doc.skip>false</quarkus.config.doc.skip>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -376,6 +377,27 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <!-- Fast local build: skips tests, formatting, enforcer and docs generation.
+           Activate with -Dquickly (mirrors the Quarkus core 'quickly' flag). -->
+      <id>quick-build</id>
+      <activation>
+        <property>
+          <name>quickly</name>
+        </property>
+      </activation>
+      <properties>
+        <skipTests>true</skipTests>
+        <skipITs>true</skipITs>
+        <enforcer.skip>true</enforcer.skip>
+        <format.skip>true</format.skip>
+        <quarkus.build.skip>true</quarkus.build.skip>
+        <quarkus.config.doc.skip>true</quarkus.config.doc.skip>
+      </properties>
+      <build>
+        <defaultGoal>clean install</defaultGoal>
+      </build>
+    </profile>
     <profile>
       <id>docs</id>
       <activation>
