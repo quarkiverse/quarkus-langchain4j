@@ -12,6 +12,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -32,6 +33,7 @@ import dev.langchain4j.http.client.HttpRequest;
 import dev.langchain4j.http.client.SuccessfulHttpResponse;
 import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.http.client.sse.ServerSentEventListener;
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkus.runtime.BlockingOperationControl;
 import io.quarkus.runtime.IOThreadDetector;
 
@@ -92,10 +94,11 @@ class JaxRsHttpClientTest {
                 .url(baseUrl + "/error")
                 .build();
 
-        HttpException exception = assertThrows(HttpException.class, () -> client.execute(request));
+        QuarkusHttpException exception = assertThrows(QuarkusHttpException.class, () -> client.execute(request));
 
         assertEquals(400, exception.statusCode());
         assertEquals("bad-request", exception.getMessage());
+        assertEquals(Optional.of("7"), exception.header("retry-after"));
     }
 
     @Test
@@ -307,6 +310,7 @@ class JaxRsHttpClientTest {
 
     private void handleError(HttpExchange exchange) throws IOException {
         byte[] responseBody = "bad-request".getBytes();
+        exchange.getResponseHeaders().add("Retry-After", "7");
         exchange.sendResponseHeaders(400, responseBody.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBody);

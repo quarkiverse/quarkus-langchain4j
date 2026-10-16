@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Date;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -29,7 +30,9 @@ import dev.langchain4j.exception.InternalServerException;
 import dev.langchain4j.exception.InvalidRequestException;
 import dev.langchain4j.exception.LangChain4jException;
 import dev.langchain4j.exception.ModelNotFoundException;
+import dev.langchain4j.exception.RateLimitException;
 import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class HttpErrorTest extends WireMockAbstract {
@@ -303,6 +306,37 @@ public class HttpErrorTest extends WireMockAbstract {
         assertEquals("BXNIM0415E", detail.code());
         assertEquals("Provided API key could not be found.", detail.message());
         assertEquals("details", detail.moreInfo());
+    }
+
+    @Test
+    void error_429_exposes_response_headers() {
+
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
+                .build();
+
+        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 429)
+                .responseMediaType(MediaType.APPLICATION_JSON)
+                .responseHeader("Retry-After", "7")
+                .response("""
+                        {
+                            "errors": [
+                                {
+                                    "code": "token_quota_reached",
+                                    "message": "Token quota reached"
+                                }
+                            ],
+                            "trace": "xxx",
+                            "status_code": 429
+                        }
+                        """)
+                .build();
+
+        RateLimitException ex = assertThrowsExactly(RateLimitException.class, () -> chatModel.chat("message"));
+        var watsonxEx = assertInstanceOf(WatsonxException.class, ex.getCause());
+        var httpEx = assertInstanceOf(QuarkusHttpException.class, watsonxEx.getCause());
+        assertEquals(429, httpEx.statusCode());
+        assertEquals(Optional.of("7"), httpEx.header("Retry-After"));
     }
 
     @Test
