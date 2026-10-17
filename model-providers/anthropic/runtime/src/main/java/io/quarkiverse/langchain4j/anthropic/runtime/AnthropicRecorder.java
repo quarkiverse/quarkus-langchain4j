@@ -157,6 +157,8 @@ public class AnthropicRecorder {
             // Pass caching configuration to builder
             builder.cacheSystemMessages(chatModelConfig.cacheSystemMessages());
             builder.cacheTools(chatModelConfig.cacheTools());
+            builder.cacheAutomatically(chatModelConfig.cacheAutomatically());
+            chatModelConfig.cacheTtl().ifPresent(builder::cacheTtl);
 
             // Collect beta headers from features that need them
             Set<String> betas = new LinkedHashSet<>();
@@ -326,6 +328,8 @@ public class AnthropicRecorder {
             // Pass caching configuration to builder
             builder.cacheSystemMessages(chatModelConfig.cacheSystemMessages());
             builder.cacheTools(chatModelConfig.cacheTools());
+            builder.cacheAutomatically(chatModelConfig.cacheAutomatically());
+            chatModelConfig.cacheTtl().ifPresent(builder::cacheTtl);
 
             // Collect beta headers from features that need them
             List<String> betas = new ArrayList<>();

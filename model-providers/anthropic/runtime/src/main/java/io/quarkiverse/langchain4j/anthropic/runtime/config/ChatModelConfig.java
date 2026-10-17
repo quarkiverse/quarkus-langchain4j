@@ -105,6 +105,29 @@ public interface ChatModelConfig {
     Boolean cacheTools();
 
     /**
+     * Cache the conversation automatically, including user messages, by sending a top-level {@code cache_control} with
+     * each request. The cache point moves forward as the conversation grows.
+     * <p>
+     * This pays off when each request starts with everything the previous request sent, for example when an AI service
+     * calls tools in a loop, or in a chat whose memory still holds all previous messages. When the beginning of the
+     * conversation changes on every request, every request pays the cache write price and nothing is read back, so
+     * consider enabling {@code cache-system-messages} and {@code cache-tools} as well.
+     * <p>
+     * Each cached item uses one of the 4 cache breakpoints Anthropic allows per request. Anthropic-compatible gateways
+     * that do not support the top-level {@code cache_control} field may reject or ignore it.
+     */
+    @WithDefault("false")
+    Boolean cacheAutomatically();
+
+    /**
+     * How long cached prompts are kept: {@code 5m} (5 minutes) or {@code 1h} (1 hour).
+     * Applies to every cache breakpoint and has no effect unless something is cached. Writing to the 1-hour cache costs
+     * more than writing to the 5-minute one.
+     */
+    @ConfigDocDefault("5m")
+    Optional<String> cacheTtl();
+
+    /**
      * Specifies the desired format for the model's output.
      * <p>
      * <strong>Allowable values:</strong> <code>[text, json]</code>

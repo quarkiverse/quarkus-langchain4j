@@ -69,6 +69,35 @@ public interface Assistant {
 }
 ----
 
+== Prompt Caching
+
+https://platform.claude.com/docs/en/build-with-claude/prompt-caching[Prompt caching] lets Anthropic reuse the beginning of a prompt that was already sent, which lowers the cost and latency of later requests. Writing to the cache costs more than regular input tokens and reading from it costs much less, so caching pays off when the same prefix is sent more than once within the cache TTL. Prompts shorter than the model's minimum are not cached.
+
+The following properties control what is cached:
+
+[source,properties]
+----
+# Cache the system message
+quarkus.langchain4j.anthropic.chat-model.cache-system-messages=true
+# Cache the tool definitions
+quarkus.langchain4j.anthropic.chat-model.cache-tools=true
+# Cache the conversation, including user messages, up to the last message
+quarkus.langchain4j.anthropic.chat-model.cache-automatically=true
+# Keep cache entries for one hour instead of the default 5 minutes
+quarkus.langchain4j.anthropic.chat-model.cache-ttl=1h
+----
+
+`cache-automatically` adds a top-level `cache_control` to each request, so Anthropic caches the whole conversation and moves the cache point forward as the conversation grows. It pays off when each request starts with everything the previous one sent, for example an AI service calling tools in a loop, or a chat whose memory still holds all earlier messages. When the beginning of the conversation changes on every request, for example because the chat memory evicts old messages each turn, every request pays to write the cache and nothing is read back. In that case, keep `cache-system-messages` and `cache-tools` enabled so that at least the system message and tools stay cached.
+
+[NOTE]
+====
+Anthropic allows at most 4 cache breakpoints per request. `cache-system-messages`, `cache-tools` and `cache-automatically` each use one.
+
+Some Anthropic-compatible gateways and proxies do not support the top-level `cache_control` field and may reject the request or ignore it.
+====
+
+`cache-ttl` accepts `5m` (the default) or `1h` and applies to every cache breakpoint. Each cache hit refreshes the TTL, so `5m` is enough when requests sharing a prefix are less than 5 minutes apart. Writing to the 1-hour cache costs more than writing to the 5-minute one.
+
 == Advanced Tool Use Features
 These features enable more efficient tool orchestration, improved accuracy, and reduced token consumption.
 

@@ -460,6 +460,52 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-automatically]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-automatically[`+++quarkus.langchain4j.anthropic.chat-model.cache-automatically+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.cache-automatically+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cache the conversation automatically, including user messages, by sending a top-level `cache_control` with each request. The cache point moves forward as the conversation grows.
+
+This pays off when each request starts with everything the previous request sent, for example when an AI service calls tools in a loop, or in a chat whose memory still holds all previous messages. When the beginning of the conversation changes on every request, every request pays the cache write price and nothing is read back, so consider enabling `cache-system-messages` and `cache-tools` as well.
+
+Each cached item uses one of the 4 cache breakpoints Anthropic allows per request. Anthropic-compatible gateways that do not support the top-level `cache_control` field may reject or ignore it.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_AUTOMATICALLY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_AUTOMATICALLY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-ttl]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-ttl[`+++quarkus.langchain4j.anthropic.chat-model.cache-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.cache-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long cached prompts are kept: `5m` (5 minutes) or `1h` (1 hour). Applies to every cache breakpoint and has no effect unless something is cached. Writing to the 1-hour cache costs more than writing to the 5-minute one.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++5m+++`
+
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-response-format[`+++quarkus.langchain4j.anthropic.chat-model.response-format+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.response-format+++[]
@@ -1134,6 +1180,52 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-automatically]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-automatically[`+++quarkus.langchain4j.anthropic."model-name".chat-model.cache-automatically+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.cache-automatically+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cache the conversation automatically, including user messages, by sending a top-level `cache_control` with each request. The cache point moves forward as the conversation grows.
+
+This pays off when each request starts with everything the previous request sent, for example when an AI service calls tools in a loop, or in a chat whose memory still holds all previous messages. When the beginning of the conversation changes on every request, every request pays the cache write price and nothing is read back, so consider enabling `cache-system-messages` and `cache-tools` as well.
+
+Each cached item uses one of the 4 cache breakpoints Anthropic allows per request. Anthropic-compatible gateways that do not support the top-level `cache_control` field may reject or ignore it.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_AUTOMATICALLY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_AUTOMATICALLY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-ttl]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-ttl[`+++quarkus.langchain4j.anthropic."model-name".chat-model.cache-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.cache-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long cached prompts are kept: `5m` (5 minutes) or `1h` (1 hour). Applies to every cache breakpoint and has no effect unless something is cached. Writing to the 1-hour cache costs more than writing to the 5-minute one.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++5m+++`
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-response-format[`+++quarkus.langchain4j.anthropic."model-name".chat-model.response-format+++`]##
 ifdef::add-copy-button-to-config-props[]
