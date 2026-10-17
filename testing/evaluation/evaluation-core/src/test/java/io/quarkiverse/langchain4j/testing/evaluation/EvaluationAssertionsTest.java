@@ -239,6 +239,39 @@ class EvaluationAssertionsTest {
     }
 
     @Test
+    void advisoryFailuresShouldNotFailAssertions() {
+        EvaluationSample<String> sample = new EvaluationSample<>("S", new Parameters(), "expected", List.of("tag"));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "expected", EvaluationResult.failed("judge"), true)));
+
+        assertThat(report)
+                .hasAllPassed()
+                .hasPassedForTag("tag")
+                .hasScoreForTag("tag", 100.0)
+                .hasPassedCount(1)
+                .hasAtLeastPassedEvaluations(1)
+                .hasFailedCount(0)
+                .hasAtMostFailedEvaluations(0)
+                .hasEvaluationCount(2);
+    }
+
+    @Test
+    void advisoryPassesShouldNotSatisfyAssertions() {
+        EvaluationSample<String> sample = new EvaluationSample<>("S", new Parameters(), "expected", List.of("tag"));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "other", EvaluationResult.fromBoolean(false)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "other", EvaluationResult.fromBoolean(true), true)));
+
+        assertThatThrownBy(() -> assertThat(report).hasSomePassed())
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("all 1 evaluations failed");
+        assertThatThrownBy(() -> assertThat(report).hasAllPassed())
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("1 out of 1 failed");
+    }
+
+    @Test
     void hasEvaluationCount_shouldPassWhenCountMatches() {
         EvaluationReport<String> report = createReportWithResults(
                 createPassedResult("Sample1", "output1"),

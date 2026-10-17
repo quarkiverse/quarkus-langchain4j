@@ -63,7 +63,7 @@ public class Scorer implements Closeable {
                                     io.quarkiverse.langchain4j.testing.evaluation.EvaluationResult strategyResult = strategy
                                             .evaluate(sample, response);
                                     EvaluationResult<T> evaluation = EvaluationResult.fromCompletedEvaluation(
-                                            sample, response, strategyResult);
+                                            sample, response, strategyResult, strategy.isAdvisory());
                                     LOG.infof(
                                             "Evaluation of sample `%s` with strategy `%s`: %s (score: %.2f)",
                                             sample.name(),
@@ -101,6 +101,12 @@ public class Scorer implements Closeable {
         executor.shutdown();
     }
 
+    /**
+     * The evaluation of one sample execution by one strategy.
+     *
+     * @param advisory whether the result comes from an advisory strategy and therefore does not affect the score,
+     *        see {@link EvaluationStrategy#isAdvisory()}
+     */
     public record EvaluationResult<T>(
             EvaluationSample<T> sample,
             T result,
@@ -108,12 +114,32 @@ public class Scorer implements Closeable {
             boolean passed,
             double score,
             String explanation,
-            java.util.Map<String, Object> metadata) {
+            java.util.Map<String, Object> metadata,
+            boolean advisory) {
+
+        public EvaluationResult(
+                EvaluationSample<T> sample,
+                T result,
+                Throwable thrown,
+                boolean passed,
+                double score,
+                String explanation,
+                java.util.Map<String, Object> metadata) {
+            this(sample, result, thrown, passed, score, explanation, metadata, false);
+        }
 
         public static <T> EvaluationResult<T> fromCompletedEvaluation(
                 EvaluationSample<T> sample,
                 T result,
                 io.quarkiverse.langchain4j.testing.evaluation.EvaluationResult evaluationResult) {
+            return fromCompletedEvaluation(sample, result, evaluationResult, false);
+        }
+
+        public static <T> EvaluationResult<T> fromCompletedEvaluation(
+                EvaluationSample<T> sample,
+                T result,
+                io.quarkiverse.langchain4j.testing.evaluation.EvaluationResult evaluationResult,
+                boolean advisory) {
             return new EvaluationResult<>(
                     sample,
                     result,
@@ -121,7 +147,8 @@ public class Scorer implements Closeable {
                     evaluationResult.passed(),
                     evaluationResult.score(),
                     evaluationResult.explanation(),
-                    evaluationResult.metadata());
+                    evaluationResult.metadata(),
+                    advisory);
         }
 
         public static <T> EvaluationResult<T> fromEvaluationThrowable(
