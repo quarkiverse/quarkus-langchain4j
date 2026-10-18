@@ -16,5 +16,5 @@
         <module>runtime-spi</module>
         <module>opentelemetry-tests</module>
     </modules>
-    
+
 </project>
