@@ -321,7 +321,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                     throw new RuntimeException(e);
                 }
                 if (response == null || response.id() == null) {
-                    throw new OpenAiApiException(ChatCompletionResponse.class);
+                    // keep the payload, as OpenAI-compatible servers send an error object mid-stream
+                    throw new OpenAiApiException(ChatCompletionResponse.class, data);
                 }
                 return response;
             }
