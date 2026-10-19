@@ -92,7 +92,7 @@ public final class GenerateContentResponseHandler {
         return toolExecutionRequests;
     }
 
-    private static ToolExecutionRequest toToolExecutionRequest(GenerateContentResponse.Candidate.Part part) {
+    static ToolExecutionRequest toToolExecutionRequest(GenerateContentResponse.Candidate.Part part) {
         try {
             return ToolExecutionRequest.builder()
                     .name(part.functionCall().name())
