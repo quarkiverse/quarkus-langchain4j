@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -52,6 +53,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolServiceContext;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
+import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.vertx.core.Context;
 
 /**
@@ -392,6 +394,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     addToMemory(aiMessage);
                     List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
                     List<ToolExecutionResult> rawToolResults = new ArrayList<>();
+                    List<ReturnBehavior> returnBehaviors = new ArrayList<>();
+                    boolean anyToolErrored = false;
                     int maxToolCallsPerResponse;
                     if (context.maxToolCallsPerResponse != null && context.maxToolCallsPerResponse != 0) {
                         maxToolCallsPerResponse = context.maxToolCallsPerResponse;
@@ -421,6 +425,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
                         fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
                         rawToolResults.add(toolExecutionResult);
+                        anyToolErrored = anyToolErrored || toolExecutionResult.isError();
+                        returnBehaviors.add(returnBehaviorOf(toolExecutionRequest.name()));
 
                         ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil
                                 .from(toolExecutionRequest, toolExecutionResult);
@@ -430,6 +436,14 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
                     if (isCancelled()) {
                         shutdown();
+                        return;
+                    }
+
+                    // A tool declaring ReturnBehavior.IMMEDIATE / IMMEDIATE_IF_LAST terminates the tool
+                    // calling loop instead of sending its result back to the LLM. The blocking AI service
+                    // path and the upstream streaming handler both do this, so streaming services must too.
+                    if (AiServiceMethodImplementationSupport.shouldReturnImmediately(anyToolErrored, returnBehaviors)) {
+                        emitFinalResponse(completeResponse, aiMessage, false);
                         return;
                     }
 
@@ -494,44 +508,71 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                 }
             });
         } else {
-            if (completeResponseHandler != null) {
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            // Copy the provider's own metadata instance instead of rebuilding a plain
-                            // ChatResponseMetadata, so provider-specific subclasses (and the extra fields
-                            // they carry) survive. Only the token usage is replaced, with the total
-                            // accumulated over all tool calling round trips.
-                            ChatResponse finalChatResponse = ChatResponse.builder()
-                                    .aiMessage(aiMessage)
-                                    .metadata(completeResponse.metadata().toBuilder()
-                                            .tokenUsage(TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()))
-                                            .build())
-                                    .build();
-                            fireInvocationComplete(finalChatResponse);
+            emitFinalResponse(completeResponse, aiMessage, true);
+        }
+    }
+
+    /**
+     * Resolves the {@link ReturnBehavior} declared by the tool with the given name, defaulting to
+     * {@link ReturnBehavior#TO_LLM} when the tool does not declare one.
+     */
+    private ReturnBehavior returnBehaviorOf(String toolName) {
+        ToolExecutor toolExecutor = toolExecutors == null ? null : toolExecutors.get(toolName);
+        if (toolExecutor instanceof QuarkusToolExecutor quarkusToolExecutor) {
+            return quarkusToolExecutor.returnBehavior();
+        }
+        if (toolSearchContext != null) {
+            return toolSearchContext.returnBehavior(toolName);
+        }
+        return ReturnBehavior.TO_LLM;
+    }
+
+    /**
+     * Emits the terminal event of the stream. {@code addAiMessageToMemory} must be {@code false}
+     * when the message has already been stored, which is the case once the tool calling loop ran.
+     */
+    private void emitFinalResponse(ChatResponse completeResponse, AiMessage aiMessage, boolean addAiMessageToMemory) {
+        if (completeResponseHandler != null) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // Copy the provider's own metadata instance instead of rebuilding a plain
+                        // ChatResponseMetadata, so provider-specific subclasses (and the extra fields
+                        // they carry) survive. Only the token usage is replaced, with the total
+                        // accumulated over all tool calling round trips.
+                        ChatResponse finalChatResponse = ChatResponse.builder()
+                                .aiMessage(aiMessage)
+                                .metadata(completeResponse.metadata().toBuilder()
+                                        .tokenUsage(TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()))
+                                        .build())
+                                .build();
+                        fireInvocationComplete(finalChatResponse);
+                        if (addAiMessageToMemory) {
                             addToMemory(aiMessage);
-                            completeResponseHandler.accept(finalChatResponse);
-                        } finally {
-                            shutdown(); // Terminal event, we can shutdown the executor
                         }
+                        completeResponseHandler.accept(finalChatResponse);
+                    } finally {
+                        shutdown(); // Terminal event, we can shutdown the executor
                     }
-                };
-                execute(runnable);
-            } else if (completionHandler != null) {
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        Response<AiMessage> finalResponse = Response.from(aiMessage,
-                                TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
-                                completeResponse.metadata().finishReason());
-                        fireInvocationComplete(finalResponse);
+                }
+            };
+            execute(runnable);
+        } else if (completionHandler != null) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    Response<AiMessage> finalResponse = Response.from(aiMessage,
+                            TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
+                            completeResponse.metadata().finishReason());
+                    fireInvocationComplete(finalResponse);
+                    if (addAiMessageToMemory) {
                         addToMemory(aiMessage);
-                        completionHandler.accept(finalResponse);
                     }
-                };
-                execute(runnable);
-            }
+                    completionHandler.accept(finalResponse);
+                }
+            };
+            execute(runnable);
         }
     }
 
