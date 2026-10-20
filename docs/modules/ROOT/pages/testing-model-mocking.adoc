@@ -1,225 +1,673 @@
-= Mocking Model HTTP Calls with WireMock
-:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
+= Mocking Model HTTP Calls with the Mock Model API
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-mock-api
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-The https://docs.quarkiverse.io/quarkus-wiremock/dev/index.html[Quarkus WireMock extension] starts a local HTTP server as a Dev Service in dev and test mode.
-Use it to test request serialization, response handling, and application behavior without a real API key, model download, or paid model call.
+The Mock Model API extension starts a local HTTP server as a Dev Service and points every model the application uses at it.
+Your tests (or you, in dev mode) script the replies, and can inspect the requests the application sent, without a real API key, model download, or paid model call.
 Unlike xref:testing.adoc[model evaluation], these tests do not measure the quality of a real model's answers.
 
-This guide mocks the non-streaming OpenAI Chat Completions API.
-Other HTTP model providers can use the same approach, but need mappings that match their own URLs and response formats.
+The extension is strictly opt-in: adding the dependency changes nothing until you enable it.
 
-== Dependencies
+== Dependency
 
-Start with a Quarkus application using the OpenAI extension:
+Add the extension in `test` scope. The same artifact carries the test API, the ready-made `MockModelApiTestProfile` and the automatic reset of the mock before each `@QuarkusTest` method, which is active whenever `quarkus-junit` is on the classpath:
 
 [source,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <artifactId>quarkus-langchain4j-mock-api</artifactId>
     <version>{project-version}</version>
-</dependency>
-----
-
-Add the following dependencies to `pom.xml`:
-
-[source,xml]
-----
-<dependency>
-    <groupId>io.quarkiverse.wiremock</groupId>
-    <artifactId>quarkus-wiremock</artifactId>
-    <version>1.5.1</version>
-    <scope>provided</scope>
-</dependency>
-<dependency>
-    <groupId>io.quarkiverse.wiremock</groupId>
-    <artifactId>quarkus-wiremock-test</artifactId>
-    <version>1.5.1</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>io.quarkus</groupId>
-    <artifactId>quarkus-junit</artifactId>
     <scope>test</scope>
 </dependency>
 ----
 
-The Quarkus BOM manages the version of `quarkus-junit`.
-The `provided` scope makes WireMock available in dev mode as well as test mode; the extension only starts its server in these modes.
-The test dependency provides `@ConnectWireMock` and the WireMock client used for request verification.
-No internal Quarkus LangChain4j testing modules are required.
+To have the mock available in dev mode as well, use `provided` scope instead, so the extension is on the classpath in dev mode and in tests but not in the packaged application.
 
-== Redirect the model to the local server
+The server, the provider dialects and the test API (`MockModelServer` and the reply types) live in `quarkus-langchain4j-mock-api-core`, which has no Quarkus dependency and is pulled in transitively.
 
-Put the following configuration in `src/main/resources/application.properties`:
+== Enable it
 
+The dev service only starts when `quarkus.langchain4j.mock-api.enabled=true` in the active profile.
+There are three ways to set it:
+
+* In a test class, with the supplied test profile:
++
+[source,java]
+----
+@QuarkusTest
+@TestProfile(MockModelApiTestProfile.class)
+class MyTest {
+}
+----
+* For all tests, in `application.properties`:
++
 [source,properties]
 ----
-%dev.quarkus.langchain4j.openai.base-url=http://localhost:${quarkus.wiremock.devservices.port}/v1
-%dev.quarkus.langchain4j.openai.api-key=not-a-real-key
-%dev.quarkus.langchain4j.openai.chat-model.model-name=gpt-4o-mini
-%test.quarkus.langchain4j.openai.base-url=http://localhost:${quarkus.wiremock.devservices.port}/v1
-%test.quarkus.langchain4j.openai.api-key=not-a-real-key
-%test.quarkus.langchain4j.openai.chat-model.model-name=gpt-4o-mini
+%test.quarkus.langchain4j.mock-api.enabled=true
+----
+* For dev mode, in `application.properties`:
++
+[source,properties]
+----
+%dev.quarkus.langchain4j.mock-api.enabled=true
 ----
 
-WireMock chooses an available port and exposes it as `quarkus.wiremock.devservices.port`.
-Do not set a fixed port or use a fallback URL pointing to a real provider.
-Keep Dev Services enabled; the port property is supplied when the WireMock Dev Service starts.
+NOTE: The flag is a build-time key.
+A test profile that sets it makes Quarkus build the application again for the test classes that use that profile.
 
-IMPORTANT: Starting WireMock does not automatically redirect model calls.
-The `base-url` setting above is required.
-It includes `/v1`, so the chat request reaches `/v1/chat/completions`.
-`@ConnectWireMock` connects the test's WireMock client; it does not configure the model's base URL.
+With the mock enabled, every model the application uses is pointed at it, named models included: the set of models is the one Quarkus LangChain4j itself determines at build time from the injection points and AI services, so there is nothing to declare.
+If two or more providers are on the classpath, Quarkus LangChain4j still requires you to choose one, for example `quarkus.langchain4j.chat-model.provider=openai` (and the per-kind equivalents), as it always does.
 
-The `%dev` and `%test` prefixes keep the mock settings out of production.
-Configure production credentials separately, for example through environment variables.
-If testing a named model, apply the overrides to that model's configuration instead.
+== Script replies
 
-== Provide a deterministic response
-
-Create `src/test/resources/mappings/chat-completions.json`:
-
-[source,json]
-----
-{
-  "request": {
-    "method": "POST",
-    "urlPath": "/v1/chat/completions",
-    "bodyPatterns": [
-      { "matchesJsonPath": "$[?(@.model == 'gpt-4o-mini')]" }
-    ]
-  },
-  "response": {
-    "status": 200,
-    "headers": { "Content-Type": "application/json" },
-    "jsonBody": {
-      "id": "chatcmpl-mock",
-      "object": "chat.completion",
-      "created": 1710000000,
-      "model": "gpt-4o-mini",
-      "choices": [
-        {
-          "index": 0,
-          "message": { "role": "assistant", "content": "Hello from WireMock!" },
-          "finish_reason": "stop"
-        }
-      ],
-      "usage": { "prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2 }
-    }
-  }
-}
-----
-
-By default, `quarkus.wiremock.devservices.files-mapping` is `src/test/resources`.
-The extension reads the `mappings` directory in both dev and test mode, so the same fixture works for both.
-The model name is only a request-matching value: no real model is loaded.
-Requests that do not match a mapping receive a WireMock error response rather than being forwarded to a real provider.
-
-== Test the model call and verify the request
-
-Create `src/test/java/org/acme/ModelMockTest.java`:
+Inject `MockModelServer` and queue replies per operation: `chat()`, `decision()`, `embeddings()`, `moderation()` and `scoring()`.
+Queued replies are consumed in order.
+When the queue is empty, the default reply answers.
+The examples call an application endpoint, `/chat?q=...`, that forwards the question to an AI service:
 
 [source,java]
 ----
-package org.acme;
+@RegisterAiService
+public interface Assistant {
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import jakarta.inject.Inject;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import com.github.tomakehurst.wiremock.client.WireMock;
-
-import dev.langchain4j.model.chat.ChatModel;
-import io.quarkiverse.wiremock.devservice.ConnectWireMock;
-import io.quarkus.test.junit.QuarkusTest;
-
-@QuarkusTest
-@ConnectWireMock // <1>
-class ModelMockTest {
-
-    @Inject
-    ChatModel model; // <2>
-
-    WireMock wiremock;
-
-    @BeforeEach
-    void resetRequests() {
-        wiremock.resetRequests(); // <3>
-    }
-
-    @Test
-    void shouldUseLocalModel() { // <4>
-        assertEquals("Hello from WireMock!", model.chat("Hello"));
-
-        wiremock.verifyThat(1, postRequestedFor(urlPathEqualTo("/v1/chat/completions"))
-                .withHeader("Authorization", equalTo("Bearer not-a-real-key"))
-                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
-                .withRequestBody(matchingJsonPath("$.messages[0].role", equalTo("user")))
-                .withRequestBody(matchingJsonPath("$.messages[0].content", equalTo("Hello"))));
-    }
+    String chat(String msg);
 }
-----
-<1> `@ConnectWireMock` supplies the `WireMock` field; do not add CDI `@Inject` to that field.
-<2> The injected chat model uses the local OpenAI configuration above. AI Services using the default OpenAI chat model use the same configuration.
-<3> Resetting the request journal before each test keeps request counts independent without deleting the file-based mappings.
-<4> The assertions check the parsed answer as well as the outgoing URL, fake authorization header, model, and user message.
-
-Run the test with `./mvnw test`.
-
-== Use the mock in dev mode
-
-For a minimal HTTP endpoint, add `io.quarkus:quarkus-rest` (with its version managed by the Quarkus BOM) and create `src/main/java/org/acme/ChatResource.java`:
-
-[source,java]
-----
-package org.acme;
-
-import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-
-import dev.langchain4j.model.chat.ChatModel;
 
 @Path("/chat")
 public class ChatResource {
 
-    @Inject
-    ChatModel model;
+    private final Assistant assistant;
+
+    public ChatResource(Assistant assistant) {
+        this.assistant = assistant;
+    }
 
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String chat(@QueryParam("message") String message) {
-        return model.chat(message);
+    public String chat(@QueryParam("q") String q) {
+        return assistant.chat(q);
     }
 }
 ----
 
-From the application directory, start `./mvnw quarkus:dev`, then call:
+The following `@QuarkusTest` scripts a reply and then checks the request that reached the mock:
+
+[source,java]
+----
+@QuarkusTest
+@TestProfile(MockModelApiTestProfile.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class ProfileEnabledTest {
+
+    @Inject
+    MockModelServer mock;
+
+    @Test
+    @Order(1)
+    void scriptedReplyReachesTheEndpoint() {
+        mock.chat().reply("scripted");
+        given().queryParam("q", "hi").get("/chat").then().statusCode(200).body(is("scripted"));
+        assertThat(mock.chat().singleRequest().asChat().messages())
+                .anySatisfy(m -> assertThat(m.text()).isEqualTo("hi"));
+    }
+
+    @Test
+    @Order(2)
+    void journalWasResetBetweenTests() {
+        // the previous test made a request; the reset callback cleared it before this method
+        assertThat(mock.requests()).isEmpty();
+    }
+}
+----
+
+=== Tool calls
+
+Queue a tool call followed by the final answer to script a tool-calling conversation:
+
+[source,java]
+----
+mock.chat().replies(List.of(ChatReply.toolCall("getWeather", Map.of("city", "Paris")), ChatReply.text("Sunny")));
+----
+
+An AI service with a `getWeather` tool executes the tool after the first reply and sends its result in a second request, which receives `Sunny`.
+In that second request, `asChat().messages()` contains the tool result as a message with the `tool` role.
+
+=== Usage
+
+[source,java]
+----
+mock.chat().reply(ChatReply.text("x").usage(14, 47));
+----
+
+=== Scoring
+
+For scoring models (rerankers), a `ScoringReply` gives one score per scored segment, in the order of the segments:
+
+[source,java]
+----
+mock.scoring().reply(ScoringReply.of(0.2, 0.9));
+----
+
+The provider's response orders them the way its API does; Cohere, for example, lists the most relevant document first.
+
+=== Errors
+
+`fail(status, message)` queues an error response, rendered in the provider's documented error format.
+The OpenAI client retries a failed request once by default, and that retry consumes the next queued reply.
+Other clients retry differently; `mock.chat().requests()` shows how many attempts reached the mock.
+Queue the failure twice (or configure `quarkus.langchain4j.openai.max-retries`) to see the exception in your test:
+
+[source,java]
+----
+mock.chat().fail(429, "rate limited");
+mock.chat().fail(429, "rate limited");
+
+assertThatThrownBy(() -> chatModel.chat("hi")).hasMessageContaining("rate limited");
+----
+
+=== Default replies
+
+When nothing is queued:
+
+* chat answers with `quarkus.langchain4j.mock-api.default-chat-reply`;
+* embeddings are deterministic vectors derived from the input, with `quarkus.langchain4j.mock-api.default-embedding-dimension` dimensions;
+* moderation answers "not flagged";
+* scoring gives every segment the same score;
+* decisions have no default and answer `404`.
+
+=== Streaming, chunks and delays
+
+Streaming needs no special reply: the same queued reply is streamed when the client asks for a streaming response, in the provider's own stream format (server-sent events, newline-delimited JSON for Ollama, the AWS event stream for Bedrock).
+Use `ChatReply.chunks(...)` to fix where the text is split into chunks, and `delay(Duration)` to hold the response back, for example to test timeouts:
+
+[source,java]
+----
+mock.chat().reply(ChatReply.text("Hello world").chunks(List.of("Hello", " world")));
+mock.chat().reply(ChatReply.text("slow").delay(Duration.ofSeconds(5)));
+----
+
+=== Raw stubs
+
+For anything without a neutral reply type, script the HTTP response directly:
+
+[source,java]
+----
+mock.raw().on("POST", "/v1/chat/completions").reply(404, "{\"error\":\"nope\"}");
+----
+
+Raw stubs are checked before the provider formats, in the order they were registered, and stay until the next reset.
+The path is a glob: `*` matches within one path segment, `**` across segments.
+Each provider's requests arrive under a path prefix of their own, listed in <<covered-providers>>: a raw stub for Mistral chat is `/mistralai/v1/chat/completions`, while OpenAI and Azure OpenAI have no prefix.
+Requests answered by a raw stub have no operation, so find them in `mock.requests()` rather than in an operation's `requests()`.
+
+`replies(...)` sends the responses in order, one per matching request, and then repeats the last one.
+`whenBody(jsonPointer, expected)` limits the route to requests whose JSON body has the text `expected` at that pointer, and `delay(Duration)` holds back every response of the route.
+
+For example, watsonx text extraction is not modelled.
+It submits a job, polls it until it is done and then reads the result from Cloud Object Storage, whose URL the mock does not override, so point it at the mock yourself:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.text-extraction.cos-url=${quarkus.langchain4j.mock-api.url}/cos
+----
+
+[source,java]
+----
+mock.raw().on("POST", "/watsonx/ml/v1/text/extractions").reply(201, job("submitted"));
+mock.raw().on("GET", "/watsonx/ml/v1/text/extractions/*")
+        .replies(RawResponse.json(200, job("running")), RawResponse.json(200, job("completed")));
+mock.raw().on("GET", "/cos/results/document.md")
+        .replies(RawResponse.of(200, Map.of("Content-Type", "text/plain"), "# Extracted text"));
+----
+
+Here `job(status)` returns a `TextExtractionResponse` body, as in the watsonx.ai API reference, with that status.
+
+== Assert on requests
+
+Every request is captured.
+`mock.chat().singleRequest()` returns the only captured chat request (and fails if there are none or several), `mock.chat().requests()` returns all of them.
+A `CapturedRequest` gives raw access (`path()`, `header(name)`, `bodyAsJson()`) and typed views:
+A body that is not textual, such as a multipart upload, is kept with one character per byte (ISO-8859-1), so its text parts can be asserted on and the bytes recovered with `body().getBytes(StandardCharsets.ISO_8859_1)`.
+
+* `asChat()` exposes the messages, tool definitions, tool results, model name, sampling parameters and response format;
+* `asDecision()` is the equivalent for decision requests.
+
+`operation()` and `dialect()` tell which operation and which provider format the mock recognized.
+
+[source,java]
+----
+CapturedRequest r = mock.chat().singleRequest();
+assertThat(r.path()).endsWith("/v1/chat/completions");
+assertThat(r.header("Authorization")).isEqualTo("Bearer mock-api-key");
+assertThat(r.asChat().messages()).singleElement().satisfies(msg -> {
+    assertThat(msg.role()).isEqualTo("user");
+    assertThat(msg.text()).isEqualTo("hi");
+});
+----
+
+== Resetting between tests
+
+Before each `@QuarkusTest` method the mock is reset automatically by a JUnit callback, as the second test above shows.
+With `QuarkusExtensionTest`, call `mock.reset()` in a `@BeforeEach` method:
+
+[source,java]
+----
+@BeforeEach
+void reset() {
+    mock.reset();
+}
+----
+
+== Integration tests
+
+In a `@QuarkusIntegrationTest` the application runs in a separate process, so you cannot inject `MockModelServer`.
+Connect to the running mock with the URL that the dev service publishes in `DevServicesContext`:
+
+[source,java]
+----
+@QuarkusIntegrationTest
+@TestProfile(MockModelApiTestProfile.class)
+class ProfileEnabledIT {
+
+    DevServicesContext ctx;
+
+    @Test
+    void scriptedReplyAcrossProcesses() {
+        try (MockModelServer mock = MockModelServer
+                .connect(ctx.devServicesProperties().get("quarkus.langchain4j.mock-api.url"))) {
+            mock.reset();
+            mock.chat().reply("from IT");
+            given().queryParam("q", "hi").get("/chat").then().statusCode(200).body(is("from IT"));
+            assertThat(mock.chat().singleRequest().path()).endsWith("/v1/chat/completions");
+        }
+    }
+}
+----
+
+The endpoint URLs, and the identity placeholders for keys you did not configure, reach the launched jar as system properties.
+Because the extension is test-scoped, that jar logs harmless `Unrecognized configuration key "quarkus.langchain4j.mock-api.*"` warnings.
+The set of named models is fixed at build time from the injection points and AI services, so a named model the application does not refer to is not covered, whatever its configuration; the unnamed model of every provider on the classpath always is.
+
+== Dev mode
+
+Set `%dev.quarkus.langchain4j.mock-api.enabled=true` and run `./mvnw quarkus:dev`.
+The dev service appears in the Dev UI dev services panel and is reused across live reloads, so its URL stays stable.
+With nothing scripted, the application receives the default replies, which you can change with `quarkus.langchain4j.mock-api.default-chat-reply` and `quarkus.langchain4j.mock-api.default-embedding-dimension`.
+
+You can also drive the mock by hand through its admin API.
+With `URL` set to the mock's base URL (shown in the Dev UI):
 
 [source,shell]
 ----
-curl 'http://localhost:8080/chat?message=Hello'
+# queue a chat reply
+curl -X POST $URL/_admin/replies/chat -H 'Content-Type: application/json' -d '[{"kind":"ChatReply","text":"hi"}]'
+
+# list the requests captured so far
+curl $URL/_admin/requests
+
+# clear queued replies and captured requests
+curl -X POST $URL/_admin/reset
 ----
 
-The response is `Hello from WireMock!`.
-WireMock runs inside the local JVM and does not require Docker.
-Keep the JSON mapping available at the configured filesystem path when starting dev mode.
+[[identity-defaults]]
+== Identity defaults
 
-== Scope of the mock
+Some providers refuse to start without identity configuration.
+When you do not set such a value at all, the mock fills in a placeholder:
 
-This mapping only covers non-streaming chat completions.
-To test failures, supply mappings with error statuses or delayed responses, and assert the application's error handling.
+[cols="1,1"]
+|===
+|Key|Placeholder
+
+|`api-key` (OpenAI, Anthropic, Google GenAI, AI Gemini, Mistral, Cohere, Hugging Face)
+|`mock-api-key`
+
+|`api-key` (Azure OpenAI), unless an `ad-token` is configured for the same model
+|`mock-api-key`
+
+|`deployment-name` (Azure OpenAI)
+|`mock-deployment`
+
+|`project-id` (Vertex AI, Vertex AI Gemini)
+|`mock-project`
+
+|`location` (Vertex AI, Vertex AI Gemini)
+|`us-central1`
+
+|`chat-model.model-id` (OpenShift AI)
+|`mock-model`
+
+|`api-key` (watsonx)
+|`mock-api-key`
+
+|`project-id` (watsonx), unless a `space-id` is configured for the same model
+|`mock-project`
+
+|`aws.region` (Bedrock, provider level only)
+|`us-east-1`
+
+|`aws.credentials-provider` (Bedrock, provider level only)
+|`mockApiAwsCredentials`, a bean with fixed credentials for the mock
+|===
+
+Ollama and TypeSafe get no placeholders: Ollama has no credentials, and TypeSafe only requires an API key for its default URL, so no `Authorization` header is sent.
+
+A value you configure yourself always wins: the mock only fills in keys you did not set at all at build time, at the default level or for the same named model.
+Setting a key to an empty value counts as setting it, which is how a test keeps a key empty on purpose, for example to make a provider fall back to its `ModelAuthProvider` instead of an API key.
+For Azure OpenAI, an `ad-token` (at the default level or per model kind, for example `chat-model.ad-token`) counts as configuring `api-key`, because the client accepts only one of them.
+For watsonx, a `space-id` counts as configuring `project-id` in the same way.
+
+An OpenAI chat model without an explicit `chat-model.mode` selects its API from its base URL: the Responses API for OpenAI itself, Chat Completions for any other URL.
+Pointed at the mock, every model would select Chat Completions, so the mock sets `chat-model.mode=responses` for a model you would run against OpenAI, that is one with no `base-url` of its own or with OpenAI's, and leaves a model with another `base-url` on Chat Completions, as it would be against the compatible endpoint you configured.
+A `chat-model.mode` you set yourself always wins, and a test about one of the two APIs is best off setting it.
+
+The Vertex AI providers authenticate with Google credentials instead of a key, so the mock replaces those with beans:
+
+* Vertex AI Gemini gets a `ModelAuthProvider` bean per model in use, qualified with the model's config name, that sends `Authorization: Bearer mock-access-token`.
+A model for which you have a `ModelAuthProvider` bean of your own, qualified with its `@ModelName` or unqualified, gets no mock bean, so your provider is used exactly as it would be without the mock.
+* Vertex AI gets a default `AuthProvider` bean with the same token, which replaces Application Default Credentials; an `AuthProvider` bean of your own still wins.
+
+[[covered-providers]]
+== Covered providers
+
+Every HTTP model provider in Quarkus LangChain4j is covered.
+The wire formats follow each provider's public API documentation (for OpenAI, the published OpenAPI specification); for example, a declined decision answer is rendered with the documented `refusal` type.
+
+The operations column uses the names of the reply scopes; "streaming" and "tools" mean streaming chat and tool calls in chat.
+Endpoint keys are always overridden, also for named models; identity keys are only filled in when you did not set them (see <<identity-defaults>>).
+The path prefix is where the provider's requests arrive on the mock, and what a raw stub for that provider starts with.
+
+[cols="2,2,3,3,4"]
+|===
+|Provider (config prefix)|Path prefix|Operations|Filled in|Notes
+
+|OpenAI (`openai`)
+|none
+|chat, streaming, tools, embeddings, moderation, decision
+|`base-url`, `api-key`, `chat-model.mode` (see <<identity-defaults>>)
+|Chat Completions, the Responses API and the Decisions API.
+Image generation and transcription are raw stubs only.
+
+|Azure OpenAI (`azure-openai`)
+|none
+|chat, streaming, tools, embeddings
+|`endpoint` (default and per model kind), `api-key`, `deployment-name`
+|OpenAI bodies under `/openai/deployments/mock-deployment`.
+
+|Anthropic (`anthropic`)
+|`/anthropic`
+|chat, streaming, tools
+|`base-url`, `api-key`
+|`ChatReply.thinking` becomes a `thinking` content block.
+
+|Google GenAI (`google.genai`)
+|`/google-genai`
+|chat, streaming, tools, embeddings
+|`base-url`, `api-key`
+|
+
+|AI Gemini (`ai.gemini`)
+|`/ai-gemini`
+|chat, streaming, tools, embeddings
+|`base-url`, `api-key`
+|
+
+|Vertex AI Gemini (`vertexai.gemini`)
+|`/vertexai-gemini`
+|chat, streaming, tools, embeddings
+|`base-url`, `project-id`, `location`, a token per model
+|Embeddings go through `:predict`.
+
+|Vertex AI (`vertexai`)
+|`/vertexai`
+|chat
+|`base-url`, `project-id`, `location`, a default `AuthProvider` bean
+|PaLM chat over `:predict`, which has neither streaming nor tools.
+
+|Mistral (`mistralai`)
+|`/mistralai`
+|chat, streaming, tools, embeddings, moderation
+|`base-url`, `api-key`
+|A `CONTENT_FILTER` finish reason is rendered as `error`, because Mistral has no counterpart.
+Moderation categories use Mistral's names, for example `violence_and_threats`: a `ModerationReply` only flags when it names one of them.
+
+|OpenShift AI (`openshift-ai`)
+|`/openshift-ai`
+|chat (not streaming)
+|`base-url`, `chat-model.model-id`
+|Caikit text generation (`/api/v1/task/text-generation`), text only: a reply with tool calls is answered with a 500 error.
+
+|Ollama (`ollama`)
+|`/ollama`
+|chat, streaming, tools, embeddings
+|`base-url`
+|Streaming is newline-delimited JSON.
+`quarkus.langchain4j.mock-api.enabled=true` also disables the LangChain4j Ollama dev services, so no Ollama container or model download is started.
+
+|Cohere (`cohere`)
+|`/cohere`
+|scoring
+|`base-url`, `api-key`
+|`POST /v2/rerank` is answered from the `ScoringReply`.
+Extra scores are ignored; too few are a 500 error.
+
+|Hugging Face (`huggingface`)
+|`/huggingface`
+|chat, embeddings
+|`chat-model.inference-endpoint-url`, `embedding-model.inference-endpoint-url`, `api-key`
+|Chat is the Text Generation Inference `compat_generate` operation, whose response is an array.
+No tools and no streaming: a reply with tool calls is answered with a 500 error.
+Both inference endpoint URLs are replaced as a whole, because the mock tells chat and embeddings apart only by URL and cannot keep your path: every Hugging Face model shares one mock path, and `ChatRequestView.modelName()` is null.
+
+|TypeSafe (`typesafe`)
+|`/typesafe`
+|decision
+|`base-url`
+|No identity is filled in.
+The API has no refusal: a declined answer, or an empty `DecisionReply`, leaves the answer out, and the client throws.
+
+|watsonx (`watsonx`)
+|`/watsonx`
+|chat, streaming, tools, embeddings, moderation, scoring
+|`base-url`, `iam.base-url`, `api-key`, `project-id`
+|Also the deployment and model gateway chat and embedding endpoints.
+The IAM token endpoint is served by the mock, which answers with the token `mock-iam-token`; tokens are cached per API key, so one IAM request serves all models.
+`text-extraction.cos-url`, `text-classification.cos-url`, `schema.create.cos-url` and `built-in-tool.base-url` are not overridden: set them yourself when you test those features.
+Text generation, tokenization, text extraction and classification, files, schema services, time series, built-in tools, batches, gateway image generation, model catalogs and Cloud Pak for Data authentication are raw stubs only.
+
+|Bedrock (`bedrock`)
+|`/bedrock`
+|chat, streaming, tools, embeddings
+|`aws.endpoint-override` (provider level, `chat-model` and `embedding-model`), `aws.region`, `aws.credentials-provider`
+|Chat is the Converse API; streaming uses the AWS event stream format.
+The SigV4 signature is accepted without verification.
+Embeddings go through `invoke` with the Cohere Embed body (answered as `embeddings_by_type` when the request carries `embedding_types`, else as `embeddings_floats`) or the Titan body.
+Other `invoke` bodies are raw stubs only.
+|===
+
+Out of scope:
+
+* in-process providers such as `jinfer` and `jitllm`, which make no HTTP calls;
+* HTTP calls that are not model calls, such as MCP servers or Tavily; keep using https://docs.quarkiverse.io/quarkus-wiremock/dev/index.html[Quarkus WireMock] for those.
+
+[[client-limitations]]
+=== Client limitations observed
+
+The mock renders the documented responses.
+Where a provider's client reads them differently, the result is the same as with the real service:
+
+* Ollama: streaming responses report no token usage.
+* watsonx: the moderation result's `flaggedText()` is `null`.
+* Bedrock: Cohere embeddings report no token usage.
+* OpenShift AI: only the first message of the conversation is sent.
+
+[[wire-formats]]
+== Wire formats
+
+The examples below show, for each provider, the request its client sends (method, path on the mock including the path prefix, and body) and what the mock answers to a scripted reply: a text reply with usage, a tool call, the same text streamed, embeddings, moderation, scoring, decisions and a `429` error, as far as the provider supports them.
+Bodies are pretty printed; streams are shown as the server-sent events, newline-delimited JSON objects or AWS event stream messages the mock writes, and timestamps and random ids are replaced by fixed values.
+They are generated and verified by `WireFormatExamplesTest` in the `quarkus-langchain4j-mock-api-core` module, so they always match the mock; after changing a dialect, regenerate them with `-Dmockapi.wire.update=true`.
+
+.OpenAI and Azure OpenAI
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/openai.txt[]
+----
+====
+
+.Anthropic
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/anthropic.txt[]
+----
+====
+
+.Google GenAI
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/google-genai.txt[]
+----
+====
+
+.AI Gemini
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/ai-gemini.txt[]
+----
+====
+
+.Vertex AI Gemini
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/vertexai-gemini.txt[]
+----
+====
+
+.Vertex AI
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/vertexai.txt[]
+----
+====
+
+.Mistral
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/mistralai.txt[]
+----
+====
+
+.OpenShift AI
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/openshift-ai.txt[]
+----
+====
+
+.Ollama
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/ollama.txt[]
+----
+====
+
+.Cohere
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/cohere.txt[]
+----
+====
+
+.Hugging Face
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/huggingface.txt[]
+----
+====
+
+.TypeSafe
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/typesafe.txt[]
+----
+====
+
+.watsonx
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/watsonx.txt[]
+----
+====
+
+.Bedrock
+[%collapsible]
+====
+[source,text]
+----
+include::{examples-dir}/mock-api/wire/bedrock.txt[]
+----
+====
+
+== Precedence
+
+The mock sets the provider URL with higher priority than `application.properties`, environment variables and system properties.
+A test's `overrideRuntimeConfigKey` or a test profile override beats the mock.
+In `@QuarkusIntegrationTest` the provider URLs reach the jar as system properties, so there they also beat `application.properties`.
+Identity placeholders are not published for keys you configured, so your own API key still wins there.
+
+== Disabling
+
+The mock runs as a Dev Service.
+If `quarkus.langchain4j.mock-api.enabled` is `true` while Dev Services are disabled globally (`quarkus.devservices.enabled=false`), the build fails, so the application never calls the real provider by mistake.
+Set `quarkus.langchain4j.mock-api.enabled=false` to turn the mock off.
+
+== Port
+
+By default the mock listens on a free port chosen at start.
+A fixed `quarkus.langchain4j.mock-api.port` conflicts with parallel test JVMs, such as Surefire with `forkCount` greater than 1, because each one starts its own mock; the start then fails with a message naming the port.
+
+== Configuration reference
+
+The options live in the core configuration under `quarkus.langchain4j.mock-api`, so they are listed in the core configuration reference.
+
+[cols="1,1,2"]
+|===
+|Property |Default |Description
+
+|`quarkus.langchain4j.mock-api.enabled` |`false` |Whether the mock model API is enabled. Requires this extension; when enabled, the LangChain4j dev services are not started.
+|`quarkus.langchain4j.mock-api.port` |random free port |The port the mock server listens on.
+|`quarkus.langchain4j.mock-api.default-chat-reply` |a fixed sentence |The reply returned for chat requests when no stub matches.
+|`quarkus.langchain4j.mock-api.default-embedding-dimension` |`4` |The dimension of the embeddings returned when no stub matches.
+|===
+
+The keys below are published by the dev service for the application and are not meant to be set by hand.
+
+include::includes/quarkus-langchain4j-mock-api.adoc[leveloffset=+1,opts=optional]

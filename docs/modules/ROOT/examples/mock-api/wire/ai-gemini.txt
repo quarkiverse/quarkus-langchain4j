@@ -1,0 +1,136 @@
+=== Chat
+--> POST /ai-gemini/v1beta/models/gemini-2.5-flash:generateContent
+{
+  "contents" : [ {
+    "role" : "user",
+    "parts" : [ {
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 200 [application/json]
+{
+  "candidates" : [ {
+    "content" : {
+      "parts" : [ {
+        "text" : "Hello from the mock"
+      } ],
+      "role" : "model"
+    },
+    "finishReason" : "STOP",
+    "index" : 0
+  } ],
+  "usageMetadata" : {
+    "promptTokenCount" : 12,
+    "candidatesTokenCount" : 7,
+    "totalTokenCount" : 19
+  },
+  "modelVersion" : "gemini-2.5-flash",
+  "responseId" : "mock-response-1"
+}
+
+=== Chat with a tool call
+--> POST /ai-gemini/v1beta/models/gemini-2.5-flash:generateContent
+{
+  "contents" : [ {
+    "role" : "user",
+    "parts" : [ {
+      "text" : "What is the weather in Athens?"
+    } ]
+  } ],
+  "tools" : [ {
+    "functionDeclarations" : [ {
+      "name" : "get_weather",
+      "description" : "Returns the weather in a city",
+      "parameters" : {
+        "type" : "OBJECT",
+        "properties" : {
+          "city" : {
+            "type" : "STRING"
+          }
+        },
+        "required" : [ "city" ]
+      }
+    } ]
+  } ]
+}
+<-- 200 [application/json]
+{
+  "candidates" : [ {
+    "content" : {
+      "parts" : [ {
+        "functionCall" : {
+          "name" : "get_weather",
+          "args" : {
+            "city" : "Athens"
+          }
+        }
+      } ],
+      "role" : "model"
+    },
+    "finishReason" : "STOP",
+    "index" : 0
+  } ],
+  "usageMetadata" : {
+    "promptTokenCount" : 0,
+    "candidatesTokenCount" : 0,
+    "totalTokenCount" : 0
+  },
+  "modelVersion" : "gemini-2.5-flash",
+  "responseId" : "mock-response-1"
+}
+
+=== Streaming chat
+--> POST /ai-gemini/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse
+{
+  "contents" : [ {
+    "role" : "user",
+    "parts" : [ {
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 200 [text/event-stream]
+data: {"candidates":[{"content":{"parts":[{"text":"Hello"}],"role":"model"},"index":0}],"modelVersion":"gemini-2.5-flash","responseId":"mock-response-1"}
+
+data: {"candidates":[{"content":{"parts":[{"text":" from"}],"role":"model"},"index":0}],"modelVersion":"gemini-2.5-flash","responseId":"mock-response-1"}
+
+data: {"candidates":[{"content":{"parts":[{"text":" the"}],"role":"model"},"index":0}],"modelVersion":"gemini-2.5-flash","responseId":"mock-response-1"}
+
+data: {"candidates":[{"content":{"parts":[{"text":" mock"}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":7,"totalTokenCount":19},"modelVersion":"gemini-2.5-flash","responseId":"mock-response-1"}
+
+=== Embeddings
+--> POST /ai-gemini/v1beta/models/text-embedding-004:embedContent
+{
+  "model" : "models/text-embedding-004",
+  "content" : {
+    "parts" : [ {
+      "text" : "Hello"
+    } ]
+  }
+}
+<-- 200 [application/json]
+{
+  "embedding" : {
+    "values" : [ 0.1, 0.2, 0.3 ]
+  }
+}
+
+=== Error
+--> POST /ai-gemini/v1beta/models/gemini-2.5-flash:generateContent
+{
+  "contents" : [ {
+    "role" : "user",
+    "parts" : [ {
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 429 [application/json]
+{
+  "error" : {
+    "code" : 429,
+    "message" : "slow down",
+    "status" : "RESOURCE_EXHAUSTED"
+  }
+}

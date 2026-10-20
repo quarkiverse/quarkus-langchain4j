@@ -1,0 +1,38 @@
+=== Scoring
+--> POST /cohere/v2/rerank
+{
+  "model" : "rerank-v3.5",
+  "query" : "What is the capital of Greece?",
+  "documents" : [ "Paris is the capital of France.", "Athens is the capital of Greece." ]
+}
+<-- 200 [application/json]
+{
+  "id" : "00000000-0000-0000-0000-000000000000",
+  "results" : [ {
+    "index" : 1,
+    "relevance_score" : 0.9
+  }, {
+    "index" : 0,
+    "relevance_score" : 0.2
+  } ],
+  "meta" : {
+    "api_version" : {
+      "version" : "2"
+    },
+    "billed_units" : {
+      "search_units" : 1
+    }
+  }
+}
+
+=== Error
+--> POST /cohere/v2/rerank
+{
+  "model" : "rerank-v3.5",
+  "query" : "What is the capital of Greece?",
+  "documents" : [ "Paris is the capital of France.", "Athens is the capital of Greece." ]
+}
+<-- 429 [application/json]
+{
+  "message" : "slow down"
+}

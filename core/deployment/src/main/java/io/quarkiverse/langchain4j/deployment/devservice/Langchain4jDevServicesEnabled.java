@@ -18,7 +18,9 @@ public class Langchain4jDevServicesEnabled implements BooleanSupplier {
 
     @Override
     public boolean getAsBoolean() {
-        return config.devservices().enabled();
+        // the mock model API points every model at itself, so a model dev service (an Ollama container, or pulling
+        // models into a local Ollama) would only be started for nothing
+        return !config.mockApi().enabled() && config.devservices().enabled();
     }
 
 }
