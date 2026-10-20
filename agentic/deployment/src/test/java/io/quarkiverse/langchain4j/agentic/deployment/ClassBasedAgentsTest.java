@@ -48,7 +48,6 @@ import dev.langchain4j.service.V;
 import dev.langchain4j.service.decision.Decide;
 import io.quarkiverse.langchain4j.agentic.deployment.decision.FixedDecisionModel;
 import io.quarkiverse.langchain4j.agentic.runtime.AgentClassSupport;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.arc.ManagedContext;
@@ -64,8 +63,7 @@ public class ClassBasedAgentsTest {
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(FixedDecisionModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     // ── interceptor ──
 

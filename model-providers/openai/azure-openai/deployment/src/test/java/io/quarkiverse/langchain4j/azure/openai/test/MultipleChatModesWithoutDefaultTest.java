@@ -2,8 +2,6 @@ package io.quarkiverse.langchain4j.azure.openai.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
@@ -15,11 +13,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusExtensionTest;
+import tools.jackson.databind.JsonNode;
 
-public class MultipleChatModesWithoutDefaultTest extends OpenAiBaseTest {
+public class MultipleChatModesWithoutDefaultTest {
 
     public static final String MESSAGE_CONTENT = "Tell me a joke about developers";
 
@@ -27,17 +26,17 @@ public class MultipleChatModesWithoutDefaultTest extends OpenAiBaseTest {
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.model1.api-key", "key1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.model1.endpoint",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.model2.api-key", "key2")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.model2.endpoint",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.model2.api-key", "key2");
+
+    @Inject
+    MockModelServer mock;
 
     @BeforeEach
     void setup() {
-        setChatCompletionMessageContent(MESSAGE_CONTENT);
-        resetRequests();
+        mock.reset();
+        mock.chat().reply(MESSAGE_CONTENT);
     }
 
     @Inject
@@ -50,20 +49,27 @@ public class MultipleChatModesWithoutDefaultTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    public void testNamedModel1() throws IOException {
+    public void testNamedModel1() {
         String result = chatWithModel1.chat(MESSAGE_CONTENT);
-        assertThat(result).isNotBlank();
+        assertThat(result).isEqualTo(MESSAGE_CONTENT);
 
-        assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);
+        assertSingleRequestMessage(mock.chat().singleRequest(), "key1");
     }
 
     @Test
     @ActivateRequestContext
-    public void testNamedModel2() throws IOException {
+    public void testNamedModel2() {
         String result = chatWithModel2.chat(MESSAGE_CONTENT);
-        assertThat(result).isNotBlank();
+        assertThat(result).isEqualTo(MESSAGE_CONTENT);
 
-        assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);
+        assertSingleRequestMessage(mock.chat().singleRequest(), "key2");
     }
 
+    private static void assertSingleRequestMessage(CapturedRequest request, String apiKey) {
+        assertThat(request.header("api-key")).isEqualTo(apiKey);
+        JsonNode messages = request.bodyAsJson().get("messages");
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).get("role").stringValue()).isEqualTo("user");
+        assertThat(messages.get(0).get("content").stringValue()).isEqualTo(MESSAGE_CONTENT);
+    }
 }

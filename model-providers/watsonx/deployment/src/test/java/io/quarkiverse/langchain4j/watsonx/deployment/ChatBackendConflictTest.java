@@ -1,10 +1,10 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_DEPLOYMENT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_GATEWAY_CHAT_MODEL;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_DEPLOYMENT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_GATEWAY_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -30,7 +30,7 @@ public class ChatBackendConflictTest {
                     DEFAULT_DEPLOYMENT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.gateway-chat-model.model-name",
                     DEFAULT_GATEWAY_CHAT_MODEL)
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class))
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class))
             .assertException(t -> {
                 assertThat(t.getClass().getName()).isEqualTo(ConfigValidationException.class.getName());
                 assertThat(t)

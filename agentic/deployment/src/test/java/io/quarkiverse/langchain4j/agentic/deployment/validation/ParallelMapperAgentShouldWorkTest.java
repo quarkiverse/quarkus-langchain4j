@@ -14,7 +14,6 @@ import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusExtensionTest;
 
 public class ParallelMapperAgentShouldWorkTest {
@@ -25,8 +24,7 @@ public class ParallelMapperAgentShouldWorkTest {
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(Person.class, PersonAstrologyAgent.class, BatchHoroscopeAgent.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     @Test
     void test() {

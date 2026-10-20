@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -23,28 +20,27 @@ import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusExtensionTest;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
-public class VertexAiGeminiRecursivePolymorphicSchemaTest extends WiremockAware {
+public class VertexAiGeminiRecursivePolymorphicSchemaTest {
 
     private static final String CHAT_MODEL_ID = "gemini-3-flash-preview";
-    private static final String MODEL_URL = "/v1/projects/dummy/locations/dummy/publishers/google/models/" + CHAT_MODEL_ID;
-    private static final String RESPONSE = """
-            {"candidates":[{"content":{"role":"model","parts":[{"text":"{}"}]},"finishReason":"STOP"}],
-             "usageMetadata":{"promptTokenCount":1,"candidatesTokenCount":1,"totalTokenCount":2}}""";
 
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-id", CHAT_MODEL_ID);
 
     @Inject
     ChatModel chatModel;
+
+    @Inject
+    MockModelServer mock;
 
     public record TreeNode(String name, List<TreeNode> children) {
     }
@@ -66,13 +62,12 @@ public class VertexAiGeminiRecursivePolymorphicSchemaTest extends WiremockAware 
 
     @BeforeEach
     void setUp() {
-        resetRequests();
-        wiremock().register(post(urlPathEqualTo(MODEL_URL + ":generateContent"))
-                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody(RESPONSE)));
+        mock.reset();
+        mock.chat().reply(ChatReply.text("{}").usage(1, 1));
     }
 
     @Test
-    void recursiveTypeIsSentAsJsonSchemaWithReferences() throws Exception {
+    void recursiveTypeIsSentAsJsonSchemaWithReferences() {
         chatModel.chat(request(TreeNode.class));
 
         JsonNode generationConfig = sentGenerationConfig();
@@ -83,27 +78,27 @@ public class VertexAiGeminiRecursivePolymorphicSchemaTest extends WiremockAware 
     }
 
     @Test
-    void polymorphicTypeIsSentAsJsonSchemaWithAnyOf() throws Exception {
+    void polymorphicTypeIsSentAsJsonSchemaWithAnyOf() {
         chatModel.chat(request(Drawing.class));
 
         JsonNode generationConfig = sentGenerationConfig();
         assertJsonSchemaSent(generationConfig);
         JsonNode shape = generationConfig.get("responseJsonSchema").get("properties").get("shape");
-        assertThat(shape.get("anyOf")).hasSize(2);
+        assertThat(shape.get("anyOf").size()).isEqualTo(2);
     }
 
     @Test
-    void plainTypeIsStillSentAsResponseSchema() throws Exception {
+    void plainTypeIsStillSentAsResponseSchema() {
         chatModel.chat(request(Person.class));
 
         JsonNode generationConfig = sentGenerationConfig();
-        assertThat(generationConfig.get("responseMimeType").asText()).isEqualTo("application/json");
+        assertThat(generationConfig.get("responseMimeType").asString()).isEqualTo("application/json");
         assertThat(generationConfig.get("responseSchema")).isNotNull();
         assertThat(generationConfig.get("responseJsonSchema")).isNull();
     }
 
     private static void assertJsonSchemaSent(JsonNode generationConfig) {
-        assertThat(generationConfig.get("responseMimeType").asText()).isEqualTo("application/json");
+        assertThat(generationConfig.get("responseMimeType").asString()).isEqualTo("application/json");
         assertThat(generationConfig.get("responseSchema")).isNull();
         assertThat(generationConfig.get("responseJsonSchema")).isNotNull();
     }
@@ -116,8 +111,8 @@ public class VertexAiGeminiRecursivePolymorphicSchemaTest extends WiremockAware 
                 .build();
     }
 
-    private JsonNode sentGenerationConfig() throws Exception {
-        return new ObjectMapper().readTree(singleLoggedRequest().getBodyAsString()).get("generationConfig");
+    private JsonNode sentGenerationConfig() {
+        return mock.chat().singleRequest().bodyAsJson().get("generationConfig");
     }
 
     @Singleton

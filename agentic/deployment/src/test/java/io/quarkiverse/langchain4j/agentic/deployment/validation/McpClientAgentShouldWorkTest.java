@@ -10,7 +10,6 @@ import dev.langchain4j.agentic.declarative.McpClientAgent;
 import dev.langchain4j.agentic.declarative.McpClientSupplier;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.service.SystemMessage;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpClientAgentShouldWorkTest {
@@ -20,8 +19,7 @@ public class McpClientAgentShouldWorkTest {
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     @Test
     void test() {

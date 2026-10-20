@@ -1,11 +1,9 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
@@ -14,8 +12,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
@@ -34,28 +30,27 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.CdiBean;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.DecisionReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * The model beans of the providers used only by parameters of static agent methods are created, even if nothing
  * injects them.
  */
-public class CdiModelParametersTest extends WiremockAware {
+public class CdiModelParametersTest {
 
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", WiremockAware.wiremockUrlForConfig("/v1"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.planner.api-key", "planner-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.planner.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.writer.api-key", "writer-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.writer.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.writer.api-key", "writer-key");
 
     public static class BillingExpert {
+
         @Agent(name = "billing", description = "Answers questions about invoices", outputKey = "answer")
         public static String answer(@V("request") String request) {
             return "billing answer";
@@ -63,6 +58,7 @@ public class CdiModelParametersTest extends WiremockAware {
     }
 
     public static class SupportExpert {
+
         @Agent(name = "support", description = "Answers questions about bugs", outputKey = "answer")
         public static String answer(@V("request") String request) {
             return "support answer";
@@ -99,6 +95,7 @@ public class CdiModelParametersTest extends WiremockAware {
     }
 
     public interface ChatRouter {
+
         @PlannerAgent(outputKey = "answer", subAgents = { BillingExpert.class, SupportExpert.class })
         String route(@V("request") String request);
 
@@ -109,6 +106,7 @@ public class CdiModelParametersTest extends WiremockAware {
     }
 
     public interface DecisionRouter {
+
         @PlannerAgent(outputKey = "answer", subAgents = { BillingExpert.class, SupportExpert.class })
         String route(@V("request") String request);
 
@@ -119,6 +117,7 @@ public class CdiModelParametersTest extends WiremockAware {
     }
 
     public interface Writer {
+
         @UserMessage("Write a story about {{topic}}")
         @Agent(description = "Writes a story", outputKey = "story")
         String write(@V("topic") String topic);
@@ -131,6 +130,7 @@ public class CdiModelParametersTest extends WiremockAware {
     }
 
     public interface StoryWorkflow {
+
         @SequenceAgent(outputKey = "story", subAgents = { Writer.class })
         String write(@V("topic") String topic);
     }
@@ -144,74 +144,41 @@ public class CdiModelParametersTest extends WiremockAware {
     @Inject
     StoryWorkflow storyWorkflow;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
     void plannerUsesNamedChatModelBean() {
-        stubChatCompletion("support");
+        mock.chat().reply("support");
 
         assertThat(chatRouter.route("The app crashes")).isEqualTo("support answer");
-        assertThat(singleLoggedRequest().getHeader("Authorization")).isEqualTo("Bearer planner-key");
+
+        assertThat(mock.chat().singleRequest().header("Authorization")).isEqualTo("Bearer planner-key");
     }
 
     @Test
     void plannerUsesDecisionModelBean() {
-        wiremock().register(post(urlEqualTo("/v1/decisions"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "model": "gpt-6-luna",
-                                  "answers": [{
-                                    "type": "choice",
-                                    "name": "decision-agent",
-                                    "choice": "billing",
-                                    "probabilities": [
-                                      {"value": "billing", "probability": 0.9},
-                                      {"value": "support", "probability": 0.1}
-                                    ]
-                                  }]
-                                }
-                                """)));
+        mock.decision().reply(DecisionReply.of(
+                DecisionReply.choice("decision-agent", "billing", Map.of("billing", 0.9, "support", 0.1), null)));
 
         assertThat(decisionRouter.route("Why was I charged twice?")).isEqualTo("billing answer");
-        LoggedRequest request = singleLoggedRequest();
-        assertThat(request.getUrl()).isEqualTo("/v1/decisions");
-        assertThat(request.getHeader("Authorization")).isEqualTo("Bearer default-key");
+
+        CapturedRequest request = mock.decision().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/decisions");
+        assertThat(request.header("Authorization")).isEqualTo("Bearer default-key");
     }
 
     @Test
     void chatModelSupplierUsesNamedChatModelBean() {
-        stubChatCompletion("Once upon a time");
+        mock.chat().reply("Once upon a time");
 
         assertThat(storyWorkflow.write("dragons")).isEqualTo("Once upon a time");
-        assertThat(singleLoggedRequest().getHeader("Authorization")).isEqualTo("Bearer writer-key");
-    }
 
-    /**
-     * The default chat completion stub of the OpenAI testing module is missing when this module is tested on CI, so the
-     * test registers its own, like the MCP agent tests.
-     */
-    private void stubChatCompletion(String content) {
-        wiremock().register(post(urlEqualTo("/v1/chat/completions"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "chatcmpl-1",
-                                  "object": "chat.completion",
-                                  "created": 1698931202,
-                                  "model": "gpt-6-luna",
-                                  "choices": [{
-                                    "index": 0,
-                                    "message": {"role": "assistant", "content": "%s"},
-                                    "finish_reason": "stop"
-                                  }],
-                                  "usage": {"prompt_tokens": 9, "completion_tokens": 12, "total_tokens": 21}
-                                }
-                                """.formatted(content))));
+        assertThat(mock.chat().singleRequest().header("Authorization")).isEqualTo("Bearer writer-key");
     }
 }

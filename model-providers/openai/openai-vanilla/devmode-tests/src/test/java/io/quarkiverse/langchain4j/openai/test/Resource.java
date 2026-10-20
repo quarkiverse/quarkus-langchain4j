@@ -3,7 +3,7 @@ package io.quarkiverse.langchain4j.openai.test;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 import io.quarkus.qute.TemplateGlobal;
 
@@ -12,13 +12,10 @@ public class Resource {
 
     private final Service service;
     private final ServiceWithResource serviceWithResource;
-    private final Integer wiremockPort;
 
-    public Resource(Service service, ServiceWithResource serviceWithResource,
-            @ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
+    public Resource(Service service, ServiceWithResource serviceWithResource) {
         this.service = service;
         this.serviceWithResource = serviceWithResource;
-        this.wiremockPort = wiremockPort;
     }
 
     @GET
@@ -34,9 +31,9 @@ public class Resource {
 
     // needed because the dev mode test does not have access to this because of ClassLoaders
     @GET
-    @Path("wiremock")
-    public Integer wiremockPort() {
-        return wiremockPort;
+    @Path("url")
+    public String mockUrl() {
+        return ConfigProvider.getConfig().getValue("quarkus.langchain4j.mock-api.url", String.class);
     }
 
     @TemplateGlobal

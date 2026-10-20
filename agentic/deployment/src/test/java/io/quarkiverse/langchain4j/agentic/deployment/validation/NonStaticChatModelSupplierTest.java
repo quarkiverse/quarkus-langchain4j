@@ -13,7 +13,6 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.IllegalConfigurationException;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusExtensionTest;
 
 public class NonStaticChatModelSupplierTest {
@@ -23,8 +22,7 @@ public class NonStaticChatModelSupplierTest {
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(Agents.class, CategoryRouterWithModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .assertException(
                     throwable -> Assertions.assertThat(throwable).isInstanceOf(IllegalConfigurationException.class)
                             .hasMessageContaining("static"));

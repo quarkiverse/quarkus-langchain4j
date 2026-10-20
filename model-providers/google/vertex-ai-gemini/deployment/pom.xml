@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-testing-internal</artifactId>
+            <artifactId>quarkus-langchain4j-mock-api-deployment</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -57,6 +57,18 @@
                             <artifactId>quarkus-extension-processor</artifactId>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- hide the developer's Google Application Default Credentials, so a Vertex AI client that looks them
+                     up fails instead of sending a real access token to the mock -->
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <GOOGLE_APPLICATION_CREDENTIALS />
+                        <CLOUDSDK_CONFIG>${project.build.directory}/no-gcloud-config</CLOUDSDK_CONFIG>
+                        <NO_GCE_CHECK>true</NO_GCE_CHECK>
+                    </environmentVariables>
                 </configuration>
             </plugin>
         </plugins>

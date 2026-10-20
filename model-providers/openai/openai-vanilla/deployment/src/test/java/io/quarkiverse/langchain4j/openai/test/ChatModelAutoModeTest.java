@@ -1,9 +1,5 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
@@ -21,8 +17,7 @@ import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
 import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusExtensionTest;
 
@@ -30,33 +25,39 @@ import io.quarkus.test.QuarkusExtensionTest;
  * Verifies how {@code quarkus.langchain4j.openai.chat-model.mode} is resolved when it is not set explicitly:
  * the Responses API is selected when talking to OpenAI itself, any other base URL keeps using Chat Completions.
  * An explicit {@code mode} always wins and is a runtime property.
+ * <p>
+ * Against the mock every model talks to the mock's URL, so the mock pins the mode a model would select in production
+ * from the build-time configuration: a model with no base URL of its own, or with OpenAI's, targets the Responses API,
+ * while a model with another base URL stays on Chat Completions, as it would against the compatible endpoint it was
+ * configured for. The keys are therefore set at build time, where the mock reads them.
  */
-public class ChatModelAutoModeTest extends OpenAiBaseTest {
+public class ChatModelAutoModeTest {
+
+    // an OpenAI-compatible endpoint of the application's own; the mock redirects the model to itself
+    private static final String COMPATIBLE_ENDPOINT = "http://localhost:11434/v1";
 
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             // OpenAI base URL, default model -> responses
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-default.api-key", "key")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-default.api-key", "key")
             // OpenAI base URL, pre-GPT-6 model -> still responses, the model name plays no role
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-gpt4.api-key", "key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-gpt4.chat-model.model-name", "gpt-4o-mini")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-gpt4.api-key", "key")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-gpt4.chat-model.model-name", "gpt-4o-mini")
             // OpenAI base URL without trailing slash -> responses
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-no-slash.api-key", "key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-no-slash.base-url", "https://api.openai.com/v1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-no-slash.chat-model.model-name", "gpt-6-sol")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-no-slash.api-key", "key")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-no-slash.base-url", "https://api.openai.com/v1")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-no-slash.chat-model.model-name", "gpt-6-sol")
             // OpenAI base URL, but explicit mode wins -> chat-completion
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-explicit-completion.api-key", "key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.openai-explicit-completion.chat-model.mode",
-                    "chat-completion")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-explicit-completion.api-key", "key")
+            .overrideConfigKey("quarkus.langchain4j.openai.openai-explicit-completion.chat-model.mode", "chat-completion")
             // custom base URL (OpenAI-compatible endpoint), GPT-6 model -> chat-completion
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.custom-gpt6.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.custom-gpt6.chat-model.model-name", "gpt-6-luna")
-            // custom base URL, explicit runtime mode -> responses
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.custom-explicit-responses.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.custom-explicit-responses.chat-model.mode", "responses");
+            .overrideConfigKey("quarkus.langchain4j.openai.custom-gpt6.base-url", COMPATIBLE_ENDPOINT)
+            .overrideConfigKey("quarkus.langchain4j.openai.custom-gpt6.chat-model.model-name", "gpt-6-luna")
+            // custom base URL, explicit mode -> responses
+            .overrideConfigKey("quarkus.langchain4j.openai.custom-explicit-responses.base-url", COMPATIBLE_ENDPOINT)
+            .overrideConfigKey("quarkus.langchain4j.openai.custom-explicit-responses.chat-model.mode", "responses");
 
     @Inject
     @ModelName("openai-default")
@@ -94,18 +95,23 @@ public class ChatModelAutoModeTest extends OpenAiBaseTest {
     @ModelName("custom-explicit-responses")
     StreamingChatModel customExplicitResponsesStreamingModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setup() {
-        resetRequests();
-        resetMappings();
-        stubChatCompletionEndpoint();
-        stubResponsesEndpoint();
+        mock.reset();
     }
 
     @Test
     void openAiBaseUrlWithDefaultModelUsesResponses() {
         assertThat(ClientProxy.unwrap(openAiDefaultModel)).isInstanceOf(OpenAiResponsesChatModel.class);
         assertThat(ClientProxy.unwrap(openAiDefaultStreamingModel)).isInstanceOf(OpenAiResponsesStreamingChatModel.class);
+
+        mock.chat().reply("Hello from Responses API!");
+        assertThat(openAiDefaultModel.chat("hi")).isEqualTo("Hello from Responses API!");
+        assertThat(mock.requests()).singleElement()
+                .satisfies(request -> assertThat(request.path()).isEqualTo("/v1/responses"));
     }
 
     @Test
@@ -128,9 +134,10 @@ public class ChatModelAutoModeTest extends OpenAiBaseTest {
         assertThat(ClientProxy.unwrap(customGpt6Model)).isInstanceOf(OpenAiChatModel.class);
         assertThat(ClientProxy.unwrap(customGpt6StreamingModel)).isInstanceOf(OpenAiStreamingChatModel.class);
 
+        mock.chat().reply("Hello from Chat Completions!");
         assertThat(customGpt6Model.chat("hi")).isEqualTo("Hello from Chat Completions!");
-        wiremock().verifyThat(1, postRequestedFor(urlEqualTo("/v1/chat/completions")));
-        wiremock().verifyThat(0, postRequestedFor(urlEqualTo("/v1/responses")));
+        assertThat(mock.requests()).singleElement()
+                .satisfies(request -> assertThat(request.path()).isEqualTo("/v1/chat/completions"));
     }
 
     @Test
@@ -139,52 +146,9 @@ public class ChatModelAutoModeTest extends OpenAiBaseTest {
         assertThat(ClientProxy.unwrap(customExplicitResponsesStreamingModel))
                 .isInstanceOf(OpenAiResponsesStreamingChatModel.class);
 
+        mock.chat().reply("Hello from Responses API!");
         assertThat(customExplicitResponsesModel.chat("hi")).isEqualTo("Hello from Responses API!");
-        wiremock().verifyThat(0, postRequestedFor(urlEqualTo("/v1/chat/completions")));
-        wiremock().verifyThat(1, postRequestedFor(urlEqualTo("/v1/responses")));
-    }
-
-    private void stubChatCompletionEndpoint() {
-        wiremock().register(post(urlEqualTo("/v1/chat/completions"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "chatcmpl-123",
-                                  "object": "chat.completion",
-                                  "choices": [
-                                    {
-                                      "index": 0,
-                                      "message": {
-                                        "role": "assistant",
-                                        "content": "Hello from Chat Completions!"
-                                      },
-                                      "finish_reason": "stop"
-                                    }
-                                  ],
-                                  "usage": { "prompt_tokens": 1, "completion_tokens": 2, "total_tokens": 3 }
-                                }
-                                """)));
-    }
-
-    private void stubResponsesEndpoint() {
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "resp_123",
-                                  "model": "gpt-6-luna",
-                                  "status": "completed",
-                                  "output": [
-                                    {
-                                      "type": "message",
-                                      "role": "assistant",
-                                      "content": [ { "type": "output_text", "text": "Hello from Responses API!" } ]
-                                    }
-                                  ],
-                                  "usage": { "input_tokens": 1, "output_tokens": 2, "total_tokens": 3 }
-                                }
-                                """)));
+        assertThat(mock.requests()).singleElement()
+                .satisfies(request -> assertThat(request.path()).isEqualTo("/v1/responses"));
     }
 }
