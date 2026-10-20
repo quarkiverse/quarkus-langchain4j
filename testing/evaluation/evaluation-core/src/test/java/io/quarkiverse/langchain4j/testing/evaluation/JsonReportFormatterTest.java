@@ -212,4 +212,38 @@ class JsonReportFormatterTest {
         assertThat(output).contains("\"totalSamples\": 2");
         assertThat(output).contains("\"totalEvaluations\": 4");
     }
+
+    @Test
+    void shouldReportAdvisoryEvaluations() {
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        List<Scorer.EvaluationResult<String>> results = List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "expected", EvaluationResult.failed("judge"), true));
+        EvaluationReport<String> report = new EvaluationReport<>(results);
+
+        String output = new JsonReportFormatter().format(report, Map.of("pretty", false));
+
+        assertThat(output).contains("\"globalScore\": 100.00");
+        assertThat(output).contains("\"advisoryScore\": 0.00");
+        assertThat(output).contains("\"totalEvaluations\": 2");
+        assertThat(output).contains("\"advisoryEvaluations\": 1");
+        assertThat(output).contains("\"passed\": 1,\"failed\": 0");
+        assertThat(output).contains("\"passed\": true,\"advisory\": false");
+        assertThat(output).contains("\"passed\": false,\"advisory\": true");
+    }
+
+    @Test
+    void tagsOnlyOnAdvisoryEvaluationsShouldNotBeScored() {
+        EvaluationSample<String> blocking = new EvaluationSample<>("B", new Parameters(), "expected", List.of("core"));
+        EvaluationSample<String> advisory = new EvaluationSample<>("A", new Parameters(), "expected", List.of("tone"));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(blocking, "expected", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(advisory, "expected", EvaluationResult.fromBoolean(true),
+                        true)));
+
+        String output = new JsonReportFormatter().format(report, Map.of("pretty", false));
+
+        assertThat(output).contains("\"tagScores\": {\"core\": 100.00}");
+        assertThat(output).doesNotContain("\"tone\": 0.00");
+    }
 }

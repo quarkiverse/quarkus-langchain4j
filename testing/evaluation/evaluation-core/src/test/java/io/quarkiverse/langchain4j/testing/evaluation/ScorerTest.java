@@ -24,6 +24,66 @@ class ScorerTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    void throwingAdvisoryStrategyShouldNotBlock() {
+        scorer = new Scorer(1);
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> judge = (s, actual) -> {
+            throw new IllegalStateException("judge timed out");
+        };
+        EvaluationStrategy<String> exact = (s, actual) -> EvaluationResult.fromBoolean(true);
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> "expected",
+                EvaluationStrategy.toAdvisory(judge), exact);
+
+        assertThat(report.evaluations()).hasSize(2);
+        Scorer.EvaluationResult<String> judgeResult = report.evaluations().get(0);
+        assertThat(judgeResult.advisory()).isTrue();
+        assertThat(judgeResult.passed()).isFalse();
+        assertThat(judgeResult.result()).isEqualTo("expected");
+        assertThat(judgeResult.thrown()).isInstanceOf(IllegalStateException.class);
+        assertThat(report.evaluations().get(1).passed()).isTrue();
+        assertThat(report.score()).isEqualTo(100.0);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void throwingFunctionShouldBlockEvenWithAdvisoryStrategies() {
+        scorer = new Scorer(1);
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> judge = (s, actual) -> EvaluationResult.fromBoolean(true);
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> {
+            throw new IllegalStateException("boom");
+        }, EvaluationStrategy.toAdvisory(judge));
+
+        assertThat(report.evaluations()).hasSize(1);
+        assertThat(report.evaluations().get(0).advisory()).isFalse();
+        assertThat(report.evaluations().get(0).thrown()).isNotNull();
+        assertThat(report.score()).isEqualTo(0.0);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void advisoryStrategyShouldBeReportedButNotScored() {
+        scorer = new Scorer(1);
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> blocking = (s, actual) -> EvaluationResult.fromBoolean(true);
+        EvaluationStrategy<String> judge = (s, actual) -> EvaluationResult.failed("judge disagrees");
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> "expected",
+                blocking, EvaluationStrategy.toAdvisory(judge));
+
+        assertThat(report.evaluations()).hasSize(2);
+        assertThat(report.evaluations().get(0).advisory()).isFalse();
+        assertThat(report.evaluations().get(1).advisory()).isTrue();
+        assertThat(report.evaluations().get(1).passed()).isFalse();
+        assertThat(report.evaluations().get(1).explanation()).isEqualTo("judge disagrees");
+        assertThat(report.score()).isEqualTo(100.0);
+        assertThat(report.advisoryScore()).isEqualTo(0.0);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     void evaluateShouldReturnCorrectReport() {
         scorer = new Scorer(2);
 

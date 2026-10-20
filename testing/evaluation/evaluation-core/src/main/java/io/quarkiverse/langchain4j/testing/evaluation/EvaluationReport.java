@@ -24,6 +24,7 @@ public class EvaluationReport<T> {
     private static final double Z_95 = 1.96;
 
     private final List<Scorer.EvaluationResult<T>> evaluations;
+    private final List<Scorer.EvaluationResult<T>> blockingEvaluations;
     private final int trials;
     private final double score;
 
@@ -47,15 +48,26 @@ public class EvaluationReport<T> {
             throw new IllegalArgumentException("Trials must be at least 1, got: " + trials);
         }
         this.evaluations = evaluations;
+        // The evaluations that count toward the score: those not produced by an advisory strategy.
+        this.blockingEvaluations = evaluations.stream().filter(e -> !e.advisory()).toList();
         this.trials = trials;
-        this.score = scoreOf(evaluations);
+        this.score = scoreOf(blockingEvaluations);
     }
 
     /**
-     * @return the global score, between 0.0 and 100.0.
+     * @return the global score, between 0.0 and 100.0. Advisory evaluations are not counted.
      */
     public double score() {
         return score;
+    }
+
+    /**
+     * The score of the advisory evaluations, which do not count toward {@link #score()}.
+     *
+     * @return the percentage of passed advisory evaluations, between 0.0 and 100.0, or 0.0 if there are none
+     */
+    public double advisoryScore() {
+        return scoreOf(evaluations.stream().filter(Scorer.EvaluationResult::advisory).toList());
     }
 
     /**
@@ -72,7 +84,7 @@ public class EvaluationReport<T> {
      * @return the percentage of passed evaluations for that sample, between 0.0 and 100.0, or 0.0 if the sample is unknown
      */
     public double scoreForSample(String name) {
-        return scoreOf(evaluations.stream().filter(e -> e.sample().name().equals(name)).toList());
+        return scoreOf(blockingEvaluations.stream().filter(e -> e.sample().name().equals(name)).toList());
     }
 
     /**
@@ -86,7 +98,7 @@ public class EvaluationReport<T> {
      * @return the standard error of the global score, in percentage points
      */
     public double standardError() {
-        return standardErrorOf(evaluations);
+        return standardErrorOf(blockingEvaluations);
     }
 
     /**
@@ -96,7 +108,7 @@ public class EvaluationReport<T> {
      * @return the standard error, see {@link #standardError()}
      */
     public double standardErrorForTag(String tag) {
-        return standardErrorOf(evaluations.stream().filter(e -> e.sample().tags().contains(tag)).toList());
+        return standardErrorOf(blockingEvaluations.stream().filter(e -> e.sample().tags().contains(tag)).toList());
     }
 
     /**
@@ -174,13 +186,7 @@ public class EvaluationReport<T> {
      * @return the score for the given tag, between 0.0 and 100.0.
      */
     public double scoreForTag(String tag) {
-        long total = evaluations.stream().filter(e -> e.sample().tags().contains(tag)).count();
-        if (total == 0) {
-            return 0.0;
-        }
-        return 100.0 * evaluations.stream().filter(e -> e.sample().tags().contains(tag))
-                .filter(Scorer.EvaluationResult::passed).count()
-                / total;
+        return scoreOf(blockingEvaluations.stream().filter(e -> e.sample().tags().contains(tag)).toList());
     }
 
     /**
