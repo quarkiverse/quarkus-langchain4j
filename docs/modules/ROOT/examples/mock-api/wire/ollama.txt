@@ -1,0 +1,126 @@
+=== Chat
+--> POST /ollama/api/chat
+{
+  "model" : "llama3.2",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ],
+  "stream" : false
+}
+<-- 200 [application/json]
+{
+  "model" : "llama3.2",
+  "created_at" : "2026-01-01T00:00:00Z",
+  "message" : {
+    "role" : "assistant",
+    "content" : "Hello from the mock"
+  },
+  "done" : true,
+  "done_reason" : "stop",
+  "total_duration" : 0,
+  "load_duration" : 0,
+  "prompt_eval_count" : 12,
+  "prompt_eval_duration" : 0,
+  "eval_count" : 7,
+  "eval_duration" : 0
+}
+
+=== Chat with a tool call
+--> POST /ollama/api/chat
+{
+  "model" : "llama3.2",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "What is the weather in Athens?"
+  } ],
+  "stream" : false,
+  "tools" : [ {
+    "type" : "function",
+    "function" : {
+      "name" : "get_weather",
+      "description" : "Returns the weather in a city",
+      "parameters" : {
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "city" ]
+      }
+    }
+  } ]
+}
+<-- 200 [application/json]
+{
+  "model" : "llama3.2",
+  "created_at" : "2026-01-01T00:00:00Z",
+  "message" : {
+    "role" : "assistant",
+    "content" : "",
+    "tool_calls" : [ {
+      "function" : {
+        "name" : "get_weather",
+        "arguments" : {
+          "city" : "Athens"
+        }
+      }
+    } ]
+  },
+  "done" : true,
+  "done_reason" : "stop",
+  "total_duration" : 0,
+  "load_duration" : 0,
+  "prompt_eval_count" : 0,
+  "prompt_eval_duration" : 0,
+  "eval_count" : 0,
+  "eval_duration" : 0
+}
+
+=== Streaming chat
+--> POST /ollama/api/chat
+{
+  "model" : "llama3.2",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ],
+  "stream" : true
+}
+<-- 200 [application/x-ndjson]
+{"model":"llama3.2","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":"Hello"},"done":false}
+{"model":"llama3.2","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":" from"},"done":false}
+{"model":"llama3.2","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":" the"},"done":false}
+{"model":"llama3.2","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":" mock"},"done":false}
+{"model":"llama3.2","created_at":"2026-01-01T00:00:00Z","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop","total_duration":0,"load_duration":0,"prompt_eval_count":12,"prompt_eval_duration":0,"eval_count":7,"eval_duration":0}
+
+=== Embeddings
+--> POST /ollama/api/embed
+{
+  "model" : "nomic-embed-text",
+  "input" : [ "Hello" ]
+}
+<-- 200 [application/json]
+{
+  "model" : "nomic-embed-text",
+  "embeddings" : [ [ 0.1, 0.2, 0.3 ] ],
+  "total_duration" : 0,
+  "load_duration" : 0,
+  "prompt_eval_count" : 1
+}
+
+=== Error
+--> POST /ollama/api/chat
+{
+  "model" : "llama3.2",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ],
+  "stream" : false
+}
+<-- 429 [application/json]
+{
+  "error" : "slow down"
+}

@@ -148,6 +148,7 @@
                   <modules>
                     <excludes>
                       <exclude>*:quarkus-langchain4j-integration-test*</exclude>
+                      <exclude>*:quarkus-langchain4j-mock-api-*-tests</exclude>
                       <exclude>*:quarkus-langchain4j-docs</exclude>
                       <exclude>*:quarkus-langchain4j-sample-*</exclude>
                       <exclude>*:quarkus-langchain4j-docs-rag</exclude>

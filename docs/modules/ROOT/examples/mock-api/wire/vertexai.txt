@@ -1,0 +1,62 @@
+=== Chat
+--> POST /vertexai/v1/projects/mock-project/locations/us-central1/publishers/google/models/chat-bison:predict
+{
+  "instances" : [ {
+    "context" : "",
+    "messages" : [ {
+      "author" : "USER",
+      "content" : "Hi"
+    } ]
+  } ],
+  "parameters" : {
+    "temperature" : 0.2,
+    "maxOutputTokens" : 50,
+    "topK" : 40,
+    "topP" : 0.9
+  }
+}
+<-- 200 [application/json]
+{
+  "predictions" : [ {
+    "candidates" : [ {
+      "author" : "1",
+      "content" : "Hello from the mock"
+    } ]
+  } ],
+  "metadata" : {
+    "tokenMetadata" : {
+      "inputTokenCount" : {
+        "totalTokens" : 12
+      },
+      "outputTokenCount" : {
+        "totalTokens" : 7
+      }
+    }
+  }
+}
+
+=== Error
+--> POST /vertexai/v1/projects/mock-project/locations/us-central1/publishers/google/models/chat-bison:predict
+{
+  "instances" : [ {
+    "context" : "",
+    "messages" : [ {
+      "author" : "USER",
+      "content" : "Hi"
+    } ]
+  } ],
+  "parameters" : {
+    "temperature" : 0.2,
+    "maxOutputTokens" : 50,
+    "topK" : 40,
+    "topP" : 0.9
+  }
+}
+<-- 429 [application/json]
+{
+  "error" : {
+    "code" : 429,
+    "message" : "slow down",
+    "status" : "RESOURCE_EXHAUSTED"
+  }
+}
