@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,10 +45,14 @@ public final class ContentMapper {
         List<String> systemPrompts = new ArrayList<>();
         List<Content> contents = new ArrayList<>(messages.size());
 
-        Map<String, Content> functionCalls = new HashMap<>();
-        Map<String, Content> functionResponses = new HashMap<>();
+        // Gemini expects the results of one turn's function calls in a single content, so consecutive
+        // tool results are collected into the parts of the content that the first of them opened.
+        List<Content.Part> functionResponseParts = null;
 
         for (ChatMessage message : messages) {
+            if (!(message instanceof ToolExecutionResultMessage) && !(message instanceof SystemMessage)) {
+                functionResponseParts = null;
+            }
             if (message instanceof SystemMessage sm) {
                 systemPrompts.add(sm.text());
             } else {
@@ -106,6 +109,9 @@ public final class ContentMapper {
                 } else if (message instanceof AiMessage am) {
                     try {
                         if (am.hasToolExecutionRequests()) {
+                            // All function calls of a turn go in one content, in order: Gemini 3 only signs the
+                            // first call of a parallel batch and rejects calls split into separate contents.
+                            List<Content.Part> parts = new ArrayList<>(am.toolExecutionRequests().size());
                             for (ToolExecutionRequest toolExecutionRequest : am.toolExecutionRequests()) {
                                 String argumentsStr = toolExecutionRequest.arguments();
                                 String name = toolExecutionRequest.name();
@@ -113,10 +119,9 @@ public final class ContentMapper {
                                         argumentsStr,
                                         Map.class);
                                 FunctionCall functionCall = new FunctionCall(name, arguments);
-                                Content.Part part = Content.Part
-                                        .ofFunctionCall(functionCall, toolExecutionRequest.id());
-                                functionCalls.put(name, new Content(role, List.of(part)));
+                                parts.add(Content.Part.ofFunctionCall(functionCall, toolExecutionRequest.id()));
                             }
+                            contents.add(new Content(role, parts));
                         } else {
                             contents.add(new Content(role,
                                     List.of(Content.Part.ofText(am.text()))));
@@ -130,20 +135,15 @@ public final class ContentMapper {
                     FunctionResponse functionResponse = new FunctionResponse(toolName,
                             new FunctionResponse.Response(toolName, content));
 
-                    Content.Part part = Content.Part
-                            .ofFunctionResponse(functionResponse);
-                    functionResponses.put(toolName, new Content(role, List.of(part)));
+                    if (functionResponseParts == null) {
+                        functionResponseParts = new ArrayList<>();
+                        contents.add(new Content(role, functionResponseParts));
+                    }
+                    functionResponseParts.add(Content.Part.ofFunctionResponse(functionResponse));
                 } else {
                     throw new IllegalArgumentException(
                             "The Gemini integration currently does not support " + message.type() + " messages");
                 }
-            }
-        }
-
-        for (Map.Entry<String, Content> entry : functionCalls.entrySet()) {
-            contents.add(entry.getValue());
-            if (functionResponses.containsKey(entry.getKey())) {
-                contents.add(functionResponses.get(entry.getKey()));
             }
         }
 
