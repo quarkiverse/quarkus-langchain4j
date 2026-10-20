@@ -1,0 +1,188 @@
+=== Chat
+--> POST /mistralai/v1/chat/completions
+{
+  "model" : "mistral-small-latest",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "cmpl-mock-1",
+  "object" : "chat.completion",
+  "created" : 1767225600,
+  "model" : "mistral-small-latest",
+  "choices" : [ {
+    "index" : 0,
+    "message" : {
+      "role" : "assistant",
+      "content" : "Hello from the mock",
+      "tool_calls" : null,
+      "prefix" : false
+    },
+    "finish_reason" : "stop"
+  } ],
+  "usage" : {
+    "prompt_tokens" : 12,
+    "completion_tokens" : 7,
+    "total_tokens" : 19
+  }
+}
+
+=== Chat with a tool call
+--> POST /mistralai/v1/chat/completions
+{
+  "model" : "mistral-small-latest",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "What is the weather in Athens?"
+  } ],
+  "tools" : [ {
+    "type" : "function",
+    "function" : {
+      "name" : "get_weather",
+      "description" : "Returns the weather in a city",
+      "parameters" : {
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "city" ]
+      }
+    }
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "cmpl-mock-1",
+  "object" : "chat.completion",
+  "created" : 1767225600,
+  "model" : "mistral-small-latest",
+  "choices" : [ {
+    "index" : 0,
+    "message" : {
+      "role" : "assistant",
+      "content" : null,
+      "tool_calls" : [ {
+        "index" : 0,
+        "id" : "call_mock_0",
+        "type" : "function",
+        "function" : {
+          "name" : "get_weather",
+          "arguments" : "{\"city\":\"Athens\"}"
+        }
+      } ],
+      "prefix" : false
+    },
+    "finish_reason" : "tool_calls"
+  } ],
+  "usage" : {
+    "prompt_tokens" : 0,
+    "completion_tokens" : 0,
+    "total_tokens" : 0
+  }
+}
+
+=== Streaming chat
+--> POST /mistralai/v1/chat/completions
+{
+  "model" : "mistral-small-latest",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ],
+  "stream" : true
+}
+<-- 200 [text/event-stream]
+data: {"id":"cmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"mistral-small-latest","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"finish_reason":null}]}
+
+data: {"id":"cmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"mistral-small-latest","choices":[{"index":0,"delta":{"content":" from"},"finish_reason":null}]}
+
+data: {"id":"cmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"mistral-small-latest","choices":[{"index":0,"delta":{"content":" the"},"finish_reason":null}]}
+
+data: {"id":"cmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"mistral-small-latest","choices":[{"index":0,"delta":{"content":" mock"},"finish_reason":null}]}
+
+data: {"id":"cmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"mistral-small-latest","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":7,"total_tokens":19}}
+
+data: [DONE]
+
+=== Embeddings
+--> POST /mistralai/v1/embeddings
+{
+  "model" : "mistral-embed",
+  "input" : [ "Hello" ],
+  "encoding_format" : "float"
+}
+<-- 200 [application/json]
+{
+  "id" : "embd-mock-1",
+  "object" : "list",
+  "model" : "mistral-embed",
+  "data" : [ {
+    "object" : "embedding",
+    "embedding" : [ 0.1, 0.2, 0.3 ],
+    "index" : 0
+  } ],
+  "usage" : {
+    "prompt_tokens" : 1,
+    "completion_tokens" : 0,
+    "total_tokens" : 1
+  }
+}
+
+=== Moderation
+--> POST /mistralai/v1/moderations
+{
+  "model" : "mistral-moderation-latest",
+  "input" : [ "I am going to hit you." ]
+}
+<-- 200 [application/json]
+{
+  "id" : "mod-mock-1",
+  "model" : "mistral-moderation-latest",
+  "results" : [ {
+    "categories" : {
+      "sexual" : false,
+      "hate_and_discrimination" : false,
+      "violence_and_threats" : true,
+      "dangerous_and_criminal_content" : false,
+      "selfharm" : false,
+      "health" : false,
+      "financial" : false,
+      "law" : false,
+      "pii" : false
+    },
+    "category_scores" : {
+      "sexual" : 0.0,
+      "hate_and_discrimination" : 0.0,
+      "violence_and_threats" : 1.0,
+      "dangerous_and_criminal_content" : 0.0,
+      "selfharm" : 0.0,
+      "health" : 0.0,
+      "financial" : 0.0,
+      "law" : 0.0,
+      "pii" : 0.0
+    }
+  } ]
+}
+
+=== Error
+--> POST /mistralai/v1/chat/completions
+{
+  "model" : "mistral-small-latest",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ]
+}
+<-- 429 [application/json]
+{
+  "detail" : [ {
+    "loc" : [ "body" ],
+    "msg" : "slow down",
+    "type" : "mock_error"
+  } ]
+}

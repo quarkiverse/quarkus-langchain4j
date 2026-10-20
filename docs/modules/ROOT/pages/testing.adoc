@@ -4,7 +4,7 @@
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-For deterministic tests of model HTTP requests, or local development without calling a real model, see xref:testing-model-mocking.adoc[Mocking model HTTP calls with WireMock].
+For deterministic tests of model HTTP requests, or local development without calling a real model, see the mock model API extension in xref:testing-model-mocking.adoc[Mocking model HTTP calls with the Mock Model API].
 The evaluation framework described below instead measures the quality of model outputs.
 
 The `quarkus-langchain4j-testing-evaluation-junit5` extension provides a pragmatic and extensible testing framework for evaluating AI-infused and agentic applications.

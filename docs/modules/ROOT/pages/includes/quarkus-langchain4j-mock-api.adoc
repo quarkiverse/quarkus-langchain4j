@@ -1,0 +1,53 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-url]] [.property-path]##link:#quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-url[`+++quarkus.langchain4j.mock-api.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the running mock.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-overrides]] [.property-path]##link:#quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-overrides[`+++quarkus.langchain4j.mock-api.overrides+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.overrides+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The endpoint config keys of every model in use, each as `key=url`, that the mock points at itself.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_OVERRIDES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_OVERRIDES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+|===
+

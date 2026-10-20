@@ -1,0 +1,207 @@
+=== Chat
+--> POST /watsonx/ml/v1/text/chat?version=2025-04-23
+{
+  "model_id" : "ibm/granite-3-3-8b-instruct",
+  "project_id" : "mock-project",
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "type" : "text",
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "chat-mock-1",
+  "model_id" : "ibm/granite-3-3-8b-instruct",
+  "model" : "ibm/granite-3-3-8b-instruct",
+  "created" : 1767225600,
+  "created_at" : "2026-01-01T00:00:00Z",
+  "choices" : [ {
+    "index" : 0,
+    "message" : {
+      "role" : "assistant",
+      "content" : "Hello from the mock"
+    },
+    "finish_reason" : "stop"
+  } ],
+  "usage" : {
+    "prompt_tokens" : 12,
+    "completion_tokens" : 7,
+    "total_tokens" : 19
+  }
+}
+
+=== Chat with a tool call
+--> POST /watsonx/ml/v1/text/chat?version=2025-04-23
+{
+  "model_id" : "ibm/granite-3-3-8b-instruct",
+  "project_id" : "mock-project",
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "type" : "text",
+      "text" : "What is the weather in Athens?"
+    } ]
+  } ],
+  "tools" : [ {
+    "type" : "function",
+    "function" : {
+      "name" : "get_weather",
+      "description" : "Returns the weather in a city",
+      "parameters" : {
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "city" ]
+      }
+    }
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "chat-mock-1",
+  "model_id" : "ibm/granite-3-3-8b-instruct",
+  "model" : "ibm/granite-3-3-8b-instruct",
+  "created" : 1767225600,
+  "created_at" : "2026-01-01T00:00:00Z",
+  "choices" : [ {
+    "index" : 0,
+    "message" : {
+      "role" : "assistant",
+      "tool_calls" : [ {
+        "id" : "call_mock_0",
+        "type" : "function",
+        "function" : {
+          "name" : "get_weather",
+          "arguments" : "{\"city\":\"Athens\"}"
+        }
+      } ]
+    },
+    "finish_reason" : "tool_calls"
+  } ],
+  "usage" : {
+    "prompt_tokens" : 0,
+    "completion_tokens" : 0,
+    "total_tokens" : 0
+  }
+}
+
+=== Streaming chat
+--> POST /watsonx/ml/v1/text/chat_stream?version=2025-04-23
+{
+  "model_id" : "ibm/granite-3-3-8b-instruct",
+  "project_id" : "mock-project",
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "type" : "text",
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 200 [text/event-stream]
+event: message
+data: {"id":"chat-mock-1","model_id":"ibm/granite-3-3-8b-instruct","model":"ibm/granite-3-3-8b-instruct","created":1767225600,"created_at":"2026-01-01T00:00:00Z","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"finish_reason":null}]}
+
+event: message
+data: {"id":"chat-mock-1","model_id":"ibm/granite-3-3-8b-instruct","model":"ibm/granite-3-3-8b-instruct","created":1767225600,"created_at":"2026-01-01T00:00:00Z","choices":[{"index":0,"delta":{"role":"assistant","content":" from"},"finish_reason":null}]}
+
+event: message
+data: {"id":"chat-mock-1","model_id":"ibm/granite-3-3-8b-instruct","model":"ibm/granite-3-3-8b-instruct","created":1767225600,"created_at":"2026-01-01T00:00:00Z","choices":[{"index":0,"delta":{"role":"assistant","content":" the"},"finish_reason":null}]}
+
+event: message
+data: {"id":"chat-mock-1","model_id":"ibm/granite-3-3-8b-instruct","model":"ibm/granite-3-3-8b-instruct","created":1767225600,"created_at":"2026-01-01T00:00:00Z","choices":[{"index":0,"delta":{"role":"assistant","content":" mock"},"finish_reason":null}]}
+
+event: message
+data: {"id":"chat-mock-1","model_id":"ibm/granite-3-3-8b-instruct","model":"ibm/granite-3-3-8b-instruct","created":1767225600,"created_at":"2026-01-01T00:00:00Z","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":7,"total_tokens":19}}
+
+=== Embeddings
+--> POST /watsonx/ml/v1/text/embeddings?version=2025-04-23
+{
+  "model_id" : "ibm/granite-embedding-278m-multilingual",
+  "project_id" : "mock-project",
+  "inputs" : [ "Hello" ]
+}
+<-- 200 [application/json]
+{
+  "model_id" : "ibm/granite-embedding-278m-multilingual",
+  "results" : [ {
+    "embedding" : [ 0.1, 0.2, 0.3 ]
+  } ],
+  "created_at" : "2026-01-01T00:00:00Z",
+  "input_token_count" : 1
+}
+
+=== Moderation
+--> POST /watsonx/ml/v1/text/detection?version=2025-04-23
+{
+  "input" : "I am going to hit you.",
+  "detectors" : {
+    "hap" : { }
+  },
+  "project_id" : "mock-project"
+}
+<-- 200 [application/json]
+{
+  "detections" : [ {
+    "start" : 0,
+    "end" : 22,
+    "detection_type" : "hap",
+    "detection" : "I am going to hit you.",
+    "score" : 1.0
+  } ]
+}
+
+=== Scoring
+--> POST /watsonx/ml/v1/text/rerank?version=2025-04-23
+{
+  "model_id" : "cross-encoder/ms-marco-minilm-l-12-v2",
+  "project_id" : "mock-project",
+  "query" : "What is the capital of Greece?",
+  "inputs" : [ {
+    "text" : "Paris is the capital of France."
+  }, {
+    "text" : "Athens is the capital of Greece."
+  } ]
+}
+<-- 200 [application/json]
+{
+  "model_id" : "cross-encoder/ms-marco-minilm-l-12-v2",
+  "results" : [ {
+    "index" : 0,
+    "score" : 0.2
+  }, {
+    "index" : 1,
+    "score" : 0.9
+  } ],
+  "created_at" : "2026-01-01T00:00:00Z",
+  "input_token_count" : 2
+}
+
+=== Error
+--> POST /watsonx/ml/v1/text/chat?version=2025-04-23
+{
+  "model_id" : "ibm/granite-3-3-8b-instruct",
+  "project_id" : "mock-project",
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "type" : "text",
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 429 [application/json]
+{
+  "trace" : "00000000-0000-0000-0000-000000000000",
+  "status_code" : 429,
+  "errors" : [ {
+    "code" : "token_quota_reached",
+    "message" : "slow down"
+  } ]
+}

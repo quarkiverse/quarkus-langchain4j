@@ -1,0 +1,31 @@
+=== Chat
+--> POST /openshift-ai/api/v1/task/text-generation
+{
+  "model_id" : "mock-model",
+  "inputs" : "Hi"
+}
+<-- 200 [application/json]
+{
+  "generated_text" : "Hello from the mock",
+  "generated_tokens" : 7,
+  "finish_reason" : "EOS_TOKEN",
+  "producer_id" : {
+    "name" : "Text Generation",
+    "version" : "0.1.0"
+  },
+  "input_token_count" : 12,
+  "seed" : null
+}
+
+=== Error
+--> POST /openshift-ai/api/v1/task/text-generation
+{
+  "model_id" : "mock-model",
+  "inputs" : "Hi"
+}
+<-- 429 [application/json]
+{
+  "details" : "slow down",
+  "code" : 429,
+  "id" : "mock-error"
+}

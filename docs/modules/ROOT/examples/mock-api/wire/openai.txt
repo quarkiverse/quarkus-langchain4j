@@ -1,0 +1,398 @@
+=== Chat
+--> POST /v1/chat/completions
+{
+  "model" : "gpt-4o-mini",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "chatcmpl-mock-1",
+  "object" : "chat.completion",
+  "created" : 1767225600,
+  "model" : "gpt-4o-mini",
+  "choices" : [ {
+    "index" : 0,
+    "message" : {
+      "role" : "assistant",
+      "content" : "Hello from the mock"
+    },
+    "logprobs" : null,
+    "finish_reason" : "stop"
+  } ],
+  "usage" : {
+    "prompt_tokens" : 12,
+    "completion_tokens" : 7,
+    "total_tokens" : 19
+  }
+}
+
+=== Chat with a tool call
+--> POST /v1/chat/completions
+{
+  "model" : "gpt-4o-mini",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "What is the weather in Athens?"
+  } ],
+  "tools" : [ {
+    "type" : "function",
+    "function" : {
+      "name" : "get_weather",
+      "description" : "Returns the weather in a city",
+      "parameters" : {
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "city" ]
+      }
+    }
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "chatcmpl-mock-1",
+  "object" : "chat.completion",
+  "created" : 1767225600,
+  "model" : "gpt-4o-mini",
+  "choices" : [ {
+    "index" : 0,
+    "message" : {
+      "role" : "assistant",
+      "content" : null,
+      "tool_calls" : [ {
+        "id" : "call_mock_0",
+        "type" : "function",
+        "function" : {
+          "name" : "get_weather",
+          "arguments" : "{\"city\":\"Athens\"}"
+        }
+      } ]
+    },
+    "logprobs" : null,
+    "finish_reason" : "tool_calls"
+  } ],
+  "usage" : {
+    "prompt_tokens" : 0,
+    "completion_tokens" : 0,
+    "total_tokens" : 0
+  }
+}
+
+=== Streaming chat
+--> POST /v1/chat/completions
+{
+  "model" : "gpt-4o-mini",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ],
+  "stream" : true,
+  "stream_options" : {
+    "include_usage" : true
+  }
+}
+<-- 200 [text/event-stream]
+data: {"id":"chatcmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+data: {"id":"chatcmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{"content":" from"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+data: {"id":"chatcmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{"content":" the"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+data: {"id":"chatcmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{"content":" mock"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+data: {"id":"chatcmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}],"usage":null}
+
+data: {"id":"chatcmpl-mock-1","object":"chat.completion.chunk","created":1767225600,"model":"gpt-4o-mini","choices":[],"usage":{"prompt_tokens":12,"completion_tokens":7,"total_tokens":19}}
+
+data: [DONE]
+
+=== Chat (Responses API)
+--> POST /v1/responses
+{
+  "model" : "gpt-4o-mini",
+  "input" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "resp_mock_1",
+  "object" : "response",
+  "created_at" : 1767225600,
+  "status" : "completed",
+  "access_programs" : null,
+  "error" : null,
+  "incomplete_details" : null,
+  "instructions" : null,
+  "model" : "gpt-4o-mini",
+  "tools" : [ ],
+  "output" : [ {
+    "type" : "message",
+    "id" : "msg_mock_1",
+    "role" : "assistant",
+    "content" : [ {
+      "type" : "output_text",
+      "text" : "Hello from the mock",
+      "annotations" : [ ],
+      "logprobs" : [ ]
+    } ],
+    "status" : "completed"
+  } ],
+  "parallel_tool_calls" : true,
+  "metadata" : { },
+  "tool_choice" : "auto",
+  "temperature" : 1.0,
+  "top_p" : 1.0,
+  "usage" : {
+    "input_tokens" : 12,
+    "input_tokens_details" : {
+      "cached_tokens" : 0,
+      "cache_write_tokens" : 0
+    },
+    "output_tokens" : 7,
+    "output_tokens_details" : {
+      "reasoning_tokens" : 0
+    },
+    "total_tokens" : 19
+  }
+}
+
+=== Streaming chat (Responses API)
+--> POST /v1/responses
+{
+  "model" : "gpt-4o-mini",
+  "input" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ],
+  "stream" : true
+}
+<-- 200 [text/event-stream]
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_mock_1","object":"response","created_at":1767225600,"status":"in_progress","access_programs":null,"error":null,"incomplete_details":null,"instructions":null,"model":"gpt-4o-mini","tools":[],"output":[],"parallel_tool_calls":true,"metadata":{},"tool_choice":"auto","temperature":1.0,"top_p":1.0},"sequence_number":0}
+
+event: response.in_progress
+data: {"type":"response.in_progress","response":{"id":"resp_mock_1","object":"response","created_at":1767225600,"status":"in_progress","access_programs":null,"error":null,"incomplete_details":null,"instructions":null,"model":"gpt-4o-mini","tools":[],"output":[],"parallel_tool_calls":true,"metadata":{},"tool_choice":"auto","temperature":1.0,"top_p":1.0},"sequence_number":1}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg_mock_1","role":"assistant","content":[],"status":"in_progress"},"sequence_number":2}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","item_id":"msg_mock_1","output_index":0,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]},"sequence_number":3}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","item_id":"msg_mock_1","output_index":0,"content_index":0,"delta":"Hello","logprobs":[],"sequence_number":4}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","item_id":"msg_mock_1","output_index":0,"content_index":0,"delta":" from","logprobs":[],"sequence_number":5}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","item_id":"msg_mock_1","output_index":0,"content_index":0,"delta":" the","logprobs":[],"sequence_number":6}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","item_id":"msg_mock_1","output_index":0,"content_index":0,"delta":" mock","logprobs":[],"sequence_number":7}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","item_id":"msg_mock_1","output_index":0,"content_index":0,"text":"Hello from the mock","logprobs":[],"sequence_number":8}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","item_id":"msg_mock_1","output_index":0,"content_index":0,"part":{"type":"output_text","text":"Hello from the mock","annotations":[],"logprobs":[]},"sequence_number":9}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":0,"item":{"type":"message","id":"msg_mock_1","role":"assistant","content":[{"type":"output_text","text":"Hello from the mock","annotations":[],"logprobs":[]}],"status":"completed"},"sequence_number":10}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_mock_1","object":"response","created_at":1767225600,"status":"completed","access_programs":null,"error":null,"incomplete_details":null,"instructions":null,"model":"gpt-4o-mini","tools":[],"output":[{"type":"message","id":"msg_mock_1","role":"assistant","content":[{"type":"output_text","text":"Hello from the mock","annotations":[],"logprobs":[]}],"status":"completed"}],"parallel_tool_calls":true,"metadata":{},"tool_choice":"auto","temperature":1.0,"top_p":1.0,"usage":{"input_tokens":12,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0},"output_tokens":7,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":19}},"sequence_number":11}
+
+=== Chat (Azure OpenAI)
+--> POST /openai/deployments/mock-deployment/chat/completions?api-version=2024-10-21
+{
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ]
+}
+<-- 200 [application/json]
+{
+  "id" : "chatcmpl-mock-1",
+  "object" : "chat.completion",
+  "created" : 1767225600,
+  "model" : "mock-model",
+  "choices" : [ {
+    "index" : 0,
+    "message" : {
+      "role" : "assistant",
+      "content" : "Hello from the mock"
+    },
+    "logprobs" : null,
+    "finish_reason" : "stop"
+  } ],
+  "usage" : {
+    "prompt_tokens" : 12,
+    "completion_tokens" : 7,
+    "total_tokens" : 19
+  }
+}
+
+=== Embeddings
+--> POST /v1/embeddings
+{
+  "model" : "text-embedding-3-small",
+  "input" : [ "Hello" ]
+}
+<-- 200 [application/json]
+{
+  "object" : "list",
+  "data" : [ {
+    "object" : "embedding",
+    "index" : 0,
+    "embedding" : [ 0.1, 0.2, 0.3 ]
+  } ],
+  "model" : "text-embedding-3-small",
+  "usage" : {
+    "prompt_tokens" : 1,
+    "total_tokens" : 1
+  }
+}
+
+=== Moderation
+--> POST /v1/moderations
+{
+  "model" : "omni-moderation-latest",
+  "input" : [ "I am going to hit you." ]
+}
+<-- 200 [application/json]
+{
+  "id" : "modr-mock-1",
+  "model" : "omni-moderation-latest",
+  "results" : [ {
+    "flagged" : true,
+    "categories" : {
+      "hate" : false,
+      "hate/threatening" : false,
+      "harassment" : false,
+      "harassment/threatening" : false,
+      "illicit" : false,
+      "illicit/violent" : false,
+      "self-harm" : false,
+      "self-harm/intent" : false,
+      "self-harm/instructions" : false,
+      "sexual" : false,
+      "sexual/minors" : false,
+      "violence" : true,
+      "violence/graphic" : false
+    },
+    "category_scores" : {
+      "hate" : 0.0,
+      "hate/threatening" : 0.0,
+      "harassment" : 0.0,
+      "harassment/threatening" : 0.0,
+      "illicit" : 0.0,
+      "illicit/violent" : 0.0,
+      "self-harm" : 0.0,
+      "self-harm/intent" : 0.0,
+      "self-harm/instructions" : 0.0,
+      "sexual" : 0.0,
+      "sexual/minors" : 0.0,
+      "violence" : 1.0,
+      "violence/graphic" : 0.0
+    },
+    "category_applied_input_types" : {
+      "hate" : [ "text" ],
+      "hate/threatening" : [ "text" ],
+      "harassment" : [ "text" ],
+      "harassment/threatening" : [ "text" ],
+      "illicit" : [ "text" ],
+      "illicit/violent" : [ "text" ],
+      "self-harm" : [ "text" ],
+      "self-harm/intent" : [ "text" ],
+      "self-harm/instructions" : [ "text" ],
+      "sexual" : [ "text" ],
+      "sexual/minors" : [ "text" ],
+      "violence" : [ "text" ],
+      "violence/graphic" : [ "text" ]
+    }
+  } ]
+}
+
+=== Decision
+--> POST /v1/decisions
+{
+  "model" : "gpt-6-luna",
+  "input" : "Help! My payouts have been failing for 3 days.",
+  "questions" : [ {
+    "type" : "choice",
+    "name" : "team",
+    "instructions" : "Which team should handle this?",
+    "choices" : [ {
+      "value" : "billing",
+      "description" : "Payments"
+    }, {
+      "value" : "support",
+      "description" : "Bugs"
+    } ]
+  }, {
+    "type" : "predicate",
+    "name" : "urgent",
+    "instructions" : "Does this need attention today?"
+  } ]
+}
+<-- 200 [application/json]
+{
+  "model" : "gpt-6-luna",
+  "answers" : [ {
+    "type" : "choice",
+    "name" : "team",
+    "choice" : "billing",
+    "probabilities" : [ {
+      "value" : "billing",
+      "probability" : 0.88
+    }, {
+      "value" : "support",
+      "probability" : 0.12
+    } ],
+    "confidence" : 0.81
+  }, {
+    "type" : "predicate",
+    "name" : "urgent",
+    "probability" : 0.95
+  } ],
+  "usage" : {
+    "input_tokens" : 318,
+    "input_tokens_details" : {
+      "cached_tokens" : 0,
+      "cache_write_tokens" : 0
+    },
+    "output_tokens" : 34,
+    "output_tokens_details" : {
+      "reasoning_tokens" : 0
+    },
+    "total_tokens" : 352
+  }
+}
+
+=== Error
+--> POST /v1/chat/completions
+{
+  "model" : "gpt-4o-mini",
+  "messages" : [ {
+    "role" : "user",
+    "content" : "Hi"
+  } ]
+}
+<-- 429 [application/json]
+{
+  "error" : {
+    "message" : "slow down",
+    "type" : "mock_error",
+    "param" : null,
+    "code" : null
+  }
+}
