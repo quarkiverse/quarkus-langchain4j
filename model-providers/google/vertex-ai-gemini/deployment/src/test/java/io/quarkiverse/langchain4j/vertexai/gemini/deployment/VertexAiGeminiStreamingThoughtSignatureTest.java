@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -11,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +23,10 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
@@ -54,7 +58,8 @@ public class VertexAiGeminiStreamingThoughtSignatureTest extends WiremockAware {
             "/v1/projects/dummy/locations/dummy/publishers/google/models/%s:streamGenerateContent", CHAT_MODEL_ID);
 
     @Test
-    void streamedFunctionCallThoughtSignatureIsSentBackOnNextTurn() throws InterruptedException {
+    void streamedFunctionCallThoughtSignatureIsSentBackOnNextTurn() throws InterruptedException, IOException {
+        resetRequests();
         String eventStream = """
                 data: {"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"getWeather","args":{"city":"Paris"}},"thoughtSignature":"signature-1"},{"functionCall":{"name":"getTime","args":{"city":"Paris"}}}]}}]}
 
@@ -84,8 +89,23 @@ public class VertexAiGeminiStreamingThoughtSignatureTest extends WiremockAware {
                 ToolExecutionResultMessage.from(aiMessage.toolExecutionRequests().get(0), "sunny"),
                 ToolExecutionResultMessage.from(aiMessage.toolExecutionRequests().get(1), "12:00")));
 
-        wiremock().verifyThat(exactly(1), postRequestedFor(urlPathEqualTo(STREAM_URL))
-                .withRequestBody(containing("\"thoughtSignature\":\"signature-1\"")));
+        // The parallel calls go back as one model content, with the signature on the first call only,
+        // and their results as one user content.
+        List<LoggedRequest> nextTurn = wiremock().find(postRequestedFor(urlPathEqualTo(STREAM_URL))
+                .withRequestBody(containing("functionCall")));
+        assertThat(nextTurn).hasSize(1);
+        JsonNode contents = new ObjectMapper().readTree(nextTurn.get(0).getBodyAsString()).get("contents");
+        assertThat(contents).extracting(content -> content.get("role").asText())
+                .containsExactly("user", "model", "user");
+
+        JsonNode calls = contents.get(1).get("parts");
+        assertThat(calls).extracting(part -> part.at("/functionCall/name").asText())
+                .containsExactly("getWeather", "getTime");
+        assertThat(calls.get(0).get("thoughtSignature").asText()).isEqualTo("signature-1");
+        assertThat(calls.get(1).has("thoughtSignature")).isFalse();
+
+        assertThat(contents.get(2).get("parts")).extracting(part -> part.at("/functionResponse/name").asText())
+                .containsExactly("getWeather", "getTime");
     }
 
     private ChatResponse chat(List<ChatMessage> messages) throws InterruptedException {

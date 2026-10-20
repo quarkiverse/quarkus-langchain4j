@@ -144,6 +144,24 @@ public class VertexAiGeminiParallelToolCallsTest extends WiremockAware {
         assertThat(contents.get(4).get("parts")).hasSize(2);
     }
 
+    @Test
+    void userMessageAfterToolResultsIsNotMergedIntoThem() throws IOException {
+        ToolExecutionRequest weather = request("getWeather", "{\"city\":\"Paris\"}", "signature-1");
+
+        chatModel.chat(
+                UserMessage.from("What is the weather in Paris?"),
+                AiMessage.from(weather),
+                ToolExecutionResultMessage.from(weather, "sunny"),
+                UserMessage.from("Answer in French."));
+
+        JsonNode contents = requestContents();
+        assertThat(roles(contents)).containsExactly("user", "model", "user", "user");
+        assertThat(contents.get(2).get("parts")).hasSize(1);
+        assertThat(contents.at("/2/parts/0/functionResponse/name").asText()).isEqualTo("getWeather");
+        assertThat(contents.get(3).get("parts")).hasSize(1);
+        assertThat(contents.at("/3/parts/0/text").asText()).isEqualTo("Answer in French.");
+    }
+
     private static ToolExecutionRequest request(String name, String arguments, String id) {
         return ToolExecutionRequest.builder().name(name).arguments(arguments).id(id).build();
     }

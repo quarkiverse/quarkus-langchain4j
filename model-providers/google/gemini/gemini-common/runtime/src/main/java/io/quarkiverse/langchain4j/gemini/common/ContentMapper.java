@@ -16,6 +16,7 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
@@ -46,12 +47,12 @@ public final class ContentMapper {
         List<Content> contents = new ArrayList<>(messages.size());
 
         // Gemini expects the results of one turn's function calls in a single content, so consecutive
-        // tool results are collected into the parts of the content that the first of them opened.
-        List<Content.Part> functionResponseParts = null;
+        // tool results are collected and added as one content when the run of results ends.
+        List<Content.Part> functionResponseParts = new ArrayList<>();
 
         for (ChatMessage message : messages) {
             if (!(message instanceof ToolExecutionResultMessage) && !(message instanceof SystemMessage)) {
-                functionResponseParts = null;
+                addFunctionResponses(contents, functionResponseParts);
             }
             if (message instanceof SystemMessage sm) {
                 systemPrompts.add(sm.text());
@@ -135,10 +136,6 @@ public final class ContentMapper {
                     FunctionResponse functionResponse = new FunctionResponse(toolName,
                             new FunctionResponse.Response(toolName, content));
 
-                    if (functionResponseParts == null) {
-                        functionResponseParts = new ArrayList<>();
-                        contents.add(new Content(role, functionResponseParts));
-                    }
                     functionResponseParts.add(Content.Part.ofFunctionResponse(functionResponse));
                 } else {
                     throw new IllegalArgumentException(
@@ -146,11 +143,20 @@ public final class ContentMapper {
                 }
             }
         }
+        addFunctionResponses(contents, functionResponseParts);
 
         return new GenerateContentRequest(contents,
                 !systemPrompts.isEmpty() ? GenerateContentRequest.SystemInstruction.ofContent(systemPrompts) : null,
                 toTools(modelId, toolSpecifications, useGoogleSearch),
                 generationConfig);
+    }
+
+    private static void addFunctionResponses(List<Content> contents, List<Content.Part> functionResponseParts) {
+        if (!functionResponseParts.isEmpty()) {
+            contents.add(new Content(RoleMapper.map(ChatMessageType.TOOL_EXECUTION_RESULT),
+                    List.copyOf(functionResponseParts)));
+            functionResponseParts.clear();
+        }
     }
 
     private static List<GenerateContentRequest.Tool> toTools(
