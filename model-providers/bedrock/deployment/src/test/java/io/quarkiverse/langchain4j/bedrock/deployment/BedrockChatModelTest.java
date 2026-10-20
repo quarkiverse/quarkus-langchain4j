@@ -1,9 +1,5 @@
 package io.quarkiverse.langchain4j.bedrock.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
@@ -18,21 +14,23 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.bedrock.BedrockChatModel;
 import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class BedrockChatModelTest extends BedrockTestBase {
+class BedrockChatModelTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(TestCredentialsProvider.class)
                     .addClass(CountingChatModelListener.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.model-id", "amazon.titan-text-express-v1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.region", "eu-central-1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.endpoint-override",
-                    "http://localhost:%d".formatted(WM_PORT))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.credentials-provider",
                     "TestCredentialsProvider")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-requests", "true")
@@ -46,9 +44,13 @@ class BedrockChatModelTest extends BedrockTestBase {
     @Inject
     CountingChatModelListener listener;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset_listener_counters() {
         listener.reset();
+        mock.reset();
     }
 
     @Test
@@ -64,33 +66,7 @@ class BedrockChatModelTest extends BedrockTestBase {
     @Test
     void should_answer_a_chat_message() {
         // given
-        stubFor(post(anyUrl()) //
-                .willReturn(aResponse() //
-                        .withStatus(200) //
-                        .withHeader("Content-Type", "application/json") //
-                        .withBody("""
-                                {
-                                  "output": {
-                                    "message": {
-                                      "role": "assistant",
-                                      "content": [
-                                        {
-                                          "text": "Hello, I am good. How are you today?"
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  "stopReason": "end_turn",
-                                  "usage": {
-                                    "inputTokens": 10,
-                                    "outputTokens": 21,
-                                    "totalTokens": 31
-                                  },
-                                  "metrics": {
-                                    "latencyMs": 1185
-                                  }
-                                }
-                                """)));
+        mock.chat().reply(ChatReply.text("Hello, I am good. How are you today?").usage(10, 21));
 
         // when
         var response = chatModel.chat("Hello, how are you today?");
@@ -100,5 +76,9 @@ class BedrockChatModelTest extends BedrockTestBase {
         assertThat(listener.onRequestCount()).isEqualTo(1);
         assertThat(listener.onResponseCount()).isEqualTo(1);
         assertThat(listener.onErrorCount()).isEqualTo(0);
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/bedrock/model/amazon.titan-text-express-v1/converse");
+        assertThat(request.asChat().messages()).singleElement()
+                .satisfies(m -> assertThat(m.text()).isEqualTo("Hello, how are you today?"));
     }
 }

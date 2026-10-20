@@ -1,14 +1,12 @@
 package io.quarkiverse.langchain4j.anthropic.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -17,6 +15,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -25,17 +24,27 @@ import dev.langchain4j.model.anthropic.AnthropicChatResponseMetadata;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class AnthropicStreamingOnUnmappedRawEventTest extends AnthropicSmokeTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY);
 
     @Inject
     StreamingChatModel streamingChatModel;
+
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
 
     @Test
     void onUnmappedRawEventReceivesRawServerSentEvent() {
@@ -85,9 +94,9 @@ class AnthropicStreamingOnUnmappedRawEventTest extends AnthropicSmokeTest {
 
                 """;
 
-        wireMockServer.stubFor(
-                post(urlPathEqualTo("/messages"))
-                        .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
+        // a raw stub: the test is about server tool events the neutral reply cannot express
+        mock.raw().on("POST", "/anthropic/v1/messages")
+                .replies(RawResponse.of(200, Map.of("Content-Type", MediaType.SERVER_SENT_EVENTS), eventStream));
 
         var streamingResponse = new AtomicReference<ChatResponse>();
         List<Object> rawEvents = new CopyOnWriteArrayList<>();

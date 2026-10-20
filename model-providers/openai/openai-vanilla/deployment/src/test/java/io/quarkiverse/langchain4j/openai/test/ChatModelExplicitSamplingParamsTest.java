@@ -2,9 +2,6 @@ package io.quarkiverse.langchain4j.openai.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.util.Map;
-
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -13,37 +10,41 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatModel;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import com.fasterxml.jackson.databind.JsonNode;
 
-public class ChatModelExplicitSamplingParamsTest extends OpenAiBaseTest {
+import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
+
+public class ChatModelExplicitSamplingParamsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.temperature", "0.3")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.top-p", "0.8")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.top-p", "0.8");
 
     @Inject
     ChatModel chatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
-    void explicitlyConfiguredValuesAreSent() throws IOException {
-        setChatCompletionMessageContent("whatever");
+    void explicitlyConfiguredValuesAreSent() {
+        mock.chat().reply("whatever");
 
-        chatModel.chat("hello");
+        assertThat(chatModel.chat("hello")).isEqualTo("whatever");
 
-        Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody).containsEntry("temperature", 0.3).containsEntry("top_p", 0.8);
+        JsonNode requestBody = mock.chat().singleRequest().bodyAsJson();
+        assertThat(requestBody.get("temperature").doubleValue()).isEqualTo(0.3);
+        assertThat(requestBody.get("top_p").doubleValue()).isEqualTo(0.8);
     }
 }

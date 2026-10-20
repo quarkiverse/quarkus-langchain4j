@@ -22,8 +22,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that MicroProfile FaultTolerance annotations {@code @Retry} and
@@ -32,14 +31,13 @@ import io.quarkus.test.QuarkusUnitTest;
 public class FaultToleranceRetryAndCircuitBreakerTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(RetryAgent.class, CircuitBreakerAgent.class,
                                     FailNTimesChatModel.class, AlwaysFailingChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     /** Fails the first {@code failCount} calls, then returns {@code successResponse}. */
     public static class FailNTimesChatModel implements ChatModel {

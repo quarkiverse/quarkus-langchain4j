@@ -51,7 +51,13 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-openai-testing-internal</artifactId>
+            <artifactId>quarkus-langchain4j-mock-api-deployment</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-testing-internal</artifactId>
             <scope>test</scope>
             <version>${project.version}</version>
         </dependency>
@@ -70,6 +76,17 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!-- the stubs of the mock MCP servers echo request fields back with {{jsonPath ...}} templates; a test
+                             classpath application.properties does not reach the WireMock dev service of an extension test, so
+                             the setting lives here (an IDE run needs the same system property) -->
+                        <quarkus.wiremock.devservices.global-response-templating>true</quarkus.wiremock.devservices.global-response-templating>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>

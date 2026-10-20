@@ -16,28 +16,23 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ModelNameAgentTest extends OpenAiBaseTest {
+public class ModelNameAgentTest {
 
     static final String NAMED_MODEL_RESPONSE = "response-from-named-model";
     static final String DEFAULT_MODEL_RESPONSE = "response-from-default-model";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(NamedModelAgent.class, DefaultModelAgent.class, ChatModelProducers.class,
                                     Agents.FixedResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.mymodel.chat-model.provider", "openai")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.mymodel.api-key", "named-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.mymodel.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.mymodel.api-key", "named-key");
 
     public interface NamedModelAgent {
 

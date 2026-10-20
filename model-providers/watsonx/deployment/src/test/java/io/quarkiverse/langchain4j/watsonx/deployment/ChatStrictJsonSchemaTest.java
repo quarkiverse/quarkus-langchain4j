@@ -1,26 +1,20 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_TIME_LIMIT;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.streamingChatResponseHandler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -44,26 +38,20 @@ import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ChatStrictJsonSchemaTest extends WireMockAbstract {
+public class ChatStrictJsonSchemaTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.response-format", "json_schema")
             // "strict-json-schema" is deliberately not set: this test verifies that the strict mode is the default.
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response("my_super_token", new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     static JsonSchema jsonSchema = JsonSchema.builder()
             .name("test")
@@ -101,10 +89,7 @@ public class ChatStrictJsonSchemaTest extends WireMockAbstract {
                         JsonSchemaElementUtils.toMap(jsonSchema.rootElement(), true), true))
                 .build();
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(RESPONSE_WATSONX_CHAT_API)
-                .build();
+        mock.chat().replies(List.of(ChatReply.text("AI Response").usage(59, 47), ChatReply.text("Hello").usage(38, 3)));
 
         var chatMessages = List.<dev.langchain4j.data.message.ChatMessage> of(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -119,12 +104,6 @@ public class ChatStrictJsonSchemaTest extends WireMockAbstract {
 
         assertEquals("AI Response", response.aiMessage().text());
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
-                .build();
-
         var streamingResponse = new AtomicReference<ChatResponse>();
         streamingChatModel.chat(chatRequest, streamingChatResponseHandler(streamingResponse));
 
@@ -135,5 +114,12 @@ public class ChatStrictJsonSchemaTest extends WireMockAbstract {
         assertThat(streamingResponse.get().aiMessage().text())
                 .isNotNull()
                 .isEqualTo("Hello");
+
+        List<CapturedRequest> requests = mock.chat().requests();
+        assertThat(requests).hasSize(2);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_CHAT_API);
+        assertJsonBody(requests.get(0), body);
+        assertWatsonxRequest(requests.get(1), URL_WATSONX_CHAT_STREAMING_API);
+        assertJsonBody(requests.get(1), body);
     }
 }

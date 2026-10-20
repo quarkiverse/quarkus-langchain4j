@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.openai.test;
 import static io.restassured.RestAssured.get;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.function.Function;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -11,12 +12,12 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
-
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusDevModeTest;
 
-public class PromptDevModeTest extends WiremockAware {
+public class PromptDevModeTest {
 
     @RegisterExtension
     static final QuarkusDevModeTest devModeTest = new QuarkusDevModeTest()
@@ -24,64 +25,69 @@ public class PromptDevModeTest extends WiremockAware {
                     .addClasses(Service.class, ServiceWithResource.class, Resource.class, Configuration.class,
                             ConfigurationKey.class,
                             Resource.ApplicationGlobals.class)
-                    .addAsResource(
-                            new StringAsset(
-                                    String.format(
-                                            "quarkus.wiremock.devservices.reload=false\nquarkus.langchain4j.openai.base-url=%s",
-                                            WiremockAware.wiremockUrlForConfig("/v1"))),
+                    .addAsResource(new StringAsset("quarkus.langchain4j.mock-api.enabled=true\n"),
                             "application.properties")
                     .addAsResource("cs-organizer.txt"));
 
     @Test
     public void testJavaChange() {
-        get("test")
-                .then()
-                .statusCode(200);
+        try (MockModelServer mock = connect()) {
+            mock.reset();
+            mock.chat().reply(ChatReply.text("talks"), ChatReply.text("talks"));
 
-        devModeTest.modifySourceFile(Resource.class, new Function<String, String>() {
-            @Override
-            public String apply(String s) {
-                return s.replace("java", "kotlin");
-            }
-        });
+            get("test")
+                    .then()
+                    .statusCode(200);
 
-        get("test")
-                .then()
-                .statusCode(200);
+            devModeTest.modifySourceFile(Resource.class, new Function<String, String>() {
+                @Override
+                public String apply(String s) {
+                    return s.replace("java", "kotlin");
+                }
+            });
+
+            get("test")
+                    .then()
+                    .statusCode(200);
+        }
     }
 
     @Test
     public void testResourceChange() {
-        get("test/with-resource")
-                .then()
-                .statusCode(200);
+        try (MockModelServer mock = connect()) {
+            mock.reset();
+            mock.chat().reply(ChatReply.text("talks"), ChatReply.text("talks"));
 
-        // unfortunately the only way to get the port for a dev mode test is from the application
-        int wiremockPort = Integer.parseInt(get("test/wiremock")
+            get("test/with-resource")
+                    .then()
+                    .statusCode(200);
+
+            assertThat(mock.chat().singleRequest().body()).contains("science");
+
+            devModeTest.modifyResourceFile("cs-organizer.txt", new Function<String, String>() {
+                @Override
+                public String apply(String s) {
+                    return s.replace("science", "programming");
+                }
+            });
+
+            get("test/with-resource")
+                    .then()
+                    .statusCode(200);
+
+            List<CapturedRequest> requests = mock.chat().requests();
+            assertThat(requests).hasSize(2);
+            assertThat(requests.get(1).body()).contains("programming");
+        }
+    }
+
+    // the dev mode test cannot read the application's config because of ClassLoaders, so the application exposes it
+    private static MockModelServer connect() {
+        return MockModelServer.connect(get("test/url")
                 .then()
                 .statusCode(200)
                 .extract()
                 .body()
                 .asString());
-
-        var requestBody = singleLoggedRequest(wiremock(wiremockPort)).getBody();
-        assertThat(new String(requestBody)).contains("science");
-
-        devModeTest.modifyResourceFile("cs-organizer.txt", new Function<String, String>() {
-            @Override
-            public String apply(String s) {
-                return s.replace("science", "programming");
-            }
-        });
-
-        get("test/with-resource")
-                .then()
-                .statusCode(200);
-
-        assertThat(wiremock(wiremockPort).getServeEvents()).hasSize(2);
-        ServeEvent serveEvent = wiremock().getServeEvents().get(0);
-        requestBody = serveEvent.getRequest().getBody();
-        assertThat(new String(requestBody)).contains("programming");
     }
-
 }

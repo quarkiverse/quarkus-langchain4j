@@ -34,14 +34,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.wiremock</groupId>
-            <artifactId>wiremock-standalone</artifactId>
-            <version>${wiremock.version}</version>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit-internal</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit-internal</artifactId>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-mock-api-deployment</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -62,6 +62,30 @@
                             <artifactId>quarkus-extension-processor</artifactId>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- hide the developer's AWS credentials (environment, profile files, EC2 instance metadata), so a
+                     Bedrock client that looks them up fails instead of sending real credentials to the mock -->
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <AWS_EC2_METADATA_DISABLED>true</AWS_EC2_METADATA_DISABLED>
+                        <AWS_CONFIG_FILE>${project.build.directory}/no-aws-config</AWS_CONFIG_FILE>
+                        <AWS_SHARED_CREDENTIALS_FILE>${project.build.directory}/no-aws-credentials</AWS_SHARED_CREDENTIALS_FILE>
+                    </environmentVariables>
+                    <excludedEnvironmentVariables>
+                        <excludedEnvironmentVariable>AWS_PROFILE</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_ACCESS_KEY_ID</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_SECRET_ACCESS_KEY</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_SESSION_TOKEN</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_BEARER_TOKEN_BEDROCK</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_REGION</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_DEFAULT_REGION</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_WEB_IDENTITY_TOKEN_FILE</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_CONTAINER_CREDENTIALS_RELATIVE_URI</excludedEnvironmentVariable>
+                        <excludedEnvironmentVariable>AWS_CONTAINER_CREDENTIALS_FULL_URI</excludedEnvironmentVariable>
+                    </excludedEnvironmentVariables>
                 </configuration>
             </plugin>
         </plugins>

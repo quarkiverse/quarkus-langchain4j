@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -26,19 +23,21 @@ import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class VertexAiGeminiStreamingListenerTest extends WiremockAware {
+public class VertexAiGeminiStreamingListenerTest {
 
     private static final String CHAT_MODEL_ID = "gemini-3-flash-preview";
-    private static final String STREAM_URL = String.format(
-            "/v1/projects/dummy/locations/dummy/publishers/google/models/%s:streamGenerateContent", CHAT_MODEL_ID);
+    private static final String STREAM_PATH = String.format(
+            "/vertexai-gemini/v1/projects/mock-project/locations/us-central1/publishers/google/models/%s:streamGenerateContent",
+            CHAT_MODEL_ID);
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-id", CHAT_MODEL_ID);
 
     @Inject
@@ -47,38 +46,39 @@ public class VertexAiGeminiStreamingListenerTest extends WiremockAware {
     @Inject
     RecordingListener listener;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setUp() {
+        mock.reset();
         listener.responses.clear();
         listener.errors.clear();
     }
 
     @Test
     void listenerIsNotifiedOfStreamedResponse() throws Exception {
-        wiremock().register(post(urlPathEqualTo(STREAM_URL))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "text/event-stream")
-                        .withBody(
-                                """
-                                        data: {"candidates":[{"content":{"role":"model","parts":[{"text":"Hi"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":1,"candidatesTokenCount":1,"totalTokenCount":2}}
-
-                                        """)));
+        mock.chat().reply(ChatReply.text("Hi").usage(1, 1));
 
         stream().get(30, TimeUnit.SECONDS);
 
         assertThat(listener.responses).singleElement()
                 .satisfies(context -> assertThat(context.chatResponse().aiMessage().text()).isEqualTo("Hi"));
         assertThat(listener.errors).isEmpty();
+        assertThat(mock.requests()).singleElement()
+                .satisfies(request -> assertThat(request.path()).isEqualTo(STREAM_PATH));
     }
 
     @Test
     void listenerIsNotifiedOfStreamingError() {
-        wiremock().register(post(urlPathEqualTo(STREAM_URL)).willReturn(aResponse().withStatus(500)));
+        mock.chat().fail(500, "the mock is unavailable");
 
         assertThat(stream()).failsWithin(30, TimeUnit.SECONDS);
 
         assertThat(listener.errors).hasSize(1);
         assertThat(listener.responses).isEmpty();
+        assertThat(mock.requests()).isNotEmpty()
+                .allSatisfy(request -> assertThat(request.path()).isEqualTo(STREAM_PATH));
     }
 
     private CompletableFuture<ChatResponse> stream() {

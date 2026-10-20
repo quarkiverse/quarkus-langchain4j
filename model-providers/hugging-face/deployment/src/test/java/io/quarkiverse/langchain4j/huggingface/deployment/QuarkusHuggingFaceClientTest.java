@@ -1,22 +1,20 @@
 package io.quarkiverse.langchain4j.huggingface.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+import jakarta.inject.Inject;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.huggingface.HuggingFaceModelName;
 import dev.langchain4j.model.huggingface.client.EmbeddingRequest;
 import dev.langchain4j.model.huggingface.client.Options;
 import dev.langchain4j.model.huggingface.client.Parameters;
@@ -24,33 +22,38 @@ import dev.langchain4j.model.huggingface.client.TextGenerationRequest;
 import dev.langchain4j.model.huggingface.client.TextGenerationResponse;
 import io.quarkiverse.langchain4j.huggingface.HuggingFaceRestApi;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceClientFactory;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.EmbeddingReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class QuarkusHuggingFaceClientTest extends WiremockAware {
+public class QuarkusHuggingFaceClientTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
-    private static final String CHAT_MODEL_ID = HuggingFaceModelName.TII_UAE_FALCON_7B_INSTRUCT;
-    private static final String EMBED_MODEL_ID = HuggingFaceModelName.SENTENCE_TRANSFORMERS_ALL_MINI_LM_L6_V2;
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
     private static final String API_KEY = "key";
+
+    @Inject
+    MockModelServer mock;
+
+    @ConfigProperty(name = "quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url")
+    URL chatEndpointUrl;
+
+    @ConfigProperty(name = "quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url")
+    URL embeddingEndpointUrl;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
 
     @Test
     void chat() {
-        wiremock().register(
-                post(urlEqualTo("/models/" + sanitizeModelForUrl(CHAT_MODEL_ID)))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody("""
-                                        [
-                                          {
-                                            "generated_text": "\\nI'm hanging with my bro...\\nAnd so on and so forth...\\nSo,"
-                                          }
-                                        ]
-                                        """)));
+        mock.chat().reply(ChatReply.text("\nI'm hanging with my bro...\nAnd so on and so forth...\nSo,"));
 
         TextGenerationRequest request = TextGenerationRequest.builder()
                 .inputs("What are you doing?")
@@ -66,47 +69,40 @@ public class QuarkusHuggingFaceClientTest extends WiremockAware {
         assertThat(response).isNotNull().satisfies(r -> {
             assertThat(r.getGeneratedText()).contains("hanging with");
         });
+
+        CapturedRequest captured = mock.chat().singleRequest();
+        assertThat(captured.path()).isEqualTo("/huggingface/chat");
+        assertThat(captured.query()).isNull();
+        assertThat(captured.header("Authorization")).isEqualTo("Bearer " + API_KEY);
     }
 
     @Test
     void embed() {
-        wiremock().register(
-                post(urlEqualTo("/models/" + sanitizeModelForUrl(EMBED_MODEL_ID)))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(
-                                        "[[-0.06277172267436981,0.054958775639534,0.052164800465106964,0.08578997850418091]]")));
+        mock.embeddings().reply(EmbeddingReply.of(
+                new float[] { -0.06277172267436981f, 0.054958775639534f, 0.052164800465106964f, 0.08578997850418091f }));
 
         List<float[]> response = createClient().embed(new EmbeddingRequest(List.of("whatever"), true));
         assertThat(response).singleElement().satisfies(fa -> {
             assertThat(fa).hasSize(4);
         });
-    }
 
-    private String sanitizeModelForUrl(String modelId) {
-        return modelId.replace("/", "%2F");
+        CapturedRequest captured = mock.embeddings().singleRequest();
+        assertThat(captured.path()).isEqualTo("/huggingface/embeddings");
+        assertThat(captured.query()).isNull();
+        assertThat(captured.header("Authorization")).isEqualTo("Bearer " + API_KEY);
     }
 
     private QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient createClient() {
-        try {
-            HuggingFaceRestApi restApi = QuarkusRestClientBuilder.newBuilder()
-                    .baseUrl(new URL(resolvedWiremockUrl("/models/" + sanitizeModelForUrl(EMBED_MODEL_ID))))
-                    .build(HuggingFaceRestApi.class);
-            return new QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient(restApi, API_KEY);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+        HuggingFaceRestApi restApi = QuarkusRestClientBuilder.newBuilder()
+                .baseUrl(embeddingEndpointUrl)
+                .build(HuggingFaceRestApi.class);
+        return new QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient(restApi, API_KEY);
     }
 
     private QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient createClientForChat() {
-        try {
-            HuggingFaceRestApi restApi = RestClientBuilder.newBuilder()
-                    .baseUrl(new URL(resolvedWiremockUrl("/models/" + sanitizeModelForUrl(CHAT_MODEL_ID))))
-                    .build(HuggingFaceRestApi.class);
-            return new QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient(restApi, API_KEY);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+        HuggingFaceRestApi restApi = RestClientBuilder.newBuilder()
+                .baseUrl(chatEndpointUrl)
+                .build(HuggingFaceRestApi.class);
+        return new QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient(restApi, API_KEY);
     }
 }

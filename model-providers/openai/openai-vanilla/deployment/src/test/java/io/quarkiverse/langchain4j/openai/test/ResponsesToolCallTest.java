@@ -1,9 +1,8 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
@@ -19,50 +18,34 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ResponsesToolCallTest extends OpenAiBaseTest {
+public class ResponsesToolCallTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "responses")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     @Inject
     ChatModel chatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
     void toolCallIsParsed() {
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                                """
-                                        {
-                                          "id": "resp_1",
-                                          "model": "gpt-4o-mini",
-                                          "status": "completed",
-                                          "output": [
-                                            {
-                                              "type": "function_call",
-                                              "call_id": "call_1",
-                                              "name": "getWeather",
-                                              "arguments": "{\\"city\\":\\"Paris\\"}"
-                                            }
-                                          ],
-                                          "usage": { "input_tokens": 1, "output_tokens": 2, "total_tokens": 3 }
-                                        }
-                                        """)));
+        mock.chat().reply(ChatReply.toolCall("getWeather", Map.of("city", "Paris")));
 
         ChatRequest request = ChatRequest.builder()
                 .messages(UserMessage.from("What's the weather in Paris?"))
@@ -82,8 +65,13 @@ public class ResponsesToolCallTest extends OpenAiBaseTest {
                 .singleElement()
                 .satisfies(toolCall -> {
                     assertThat(toolCall.name()).isEqualTo("getWeather");
-                    assertThat(toolCall.id()).isEqualTo("call_1");
+                    // the id the mock gives the first tool call of a reply
+                    assertThat(toolCall.id()).isEqualTo("call_mock_0");
                     assertThat(toolCall.arguments()).contains("Paris");
                 });
+
+        CapturedRequest captured = mock.chat().singleRequest();
+        assertThat(captured.path()).isEqualTo("/v1/responses");
+        assertThat(captured.query()).isNull();
     }
 }

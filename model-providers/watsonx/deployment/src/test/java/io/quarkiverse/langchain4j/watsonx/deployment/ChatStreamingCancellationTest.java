@@ -1,22 +1,18 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_STREAMING_API;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -29,52 +25,17 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.PartialResponse;
 import dev.langchain4j.model.chat.response.PartialResponseContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ChatStreamingCancellationTest extends WireMockAbstract {
-
-    private static final int EVENTS = 6;
-    private static final String RESPONSE_STREAMING_TOKENS = """
-            id: 1
-            event: message
-            data: {"id":"chatcmpl-1","object":"chat.completion.chunk","model_id":"my_super_model","model":"my_super_model","choices":[{"index":0,"finish_reason":null,"delta":{"role":"assistant","content":"one"}}],"created":1749736055}
-
-            id: 2
-            event: message
-            data: {"id":"chatcmpl-1","object":"chat.completion.chunk","model_id":"my_super_model","model":"my_super_model","choices":[{"index":0,"finish_reason":null,"delta":{"content":"two"}}],"created":1749736055}
-
-            id: 3
-            event: message
-            data: {"id":"chatcmpl-1","object":"chat.completion.chunk","model_id":"my_super_model","model":"my_super_model","choices":[{"index":0,"finish_reason":null,"delta":{"content":"three"}}],"created":1749736055}
-
-            id: 4
-            event: message
-            data: {"id":"chatcmpl-1","object":"chat.completion.chunk","model_id":"my_super_model","model":"my_super_model","choices":[{"index":0,"finish_reason":null,"delta":{"content":"four"}}],"created":1749736055}
-
-            id: 5
-            event: message
-            data: {"id":"chatcmpl-1","object":"chat.completion.chunk","model_id":"my_super_model","model":"my_super_model","choices":[{"index":0,"finish_reason":"stop","delta":{"content":""}}],"created":1749736055}
-
-            id: 6
-            event: message
-            data: {"id":"chatcmpl-1","object":"chat.completion.chunk","model_id":"my_super_model","model":"my_super_model","choices":[],"created":1749736055,"usage":{"completion_tokens":4,"prompt_tokens":10,"total_tokens":14}}
-
-            """;
+public class ChatStreamingCancellationTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response("my_super_token", new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     StreamingChatModel streamingChatModel;
@@ -82,13 +43,10 @@ public class ChatStreamingCancellationTest extends WireMockAbstract {
     @Test
     void cancel_stops_the_stream() {
 
+        // the mock sends the whole stream at once: what is left of it must not reach the handler after the cancel
         var streamDuration = Duration.ofSeconds(3);
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_STREAMING_TOKENS)
-                .chunkedDribbleDelay(EVENTS, streamDuration)
-                .build();
+        mock.chat().reply(ChatReply.text("onetwothreefour").chunks(List.of("one", "two", "three", "four")).usage(10, 4));
 
         var partialResponses = new CopyOnWriteArrayList<String>();
         var cancelled = new AtomicBoolean(false);
@@ -128,5 +86,6 @@ public class ChatStreamingCancellationTest extends WireMockAbstract {
         assertThat(partialResponses).hasSize(1);
         assertThat(completeResponse.get()).isNull();
         assertThat(error.get()).isNull();
+        assertWatsonxRequest(mock.chat().singleRequest(), URL_WATSONX_CHAT_STREAMING_API);
     }
 }

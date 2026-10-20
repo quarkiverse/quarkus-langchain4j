@@ -1,18 +1,12 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -23,38 +17,33 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class StreamingChatModelSamplingParamsOmittedTest extends OpenAiBaseTest {
+public class StreamingChatModelSamplingParamsOmittedTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
-
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
     @Inject
     StreamingChatModel streamingChatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
-    void temperatureAndTopPAreNotSentWhenUnconfigured() throws IOException, InterruptedException {
-        var eventStream = """
-                data: {"id":"chatcmpl-1","object":"chat.completion.chunk","created":1,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{"role":"assistant","content":"Hallo"},"finish_reason":null}]}
-
-                data: {"id":"chatcmpl-1","object":"chat.completion.chunk","created":1,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
-
-                data: [DONE]
-                """;
-        wiremock().register(post(urlEqualTo("/v1/chat/completions"))
-                .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
+    void temperatureAndTopPAreNotSentWhenUnconfigured() throws InterruptedException {
+        mock.chat().reply("Hallo");
 
         var latch = new CountDownLatch(1);
         streamingChatModel.chat("hello", new StreamingChatResponseHandler() {
@@ -77,7 +66,10 @@ public class StreamingChatModelSamplingParamsOmittedTest extends OpenAiBaseTest 
             fail("Streaming did not complete in time");
         }
 
-        Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody).doesNotContainKey("temperature").doesNotContainKey("top_p");
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.query()).isNull();
+        assertThat(request.bodyAsJson().has("temperature")).isFalse();
+        assertThat(request.bodyAsJson().has("top_p")).isFalse();
     }
 }

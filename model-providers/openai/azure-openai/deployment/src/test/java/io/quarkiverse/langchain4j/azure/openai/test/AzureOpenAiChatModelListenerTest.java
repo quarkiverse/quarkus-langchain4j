@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -17,19 +18,17 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class AzureOpenAiChatModelListenerTest extends OpenAiBaseTest {
+public class AzureOpenAiChatModelListenerTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(CapturingChatModelListener.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.endpoint",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.deployment-name", "my-gpt4");
 
     @Inject
@@ -38,9 +37,19 @@ public class AzureOpenAiChatModelListenerTest extends OpenAiBaseTest {
     @Inject
     CapturingChatModelListener listener;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     void listenerReceivesModelName() {
-        chatModel.chat("hello");
+        mock.chat().reply("ok");
+
+        assertThat(chatModel.chat("hello")).isEqualTo("ok");
         assertThat(listener.wasCalled()).as("listener.onRequest was called").isTrue();
         assertThat(listener.getRequestModelName()).isEqualTo("my-gpt4");
     }

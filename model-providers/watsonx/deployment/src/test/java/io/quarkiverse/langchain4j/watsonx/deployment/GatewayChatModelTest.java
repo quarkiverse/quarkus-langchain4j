@@ -1,14 +1,11 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_GATEWAY_CHAT_MODEL;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GATEWAY_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GATEWAY_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GATEWAY_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_GATEWAY_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_TIME_LIMIT;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.RESPONSE_WATSONX_GATEWAY_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_GATEWAY_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.streamingChatResponseHandler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,13 +14,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -47,19 +42,18 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.watsonx.WatsonxChatResponseMetadata;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class GatewayChatModelTest extends WireMockAbstract {
+public class GatewayChatModelTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.gateway-chat-model.model-name",
                     DEFAULT_GATEWAY_CHAT_MODEL)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-chat-model.model-name",
                     DEFAULT_GATEWAY_CHAT_MODEL)
@@ -88,14 +82,7 @@ public class GatewayChatModelTest extends WireMockAbstract {
                     "0.3")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-chat-model.top-p", "0.8")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-chat-model.logprobs", "true")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response("my_super_token", new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     ChatModel chatModel;
@@ -139,10 +126,8 @@ public class GatewayChatModelTest extends WireMockAbstract {
     @Test
     void chat() throws Exception {
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_CHAT_API, 200)
-                .body(mapper.writeValueAsString(defaultRequest().build()))
-                .response(RESPONSE_WATSONX_GATEWAY_CHAT_API)
-                .build();
+        // service_tier, system_fingerprint and cached are gateway specific fields
+        mock.raw().on("POST", URL_WATSONX_GATEWAY_CHAT_API).reply(200, RESPONSE_WATSONX_GATEWAY_CHAT_API);
 
         var chatResponse = chatModel.chat(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -158,6 +143,11 @@ public class GatewayChatModelTest extends WireMockAbstract {
         assertEquals("default", metadata.serviceTier());
         assertEquals("fp_44709d6fcb", metadata.systemFingerprint());
         assertEquals(false, metadata.cached());
+
+        assertThat(apiRequests()).singleElement().satisfies(request -> {
+            assertWatsonxRequest(request, URL_WATSONX_GATEWAY_CHAT_API);
+            assertJsonBody(request, defaultRequest().build());
+        });
     }
 
     @Test
@@ -184,14 +174,15 @@ public class GatewayChatModelTest extends WireMockAbstract {
                 .metadata(Map.of("my-key", "my-value"))
                 .build();
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(RESPONSE_WATSONX_GATEWAY_CHAT_API)
-                .build();
+        mock.chat().reply(ChatReply.text("AI Response").usage(59, 47));
 
         assertEquals("AI Response",
                 allPropertiesChatModel.chat(dev.langchain4j.data.message.UserMessage.from("UserMessage"))
                         .aiMessage().text());
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_GATEWAY_CHAT_API);
+        assertJsonBody(request, body);
     }
 
     @Test
@@ -202,11 +193,7 @@ public class GatewayChatModelTest extends WireMockAbstract {
                 .streamOptions(new StreamOptions(true))
                 .build();
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_GATEWAY_CHAT_STREAMING_API)
-                .build();
+        mock.chat().reply(ChatReply.text("Hello").usage(38, 3));
 
         var messages = List.of(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -223,31 +210,37 @@ public class GatewayChatModelTest extends WireMockAbstract {
         assertNotNull(streamingResponse.get().metadata().id());
         assertEquals(FinishReason.STOP, streamingResponse.get().metadata().finishReason());
         assertEquals(41, streamingResponse.get().metadata().tokenUsage().totalTokenCount());
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_GATEWAY_CHAT_API);
+        assertJsonBody(request, body);
     }
 
     @Test
     void chat_error() throws Exception {
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_CHAT_API, 404)
-                .responseMediaType(MediaType.APPLICATION_JSON)
-                .response("""
+        // a watsonx.ai error envelope, which the gateway's own error format is not
+        mock.raw().on("POST", URL_WATSONX_GATEWAY_CHAT_API).reply(404, """
+                {
+                    "errors": [
                         {
-                            "errors": [
-                                {
-                                    "code": "model_not_supported",
-                                    "message": "Model 'openai/gpt-4o-mini' is not supported"
-                                }
-                            ],
-                            "trace": "3ba1905572c91c5e3e00b6f0d3f2f81f",
-                            "status_code": 404
-                        }""")
-                .build();
+                            "code": "model_not_supported",
+                            "message": "Model 'openai/gpt-4o-mini' is not supported"
+                        }
+                    ],
+                    "trace": "3ba1905572c91c5e3e00b6f0d3f2f81f",
+                    "status_code": 404
+                }""");
 
         var ex = assertThrows(LangChain4jException.class, () -> chatModel.chat("UserMessage"));
         var watsonxEx = assertInstanceOf(WatsonxException.class, ex.getCause());
         var details = watsonxEx.details().orElseThrow();
         assertEquals(404, details.statusCode());
         assertEquals("model_not_supported", details.errors().get(0).code());
+
+        // a 404 is not retried
+        assertThat(apiRequests()).singleElement()
+                .satisfies(request -> assertWatsonxRequest(request, URL_WATSONX_GATEWAY_CHAT_API));
     }
 
     private ModelGatewayTextChatRequest.Builder defaultRequest() {

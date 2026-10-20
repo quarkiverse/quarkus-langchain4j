@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.openai.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Map;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -11,37 +13,35 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ModelBuilderCustomizerNamedTest extends OpenAiBaseTest {
+public class ModelBuilderCustomizerNamedTest {
 
     @ApplicationScoped
     @ModelName("my-model")
     public static class NamedCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
         @Override
         public void customize(OpenAiChatModel.OpenAiChatModelBuilder builder) {
-            builder.customHeaders(java.util.Map.of("X-Custom-Named", "named-value"));
+            builder.customHeaders(Map.of("X-Custom-Named", "named-value"));
         }
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(NamedCustomizer.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion")
+            .overrideConfigKey("quarkus.langchain4j.openai.my-model.chat-model.mode", "chat-completion")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "defaultKey")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.my-model.api-key", "namedKey")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.my-model.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.my-model.api-key", "namedKey");
 
     @Inject
     ChatModel defaultModel;
@@ -50,25 +50,32 @@ public class ModelBuilderCustomizerNamedTest extends OpenAiBaseTest {
     @ModelName("my-model")
     ChatModel namedModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setup() {
-        setChatCompletionMessageContent("hello");
-        resetRequests();
+        mock.reset();
+        mock.chat().reply("hello");
     }
 
     @Test
     void customizerAppliedToNamedModel() {
-        namedModel.chat("test");
+        assertThat(namedModel.chat("test")).isEqualTo("hello");
 
-        LoggedRequest request = singleLoggedRequest();
-        assertThat(request.getHeader("X-Custom-Named")).isEqualTo("named-value");
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.header("Authorization")).isEqualTo("Bearer namedKey");
+        assertThat(request.header("X-Custom-Named")).isEqualTo("named-value");
     }
 
     @Test
     void customizerNotAppliedToDefaultModel() {
-        defaultModel.chat("test");
+        assertThat(defaultModel.chat("test")).isEqualTo("hello");
 
-        LoggedRequest request = singleLoggedRequest();
-        assertThat(request.getHeader("X-Custom-Named")).isNull();
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.header("Authorization")).isEqualTo("Bearer defaultKey");
+        assertThat(request.header("X-Custom-Named")).isNull();
     }
 }
