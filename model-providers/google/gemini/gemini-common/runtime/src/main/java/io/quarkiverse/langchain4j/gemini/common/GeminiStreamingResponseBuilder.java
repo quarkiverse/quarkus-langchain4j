@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
@@ -17,7 +14,6 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.Candidate;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.Candidate.Part;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.UsageMetadata;
@@ -144,7 +140,7 @@ class GeminiStreamingResponseBuilder {
 
     static AiMessage fromGPartsToAiMessage(List<Part> parts) {
         StringBuilder fullText = new StringBuilder();
-        List<FunctionCall> functionCalls = new ArrayList<>();
+        List<Part> functionCallParts = new ArrayList<>();
 
         for (Part part : parts) {
             String text = part.text();
@@ -156,31 +152,17 @@ class GeminiStreamingResponseBuilder {
             }
 
             if (part.functionCall() != null) {
-                functionCalls.add(part.functionCall());
+                functionCallParts.add(part);
             }
         }
 
-        if (functionCalls.isEmpty()) {
+        if (functionCallParts.isEmpty()) {
             return AiMessage.from(fullText.toString());
         } else {
-            return AiMessage.from(fromToolExecReqToGFunCall(functionCalls));
+            return AiMessage.from(functionCallParts.stream()
+                    .map(GenerateContentResponseHandler::toToolExecutionRequest)
+                    .toList());
         }
-    }
-
-    static List<ToolExecutionRequest> fromToolExecReqToGFunCall(List<FunctionCall> functionCalls) {
-        return functionCalls.stream()
-                .map(functionCall -> {
-                    try {
-                        return ToolExecutionRequest.builder()
-                                .name(functionCall.name())
-                                .arguments(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
-                                        .writeValueAsString(functionCall.args()))
-                                .build();
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .collect(Collectors.toList());
     }
 
     static FinishReason fromGFinishReasonToFinishReason(
