@@ -7,27 +7,28 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ModelAuthProviderSmokeTest extends OpenAiBaseTest {
+public class ModelAuthProviderSmokeTest {
 
+    // the empty api-key keeps the mock from filling one in: the ModelAuthProvider must be the only credential
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.endpoint", WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            .overrideConfigKey("quarkus.langchain4j.azure-openai.api-key", "");
 
     @Inject
     ChatModel chatLanguageModel;
@@ -35,16 +36,27 @@ public class ModelAuthProviderSmokeTest extends OpenAiBaseTest {
     @Inject
     StreamingChatModel streamingChatLanguageModel;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     void testChatLanguageModel() {
         assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(AzureOpenAiChatModel.class);
         assertThat(ClientProxy.unwrap(streamingChatLanguageModel)).isInstanceOf(AzureOpenAiStreamingChatModel.class);
 
-        String response = chatLanguageModel.chat("hello");
-        assertThat(response).isNotBlank();
+        mock.chat().reply("Hello there");
 
-        LoggedRequest loggedRequest = singleLoggedRequest();
-        assertThat(loggedRequest.getHeader("Authorization")).isEqualTo("Bearer token");
+        String response = chatLanguageModel.chat("hello");
+        assertThat(response).isEqualTo("Hello there");
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.header("Authorization")).isEqualTo("Bearer token");
+        assertThat(request.header("api-key")).isNull();
     }
 
     @ApplicationScoped

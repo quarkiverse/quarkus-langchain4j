@@ -2,9 +2,9 @@ package org.acme.examples.aiservices;
 
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
+import static org.acme.examples.aiservices.OpenAiRequestAssertions.assertMultipleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +14,7 @@ import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import org.acme.examples.aiservices.OpenAiRequestAssertions.MessageContent;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,25 +28,24 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ChatMemorySeederTest extends OpenAiBaseTest {
+public class ChatMemorySeederTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+                    () -> ShrinkWrap.create(JavaArchive.class).addClass(OpenAiRequestAssertions.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
 
     @BeforeEach
     void setup() {
-        resetRequests();
-        resetMappings();
+        mock.reset();
     }
 
     // we define this so we can peek into the memory
@@ -91,17 +91,20 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
     }
 
     @Inject
+    MockModelServer mock;
+
+    @Inject
     SentimentAnalyzer sentimentAnalyzer;
 
     @Test
     @ActivateRequestContext
-    void testRequestScoped() throws IOException {
+    void testRequestScoped() {
         ArcContainer container = Arc.container();
         ChatMemoryStore store = container.instance(ChatMemoryStore.class).get();
         assertThat(store).isInstanceOf(CustomChatMemoryStore.class);
 
         // first request
-        setChatCompletionMessageContent("POSITIVE");
+        mock.chat().reply("POSITIVE");
 
         Sentiment sentiment = sentimentAnalyzer
                 .analyzeSentimentOf("This LaptopPro X15 is wicked fast and that 4K screen is a dream.");
@@ -110,7 +113,7 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
         assertThat(sentiment).isEqualTo(Sentiment.POSITIVE);
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a professional sentiment analyzer"),
                         new MessageContent("user", "great!"),
@@ -125,11 +128,11 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
         List<ChatMessage> messagesFromStore = store.getMessages(key);
         assertThat(messagesFromStore).hasSize(5);
 
-        // clear wiremock's requests, so we can assert the second request easily
-        resetRequests();
+        // clear the mock's requests, so we can assert the second request easily
+        mock.reset();
 
         // second request
-        setChatCompletionMessageContent("NEUTRAL");
+        mock.chat().reply("NEUTRAL");
 
         sentiment = sentimentAnalyzer.analyzeSentimentOf("The earth is round.");
 
@@ -137,7 +140,7 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
         assertThat(sentiment).isEqualTo(Sentiment.NEUTRAL);
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a professional sentiment analyzer"),
                         new MessageContent("user", "great!"),
@@ -175,13 +178,13 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
     SingletonSentimentAnalyzer singletonSentimentAnalyzer;
 
     @Test
-    void testSingleton() throws IOException {
+    void testSingleton() {
         ArcContainer container = Arc.container();
         ChatMemoryStore store = container.instance(ChatMemoryStore.class).get();
         assertThat(store).isInstanceOf(CustomChatMemoryStore.class);
 
         // first request
-        setChatCompletionMessageContent("POSITIVE");
+        mock.chat().reply("POSITIVE");
 
         Sentiment sentiment = singletonSentimentAnalyzer
                 .analyzeSentimentOf("This LaptopPro X15 is wicked fast and that 4K screen is a dream.");
@@ -190,7 +193,7 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
         assertThat(sentiment).isEqualTo(Sentiment.POSITIVE);
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a professional sentiment analyzer"),
                         new MessageContent("user", "great!"),
@@ -205,11 +208,11 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
         List<ChatMessage> messagesFromStore = store.getMessages(key);
         assertThat(messagesFromStore).hasSize(5);
 
-        // clear wiremock's requests, so we can assert the second request easily
-        resetRequests();
+        // clear the mock's requests, so we can assert the second request easily
+        mock.reset();
 
         // second request
-        setChatCompletionMessageContent("NEUTRAL");
+        mock.chat().reply("NEUTRAL");
 
         sentiment = singletonSentimentAnalyzer.analyzeSentimentOf("The earth is round.");
 
@@ -217,7 +220,7 @@ public class ChatMemorySeederTest extends OpenAiBaseTest {
         assertThat(sentiment).isEqualTo(Sentiment.NEUTRAL);
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a professional sentiment analyzer"),
                         new MessageContent("user", "great!"),

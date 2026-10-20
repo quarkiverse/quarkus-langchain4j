@@ -1,40 +1,40 @@
 package org.acme.examples.aiservices;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * List/Set AI service return types must produce a real JSON schema (not empty {}), see #943.
  */
-public class CollectionStructuredOutputResponseTest extends OpenAiBaseTest {
+public class CollectionStructuredOutputResponseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.response-format", "json_schema")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.strict-json-schema", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
 
     record FileInfo(String filename, String content) {
     }
@@ -48,12 +48,19 @@ public class CollectionStructuredOutputResponseTest extends OpenAiBaseTest {
     }
 
     @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
+    @Inject
     FileInfoExtractor fileInfoExtractor;
 
     @Test
-    public void testListOfPojo() throws IOException {
-        setChatCompletionMessageContent(
-                "{\\n\\\"values\\\": [{\\n\\\"filename\\\": \\\"a.txt\\\",\\n\\\"content\\\": \\\"hello\\\"\\n}]\\n}");
+    public void testListOfPojo() {
+        mock.chat().reply("{\n\"values\": [{\n\"filename\": \"a.txt\",\n\"content\": \"hello\"\n}]\n}");
 
         List<FileInfo> result = fileInfoExtractor.generate("some input");
 
@@ -61,25 +68,12 @@ public class CollectionStructuredOutputResponseTest extends OpenAiBaseTest {
         assertThat(result.get(0).filename()).isEqualTo("a.txt");
         assertThat(result.get(0).content()).isEqualTo("hello");
 
-        Map<String, Object> requestAsMap = getRequestAsMap();
-        assertThat(requestAsMap).hasEntrySatisfying("response_format", (v) -> {
-            assertThat(v).asInstanceOf(map(String.class, Object.class)).satisfies(responseFormatMap -> {
-                assertThat(responseFormatMap).containsEntry("type", "json_schema");
-                assertThat(responseFormatMap).extracting("json_schema").satisfies(js -> {
-                    assertThat(js).asInstanceOf(map(String.class, Object.class)).satisfies(jsonSchemaMap -> {
-                        assertThat(jsonSchemaMap).containsEntry("name", "List_of_FileInfo");
-                        assertThat(jsonSchemaMap).extracting("schema").asInstanceOf(map(String.class, Object.class))
-                                .satisfies(schema -> {
-                                    assertThat(schema).containsKey("properties");
-                                    assertThat(schema.get("properties")).asInstanceOf(map(String.class, Object.class))
-                                            .containsKey("values");
-                                    assertThat(schema.get("properties")).asInstanceOf(map(String.class, Object.class))
-                                            .extracting("values").asInstanceOf(map(String.class, Object.class))
-                                            .containsEntry("type", "array");
-                                });
-                    });
-                });
-            });
-        });
+        JsonNode responseFormat = mock.chat().singleRequest().bodyAsJson().get("response_format");
+        assertThat(responseFormat.path("type").textValue()).isEqualTo("json_schema");
+        JsonNode jsonSchema = responseFormat.get("json_schema");
+        assertThat(jsonSchema.path("name").textValue()).isEqualTo("List_of_FileInfo");
+        JsonNode properties = jsonSchema.get("schema").get("properties");
+        assertThat(properties.has("values")).isTrue();
+        assertThat(properties.get("values").path("type").textValue()).isEqualTo("array");
     }
 }

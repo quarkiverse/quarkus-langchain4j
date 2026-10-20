@@ -1,15 +1,10 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_API;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Date;
 import java.util.List;
 import java.util.logging.LogRecord;
 
@@ -22,38 +17,30 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.chat.ChatModel;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class MaskedHeadersInRequestLogTest extends WireMockAbstract {
+public class MaskedHeadersInRequestLogTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.log-requests", "true")
             .setLogRecordPredicate(record -> true)
             .assertLogRecords(MaskedHeadersInRequestLogTest::verifyLogRecords)
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response(BEARER_TOKEN, new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     ChatModel chatModel;
 
     @Test
     void maskedHeadersAreLogged() {
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .response(RESPONSE_WATSONX_CHAT_API)
-                .build();
+        mock.chat().reply(ChatReply.text("AI Response").usage(59, 47));
 
         assertThat(chatModel.chat("Hello")).isEqualTo("AI Response");
+        assertWatsonxRequest(mock.chat().singleRequest(), URL_WATSONX_CHAT_API);
     }
 
     private static void verifyLogRecords(List<LogRecord> logRecords) {
@@ -61,7 +48,7 @@ public class MaskedHeadersInRequestLogTest extends WireMockAbstract {
                 .map(record -> ((ExtLogRecord) record).getFormattedMessage())
                 .filter(message -> message.startsWith("Request:")))
                 .isNotEmpty()
-                .allSatisfy(message -> assertThat(message).doesNotContain(BEARER_TOKEN))
+                .allSatisfy(message -> assertThat(message).doesNotContain(MOCK_TOKEN))
                 .anySatisfy(message -> assertThat(message).contains("[Authorization: Beare...en]"));
     }
 }

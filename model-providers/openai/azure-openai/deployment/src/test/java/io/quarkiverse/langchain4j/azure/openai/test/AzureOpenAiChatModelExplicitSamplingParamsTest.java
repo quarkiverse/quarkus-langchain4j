@@ -2,9 +2,7 @@ package io.quarkiverse.langchain4j.azure.openai.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.inject.Inject;
@@ -15,25 +13,25 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class AzureOpenAiChatModelExplicitSamplingParamsTest extends OpenAiBaseTest {
+public class AzureOpenAiChatModelExplicitSamplingParamsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.temperature", "0.3")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.top-p", "0.8")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.reasoning-effort", "medium")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.endpoint",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.reasoning-effort", "medium");
 
     @Inject
     ChatModel chatModel;
@@ -41,25 +39,25 @@ public class AzureOpenAiChatModelExplicitSamplingParamsTest extends OpenAiBaseTe
     @Inject
     StreamingChatModel streamingChatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
+        mock.chat().reply("ok");
     }
 
     @Test
-    void explicitlyConfiguredValuesAreSent() throws IOException {
+    void explicitlyConfiguredValuesAreSent() {
         chatModel.chat("hello");
 
-        Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody)
-                .containsEntry("temperature", 0.3)
-                .containsEntry("top_p", 0.8)
-                .containsEntry("reasoning_effort", "medium");
+        assertSamplingParams(mock.chat().singleRequest().bodyAsJson());
     }
 
     @Test
-    void streamingModelAlsoSendsThem() throws IOException, InterruptedException {
-        var latch = new CountDownLatch(1);
+    void streamingModelAlsoSendsThem() throws Exception {
+        CompletableFuture<ChatResponse> done = new CompletableFuture<>();
         streamingChatModel.chat("hello", new StreamingChatResponseHandler() {
             @Override
             public void onPartialResponse(String token) {
@@ -67,20 +65,24 @@ public class AzureOpenAiChatModelExplicitSamplingParamsTest extends OpenAiBaseTe
 
             @Override
             public void onError(Throwable error) {
-                latch.countDown();
+                done.completeExceptionally(error);
             }
 
             @Override
             public void onCompleteResponse(ChatResponse response) {
-                latch.countDown();
+                done.complete(response);
             }
         });
-        latch.await(1, TimeUnit.MINUTES);
+        assertThat(done.get(1, TimeUnit.MINUTES).aiMessage().text()).isEqualTo("ok");
 
-        Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody)
-                .containsEntry("temperature", 0.3)
-                .containsEntry("top_p", 0.8)
-                .containsEntry("reasoning_effort", "medium");
+        JsonNode requestBody = mock.chat().singleRequest().bodyAsJson();
+        assertThat(requestBody.get("stream").booleanValue()).isTrue();
+        assertSamplingParams(requestBody);
+    }
+
+    private static void assertSamplingParams(JsonNode requestBody) {
+        assertThat(requestBody.get("temperature").doubleValue()).isEqualTo(0.3);
+        assertThat(requestBody.get("top_p").doubleValue()).isEqualTo(0.8);
+        assertThat(requestBody.get("reasoning_effort").textValue()).isEqualTo("medium");
     }
 }

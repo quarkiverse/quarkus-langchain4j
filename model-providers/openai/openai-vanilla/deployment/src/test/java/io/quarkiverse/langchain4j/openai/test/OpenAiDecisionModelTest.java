@@ -1,15 +1,11 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -22,8 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.client.MappingBuilder;
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
@@ -46,55 +41,35 @@ import dev.langchain4j.model.decision.response.ScaleAnswer;
 import dev.langchain4j.model.decision.response.YesNoAnswer;
 import dev.langchain4j.model.openai.OpenAiDecisionModel;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.DecisionReply;
+import io.quarkiverse.langchain4j.mockapi.ErrorReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Exercises {@code OpenAiDecisionModel} through the CDI bean, the Quarkus configuration and the Quarkus HTTP client.
  */
-public class OpenAiDecisionModelTest extends OpenAiBaseTest {
+public class OpenAiDecisionModelTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(RecordingListener.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", WiremockAware.wiremockUrlForConfig("/v1"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.m1.base-url", WiremockAware.wiremockUrlForConfig("/v1"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.m1.api-key", "other-key")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.m1.decision-model.model-name", "gpt-6-luna-mini");
 
-    private static final String RESPONSE = """
-            {
-              "model": "gpt-6-luna-2026-09-01",
-              "answers": [
-                {
-                  "type": "choice",
-                  "name": "team",
-                  "choice": "billing",
-                  "probabilities": [
-                    {"value": "billing", "probability": 0.88},
-                    {"value": "support", "probability": 0.12}
-                  ],
-                  "confidence": 0.81
-                },
-                {"type": "predicate", "name": "urgent", "probability": 0.95},
-                {
-                  "type": "score",
-                  "name": "frustration",
-                  "score": 1.44,
-                  "probabilities": [
-                    {"value": 0, "label": "Calm", "probability": 0.06},
-                    {"value": 1, "label": "Frustrated", "probability": 0.44},
-                    {"value": 2, "label": "Angry", "probability": 0.5}
-                  ],
-                  "confidence": 0.78
-                }
-              ],
-              "usage": {"input_tokens": 318, "output_tokens": 34, "total_tokens": 352}
-            }
-            """;
+    private static final DecisionReply REPLY = DecisionReply.of(
+            DecisionReply.choice("team", "billing", probabilities("billing", 0.88, "support", 0.12), 0.81),
+            DecisionReply.predicate("urgent", 0.95),
+            DecisionReply.score("frustration", 1.44,
+                    List.of(DecisionReply.level(0, "Calm", 0.06), DecisionReply.level(1, "Frustrated", 0.44),
+                            DecisionReply.level(2, "Angry", 0.5)),
+                    0.78))
+            .modelName("gpt-6-luna-2026-09-01")
+            .usage(318, 34);
 
     private static final DecisionRequest REQUEST = DecisionRequest.builder()
             .input("Help! My payouts have been failing for 3 days.")
@@ -122,57 +97,58 @@ public class OpenAiDecisionModelTest extends OpenAiBaseTest {
     @ModelName("m1")
     DecisionModel namedModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setUp() {
-        resetRequests();
-        resetMappings();
+        mock.reset();
         RecordingListener.clear();
     }
 
     @Test
-    void should_send_request_in_decisions_api_format() {
+    void should_send_request_in_decisions_api_format() throws Exception {
         assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiDecisionModel.class);
-        wiremock().register(decisions()
-                .withHeader("Authorization", equalTo("Bearer default-key"))
-                .withRequestBody(equalToJson(
-                        """
-                                {
-                                  "model": "gpt-6-luna",
-                                  "input": "Help! My payouts have been failing for 3 days.",
-                                  "questions": [
-                                    {
-                                      "type": "choice",
-                                      "name": "team",
-                                      "instructions": "Which team should handle this?",
-                                      "choices": [
-                                        {"value": "billing", "description": "Payments, invoicing, refunds"},
-                                        {"value": "support", "description": "Bugs. Not for invoices"}
-                                      ]
-                                    },
-                                    {
-                                      "type": "predicate",
-                                      "name": "urgent",
-                                      "instructions": "Does this need attention today?\\nAnswer yes when: Money is not reaching the customer"
-                                    },
-                                    {
-                                      "type": "score",
-                                      "name": "frustration",
-                                      "instructions": "How frustrated is the customer?",
-                                      "levels": [{"label": "Calm"}, {"label": "Frustrated"}, {"label": "Angry"}]
-                                    }
-                                  ]
-                                }
-                                """))
-                .willReturn(ok()));
+        mock.decision().reply(REPLY);
 
         defaultModel.decide(REQUEST);
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        CapturedRequest request = singleDecisionRequest();
+        assertThat(request.header("Authorization")).isEqualTo("Bearer default-key");
+        assertThat(request.bodyAsJson()).isEqualTo(new ObjectMapper().readTree(
+                """
+                        {
+                          "model": "gpt-6-luna",
+                          "input": "Help! My payouts have been failing for 3 days.",
+                          "questions": [
+                            {
+                              "type": "choice",
+                              "name": "team",
+                              "instructions": "Which team should handle this?",
+                              "choices": [
+                                {"value": "billing", "description": "Payments, invoicing, refunds"},
+                                {"value": "support", "description": "Bugs. Not for invoices"}
+                              ]
+                            },
+                            {
+                              "type": "predicate",
+                              "name": "urgent",
+                              "instructions": "Does this need attention today?\\nAnswer yes when: Money is not reaching the customer"
+                            },
+                            {
+                              "type": "score",
+                              "name": "frustration",
+                              "instructions": "How frustrated is the customer?",
+                              "levels": [{"label": "Calm"}, {"label": "Frustrated"}, {"label": "Angry"}]
+                            }
+                          ]
+                        }
+                        """));
     }
 
     @Test
     void should_map_response() {
-        wiremock().register(decisions().willReturn(ok()));
+        mock.decision().reply(REPLY);
 
         DecisionResponse response = defaultModel.decide(REQUEST);
 
@@ -196,20 +172,15 @@ public class OpenAiDecisionModelTest extends OpenAiBaseTest {
         assertThat(response.tokenUsage().inputTokenCount()).isEqualTo(318);
         assertThat(response.tokenUsage().outputTokenCount()).isEqualTo(34);
         assertThat(response.tokenUsage().totalTokenCount()).isEqualTo(352);
+        singleDecisionRequest();
     }
 
     @Test
     void should_map_refusal() {
-        wiremock().register(decisions().willReturn(ok("""
-                {
-                  "model": "gpt-6-luna",
-                  "answers": [
-                    {"type": "refusal", "name": "team"},
-                    {"type": "predicate", "name": "urgent", "probability": 0.95},
-                    {"type": "score", "name": "frustration", "score": 1.0}
-                  ]
-                }
-                """)));
+        mock.decision().reply(DecisionReply.of(
+                DecisionReply.declined("team"),
+                DecisionReply.predicate("urgent", 0.95),
+                DecisionReply.score("frustration", 1.0, List.of(), null)));
 
         DecisionResponse response = defaultModel.decide(REQUEST);
 
@@ -217,32 +188,12 @@ public class OpenAiDecisionModelTest extends OpenAiBaseTest {
         assertThat(response.isRefused("urgent")).isFalse();
         assertThatThrownBy(() -> response.choice("team")).isInstanceOf(ContentFilteredException.class);
         assertThat(response.yesNo("urgent").probability()).isEqualTo(0.95);
+        singleDecisionRequest();
     }
 
     @Test
-    void should_send_images_as_input_parts() {
-        wiremock().register(decisions()
-                .withRequestBody(equalToJson("""
-                        {
-                          "model": "gpt-6-luna",
-                          "input": [
-                            {
-                              "type": "message",
-                              "role": "user",
-                              "content": [
-                                {"type": "input_text", "text": "The customer attached this photo."},
-                                {"type": "input_image", "image_url": "data:image/png;base64,iVBORw0KGgo=", "detail": "low"}
-                              ]
-                            }
-                          ],
-                          "questions": [
-                            {"type": "predicate", "name": "damaged", "instructions": "Is the item visibly damaged?"}
-                          ]
-                        }
-                        """))
-                .willReturn(ok("""
-                        {"model": "gpt-6-luna", "answers": [{"type": "predicate", "name": "damaged", "probability": 0.2}]}
-                        """)));
+    void should_send_images_as_input_parts() throws Exception {
+        mock.decision().reply(DecisionReply.of(DecisionReply.predicate("damaged", 0.2)));
 
         DecisionResponse response = defaultModel.decide(DecisionRequest.builder()
                 .input(List.of(
@@ -252,47 +203,63 @@ public class OpenAiDecisionModelTest extends OpenAiBaseTest {
                 .build());
 
         assertThat(response.yesNo("damaged").probability()).isEqualTo(0.2);
+        assertThat(singleDecisionRequest().bodyAsJson()).isEqualTo(new ObjectMapper().readTree("""
+                {
+                  "model": "gpt-6-luna",
+                  "input": [
+                    {
+                      "type": "message",
+                      "role": "user",
+                      "content": [
+                        {"type": "input_text", "text": "The customer attached this photo."},
+                        {"type": "input_image", "image_url": "data:image/png;base64,iVBORw0KGgo=", "detail": "low"}
+                      ]
+                    }
+                  ],
+                  "questions": [
+                    {"type": "predicate", "name": "damaged", "instructions": "Is the item visibly damaged?"}
+                  ]
+                }
+                """));
     }
 
     @Test
     void should_use_named_configuration() {
         assertThat(ClientProxy.unwrap(namedModel)).isInstanceOf(OpenAiDecisionModel.class);
-        wiremock().register(decisions()
-                .withHeader("Authorization", equalTo("Bearer other-key"))
-                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-6-luna-mini")))
-                .willReturn(ok()));
+        mock.decision().reply(REPLY);
 
         namedModel.decide(REQUEST);
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        CapturedRequest request = singleDecisionRequest();
+        assertThat(request.header("Authorization")).isEqualTo("Bearer other-key");
+        assertThat(request.bodyAsJson().at("/model").textValue()).isEqualTo("gpt-6-luna-mini");
     }
 
     @Test
     void request_model_name_should_override_default() {
-        wiremock().register(decisions()
-                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-6-luna-2026-09-01")))
-                .willReturn(ok()));
+        mock.decision().reply(REPLY);
 
         defaultModel.decide(REQUEST.toBuilder()
                 .parameters(DecisionRequestParameters.builder().modelName("gpt-6-luna-2026-09-01").build())
                 .build());
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        assertThat(singleDecisionRequest().bodyAsJson().at("/model").textValue()).isEqualTo("gpt-6-luna-2026-09-01");
     }
 
     @Test
     void should_decide_async() throws Exception {
-        wiremock().register(decisions().willReturn(ok()));
+        mock.decision().reply(REPLY);
 
         DecisionResponse response = defaultModel.decideAsync(REQUEST).get(10, TimeUnit.SECONDS);
 
         assertThat(response.choice("team").value()).isEqualTo("billing");
         assertThat(RecordingListener.RESPONSES).hasSize(1);
+        singleDecisionRequest();
     }
 
     @Test
     void should_notify_listeners_and_report_provider() {
-        wiremock().register(decisions().willReturn(ok()));
+        mock.decision().reply(REPLY);
 
         DecisionResponse response = defaultModel.decide(REQUEST);
 
@@ -301,40 +268,49 @@ public class OpenAiDecisionModelTest extends OpenAiBaseTest {
         assertThat(RecordingListener.RESPONSES).hasSize(1);
         assertThat(RecordingListener.RESPONSES.get(0).decisionResponse()).isEqualTo(response);
         assertThat(RecordingListener.ERRORS).isEmpty();
+        singleDecisionRequest();
     }
 
     @Test
     void should_map_authentication_errors_without_retrying() {
-        wiremock().register(decisions()
-                .willReturn(aResponse().withStatus(401).withBody("{\"error\": \"unauthorized\"}")));
+        mock.decision().fail(401, "unauthorized");
 
         assertThatThrownBy(() -> defaultModel.decide(REQUEST)).isInstanceOf(AuthenticationException.class);
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        // a retry would be recorded as a second request
+        singleDecisionRequest();
         assertThat(RecordingListener.ERRORS).hasSize(1);
     }
 
     @Test
     void should_retry_server_errors_according_to_max_retries() {
-        wiremock().register(decisions().willReturn(aResponse().withStatus(500).withBody("boom")));
+        mock.decision().reply(ErrorReply.of(500, "boom"), ErrorReply.of(500, "boom"));
 
         assertThatThrownBy(() -> defaultModel.decide(REQUEST)).isInstanceOf(RuntimeException.class);
 
         // the default max-retries is 1, so the first attempt is retried once
-        assertThat(wiremock().getServeEvents()).hasSize(2);
+        assertThat(mock.requests()).hasSize(2);
+        assertThat(mock.decision().requests()).hasSize(2).allSatisfy(request -> {
+            assertThat(request.path()).isEqualTo("/v1/decisions");
+            assertThat(request.query()).isNull();
+        });
         assertThat(RecordingListener.ERRORS).hasSize(1);
     }
 
-    private static MappingBuilder decisions() {
-        return post(urlEqualTo("/v1/decisions"));
+    private CapturedRequest singleDecisionRequest() {
+        assertThat(mock.requests()).hasSize(1);
+        CapturedRequest request = mock.decision().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/decisions");
+        assertThat(request.query()).isNull();
+        return request;
     }
 
-    private static ResponseDefinitionBuilder ok() {
-        return ok(RESPONSE);
-    }
-
-    private static ResponseDefinitionBuilder ok(String body) {
-        return aResponse().withHeader("Content-Type", "application/json").withBody(body);
+    private static Map<String, Double> probabilities(String firstValue, double firstProbability, String secondValue,
+            double secondProbability) {
+        Map<String, Double> probabilities = new LinkedHashMap<>();
+        probabilities.put(firstValue, firstProbability);
+        probabilities.put(secondValue, secondProbability);
+        return probabilities;
     }
 
     @ApplicationScoped

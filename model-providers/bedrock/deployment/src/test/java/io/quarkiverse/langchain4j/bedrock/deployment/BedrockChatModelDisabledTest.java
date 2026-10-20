@@ -15,13 +15,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.model.ModelDisabledException;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class BedrockChatModelDisabledTest extends BedrockTestBase {
+class BedrockChatModelDisabledTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.enable-integration", "false");
 

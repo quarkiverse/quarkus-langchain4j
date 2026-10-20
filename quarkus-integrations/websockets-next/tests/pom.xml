@@ -29,7 +29,7 @@
 
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-openai-testing-internal</artifactId>
+            <artifactId>quarkus-langchain4j-mock-api-deployment</artifactId>
             <scope>test</scope>
             <version>${project.version}</version>
         </dependency>

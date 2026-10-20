@@ -20,12 +20,10 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.skills.Skills;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class AgentSkillsTest extends OpenAiBaseTest {
+public class AgentSkillsTest {
 
     private static final String FOOBAR_SKILL = """
             ---
@@ -46,7 +44,7 @@ public class AgentSkillsTest extends OpenAiBaseTest {
             """;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             CapturingChatModel.class,
@@ -56,8 +54,7 @@ public class AgentSkillsTest extends OpenAiBaseTest {
                     .addAsResource(new StringAsset(FOOBAR_SKILL), "skills/foobar-skill/SKILL.md")
                     .addAsResource(new StringAsset(BAZQUX_SKILL), "skills/bazqux-skill/SKILL.md"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.skills.directories", "classpath:skills");
 
     public static class CapturingChatModel implements ChatModel {

@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.CompletableFuture;
@@ -29,23 +26,19 @@ import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class VertexAiGeminiToolChoiceTest extends WiremockAware {
+public class VertexAiGeminiToolChoiceTest {
 
     private static final String CHAT_MODEL_ID = "gemini-3-flash-preview";
-    private static final String MODEL_URL = "/v1/projects/dummy/locations/dummy/publishers/google/models/" + CHAT_MODEL_ID;
-    private static final String RESPONSE = """
-            {"candidates":[{"content":{"role":"model","parts":[{"text":"Hi"}]},"finishReason":"STOP"}],
-             "usageMetadata":{"promptTokenCount":1,"candidatesTokenCount":1,"totalTokenCount":2}}""";
     private static final ToolSpecification GET_WEATHER = ToolSpecification.builder()
             .name("getWeather").description("Returns the weather").build();
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-id", CHAT_MODEL_ID);
 
     @Inject
@@ -54,14 +47,13 @@ public class VertexAiGeminiToolChoiceTest extends WiremockAware {
     @Inject
     StreamingChatModel streamingChatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setUp() {
-        resetRequests();
-        wiremock().register(post(urlPathEqualTo(MODEL_URL + ":generateContent"))
-                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody(RESPONSE)));
-        wiremock().register(post(urlPathEqualTo(MODEL_URL + ":streamGenerateContent"))
-                .willReturn(aResponse().withHeader("Content-Type", "text/event-stream")
-                        .withBody("data: " + RESPONSE.replace("\n", "") + "\n\n")));
+        mock.reset();
+        mock.chat().reply("Hi");
     }
 
     @Test
@@ -81,7 +73,7 @@ public class VertexAiGeminiToolChoiceTest extends WiremockAware {
     }
 
     @Test
-    void noToolConfigIsSentWithoutToolChoice() throws Exception {
+    void noToolConfigIsSentWithoutToolChoice() {
         chatModel.chat(request(null));
 
         assertThat(sentToolConfig()).isNull();
@@ -119,8 +111,8 @@ public class VertexAiGeminiToolChoiceTest extends WiremockAware {
                 .build();
     }
 
-    private JsonNode sentToolConfig() throws Exception {
-        return json(singleLoggedRequest().getBodyAsString()).get("toolConfig");
+    private JsonNode sentToolConfig() {
+        return mock.chat().singleRequest().bodyAsJson().get("toolConfig");
     }
 
     private static JsonNode json(String json) throws Exception {

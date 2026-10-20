@@ -1,13 +1,10 @@
 package org.acme.examples.aiservices;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static dev.langchain4j.test.guardrail.GuardrailAssertions.assertThat;
 import static dev.langchain4j.test.guardrail.GuardrailAssertions.assertThatExceptionOfType;
 import static dev.langchain4j.test.guardrail.GuardrailAssertions.atIndex;
+import static org.acme.examples.aiservices.OpenAiRequestAssertions.assertMultipleRequestMessage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +15,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.acme.examples.aiservices.OpenAiRequestAssertions.MessageContent;
 import org.jboss.logging.Logger;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -27,9 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.AiMessage;
@@ -62,25 +56,31 @@ import dev.langchain4j.observability.event.DefaultOutputGuardrailExecutedEvent;
 import dev.langchain4j.observability.event.DefaultToolExecutedEvent;
 import dev.langchain4j.service.guardrail.InputGuardrails;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
+import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkiverse.langchain4j.observability.AiServiceSelector;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.logging.Log;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-class AuditingTests extends OpenAiBaseTest {
+class AuditingTests {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
-
-    private static final String SCENARIO = "tools";
-    private static final String SECOND_SCENARIO = "second";
+                    () -> ShrinkWrap.create(JavaArchive.class).addClass(OpenAiRequestAssertions.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
     private static final String USER_MESSAGE = "What is the square root of 485906798473894056 in scientific notation?";
     private static final String EXPECTED_RESPONSE = "The square root of 485,906,798,473,894,056 in scientific notation is approximately 6.97070153193991E8.";
+
+    @Inject
+    MockModelServer mock;
+
+    @Inject
+    ChatMemoryStore chatMemoryStore;
 
     @Inject
     Assistant1 assistant1;
@@ -114,9 +114,6 @@ class AuditingTests extends OpenAiBaseTest {
 
     @Inject
     Assistant2OutputGuardrailAuditor assistant2OutputGuardrailAuditor;
-
-    @Inject
-    CalculatorAfter calculatorAfter;
 
     @BeforeEach
     void beforeEach() {
@@ -187,12 +184,12 @@ class AuditingTests extends OpenAiBaseTest {
 
     @ParameterizedTest
     @ValueSource(classes = { Assistant1.class, Assistant2.class })
-    void should_execute_tool_then_answer(Class<? extends Assistant> assistantClass) throws IOException {
+    void should_execute_tool_then_answer(Class<? extends Assistant> assistantClass) {
         shouldExecuteToolThenAnswer(assistantClass, getAssistant(assistantClass));
     }
 
     private void noEventsReceived(BaseAuditor auditor) {
-        assertThat(wiremock().getServeEvents().size()).isGreaterThanOrEqualTo(2);
+        assertThat(mock.requests()).hasSize(2);
         assertThat(auditor.invocationContexts)
                 .isNotNull()
                 .isEmpty();
@@ -303,8 +300,7 @@ class AuditingTests extends OpenAiBaseTest {
                 }, atIndex(1));
     }
 
-    private void shouldExecuteToolThenAnswer(Class<? extends Assistant> assistantClass, Assistant assistant)
-            throws IOException {
+    private void shouldExecuteToolThenAnswer(Class<? extends Assistant> assistantClass, Assistant assistant) {
 
         var answer = assistant.chat(USER_MESSAGE);
         verifyToolExecutedEvents(assistantClass, answer, allServicesAuditor);
@@ -318,15 +314,19 @@ class AuditingTests extends OpenAiBaseTest {
         }
     }
 
-    private void verifyToolExecutedEvents(Class<? extends Assistant> assistantClass, String answer, BaseAuditor auditor)
-            throws IOException {
+    private void verifyToolExecutedEvents(Class<? extends Assistant> assistantClass, String answer, BaseAuditor auditor) {
         assertThat(answer).isEqualTo(EXPECTED_RESPONSE);
 
-        var numServeEvents = wiremock().getServeEvents().size();
-        assertThat(numServeEvents).isGreaterThanOrEqualTo(2);
+        // the second request carries the tool result
+        List<CapturedRequest> requests = mock.requests();
+        assertThat(requests).hasSize(2);
+        assertThat(requests).allSatisfy(request -> {
+            assertThat(request.path()).isEqualTo("/v1/chat/completions");
+            assertThat(request.query()).isNull();
+        });
 
         assertMultipleRequestMessage(
-                getRequestAsMap(getRequestBody(wiremock().getServeEvents().get((numServeEvents == 2) ? 0 : 2))),
+                requests.get(1).bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a chat bot that answers questions"),
                         new MessageContent("user",
@@ -361,7 +361,9 @@ class AuditingTests extends OpenAiBaseTest {
     }
 
     private void resetSetup() {
-        setupWiremock();
+        setupMock();
+        // both assistants share the default chat memory: start each invocation from an empty one
+        chatMemoryStore.deleteMessages("default");
         this.allServicesAuditor.init();
         this.allServicesInputGuardrailAuditor.init();
         this.allServicesOutputGuardrailAuditor.init();
@@ -383,7 +385,7 @@ class AuditingTests extends OpenAiBaseTest {
         }
     }
 
-    private void setupWiremock() {
+    private void setupMock() {
         var firstResponse = """
                 {
                   "id": "chatcmpl-8D88Dag1gAKnOPP9Ed4bos7vSpaNz",
@@ -436,18 +438,11 @@ class AuditingTests extends OpenAiBaseTest {
                         }
                 """;
 
-        wiremock().register(
-                post(urlPathEqualTo("/v1/chat/completions"))
-                        .inScenario(SCENARIO)
-                        .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(okJson(firstResponse)));
-        wiremock().register(
-                post(urlPathEqualTo("/v1/chat/completions"))
-                        .inScenario(SCENARIO)
-                        .whenScenarioStateIs(SECOND_SCENARIO)
-                        .willReturn(okJson(secondResponse)));
-
-        wiremock().setSingleScenarioState(SCENARIO, Scenario.STARTED);
+        // the fixtures use the legacy function_call format, which the neutral model cannot express
+        mock.reset();
+        mock.raw().on("POST", "/v1/chat/completions").replies(
+                RawResponse.json(200, firstResponse),
+                RawResponse.json(200, secondResponse));
     }
 
     @Singleton
@@ -482,20 +477,6 @@ class AuditingTests extends OpenAiBaseTest {
         }
     }
 
-    @Singleton
-    static class CalculatorAfter implements Runnable {
-        private final WireMock wireMock;
-
-        public CalculatorAfter(@ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
-            this.wireMock = new WireMock(wiremockPort);
-        }
-
-        @Override
-        public void run() {
-            this.wireMock.setSingleScenarioState(SCENARIO, SECOND_SCENARIO);
-        }
-    }
-
     @dev.langchain4j.service.SystemMessage("You are a chat bot that answers questions")
     interface Assistant {
         String chat(String message);
@@ -519,17 +500,9 @@ class AuditingTests extends OpenAiBaseTest {
 
     @Singleton
     static class Calculator {
-        private final CalculatorAfter after;
-
-        Calculator(CalculatorAfter after) {
-            this.after = after;
-        }
-
         @Tool("calculates the square root of the provided number")
         double squareRoot(double number) {
-            var result = Math.sqrt(number);
-            after.run();
-            return result;
+            return Math.sqrt(number);
         }
     }
 

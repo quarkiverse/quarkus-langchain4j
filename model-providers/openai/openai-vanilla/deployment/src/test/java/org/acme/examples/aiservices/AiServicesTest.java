@@ -1,32 +1,31 @@
 package org.acme.examples.aiservices;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
 import static java.time.Month.JULY;
+import static org.acme.examples.aiservices.OpenAiRequestAssertions.assertMultipleRequestMessage;
+import static org.acme.examples.aiservices.OpenAiRequestAssertions.assertSingleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.tuple;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 
+import org.acme.examples.aiservices.OpenAiRequestAssertions.MessageContent;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,8 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.ChatMessage;
@@ -56,24 +53,38 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.ModerationReply;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class AiServicesTest extends OpenAiBaseTest {
+public class AiServicesTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
+                            .addClass(OpenAiRequestAssertions.class)
                             .addAsResource("messages/recipe-user.txt")
                             .addAsResource("messages/translate-user.txt")
                             .addAsResource("messages/translate-system"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever");
 
+    @Inject
+    MockModelServer mock;
+
+    @ConfigProperty(name = "quarkus.langchain4j.openai.base-url")
+    String baseUrl;
+
     private OpenAiChatModel createChatModel() {
-        return OpenAiChatModel.builder().baseUrl(resolvedWiremockUrl("/v1"))
+        return OpenAiChatModel.builder().baseUrl(baseUrl)
                 .logRequests(true)
                 .logResponses(true)
                 .maxRetries(1)
@@ -81,7 +92,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     private OpenAiModerationModel createModerationModel() {
-        return OpenAiModerationModel.builder().baseUrl(resolvedWiremockUrl("/v1"))
+        return OpenAiModerationModel.builder().baseUrl(baseUrl)
                 .logRequests(true)
                 .logResponses(true)
                 .apiKey("whatever").build();
@@ -93,8 +104,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
     @BeforeEach
     void setup() {
-        resetRequests();
-        resetMappings();
+        mock.reset();
         clearDefaultMemory();
     }
 
@@ -108,11 +118,11 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    public void test_simple_instruction_with_single_argument_and_no_annotations() throws IOException {
+    public void test_simple_instruction_with_single_argument_and_no_annotations() {
         String result = AiServices.create(Assistant.class, createChatModel()).chat("Tell me a joke about developers");
         assertThat(result).isNotBlank();
 
-        assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about developers");
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), "Tell me a joke about developers");
     }
 
     interface Humorist {
@@ -125,11 +135,11 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    public void test_simple_instruction_with_single_argument() throws IOException {
+    public void test_simple_instruction_with_single_argument() {
         String result = AiServices.create(Humorist.class, createChatModel()).joke(new Wrapper("programmers"));
         assertThat(result).isNotBlank();
 
-        assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about programmers");
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), "Tell me a joke about programmers");
     }
 
     interface DateTimeExtractor {
@@ -145,41 +155,41 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_extract_date() throws IOException {
-        setChatCompletionMessageContent("1968-07-04");
+    void test_extract_date() {
+        mock.chat().reply("1968-07-04");
         DateTimeExtractor dateTimeExtractor = AiServices.create(DateTimeExtractor.class, createChatModel());
 
         LocalDate result = dateTimeExtractor.extractDateFrom(
                 "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.");
         assertThat(result).isEqualTo(LocalDate.of(1968, JULY, 4));
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Extract date from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: yyyy-MM-dd");
     }
 
     @Test
-    void test_extract_time() throws IOException {
-        setChatCompletionMessageContent("23:45:00");
+    void test_extract_time() {
+        mock.chat().reply("23:45:00");
         DateTimeExtractor dateTimeExtractor = AiServices.create(DateTimeExtractor.class, createChatModel());
 
         LocalTime result = dateTimeExtractor.extractTimeFrom(
                 "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.");
         assertThat(result).isEqualTo(LocalTime.of(23, 45, 0));
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Extract time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: HH:mm:ss");
     }
 
     @Test
-    void test_extract_date_time() throws IOException {
-        setChatCompletionMessageContent("1968-07-04T23:45:00");
+    void test_extract_date_time() {
+        mock.chat().reply("1968-07-04T23:45:00");
         DateTimeExtractor dateTimeExtractor = AiServices.create(DateTimeExtractor.class, createChatModel());
 
         LocalDateTime result = dateTimeExtractor.extractDateTimeFrom(
                 "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.");
         assertThat(result).isEqualTo(LocalDateTime.of(1968, JULY, 4, 23, 45, 0));
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Extract date and time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: yyyy-MM-ddTHH:mm:ss");
     }
 
@@ -188,8 +198,8 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_extract_date_from_text() throws IOException {
-        setChatCompletionMessageContent("1968-07-04T23:45:00");
+    void test_extract_date_from_text() {
+        mock.chat().reply("1968-07-04T23:45:00");
         TextOperator textOperator = AiServices.create(TextOperator.class, createChatModel());
 
         String text = "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.";
@@ -197,7 +207,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         LocalDateTime result = textOperator.doAnythingWithText("Extract date and time from {{text}}", text);
         assertThat(result).isEqualTo(LocalDateTime.of(1968, JULY, 4, 23, 45, 0));
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Extract date and time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: yyyy-MM-ddTHH:mm:ss");
     }
 
@@ -214,8 +224,8 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_extract_enum() throws IOException {
-        setChatCompletionMessageContent("POSITIVE");
+    void test_extract_enum() {
+        mock.chat().reply("POSITIVE");
         SentimentAnalyzer sentimentAnalyzer = AiServices.create(SentimentAnalyzer.class, createChatModel());
 
         Sentiment sentiment = sentimentAnalyzer.analyzeSentimentOf(
@@ -223,7 +233,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         assertThat(sentiment).isEqualTo(Sentiment.POSITIVE);
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Analyze sentiment of This LaptopPro X15 is wicked fast and that 4K screen is a dream.\nYou must answer strictly with one of these enums:\nPOSITIVE\nNEUTRAL\nNEGATIVE");
     }
 
@@ -240,10 +250,9 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_extract_custom_POJO() throws IOException {
-        setChatCompletionMessageContent(
-                // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"firstName\\\": \\\"John\\\",\\n\\\"lastName\\\": \\\"Doe\\\",\\n\\\"birthDate\\\": \\\"1968-07-04\\\"\\n}");
+    void test_extract_custom_POJO() {
+        mock.chat().reply(
+                "{\n\"firstName\": \"John\",\n\"lastName\": \"Doe\",\n\"birthDate\": \"1968-07-04\"\n}");
         PersonExtractor personExtractor = AiServices.create(PersonExtractor.class, createChatModel());
 
         String text = "In 1968, amidst the fading echoes of Independence Day, "
@@ -256,7 +265,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertThat(result.lastName).isEqualTo("Doe");
         assertThat(result.birthDate).isEqualTo(LocalDate.of(1968, JULY, 4));
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Extract information about a person from In 1968, amidst the fading echoes of Independence Day, " +
                         "a child named John arrived under the calm evening sky. This newborn, bearing the surname Doe, " +
                         "marked the start of a new journey.\nYou must answer strictly in the following JSON format: " +
@@ -304,24 +313,22 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_create_recipe_from_list_of_ingredients() throws IOException {
-        // this is supposed to be strings inside a json string hence all the escaping...
+    void test_create_recipe_from_list_of_ingredients() {
         Stream.of(
-                "```json\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n```",
-                "```\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n```",
-                "```json\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n",
-                "```\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n",
-                "Woooow, do you want to know how to make a Greek salad? Here we go:```\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n",
-                "```\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n\\nYou can also add some tofu if you like!!!",
-                "I'm here to help you {\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}")
+                "```json\n{\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}\n```",
+                "```\n{\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}\n```",
+                "```json\n{\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}\n",
+                "```\n{\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}\n",
+                "Woooow, do you want to know how to make a Greek salad? Here we go:```\n{\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}\n",
+                "```\n{\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}\n\nYou can also add some tofu if you like!!!",
+                "I'm here to help you {\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}")
 
                 .forEach(value -> {
 
-                    resetRequests();
-                    resetMappings();
+                    mock.reset();
                     clearDefaultMemory();
 
-                    setChatCompletionMessageContent(value);
+                    mock.chat().reply(value);
                     Chef chef = AiServices.create(Chef.class, createChatModel());
 
                     Recipe result = chef.createRecipeFrom("cucumber", "tomato", "feta", "onion", "olives");
@@ -331,22 +338,17 @@ public class AiServicesTest extends OpenAiBaseTest {
                     assertThat(result.steps).isNotEmpty();
                     assertThat(result.preparationTimeMinutes).isPositive();
 
-                    try {
-                        assertSingleRequestMessage(getRequestAsMap(),
-                                "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
-                                        +
-                                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}");
-                    } catch (IOException e) {
-                        fail("Should never happen");
-                    }
+                    assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
+                            "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
+                                    +
+                                    "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}");
                 });
     }
 
     @Test
-    void test_create_recipe_using_structured_prompt() throws IOException {
-        setChatCompletionMessageContent(
-                // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}");
+    void test_create_recipe_using_structured_prompt() {
+        mock.chat().reply(
+                "{\n\"title\": \"Greek Salad\",\n\"description\": \"A refreshing and tangy salad with Mediterranean flavors.\",\n\"steps\": [\n\"Chop, dice, and slice.\",\n\"Mix veggies with feta.\",\n\"Drizzle with olive oil.\",\n\"Toss gently, then serve.\"\n],\n\"preparationTimeMinutes\": 15\n}");
         Chef chef = AiServices.create(Chef.class, createChatModel());
 
         Recipe result = chef
@@ -357,17 +359,16 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertThat(result.steps).isNotEmpty();
         assertThat(result.preparationTimeMinutes).isPositive();
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
                         +
                         "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}");
     }
 
     @Test
-    void test_create_recipe_using_structured_prompt_and_system_message() throws IOException {
-        setChatCompletionMessageContent(
-                // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"title\\\": \\\"Greek Medley Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with a Mediterranean twist.\\\",\\n\\\"steps\\\": [\\n\\\"Slice and dice, precise!\\\",\\n\\\"Mix and toss, no loss!\\\",\\n\\\"Sprinkle feta, get betta!\\\",\\n\\\"Garnish with olives, no jives!\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}");
+    void test_create_recipe_using_structured_prompt_and_system_message() {
+        mock.chat().reply(
+                "{\n\"title\": \"Greek Medley Salad\",\n\"description\": \"A refreshing and tangy salad with a Mediterranean twist.\",\n\"steps\": [\n\"Slice and dice, precise!\",\n\"Mix and toss, no loss!\",\n\"Sprinkle feta, get betta!\",\n\"Garnish with olives, no jives!\"\n],\n\"preparationTimeMinutes\": 15\n}");
         Chef chef = AiServices.create(Chef.class, createChatModel());
 
         Recipe result = chef
@@ -382,7 +383,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         });
         assertThat(result.preparationTimeMinutes).isEqualTo(15);
 
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a very funny chef"),
                         new MessageContent("user",
@@ -402,15 +403,15 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_with_system_message_of_first_method() throws IOException {
-        setChatCompletionMessageContent(
+    void test_with_system_message_of_first_method() {
+        mock.chat().reply(
                 "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption.");
         ProfessionalChef chef = AiServices.create(ProfessionalChef.class, createChatModel());
 
         String result = chef.answer("How long should I grill chicken?");
         assertThat(result).contains("Grilling chicken typically");
 
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a professional chef. You are friendly, polite and concise."),
                         new MessageContent("user",
@@ -418,15 +419,15 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_with_system_message_of_second_method() throws IOException {
-        setChatCompletionMessageContent(
+    void test_with_system_message_of_second_method() {
+        mock.chat().reply(
                 "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption.");
         ProfessionalChef chef = AiServices.create(ProfessionalChef.class, createChatModel());
 
         String result = chef.answer2("How long should I grill chicken?");
         assertThat(result).contains("Grilling chicken typically");
 
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are an amateur."),
                         new MessageContent("user",
@@ -441,15 +442,15 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_with_system_and_user_messages() throws IOException {
-        setChatCompletionMessageContent("Hallo, wie geht es dir?");
+    void test_with_system_and_user_messages() {
+        mock.chat().reply("Hallo, wie geht es dir?");
         Translator translator = AiServices.create(Translator.class, createChatModel());
 
         String translation = translator.translate("Hello, how are you?", "german");
 
         assertThat(translation).isEqualTo("Hallo, wie geht es dir?");
 
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", "You are a professional translator into german"),
                         new MessageContent("user",
@@ -463,9 +464,9 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_with_system_message_and_user_message_as_argument() throws IOException {
-        setChatCompletionMessageContent(
-                "- AI is a branch of computer science\\n- AI aims to create machines that mimic human intelligence\\n- AI can perform tasks like recognizing patterns, making decisions, and predictions");
+    void test_with_system_message_and_user_message_as_argument() {
+        mock.chat().reply(
+                "- AI is a branch of computer science\n- AI aims to create machines that mimic human intelligence\n- AI can perform tasks like recognizing patterns, making decisions, and predictions");
         Summarizer summarizer = AiServices.create(Summarizer.class, createChatModel());
 
         String text = "AI, or artificial intelligence, is a branch of computer science that aims to create " +
@@ -479,7 +480,7 @@ public class AiServicesTest extends OpenAiBaseTest {
             assertThat(list.get(2)).contains("predictions");
         });
 
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system",
                                 "Summarize every message from user in 3 bullet points. Provide only bullet points."),
@@ -499,9 +500,9 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void test_with_system_message_and_no_user_message() throws IOException {
-        setChatCompletionMessageContent(
-                "- AI is a branch of computer science\\n- AI aims to create machines that mimic human intelligence\\n- AI can perform tasks like recognizing patterns, making decisions, and predictions");
+    void test_with_system_message_and_no_user_message() {
+        mock.chat().reply(
+                "- AI is a branch of computer science\n- AI aims to create machines that mimic human intelligence\n- AI can perform tasks like recognizing patterns, making decisions, and predictions");
         SummarizerWithoutUserMessage summarizer = AiServices.create(SummarizerWithoutUserMessage.class, createChatModel());
 
         String text = "AI, or artificial intelligence, is a branch of computer science that aims to create " +
@@ -515,7 +516,7 @@ public class AiServicesTest extends OpenAiBaseTest {
             assertThat(list.get(2)).contains("predictions");
         });
 
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system",
                                 """
@@ -537,48 +538,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
     @Test
     void should_throw_when_text_is_flagged() {
-        wiremock().register(post(urlEqualTo("/v1/moderations"))
-                .withHeader("Authorization", equalTo("Bearer whatever"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                                """
-                                        {
-                                            "id": "modr-8Bmx2bYNsgzuAsSuxaQRDCMKHgJbC",
-                                            "model": "text-moderation-006",
-                                            "results": [
-                                                {
-                                                    "flagged": true,
-                                                    "categories": {
-                                                        "sexual": false,
-                                                        "hate": true,
-                                                        "harassment": false,
-                                                        "self-harm": false,
-                                                        "sexual/minors": false,
-                                                        "hate/threatening": true,
-                                                        "violence/graphic": false,
-                                                        "self-harm/intent": false,
-                                                        "self-harm/instructions": false,
-                                                        "harassment/threatening": false,
-                                                        "violence": false
-                                                    },
-                                                    "category_scores": {
-                                                        "sexual": 0.0001485530665377155,
-                                                        "hate": 0.00004570276360027492,
-                                                        "harassment": 0.00006113418203312904,
-                                                        "self-harm": 5.4490744361146426e-8,
-                                                        "sexual/minors": 6.557503979820467e-7,
-                                                        "hate/threatening": 7.536454127432535e-9,
-                                                        "violence/graphic": 2.776141343474592e-7,
-                                                        "self-harm/intent": 9.653235544249128e-9,
-                                                        "self-harm/instructions": 1.2119762970996817e-9,
-                                                        "harassment/threatening": 5.06949959344638e-7,
-                                                        "violence": 0.000026839805286726914
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                                                                """)));
+        mock.moderation().reply(ModerationReply.flagged("hate", "hate/threatening"));
         ChatWithModeration chatWithModeration = AiServices.builder(ChatWithModeration.class)
                 .chatModel(createChatModel())
                 .moderationModel(createModerationModel())
@@ -587,52 +547,13 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertThatThrownBy(() -> chatWithModeration.chat("I WILL KILL YOU!!!"))
                 .isExactlyInstanceOf(ModerationException.class)
                 .hasMessage("Text \"" + "I WILL KILL YOU!!!" + "\" violates content policy");
+
+        assertModerationRequest();
     }
 
     @Test
     void should_not_throw_when_text_is_not_flagged() {
-        wiremock().register(post(urlEqualTo("/v1/moderations"))
-                .withHeader("Authorization", equalTo("Bearer whatever"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                                """
-                                        {
-                                            "id": "modr-8Bmx2bYNsgzuAsSuxaQRDCMKHgJbC",
-                                            "model": "text-moderation-006",
-                                            "results": [
-                                                {
-                                                    "flagged": false,
-                                                    "categories": {
-                                                        "sexual": false,
-                                                        "hate": true,
-                                                        "harassment": false,
-                                                        "self-harm": false,
-                                                        "sexual/minors": false,
-                                                        "hate/threatening": false,
-                                                        "violence/graphic": false,
-                                                        "self-harm/intent": false,
-                                                        "self-harm/instructions": false,
-                                                        "harassment/threatening": false,
-                                                        "violence": false
-                                                    },
-                                                    "category_scores": {
-                                                        "sexual": 0.0001485530665377155,
-                                                        "hate": 0.00004570276360027492,
-                                                        "harassment": 0.00006113418203312904,
-                                                        "self-harm": 5.4490744361146426e-8,
-                                                        "sexual/minors": 6.557503979820467e-7,
-                                                        "hate/threatening": 7.536454127432535e-9,
-                                                        "violence/graphic": 2.776141343474592e-7,
-                                                        "self-harm/intent": 9.653235544249128e-9,
-                                                        "self-harm/instructions": 1.2119762970996817e-9,
-                                                        "harassment/threatening": 5.06949959344638e-7,
-                                                        "violence": 0.000026839805286726914
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                                                                """)));
+        mock.moderation().reply(ModerationReply.notFlagged());
         ChatWithModeration chatWithModeration = AiServices.builder(ChatWithModeration.class)
                 .chatModel(createChatModel())
                 .moderationModel(createModerationModel())
@@ -640,6 +561,15 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         String result = chatWithModeration.chat("I will hug you");
         assertThat(result).isNotBlank();
+
+        assertModerationRequest();
+    }
+
+    private void assertModerationRequest() {
+        CapturedRequest request = mock.moderation().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/moderations");
+        assertThat(request.query()).isNull();
+        assertThat(request.header("Authorization")).isEqualTo("Bearer whatever");
     }
 
     interface ChatWithMemory {
@@ -654,7 +584,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void should_keep_chat_memory() throws IOException {
+    void should_keep_chat_memory() {
         MessageWindowChatMemory chatMemory = createChatMemory();
         ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
                 .chatModel(createChatModel())
@@ -663,14 +593,14 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         /* **** First request **** */
         String firstUserMessage = "Hello, my name is Klaus";
-        setChatCompletionMessageContent("Nice to meet you Klaus");
+        mock.chat().reply("Nice to meet you Klaus");
         String firstAiMessage = chatWithMemory.chatWithoutSystemMessage(firstUserMessage);
 
         // assert response
         assertThat(firstAiMessage).isEqualTo("Nice to meet you Klaus");
 
         // assert request
-        assertSingleRequestMessage(getRequestAsMap(), firstUserMessage);
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), firstUserMessage);
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(2)
@@ -678,17 +608,17 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .containsExactly(tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
-        resetRequests();
+        mock.reset();
 
         String secondUserMessage = "What is my name?";
-        setChatCompletionMessageContent("Your name is Klaus");
+        mock.chat().reply("Your name is Klaus");
         String secondAiMessage = chatWithMemory.chatWithoutSystemMessage(secondUserMessage);
 
         // assert response
         assertThat(secondAiMessage).contains("Klaus");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("user", firstUserMessage),
                         new MessageContent("assistant", firstAiMessage),
@@ -710,15 +640,36 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .build();
 
         String firstUserMessage = "Hello, my name is Klaus";
-        setChatCompletionMessageContent("{\"test\""); // this will cause a JSON processing exception
+        // the unescaped message content makes the response body malformed JSON, which causes a JSON processing exception
+        mock.raw().on("POST", "/v1/chat/completions").reply(200, """
+                {
+                  "id": "chatcmpl-123",
+                  "object": "chat.completion",
+                  "created": 1698140213,
+                  "choices": [{
+                    "index": 0,
+                    "message": {
+                      "role": "assistant",
+                      "content": "{"test""
+                    },
+                    "finish_reason": "stop"
+                  }],
+                  "usage": {
+                    "prompt_tokens": 9,
+                    "completion_tokens": 12,
+                    "total_tokens": 21
+                  }
+                }
+                """);
         assertThatThrownBy(() -> chatWithMemory.chatWithoutSystemMessage(firstUserMessage));
+        assertThat(mock.requests()).isNotEmpty();
 
         // assert chat memory
         assertThat(chatMemory.messages()).isEmpty();
     }
 
     @Test
-    void should_keep_chat_memory_and_not_duplicate_system_message() throws IOException {
+    void should_keep_chat_memory_and_not_duplicate_system_message() {
         MessageWindowChatMemory chatMemory = createChatMemory();
         ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
                 .chatModel(createChatModel())
@@ -730,7 +681,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         String systemMessage = "You are helpful assistant";
         String firstUserMessage = "Hello, my name is Klaus";
 
-        setChatCompletionMessageContent("Nice to meet you Klaus");
+        mock.chat().reply("Nice to meet you Klaus");
 
         String firstAiMessage = chatWithMemory.chatWithSystemMessage(firstUserMessage);
 
@@ -738,7 +689,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertThat(firstAiMessage).isEqualTo("Nice to meet you Klaus");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", systemMessage),
                         new MessageContent("user", firstUserMessage)));
@@ -749,17 +700,17 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .containsExactly(tuple(SYSTEM, systemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
-        resetRequests();
+        mock.reset();
 
         String secondUserMessage = "What is my name?";
-        setChatCompletionMessageContent("Your name is Klaus");
+        mock.chat().reply("Your name is Klaus");
         String secondAiMessage = chatWithMemory.chatWithSystemMessage(secondUserMessage);
 
         // assert response
         assertThat(secondAiMessage).contains("Klaus");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", systemMessage),
                         new MessageContent("user", firstUserMessage),
@@ -775,7 +726,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void should_keep_chat_memory_and_add_new_system_message() throws IOException {
+    void should_keep_chat_memory_and_add_new_system_message() {
         MessageWindowChatMemory chatMemory = createChatMemory();
         ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
                 .chatModel(createChatModel())
@@ -787,7 +738,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         String firstSystemMessage = "You are helpful assistant";
         String firstUserMessage = "Hello, my name is Klaus";
 
-        setChatCompletionMessageContent("Nice to meet you Klaus");
+        mock.chat().reply("Nice to meet you Klaus");
 
         String firstAiMessage = chatWithMemory.chatWithSystemMessage(firstUserMessage);
 
@@ -795,7 +746,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertThat(firstAiMessage).isEqualTo("Nice to meet you Klaus");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", firstSystemMessage),
                         new MessageContent("user", firstUserMessage)));
@@ -806,18 +757,18 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .containsExactly(tuple(SYSTEM, firstSystemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
-        resetRequests();
+        mock.reset();
 
         String secondSystemMessage = "You are funny assistant";
         String secondUserMessage = "What is my name?";
-        setChatCompletionMessageContent("Your name is Klaus");
+        mock.chat().reply("Your name is Klaus");
         String secondAiMessage = chatWithMemory.chatWithAnotherSystemMessage(secondUserMessage);
 
         // assert response
         assertThat(secondAiMessage).contains("Klaus");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("system", secondSystemMessage),
                         new MessageContent("user", firstUserMessage),
@@ -837,7 +788,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void should_keep_separate_chat_memory_for_each_user_in_store() throws IOException {
+    void should_keep_separate_chat_memory_for_each_user_in_store() {
 
         // emulating persistent storage
         Map</* memoryId */ Object, String> persistentStorage = new HashMap<>();
@@ -876,14 +827,14 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         /* **** First request for user 1 **** */
         String firstMessageFromFirstUser = "Hello, my name is Klaus";
-        setChatCompletionMessageContent("Nice to meet you Klaus");
+        mock.chat().reply("Nice to meet you Klaus");
         String firstAiResponseToFirstUser = chatWithMemory.chat(firstMemoryId, firstMessageFromFirstUser);
 
         // assert response
         assertThat(firstAiResponseToFirstUser).isEqualTo("Nice to meet you Klaus");
 
         // assert request
-        assertSingleRequestMessage(getRequestAsMap(), firstMessageFromFirstUser);
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), firstMessageFromFirstUser);
 
         // assert chat memory
         assertThat(store.getMessages(firstMemoryId)).hasSize(2)
@@ -891,17 +842,17 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         /* **** First request for user 2 **** */
-        resetRequests();
+        mock.reset();
 
         String firstMessageFromSecondUser = "Hello, my name is Francine";
-        setChatCompletionMessageContent("Nice to meet you Francine");
+        mock.chat().reply("Nice to meet you Francine");
         String firstAiResponseToSecondUser = chatWithMemory.chat(secondMemoryId, firstMessageFromSecondUser);
 
         // assert response
         assertThat(firstAiResponseToSecondUser).isEqualTo("Nice to meet you Francine");
 
         // assert request
-        assertSingleRequestMessage(getRequestAsMap(), firstMessageFromSecondUser);
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), firstMessageFromSecondUser);
 
         // assert chat memory
         assertThat(store.getMessages(secondMemoryId)).hasSize(2)
@@ -909,17 +860,17 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         /* **** Second request for user 1 **** */
-        resetRequests();
+        mock.reset();
 
         String secondsMessageFromFirstUser = "What is my name?";
-        setChatCompletionMessageContent("Your name is Klaus");
+        mock.chat().reply("Your name is Klaus");
         String secondAiMessageToFirstUser = chatWithMemory.chat(firstMemoryId, secondsMessageFromFirstUser);
 
         // assert response
         assertThat(secondAiMessageToFirstUser).contains("Klaus");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("user", firstMessageFromFirstUser),
                         new MessageContent("assistant", firstAiResponseToFirstUser),
@@ -932,17 +883,17 @@ public class AiServicesTest extends OpenAiBaseTest {
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
         /* **** Second request for user 2 **** */
-        resetRequests();
+        mock.reset();
 
         String secondsMessageFromSecondUser = "What is my name?";
-        setChatCompletionMessageContent("Your name is Francine");
+        mock.chat().reply("Your name is Francine");
         String secondAiMessageToSecondUser = chatWithMemory.chat(secondMemoryId, secondsMessageFromSecondUser);
 
         // assert response
         assertThat(secondAiMessageToSecondUser).contains("Francine");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("user", firstMessageFromSecondUser),
                         new MessageContent("assistant", firstAiResponseToSecondUser),
@@ -961,8 +912,8 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void should_return_result() throws IOException {
-        setChatCompletionMessageContent("Berlin is the capital of Germany");
+    void should_return_result() {
+        mock.chat().reply(ChatReply.text("Berlin is the capital of Germany").usage(9, 12));
 
         // given
         AssistantReturningResult assistant = AiServices.create(AssistantReturningResult.class, createChatModel());
@@ -984,7 +935,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         assertThat(result.sources()).isEmpty();
 
-        assertSingleRequestMessage(getRequestAsMap(), "What is the capital of Germany?");
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), "What is the capital of Germany?");
     }
 
     interface AssistantReturningPrimitive {
@@ -993,8 +944,8 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void should_return_primitive() throws IOException {
-        setChatCompletionMessageContent("true");
+    void should_return_primitive() {
+        mock.chat().reply("true");
 
         // given
         AssistantReturningPrimitive assistant = AiServices.create(AssistantReturningPrimitive.class, createChatModel());
@@ -1007,7 +958,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         // then
         assertThat(result).isTrue();
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Is Berlin the is the capital of Germany?\nYou must answer strictly in the following format: one of [true, false]");
     }
 
@@ -1028,7 +979,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     }
 
     @Test
-    void should_execute_tool_then_answer() throws IOException {
+    void should_execute_tool_then_answer() {
         var firstResponse = """
                 {
                   "id": "chatcmpl-8D88Dag1gAKnOPP9Ed4bos7vSpaNz",
@@ -1081,33 +1032,16 @@ public class AiServicesTest extends OpenAiBaseTest {
                         }
                 """;
 
-        String scenario = "tools";
-        String secondState = "second";
+        // the fixtures use the legacy function_call format, which the neutral model cannot express
+        mock.raw().on("POST", "/v1/chat/completions").replies(
+                RawResponse.json(200, firstResponse),
+                RawResponse.json(200, secondResponse));
 
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer whatever"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(firstResponse)));
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer whatever"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(secondState)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(secondResponse)));
-
-        wiremock().setSingleScenarioState(scenario, Scenario.STARTED);
-
-        AtomicReference<WireMock> wiremockRef = new AtomicReference<>(wiremock());
+        AtomicInteger toolExecutions = new AtomicInteger();
         Assistant assistant = AiServices.builder(Assistant.class)
                 .chatModel(createChatModel())
                 .chatMemory(createChatMemory())
-                .tools(new Calculator(() -> wiremockRef.get().setSingleScenarioState(scenario, secondState)))
+                .tools(new Calculator(toolExecutions::incrementAndGet))
                 .build();
 
         String userMessage = "What is the square root of 485906798473894056 in scientific notation?";
@@ -1117,11 +1051,19 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertThat(answer).isEqualTo(
                 "The square root of 485,906,798,473,894,056 in scientific notation is approximately 6.97070153193991E8.");
 
-        assertThat(wiremock().getServeEvents()).hasSize(2);
+        assertThat(toolExecutions).hasValue(1);
 
-        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(1))),
+        List<CapturedRequest> requests = mock.requests();
+        assertThat(requests).hasSize(2);
+        assertThat(requests).allSatisfy(request -> {
+            assertThat(request.path()).isEqualTo("/v1/chat/completions");
+            assertThat(request.query()).isNull();
+            assertThat(request.header("Authorization")).isEqualTo("Bearer whatever");
+        });
+
+        assertSingleRequestMessage(requests.get(0).bodyAsJson(),
                 "What is the square root of 485906798473894056 in scientific notation?");
-        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0))),
+        assertMultipleRequestMessage(requests.get(1).bodyAsJson(),
                 List.of(
                         new MessageContent("user", "What is the square root of 485906798473894056 in scientific notation?"),
                         new MessageContent("assistant", null),

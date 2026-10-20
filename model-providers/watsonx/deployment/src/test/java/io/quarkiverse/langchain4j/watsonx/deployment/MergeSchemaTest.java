@@ -1,28 +1,18 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.delete;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_MERGE_SCHEMA_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_MERGE_SCHEMA_RESULT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_MERGE_SCHEMA_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_MERGE_SCHEMA_RESULT_API;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
@@ -38,9 +28,11 @@ import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaDeleteParameter
 import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaFetchParameters;
 import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class MergeSchemaTest extends WireMockAbstract {
+public class MergeSchemaTest extends WatsonxMockTestBase {
 
     static String SCHEMA_ID = "my-id";
 
@@ -75,21 +67,12 @@ public class MergeSchemaTest extends WireMockAbstract {
             }""";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
-                .response(BEARER_TOKEN, new Date())
-                .build();
-    }
+                    .addClasses(WatsonxTestUtil.class));
 
     @Inject
     MergeSchemaService mergeSchemaService;
@@ -97,61 +80,46 @@ public class MergeSchemaTest extends WireMockAbstract {
     @Test
     void should_start_merge_schema() {
 
-        mockWatsonxBuilder(URL_WATSONX_MERGE_SCHEMA_API, 200)
-                .body("""
-                        {
-                            "project_id": "%s",
-                            "parameters": {
-                                "schemas": [
-                                    {
-                                        "document_type": "Invoice",
-                                        "document_description": "An invoice"
-                                    },
-                                    {
-                                        "document_type": "Receipt",
-                                        "document_description": "A receipt"
-                                    }
-                                ]
+        String expectedBody = """
+                {
+                    "project_id": "%s",
+                    "parameters": {
+                        "schemas": [
+                            {
+                                "document_type": "Invoice",
+                                "document_description": "An invoice"
+                            },
+                            {
+                                "document_type": "Receipt",
+                                "document_description": "A receipt"
                             }
-                        }""".formatted(PROJECT_ID))
-                .response(RESPONSE.formatted(SCHEMA_ID, PROJECT_ID, Status.SUBMITTED.value()))
-                .build();
+                        ]
+                    }
+                }""".formatted(PROJECT_ID);
+        mock.raw().on("POST", URL_WATSONX_MERGE_SCHEMA_API).reply(200,
+                RESPONSE.formatted(SCHEMA_ID, PROJECT_ID, Status.SUBMITTED.value()));
 
         var response = mergeSchemaService.startMergeSchema(SCHEMAS);
         assertNotNull(response);
         assertEquals(SCHEMA_ID, response.metadata().id());
         assertEquals(Status.SUBMITTED.value(), response.entity().results().status());
+
+        List<CapturedRequest> requests = apiRequests();
+        assertThat(requests).hasSize(1);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_MERGE_SCHEMA_API);
+        assertJsonBody(requests.get(0), expectedBody);
     }
 
     @Test
     void should_fetch_merge_schema_request() {
 
-        watsonxServer.stubFor(get(urlPathMatching(URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)))
-                .withQueryParam("project_id", equalTo(URLEncoder.encode(PROJECT_ID, Charset.defaultCharset())))
-                .withQueryParam("version", matching("\\d{4}-\\d{2}-\\d{2}"))
-                .withHeader("Authorization", equalTo("Bearer %s".formatted(BEARER_TOKEN)))
-                .withHeader("Accept", equalTo("application/json"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(RESPONSE.formatted(SCHEMA_ID, PROJECT_ID, Status.COMPLETED.value()))));
+        mock.raw().on("GET", URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)).replies(
+                RawResponse.json(200, RESPONSE.formatted(SCHEMA_ID, PROJECT_ID, Status.COMPLETED.value())),
+                RawResponse.json(200, "{}"));
 
         var response = mergeSchemaService.fetchRequest(SCHEMA_ID);
         assertEquals(Status.COMPLETED.value(), response.entity().results().status());
         assertEquals(SCHEMAS, response.entity().parameters().schemas());
-
-        watsonxServer.resetAll();
-
-        watsonxServer.stubFor(get(urlPathMatching(URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)))
-                .withQueryParam("space_id", equalTo(URLEncoder.encode("new-space-id", Charset.defaultCharset())))
-                .withQueryParam("version", matching("\\d{4}-\\d{2}-\\d{2}"))
-                .withHeader("Authorization", equalTo("Bearer %s".formatted(BEARER_TOKEN)))
-                .withHeader("Accept", equalTo("application/json"))
-                .withHeader("X-Global-Transaction-Id", equalTo("my-transaction-id"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{}")));
 
         var parameters = MergeSchemaFetchParameters.builder()
                 .spaceId("new-space-id")
@@ -159,28 +127,28 @@ public class MergeSchemaTest extends WireMockAbstract {
                 .build();
 
         assertNotNull(mergeSchemaService.fetchRequest(SCHEMA_ID, parameters));
+
+        List<CapturedRequest> requests = apiRequests();
+        assertThat(requests).hasSize(2);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID));
+        assertThat(requests.get(0).method()).isEqualTo("GET");
+        assertThat(queryParams(requests.get(0))).containsEntry("project_id", PROJECT_ID);
+        assertThat(requests.get(0).header("Accept")).isEqualTo("application/json");
+        assertWatsonxRequest(requests.get(1), URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID));
+        assertThat(requests.get(1).method()).isEqualTo("GET");
+        assertThat(queryParams(requests.get(1))).containsEntry("space_id", "new-space-id");
+        assertThat(requests.get(1).header("Accept")).isEqualTo("application/json");
+        assertThat(requests.get(1).header("X-Global-Transaction-Id")).isEqualTo("my-transaction-id");
     }
 
     @Test
     void should_delete_merge_schema_request() {
 
-        watsonxServer.stubFor(delete(urlPathMatching(URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)))
-                .withQueryParam("project_id", equalTo(URLEncoder.encode(PROJECT_ID, Charset.defaultCharset())))
-                .withQueryParam("version", matching("\\d{4}-\\d{2}-\\d{2}"))
-                .withHeader("Authorization", equalTo("Bearer %s".formatted(BEARER_TOKEN)))
-                .willReturn(aResponse().withStatus(204)));
+        mock.raw().on("DELETE", URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)).replies(
+                RawResponse.of(204, Map.of(), null),
+                RawResponse.of(204, Map.of(), null));
 
         assertTrue(mergeSchemaService.deleteRequest(SCHEMA_ID));
-
-        watsonxServer.resetAll();
-
-        watsonxServer.stubFor(delete(urlPathMatching(URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)))
-                .withQueryParam("space_id", equalTo(URLEncoder.encode("new-space-id", Charset.defaultCharset())))
-                .withQueryParam("hard_delete", equalTo("true"))
-                .withQueryParam("version", matching("\\d{4}-\\d{2}-\\d{2}"))
-                .withHeader("Authorization", equalTo("Bearer %s".formatted(BEARER_TOKEN)))
-                .withHeader("X-Global-Transaction-Id", equalTo("my-transaction-id"))
-                .willReturn(aResponse().withStatus(204)));
 
         var parameters = MergeSchemaDeleteParameters.builder()
                 .spaceId("new-space-id")
@@ -189,49 +157,61 @@ public class MergeSchemaTest extends WireMockAbstract {
                 .build();
 
         assertTrue(mergeSchemaService.deleteRequest(SCHEMA_ID, parameters));
+
+        List<CapturedRequest> requests = apiRequests();
+        assertThat(requests).hasSize(2);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID));
+        assertThat(requests.get(0).method()).isEqualTo("DELETE");
+        assertThat(queryParams(requests.get(0))).containsEntry("project_id", PROJECT_ID);
+        assertWatsonxRequest(requests.get(1), URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID));
+        assertThat(requests.get(1).method()).isEqualTo("DELETE");
+        assertThat(queryParams(requests.get(1))).containsEntry("space_id", "new-space-id");
+        assertThat(queryParams(requests.get(1))).containsEntry("hard_delete", "true");
+        assertThat(requests.get(1).header("X-Global-Transaction-Id")).isEqualTo("my-transaction-id");
     }
 
     @Test
     void should_return_false_when_merge_schema_request_does_not_exist() {
 
-        watsonxServer.stubFor(delete(urlPathMatching(URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)))
-                .withQueryParam("project_id", equalTo(URLEncoder.encode(PROJECT_ID, Charset.defaultCharset())))
-                .withQueryParam("version", matching("\\d{4}-\\d{2}-\\d{2}"))
-                .withHeader("Authorization", equalTo("Bearer %s".formatted(BEARER_TOKEN)))
-                .willReturn(aResponse()
-                        .withStatus(404)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                    "trace": "db2821f494a629c614616e458c85de36",
-                                    "errors": [
-                                        {
-                                            "code": "schema_event_does_not_exist",
-                                            "message": "Schema request does not exist."
-                                        }
-                                    ]
-                                }""")));
+        mock.raw().on("DELETE", URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID)).replies(RawResponse.json(404, """
+                {
+                    "trace": "db2821f494a629c614616e458c85de36",
+                    "errors": [
+                        {
+                            "code": "schema_event_does_not_exist",
+                            "message": "Schema request does not exist."
+                        }
+                    ]
+                }"""));
 
         assertFalse(mergeSchemaService.deleteRequest(SCHEMA_ID));
+
+        List<CapturedRequest> requests = apiRequests();
+        assertThat(requests).hasSize(1);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_MERGE_SCHEMA_RESULT_API.formatted(SCHEMA_ID));
+        assertThat(requests.get(0).method()).isEqualTo("DELETE");
+        assertThat(queryParams(requests.get(0))).containsEntry("project_id", PROJECT_ID);
     }
 
     @Test
     void should_propagate_error_on_start_merge_schema() {
 
-        mockWatsonxBuilder(URL_WATSONX_MERGE_SCHEMA_API, 400)
-                .response("""
+        mock.raw().on("POST", URL_WATSONX_MERGE_SCHEMA_API).reply(400, """
+                {
+                    "trace": "db2821f494a629c614616e458c85de36",
+                    "errors": [
                         {
-                            "trace": "db2821f494a629c614616e458c85de36",
-                            "errors": [
-                                {
-                                    "code": "invalid_request_entity",
-                                    "message": "Missing schemas."
-                                }
-                            ]
-                        }""")
-                .build();
+                            "code": "invalid_request_entity",
+                            "message": "Missing schemas."
+                        }
+                    ]
+                }""");
 
         var ex = assertThrows(WatsonxException.class, () -> mergeSchemaService.startMergeSchema(SCHEMAS));
         assertEquals(400, ex.statusCode());
+
+        List<CapturedRequest> requests = apiRequests();
+        assertThat(requests).hasSize(1);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_MERGE_SCHEMA_API);
     }
 }

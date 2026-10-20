@@ -1,50 +1,53 @@
 package io.quarkiverse.langchain4j.memorystore.redis.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static io.quarkiverse.langchain4j.memorystore.redis.test.OpenAiRequestAssertions.assertMultipleRequestMessage;
+import static io.quarkiverse.langchain4j.memorystore.redis.test.OpenAiRequestAssertions.assertSingleFunction;
+import static io.quarkiverse.langchain4j.memorystore.redis.test.OpenAiRequestAssertions.assertSingleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.langchain4j.agent.tool.Tool;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.memorystore.redis.test.OpenAiRequestAssertions.MessageContent;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class RedisMemoryToolBoxTest extends OpenAiBaseTest {
+public class RedisMemoryToolBoxTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+                    () -> ShrinkWrap.create(JavaArchive.class).addClass(OpenAiRequestAssertions.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
+    @Inject
+    MockModelServer mock;
 
-    private static final String scenario = "tools";
-    private static final String secondState = "second";
+    @Inject
+    CalculatorAfter calculatorAfter;
 
     @BeforeEach
     void setUp() {
-        wiremock().resetRequests();
+        mock.reset();
+        calculatorAfter.reset();
     }
 
     @Inject
@@ -52,7 +55,7 @@ public class RedisMemoryToolBoxTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    void should_execute_tool_then_answer() throws IOException {
+    void should_execute_tool_then_answer() {
         var firstResponse = """
                 {
                   "id": "chatcmpl-8D88Dag1gAKnOPP9Ed4bos7vSpaNz",
@@ -105,22 +108,10 @@ public class RedisMemoryToolBoxTest extends OpenAiBaseTest {
                         }
                 """;
 
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(firstResponse)));
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(secondState)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(secondResponse)));
-
-        wiremock().setSingleScenarioState(scenario, Scenario.STARTED);
+        // the fixtures use the legacy function_call format, which the neutral model cannot express
+        mock.raw().on("POST", "/v1/chat/completions").replies(
+                RawResponse.json(200, firstResponse),
+                RawResponse.json(200, secondResponse));
 
         String userMessage = "What is the square root of 485906798473894056 in scientific notation?";
 
@@ -129,14 +120,20 @@ public class RedisMemoryToolBoxTest extends OpenAiBaseTest {
         assertThat(answer).isEqualTo(
                 "The square root of 485,906,798,473,894,056 in scientific notation is approximately 6.97070153193991E8.");
 
-        assertThat(wiremock().getServeEvents()).hasSize(2);
+        assertThat(calculatorAfter.calls()).isEqualTo(1);
 
-        Map<String, Object> firstApiRequest = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(1)));
+        List<CapturedRequest> requests = mock.requests();
+        assertThat(requests).hasSize(2);
+        assertThat(requests).allSatisfy(request -> {
+            assertThat(request.path()).isEqualTo("/v1/chat/completions");
+            assertThat(request.query()).isNull();
+        });
+
+        JsonNode firstApiRequest = requests.get(0).bodyAsJson();
         assertSingleRequestMessage(firstApiRequest,
                 "What is the square root of 485906798473894056 in scientific notation?");
         assertSingleFunction(firstApiRequest, "squareRoot");
-        Map<String, Object> secondApiRequest = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0)));
-        assertMultipleRequestMessage(secondApiRequest,
+        assertMultipleRequestMessage(requests.get(1).bodyAsJson(),
                 List.of(
                         new MessageContent("user",
                                 "What is the square root of 485906798473894056 in scientific notation?"),
@@ -146,12 +143,18 @@ public class RedisMemoryToolBoxTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    void should_not_use_tool() throws IOException {
-        String result = bot.chat("What is the square root of 485906798473894056 in scientific notation?");
-        assertThat(result).isNotBlank();
+    void should_not_use_tool() {
+        mock.chat().reply("I cannot calculate that.");
 
-        assertSingleRequestMessage(getRequestAsMap(), "What is the square root of 485906798473894056 in scientific notation?");
-        assertSingleFunction(getRequestAsMap(), "fooBar");
+        String result = bot.chat("What is the square root of 485906798473894056 in scientific notation?");
+        assertThat(result).isEqualTo("I cannot calculate that.");
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.query()).isNull();
+        assertSingleRequestMessage(request.bodyAsJson(),
+                "What is the square root of 485906798473894056 in scientific notation?");
+        assertSingleFunction(request.bodyAsJson(), "fooBar");
     }
 
     @RegisterAiService(tools = Dummy.class)
@@ -166,16 +169,19 @@ public class RedisMemoryToolBoxTest extends OpenAiBaseTest {
     @Singleton
     public static class CalculatorAfter implements Runnable {
 
-        private final Integer wiremockPort;
-
-        public CalculatorAfter(@ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
-            this.wiremockPort = wiremockPort;
-        }
+        private final AtomicInteger calls = new AtomicInteger();
 
         @Override
         public void run() {
-            WireMock wireMock = new WireMock(wiremockPort);
-            wireMock.setSingleScenarioState(scenario, secondState);
+            calls.incrementAndGet();
+        }
+
+        int calls() {
+            return calls.get();
+        }
+
+        void reset() {
+            calls.set(0);
         }
     }
 

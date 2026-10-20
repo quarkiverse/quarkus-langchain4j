@@ -1,15 +1,11 @@
 package io.quarkiverse.langchain4j.mistralai.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -26,33 +22,31 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
-class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
+class MistralAiStreamingChatLanguageModelSmokeTest {
 
     private static final String API_KEY = "somekey";
     private static final String CHAT_MODEL_ID = "mistral-tiny";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(WeatherAssistant.class, WeatherTools.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.api-key", API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.log-requests", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.log-requests", "true");
 
     @Singleton
     @RegisterAiService(tools = WeatherTools.class)
@@ -84,10 +78,13 @@ class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
     @Inject
     WeatherAssistant assistant;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setup() {
         WeatherTools.invocations.clear();
-        resetRequests();
+        mock.reset();
     }
 
     @Test
@@ -108,10 +105,10 @@ class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
 
                 """;
 
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
+        // a raw stub: the regression needs a tool call delta with an explicit "content": null, while a neutral
+        // reply omits the content of a tool call delta
+        mock.raw().on("POST", "/mistralai/v1/chat/completions")
+                .replies(RawResponse.of(200, Map.of("Content-Type", MediaType.SERVER_SENT_EVENTS), eventStream));
 
         AtomicReference<ChatResponse> response = new AtomicReference<>();
         AtomicReference<Throwable> error = new AtomicReference<>();
@@ -149,10 +146,13 @@ class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
         assertThat(response.get()).isNotNull();
         assertThat(response.get().aiMessage()).isNotNull();
 
-        LoggedRequest loggedRequest = singleLoggedRequest();
-        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Quarkus REST Client");
-        String requestBody = new String(loggedRequest.getBody());
-        assertThat(requestBody).contains(CHAT_MODEL_ID).contains("stream");
+        assertThat(mock.requests()).hasSize(1);
+        CapturedRequest loggedRequest = mock.requests().get(0);
+        assertThat(loggedRequest.path()).isEqualTo("/mistralai/v1/chat/completions");
+        assertThat(loggedRequest.query()).isNull();
+        assertThat(loggedRequest.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        assertThat(loggedRequest.header("User-Agent")).isEqualTo("Quarkus REST Client");
+        assertThat(loggedRequest.body()).contains(CHAT_MODEL_ID).contains("stream");
     }
 
     @Test
@@ -186,19 +186,11 @@ class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
 
                 """;
 
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .inScenario("tool-calling")
-                        .whenScenarioStateIs(Scenario.STARTED)
-                        .willSetStateTo("tools-executed")
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, toolCallStream)));
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .inScenario("tool-calling")
-                        .whenScenarioStateIs("tools-executed")
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, finalAnswerStream)));
+        // a raw stub: the test needs the tool call arguments split across two deltas, which a neutral reply
+        // cannot express; the two streams are served in order
+        mock.raw().on("POST", "/mistralai/v1/chat/completions")
+                .replies(RawResponse.of(200, Map.of("Content-Type", MediaType.SERVER_SENT_EVENTS), toolCallStream),
+                        RawResponse.of(200, Map.of("Content-Type", MediaType.SERVER_SENT_EVENTS), finalAnswerStream));
 
         List<String> tokens = assistant.chat("What is the weather and time in Paris?")
                 .collect().asList()
@@ -211,22 +203,26 @@ class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
         assertThat(WeatherTools.invocations)
                 .containsExactlyInAnyOrder("getWeather(Paris)", "getTime(Europe/Paris)");
 
-        List<LoggedRequest> requests = wiremock().find(postRequestedFor(urlEqualTo("/v1/chat/completions")));
+        List<CapturedRequest> requests = mock.requests();
         assertThat(requests).hasSize(2);
-        List<String> bodies = requests.stream().map(r -> new String(r.getBody())).toList();
+        assertThat(requests).allSatisfy(r -> {
+            assertThat(r.path()).isEqualTo("/mistralai/v1/chat/completions");
+            assertThat(r.query()).isNull();
+            assertThat(r.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        });
 
         // the tools were declared to the model on the initial streaming request
-        assertThat(bodies).anySatisfy(body -> assertThat(body)
+        assertThat(requests.get(0).body())
                 .contains("\"tools\"")
                 .contains("getWeather")
                 .contains("getTime")
-                .doesNotContain("call_1"));
+                .doesNotContain("call_1");
 
         // the follow-up request carried the tool execution results back to the model
-        assertThat(bodies).anySatisfy(body -> assertThat(body)
+        assertThat(requests.get(1).body())
                 .contains("call_1")
                 .contains("call_2")
                 .contains("The weather in Paris is sunny")
-                .contains("The time in Europe/Paris is 12:00"));
+                .contains("The time in Europe/Paris is 12:00");
     }
 }

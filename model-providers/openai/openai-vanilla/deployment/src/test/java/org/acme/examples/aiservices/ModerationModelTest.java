@@ -1,8 +1,5 @@
 package org.acme.examples.aiservices;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -11,24 +8,25 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.ModerationException;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.ModerationReply;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ModerationModelTest extends OpenAiBaseTest {
+public class ModerationModelTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     @RegisterAiService(moderationModelSupplier = RegisterAiService.BeanIfExistsModerationModelSupplier.class)
     interface ChatWithModeration {
@@ -40,102 +38,41 @@ public class ModerationModelTest extends OpenAiBaseTest {
     @Inject
     ChatWithModeration chatWithModeration;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     @ActivateRequestContext
     void should_throw_when_text_is_flagged() {
-        wiremock().register(post(urlEqualTo("/v1/moderations"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                                """
-                                        {
-                                            "id": "modr-8Bmx2bYNsgzuAsSuxaQRDCMKHgJbC",
-                                            "model": "text-moderation-006",
-                                            "results": [
-                                                {
-                                                    "flagged": true,
-                                                    "categories": {
-                                                        "sexual": false,
-                                                        "hate": true,
-                                                        "harassment": false,
-                                                        "self-harm": false,
-                                                        "sexual/minors": false,
-                                                        "hate/threatening": true,
-                                                        "violence/graphic": false,
-                                                        "self-harm/intent": false,
-                                                        "self-harm/instructions": false,
-                                                        "harassment/threatening": false,
-                                                        "violence": false
-                                                    },
-                                                    "category_scores": {
-                                                        "sexual": 0.0001485530665377155,
-                                                        "hate": 0.00004570276360027492,
-                                                        "harassment": 0.00006113418203312904,
-                                                        "self-harm": 5.4490744361146426e-8,
-                                                        "sexual/minors": 6.557503979820467e-7,
-                                                        "hate/threatening": 7.536454127432535e-9,
-                                                        "violence/graphic": 2.776141343474592e-7,
-                                                        "self-harm/intent": 9.653235544249128e-9,
-                                                        "self-harm/instructions": 1.2119762970996817e-9,
-                                                        "harassment/threatening": 5.06949959344638e-7,
-                                                        "violence": 0.000026839805286726914
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                                                                """)));
+        mock.moderation().reply(ModerationReply.flagged("hate", "hate/threatening"));
 
         assertThatThrownBy(() -> chatWithModeration.chat("I WILL KILL YOU!!!"))
                 .isExactlyInstanceOf(ModerationException.class)
                 .hasMessage("Text \"" + "I WILL KILL YOU!!!" + "\" violates content policy");
+
+        assertModerationRequest();
     }
 
     @Test
     @ActivateRequestContext
     void should_not_throw_when_text_is_not_flagged() {
-        wiremock().register(post(urlEqualTo("/v1/moderations"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(
-                                """
-                                        {
-                                            "id": "modr-8Bmx2bYNsgzuAsSuxaQRDCMKHgJbC",
-                                            "model": "text-moderation-006",
-                                            "results": [
-                                                {
-                                                    "flagged": false,
-                                                    "categories": {
-                                                        "sexual": false,
-                                                        "hate": true,
-                                                        "harassment": false,
-                                                        "self-harm": false,
-                                                        "sexual/minors": false,
-                                                        "hate/threatening": false,
-                                                        "violence/graphic": false,
-                                                        "self-harm/intent": false,
-                                                        "self-harm/instructions": false,
-                                                        "harassment/threatening": false,
-                                                        "violence": false
-                                                    },
-                                                    "category_scores": {
-                                                        "sexual": 0.0001485530665377155,
-                                                        "hate": 0.00004570276360027492,
-                                                        "harassment": 0.00006113418203312904,
-                                                        "self-harm": 5.4490744361146426e-8,
-                                                        "sexual/minors": 6.557503979820467e-7,
-                                                        "hate/threatening": 7.536454127432535e-9,
-                                                        "violence/graphic": 2.776141343474592e-7,
-                                                        "self-harm/intent": 9.653235544249128e-9,
-                                                        "self-harm/instructions": 1.2119762970996817e-9,
-                                                        "harassment/threatening": 5.06949959344638e-7,
-                                                        "violence": 0.000026839805286726914
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                                                                """)));
+        mock.moderation().reply(ModerationReply.notFlagged());
+        mock.chat().reply("I will hug you too");
 
         String result = chatWithModeration.chat("I will hug you");
-        assertThat(result).isNotBlank();
+        assertThat(result).isEqualTo("I will hug you too");
+
+        assertModerationRequest();
+    }
+
+    private void assertModerationRequest() {
+        CapturedRequest request = mock.moderation().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/moderations");
+        assertThat(request.query()).isNull();
     }
 }

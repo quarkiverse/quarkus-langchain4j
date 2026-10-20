@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -14,16 +15,17 @@ import dev.langchain4j.model.ModelDisabledException;
 import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.model.decision.request.DecisionRequest;
 import dev.langchain4j.model.decision.request.YesNoQuestion;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkiverse.langchain4j.openai.DisabledDecisionModel;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class DecisionModelEnableIntegrationFalseTest extends OpenAiBaseTest {
+public class DecisionModelEnableIntegrationFalseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.enable-integration", "false");
 
     private static final DecisionRequest REQUEST = DecisionRequest.builder()
@@ -34,13 +36,21 @@ public class DecisionModelEnableIntegrationFalseTest extends OpenAiBaseTest {
     @Inject
     DecisionModel model;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     void blockingCallFailsWithModelDisabled() {
         assertThat(ClientProxy.unwrap(model)).isInstanceOf(DisabledDecisionModel.class);
 
         assertThatThrownBy(() -> model.decide(REQUEST)).isInstanceOf(ModelDisabledException.class);
 
-        assertThat(wiremock().getServeEvents()).isEmpty();
+        assertThat(mock.requests()).isEmpty();
     }
 
     @Test
