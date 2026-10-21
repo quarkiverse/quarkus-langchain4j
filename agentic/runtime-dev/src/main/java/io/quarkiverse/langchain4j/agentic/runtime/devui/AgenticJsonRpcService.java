@@ -1,7 +1,18 @@
 package io.quarkiverse.langchain4j.agentic.runtime.devui;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -10,140 +21,424 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.observability.AgentInvocation;
 import dev.langchain4j.agentic.observability.AgentMonitor;
+import dev.langchain4j.agentic.observability.HtmlReportGenerator;
 import dev.langchain4j.agentic.observability.MonitoredExecution;
+import dev.langchain4j.agentic.planner.AgentArgument;
 import dev.langchain4j.agentic.planner.AgentInstance;
+import dev.langchain4j.agentic.planner.AgenticSystemTopology;
+import dev.langchain4j.agentic.scope.AgenticScope;
+import dev.langchain4j.agentic.workflow.ConditionalAgent;
+import dev.langchain4j.agentic.workflow.ConditionalAgentInstance;
+import dev.langchain4j.agentic.workflow.LoopAgentInstance;
+import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.service.tool.ToolExecution;
+import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder.MonitoredRoot;
 import io.quarkus.arc.Arc;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * Dev UI backend of the agentic pages. Topology and executions are serialized as JSON carrying the same data the
+ * LangChain4j {@link HtmlReportGenerator} renders, and the generator's own HTML is exposed for the canonical report.
+ */
 public class AgenticJsonRpcService {
 
     private static final Logger log = Logger.getLogger(AgenticJsonRpcService.class);
 
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+
+    private static final String[] KEY_PALETTE = {
+            "#e63946", "#457b9d", "#2a9d8f", "#e9c46a", "#7b2d8e",
+            "#f4a261", "#264653", "#d62828", "#6a994e", "#bc6c25"
+    };
+
     public JsonArray getRootAgentEntries() {
-        List<Object> rootAgents = DevAgentMonitorHolder.rootAgents();
-        JsonArray entries = new JsonArray();
-        for (int i = 0; i < rootAgents.size(); i++) {
+        List<MonitoredRoot> roots = DevAgentMonitorHolder.roots();
+        List<JsonObject> entries = new ArrayList<>();
+        for (int i = 0; i < roots.size(); i++) {
+            AgentInstance agent = roots.get(i).agent();
             entries.add(new JsonObject()
-                    .put("name", ((AgentInstance) rootAgents.get(i)).name())
-                    .put("index", i));
+                    .put("index", i)
+                    .put("name", agent.name())
+                    .put("typeName", agent.type() != null ? agent.type().getSimpleName() : agent.name())
+                    .put("className", agent.type() != null ? agent.type().getName() : null)
+                    .put("topology", agent.topology().name()));
         }
-        List<JsonObject> sorted = new java.util.ArrayList<>();
-        for (int i = 0; i < entries.size(); i++) {
-            sorted.add(entries.getJsonObject(i));
-        }
-        sorted.sort(java.util.Comparator.comparing(o -> o.getString("name")));
-        return new JsonArray(sorted);
+        entries.sort(ByTypeName.INSTANCE);
+        return new JsonArray(new ArrayList<>(entries));
     }
 
-    public JsonObject getTopologyJson(int index) {
-        List<Object> rootAgents = DevAgentMonitorHolder.rootAgents();
-        if (rootAgents.isEmpty()) {
+    public JsonObject getTopology(int index) {
+        MonitoredRoot root = rootAt(index);
+        if (root == null) {
             return new JsonObject().put("error", "No root agents detected");
         }
-        int i = (index >= 0 && index < rootAgents.size()) ? index : 0;
         try {
-            AgentInstance rootAgent = (AgentInstance) rootAgents.get(i);
-            return serializeAgentTopology(rootAgent);
+            AgentInstance rootAgent = root.agent();
+            Map<String, String> keyColors = collectStateKeyColors(rootAgent);
+            Set<AgenticSystemTopology> topologies = new LinkedHashSet<>();
+            collectTopologies(rootAgent, topologies);
+
+            JsonArray legend = new JsonArray();
+            for (AgenticSystemTopology topology : topologies) {
+                legend.add(topology.name());
+            }
+            JsonArray dataFlow = new JsonArray();
+            for (Map.Entry<String, String> keyColor : keyColors.entrySet()) {
+                dataFlow.add(new JsonObject().put("key", keyColor.getKey()).put("color", keyColor.getValue()));
+            }
+            return new JsonObject()
+                    .put("legend", legend)
+                    .put("dataFlow", dataFlow)
+                    .put("root", serializeNode(rootAgent, null));
         } catch (Exception e) {
             log.warn("Failed to generate topology", e);
             return new JsonObject().put("error", "Failed to generate topology: " + e.getMessage());
         }
     }
 
-    private JsonObject serializeAgentTopology(AgentInstance agent) {
-        JsonObject node = new JsonObject()
-                .put("name", agent.name())
-                .put("type", agent.topology() != null ? agent.topology().name() : "AGENT")
-                .put("agentId", agent.agentId());
+    public JsonObject getExecutions(int index) {
+        MonitoredRoot root = rootAt(index);
+        if (root == null) {
+            return new JsonObject().put("error", "No root agents detected");
+        }
+        try {
+            AgentMonitor monitor = root.monitor();
+            String rootAgentId = root.agent().agentId();
+            JsonArray sessions = new JsonArray();
+            for (Object memoryId : monitor.allMemoryIds()) {
+                JsonArray executions = new JsonArray();
+                int success = 0;
+                int failed = 0;
+                int completedWithError = 0;
+                int running = 0;
+                for (MonitoredExecution execution : monitor.allExecutionsFor(memoryId)) {
+                    if (!rootAgentId.equals(execution.topLevelInvocations().agent().agentId())) {
+                        continue;
+                    }
+                    String status = statusOf(execution);
+                    switch (status) {
+                        case "ok" -> success++;
+                        case "fail" -> failed++;
+                        case "warn" -> completedWithError++;
+                        default -> running++;
+                    }
+                    executions.add(serializeExecution(execution, status));
+                }
+                if (!executions.isEmpty()) {
+                    sessions.add(new JsonObject()
+                            .put("memoryId", String.valueOf(memoryId))
+                            .put("runs", executions.size())
+                            .put("success", success)
+                            .put("failed", failed)
+                            .put("completedWithError", completedWithError)
+                            .put("running", running)
+                            .put("executions", executions));
+                }
+            }
+            return new JsonObject()
+                    .put("nowMillis", epochMillis(LocalDateTime.now()))
+                    .put("sessions", sessions);
+        } catch (Exception e) {
+            log.warn("Failed to generate execution report", e);
+            return new JsonObject().put("error", "Failed to generate execution report: " + e.getMessage());
+        }
+    }
 
-        if (agent.description() != null) {
+    /**
+     * Cheap fingerprint of the executions of a root agent, changing whenever {@link #getExecutions(int)} would return
+     * something different, so the Dev UI can poll it instead of the whole history. It starts with the key of the root
+     * agent so the Dev UI notices when a restart moved the root agents.
+     */
+    public String getExecutionsVersion(int index) {
+        MonitoredRoot root = rootAt(index);
+        if (root == null) {
+            return "";
+        }
+        String rootAgentId = root.agent().agentId();
+        long[] counters = new long[4];
+        for (Object memoryId : root.monitor().allMemoryIds()) {
+            for (MonitoredExecution execution : root.monitor().allExecutionsFor(memoryId)) {
+                if (rootAgentId.equals(execution.topLevelInvocations().agent().agentId())) {
+                    counters[0] += execution.hasError() ? 2 : 1;
+                    countInvocations(execution.topLevelInvocations(), counters);
+                }
+            }
+        }
+        return rootKey(root.agent()) + "|" + counters[0] + ":" + counters[1] + ":" + counters[2] + ":" + counters[3];
+    }
+
+    private static String rootKey(AgentInstance agent) {
+        return agent.type() != null ? agent.type().getName() : agent.name();
+    }
+
+    private static void countInvocations(AgentInvocation invocation, long[] counters) {
+        counters[1]++;
+        if (invocation.done()) {
+            counters[2]++;
+        }
+        counters[3] += invocation.toolExecutions().size();
+        for (AgentInvocation nested : invocation.nestedInvocations()) {
+            countInvocations(nested, counters);
+        }
+    }
+
+    public String getTopologyReportHtml(int index) {
+        MonitoredRoot root = rootAt(index);
+        if (root == null) {
+            return "<html><body><p>No root agents detected.</p></body></html>";
+        }
+        return HtmlReportGenerator.generateTopology(root.agent());
+    }
+
+    public String getExecutionReportHtml(int index) {
+        MonitoredRoot root = rootAt(index);
+        if (root == null) {
+            return "<html><body><p>No root agents detected.</p></body></html>";
+        }
+        return HtmlReportGenerator.generateExecution(root.monitor());
+    }
+
+    private static MonitoredRoot rootAt(int index) {
+        List<MonitoredRoot> roots = DevAgentMonitorHolder.roots();
+        if (roots.isEmpty()) {
+            return null;
+        }
+        return index >= 0 && index < roots.size() ? roots.get(index) : roots.get(0);
+    }
+
+    private JsonObject serializeNode(AgentInstance agent, String condition) {
+        JsonObject node = new JsonObject()
+                .put("agentId", agent.agentId())
+                .put("name", agent.name())
+                .put("topology", agent.topology().name())
+                .put("async", agent.async())
+                .put("optional", agent.optional());
+        if (condition != null && !condition.isEmpty()) {
+            node.put("condition", condition);
+        }
+        if (agent.type() != null) {
+            node.put("typeName", agent.type().getSimpleName());
+            node.put("className", agent.type().getName());
+        }
+        if (agent.description() != null && !agent.description().isEmpty()) {
             node.put("description", agent.description());
         }
-
-        List<AgentInstance> subAgents = agent.subagents();
-        if (subAgents != null && !subAgents.isEmpty()) {
-            JsonArray children = new JsonArray();
-            for (AgentInstance sub : subAgents) {
-                children.add(serializeAgentTopology(sub));
-            }
-            node.put("subAgents", children);
+        if (agent.outputType() != null) {
+            node.put("outputType", simpleTypeName(agent.outputType()));
         }
+        if (agent.plannerType() != null) {
+            node.put("plannerType", agent.plannerType().getSimpleName());
+        }
+        if (agent.outputKey() != null && !agent.outputKey().isEmpty()) {
+            node.put("outputKey", agent.outputKey());
+        }
+        JsonArray arguments = new JsonArray();
+        if (agent.arguments() != null) {
+            for (AgentArgument argument : agent.arguments()) {
+                JsonObject json = new JsonObject()
+                        .put("name", argument.name())
+                        .put("optional", argument.isOptional());
+                if (argument.type() != null) {
+                    json.put("type", simpleTypeName(argument.type()));
+                }
+                arguments.add(json);
+            }
+        }
+        node.put("arguments", arguments);
+        if (agent.topology() == AgenticSystemTopology.LOOP) {
+            LoopAgentInstance loop = agent.as(LoopAgentInstance.class);
+            JsonObject loopJson = new JsonObject()
+                    .put("maxIterations", loop.maxIterations())
+                    .put("testExitAtLoopEnd", loop.testExitAtLoopEnd());
+            if (loop.exitCondition() != null && !loop.exitCondition().isEmpty()) {
+                loopJson.put("exitCondition", loop.exitCondition());
+            }
+            node.put("loop", loopJson);
+        }
+        JsonArray subagents = new JsonArray();
+        List<AgentInstance> children = agent.subagents();
+        if (children != null && !children.isEmpty()) {
+            Map<String, String> conditions = conditionsOf(agent);
+            for (AgentInstance child : children) {
+                subagents.add(serializeNode(child, conditions.get(child.agentId())));
+            }
+        }
+        node.put("subagents", subagents);
         return node;
     }
 
-    public JsonObject getExecutionReportJson(int index) {
-        List<AgentMonitor> monitors = DevAgentMonitorHolder.monitors();
-        if (monitors.isEmpty()) {
-            return new JsonObject().put("error", "No execution data available");
+    private static Map<String, String> conditionsOf(AgentInstance agent) {
+        if (agent.topology() != AgenticSystemTopology.ROUTER) {
+            return Map.of();
         }
-        int i = (index >= 0 && index < monitors.size()) ? index : 0;
+        ConditionalAgentInstance router;
         try {
-            AgentMonitor monitor = monitors.get(i);
-            JsonArray executions = new JsonArray();
+            router = agent.as(ConditionalAgentInstance.class);
+        } catch (ClassCastException e) {
+            return Map.of();
+        }
+        Map<String, String> conditions = new LinkedHashMap<>();
+        for (ConditionalAgent conditionalAgent : router.conditionalSubagents()) {
+            if (conditionalAgent.condition() != null) {
+                for (AgentInstance child : conditionalAgent.agentInstances()) {
+                    conditions.put(child.agentId(), conditionalAgent.condition());
+                }
+            }
+        }
+        return conditions;
+    }
 
-            for (MonitoredExecution exec : monitor.successfulExecutions()) {
-                executions.add(serializeExecution(exec, "success"));
+    private static void collectTopologies(AgentInstance agent, Set<AgenticSystemTopology> topologies) {
+        topologies.add(agent.topology());
+        if (agent.subagents() != null) {
+            for (AgentInstance child : agent.subagents()) {
+                collectTopologies(child, topologies);
             }
-            for (MonitoredExecution exec : monitor.failedExecutions()) {
-                executions.add(serializeExecution(exec, "failed"));
-            }
-            for (MonitoredExecution exec : monitor.ongoingExecutions().values()) {
-                executions.add(serializeExecution(exec, "ongoing"));
-            }
-
-            return new JsonObject().put("executions", executions);
-        } catch (Exception e) {
-            log.warn("Failed to generate execution report", e);
-            return new JsonObject().put("error", "Failed: " + e.getMessage());
         }
     }
 
-    private JsonObject serializeExecution(MonitoredExecution exec, String status) {
-        JsonObject obj = new JsonObject()
-                .put("memoryId", String.valueOf(exec.memoryId()))
+    private static Map<String, String> collectStateKeyColors(AgentInstance root) {
+        Set<String> keys = new LinkedHashSet<>();
+        collectKeys(root, keys);
+        Map<String, String> colors = new LinkedHashMap<>();
+        int i = 0;
+        for (String key : keys) {
+            colors.put(key, KEY_PALETTE[i % KEY_PALETTE.length]);
+            i++;
+        }
+        return colors;
+    }
+
+    private static void collectKeys(AgentInstance agent, Set<String> keys) {
+        if (agent.outputKey() != null && !agent.outputKey().isEmpty()) {
+            keys.add(agent.outputKey());
+        }
+        if (agent.arguments() != null) {
+            for (AgentArgument argument : agent.arguments()) {
+                if (argument.name() != null) {
+                    keys.add(argument.name());
+                }
+            }
+        }
+        if (agent.subagents() != null) {
+            for (AgentInstance child : agent.subagents()) {
+                collectKeys(child, keys);
+            }
+        }
+    }
+
+    /**
+     * An execution that recorded an error but still completed, because an error handler retried or replaced the
+     * failed agent or because an async agent failed after its root returned, is reported apart from a failed one.
+     */
+    private static String statusOf(MonitoredExecution execution) {
+        if (execution.hasError()) {
+            return execution.done() ? "warn" : "fail";
+        }
+        if (execution.done()) {
+            return "ok";
+        }
+        return "run";
+    }
+
+    private JsonObject serializeExecution(MonitoredExecution execution, String status) {
+        JsonObject json = new JsonObject()
                 .put("status", status)
-                .put("topLevel", serializeInvocation(exec.topLevelInvocations()));
-        if (exec.hasError()) {
-            obj.put("error", exec.error().error().getMessage());
+                .put("topLevel", serializeInvocation(execution.topLevelInvocations()));
+        if (execution.hasError()) {
+            Throwable error = execution.error().error();
+            JsonObject errorJson = new JsonObject()
+                    .put("agentName", execution.error().agentName())
+                    .put("agentId", execution.error().agentId())
+                    .put("message", String.valueOf(error.getMessage()))
+                    .put("type", error.getClass().getName());
+            Throwable rootCause = rootCause(error);
+            if (rootCause != error) {
+                errorJson.put("rootCause", rootCause.getClass().getSimpleName() + ": " + rootCause.getMessage());
+            }
+            json.put("error", errorJson);
         }
-        return obj;
+        return json;
     }
 
-    private JsonObject serializeInvocation(AgentInvocation inv) {
-        JsonObject obj = new JsonObject()
-                .put("agentName", inv.agent().name())
-                .put("startTime", inv.startTime().toString());
-        if (inv.done()) {
-            obj.put("duration", inv.duration().toMillis());
-            obj.put("tokenCount", inv.totalTokenCount());
-            obj.put("output", inv.output() != null ? String.valueOf(inv.output()) : null);
-        } else {
-            obj.put("status", "in_progress");
+    private static Throwable rootCause(Throwable error) {
+        Throwable cause = error;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
         }
-        if (inv.iterationIndex() >= 0) {
-            obj.put("iterationIndex", inv.iterationIndex());
-        }
+        return cause;
+    }
 
-        if (!inv.toolExecutions().isEmpty()) {
-            JsonArray tools = new JsonArray();
-            for (var toolExec : inv.toolExecutions()) {
-                tools.add(new JsonObject()
-                        .put("name", toolExec.request().name())
-                        .put("arguments", toolExec.request().arguments())
-                        .put("result", toolExec.result()));
-            }
-            obj.put("toolExecutions", tools);
+    private JsonObject serializeInvocation(AgentInvocation invocation) {
+        AgentInstance agent = invocation.agent();
+        JsonObject json = new JsonObject()
+                .put("agentId", agent.agentId())
+                .put("name", agent.name())
+                .put("topology", agent.topology().name())
+                .put("done", invocation.done())
+                .put("startMillis", epochMillis(invocation.startTime()))
+                .put("startTime", invocation.startTime().format(TIME_FMT))
+                .put("iterationIndex", invocation.iterationIndex());
+        if (invocation.done()) {
+            json.put("finishMillis", epochMillis(invocation.finishTime()))
+                    .put("finishTime", invocation.finishTime().format(TIME_FMT))
+                    .put("durationMillis", invocation.duration().toMillis())
+                    .put("totalTokenCount", invocation.totalTokenCount())
+                    .put("output", invocation.output() != null ? String.valueOf(invocation.output()) : null);
         }
+        JsonObject inputs = new JsonObject();
+        if (invocation.inputs() != null) {
+            for (Map.Entry<String, Object> input : invocation.inputs().entrySet()) {
+                inputs.put(input.getKey(), input.getValue() != null ? String.valueOf(input.getValue()) : null);
+            }
+        }
+        json.put("inputs", inputs);
 
-        if (!inv.nestedInvocations().isEmpty()) {
-            JsonArray nested = new JsonArray();
-            for (AgentInvocation sub : inv.nestedInvocations()) {
-                nested.add(serializeInvocation(sub));
+        JsonArray tools = new JsonArray();
+        for (ToolExecution toolExecution : invocation.toolExecutions()) {
+            JsonObject tool = new JsonObject()
+                    .put("name", toolExecution.request().name())
+                    .put("arguments", toolExecution.request().arguments())
+                    .put("result", toolExecution.result())
+                    .put("failed", toolExecution.hasFailed());
+            if (toolExecution.startTime() != null && toolExecution.duration() != null) {
+                tool.put("startMillis", epochMillis(toolExecution.startTime()))
+                        .put("durationMillis", toolExecution.duration().toMillis());
             }
-            obj.put("nestedInvocations", nested);
+            tools.add(tool);
         }
-        return obj;
+        json.put("toolExecutions", tools);
+
+        JsonArray nested = new JsonArray();
+        for (AgentInvocation nestedInvocation : invocation.nestedInvocations()) {
+            nested.add(serializeInvocation(nestedInvocation));
+        }
+        json.put("nestedInvocations", nested);
+        return json;
+    }
+
+    private static final class ByTypeName implements Comparator<JsonObject> {
+
+        private static final ByTypeName INSTANCE = new ByTypeName();
+
+        @Override
+        public int compare(JsonObject first, JsonObject second) {
+            return first.getString("typeName").compareTo(second.getString("typeName"));
+        }
+    }
+
+    private static long epochMillis(LocalDateTime time) {
+        return time.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    private static String simpleTypeName(Type type) {
+        if (type instanceof Class<?> c) {
+            return c.getSimpleName();
+        }
+        String name = type.getTypeName();
+        int dot = name.lastIndexOf('.');
+        return dot >= 0 ? name.substring(dot + 1) : name;
     }
 
     @ActivateRequestContext
@@ -191,20 +486,19 @@ public class AgenticJsonRpcService {
         }
 
         JsonObject inputs = (inputJson != null && !inputJson.isBlank()) ? new JsonObject(inputJson) : new JsonObject();
-        java.lang.reflect.Parameter[] params = method.getParameters();
+        Parameter[] params = method.getParameters();
         Object[] args = new Object[paramTypes.length];
 
         for (int i = 0; i < paramTypes.length; i++) {
             Class<?> type = paramTypes[i];
             String paramName = params[i].getName();
 
-            if (type.getName().equals("dev.langchain4j.agentic.scope.AgenticScope")) {
+            if (AgenticScope.class.isAssignableFrom(type)) {
                 args[i] = null;
                 continue;
             }
 
-            if (params[i].isAnnotationPresent(dev.langchain4j.service.MemoryId.class)
-                    || paramName.equals("memoryId")) {
+            if (params[i].isAnnotationPresent(MemoryId.class) || paramName.equals("memoryId")) {
                 args[i] = inputs.containsKey(paramName) ? inputs.getString(paramName) : UUID.randomUUID().toString();
                 continue;
             }
