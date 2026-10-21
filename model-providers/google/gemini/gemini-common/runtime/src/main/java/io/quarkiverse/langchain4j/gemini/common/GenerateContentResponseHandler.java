@@ -63,11 +63,16 @@ public final class GenerateContentResponseHandler {
     }
 
     public static GenerateContentResponse.FinishReason getFinishReason(GenerateContentResponse response) {
-        if (response.candidates().size() != 1) {
+        int candidateCount = response.candidates() == null ? 0 : response.candidates().size();
+        if (candidateCount == 0 && response.promptFeedback() != null && response.promptFeedback().blockReason() != null) {
+            throw new IllegalArgumentException(
+                    "The prompt is blocked with reason " + response.promptFeedback().blockReason() + ".");
+        }
+        if (candidateCount != 1) {
             throw new IllegalArgumentException(
                     String.format(
                             "This response should have exactly 1 candidate, but it has %s.",
-                            response.candidates().size()));
+                            candidateCount));
         }
         return response.candidates().get(0).finishReason();
     }
@@ -80,8 +85,12 @@ public final class GenerateContentResponseHandler {
     }
 
     public static List<ToolExecutionRequest> getToolExecutionRequests(GenerateContentResponse response) {
-        List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
         List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>();
+        GenerateContentResponse.Candidate.Content content = response.candidates().get(0).content();
+        if (content == null || content.parts() == null) {
+            return toolExecutionRequests;
+        }
+        List<GenerateContentResponse.Candidate.Part> parts = content.parts();
         for (GenerateContentResponse.Candidate.Part part : parts) {
             FunctionCall functionCall = part.functionCall();
             if (functionCall == null) {

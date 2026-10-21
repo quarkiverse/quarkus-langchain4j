@@ -52,12 +52,20 @@ class GeminiStreamingResponseBuilder {
             return Optional.empty();
         }
 
-        Candidate firstCandidate = partialResponse.candidates().get(0);
-
         updateId(partialResponse);
         updateModelName(partialResponse);
-        updateFinishReason(firstCandidate);
         updateTokenUsage(partialResponse.usageMetadata());
+
+        if (partialResponse.candidates() == null || partialResponse.candidates().isEmpty()) {
+            // Gemini returns no candidates when the prompt is blocked; the reason is in promptFeedback instead
+            if (partialResponse.promptFeedback() != null && partialResponse.promptFeedback().blockReason() != null) {
+                finishReason.set(FinishReason.CONTENT_FILTER);
+            }
+            return Optional.empty();
+        }
+
+        Candidate firstCandidate = partialResponse.candidates().get(0);
+        updateFinishReason(firstCandidate);
 
         Candidate.Content content = firstCandidate.content();
         if (content == null || content.parts() == null) {
