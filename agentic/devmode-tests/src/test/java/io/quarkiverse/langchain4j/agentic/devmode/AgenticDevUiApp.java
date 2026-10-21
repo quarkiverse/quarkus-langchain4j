@@ -1,5 +1,8 @@
 package io.quarkiverse.langchain4j.agentic.devmode;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
@@ -11,9 +14,12 @@ import jakarta.ws.rs.PathParam;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.agentic.agent.ErrorContext;
+import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.declarative.ActivationCondition;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
 import dev.langchain4j.agentic.declarative.ConditionalAgent;
+import dev.langchain4j.agentic.declarative.ErrorHandler;
 import dev.langchain4j.agentic.declarative.ExitCondition;
 import dev.langchain4j.agentic.declarative.LoopAgent;
 import dev.langchain4j.agentic.declarative.ParallelAgent;
@@ -28,7 +34,8 @@ import io.quarkus.arc.Unremovable;
 
 /**
  * Agentic systems of the Dev UI test application: a story workflow using every workflow type, a {@link MonitoredAgent}
- * root carrying its own monitor and a {@code @Dependent} root getting a new instance for each request.
+ * root carrying its own monitor, a {@code @Dependent} root getting a new instance for each request and a root retrying
+ * a failed sub-agent.
  */
 public class AgenticDevUiApp {
 
@@ -94,6 +101,32 @@ public class AgenticDevUiApp {
 
         @SequenceAgent(description = "Answers with a new instance for each request", outputKey = "greeting", subAgents = Greeter.class)
         String greet(@MemoryId String session, @V("topic") String topic);
+    }
+
+    public interface RetryingDesk {
+
+        @SequenceAgent(description = "Retries a step failing once", outputKey = "draft", subAgents = FlakyStep.class)
+        String retry(@MemoryId String session, @V("topic") String topic);
+
+        @ErrorHandler
+        static ErrorRecoveryResult onError(ErrorContext context) {
+            return ErrorRecoveryResult.retry();
+        }
+    }
+
+    @ApplicationScoped
+    @Unremovable
+    public static class FlakyStep {
+
+        private final Set<String> failedTopics = ConcurrentHashMap.newKeySet();
+
+        @Agent(description = "Fails the first time it sees a topic", outputKey = "draft")
+        public String flaky(@V("topic") String topic) {
+            if (failedTopics.add(topic)) {
+                throw new IllegalStateException("Transient failure for " + topic);
+            }
+            return "draft of " + topic;
+        }
     }
 
     public interface Greeter {
