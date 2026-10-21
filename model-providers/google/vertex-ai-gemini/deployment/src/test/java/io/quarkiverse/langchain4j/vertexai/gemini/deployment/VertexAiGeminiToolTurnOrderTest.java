@@ -5,6 +5,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -82,6 +84,23 @@ public class VertexAiGeminiToolTurnOrderTest extends WiremockAware {
                   {"role":"model","parts":[{"text":"Sunny in Paris, rainy in London."}]},
                   {"role":"user","parts":[{"text":"Will it stay dry tomorrow?"}]}
                 ]
+                """));
+    }
+
+    @Test
+    void textOfAiMessageWithToolCallsIsSentBeforeTheCalls() throws Exception {
+        ToolExecutionRequest paris = ToolExecutionRequest.builder()
+                .id("signature-1").name("getWeather").arguments("{\"city\":\"Paris\"}").build();
+
+        chatModel.chat(
+                UserMessage.from("What is the weather in Paris?"),
+                AiMessage.from("Let me check the weather.", List.of(paris)),
+                ToolExecutionResultMessage.from(paris, "sunny"));
+
+        assertThat(sentContents().get(1)).isEqualTo(MAPPER.readTree("""
+                {"role":"model","parts":[
+                  {"text":"Let me check the weather."},
+                  {"functionCall":{"name":"getWeather","args":{"city":"Paris"}},"thoughtSignature":"signature-1"}]}
                 """));
     }
 
