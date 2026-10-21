@@ -406,8 +406,9 @@ public class ToolProcessor {
                             }
                         }
 
-                        boolean isRequired = (pInstance == null)
-                                || ((pInstance.value("required") != null) && pInstance.value("required").asBoolean());
+                        AnnotationValue requiredValue = pInstance != null ? pInstance.value("required") : null;
+                        // @P#required defaults to true, and Jandex does not materialize annotation defaults
+                        boolean isRequired = requiredValue == null || requiredValue.asBoolean();
                         if (!hasDefaultValue && isRequired) {
                             required.add(parameter.name());
                         }
@@ -1129,8 +1130,25 @@ public class ToolProcessor {
 
     private static String descriptionFrom(MethodParameterInfo parameter) {
         return Optional.ofNullable(parameter.annotation(P))
-                .map(p -> p.value() != null ? p.value().asString() : null)
+                .map(ToolProcessor::descriptionFrom)
                 .orElse(null);
+    }
+
+    /**
+     * {@code @P#description()} and {@code @P#value()} are aliases; a blank one means "not set", so that it does not
+     * shadow a description declared on the parameter's type.
+     */
+    private static String descriptionFrom(AnnotationInstance pAnnotation) {
+        String description = stringValueOrNull(pAnnotation, "description");
+        return description != null ? description : stringValueOrNull(pAnnotation, "value");
+    }
+
+    private static String stringValueOrNull(AnnotationInstance annotation, String member) {
+        AnnotationValue value = annotation.value(member);
+        if (value == null || value.asString().isBlank()) {
+            return null;
+        }
+        return value.asString();
     }
 
     private static Object[] enumConstants(Type type) {
