@@ -63,22 +63,43 @@ public class ModelAuthProviderFilter implements ResteasyReactiveClientRequestFil
             MultivaluedMap<String, Object> headers) implements ModelAuthProvider.Input {
     }
 
-    private static class ApplicationDefaultAuthProvider implements ModelAuthProvider {
+    static class ApplicationDefaultAuthProvider implements ModelAuthProvider {
 
         private static final String SCOPE_CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform";
         private static final String SCOPE_GENERATIVE_LANGUAGE = "https://www.googleapis.com/auth/generative-language.retriever";
 
+        // created on the first request and reused, so refreshIfExpired fetches a new access token only when the
+        // current one has expired
+        private volatile GoogleCredentials credentials;
+
         @Override
         public String getAuthorization(Input input) {
             try {
-                var credentials = GoogleCredentials
-                        .getApplicationDefault()
-                        .createScoped(List.of(SCOPE_GENERATIVE_LANGUAGE, SCOPE_CLOUD_PLATFORM));
+                var credentials = credentials();
                 credentials.refreshIfExpired();
                 return "Bearer " + credentials.getAccessToken().getTokenValue();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+        }
+
+        private GoogleCredentials credentials() throws IOException {
+            var credentials = this.credentials;
+            if (credentials == null) {
+                synchronized (this) {
+                    credentials = this.credentials;
+                    if (credentials == null) {
+                        credentials = applicationDefaultCredentials()
+                                .createScoped(List.of(SCOPE_GENERATIVE_LANGUAGE, SCOPE_CLOUD_PLATFORM));
+                        this.credentials = credentials;
+                    }
+                }
+            }
+            return credentials;
+        }
+
+        GoogleCredentials applicationDefaultCredentials() throws IOException {
+            return GoogleCredentials.getApplicationDefault();
         }
     }
 }
