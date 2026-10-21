@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
+import static dev.langchain4j.internal.Utils.isNullOrEmpty;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -107,7 +109,10 @@ public final class ContentMapper {
                 } else if (message instanceof AiMessage am) {
                     try {
                         if (am.hasToolExecutionRequests()) {
-                            List<Content.Part> parts = new ArrayList<>(am.toolExecutionRequests().size());
+                            List<Content.Part> parts = new ArrayList<>(am.toolExecutionRequests().size() + 1);
+                            if (!isNullOrEmpty(am.text())) {
+                                parts.add(Content.Part.ofText(am.text()));
+                            }
                             for (ToolExecutionRequest toolExecutionRequest : am.toolExecutionRequests()) {
                                 String argumentsStr = toolExecutionRequest.arguments();
                                 String name = toolExecutionRequest.name();
