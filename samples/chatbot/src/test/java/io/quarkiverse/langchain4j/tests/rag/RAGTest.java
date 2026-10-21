@@ -102,7 +102,7 @@ public class RAGTest {
         LinesArray metrics = new LinesArray(Stream.of(metricsResponse.body().split("\n"))
                 .filter(line -> line.startsWith("gen_ai"))
                 .toList());
-        assertTrue(metrics.containsLine("gen_ai_client_estimated_cost_total"));
+        assertTrue(metrics.containsLine("gen_ai_client_estimated_cost_total"), "There is no cost estimation metric!");
         assertTrue(metrics.containsLine("gen_ai_client_operation_duration_seconds_max"));
         assertTrue(metrics.containsLine("gen_ai_client_operation_duration_seconds_count"));
         assertTrue(metrics.containsLine("gen_ai_client_operation_duration_seconds_sum"));
@@ -124,9 +124,9 @@ public class RAGTest {
                 })
                 .orElseThrow(() -> new AssertionError("There is no metric for output tokens!"));
         assertTrue(outputTokensMetric.contains("ai_service_class_name=\"io.quarkiverse.langchain4j.sample.chatbot.Bot\""));
-        assertTrue(outputTokensMetric.contains("gen_ai_request_model=\"gpt-4o-mini\""));
+        assertTrue(outputTokensMetric.contains("gen_ai_request_model=\"gpt-6-luna\""));
         String tokens = outputTokensMetric.split("} ")[1];
-        Assertions.assertEquals("1.0", tokens, "Wrong number of tokens!");
+        Assertions.assertEquals("4.0", tokens, "Wrong number of tokens for output '%s'!".formatted(response));
 
     }
 
