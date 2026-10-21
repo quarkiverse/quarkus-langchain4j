@@ -1,40 +1,56 @@
 package io.quarkiverse.langchain4j.agentic.runtime.devui;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import dev.langchain4j.agentic.observability.AgentMonitor;
+import dev.langchain4j.agentic.planner.AgentInstance;
 
 public class DevAgentMonitorHolder {
 
     public static volatile Set<String> allowedAgentClassNames = Collections.emptySet();
 
-    private static final List<AgentMonitor> MONITORS = new CopyOnWriteArrayList<>();
-    private static final List<Object> ROOT_AGENTS = new CopyOnWriteArrayList<>();
+    private static final Map<String, MonitoredRoot> ROOTS = new LinkedHashMap<>();
 
     private DevAgentMonitorHolder() {
     }
 
-    public static void register(AgentMonitor monitor) {
-        MONITORS.add(monitor);
+    /**
+     * Registers a root agent carrying its own monitor, replacing the previous instance of the same agent class.
+     */
+    public static synchronized void register(String agentClassName, AgentInstance rootAgent, AgentMonitor monitor) {
+        ROOTS.put(agentClassName, new MonitoredRoot(rootAgent, monitor));
     }
 
-    public static void registerRootAgent(Object rootAgent) {
-        ROOT_AGENTS.add(rootAgent);
+    /**
+     * The monitor shared by every instance of a root agent class, created and registered with the first instance.
+     */
+    public static synchronized AgentMonitor sharedMonitor(String agentClassName, AgentInstance rootAgent) {
+        MonitoredRoot root = ROOTS.get(agentClassName);
+        if (root == null) {
+            AgentMonitor monitor = new AgentMonitor();
+            monitor.setRootAgent(rootAgent);
+            root = new MonitoredRoot(rootAgent, monitor);
+            ROOTS.put(agentClassName, root);
+        }
+        return root.monitor();
     }
 
-    public static List<AgentMonitor> monitors() {
-        return MONITORS;
+    public static synchronized List<MonitoredRoot> roots() {
+        return new ArrayList<>(ROOTS.values());
     }
 
-    public static List<Object> rootAgents() {
-        return ROOT_AGENTS;
+    public static synchronized void reset() {
+        ROOTS.clear();
     }
 
-    public static void reset() {
-        MONITORS.clear();
-        ROOT_AGENTS.clear();
+    /**
+     * A root agent of an agentic system together with the {@link AgentMonitor} attached at that root.
+     */
+    public record MonitoredRoot(AgentInstance agent, AgentMonitor monitor) {
     }
 }
