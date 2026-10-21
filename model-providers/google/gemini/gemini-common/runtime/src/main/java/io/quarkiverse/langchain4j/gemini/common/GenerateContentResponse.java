@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata usageMetadata, String modelVersion,
-        String responseId) {
+        String responseId, PromptFeedback promptFeedback) {
 
     public record Candidate(Content content, FinishReason finishReason) {
 
@@ -17,6 +17,10 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
         public record Part(String text, FunctionCall functionCall, Boolean thought, String thoughtSignature) {
 
         }
+
+    }
+
+    public record PromptFeedback(String blockReason) {
 
     }
 

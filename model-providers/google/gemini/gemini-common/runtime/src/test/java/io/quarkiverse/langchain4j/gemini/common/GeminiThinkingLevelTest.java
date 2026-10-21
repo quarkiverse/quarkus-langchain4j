@@ -108,7 +108,7 @@ class GeminiThinkingLevelTest {
         GenerateContentResponse.Candidate candidate = new GenerateContentResponse.Candidate(content,
                 GenerateContentResponse.FinishReason.STOP);
         return new GenerateContentResponse(List.of(candidate),
-                new GenerateContentResponse.UsageMetadata(1, 1, 2), "gemini-3.8-flash", "id");
+                new GenerateContentResponse.UsageMetadata(1, 1, 2), "gemini-3.8-flash", "id", null);
     }
 
     private static final class CapturingChatModel extends GeminiChatLanguageModel {
