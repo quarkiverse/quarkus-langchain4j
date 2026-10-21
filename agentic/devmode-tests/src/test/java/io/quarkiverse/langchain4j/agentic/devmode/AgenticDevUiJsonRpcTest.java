@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.agentic.devmode.AgenticDevUiApp.MonitoredDesk;
+import io.quarkiverse.langchain4j.agentic.devmode.AgenticDevUiApp.RetryingDesk;
 import io.quarkiverse.langchain4j.agentic.devmode.AgenticDevUiApp.StoryWorkflow;
 import io.quarkus.devui.tests.DevUIJsonRPCTest;
 import io.quarkus.test.QuarkusDevModeTest;
@@ -61,7 +62,7 @@ public class AgenticDevUiJsonRpcTest extends DevUIJsonRPCTest {
         for (JsonNode root : roots) {
             names.add(root.get("typeName").asText());
         }
-        assertThat(names).containsExactly("MonitoredDesk", "StoryWorkflow");
+        assertThat(names).containsExactly("MonitoredDesk", "RetryingDesk", "StoryWorkflow");
     }
 
     @Test
@@ -201,6 +202,46 @@ public class AgenticDevUiJsonRpcTest extends DevUIJsonRPCTest {
                 "own-monitor");
         assertThat(names(session.get("executions").get(0).get("topLevel").get("nestedInvocations")))
                 .containsExactly("sayHello");
+        assertThat(devMode.getLogRecords()).isEmpty();
+    }
+
+    @Test
+    void executionsVersionChangesOnlyWhenTheExecutionsChange() throws Exception {
+        int index = rootIndex("MonitoredDesk");
+        int storyIndex = rootIndex("StoryWorkflow");
+        String before = executeJsonRPCMethod(String.class, "getExecutionsVersion", Map.of("index", index));
+        String storyBefore = executeJsonRPCMethod(String.class, "getExecutionsVersion", Map.of("index", storyIndex));
+        assertThat(before).startsWith(MonitoredDesk.class.getName() + "|");
+        assertThat(executeJsonRPCMethod(String.class, "getExecutionsVersion", Map.of("index", index))).isEqualTo(before);
+
+        invoke(MonitoredDesk.class, "greet", "{\"session\":\"versioned\",\"topic\":\"hello\"}", true);
+
+        String after = executeJsonRPCMethod(String.class, "getExecutionsVersion", Map.of("index", index));
+        assertThat(after).startsWith(MonitoredDesk.class.getName() + "|").isNotEqualTo(before);
+        assertThat(executeJsonRPCMethod(String.class, "getExecutionsVersion", Map.of("index", storyIndex)))
+                .isEqualTo(storyBefore);
+    }
+
+    @Test
+    void executionRecoveredByTheErrorHandlerIsNotReportedAsFailed() throws Exception {
+        invoke(RetryingDesk.class, "retry", "{\"session\":\"retried\",\"topic\":\"rain\"}", true);
+
+        JsonNode session = session(executeJsonRPCMethod("getExecutions", Map.of("index", rootIndex("RetryingDesk"))),
+                "retried");
+        assertThat(session.get("failed").asInt()).isZero();
+        assertThat(session.get("completedWithError").asInt()).isEqualTo(1);
+        JsonNode execution = session.get("executions").get(0);
+        assertThat(execution.get("status").asText()).isEqualTo("warn");
+        assertThat(execution.get("error").get("agentName").asText()).isEqualTo("flaky");
+        assertThat(execution.get("error").get("rootCause").asText())
+                .isEqualTo("IllegalStateException: Transient failure for rain");
+        JsonNode top = execution.get("topLevel");
+        assertThat(top.get("done").asBoolean()).isTrue();
+        List<Boolean> attempts = new ArrayList<>();
+        for (JsonNode attempt : top.get("nestedInvocations")) {
+            attempts.add(attempt.get("done").asBoolean());
+        }
+        assertThat(attempts).containsExactly(false, true);
         assertThat(devMode.getLogRecords()).isEmpty();
     }
 
