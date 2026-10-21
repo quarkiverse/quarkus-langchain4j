@@ -110,6 +110,7 @@ public class AgenticJsonRpcService {
                 JsonArray executions = new JsonArray();
                 int success = 0;
                 int failed = 0;
+                int completedWithError = 0;
                 int running = 0;
                 for (MonitoredExecution execution : monitor.allExecutionsFor(memoryId)) {
                     if (!rootAgentId.equals(execution.topLevelInvocations().agent().agentId())) {
@@ -119,6 +120,7 @@ public class AgenticJsonRpcService {
                     switch (status) {
                         case "ok" -> success++;
                         case "fail" -> failed++;
+                        case "warn" -> completedWithError++;
                         default -> running++;
                     }
                     executions.add(serializeExecution(execution, status));
@@ -129,6 +131,7 @@ public class AgenticJsonRpcService {
                             .put("runs", executions.size())
                             .put("success", success)
                             .put("failed", failed)
+                            .put("completedWithError", completedWithError)
                             .put("running", running)
                             .put("executions", executions));
                 }
@@ -139,6 +142,44 @@ public class AgenticJsonRpcService {
         } catch (Exception e) {
             log.warn("Failed to generate execution report", e);
             return new JsonObject().put("error", "Failed to generate execution report: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Cheap fingerprint of the executions of a root agent, changing whenever {@link #getExecutions(int)} would return
+     * something different, so the Dev UI can poll it instead of the whole history. It starts with the key of the root
+     * agent so the Dev UI notices when a restart moved the root agents.
+     */
+    public String getExecutionsVersion(int index) {
+        MonitoredRoot root = rootAt(index);
+        if (root == null) {
+            return "";
+        }
+        String rootAgentId = root.agent().agentId();
+        long[] counters = new long[4];
+        for (Object memoryId : root.monitor().allMemoryIds()) {
+            for (MonitoredExecution execution : root.monitor().allExecutionsFor(memoryId)) {
+                if (rootAgentId.equals(execution.topLevelInvocations().agent().agentId())) {
+                    counters[0] += execution.hasError() ? 2 : 1;
+                    countInvocations(execution.topLevelInvocations(), counters);
+                }
+            }
+        }
+        return rootKey(root.agent()) + "|" + counters[0] + ":" + counters[1] + ":" + counters[2] + ":" + counters[3];
+    }
+
+    private static String rootKey(AgentInstance agent) {
+        return agent.type() != null ? agent.type().getName() : agent.name();
+    }
+
+    private static void countInvocations(AgentInvocation invocation, long[] counters) {
+        counters[1]++;
+        if (invocation.done()) {
+            counters[2]++;
+        }
+        counters[3] += invocation.toolExecutions().size();
+        for (AgentInvocation nested : invocation.nestedInvocations()) {
+            countInvocations(nested, counters);
         }
     }
 
@@ -287,9 +328,13 @@ public class AgenticJsonRpcService {
         }
     }
 
+    /**
+     * An execution that recorded an error but still completed, because an error handler retried or replaced the
+     * failed agent or because an async agent failed after its root returned, is reported apart from a failed one.
+     */
     private static String statusOf(MonitoredExecution execution) {
         if (execution.hasError()) {
-            return "fail";
+            return execution.done() ? "warn" : "fail";
         }
         if (execution.done()) {
             return "ok";

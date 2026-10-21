@@ -1,9 +1,13 @@
 import { LitElement, html, svg, css, nothing } from 'lit';
 import { JsonRpc } from 'jsonrpc';
+import { RouterController } from 'router-controller';
 import '@vaadin/button';
+import '@vaadin/checkbox';
 import '@vaadin/icon';
 import '@vaadin/select';
 import '@vaadin/progress-bar';
+import { goToAgentPage, rootIndexFor, rootKeyOf, syncAgentParams } from './agents-navigation.js';
+import { curvePath, portOf, relativeRect, roundedPath, routeDataFlow, treeConnectors } from './agents-topology-edges.js';
 
 const TOPOLOGY = {
     AI_AGENT: { label: 'AI', css: 'ai' },
@@ -15,6 +19,21 @@ const TOPOLOGY = {
     ROUTER: { label: 'Router', css: 'rtr' },
     STAR: { label: 'Star', css: 'star' },
 };
+
+const MIN_FIT_SCALE = 0.25;
+
+function findNode(node, agentId) {
+    if (node.agentId === agentId) {
+        return node;
+    }
+    for (const child of node.subagents) {
+        const found = findNode(child, agentId);
+        if (found) {
+            return found;
+        }
+    }
+    return null;
+}
 
 function topologyOf(name) {
     return TOPOLOGY[name] || TOPOLOGY.AI_AGENT;
@@ -84,6 +103,15 @@ export class QwcAgentsTopology extends LitElement {
         }
         .toolbar .root-name { font-weight: 600; }
         .toolbar .spacer { flex: 1; }
+        .focus-chip {
+            display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 10px; border-radius: 12px;
+            font-size: 12px; background: color-mix(in srgb, var(--c-par) 14%, var(--card));
+            border: 1px solid color-mix(in srgb, var(--c-par) 45%, var(--card));
+        }
+        .focus-chip button {
+            border: none; background: transparent; color: var(--fg2); cursor: pointer; font-size: 14px; line-height: 1;
+            padding: 0 4px;
+        }
         .content { flex: 1; overflow: auto; padding: 0 15px 15px; }
         .placeholder { padding: 20px; text-align: center; color: var(--fg2); }
 
@@ -137,6 +165,15 @@ export class QwcAgentsTopology extends LitElement {
             box-shadow: 0 1px 3px rgba(0, 0, 0, .06); transition: box-shadow .2s, transform .2s;
         }
         .node-card:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, .15); transform: translateY(-2px); }
+        .node-card.focused { outline: 2px solid var(--c-par); outline-offset: 2px; }
+        .card-link {
+            position: absolute; top: 4px; right: 4px; border: 1px solid var(--brd); background: var(--card);
+            color: var(--lumo-primary-text-color); cursor: pointer; padding: 3px; line-height: 0; border-radius: 4px;
+            opacity: 0; transition: opacity .15s;
+        }
+        .node-card:hover .card-link, .node-card.focused .card-link, .card-link:focus-visible { opacity: 1; }
+        .card-link:hover, .card-link:focus-visible { color: var(--lumo-primary-text-color); }
+        .card-link vaadin-icon { width: 12px; height: 12px; }
         .node-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
         .agent-name { font-size: 14px; font-weight: 600; }
         .node-border-ai { border-left: 3px solid var(--c-ai); }
@@ -167,7 +204,10 @@ export class QwcAgentsTopology extends LitElement {
             color: color-mix(in srgb, var(--c-amber) 70%, var(--fg));
             border: 1px solid color-mix(in srgb, var(--c-amber) 55%, var(--card));
         }
-        .condition-label { padding: 1px 8px; margin-bottom: 4px; white-space: nowrap; }
+        .condition-label { position: relative; padding: 1px 8px; margin-bottom: 10px; white-space: nowrap; }
+        .condition-label::after {
+            content: ''; position: absolute; top: 100%; left: 50%; height: 10px; border-left: 2px solid var(--conn);
+        }
 
         .node-details { font-size: 11px; }
         .node-detail { display: flex; gap: 4px; margin-top: 1px; }
@@ -194,6 +234,13 @@ export class QwcAgentsTopology extends LitElement {
 
         .df-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2; overflow: visible; }
         .df-svg.df-hidden { display: none; }
+        .df-path { transition: opacity .15s, stroke-width .15s; }
+        .df-svg.df-focus .df-path { opacity: .1; }
+        .df-svg.df-focus .df-path.df-hot { opacity: .95; stroke-width: 2.4; }
+        .df-key { cursor: pointer; border-radius: 3px; }
+        .df-key:hover span, .df-key.active span { color: var(--fg); }
+        .df-key.active span { font-weight: 600; }
+        .df-legend.filtered .df-key:not(.active) { opacity: .4; }
         .footer { text-align: center; padding: 16px 0 4px; font-size: 12px; color: var(--fg3); border-top: 1px solid var(--brd); margin-top: 20px; }
     `;
 
@@ -205,9 +252,13 @@ export class QwcAgentsTopology extends LitElement {
         _error: { state: true },
         _edgesHidden: { state: true },
         _loadedAt: { state: true },
+        _keyFilter: { state: true },
+        _focusAgentId: { state: true },
+        _fit: { state: true },
     };
 
     jsonRpc = new JsonRpc(this);
+    routerController = new RouterController(this);
 
     constructor() {
         super();
@@ -218,32 +269,52 @@ export class QwcAgentsTopology extends LitElement {
         this._error = null;
         this._edgesHidden = false;
         this._loadedAt = null;
+        this._keyFilter = null;
         this._resizeObserver = null;
+        this._drawFrame = 0;
+        this._hoveredCard = null;
+        this._focusAgentId = null;
+        this._focusPending = false;
+        this._fit = false;
     }
 
     connectedCallback() {
         super.connectedCallback();
-        this._resizeObserver = new ResizeObserver(() => this._drawDataFlow());
+        this._resizeObserver = new ResizeObserver(() => this._scheduleDraw());
         this._resizeObserver.observe(this);
-        this._loadEntries();
+        this._focusAgentId = this.routerController.getQueryParameter('agent');
+        this._focusPending = this._focusAgentId != null;
+        this._loadEntries(this.routerController.getQueryParameter('root'));
     }
 
     disconnectedCallback() {
         if (this._resizeObserver) {
             this._resizeObserver.disconnect();
         }
+        cancelAnimationFrame(this._drawFrame);
+        this._drawFrame = 0;
         super.disconnectedCallback();
     }
 
     updated() {
-        this._drawDataFlow();
+        this._scheduleDraw();
     }
 
-    _loadEntries() {
+    _scheduleDraw() {
+        if (this._drawFrame) {
+            return;
+        }
+        this._drawFrame = requestAnimationFrame(() => {
+            this._drawFrame = 0;
+            this._drawDataFlow();
+        });
+    }
+
+    _loadEntries(rootKey) {
         this.jsonRpc.getRootAgentEntries()
             .then(response => {
                 this._entries = response.result || [];
-                this._selectedIndex = this._entries.length > 0 ? this._entries[0].index : 0;
+                this._selectedIndex = rootIndexFor(this._entries, rootKey);
                 this._loadTopology();
             })
             .catch(error => {
@@ -264,6 +335,7 @@ export class QwcAgentsTopology extends LitElement {
                 } else {
                     this._topology = result;
                 }
+                this._keyFilter = null;
                 this._loadedAt = new Date();
                 this._loading = false;
             })
@@ -277,8 +349,29 @@ export class QwcAgentsTopology extends LitElement {
         const index = parseInt(e.target.value, 10);
         if (!isNaN(index) && index !== this._selectedIndex) {
             this._selectedIndex = index;
+            this._clearFocus();
             this._loadTopology();
         }
+    }
+
+    _selectedEntry() {
+        return this._entries.find(e => e.index === this._selectedIndex) || null;
+    }
+
+    _clearFocus() {
+        this._focusAgentId = null;
+        this._focusPending = false;
+        syncAgentParams(rootKeyOf(this._selectedEntry()), null);
+    }
+
+    _showExecutions(e, node) {
+        e.stopPropagation();
+        goToAgentPage(this.routerController, 'qwc-agents-executions.js', rootKeyOf(this._selectedEntry()), node.agentId);
+    }
+
+    _focusName() {
+        const node = this._topology ? findNode(this._topology.root, this._focusAgentId) : null;
+        return node ? node.name : this._focusAgentId;
     }
 
     _openReport() {
@@ -304,7 +397,13 @@ export class QwcAgentsTopology extends LitElement {
                     <vaadin-select label="Root agent" .items="${items}" .value="${String(this._selectedIndex)}"
                         @value-changed="${this._onRootSelected}"></vaadin-select>
                 ` : items.length === 1 ? html`<span class="root-name">${items[0].label}</span>` : nothing}
+                ${this._focusAgentId ? html`
+                    <span class="focus-chip" title="${this._focusAgentId}">Agent: ${this._focusName()}
+                        <button aria-label="Clear the highlighted agent" title="Clear the highlighted agent" @click="${() => this._clearFocus()}">&#215;</button>
+                    </span>` : nothing}
                 <vaadin-button theme="small" @click="${() => this._loadTopology()}">Refresh</vaadin-button>
+                <vaadin-checkbox label="Fit to width" .checked="${this._fit}"
+                    @checked-changed="${e => { this._fit = e.detail.value; }}"></vaadin-checkbox>
                 <span class="spacer"></span>
                 <vaadin-button theme="small tertiary" title="Open the report generated by LangChain4j in a new tab"
                     ?disabled="${this._entries.length === 0}" @click="${() => this._openReport()}">
@@ -342,17 +441,20 @@ export class QwcAgentsTopology extends LitElement {
                         </div>`)}
                 </div>
                 ${topology.dataFlow.length > 0 ? html`
-                    <div class="legend df-legend">
+                    <div class="legend df-legend ${this._keyFilter ? 'filtered' : ''}">
                         <span class="df-legend-title">Data Flow</span>
                         ${topology.dataFlow.map(e => html`
-                            <div class="legend-item">
+                            <div class="legend-item df-key ${this._keyFilter === e.key ? 'active' : ''}" role="button" tabindex="0"
+                                aria-pressed="${this._keyFilter === e.key}" title="Show only the edges of ${e.key}"
+                                @click="${() => this._toggleKeyFilter(e.key)}"
+                                @keydown="${ev => this._onKeyFilterKeydown(ev, e.key)}">
                                 <div class="legend-dot" style="background:${e.color}"></div>
                                 <span>${e.key}</span>
                             </div>`)}
                         <button class="df-toggle" @click="${() => { this._edgesHidden = !this._edgesHidden; }}">Toggle Edges</button>
                     </div>` : nothing}
                 <div class="topology-scroll">
-                    <div class="org-tree">
+                    <div class="org-tree" @mouseover="${this._onTreeHover}" @mouseleave="${this._onTreeLeave}">
                         <svg class="df-svg ${this._edgesHidden ? 'df-hidden' : ''}">
                             <defs>
                                 ${topology.dataFlow.map(e => svg`
@@ -377,7 +479,7 @@ export class QwcAgentsTopology extends LitElement {
         return html`
             <li>
                 ${node.condition ? html`<div class="condition-label">when: ${node.condition}</div>` : nothing}
-                <div class="node-card node-border-${t.css}"
+                <div class="node-card node-border-${t.css} ${node.agentId === this._focusAgentId ? 'focused' : ''}"
                     title="${node.agentId}${node.className ? '\n' + node.className : ''}"
                     data-agent-id="${node.agentId}"
                     data-output-key="${node.outputKey || ''}"
@@ -387,6 +489,10 @@ export class QwcAgentsTopology extends LitElement {
                         <span class="topology-badge ${t.css}">${t.label}</span>
                         <span class="agent-name">${node.name}</span>
                         ${node.async ? html`<span class="async-badge">async</span>` : nothing}
+                        <button class="card-link" title="Show the executions of ${node.name}" aria-label="Show the executions of ${node.name}"
+                            @click="${e => this._showExecutions(e, node)}">
+                            <vaadin-icon icon="font-awesome-solid:chart-line"></vaadin-icon>
+                        </button>
                     </div>
                     <div class="node-details">
                         ${showType ? this._detail('Type', node.typeName) : nothing}
@@ -402,8 +508,8 @@ export class QwcAgentsTopology extends LitElement {
                     </div>
                     ${node.arguments.length > 0 || node.outputKey ? html`
                         <div class="key-flow">
-                            ${node.arguments.map(a => html`<span class="key-pill key-in" style="--kc:${keyColors[a.name] || '#999'}" title="${a.type || ''}">&#8592; ${a.name}</span>`)}
-                            ${node.outputKey ? html`<span class="key-pill key-out" style="--kc:${keyColors[node.outputKey] || '#999'}">&#8594; ${node.outputKey}</span>` : nothing}
+                            ${node.arguments.map(a => html`<span class="key-pill key-in" data-key="${a.name}" style="--kc:${keyColors[a.name] || '#999'}" title="${a.type || ''}">&#8592; ${a.name}</span>`)}
+                            ${node.outputKey ? html`<span class="key-pill key-out" data-key="${node.outputKey}" style="--kc:${keyColors[node.outputKey] || '#999'}">&#8594; ${node.outputKey}</span>` : nothing}
                         </div>` : nothing}
                 </div>
                 ${node.subagents.length > 0 ? html`<ul>${node.subagents.map(child => this._renderNode(child, keyColors))}</ul>` : nothing}
@@ -428,62 +534,169 @@ export class QwcAgentsTopology extends LitElement {
         return h;
     }
 
+    _toggleKeyFilter(key) {
+        this._keyFilter = this._keyFilter === key ? null : key;
+    }
+
+    _onKeyFilterKeydown(e, key) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this._toggleKeyFilter(key);
+        }
+    }
+
+    _onTreeHover(e) {
+        const card = e.target.closest('.node-card');
+        if (card !== this._hoveredCard) {
+            this._hoveredCard = card;
+            this._applyEdgeFocus();
+        }
+    }
+
+    _onTreeLeave() {
+        this._hoveredCard = null;
+        this._applyEdgeFocus();
+    }
+
+    _applyEdgeFocus() {
+        const svg = this.renderRoot.querySelector('.df-svg');
+        if (!svg) {
+            return;
+        }
+        let focusCard = this._hoveredCard && this._hoveredCard.isConnected ? this._hoveredCard : null;
+        if (!focusCard) {
+            focusCard = this.renderRoot.querySelector('.node-card.focused');
+        }
+        const card = focusCard ? focusCard.dataset.dfIndex : null;
+        const hot = [];
+        for (const path of svg.querySelectorAll('.df-path')) {
+            const connected = card != null && (path.dataset.from === card || path.dataset.to === card);
+            path.classList.toggle('df-hot', connected);
+            if (connected) {
+                hot.push(path);
+            }
+        }
+        for (const path of hot) {
+            svg.appendChild(path);
+        }
+        svg.classList.toggle('df-focus', hot.length > 0);
+    }
+
     _drawDataFlow() {
         const svg = this.renderRoot.querySelector('.df-svg');
         const tree = svg ? svg.parentElement : null;
         if (!svg || !tree) {
             return;
         }
+        tree.style.transform = '';
+        tree.style.marginBottom = '';
         svg.style.width = tree.scrollWidth + 'px';
         svg.style.height = tree.scrollHeight + 'px';
         svg.querySelectorAll('.df-path').forEach(p => p.remove());
+        if (this._edgesHidden) {
+            this._applyFit(tree);
+            this._revealFocus(tree);
+            return;
+        }
 
-        const treeRect = tree.getBoundingClientRect();
-        const producers = {};
-        tree.querySelectorAll('.node-card[data-output-key]').forEach(n => {
-            const key = n.getAttribute('data-output-key');
-            if (key) {
-                (producers[key] = producers[key] || []).push(n);
-            }
+        const origin = tree.getBoundingClientRect();
+        const cards = [...tree.querySelectorAll('.node-card')];
+        const edges = this._collectEdges(cards, origin);
+        const obstacles = cards
+            .concat([...tree.querySelectorAll('.condition-label')])
+            .concat([...tree.querySelectorAll('.async-badge')].filter(b => !b.closest('.node-card')))
+            .map(el => relativeRect(el, origin));
+        const routes = routeDataFlow(edges, obstacles, treeConnectors(tree, origin));
+        edges.forEach((edge, i) => {
+            const d = routes[i] ? roundedPath(routes[i]) : curvePath(edge.from.x, edge.from.y, edge.to.x, edge.to.y);
+            this._drawEdge(svg, edge, d);
         });
-        tree.querySelectorAll('.node-card[data-input-keys]').forEach(consumer => {
-            const keys = consumer.getAttribute('data-input-keys');
-            if (!keys) {
-                return;
-            }
-            const cRect = consumer.getBoundingClientRect();
-            const cx = cRect.left + cRect.width / 2 - treeRect.left;
-            const cy = cRect.top - treeRect.top;
-            keys.split(',').forEach(key => {
-                (producers[key] || []).forEach(producer => {
-                    if (producer === consumer || producer.contains(consumer) || consumer.contains(producer)) {
-                        return;
-                    }
-                    const pRect = producer.getBoundingClientRect();
-                    const px = pRect.left + pRect.width / 2 - treeRect.left;
-                    const py = pRect.bottom - treeRect.top;
-                    this._drawEdge(svg, px, py, cx, cy, producer.getAttribute('data-output-color') || '#999', this._markerId(key));
-                });
-            });
-        });
+        this._applyEdgeFocus();
+        this._applyFit(tree);
+        this._revealFocus(tree);
     }
 
-    _drawEdge(svg, x1, y1, x2, y2, color, markerId) {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const bend = Math.min(60, dist * 0.3);
-        const cpx = (x1 + x2) / 2 + (-dy / (dist || 1) * bend);
-        const cpy = (y1 + y2) / 2 + (dx / (dist || 1) * bend);
+    /**
+     * Scales the tree down to the width of its scroll container once its edges are routed, so routing keeps working
+     * on unscaled coordinates. The negative margin gives back the height the transform does not release.
+     */
+    _applyFit(tree) {
+        if (!this._fit) {
+            return;
+        }
+        const available = tree.parentElement.clientWidth;
+        const needed = tree.scrollWidth;
+        if (needed <= available || available <= 0) {
+            return;
+        }
+        const scale = Math.max(MIN_FIT_SCALE, available / needed);
+        tree.style.transformOrigin = '0 0';
+        tree.style.transform = 'scale(' + scale + ')';
+        tree.style.marginBottom = (-(tree.offsetHeight * (1 - scale))) + 'px';
+    }
+
+    _revealFocus(tree) {
+        if (!this._focusPending) {
+            return;
+        }
+        const card = tree.querySelector('.node-card.focused');
+        if (card) {
+            this._focusPending = false;
+            card.scrollIntoView({ block: 'center', inline: 'center' });
+        }
+    }
+
+    _collectEdges(cards, origin) {
+        const producers = {};
+        cards.forEach((card, index) => {
+            card.dataset.dfIndex = String(index);
+            const key = card.getAttribute('data-output-key');
+            if (key) {
+                (producers[key] = producers[key] || []).push(card);
+            }
+        });
+        const edges = [];
+        for (const consumer of cards) {
+            const keys = consumer.getAttribute('data-input-keys');
+            if (!keys) {
+                continue;
+            }
+            for (const key of keys.split(',')) {
+                if (this._keyFilter && key !== this._keyFilter) {
+                    continue;
+                }
+                for (const producer of producers[key] || []) {
+                    if (producer === consumer || producer.contains(consumer) || consumer.contains(producer)) {
+                        continue;
+                    }
+                    edges.push({
+                        key,
+                        order: edges.length,
+                        color: producer.getAttribute('data-output-color') || '#999',
+                        fromCard: producer.dataset.dfIndex,
+                        toCard: consumer.dataset.dfIndex,
+                        from: portOf(producer, 'key-out', key, origin),
+                        to: portOf(consumer, 'key-in', key, origin),
+                    });
+                }
+            }
+        }
+        return edges;
+    }
+
+    _drawEdge(svg, edge, d) {
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', 'M' + x1 + ',' + y1 + ' Q' + cpx + ',' + cpy + ' ' + x2 + ',' + y2);
-        path.setAttribute('stroke', color);
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', edge.color);
         path.setAttribute('stroke-width', '1.8');
         path.setAttribute('stroke-dasharray', '6,4');
         path.setAttribute('fill', 'none');
         path.setAttribute('opacity', '0.55');
         path.setAttribute('class', 'df-path');
-        path.setAttribute('marker-end', 'url(#' + markerId + ')');
+        path.setAttribute('marker-end', 'url(#' + this._markerId(edge.key) + ')');
+        path.dataset.key = edge.key;
+        path.dataset.from = edge.fromCard;
+        path.dataset.to = edge.toCard;
         svg.appendChild(path);
     }
 }

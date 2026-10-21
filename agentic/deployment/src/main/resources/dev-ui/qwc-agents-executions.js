@@ -1,9 +1,12 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { JsonRpc } from 'jsonrpc';
+import { RouterController } from 'router-controller';
 import '@vaadin/button';
+import '@vaadin/checkbox';
 import '@vaadin/icon';
 import '@vaadin/select';
 import '@vaadin/progress-bar';
+import { goToAgentPage, rootIndexFor, rootKeyOf, syncAgentParams } from './agents-navigation.js';
 
 const TOPOLOGY = {
     AI_AGENT: { label: 'AI', css: 'ai' },
@@ -17,6 +20,12 @@ const TOPOLOGY = {
 };
 
 const ALL_SESSIONS = '__all__';
+
+const LIVE_INTERVAL_MILLIS = 2000;
+
+const LIVE_STALL_MILLIS = 4000;
+
+const LIVE_TIMEOUT_MILLIS = 15000;
 
 function topologyOf(name) {
     return TOPOLOGY[name] || TOPOLOGY.AI_AGENT;
@@ -41,6 +50,79 @@ function fmtDur(ms) {
 
 function fmtTokens(tokens) {
     return tokens < 1000 ? String(tokens) : (tokens / 1000).toFixed(1) + 'k';
+}
+
+/**
+ * Latest instant known for an invocation tree. A failed invocation never gets a finish time, so the latest instant of
+ * the invocation that failed is the closest known point to when the error happened.
+ */
+function latestMillis(invocation) {
+    let latest = invocation.done ? invocation.finishMillis : invocation.startMillis;
+    for (const tool of invocation.toolExecutions) {
+        if (tool.startMillis != null && tool.durationMillis != null) {
+            latest = Math.max(latest, tool.startMillis + tool.durationMillis);
+        }
+    }
+    for (const nested of invocation.nestedInvocations) {
+        latest = Math.max(latest, latestMillis(nested));
+    }
+    return latest;
+}
+
+/**
+ * Adds to {@code path} the unfinished invocations from the latest unfinished invocation of {@code agentId} up to the
+ * root, which is the chain an error went through. Unfinished invocations outside it, such as an async agent still
+ * running, are left out.
+ */
+function collectFailurePath(invocation, agentId, path) {
+    let found = false;
+    for (let i = invocation.nestedInvocations.length - 1; i >= 0 && !found; i--) {
+        found = collectFailurePath(invocation.nestedInvocations[i], agentId, path);
+    }
+    if (!found && !invocation.done && invocation.agentId === agentId) {
+        found = true;
+    }
+    if (found && !invocation.done) {
+        path.add(invocation);
+    }
+    return found;
+}
+
+function hasUnfinishedOutside(invocation, path) {
+    if (!invocation.done && !path.has(invocation)) {
+        return true;
+    }
+    for (const nested of invocation.nestedInvocations) {
+        if (hasUnfinishedOutside(nested, path)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function invokes(invocation, agentId) {
+    if (invocation.agentId === agentId) {
+        return true;
+    }
+    for (const nested of invocation.nestedInvocations) {
+        if (invokes(nested, agentId)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function findName(invocation, agentId) {
+    if (invocation.agentId === agentId) {
+        return invocation.name;
+    }
+    for (const nested of invocation.nestedInvocations) {
+        const name = findName(nested, agentId);
+        if (name) {
+            return name;
+        }
+    }
+    return null;
 }
 
 function mapToString(map) {
@@ -89,6 +171,7 @@ export class QwcAgentsExecutions extends LitElement {
             --c-ok: #10b981;
             --c-fail: #ef4444;
             --c-run: #3b82f6;
+            --c-warn: #d97706;
             --fg: var(--lumo-body-text-color);
             --fg2: var(--lumo-secondary-text-color);
             --fg3: var(--lumo-tertiary-text-color);
@@ -107,6 +190,15 @@ export class QwcAgentsExecutions extends LitElement {
         .toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 15px; flex-wrap: wrap; }
         .toolbar .root-name { font-weight: 600; }
         .toolbar .spacer { flex: 1; }
+        .focus-chip {
+            display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 10px; border-radius: 12px;
+            font-size: 12px; background: color-mix(in srgb, var(--c-par) 14%, var(--card));
+            border: 1px solid color-mix(in srgb, var(--c-par) 45%, var(--card));
+        }
+        .focus-chip button {
+            border: none; background: transparent; color: var(--fg2); cursor: pointer; font-size: 14px; line-height: 1;
+            padding: 0 4px;
+        }
         .content { flex: 1; overflow: auto; padding: 0 15px 15px; }
         .placeholder { padding: 20px; text-align: center; color: var(--fg2); }
 
@@ -141,6 +233,7 @@ export class QwcAgentsExecutions extends LitElement {
         .status-badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
         .st-ok { background: color-mix(in srgb, var(--c-ok) 18%, var(--card)); color: color-mix(in srgb, var(--c-ok) 60%, var(--fg)); }
         .st-fail { background: color-mix(in srgb, var(--c-fail) 18%, var(--card)); color: color-mix(in srgb, var(--c-fail) 65%, var(--fg)); }
+        .st-warn { background: color-mix(in srgb, var(--c-warn) 18%, var(--card)); color: color-mix(in srgb, var(--c-warn) 70%, var(--fg)); }
         .st-run { background: color-mix(in srgb, var(--c-run) 18%, var(--card)); color: color-mix(in srgb, var(--c-run) 65%, var(--fg)); }
         .execution-body {
             border: 1px solid var(--brd); border-top: none; border-radius: 0 0 var(--rad) var(--rad);
@@ -153,6 +246,7 @@ export class QwcAgentsExecutions extends LitElement {
         .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .st-dot-ok { background: var(--c-ok); }
         .st-dot-fail { background: var(--c-fail); }
+        .st-dot-warn { background: var(--c-warn); }
         .st-dot-run { background: var(--c-run); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
         .exec-agent { font-weight: 600; font-size: 14px; }
@@ -163,6 +257,11 @@ export class QwcAgentsExecutions extends LitElement {
             border: 1px solid color-mix(in srgb, var(--c-fail) 40%, var(--card));
             color: color-mix(in srgb, var(--c-fail) 70%, var(--fg));
             border-radius: var(--rad); padding: 8px 12px; margin-bottom: 8px; font-size: 12px;
+        }
+        .error-box.warn {
+            background: color-mix(in srgb, var(--c-warn) 10%, var(--card));
+            border-color: color-mix(in srgb, var(--c-warn) 40%, var(--card));
+            color: color-mix(in srgb, var(--c-warn) 75%, var(--fg));
         }
         .error-box code { font-size: 11px; word-break: break-all; }
         .error-box .root-cause { margin-top: 4px; }
@@ -177,6 +276,11 @@ export class QwcAgentsExecutions extends LitElement {
         .wf-table tr.wf-row { cursor: pointer; }
         .wf-table tr.wf-row:hover { background: var(--bg2); }
         .wf-table tr.wf-row.expanded { background: var(--bg2); }
+        .wf-table tr.wf-row.focus-row td:first-child { box-shadow: inset 3px 0 0 var(--c-par); }
+        .wf-table tr.wf-row.focus-row { background: color-mix(in srgb, var(--c-par) 8%, var(--card)); }
+        .wf-table tr.wf-row.failed-row { background: color-mix(in srgb, var(--c-fail) 8%, var(--card)); }
+        .wf-table tr.wf-row.failed-row td:first-child { box-shadow: inset 3px 0 0 var(--c-fail); }
+        .wf-failed { color: color-mix(in srgb, var(--c-fail) 75%, var(--fg)); font-weight: 600; }
         .wf-timeline-col { width: 35%; }
         .wf-agent { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
         .wf-indent { display: inline-block; width: 18px; }
@@ -194,6 +298,10 @@ export class QwcAgentsExecutions extends LitElement {
         .bar-rtr { background: var(--c-rtr); }
         .bar-star { background: var(--c-star); }
         .bar-tool { background: var(--c-tool); }
+        .wf-bar.bar-aborted {
+            background-image: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--c-fail) 55%, transparent) 4px 7px);
+            outline: 1px solid var(--c-fail);
+        }
         .wf-io { font-size: 11px; color: var(--fg3); white-space: nowrap; }
         .row-toggle {
             cursor: pointer; font-size: 10px; margin-right: 4px; display: inline-block;
@@ -230,6 +338,10 @@ export class QwcAgentsExecutions extends LitElement {
         .detail { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 12px; }
         .detail dt { color: var(--fg3); font-weight: 600; }
         .detail dd { margin: 0; }
+        .detail-link {
+            border: none; background: transparent; color: var(--lumo-primary-text-color); cursor: pointer;
+            padding: 0; font: inherit; text-decoration: underline;
+        }
         .detail pre {
             margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 11px;
             font-family: var(--lumo-font-family-monospace, monospace); color: var(--fg);
@@ -249,9 +361,13 @@ export class QwcAgentsExecutions extends LitElement {
         _collapsedRows: { state: true },
         _expandedRows: { state: true },
         _loadedAt: { state: true },
+        _focusAgentId: { state: true },
+        _live: { state: true },
+        _liveFailed: { state: true },
     };
 
     jsonRpc = new JsonRpc(this);
+    routerController = new RouterController(this);
 
     constructor() {
         super();
@@ -266,18 +382,32 @@ export class QwcAgentsExecutions extends LitElement {
         this._collapsedRows = new Set();
         this._expandedRows = new Set();
         this._loadedAt = null;
+        this._focusAgentId = null;
+        this._live = true;
+        this._liveFailed = false;
+        this._liveTimer = 0;
+        this._livePendingSince = 0;
+        this._version = null;
     }
 
     connectedCallback() {
         super.connectedCallback();
-        this._loadEntries();
+        this._focusAgentId = this.routerController.getQueryParameter('agent');
+        this._liveTimer = setInterval(() => this._pollVersion(), LIVE_INTERVAL_MILLIS);
+        this._loadEntries(this.routerController.getQueryParameter('root'));
     }
 
-    _loadEntries() {
+    disconnectedCallback() {
+        clearInterval(this._liveTimer);
+        this._liveTimer = 0;
+        super.disconnectedCallback();
+    }
+
+    _loadEntries(rootKey) {
         this.jsonRpc.getRootAgentEntries()
             .then(response => {
                 this._entries = response.result || [];
-                this._selectedIndex = this._entries.length > 0 ? this._entries[0].index : 0;
+                this._selectedIndex = rootIndexFor(this._entries, rootKey);
                 this._loadExecutions();
             })
             .catch(error => {
@@ -289,8 +419,25 @@ export class QwcAgentsExecutions extends LitElement {
     _loadExecutions() {
         this._loading = true;
         this._error = null;
-        this.jsonRpc.getExecutions({ index: this._selectedIndex })
+        this._version = null;
+        const index = this._selectedIndex;
+        this.jsonRpc.getExecutionsVersion({ index })
             .then(response => {
+                if (index === this._selectedIndex) {
+                    this._version = response.result;
+                }
+            })
+            .catch(() => null)
+            .finally(() => this._fetchExecutions(false));
+    }
+
+    _fetchExecutions(live) {
+        const index = this._selectedIndex;
+        return this.jsonRpc.getExecutions({ index })
+            .then(response => {
+                if (index !== this._selectedIndex) {
+                    return;
+                }
                 const result = response.result;
                 if (result.error) {
                     this._error = result.error;
@@ -306,15 +453,80 @@ export class QwcAgentsExecutions extends LitElement {
                 this._loading = false;
             })
             .catch(error => {
+                if (live) {
+                    throw error;
+                }
                 this._error = String(error);
                 this._loading = false;
             });
+    }
+
+    /**
+     * Polls the version of the executions and reloads them only when it changed. A poll that fails or stays pending,
+     * typically while the application restarts, marks the page as waiting. The root agents are reloaded once the
+     * application answers again, or when the version belongs to another root agent, since a restart may move them.
+     */
+    _pollVersion() {
+        const pendingFor = this._livePendingSince > 0 ? Date.now() - this._livePendingSince : 0;
+        if (pendingFor > LIVE_STALL_MILLIS && !this._liveFailed) {
+            this._liveFailed = true;
+        }
+        if (!this._live || (pendingFor > 0 && pendingFor < LIVE_TIMEOUT_MILLIS) || this._loading || document.hidden
+                || this._entries.length === 0) {
+            return;
+        }
+        const index = this._selectedIndex;
+        const since = Date.now();
+        this._livePendingSince = since;
+        this.jsonRpc.getExecutionsVersion({ index })
+            .then(response => {
+                if (index !== this._selectedIndex) {
+                    return null;
+                }
+                const rootKey = rootKeyOf(this._selectedEntry());
+                if (this._liveFailed || !String(response.result).startsWith(rootKey + '|')) {
+                    this._liveFailed = false;
+                    this._loadEntries(rootKey);
+                    return null;
+                }
+                if (response.result === this._version) {
+                    return null;
+                }
+                const version = response.result;
+                return this._fetchExecutions(true).then(() => {
+                    if (index === this._selectedIndex) {
+                        this._version = version;
+                    }
+                });
+            })
+            .catch(() => {
+                this._liveFailed = true;
+            })
+            .finally(() => {
+                if (this._livePendingSince === since) {
+                    this._livePendingSince = 0;
+                }
+            });
+    }
+
+    _selectedEntry() {
+        return this._entries.find(e => e.index === this._selectedIndex) || null;
+    }
+
+    _clearFocus() {
+        this._focusAgentId = null;
+        syncAgentParams(rootKeyOf(this._selectedEntry()), null);
+    }
+
+    _showInTopology(inv) {
+        goToAgentPage(this.routerController, 'qwc-agents-topology.js', rootKeyOf(this._selectedEntry()), inv.agentId);
     }
 
     _onRootSelected(e) {
         const index = parseInt(e.target.value, 10);
         if (!isNaN(index) && index !== this._selectedIndex) {
             this._selectedIndex = index;
+            this._clearFocus();
             this._sessionFilter = ALL_SESSIONS;
             this._collapsedGroups = new Map();
             this._collapsedRows = new Set();
@@ -356,7 +568,13 @@ export class QwcAgentsExecutions extends LitElement {
                     <vaadin-select label="Session (memoryId)" .items="${sessions}" .value="${this._sessionFilter}"
                         @value-changed="${e => { this._sessionFilter = e.target.value || ALL_SESSIONS; }}"></vaadin-select>
                 ` : nothing}
+                ${this._focusAgentId ? html`
+                    <span class="focus-chip" title="${this._focusAgentId}">Agent: ${this._focusName()}
+                        <button aria-label="Show every execution" title="Show every execution" @click="${() => this._clearFocus()}">&#215;</button>
+                    </span>` : nothing}
                 <vaadin-button theme="small" @click="${() => this._loadExecutions()}">Refresh</vaadin-button>
+                <vaadin-checkbox label="Live" title="Reload the executions as they happen" .checked="${this._live}"
+                    @checked-changed="${e => { this._live = e.detail.value; }}"></vaadin-checkbox>
                 <span class="spacer"></span>
                 <vaadin-button theme="small tertiary" title="Open the report generated by LangChain4j in a new tab"
                     ?disabled="${this._entries.length === 0}" @click="${() => this._openReport()}">
@@ -367,11 +585,48 @@ export class QwcAgentsExecutions extends LitElement {
         `;
     }
 
-    _renderReport() {
+    _focusName() {
+        if (this._report) {
+            for (const session of this._report.sessions) {
+                for (const execution of session.executions) {
+                    const name = findName(execution.topLevel, this._focusAgentId);
+                    if (name) {
+                        return name;
+                    }
+                }
+            }
+        }
+        return this._focusAgentId;
+    }
+
+    _visibleSessions() {
         const allSessions = this._report.sessions;
-        const sessions = this._sessionFilter === ALL_SESSIONS
+        let sessions = this._sessionFilter === ALL_SESSIONS
             ? allSessions
             : allSessions.filter(s => s.memoryId === this._sessionFilter);
+        if (this._focusAgentId) {
+            const focused = [];
+            for (const session of sessions) {
+                const executions = [];
+                const positions = [];
+                session.executions.forEach((execution, position) => {
+                    if (invokes(execution.topLevel, this._focusAgentId)) {
+                        executions.push(execution);
+                        positions.push(position);
+                    }
+                });
+                if (executions.length > 0) {
+                    focused.push(Object.assign({}, session, { executions, positions }));
+                }
+            }
+            sessions = focused;
+        }
+        return sessions;
+    }
+
+    _renderReport() {
+        const allSessions = this._report.sessions;
+        const sessions = this._visibleSessions();
         return html`
             <section>
                 <div class="section-header">
@@ -387,9 +642,11 @@ export class QwcAgentsExecutions extends LitElement {
                     <button class="tool-toggle" @click="${() => { this._toolsHidden = !this._toolsHidden; }}">Toggle Tools</button>
                 </div>
                 ${sessions.length === 0
-                    ? html`<div class="no-data">No executions recorded.</div>`
-                    : sessions.map(s => this._renderGroup(s, allSessions.indexOf(s)))}
-                <div class="footer">Loaded from the running application at ${this._loadedAt ? this._loadedAt.toLocaleTimeString() : ''}</div>
+                    ? html`<div class="no-data">${this._focusAgentId ? 'No execution of ' + this._focusName() + ' recorded.' : 'No executions recorded.'}</div>`
+                    : sessions.map((s, i) => this._renderGroup(s, i))}
+                <div class="footer">
+                    ${this._liveFailed ? 'Waiting for the application...' : html`Loaded from the running application at ${this._loadedAt ? this._loadedAt.toLocaleTimeString() : ''}`}
+                </div>
             </section>
         `;
     }
@@ -398,7 +655,7 @@ export class QwcAgentsExecutions extends LitElement {
         if (this._collapsedGroups.has(session.memoryId)) {
             return this._collapsedGroups.get(session.memoryId);
         }
-        return this._sessionFilter === ALL_SESSIONS && idx > 0;
+        return this._sessionFilter === ALL_SESSIONS && !this._focusAgentId && idx > 0;
     }
 
     _toggleGroup(session, idx) {
@@ -418,12 +675,13 @@ export class QwcAgentsExecutions extends LitElement {
                         <span class="section-count">${session.runs} run(s)</span>
                         ${session.success > 0 ? html`<span class="status-badge st-ok">${session.success} success</span>` : nothing}
                         ${session.failed > 0 ? html`<span class="status-badge st-fail">${session.failed} failed</span>` : nothing}
+                        ${session.completedWithError > 0 ? html`<span class="status-badge st-warn">${session.completedWithError} completed with error</span>` : nothing}
                         ${session.running > 0 ? html`<span class="status-badge st-run">in progress</span>` : nothing}
                     </div>
                 </div>
                 ${collapsed ? nothing : html`
                     <div class="execution-body">
-                        ${session.executions.map((e, i) => this._renderExecution(e, session.memoryId + '/' + i))}
+                        ${session.executions.map((e, i) => this._renderExecution(e, session.memoryId + '/' + (session.positions ? session.positions[i] : i)))}
                     </div>`}
             </div>
         `;
@@ -448,26 +706,44 @@ export class QwcAgentsExecutions extends LitElement {
                         : html`<span class="exec-time">${top.startTime} &#8594;</span>`}
                 </div>
                 ${execution.error ? html`
-                    <div class="error-box">
-                        <strong>Error in ${execution.error.agentName}:</strong>
+                    <div class="error-box ${execution.status === 'warn' ? 'warn' : ''}">
+                        <strong>Error in ${execution.error.agentName}${execution.status === 'warn' ? ' (the execution still completed)' : ''}:</strong>
                         <code title="${execution.error.type}">${execution.error.message}</code>
                         ${execution.error.rootCause ? html`<div class="root-cause">Caused by: <code>${execution.error.rootCause}</code></div>` : nothing}
                     </div>` : nothing}
-                ${hasWaterfall ? this._renderWaterfall(top, key) : nothing}
+                ${hasWaterfall ? this._renderWaterfall(top, key, this._failureOf(execution)) : nothing}
             </div>
         `;
     }
 
-    _renderWaterfall(top, key) {
+    _failureOf(execution) {
+        if (!execution.error) {
+            return null;
+        }
+        const path = new Set();
+        if (!collectFailurePath(execution.topLevel, execution.error.agentId, path) && !execution.topLevel.done) {
+            path.add(execution.topLevel);
+        }
+        const failedInvocation = path.size > 0 ? path.values().next().value : null;
+        return {
+            agentId: execution.error.agentId,
+            path,
+            failedAtMillis: failedInvocation ? latestMillis(failedInvocation) : null,
+            endMillis: hasUnfinishedOutside(execution.topLevel, path) ? null : latestMillis(execution.topLevel),
+        };
+    }
+
+    _renderWaterfall(top, key, failure) {
         const base = top.startMillis;
-        const totalMs = Math.max(1, top.done ? top.durationMillis : this._report.nowMillis - base);
+        const end = top.done ? top.finishMillis : failure && failure.endMillis != null ? failure.endMillis : this._report.nowMillis;
+        const totalMs = Math.max(1, end - base);
         const rows = [];
         this._flatten(top, 0, -1, rows, { next: 0 }, []);
         return html`
             <table class="wf-table">
                 <thead><tr><th>Agent</th><th>Duration</th><th>Tokens</th><th class="wf-timeline-col">Timeline</th><th>Input</th><th>Output</th></tr></thead>
                 <tbody>
-                    ${rows.map(row => this._isRowHidden(row, key) ? nothing : this._renderRow(row, key, base, totalMs))}
+                    ${rows.map(row => this._isRowHidden(row, key) ? nothing : this._renderRow(row, key, base, totalMs, failure))}
                 </tbody>
             </table>
         `;
@@ -519,7 +795,7 @@ export class QwcAgentsExecutions extends LitElement {
         this._expandedRows = rows;
     }
 
-    _renderRow(row, key, base, totalMs) {
+    _renderRow(row, key, base, totalMs, failure) {
         const rowKey = key + '#' + row.rowId;
         const expanded = this._expandedRows.has(rowKey);
         const indents = [];
@@ -528,19 +804,22 @@ export class QwcAgentsExecutions extends LitElement {
         }
         return row.kind === 'tool'
             ? html`${this._renderToolRow(row.data, indents, rowKey, expanded, base, totalMs)}${expanded ? this._renderToolDetail(row.data) : nothing}`
-            : html`${this._renderAgentRow(row, indents, rowKey, expanded, base, totalMs)}${expanded ? this._renderAgentDetail(row.data) : nothing}`;
+            : html`${this._renderAgentRow(row, indents, rowKey, expanded, base, totalMs, failure)}${expanded ? this._renderAgentDetail(row.data, failure) : nothing}`;
     }
 
-    _renderAgentRow(row, indents, rowKey, expanded, base, totalMs) {
+    _renderAgentRow(row, indents, rowKey, expanded, base, totalMs, failure) {
         const inv = row.data;
         const t = topologyOf(inv.topology);
-        const durMs = inv.done ? inv.durationMillis : this._report.nowMillis - inv.startMillis;
-        const leftPct = Math.max(0, (inv.startMillis - base) / totalMs * 100);
-        const widthPct = Math.max(0.4, durMs / totalMs * 100);
+        const failed = failure != null && failure.path.has(inv);
+        const failedHere = failed && inv.agentId === failure.agentId;
+        const end = failed && failure.failedAtMillis != null ? failure.failedAtMillis : this._report.nowMillis;
+        const durMs = inv.done ? inv.durationMillis : end - inv.startMillis;
+        const leftPct = Math.min(99.6, Math.max(0, (inv.startMillis - base) / totalMs * 100));
+        const widthPct = Math.min(100 - leftPct, Math.max(0.4, durMs / totalMs * 100));
         const inputs = Object.keys(inv.inputs).length > 0 ? mapToString(inv.inputs) : null;
         const collapsed = this._collapsedRows.has(rowKey);
         return html`
-            <tr class="wf-row ${expanded ? 'expanded' : ''}" title="Click to show the full inputs and output"
+            <tr class="wf-row ${expanded ? 'expanded' : ''} ${failedHere ? 'failed-row' : ''} ${inv.agentId === this._focusAgentId ? 'focus-row' : ''}" title="Click to show the full inputs and output"
                 @click="${() => this._toggleDetail(rowKey)}">
                 <td><div class="wf-agent">
                     ${indents}
@@ -548,12 +827,13 @@ export class QwcAgentsExecutions extends LitElement {
                     ${row.hasChildren ? html`<span class="row-toggle ${collapsed ? 'collapsed' : ''}" @click="${e => this._toggleRow(e, rowKey)}">&#9660;</span>` : nothing}
                     <span class="topology-badge ${t.css}">${t.label}</span> ${inv.name}
                     ${inv.iterationIndex >= 0 ? html`<span class="iter-tag">iter ${inv.iterationIndex}</span>` : nothing}
+                    ${failedHere ? html`<span class="failed-tag">error</span>` : nothing}
                 </div></td>
-                <td class="wf-dur">${inv.done ? fmtDur(inv.durationMillis) : html`<em>...</em>`}</td>
+                <td class="wf-dur">${inv.done ? fmtDur(inv.durationMillis) : failed ? html`<span class="wf-failed">failed</span>` : html`<em>...</em>`}</td>
                 <td class="wf-dur">${inv.done && inv.totalTokenCount > 0 ? fmtTokens(inv.totalTokenCount) : ''}</td>
                 <td><div class="wf-bar-track">
-                    <div class="wf-bar bar-${t.css}" style="left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;"
-                        title="${inv.name}: ${inv.done ? fmtDur(inv.durationMillis) : 'running'}"></div>
+                    <div class="wf-bar bar-${t.css} ${failed ? 'bar-aborted' : ''}" style="left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;"
+                        title="${inv.name}: ${inv.done ? fmtDur(inv.durationMillis) : failed ? 'failed' : 'running'}"></div>
                 </div></td>
                 <td class="wf-io" title="${inputs || ''}">${inputs ? truncate(inputs, 80) : ''}</td>
                 <td class="wf-io" title="${inv.done && inv.output != null ? inv.output : ''}">${inv.done && inv.output != null ? truncate(inv.output, 80) : ''}</td>
@@ -563,8 +843,8 @@ export class QwcAgentsExecutions extends LitElement {
 
     _renderToolRow(tool, indents, rowKey, expanded, base, totalMs) {
         const hasTiming = tool.startMillis != null && tool.durationMillis != null;
-        const leftPct = hasTiming ? Math.max(0, (tool.startMillis - base) / totalMs * 100) : 0;
-        const widthPct = hasTiming ? Math.max(0.4, tool.durationMillis / totalMs * 100) : 0.4;
+        const leftPct = hasTiming ? Math.min(99.6, Math.max(0, (tool.startMillis - base) / totalMs * 100)) : 0;
+        const widthPct = hasTiming ? Math.min(100 - leftPct, Math.max(0.4, tool.durationMillis / totalMs * 100)) : 0.4;
         return html`
             <tr class="wf-row tool-row ${expanded ? 'expanded' : ''}" title="Click to show the full request and result"
                 @click="${() => this._toggleDetail(rowKey)}">
@@ -586,13 +866,14 @@ export class QwcAgentsExecutions extends LitElement {
         `;
     }
 
-    _renderAgentDetail(inv) {
+    _renderAgentDetail(inv, failure) {
         const inputs = Object.entries(inv.inputs);
         return html`
             <tr class="detail-row"><td colspan="6">
                 <dl class="detail">
-                    <dt>Agent id</dt><dd><pre>${inv.agentId}</pre></dd>
-                    <dt>Started</dt><dd>${inv.startTime}${inv.done ? html` &#8594; ${inv.finishTime} (${fmtDur(inv.durationMillis)})` : ' (running)'}</dd>
+                    <dt>Agent id</dt><dd><pre>${inv.agentId}</pre>
+                        <button class="detail-link" @click="${() => this._showInTopology(inv)}">Show in topology</button></dd>
+                    <dt>Started</dt><dd>${inv.startTime}${inv.done ? html` &#8594; ${inv.finishTime} (${fmtDur(inv.durationMillis)})` : failure && failure.path.has(inv) ? ' (failed)' : ' (running)'}</dd>
                     ${inv.done ? html`<dt>Tokens</dt><dd>${inv.totalTokenCount}</dd>` : nothing}
                     ${inputs.map(([k, v]) => html`<dt>Input ${k}</dt><dd><pre>${v}</pre></dd>`)}
                     ${inv.done ? html`<dt>Output</dt><dd><pre>${inv.output != null ? inv.output : 'null'}</pre></dd>` : nothing}
