@@ -63,22 +63,36 @@ public class ModelAuthProviderFilter implements ResteasyReactiveClientRequestFil
             MultivaluedMap<String, Object> headers) implements ModelAuthProvider.Input {
     }
 
-    private static class ApplicationDefaultAuthProvider implements ModelAuthProvider {
+    static class ApplicationDefaultAuthProvider implements ModelAuthProvider {
 
         private static final String SCOPE_CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform";
         private static final String SCOPE_GENERATIVE_LANGUAGE = "https://www.googleapis.com/auth/generative-language.retriever";
 
+        private GoogleCredentials scopedCredentials;
+
         @Override
         public String getAuthorization(Input input) {
             try {
-                var credentials = GoogleCredentials
-                        .getApplicationDefault()
-                        .createScoped(List.of(SCOPE_GENERATIVE_LANGUAGE, SCOPE_CLOUD_PLATFORM));
+                var credentials = scopedCredentials();
                 credentials.refreshIfExpired();
                 return "Bearer " + credentials.getAccessToken().getTokenValue();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+        }
+
+        // for credentials that support scopes, such as service account and Compute Engine credentials, createScoped
+        // returns a copy without an access token, so the scoped credentials are kept to reuse their token until it expires
+        private synchronized GoogleCredentials scopedCredentials() throws IOException {
+            if (scopedCredentials == null) {
+                scopedCredentials = applicationDefaultCredentials()
+                        .createScoped(List.of(SCOPE_GENERATIVE_LANGUAGE, SCOPE_CLOUD_PLATFORM));
+            }
+            return scopedCredentials;
+        }
+
+        GoogleCredentials applicationDefaultCredentials() throws IOException {
+            return GoogleCredentials.getApplicationDefault();
         }
     }
 }
