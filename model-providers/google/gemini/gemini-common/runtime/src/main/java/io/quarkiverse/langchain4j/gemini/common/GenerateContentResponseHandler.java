@@ -28,14 +28,14 @@ public final class GenerateContentResponseHandler {
                 List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
                 if (parts != null && !parts.isEmpty()) {
                     for (GenerateContentResponse.Candidate.Part part : parts) {
-                        if (part.thought() == null || !part.thought()) {
+                        if ((part.thought() == null || !part.thought()) && part.text() != null) {
                             text.append(part.text());
                         }
                     }
                 }
             }
         }
-        return text.toString();
+        return text.isEmpty() ? null : text.toString();
     }
 
     public static String getThoughts(GenerateContentResponse response) {
