@@ -18,12 +18,12 @@ import dev.langchain4j.agentic.declarative.ParallelExecutor;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.agentic.deployment.ParallelAgents;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class NonExecutorReturnTypeParallelExecutorTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(ParallelAgents.class, EveningPlannerAgent.class))
             .assertException(

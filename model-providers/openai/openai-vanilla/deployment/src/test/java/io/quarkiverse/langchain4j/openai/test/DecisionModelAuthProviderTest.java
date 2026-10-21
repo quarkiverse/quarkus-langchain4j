@@ -52,7 +52,7 @@ public class DecisionModelAuthProviderTest extends OpenAiBaseTest {
 
         model.decide(DecisionRequest.builder()
                 .input("Congratulations! You won a free cruise!")
-                .question("spam", YesNoQuestion.of("Is this message spam?"))
+                .question("spam", YesNoQuestion.from("Is this message spam?"))
                 .build());
 
         LoggedRequest loggedRequest = singleLoggedRequest();

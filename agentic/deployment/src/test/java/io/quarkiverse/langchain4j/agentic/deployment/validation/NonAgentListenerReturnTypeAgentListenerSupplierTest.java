@@ -11,12 +11,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agentic.declarative.AgentListenerSupplier;
 import dev.langchain4j.service.IllegalConfigurationException;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class NonAgentListenerReturnTypeAgentListenerSupplierTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(Agents.class, StyleReviewLoopAgentWithListener.class))
             .assertException(

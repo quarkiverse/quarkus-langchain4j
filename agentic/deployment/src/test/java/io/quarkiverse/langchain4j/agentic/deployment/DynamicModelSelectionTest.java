@@ -21,7 +21,7 @@ import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.Unremovable;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class DynamicModelSelectionTest extends OpenAiBaseTest {
 
@@ -29,7 +29,7 @@ public class DynamicModelSelectionTest extends OpenAiBaseTest {
     static final String SECOND_MODEL_RESPONSE = "second";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(EchoAgent.class, DynamicSequenceAgent.class, DynamicModelAgent.class,

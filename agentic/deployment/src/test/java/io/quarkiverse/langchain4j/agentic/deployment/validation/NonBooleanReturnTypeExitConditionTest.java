@@ -14,12 +14,12 @@ import dev.langchain4j.agentic.declarative.LoopCounter;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class NonBooleanReturnTypeExitConditionTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(Agents.class, StyleReviewLoopAgentWithCounter.class))
             .assertException(

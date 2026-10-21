@@ -35,13 +35,13 @@ To use it programmatically:
 @Inject DecisionModel decisionModel;
 
 DecisionRequest request = DecisionRequest.builder()
-        .input("Help! My payouts have been failing for 3 days.")
+        .inputFields(Map.of("ticket", "Help! My payouts have been failing for 3 days."))
         .question("team", ChoiceQuestion.builder()
                 .text("Which team should handle this ticket?")
                 .option("billing", "Payments, payouts, invoices, refunds")
                 .option("support", "Problems using the product")
                 .build())
-        .question("urgent", YesNoQuestion.of("Does this need attention today?"))
+        .question("urgent", YesNoQuestion.from("Does this need attention today?"))
         .build();
 
 DecisionResponse response = decisionModel.decide(request);
@@ -51,6 +51,8 @@ YesNoAnswer urgent = response.yesNo("urgent");
 ----
 
 All CDI beans implementing `DecisionModelListener` are automatically registered with the model.
+
+Rather than building the requests yourself, you can declare a xref:decision-services.adoc[Decision Service], an interface implemented by the decision model, or a xref:agentic.adoc#_decision_agents[decision agent] in an agentic system.
 
 === Multiple models
 
