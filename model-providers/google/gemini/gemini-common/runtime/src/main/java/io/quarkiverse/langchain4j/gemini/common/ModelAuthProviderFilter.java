@@ -23,8 +23,8 @@ public class ModelAuthProviderFilter implements ResteasyReactiveClientRequestFil
 
     private final ModelAuthProvider authorizer;
 
-    public ModelAuthProviderFilter(String modelId) {
-        this.authorizer = ModelAuthProvider.resolve(modelId).orElse(new ApplicationDefaultAuthProvider());
+    public ModelAuthProviderFilter(String configName) {
+        this.authorizer = ModelAuthProvider.resolve(configName).orElse(new ApplicationDefaultAuthProvider());
     }
 
     @Override

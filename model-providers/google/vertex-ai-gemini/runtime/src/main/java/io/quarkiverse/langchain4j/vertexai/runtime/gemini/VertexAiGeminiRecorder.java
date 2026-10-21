@@ -64,6 +64,7 @@ public class VertexAiGeminiRecorder {
                     .or(() -> Optional.of("https://" + location + "-aiplatform.googleapis.com"));
 
             var builder = VertexAiGeminiEmbeddingModel.builder()
+                    .configName(configName)
                     .baseUrl(baseUrl)
                     .location(location)
                     .projectId(projectId)
@@ -116,6 +117,7 @@ public class VertexAiGeminiRecorder {
                 throw new ConfigValidationException(createConfigProblems("project-id", configName));
             }
             var builder = VertexAiGeminiChatLanguageModel.builder()
+                    .configName(configName)
                     .baseUrl(baseUrl)
                     .location(location)
                     .projectId(projectId)
@@ -184,6 +186,7 @@ public class VertexAiGeminiRecorder {
             }
 
             var builder = VertexAiGeminiStreamingChatLanguageModel.builder()
+                    .configName(configName)
                     .baseUrl(baseUrl)
                     .location(location)
                     .projectId(projectId)
