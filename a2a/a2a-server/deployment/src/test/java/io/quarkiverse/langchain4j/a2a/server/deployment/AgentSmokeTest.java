@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.net.URL;
 
 import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.a2aproject.sdk.server.PublicAgentCard;
+import org.a2aproject.sdk.server.agentexecution.AgentExecutor;
 import org.a2aproject.sdk.spec.AgentCard;
 import org.a2aproject.sdk.spec.TransportProtocol;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.a2a.server.ExposeA2AAgent;
+import io.quarkiverse.langchain4j.a2a.server.runtime.executor.QuarkusBaseAgentExecutor;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.common.http.TestHTTPResource;
@@ -32,6 +35,9 @@ public class AgentSmokeTest {
 
     @PublicAgentCard
     Instance<AgentCard> agentCardInstance;
+
+    @Inject
+    Instance<AgentExecutor> agentExecutorInstance;
 
     @TestHTTPResource
     URL url;
@@ -70,5 +76,12 @@ public class AgentSmokeTest {
             assertThat(skill.tags()).containsOnly("weather");
             assertThat(skill.examples()).containsOnly("weather in LA, CA");
         });
+    }
+
+    @Test
+    public void testExecutor() {
+        assertThat(agentExecutorInstance.isResolvable()).isTrue();
+        AgentExecutor agentExecutor = agentExecutorInstance.get();
+        assertThat(agentExecutor).isInstanceOf(QuarkusBaseAgentExecutor.class);
     }
 }
