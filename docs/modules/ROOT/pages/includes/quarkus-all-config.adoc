@@ -97,6 +97,184 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+h|[.extension-name]##LangChain4j A2A server##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-name]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-name[`+++quarkus.langchain4j.a2a.server.name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name under which the agent advertises itself on its Agent Card.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++${quarkus.application.name}+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-description]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-description[`+++quarkus.langchain4j.a2a.server.description+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.description+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A human-readable description of what the agent does, used by clients to decide whether to engage with it.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_DESCRIPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_DESCRIPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++empty+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-url]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-url[`+++quarkus.langchain4j.a2a.server.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL where the agent is available. When not set, it is derived from the address the HTTP server is actually bound to, preferring HTTPS when both are enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++the address the HTTP server is bound to+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-version]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-version[`+++quarkus.langchain4j.a2a.server.version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version of the agent
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++1.0.0+++`
+
+h|[[quarkus-langchain4j-a2a-server_section_quarkus-langchain4j-a2a-server-tenants]] [.section-name.section-level0]##link:#quarkus-langchain4j-a2a-server_section_quarkus-langchain4j-a2a-server-tenants[The identity of each agent exposed under a tenant, keyed by the tenant named on `@ExposeA2AAgent`]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-name]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-name[`+++quarkus.langchain4j.a2a.server.tenants."tenant".name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.tenants."tenant".name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name under which the agent advertises itself on its Agent Card.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++quarkus.langchain4j.a2a.server.name+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-description]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-description[`+++quarkus.langchain4j.a2a.server.tenants."tenant".description+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.tenants."tenant".description+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A human-readable description of what the agent does.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__DESCRIPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__DESCRIPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++quarkus.langchain4j.a2a.server.description+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-url]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-url[`+++quarkus.langchain4j.a2a.server.tenants."tenant".url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.tenants."tenant".url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL where the agent is available.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++quarkus.langchain4j.a2a.server.url+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-version]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-tenants-tenant-version[`+++quarkus.langchain4j.a2a.server.tenants."tenant".version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.tenants."tenant".version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version of the agent.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_TENANTS__TENANT__VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++quarkus.langchain4j.a2a.server.version+++`
+
+
+
 h|[.extension-name]##LangChain4j Easy RAG##
 h|Type
 h|Default
