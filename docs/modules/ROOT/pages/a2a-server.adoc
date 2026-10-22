@@ -7,7 +7,7 @@ include::./includes/customization.adoc[]
 The https://a2a-protocol.org/latest/specification/[Agent2Agent (A2A) protocol] is an open standard that lets independent AI agents discover each other and collaborate as peers.
 Where MCP connects an agent to _tools_, A2A connects an agent to _other agents_.
 
-This extension exposes a Quarkus LangChain4j AI Service as an A2A agent: it publishes an Agent Card describing what the agent can do.
+This extension exposes a Quarkus LangChain4j AI Service as an A2A agent: it publishes an Agent Card describing what the agent can do and serves the protocol endpoints that let other agents talk to it.
 
 [IMPORTANT]
 ====
@@ -32,7 +32,7 @@ To *consume* a remote A2A agent, use the `@A2AClientAgent` annotation of the xre
 </dependency>
 ----
 
-The extension brings the JSON-RPC transport, which is the one A2A clients are most likely to support.
+The extension serves the JSON-RPC transport, which is the one A2A clients are most likely to support.
 
 == Exposing an AI Service
 
@@ -54,7 +54,7 @@ public interface WeatherAgent {
 }
 ----
 
-That is all that is required. At build time the extension produces the Agent Card served at `/.well-known/agent-card.json`:
+That is all that is required. At build time the extension generates the `AgentExecutor` that the A2A runtime invokes, and produces the Agent Card served at `/.well-known/agent-card.json`:
 
 [source,json]
 ----
@@ -85,6 +85,11 @@ That is all that is required. At build time the extension produces the Agent Car
 Every skill must declare at least one tag, since the A2A specification requires it, and the build fails with a clear message if one is missing.
 ====
 
+[NOTE]
+====
+The agent denies every request, in dev mode too, until the application says who may read the tasks it works on, through a `TaskAuthorizationProvider` bean or by setting `a2a.authorization.required=false`; `%dev.a2a.authorization.required=false` is enough to try it locally. See <<Task authorization>>.
+====
+
 == Describing the agent
 
 The identity of the agent belongs to the application, not to any single class, so it is configured rather than annotated:
@@ -109,12 +114,125 @@ quarkus.langchain4j.a2a.server.url=https://agents.example.com
 
 == Supported method signatures
 
-The exposed type must be an AI Service interface with exactly one abstract method.
-The method has to return the agent's answer itself as a `String`, so a `void` method fails the build, and so does one returning any other type, `Multi`, `Uni`, `CompletionStage`, `Future`, `TokenStream` and `Result` included.
+The exposed type must be an AI Service interface with exactly one abstract method. Its parameter has to be a `String`, which is filled with the text the client sent.
+
+Any other parameter fails the build, since there would be nothing to fill it with, and so does one of any other type.
+The method also has to return the answer itself as a `String`: its return value is what the client receives as a text part, so a `void` method fails the build, and so does one returning any other type, `Multi`, `Uni`, `CompletionStage`, `Future`, `TokenStream` and `Result` included.
+
+== Protocol version negotiation
+
+Clients declare which version of the protocol they speak through the `A2A-Version` header, and
+https://a2a-protocol.org/latest/specification/#362-server-responsibilities[section 3.6.2] of the specification tells
+agents to assume `0.3` when it is absent.
+Since this extension serves `1.0` only, sending a message without the header fails with `VersionNotSupportedError`:
+
+[source,bash]
+----
+# rejected: no version header, so 0.3 is assumed
+curl -X POST http://localhost:8080/ -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":"1","method":"SendMessage","params":{...}}'
+
+# accepted
+curl -X POST http://localhost:8080/ -H 'Content-Type: application/json' -H 'A2A-Version: 1.0' \
+  -d '{"jsonrpc":"2.0","id":"1","method":"SendMessage","params":{...}}'
+----
+
+The check covers every operation, not only message sending, so a call without the header is refused whichever
+method it names.
+
+A proper A2A client sends the header on its own, including the one behind `@A2AClientAgent`, so this only shows
+up when calling the endpoints by hand, with `curl` or an HTTP test client.
+
+== Security
+
+The endpoints are served by the A2A SDK's reference implementations as Vert.x routes on the application's HTTP
+server. The extension adds no authentication of its own, so an application that brings no security extension serves
+them anonymously: anyone who can reach the port can send a message. Which tasks they can list and read is up to the
+`TaskAuthorizationProvider`; see <<Task authorization>>.
+
+Quarkus security applies to these routes like it does to any other. Adding an extension such as `quarkus-oidc` or
+`quarkus-elytron-security-properties-file`, and configuring it for the paths the transports serve, is what puts an
+identity in front of the agent.
+
+=== Task authorization
+
+The SDK asks a `TaskAuthorizationProvider` who may create, read and write each task, so that a server cannot hand one
+caller's task to another. A refusal reaches the client as `TaskNotFoundError` rather than as an authorization failure,
+because the SDK does not reveal whether the task exists.
+
+Unless the application supplies a provider of its own, the extension supplies one that denies every task operation,
+the first message included, in every launch mode, and says so with a warning at startup. Declaring a `TaskAuthorizationProvider` bean is all
+it takes to replace it. This one lets whoever created a task, as authenticated by the application's security
+extension, read and write it:
+
+[source,java]
+----
+@ApplicationScoped
+public class OwnerOnlyTaskAuthorizationProvider implements TaskAuthorizationProvider {
+
+    private final ConcurrentMap<String, String> owners = new ConcurrentHashMap<>();
+
+    @Override
+    public boolean checkCreate(ServerCallContext context, TaskOperation operation) {
+        return context.getUser() != null && context.getUser().isAuthenticated();
+    }
+
+    @Override
+    public boolean checkRead(ServerCallContext context, String taskId, TaskOperation operation) {
+        return isOwner(context, taskId);
+    }
+
+    @Override
+    public boolean checkWrite(ServerCallContext context, String taskId, TaskOperation operation) {
+        return isOwner(context, taskId);
+    }
+
+    @Override
+    public boolean isTaskRecorded(String taskId) {
+        return owners.containsKey(taskId);
+    }
+
+    @Override
+    public void recordOwnership(ServerCallContext context, String taskId, TaskOperation operation) {
+        owners.putIfAbsent(taskId, context.getUser().getUsername());
+    }
+
+    private boolean isOwner(ServerCallContext context, String taskId) {
+        String owner = owners.get(taskId);
+        return owner != null && context.getUser() != null && owner.equals(context.getUser().getUsername());
+    }
+}
+----
+
+The SDK looks the provider up as a bean without qualifiers, and ignores two of them as ambiguous, so the build fails if
+the application declares more than one.
+
+When every caller that reaches the endpoint may see every task, such as in a single-user deployment, turn the check
+off instead with `a2a.authorization.required=false`, in lowercase: the SDK reads any value but `true` as off, while the extension only steps aside for `false`, so startup fails on a value such as `FALSE` that the two would read differently. Any caller can then list and read every task, and a warning at startup says
+so. Like `quarkus.security.auth.enabled-in-dev-mode`, it can be turned off for local development only:
+
+[source,properties]
+----
+%dev.a2a.authorization.required=false
+----
+
+A provider of the application's own is still consulted when the check is off.
+
+== Slow agents
+
+A2A operations block by default: unless the client asks for `returnImmediately`, the server holds the request until the task reaches a terminal state.
+The SDK gives that wait a budget of 30 seconds, which an agent backed by a large model can exceed.
+Raise it through the SDK's own property, which is not namespaced under `quarkus.`:
+
+[source,properties]
+----
+a2a.blocking.agent.timeout.seconds=120
+----
 
 == Current limitations
 
-- *The Agent Card declares no security schemes*, so a client learns that the endpoints are protected only when its requests are refused.
+- *Task ownership is not modelled.* The extension's own `TaskAuthorizationProvider` denies everything, so restricting each task to whoever created it takes a provider of the application's own; once the application turns the check off, any caller reaching the endpoint can list and read every task. See <<Task authorization>>.
+- *The Agent Card declares no security schemes*, so a client learns that the endpoints are protected only when its requests are refused. See <<Security>>.
 - *Agent Card signing* is not performed. The specification describes JWS signatures in https://a2a-protocol.org/latest/specification/#84-agent-card-signing[section 8.4]; the SDK models the field but does not sign or verify.
 
 == Configuration reference

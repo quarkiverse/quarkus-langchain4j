@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.deployment.DotNames.COMPLETION_STAGE;
 import static io.quarkiverse.langchain4j.deployment.DotNames.MULTI;
 import static io.quarkiverse.langchain4j.deployment.DotNames.UNI;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,9 +17,15 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.a2aproject.sdk.server.PublicAgentCard;
+import org.a2aproject.sdk.server.agentexecution.AgentExecutor;
+import org.a2aproject.sdk.server.agentexecution.RequestContext;
+import org.a2aproject.sdk.server.auth.TaskAuthorizationProvider;
 import org.a2aproject.sdk.spec.AgentCapabilities;
 import org.a2aproject.sdk.spec.AgentCard;
 import org.a2aproject.sdk.spec.AgentSkill;
@@ -39,15 +46,25 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.a2a.server.ExposeA2AAgent;
+import io.quarkiverse.langchain4j.a2a.server.runtime.A2AEventBusStarter;
 import io.quarkiverse.langchain4j.a2a.server.runtime.A2AServerRecorder;
+import io.quarkiverse.langchain4j.a2a.server.runtime.authorization.DenyingTaskAuthorizationProvider;
 import io.quarkiverse.langchain4j.a2a.server.runtime.card.AgentCardProducer;
 import io.quarkiverse.langchain4j.a2a.server.runtime.card.ConfigCardBuilderCustomizer;
 import io.quarkiverse.langchain4j.a2a.server.runtime.card.DetectedTransports;
 import io.quarkiverse.langchain4j.a2a.server.runtime.card.ExposedAgent;
+import io.quarkiverse.langchain4j.a2a.server.runtime.executor.QuarkusBaseAgentExecutor;
 import io.quarkiverse.langchain4j.deployment.AiServicesUtil;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
+import io.quarkus.arc.deployment.BeanContainerBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
+import io.quarkus.arc.processor.BeanInfo;
+import io.quarkus.arc.processor.BeanResolver;
 import io.quarkus.arc.processor.DotNames;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -56,6 +73,12 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.gizmo.ClassCreator;
+import io.quarkus.gizmo.ClassOutput;
+import io.quarkus.gizmo.FieldDescriptor;
+import io.quarkus.gizmo.MethodCreator;
+import io.quarkus.gizmo.MethodDescriptor;
+import io.quarkus.gizmo.ResultHandle;
 
 public class A2AServerProcessor {
 
@@ -82,6 +105,8 @@ public class A2AServerProcessor {
             LangChain4jDotNames.TOKEN_STREAM,
             LangChain4jDotNames.RESULT);
 
+    private static final String EVENT_BUS_INITIALIZER = "org.a2aproject.sdk.server.events.MainEventBusProcessorInitializer";
+
     /**
      * Marker class of each reference implementation, mapped to the transport it serves. Iteration order determines
      * the order of {@code supportedInterfaces} on the Agent Card, whose first entry is the preferred one.
@@ -99,30 +124,35 @@ public class A2AServerProcessor {
     }
 
     /**
-     * With no agent to expose there is no card to build, so the beans building it are vetoed.
+     * With no agent to expose there is no card to build and no task to authorize, so the beans providing them are
+     * vetoed.
      */
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     public void beans(CombinedIndexBuildItem indexBuildItem,
             A2AServerRecorder recorder,
             BuildProducer<AnnotationsTransformerBuildItem> annotationsTransformerProducer,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer) {
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer) {
 
         IndexView index = indexBuildItem.getIndex();
         Collection<AnnotationInstance> exposeInstances = index.getAnnotations(ExposeA2AAgent.class);
         if (exposeInstances.isEmpty()) {
             annotationsTransformerProducer.produce(new AnnotationsTransformerBuildItem(vetoingClassTransformation(
-                    Set.of(AgentCardProducer.class.getName(), ConfigCardBuilderCustomizer.class.getName()))));
+                    Set.of(AgentCardProducer.class.getName(), ConfigCardBuilderCustomizer.class.getName(),
+                            DenyingTaskAuthorizationProvider.class.getName()))));
             return;
         }
         validateSingleAgent(exposeInstances);
 
         createDetectedTransportsBean(recorder, syntheticBeanProducer);
+        ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
         for (AnnotationInstance exposeInstance : exposeInstances) {
             ClassInfo targetClass = exposeInstance.target().asClass();
             MethodInfo aiServiceMethod = determineExposedMethod(targetClass, index);
 
             createAgentCardBean(recorder, syntheticBeanProducer, exposeInstance, aiServiceMethod);
+            generateAgentExecutor(targetClass, aiServiceMethod, generatedBeanOutput);
         }
     }
 
@@ -206,6 +236,64 @@ public class A2AServerProcessor {
     }
 
     /**
+     * The SDK reports a denied task operation as {@code TaskNotFoundError}, and serves every task to every caller
+     * once the check is off, neither of which the application would otherwise hear about.
+     */
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void reportTaskAuthorization(CombinedIndexBuildItem indexBuildItem,
+            A2AServerRecorder recorder,
+            BeanContainerBuildItem beanContainerBuildItem) {
+        if (indexBuildItem.getIndex().getAnnotations(ExposeA2AAgent.class).isEmpty()) {
+            return;
+        }
+        recorder.reportTaskAuthorization();
+    }
+
+    /**
+     * The SDK looks the provider up through an unqualified {@code Instance} and uses it only if it resolves, so two
+     * providers of the application's own would both be ignored, without a word.
+     */
+    @BuildStep
+    void rejectAmbiguousTaskAuthorizationProviders(CombinedIndexBuildItem indexBuildItem,
+            ValidationPhaseBuildItem validationPhaseBuildItem,
+            BuildProducer<ValidationErrorBuildItem> validationErrorProducer) {
+        if (indexBuildItem.getIndex().getAnnotations(ExposeA2AAgent.class).isEmpty()) {
+            return;
+        }
+        BeanResolver beanResolver = validationPhaseBuildItem.getBeanResolver();
+        Set<BeanInfo> providers = beanResolver.resolveBeans(ClassType.create(TaskAuthorizationProvider.class),
+                AnnotationInstance.builder(DotNames.DEFAULT).build());
+        try {
+            beanResolver.resolveAmbiguity(providers);
+        } catch (AmbiguousResolutionException e) {
+            List<String> providerClasses = new ArrayList<>();
+            for (BeanInfo provider : providers) {
+                if (!provider.isDefaultBean()) {
+                    providerClasses.add(provider.getBeanClass().toString());
+                }
+            }
+            validationErrorProducer.produce(new ValidationErrorBuildItem(new DeploymentException(
+                    "There is more than one TaskAuthorizationProvider bean, " + providerClasses
+                            + ", so the A2A Java SDK would use none of them. Keep one")));
+        }
+    }
+
+    /**
+     * The SDK's {@code MainEventBusProcessorInitializer} observes {@code @Initialized(ApplicationScoped.class)},
+     * which Quarkus fires during static initialization. {@link A2AEventBusStarter} replaces it, starting the
+     * processor at runtime instead.
+     *
+     * @see <a href="https://github.com/a2aproject/a2a-java/issues/1032">a2a-java#1032: no native-image
+     *      reachability metadata</a>
+     */
+    @BuildStep
+    void vetoEagerEventBusInitializer(BuildProducer<AnnotationsTransformerBuildItem> annotationsTransformerProducer) {
+        annotationsTransformerProducer.produce(new AnnotationsTransformerBuildItem(
+                vetoingClassTransformation(Set.of(EVENT_BUS_INITIALIZER))));
+    }
+
+    /**
      * Identifies which parameter carries the text the client sent, following the same rules an AI Service uses:
      * an explicit {@code @UserMessage} wins, otherwise the only parameter that is not a memory id qualifies.
      */
@@ -229,6 +317,31 @@ public class A2AServerProcessor {
                     + "'@UserMessage'");
         }
         return candidates.get(0);
+    }
+
+    /**
+     * Maps a parameter of the AI Service method onto the part of the A2A request that feeds it. Only one source
+     * exists: the text the client sent.
+     */
+    private ResultHandle loadParameter(MethodCreator invoke, MethodParameterInfo parameter,
+            MethodParameterInfo userMessageParam) {
+        if (!DotNames.STRING.equals(parameter.type().name())) {
+            throw new DeploymentException("Parameter '" + parameterLabel(parameter) + "' is of type '"
+                    + parameter.type().name() + "', but an A2A request can only supply Strings");
+        }
+        if (parameter.position() == userMessageParam.position()) {
+            return invoke.invokeVirtualMethod(
+                    MethodDescriptor.ofMethod(RequestContext.class, "getUserInput", String.class, String.class),
+                    invoke.getMethodParam(0), invoke.load("\n"));
+        }
+        throw new DeploymentException("Parameter '" + parameterLabel(parameter) + "' cannot be filled from an A2A "
+                + "request. Only the message itself is available");
+    }
+
+    private String parameterLabel(MethodParameterInfo parameter) {
+        String name = parameter.name();
+        return (name != null ? name : "#" + parameter.position()) + "' of '"
+                + parameter.method().declaringClass().name() + "#" + parameter.method().name();
     }
 
     /**
@@ -302,5 +415,81 @@ public class A2AServerProcessor {
                 .addQualifier(PUBLIC_AGENT_CARD)
                 .unremovable();
         syntheticBeanProducer.produce(configurator.done());
+    }
+
+    /**
+     * Generates an implementation of {@link AgentExecutor} that looks something like:
+     *
+     * <pre>
+     * &#64;Singleton
+     * public class WeatherAgent$AgentExecutor extends QuarkusBaseAgentExecutor {
+     *
+     *     private final WeatherAgent aiService;
+     *
+     *     &#64;Inject
+     *     public WeatherAgent$AgentExecutor(WeatherAgent aiService) {
+     *         this.aiService = aiService;
+     *     }
+     *
+     *     protected List<Part<?>> invoke(RequestContext context) {
+     *         String aiServiceResult = aiService.chat(context.getUserInput("\n"));
+     *         return stringResultToParts(aiServiceResult);
+     *     }
+     * }
+     * </pre>
+     * <p>
+     * The {@code String} result travels as a {@code TextPart}, matching the output mode the Agent Card advertises.
+     * The class is named after the full binary name of the target, so member interfaces with the same simple name do
+     * not collide.
+     */
+    private void generateAgentExecutor(ClassInfo classInfo, MethodInfo aiServiceMethod, ClassOutput classOutput) {
+        String implClassName = classInfo.name().toString() + "$AgentExecutor";
+        ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
+                .classOutput(classOutput)
+                .className(implClassName)
+                .superClass(QuarkusBaseAgentExecutor.class);
+        try (ClassCreator classCreator = classCreatorBuilder.build()) {
+            classCreator.addAnnotation(Singleton.class);
+
+            FieldDescriptor aiServiceField = classCreator.getFieldCreator("aiService", classInfo.name().toString())
+                    .setModifiers(Modifier.PRIVATE | Modifier.FINAL)
+                    .getFieldDescriptor();
+            {
+                MethodCreator ctor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
+                        classInfo.name().toString());
+                ctor.setModifiers(Modifier.PUBLIC);
+                ctor.addAnnotation(Inject.class);
+                ctor.invokeSpecialMethod(MethodDescriptor.ofConstructor(QuarkusBaseAgentExecutor.class),
+                        ctor.getThis());
+                ctor.writeInstanceField(aiServiceField, ctor.getThis(),
+                        ctor.getMethodParam(0));
+                ctor.returnValue(null);
+            }
+
+            {
+                MethodCreator invoke = classCreator
+                        .getMethodCreator(MethodDescriptor.ofMethod(implClassName, "invoke", List.class,
+                                RequestContext.class));
+                invoke.setModifiers(Modifier.PROTECTED);
+
+                List<MethodParameterInfo> aiServiceMethodParams = aiServiceMethod.parameters();
+                MethodParameterInfo userMessageParam = determineUserMessageParameter(aiServiceMethod);
+
+                List<ResultHandle> aiServiceMethodParamHandles = new ArrayList<>();
+                for (MethodParameterInfo parameter : aiServiceMethodParams) {
+                    aiServiceMethodParamHandles.add(loadParameter(invoke, parameter, userMessageParam));
+                }
+
+                ResultHandle aiServiceResultHandle = invoke.invokeInterfaceMethod(MethodDescriptor.of(aiServiceMethod),
+                        invoke.readInstanceField(aiServiceField, invoke.getThis()),
+                        aiServiceMethodParamHandles.toArray(new ResultHandle[aiServiceMethodParams.size()]));
+
+                ResultHandle result = invoke.invokeVirtualMethod(
+                        MethodDescriptor.ofMethod(implClassName, "stringResultToParts", List.class, String.class),
+                        invoke.getThis(), aiServiceResultHandle);
+
+                invoke.returnValue(result);
+            }
+        }
     }
 }
