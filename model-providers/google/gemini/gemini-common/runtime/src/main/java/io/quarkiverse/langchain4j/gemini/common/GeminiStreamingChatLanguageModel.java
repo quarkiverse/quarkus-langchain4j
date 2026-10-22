@@ -215,6 +215,19 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
 
         @Override
         public void accept(SseEvent<String> t) {
+            try {
+                handle(t);
+            } catch (Exception e) {
+                // Mutiny drops exceptions thrown from the item callback and cancels the stream without notifying the handler
+                try {
+                    handler.onError(e);
+                } catch (Exception e2) {
+                    log.warn("Exception while calling onError of the streaming response handler", e2);
+                }
+            }
+        }
+
+        private void handle(SseEvent<String> t) {
             handler.resetMappingTracking();
 
             ServerSentEvent rawEvent = new ServerSentEvent(t.name(), t.data());
