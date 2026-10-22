@@ -17,7 +17,7 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <!-- quarkus-aesh needs Quarkus 3.38 or newer -->
-        <quarkus.platform.version>3.40.0</quarkus.platform.version>
+        <quarkus.platform.version>4.0.0.Beta1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.1</surefire-plugin.version>
         <!-- 999-SNAPSHOT until a quarkus-langchain4j release contains the jitllm provider; the release
