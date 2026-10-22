@@ -166,11 +166,15 @@ class GeminiStreamingResponseBuilder {
 
         if (functionCallParts.isEmpty()) {
             return AiMessage.from(fullText.toString());
-        } else {
-            return AiMessage.from(functionCallParts.stream()
-                    .map(GenerateContentResponseHandler::toToolExecutionRequest)
-                    .toList());
         }
+        List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>(functionCallParts.size());
+        for (Part functionCallPart : functionCallParts) {
+            toolExecutionRequests.add(GenerateContentResponseHandler.toToolExecutionRequest(functionCallPart));
+        }
+        return AiMessage.builder()
+                .text(fullText.isEmpty() ? null : fullText.toString())
+                .toolExecutionRequests(toolExecutionRequests)
+                .build();
     }
 
     static FinishReason fromGFinishReasonToFinishReason(
