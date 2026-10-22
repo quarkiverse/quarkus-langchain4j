@@ -14,19 +14,18 @@ import io.quarkiverse.langchain4j.a2a.server.ExposeA2AAgent;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Every request is served by the one agent there is, so two would leave the server with no way of telling which
- * should answer.
+ * The tenant travels in the path of the HTTP transports, and the SDK refuses one holding anything that could change
+ * what the path means. An agent exposed under such a tenant could build, start, and never be reached.
  */
-public class TwoAgentsTest {
+public class InvalidTenantTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .withApplicationRoot(jar -> jar.addClasses(FirstAgent.class, SecondAgent.class))
+            .withApplicationRoot(jar -> jar.addClasses(TestAgent.class))
             .assertException(throwable -> Assertions.assertThat(throwable)
                     .isInstanceOf(DeploymentException.class)
-                    .hasMessageContaining(FirstAgent.class.getName())
-                    .hasMessageContaining(SecondAgent.class.getName())
-                    .hasMessageContaining("an application can only expose one agent"));
+                    .hasMessageContaining("weather/eu")
+                    .hasMessageContaining("can only hold letters, digits"));
 
     @Test
     public void test() {
@@ -34,15 +33,8 @@ public class TwoAgentsTest {
     }
 
     @RegisterAiService
-    @ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(id = "first", name = "First", description = "The first", tags = "one"))
-    public interface FirstAgent {
-
-        String chat(@UserMessage String question);
-    }
-
-    @RegisterAiService
-    @ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(id = "second", name = "Second", description = "The second", tags = "two"))
-    public interface SecondAgent {
+    @ExposeA2AAgent(tenant = "weather/eu", skills = @ExposeA2AAgent.Skill(id = "weather_search", name = "Search weather", description = "Helps with weather", tags = "weather"))
+    public interface TestAgent {
 
         String chat(@UserMessage String question);
     }

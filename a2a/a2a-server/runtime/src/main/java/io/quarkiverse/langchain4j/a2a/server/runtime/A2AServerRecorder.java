@@ -62,7 +62,7 @@ public class A2AServerRecorder {
             if (off) {
                 LOG.warnf("A2A task authorization is off (%s=false) and the application supplies no"
                         + " TaskAuthorizationProvider, so any caller that reaches the endpoint can list and read"
-                        + " every task",
+                        + " every task, whichever tenant created it",
                         DenyingTaskAuthorizationProvider.AUTHORIZATION_REQUIRED);
             } else {
                 LOG.warn("A2A task authorization is on but no TaskAuthorizationProvider can be resolved, so every"

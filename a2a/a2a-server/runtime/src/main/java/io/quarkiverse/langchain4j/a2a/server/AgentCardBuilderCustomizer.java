@@ -5,7 +5,9 @@ import org.a2aproject.sdk.spec.AgentCard;
 /**
  * Meant to be implemented by a CDI bean that provides arbitrary customization for {@link AgentCard.Builder}.
  * <p>
- * All implementations (that are registered as CDI beans) are taken into account.
+ * All implementations (that are registered as CDI beans) are taken into account. One qualified with
+ * {@link org.a2aproject.sdk.server.multitenancy.Tenant} customizes the card of the agent exposed under that tenant
+ * alone, and one with no such qualifier every card.
  */
 public interface AgentCardBuilderCustomizer extends Comparable<AgentCardBuilderCustomizer> {
 

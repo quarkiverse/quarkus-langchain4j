@@ -31,6 +31,12 @@
       <artifactId>a2a-java-sdk-reference-jsonrpc</artifactId>
       <version>${a2a.version}</version>
     </dependency>
+    <!-- Routes requests and Agent Cards to the agent exposed under the tenant they name -->
+    <dependency>
+      <groupId>org.a2aproject.sdk</groupId>
+      <artifactId>a2a-java-extras-multitenancy</artifactId>
+      <version>${a2a.version}</version>
+    </dependency>
     <!-- Opt-in: the reference implementations register their routes as soon as they are on the classpath -->
     <dependency>
       <groupId>org.a2aproject.sdk</groupId>

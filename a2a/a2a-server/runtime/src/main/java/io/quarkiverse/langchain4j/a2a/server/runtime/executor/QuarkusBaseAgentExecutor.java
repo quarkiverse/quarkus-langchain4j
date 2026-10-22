@@ -125,10 +125,26 @@ public abstract class QuarkusBaseAgentExecutor implements AgentExecutor {
 
     /**
      * The memory id an exposed method receives. An A2A context groups the interactions that belong together, which
-     * is what a memory id is.
+     * is what a memory id is, but chat memories are kept by id alone in a store every AI Service shares by default,
+     * and the {@code contextId} is the client's to choose. The agent of a tenant therefore keeps its conversations
+     * under the tenant as well, so that the same {@code contextId} sent to two tenants reaches two memories.
+     * <p>
+     * The ids are told apart by what follows the last {@code #}: a tenant's id ends with the tenant, which never
+     * contains one, while the id of the agent without a tenant either holds no {@code #} or ends with one, so no
+     * {@code contextId} can make that agent reach a tenant's memory.
+     *
+     * @param tenant the tenant the agent is exposed under, or {@code null} for the agent served to requests that name
+     *        none
      */
-    protected static String memoryId(RequestContext context) {
-        return context.getContextId();
+    protected static String memoryId(RequestContext context, String tenant) {
+        String contextId = context.getContextId();
+        if (tenant != null) {
+            return contextId + "#" + tenant;
+        }
+        if (contextId.indexOf('#') >= 0) {
+            return contextId + "#";
+        }
+        return contextId;
     }
 
     /**

@@ -133,6 +133,65 @@ public interface StoryCreator {
 
 The agentic module does not need to be present for the extension to work; it is detected when it is.
 
+== Serving several agents
+
+One application can expose several agents, each under a tenant of its own:
+
+[source,java]
+----
+@RegisterAiService
+@ExposeA2AAgent(tenant = "weather", skills = @ExposeA2AAgent.Skill(...))
+public interface WeatherAgent {
+    String chat(@UserMessage String question);
+}
+
+@RegisterAiService
+@ExposeA2AAgent(tenant = "stories", skills = @ExposeA2AAgent.Skill(...))
+public interface StoryAgent {
+    String chat(@UserMessage String question);
+}
+----
+
+A client names the tenant on every request, and each request is served by the agent exposed under it:
+
+|===
+|Transport |Where the tenant goes
+
+|JSON-RPC
+|The `tenant` field of the request's `params`
+
+|HTTP+JSON
+|The first segment of the path, as in `/weather/message:send`
+
+|gRPC
+|The `tenant` field of the request message
+|===
+
+The card of each tenant carries the tenant on its interfaces, which is what the specification tells a client to send.
+The A2A Java SDK serves it at `/.well-known/<tenant>/agent-card.json`, a convention of its own: the specification only defines `/.well-known/agent-card.json`.
+Its identity is configured under the tenant, and anything left unset falls back to what is configured for the server as a whole:
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.server.name=Example Agents
+quarkus.langchain4j.a2a.server.tenants.weather.name=Weather Agent
+quarkus.langchain4j.a2a.server.tenants.weather.description=Answers questions about the weather
+----
+
+At most one agent can be exposed without a tenant. It serves the requests that name none, and its card stays at `/.well-known/agent-card.json`.
+An application need not have one: requests naming no tenant are then refused.
+The specification leaves it to the server what becomes of a request naming a tenant no agent is exposed under.
+The SDK refuses it as invalid, unless the application produces an `@ExtendedAgentCard` without a tenant, in which case it hands the request to the agent exposed without one.
+Tenants are made of letters, digits, `_`, `.` and `-`, and the build fails on any other character, on `.` or `..` alone, on two agents under the same tenant, and on two agents without one.
+
+The `contextId` is the client's to choose, while chat memories are kept by id in a store the AI Services share, so the agent of a tenant receives its `@MemoryId` as `<contextId>#<tenant>`, and the agent without a tenant receives the `contextId` itself, or `<contextId>#` when it contains a `#`, so that no `contextId` can reach a tenant's memory.
+The same `contextId` sent to two tenants therefore reaches two conversations rather than one.
+
+An `AgentCardBuilderCustomizer` with no qualifier customizes every card, and one qualified `@Tenant("weather")` the card of that tenant alone.
+An extended card is produced per tenant the same way, as a bean qualified with both `@Tenant` and `@ExtendedAgentCard`.
+
+Routing on the tenant comes from the SDK's `a2a-java-extras-multitenancy` module, which the extension brings along.
+
 == Supported method signatures
 
 The exposed type must be an interface with exactly one method to expose (for an AI Service, one abstract method; for an agentic workflow, one method carrying a workflow annotation). Every parameter has to be a `String`, and each is filled from the incoming A2A request:
@@ -144,7 +203,7 @@ The exposed type must be an interface with exactly one method to expose (for an 
 |The text the client sent
 
 |A parameter annotated `@MemoryId`
-|The A2A `contextId`, which groups the interactions belonging to one conversation
+|The A2A `contextId`, which groups the interactions belonging to one conversation. See <<Serving several agents>> for how the tenant is added
 |===
 
 A parameter that matches neither fails the build, since there would be nothing to fill it with, and so does one of any other type, including a `@MemoryId` that is not a `String`.
@@ -275,6 +334,7 @@ public class ProviderCustomizer implements AgentCardBuilderCustomizer {
 
 Customizers implement `Comparable` and are applied in descending priority order, so a later one can override what an earlier one set.
 The extension fills the card from the annotation and the configuration before any customizer of the application runs, so a customizer can override any of those fields without declaring a priority.
+A customizer qualified with `@Tenant` applies to the card of that tenant alone, see <<Serving several agents>>.
 
 === The extended Agent Card
 
@@ -368,7 +428,7 @@ The SDK looks the provider up as a bean without qualifiers, and ignores two of t
 the application declares more than one.
 
 When every caller that reaches the endpoint may see every task, such as in a single-user deployment, turn the check
-off instead with `a2a.authorization.required=false`, in lowercase: the SDK reads any value but `true` as off, while the extension only steps aside for `false`, so startup fails on a value such as `FALSE` that the two would read differently. Any caller can then list and read every task, and a warning at startup says
+off instead with `a2a.authorization.required=false`, in lowercase: the SDK reads any value but `true` as off, while the extension only steps aside for `false`, so startup fails on a value such as `FALSE` that the two would read differently. Any caller can then list and read every task, whichever tenant created it, and a warning at startup says
 so. Like `quarkus.security.auth.enabled-in-dev-mode`, it can be turned off for local development only:
 
 [source,properties]
@@ -393,6 +453,7 @@ A client that asks for `returnImmediately` can cancel the task while the agent i
 
 == Current limitations
 
+- *Tasks are not partitioned by tenant.* The SDK keeps every tenant's tasks in one store, under ids that carry no tenant, so a client that knows the id of another tenant's task can read it. See <<Task authorization>>.
 - *Streaming carries the task's lifecycle, not the answer as it is produced.* `@ExposeA2AAgent(streaming = true)` serves https://a2a-protocol.org/latest/specification/#312-send-streaming-message[`SendStreamingMessage`], so a client is told how the task progresses, but the exposed method returns once and its result reaches the client as a single artifact.
 - *Task ownership is not modelled.* The extension's own `TaskAuthorizationProvider` denies everything, so restricting each task to whoever created it takes a provider of the application's own; once the application turns the check off, any caller reaching the endpoint can list and read every task. Conversations are not owned either: the `contextId` a client sends selects the chat memory, so a caller who knows another's `contextId` continues that conversation. See <<Task authorization>>.
 - *The Agent Card declares no security schemes.* An application that protects its endpoints has to say so on the card itself, through `AgentCardBuilderCustomizer`. See <<Security>>.

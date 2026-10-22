@@ -46,6 +46,16 @@ public @interface ExposeA2AAgent {
 
     Skill[] skills();
 
+    /**
+     * The tenant the agent is exposed under, which lets one application serve several agents. A client addresses
+     * it through the {@code tenant} field of a request, or through the path for the HTTP+JSON transport, and the A2A
+     * Java SDK serves its card at {@code /.well-known/<tenant>/agent-card.json}. Its name, description, version and
+     * URL are configured under {@code quarkus.langchain4j.a2a.server.tenants."<tenant>"}.
+     * <p>
+     * Left empty, the agent is the one served to requests that name no tenant, and at most one agent may be.
+     */
+    String tenant() default "";
+
     @Retention(RUNTIME)
     @Target(ElementType.ANNOTATION_TYPE)
     @interface Skill {

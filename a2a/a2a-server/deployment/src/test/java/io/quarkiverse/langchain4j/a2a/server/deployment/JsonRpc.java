@@ -20,11 +20,18 @@ public final class JsonRpc {
     }
 
     public static ValidatableResponse post(String body) {
+        return post("/", body);
+    }
+
+    /**
+     * The path matters to the JSON-RPC binding: whatever follows the root names the tenant the request is for.
+     */
+    public static ValidatableResponse post(String path, String body) {
         return given()
                 .contentType("application/json")
                 .header("A2A-Version", "1.0")
                 .body(body)
-                .when().post("/")
+                .when().post(path)
                 .then()
                 .statusCode(200);
     }
@@ -70,6 +77,7 @@ public final class JsonRpc {
         private String contextId = "context-1";
         private String messageId = "message-1";
         private boolean returnImmediately;
+        private String tenant;
 
         private MessageRequest(String method, String text) {
             this.method = method;
@@ -94,9 +102,17 @@ public final class JsonRpc {
             return this;
         }
 
+        public MessageRequest tenant(String tenant) {
+            this.tenant = tenant;
+            return this;
+        }
+
         public String json() {
             ObjectNode request = request(method);
             ObjectNode params = request.putObject("params");
+            if (tenant != null) {
+                params.put("tenant", tenant);
+            }
             ObjectNode message = params.putObject("message");
             message.put("messageId", messageId);
             message.put("contextId", contextId);

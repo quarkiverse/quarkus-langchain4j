@@ -9,12 +9,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
@@ -26,6 +28,7 @@ import org.a2aproject.sdk.server.PublicAgentCard;
 import org.a2aproject.sdk.server.agentexecution.AgentExecutor;
 import org.a2aproject.sdk.server.agentexecution.RequestContext;
 import org.a2aproject.sdk.server.auth.TaskAuthorizationProvider;
+import org.a2aproject.sdk.server.multitenancy.Tenant;
 import org.a2aproject.sdk.spec.AgentCapabilities;
 import org.a2aproject.sdk.spec.AgentCard;
 import org.a2aproject.sdk.spec.AgentExtension;
@@ -94,8 +97,11 @@ public class A2AServerProcessor {
     private static final String APPLICATION_JSON = "application/json";
 
     private static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
+    private static final DotName TENANT = DotName.createSimple(Tenant.class);
     private static final DotName PUBLIC_AGENT_CARD = DotName.createSimple(PublicAgentCard.class);
 
+    /** The characters, and the length, the SDK accepts in a tenant; anything else it refuses on every request. */
+    private static final Pattern VALID_TENANT = Pattern.compile("[a-zA-Z0-9_.\\-]{1,256}");
     private static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
 
     /**
@@ -209,37 +215,64 @@ public class A2AServerProcessor {
                             DenyingTaskAuthorizationProvider.class.getName()))));
             return;
         }
-        validateSingleAgent(exposeInstances);
+        validateTenants(exposeInstances);
 
         createDetectedTransportsBean(recorder, syntheticBeanProducer);
         ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
         for (AnnotationInstance exposeInstance : exposeInstances) {
             ClassInfo targetClass = exposeInstance.target().asClass();
             MethodInfo aiServiceMethod = determineExposedMethod(targetClass, index);
+            String tenant = tenantOf(exposeInstance);
 
-            createAgentCardBean(recorder, syntheticBeanProducer, exposeInstance, aiServiceMethod);
+            createAgentCardBean(recorder, syntheticBeanProducer, exposeInstance, aiServiceMethod, tenant);
             if (!targetClass.hasDeclaredAnnotation(RegisterAiService.class)) {
                 registerResultForReflection(aiServiceMethod, reflectiveHierarchyProducer);
             }
-            generateAgentExecutor(targetClass, aiServiceMethod, generatedBeanOutput);
+            generateAgentExecutor(targetClass, aiServiceMethod, tenant, generatedBeanOutput);
         }
     }
 
     /**
-     * The SDK serves every request with the one agent executor and the one public card there is, so a second agent
-     * would leave both ambiguous.
+     * Each request is routed to an agent by the tenant it names, so two agents under one tenant would leave the
+     * routing ambiguous, and so would two agents under none.
      */
-    private static void validateSingleAgent(Collection<AnnotationInstance> exposeInstances) {
-        DotName first = null;
+    private static void validateTenants(Collection<AnnotationInstance> exposeInstances) {
+        Map<String, DotName> agentsByTenant = new HashMap<>();
         for (AnnotationInstance exposeInstance : exposeInstances) {
             DotName agent = exposeInstance.target().asClass().name();
-            if (first == null) {
-                first = agent;
+            String tenant = tenantOf(exposeInstance);
+            if (tenant != null && (!VALID_TENANT.matcher(tenant).matches() || isDotSegment(tenant))) {
+                throw new DeploymentException("'" + agent + "' is exposed under the tenant '" + tenant
+                        + "', but a tenant can only hold letters, digits, '_', '.' and '-', up to 256 of them, and "
+                        + "cannot be '.' or '..'");
+            }
+            DotName previous = agentsByTenant.put(tenant, agent);
+            if (previous == null) {
                 continue;
             }
-            throw new DeploymentException("Both '" + first + "' and '" + agent + "' are annotated with "
-                    + "'@ExposeA2AAgent', but an application can only expose one agent");
+            if (tenant == null) {
+                throw new DeploymentException("Both '" + previous + "' and '" + agent + "' are exposed without a "
+                        + "tenant, but only one agent can serve the requests that name none. Set "
+                        + "'@ExposeA2AAgent(tenant = ...)' on the others");
+            }
+            throw new DeploymentException("Both '" + previous + "' and '" + agent + "' are exposed under the tenant '"
+                    + tenant + "'. Each tenant can only be served by one agent");
         }
+    }
+
+    /**
+     * The SDK reads the tenant from the normalized path, where {@code .} and {@code ..} are no tenant at all.
+     */
+    private static boolean isDotSegment(String tenant) {
+        return ".".equals(tenant) || "..".equals(tenant);
+    }
+
+    private static String tenantOf(AnnotationInstance exposeInstance) {
+        AnnotationValue tenantValue = exposeInstance.value("tenant");
+        if (tenantValue == null || tenantValue.asString().isEmpty()) {
+            return null;
+        }
+        return tenantValue.asString();
     }
 
     /**
@@ -539,7 +572,7 @@ public class A2AServerProcessor {
      * exist: the text the client sent, and the context the request belongs to.
      */
     private ResultHandle loadParameter(MethodCreator invoke, MethodParameterInfo parameter,
-            MethodParameterInfo userMessageParam) {
+            MethodParameterInfo userMessageParam, String tenant) {
         if (!DotNames.STRING.equals(parameter.type().name())) {
             throw new DeploymentException("Parameter '" + parameterLabel(parameter) + "' is of type '"
                     + parameter.type().name() + "', but an A2A request can only supply Strings");
@@ -552,8 +585,8 @@ public class A2AServerProcessor {
         if (parameter.hasAnnotation(MEMORY_ID)) {
             return invoke.invokeStaticMethod(
                     MethodDescriptor.ofMethod(QuarkusBaseAgentExecutor.class, "memoryId", String.class,
-                            RequestContext.class),
-                    invoke.getMethodParam(0));
+                            RequestContext.class, String.class),
+                    invoke.getMethodParam(0), tenant != null ? invoke.load(tenant) : invoke.loadNull());
         }
         throw new DeploymentException("Parameter '" + parameterLabel(parameter) + "' cannot be filled from an A2A "
                 + "request. Only the message itself and a '@MemoryId' are available");
@@ -597,7 +630,8 @@ public class A2AServerProcessor {
     private void createAgentCardBean(A2AServerRecorder recorder,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             AnnotationInstance exposeInstance,
-            MethodInfo aiServiceMethod) {
+            MethodInfo aiServiceMethod,
+            String tenant) {
         AnnotationValue streamingValue = exposeInstance.value("streaming");
         boolean streaming = streamingValue != null ? streamingValue.asBoolean() : false;
 
@@ -634,7 +668,7 @@ public class A2AServerProcessor {
             skills.add(skillBuilder.build());
         }
 
-        ExposedAgent agent = new ExposedAgent(
+        ExposedAgent agent = new ExposedAgent(tenant,
                 new AgentCapabilities(streaming, pushNotifications, extendedAgentCard, extensions),
                 defaultInputModes, defaultOutputModes, skills);
 
@@ -644,9 +678,23 @@ public class A2AServerProcessor {
                 .addInjectionPoint(ClassType.create(AgentCardProducer.class))
                 .createWith(recorder.agentCard(agent))
                 .setRuntimeInit()
-                .addQualifier(PUBLIC_AGENT_CARD)
                 .unremovable();
-        syntheticBeanProducer.produce(configurator.done());
+        syntheticBeanProducer.produce(qualifyAgentCard(configurator, tenant).done());
+    }
+
+    /**
+     * The card of a tenant is qualified with {@code @Tenant} alone, which is enough for the SDK's router to find it.
+     * Were it {@code @PublicAgentCard} too, the SDK would serve it at the well-known URI of the server whenever it is
+     * the only card there is, since it only sets tenant cards aside when there is more than one to choose from.
+     * Leaving the qualifier off also lets an application replace the card of a tenant by producing one qualified
+     * with both, which the router prefers.
+     */
+    private static SyntheticBeanBuildItem.ExtendedBeanConfigurator qualifyAgentCard(
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator, String tenant) {
+        if (tenant == null) {
+            return configurator.addQualifier(PUBLIC_AGENT_CARD);
+        }
+        return configurator.addQualifier(AnnotationInstance.builder(TENANT).add("value", tenant).build());
     }
 
     /**
@@ -654,6 +702,7 @@ public class A2AServerProcessor {
      *
      * <pre>
      * &#64;Singleton
+     * &#64;Tenant("weather") // only when the agent is exposed under a tenant
      * public class WeatherAgent$AgentExecutor extends QuarkusBaseAgentExecutor {
      *
      *     private final WeatherAgent aiService;
@@ -674,7 +723,8 @@ public class A2AServerProcessor {
      * output mode the Agent Card advertises. The class is named after the full binary name of the target, so
      * member interfaces with the same simple name do not collide.
      */
-    private void generateAgentExecutor(ClassInfo classInfo, MethodInfo aiServiceMethod, ClassOutput classOutput) {
+    private void generateAgentExecutor(ClassInfo classInfo, MethodInfo aiServiceMethod, String tenant,
+            ClassOutput classOutput) {
         String implClassName = classInfo.name().toString() + "$AgentExecutor";
         ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
                 .classOutput(classOutput)
@@ -682,6 +732,9 @@ public class A2AServerProcessor {
                 .superClass(QuarkusBaseAgentExecutor.class);
         try (ClassCreator classCreator = classCreatorBuilder.build()) {
             classCreator.addAnnotation(Singleton.class);
+            if (tenant != null) {
+                classCreator.addAnnotation(Tenant.class).addValue("value", tenant);
+            }
 
             FieldDescriptor aiServiceField = classCreator.getFieldCreator("aiService", classInfo.name().toString())
                     .setModifiers(Modifier.PRIVATE | Modifier.FINAL)
@@ -709,7 +762,7 @@ public class A2AServerProcessor {
 
                 List<ResultHandle> aiServiceMethodParamHandles = new ArrayList<>();
                 for (MethodParameterInfo parameter : aiServiceMethodParams) {
-                    aiServiceMethodParamHandles.add(loadParameter(invoke, parameter, userMessageParam));
+                    aiServiceMethodParamHandles.add(loadParameter(invoke, parameter, userMessageParam, tenant));
                 }
 
                 ResultHandle aiServiceResultHandle = invoke.invokeInterfaceMethod(MethodDescriptor.of(aiServiceMethod),
