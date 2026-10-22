@@ -38,6 +38,8 @@
     <module>mcp-conformance</module>
     <module>mcp-native</module>
     <module>secure-mcp</module>
+    <module>a2a-server</module>
+    <module>a2a-server-structured-result</module>
   </modules>
 
 
