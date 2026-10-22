@@ -1,0 +1,95 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-name]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-name[`+++quarkus.langchain4j.a2a.server.name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name under which the agent advertises itself on its Agent Card.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++${quarkus.application.name}+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-description]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-description[`+++quarkus.langchain4j.a2a.server.description+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.description+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A human-readable description of what the agent does, used by clients to decide whether to engage with it.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_DESCRIPTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_DESCRIPTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++empty+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-url]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-url[`+++quarkus.langchain4j.a2a.server.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL where the agent is available. When not set, it is derived from the address the HTTP server is actually bound to, preferring HTTPS when both are enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++the address the HTTP server is bound to+++`
+
+a| [[quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-version]] [.property-path]##link:#quarkus-langchain4j-a2a-server_quarkus-langchain4j-a2a-server-version[`+++quarkus.langchain4j.a2a.server.version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.server.version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version of the agent
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_SERVER_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_SERVER_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++1.0.0+++`
+
+|===
+

@@ -231,9 +231,6 @@ public class AiServicesProcessor {
     public static final MethodDescriptor CHAT_MEMORY_SEEDER_CONTEXT_METHOD_NAME = MethodDescriptor
             .ofMethod(ChatMemorySeeder.Context.class, "methodName", String.class);
 
-    private static final DotName CHAT_MEMORY_ACCESS = DotName.createSimple(
-            ChatMemoryAccess.class);
-
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
     private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
@@ -2047,35 +2044,8 @@ public class AiServicesProcessor {
                 boolean agentOwned = agentClassBasedAiServices.contains(iface.name());
                 boolean classBased = agentOwned
                         || (!iface.isInterface() && registeredAiServiceClassNames.contains(iface.name().toString()));
-                List<MethodInfo> allMethods = new ArrayList<>(iface.methods());
-                if (classBased) {
-                    allMethods.addAll(superclassMethods(iface, index));
-                } else {
-                    JandexUtil.getAllSuperinterfaces(iface, index).stream().filter(ci -> !ci.name().equals(
-                            CHAT_MEMORY_ACCESS)).forEach(ci -> allMethods.addAll(ci.methods()));
-                }
-
-                List<MethodInfo> methodsToImplement = new ArrayList<>();
+                List<MethodInfo> methodsToImplement = AiServicesUtil.determineAiServiceMethods(iface, index, classBased);
                 Map<String, AiServiceMethodCreateInfo> perMethodMetadata = new HashMap<>();
-                // every method seen so far, the most specific type first: a method of a supertype with the signature
-                // of one already seen is overridden, by a method implemented here or by a concrete one of the user,
-                // which the generated implementation must not replace
-                List<MethodInfo> seenMethods = new ArrayList<>();
-                for (MethodInfo method : allMethods) {
-                    short modifiers = method.flags();
-                    if (Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers)) {
-                        continue;
-                    }
-                    if (seenMethods.stream().anyMatch(m -> MethodUtil.methodSignaturesMatch(m, method))) {
-                        continue;
-                    }
-                    seenMethods.add(method);
-                    if (classBased ? !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers)
-                            : JandexUtil.isDefault(modifiers)) {
-                        continue;
-                    }
-                    methodsToImplement.add(method);
-                }
 
                 String ifaceName = iface.name().toString();
                 String implClassName = ifaceName + "$$QuarkusImpl";
@@ -2391,23 +2361,6 @@ public class AiServicesProcessor {
 
             }
         }
-    }
-
-    /**
-     * The methods declared by the superclasses of the given class, as far as they are in the index.
-     */
-    private static List<MethodInfo> superclassMethods(ClassInfo classInfo, IndexView index) {
-        List<MethodInfo> methods = new ArrayList<>();
-        DotName superName = classInfo.superName();
-        while (superName != null && !DotNames.OBJECT.equals(superName)) {
-            ClassInfo superClass = index.getClassByName(superName);
-            if (superClass == null) {
-                break;
-            }
-            methods.addAll(superClass.methods());
-            superName = superClass.superName();
-        }
-        return methods;
     }
 
     private static void addCreatedAware(IndexView index, Set<String> detectedForCreate) {
