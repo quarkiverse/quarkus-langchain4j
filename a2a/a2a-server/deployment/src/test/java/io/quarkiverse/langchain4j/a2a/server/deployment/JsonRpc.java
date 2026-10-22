@@ -33,6 +33,10 @@ public final class JsonRpc {
         return new MessageRequest("SendMessage", text);
     }
 
+    public static MessageRequest sendStreamingMessage(String text) {
+        return new MessageRequest("SendStreamingMessage", text);
+    }
+
     public static String cancelTask(String taskId) {
         ObjectNode request = request("CancelTask");
         request.putObject("params").put("id", taskId);
@@ -42,6 +46,12 @@ public final class JsonRpc {
     public static String getTask(String taskId) {
         ObjectNode request = request("GetTask");
         request.putObject("params").put("id", taskId);
+        return request.toString();
+    }
+
+    public static String getExtendedAgentCard() {
+        ObjectNode request = request("GetExtendedAgentCard");
+        request.putObject("params");
         return request.toString();
     }
 

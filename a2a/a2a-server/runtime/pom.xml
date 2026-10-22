@@ -31,6 +31,19 @@
       <artifactId>a2a-java-sdk-reference-jsonrpc</artifactId>
       <version>${a2a.version}</version>
     </dependency>
+    <!-- Opt-in: the reference implementations register their routes as soon as they are on the classpath -->
+    <dependency>
+      <groupId>org.a2aproject.sdk</groupId>
+      <artifactId>a2a-java-sdk-reference-rest</artifactId>
+      <version>${a2a.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.a2aproject.sdk</groupId>
+      <artifactId>a2a-java-sdk-reference-grpc</artifactId>
+      <version>${a2a.version}</version>
+      <optional>true</optional>
+    </dependency>
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-testing-internal</artifactId>

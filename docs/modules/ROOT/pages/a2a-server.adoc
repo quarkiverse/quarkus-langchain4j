@@ -32,7 +32,8 @@ To *consume* a remote A2A agent, use the `@A2AClientAgent` annotation of the xre
 </dependency>
 ----
 
-The extension serves the JSON-RPC transport, which is the one A2A clients are most likely to support.
+The extension brings the JSON-RPC transport, which is the one A2A clients are most likely to support.
+See <<transports>> to add the others.
 
 == Exposing an AI Service
 
@@ -143,6 +144,74 @@ method it names.
 A proper A2A client sends the header on its own, including the one behind `@A2AClientAgent`, so this only shows
 up when calling the endpoints by hand, with `curl` or an HTTP test client.
 
+[[transports]]
+== Transports
+
+A2A defines three protocol bindings. Each is served by its own reference implementation, and the extension advertises on the Agent Card only the ones present on the classpath.
+
+JSON-RPC is included by default. To also serve REST or gRPC, add the corresponding dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>org.a2aproject.sdk</groupId>
+    <artifactId>a2a-java-sdk-reference-rest</artifactId>
+    <version>{a2a-version}</version>
+</dependency>
+<dependency>
+    <groupId>org.a2aproject.sdk</groupId>
+    <artifactId>a2a-java-sdk-reference-grpc</artifactId>
+    <version>{a2a-version}</version>
+</dependency>
+----
+
+Neither the Quarkus BOM nor this extension's BOM manages these artifacts, so the version has to be given.
+Use the one this extension was built against, shown above, since the reference implementations and the SDK core are released together.
+
+[WARNING]
+====
+These implementations register their HTTP routes as soon as they are on the classpath.
+Adding one exposes its endpoints, so add only the transports you intend to serve.
+====
+
+=== Serving gRPC
+
+The extension puts one URL on every interface it detects, so gRPC has to answer on the same port as the rest:
+
+[source,properties]
+----
+quarkus.grpc.server.use-separate-server=false
+----
+
+Left on its default, the gRPC server binds a port of its own and clients following the card reach the HTTP server instead.
+`quarkus.langchain4j.a2a.server.url` changes the address of every interface on the card, JSON-RPC and REST included, so it cannot point gRPC at a server of its own.
+
+The gRPC binding expects the `A2A-Version` metadata the same way the other two expect the header, so send the version on every call whichever transport you use.
+
+== Customizing the Agent Card
+
+Anything the annotation and the configuration do not cover (a provider, an icon, security schemes, signatures) can be contributed by implementing `AgentCardBuilderCustomizer` as a CDI bean:
+
+[source,java]
+----
+@ApplicationScoped
+public class ProviderCustomizer implements AgentCardBuilderCustomizer {
+
+    @Override
+    public void customize(AgentCard.Builder cardBuilder) {
+        cardBuilder.provider(new AgentProvider("Example Inc.", "https://example.com"));
+    }
+}
+----
+
+Customizers implement `Comparable` and are applied in descending priority order, so a later one can override what an earlier one set.
+The extension fills the card from the annotation and the configuration before any customizer of the application runs, so a customizer can override any of those fields without declaring a priority.
+
+=== The extended Agent Card
+
+`@ExposeA2AAgent(extendedAgentCard = true)` only advertises that an authenticated, richer card exists. The card itself is the application's to produce, as a bean qualified `@ExtendedAgentCard`, and the extension serves it as is: the configuration (name, URL) and the `AgentCardBuilderCustomizer` beans are not applied to it, so it has to carry everything a client needs, including its interfaces.
+Enabling the capability without producing the bean leaves clients being told the card exists and then refused it.
+
 == Security
 
 The endpoints are served by the A2A SDK's reference implementations as Vert.x routes on the application's HTTP
@@ -153,6 +222,27 @@ them anonymously: anyone who can reach the port can send a message. Which tasks 
 Quarkus security applies to these routes like it does to any other. Adding an extension such as `quarkus-oidc` or
 `quarkus-elytron-security-properties-file`, and configuring it for the paths the transports serve, is what puts an
 identity in front of the agent.
+
+A2A clients discover authentication requirements from the Agent Card rather than by trial and error, so an
+application that protects the endpoints should also declare how, through
+<<Customizing the Agent Card,`AgentCardBuilderCustomizer`>>:
+
+[source,java]
+----
+@ApplicationScoped
+public class SecurityCustomizer implements AgentCardBuilderCustomizer {
+
+    @Override
+    public void customize(AgentCard.Builder cardBuilder) {
+        cardBuilder.securitySchemes(Map.of("bearer", new HTTPAuthSecurityScheme("JWT", "bearer", null)));
+        cardBuilder.securityRequirements(List.of(new SecurityRequirement(Map.of("bearer", List.of()))));
+    }
+}
+----
+
+The extension does not derive these from the application's security configuration: which scheme a deployment
+actually presents depends on how it is fronted, and a card that claims the wrong one is worse than a card that
+claims nothing.
 
 === Task authorization
 
@@ -231,8 +321,11 @@ a2a.blocking.agent.timeout.seconds=120
 
 == Current limitations
 
+- *Streaming carries the task's lifecycle, not the answer as it is produced.* `@ExposeA2AAgent(streaming = true)` serves https://a2a-protocol.org/latest/specification/#312-send-streaming-message[`SendStreamingMessage`], so a client is told how the task progresses, but the exposed method returns once and its result reaches the client as a single artifact.
 - *Task ownership is not modelled.* The extension's own `TaskAuthorizationProvider` denies everything, so restricting each task to whoever created it takes a provider of the application's own; once the application turns the check off, any caller reaching the endpoint can list and read every task. See <<Task authorization>>.
-- *The Agent Card declares no security schemes*, so a client learns that the endpoints are protected only when its requests are refused. See <<Security>>.
+- *The Agent Card declares no security schemes.* An application that protects its endpoints has to say so on the card itself, through `AgentCardBuilderCustomizer`. See <<Security>>.
+- *Push notifications are not advertised, but the SDK still serves them.* `@ExposeA2AAgent(pushNotifications = true)` only sets the capability on the card; the SDK's push notification endpoints are enabled whatever the card says, through its own `a2a.push-notification.enabled` property. Its support is also known to diverge from the specification. See https://github.com/a2aproject/a2a-java/issues/952[a2a-java#952].
+- *The gRPC interface is advertised with an `http://` URL.* The specification asks for `hostname:port` on a gRPC interface, and the extension publishes the same URL for every interface it detects, `quarkus.langchain4j.a2a.server.url` included. A client that builds a gRPC channel from the card has to strip the scheme.
 - *Agent Card signing* is not performed. The specification describes JWS signatures in https://a2a-protocol.org/latest/specification/#84-agent-card-signing[section 8.4]; the SDK models the field but does not sign or verify.
 
 == Configuration reference

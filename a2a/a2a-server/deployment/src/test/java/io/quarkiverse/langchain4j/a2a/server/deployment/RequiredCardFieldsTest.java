@@ -56,7 +56,8 @@ public class RequiredCardFieldsTest {
     }
 
     /**
-     * None of the capabilities is implemented by the extension, so the card must not advertise them.
+     * None of the capabilities is implemented by the extension, so an agent that does not ask for them must not
+     * advertise them. This is the counterpart of {@link CapabilityFlagsTest}, which pins down the opposite.
      */
     @Test
     public void testNoCapabilityIsAdvertisedUnlessAskedFor() {

@@ -28,6 +28,7 @@ import org.a2aproject.sdk.server.agentexecution.RequestContext;
 import org.a2aproject.sdk.server.auth.TaskAuthorizationProvider;
 import org.a2aproject.sdk.spec.AgentCapabilities;
 import org.a2aproject.sdk.spec.AgentCard;
+import org.a2aproject.sdk.spec.AgentExtension;
 import org.a2aproject.sdk.spec.AgentSkill;
 import org.a2aproject.sdk.spec.TransportProtocol;
 import org.jboss.jandex.AnnotationInstance;
@@ -105,6 +106,8 @@ public class A2AServerProcessor {
             LangChain4jDotNames.TOKEN_STREAM,
             LangChain4jDotNames.RESULT);
 
+    private static final String GRPC_REFERENCE_IMPL = "org.a2aproject.sdk.server.grpc.quarkus.QuarkusGrpcHandler";
+
     private static final String EVENT_BUS_INITIALIZER = "org.a2aproject.sdk.server.events.MainEventBusProcessorInitializer";
 
     /**
@@ -116,6 +119,9 @@ public class A2AServerProcessor {
     static {
         REFERENCE_IMPL_TO_TRANSPORT.put("org.a2aproject.sdk.server.apps.quarkus.A2AServerRoutes",
                 TransportProtocol.JSONRPC);
+        REFERENCE_IMPL_TO_TRANSPORT.put("org.a2aproject.sdk.server.rest.quarkus.A2AServerRoutes",
+                TransportProtocol.HTTP_JSON);
+        REFERENCE_IMPL_TO_TRANSPORT.put(GRPC_REFERENCE_IMPL, TransportProtocol.GRPC);
     }
 
     @BuildStep
@@ -370,13 +376,24 @@ public class A2AServerProcessor {
     }
 
     /**
-     * Only the parameter carrying the message describes what the agent accepts. The agent implements none of the
-     * optional capabilities, so the card advertises none.
+     * Only the parameter carrying the message describes what the agent accepts. Agent extensions are not modelled
+     * on the annotation, since arbitrary ones can be contributed through {@code AgentCardBuilderCustomizer}.
      */
     private void createAgentCardBean(A2AServerRecorder recorder,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             AnnotationInstance exposeInstance,
             MethodInfo aiServiceMethod) {
+        AnnotationValue streamingValue = exposeInstance.value("streaming");
+        boolean streaming = streamingValue != null ? streamingValue.asBoolean() : false;
+
+        AnnotationValue pushNotificationsValue = exposeInstance.value("pushNotifications");
+        boolean pushNotifications = pushNotificationsValue != null ? pushNotificationsValue.asBoolean() : false;
+
+        AnnotationValue extendedAgentCardValue = exposeInstance.value("extendedAgentCard");
+        boolean extendedAgentCard = extendedAgentCardValue != null ? extendedAgentCardValue.asBoolean() : false;
+
+        List<AgentExtension> extensions = Collections.emptyList();
+
         List<String> defaultInputModes = List.of(mediaTypeOf(determineUserMessageParameter(aiServiceMethod).type()));
         List<String> defaultOutputModes = List.of(mediaTypeOf(aiServiceMethod.returnType()));
 
@@ -403,7 +420,7 @@ public class A2AServerProcessor {
         }
 
         ExposedAgent agent = new ExposedAgent(
-                new AgentCapabilities(false, false, false, Collections.emptyList()),
+                new AgentCapabilities(streaming, pushNotifications, extendedAgentCard, extensions),
                 defaultInputModes, defaultOutputModes, skills);
 
         SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem

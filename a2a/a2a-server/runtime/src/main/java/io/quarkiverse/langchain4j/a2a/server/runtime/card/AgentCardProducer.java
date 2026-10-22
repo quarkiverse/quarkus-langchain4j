@@ -1,19 +1,31 @@
 package io.quarkiverse.langchain4j.a2a.server.runtime.card;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Singleton;
 
 import org.a2aproject.sdk.spec.AgentCard;
 
+import io.quarkiverse.langchain4j.a2a.server.AgentCardBuilderCustomizer;
+
 /**
- * Builds the card of the exposed agent: first from the configuration, then from the annotation.
+ * Builds the card of the exposed agent: first from the configuration, then from the annotation, and last through
+ * the application's {@link AgentCardBuilderCustomizer}s, so that any of those can override what came before.
  */
 @Singleton
 public class AgentCardProducer {
 
     private final ConfigCardBuilderCustomizer configCustomizer;
+    private final Instance<AgentCardBuilderCustomizer> customizers;
 
-    public AgentCardProducer(ConfigCardBuilderCustomizer configCustomizer) {
+    public AgentCardProducer(ConfigCardBuilderCustomizer configCustomizer,
+            @Any Instance<AgentCardBuilderCustomizer> customizers) {
         this.configCustomizer = configCustomizer;
+        this.customizers = customizers;
     }
 
     /**
@@ -27,6 +39,18 @@ public class AgentCardProducer {
                 .defaultInputModes(agent.defaultInputModes())
                 .defaultOutputModes(agent.defaultOutputModes())
                 .skills(agent.skills());
+        for (AgentCardBuilderCustomizer customizer : customizersInDescendingPriorityOrder()) {
+            customizer.customize(builder);
+        }
         return builder.build();
+    }
+
+    private List<AgentCardBuilderCustomizer> customizersInDescendingPriorityOrder() {
+        List<AgentCardBuilderCustomizer> applicable = new ArrayList<>();
+        for (AgentCardBuilderCustomizer customizer : customizers) {
+            applicable.add(customizer);
+        }
+        Collections.sort(applicable);
+        return applicable;
     }
 }
