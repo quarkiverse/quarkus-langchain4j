@@ -1054,13 +1054,13 @@ public class ToolProcessor {
 
             return JsonEnumSchema.builder()
                     .enumValues(enums)
-                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)))
+                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type, index)))
                     .build();
         }
 
         if (isComplexType(type)) {
             var builder = JsonObjectSchema.builder()
-                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)));
+                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type, index)));
 
             ClassInfo targetClass = index.getClassByName(type.name());
 
@@ -1116,8 +1116,20 @@ public class ToolProcessor {
         return (description != null) ? String.join(" ", description) : null;
     }
 
-    private static String descriptionFrom(Type type) {
-        return Optional.ofNullable(type.annotation(DESCRIPTION))
+    /**
+     * Reads a class-level {@code @Description} from the <em>declaration</em> of the given type.
+     * <p>
+     * {@link Type#annotation(DotName)} only reports <em>type-use</em> annotations, written at the usage site.
+     * {@code @Description} is declared {@code @Target({FIELD, TYPE})}, so it can never appear there and the
+     * declaration has to be resolved through the index instead. Mirrors
+     * {@code JsonSchemaElementUtils#descriptionFrom(Class)} in langchain4j core.
+     */
+    private static String descriptionFrom(Type type, IndexView index) {
+        ClassInfo classInfo = index.getClassByName(type.name());
+        if (classInfo == null) {
+            return null;
+        }
+        return Optional.ofNullable(classInfo.declaredAnnotation(DESCRIPTION))
                 .map(annotationInstance -> descriptionFrom(annotationInstance.value().asStringArray()))
                 .orElse(null);
     }
