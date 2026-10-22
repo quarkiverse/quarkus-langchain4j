@@ -32,6 +32,20 @@ import io.vertx.core.http.HttpClientResponse;
 @Path("v1/projects/{projectId}/locations/{location}/publishers/{publisher}/models")
 public interface VertxAiGeminiRestApi {
 
+    /**
+     * The global location and the {@code us} and {@code eu} multi-regions have their own endpoints rather than a
+     * {@code <location>-aiplatform.googleapis.com} one.
+     */
+    static String defaultBaseUrl(String location) {
+        if ("global".equals(location)) {
+            return "https://aiplatform.googleapis.com";
+        }
+        if ("us".equals(location) || "eu".equals(location)) {
+            return "https://aiplatform." + location + ".rep.googleapis.com";
+        }
+        return "https://" + location + "-aiplatform.googleapis.com";
+    }
+
     @Path("{modelId}:predict")
     @POST
     PredictResponse predict(PredictRequest request, @BeanParam ApiMetadata apiMetadata);

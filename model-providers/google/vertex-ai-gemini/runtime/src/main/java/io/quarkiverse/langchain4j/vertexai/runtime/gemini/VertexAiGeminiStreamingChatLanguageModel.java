@@ -39,7 +39,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
                 .build();
 
         try {
-            String baseUrl = builder.baseUrl.orElse(String.format("https://%s-aiplatform.googleapis.com", builder.location));
+            String baseUrl = builder.baseUrl.orElse(VertxAiGeminiRestApi.defaultBaseUrl(builder.location));
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
