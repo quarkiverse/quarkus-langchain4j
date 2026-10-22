@@ -24,7 +24,8 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
 
     }
 
-    public record UsageMetadata(Integer promptTokenCount, Integer candidatesTokenCount, Integer totalTokenCount) {
+    public record UsageMetadata(Integer promptTokenCount, Integer candidatesTokenCount, Integer totalTokenCount,
+            Integer cachedContentTokenCount, Integer thoughtsTokenCount) {
 
     }
 

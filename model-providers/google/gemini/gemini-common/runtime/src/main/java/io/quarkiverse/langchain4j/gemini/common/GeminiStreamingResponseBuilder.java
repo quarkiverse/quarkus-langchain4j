@@ -117,11 +117,7 @@ class GeminiStreamingResponseBuilder {
 
     private void updateTokenUsage(UsageMetadata usageMetadata) {
         if (usageMetadata != null) {
-            TokenUsage tokenUsage = new TokenUsage(
-                    usageMetadata.promptTokenCount(),
-                    usageMetadata.candidatesTokenCount(),
-                    usageMetadata.totalTokenCount());
-            this.tokenUsage.set(tokenUsage);
+            this.tokenUsage.set(GenerateContentResponseHandler.getTokenUsage(usageMetadata));
         }
     }
 
