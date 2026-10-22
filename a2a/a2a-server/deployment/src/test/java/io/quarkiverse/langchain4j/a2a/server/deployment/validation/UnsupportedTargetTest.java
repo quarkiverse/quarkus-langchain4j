@@ -12,7 +12,7 @@ import io.quarkiverse.langchain4j.a2a.server.ExposeA2AAgent;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * A plain interface is not an AI Service, so there is nothing to expose.
+ * A plain interface is neither an AI Service nor an agentic workflow, so there is nothing to expose.
  */
 public class UnsupportedTargetTest {
 
@@ -21,7 +21,8 @@ public class UnsupportedTargetTest {
             .withApplicationRoot(jar -> jar.addClasses(NotAnAgent.class))
             .assertException(throwable -> Assertions.assertThat(throwable)
                     .isInstanceOf(DeploymentException.class)
-                    .hasMessageContaining("@RegisterAiService"));
+                    .hasMessageContaining("@RegisterAiService")
+                    .hasMessageContaining("agentic workflow interface"));
 
     @Test
     public void test() {

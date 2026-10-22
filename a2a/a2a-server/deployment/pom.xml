@@ -38,6 +38,13 @@
       <scope>test</scope>
       <version>${project.version}</version>
     </dependency>
+    <!-- Test-only: workflows are matched by annotation name, so the extension does not depend on the agentic module -->
+    <dependency>
+      <groupId>io.quarkiverse.langchain4j</groupId>
+      <artifactId>quarkus-langchain4j-agentic-deployment</artifactId>
+      <scope>test</scope>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-openai-testing-internal</artifactId>

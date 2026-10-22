@@ -74,6 +74,11 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveHierarchyBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
 import io.quarkus.gizmo.FieldDescriptor;
@@ -94,6 +99,22 @@ public class A2AServerProcessor {
     private static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
 
     /**
+     * Declarative workflow annotations of the agentic module, referenced by name so that this extension keeps
+     * working when that module is not on the classpath. Mirrors
+     * {@code AgenticLangChain4jDotNames.AGENT_ANNOTATIONS_WITH_SUB_AGENTS}, which is the set of annotations that
+     * declare a workflow rather than a single agent.
+     */
+    private static final String DECLARATIVE_PACKAGE = "dev.langchain4j.agentic.declarative.";
+    private static final Set<DotName> AGENTIC_WORKFLOW_ANNOTATIONS = Set.of(
+            DotName.createSimple(DECLARATIVE_PACKAGE + "SequenceAgent"),
+            DotName.createSimple(DECLARATIVE_PACKAGE + "ParallelAgent"),
+            DotName.createSimple(DECLARATIVE_PACKAGE + "ParallelMapperAgent"),
+            DotName.createSimple(DECLARATIVE_PACKAGE + "LoopAgent"),
+            DotName.createSimple(DECLARATIVE_PACKAGE + "ConditionalAgent"),
+            DotName.createSimple(DECLARATIVE_PACKAGE + "SupervisorAgent"),
+            DotName.createSimple(DECLARATIVE_PACKAGE + "PlannerAgent"));
+
+    /**
      * Return types that hand the answer back later or piece by piece, or wrap it with metadata. The executor sends
      * what the method returns as the answer, so these would reach the client as the JSON form of the wrapper.
      */
@@ -106,9 +127,47 @@ public class A2AServerProcessor {
             LangChain4jDotNames.TOKEN_STREAM,
             LangChain4jDotNames.RESULT);
 
+    private static final DotName RESULT_WITH_AGENTIC_SCOPE = DotName
+            .createSimple("dev.langchain4j.agentic.scope.ResultWithAgenticScope");
+
+    /** The domain types the protocol is expressed in, plus the {@code ErrorDetail} an error response carries. */
+    private static final List<DotName> PROTOCOL_TYPE_PACKAGES = List.of(
+            DotName.createSimple("org.a2aproject.sdk.spec"),
+            DotName.createSimple("org.a2aproject.sdk.spec.util"));
+
+    /**
+     * Packages searched for the protobuf messages a request is parsed into: those the SDK generates from the A2A
+     * schema, and the well-known types of protobuf itself that they are built out of.
+     * <p>
+     * These are registered whatever the transport. The messages are the SDK's internal representation of a request,
+     * not a detail of the gRPC binding, so a JSON-RPC-only server parses into them too: without them it answers
+     * every call with {@code Generated message class "SendMessageRequest" missing method "getTenant"}.
+     * <p>
+     * The generated messages share a package with the gRPC service stubs, which extend {@code AbstractStub} and so
+     * cannot even be loaded unless the gRPC transport is on the classpath. Only the messages are wanted, and what
+     * tells them apart is that they derive from a protobuf type.
+     */
+    private static final List<DotName> PROTOBUF_MESSAGE_PACKAGES = List.of(
+            DotName.createSimple("org.a2aproject.sdk.grpc"),
+            DotName.createSimple("com.google.protobuf"));
+    private static final String PROTOBUF_PACKAGE_PREFIX = "com.google.protobuf.";
+
     private static final String GRPC_REFERENCE_IMPL = "org.a2aproject.sdk.server.grpc.quarkus.QuarkusGrpcHandler";
 
+    /**
+     * The messages the gRPC binding builds an error response out of: a {@code google.rpc.Status} whose details
+     * hold an {@code ErrorInfo}. They come from Google's common protos rather than from protobuf itself, so the
+     * packages in {@link #PROTOBUF_MESSAGE_PACKAGES} do not reach them.
+     */
+    private static final String[] GRPC_ERROR_TYPES = {
+            "com.google.rpc.Status",
+            "com.google.rpc.Status$Builder",
+            "com.google.rpc.ErrorInfo",
+            "com.google.rpc.ErrorInfo$Builder" };
+
+    private static final String DEFAULTS_RESOURCE = "META-INF/a2a-defaults.properties";
     private static final String EVENT_BUS_INITIALIZER = "org.a2aproject.sdk.server.events.MainEventBusProcessorInitializer";
+    private static final String TRANSPORT_METADATA_SERVICE = "org.a2aproject.sdk.server.TransportMetadata";
 
     /**
      * Marker class of each reference implementation, mapped to the transport it serves. Iteration order determines
@@ -139,7 +198,8 @@ public class A2AServerProcessor {
             A2AServerRecorder recorder,
             BuildProducer<AnnotationsTransformerBuildItem> annotationsTransformerProducer,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
-            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer) {
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
+            BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer) {
 
         IndexView index = indexBuildItem.getIndex();
         Collection<AnnotationInstance> exposeInstances = index.getAnnotations(ExposeA2AAgent.class);
@@ -158,6 +218,9 @@ public class A2AServerProcessor {
             MethodInfo aiServiceMethod = determineExposedMethod(targetClass, index);
 
             createAgentCardBean(recorder, syntheticBeanProducer, exposeInstance, aiServiceMethod);
+            if (!targetClass.hasDeclaredAnnotation(RegisterAiService.class)) {
+                registerResultForReflection(aiServiceMethod, reflectiveHierarchyProducer);
+            }
             generateAgentExecutor(targetClass, aiServiceMethod, generatedBeanOutput);
         }
     }
@@ -180,19 +243,26 @@ public class A2AServerProcessor {
     }
 
     /**
-     * An A2A agent is backed by an AI Service, a CDI bean exposing its contract through a single interface method,
-     * which is what the generated executor calls.
+     * An A2A agent can be backed either by an AI Service or by a declarative workflow of the agentic module. Both
+     * are CDI beans exposing their contract through a single interface method, which is what the generated
+     * executor calls.
      */
     private MethodInfo determineExposedMethod(ClassInfo classInfo, IndexView index) {
         if (!classInfo.isInterface()) {
             throw new DeploymentException("'@ExposeA2AAgent' can only be placed on an interface. Offending class is '"
                     + classInfo.name() + "'");
         }
-        if (!classInfo.hasDeclaredAnnotation(RegisterAiService.class)) {
-            throw new DeploymentException("'@ExposeA2AAgent' can only be placed on an AI Service annotated with "
-                    + "'@RegisterAiService'. Offending class is '" + classInfo.name() + "'");
+        List<MethodInfo> candidates;
+        if (classInfo.hasDeclaredAnnotation(RegisterAiService.class)) {
+            candidates = AiServicesUtil.determineAiServiceMethods(classInfo, index);
+        } else {
+            candidates = agenticWorkflowMethods(classInfo);
+            if (candidates.isEmpty()) {
+                throw new DeploymentException("'@ExposeA2AAgent' can only be placed on an AI Service annotated with "
+                        + "'@RegisterAiService', or on an agentic workflow interface. Offending class is '"
+                        + classInfo.name() + "'");
+            }
         }
-        List<MethodInfo> candidates = AiServicesUtil.determineAiServiceMethods(classInfo, index);
         if (candidates.size() != 1) {
             throw new DeploymentException("'@ExposeA2AAgent' can only be placed on a type that has a single method. "
                     + "Offending class is '" + classInfo.name() + "'");
@@ -207,12 +277,35 @@ public class A2AServerProcessor {
                     + "itself, and '" + classInfo.name() + "#" + exposedMethod.name() + "' returns "
                     + exposedMethod.returnType().name().withoutPackagePrefix());
         }
-        if (!DotNames.STRING.equals(exposedMethod.returnType().name())) {
-            throw new DeploymentException("'@ExposeA2AAgent' requires a method that returns the agent's answer as a "
-                    + "String, and '" + classInfo.name() + "#" + exposedMethod.name() + "' returns "
-                    + exposedMethod.returnType().name().withoutPackagePrefix());
-        }
         return exposedMethod;
+    }
+
+    private List<MethodInfo> agenticWorkflowMethods(ClassInfo classInfo) {
+        List<MethodInfo> workflowMethods = new ArrayList<>();
+        for (MethodInfo method : classInfo.methods()) {
+            for (DotName workflowAnnotation : AGENTIC_WORKFLOW_ANNOTATIONS) {
+                if (method.hasAnnotation(workflowAnnotation)) {
+                    workflowMethods.add(method);
+                    break;
+                }
+            }
+        }
+        return workflowMethods;
+    }
+
+    /**
+     * A workflow may hand back its result wrapped together with the scope it ran in. The scope is internal
+     * bookkeeping, so only the result travels to the client.
+     */
+    private static Type unwrapAgenticScope(Type returnType) {
+        if (!RESULT_WITH_AGENTIC_SCOPE.equals(returnType.name())) {
+            return returnType;
+        }
+        if (returnType.kind() == Type.Kind.PARAMETERIZED_TYPE
+                && returnType.asParameterizedType().arguments().size() == 1) {
+            return returnType.asParameterizedType().arguments().get(0);
+        }
+        return Type.create(DotNames.OBJECT, Type.Kind.CLASS);
     }
 
     /**
@@ -239,6 +332,35 @@ public class A2AServerProcessor {
                 .setRuntimeInit()
                 .runtimeValue(recorder.detectedTransports(protocolBindings))
                 .done());
+    }
+
+    /**
+     * Indexes the jars whose packages {@link #registerProtocolTypesForReflection} scans.
+     */
+    @BuildStep
+    void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
+        producer.produce(new IndexDependencyBuildItem("org.a2aproject.sdk", "a2a-java-sdk-spec"));
+        producer.produce(new IndexDependencyBuildItem("org.a2aproject.sdk", "a2a-java-sdk-spec-grpc"));
+        producer.produce(new IndexDependencyBuildItem("com.google.protobuf", "protobuf-java"));
+    }
+
+    /**
+     * The SDK discovers transports through {@code ServiceLoader} and rejects an Agent Card advertising one it
+     * cannot find. Native images resolve service providers at build time.
+     */
+    @BuildStep
+    void registerTransportMetadataProviders(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
+        serviceProviderProducer.produce(
+                ServiceProviderBuildItem.allProvidersFromClassPath(TRANSPORT_METADATA_SERVICE));
+    }
+
+    /**
+     * The SDK reads its own settings, such as how long a blocking agent may take, from a classpath resource that
+     * each of its modules contributes to.
+     */
+    @BuildStep
+    void includeDefaultConfigurationValues(BuildProducer<NativeImageResourceBuildItem> nativeImageResourceProducer) {
+        nativeImageResourceProducer.produce(new NativeImageResourceBuildItem(DEFAULTS_RESOURCE));
     }
 
     /**
@@ -300,6 +422,93 @@ public class A2AServerProcessor {
     }
 
     /**
+     * The SDK reaches these types reflectively from both ends of a call: protobuf parses a request into its
+     * generated messages, and Gson writes the details of an error response. The SDK ships no reachability
+     * metadata of its own.
+     *
+     * @see <a href="https://github.com/a2aproject/a2a-java/issues/1032">a2a-java#1032: no native-image
+     *      reachability metadata</a>
+     */
+    @BuildStep
+    void registerProtocolTypesForReflection(CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        if (index.getAnnotations(ExposeA2AAgent.class).isEmpty()) {
+            return;
+        }
+        List<String> protocolTypes = new ArrayList<>();
+        for (DotName packageName : PROTOCOL_TYPE_PACKAGES) {
+            for (ClassInfo classInfo : index.getClassesInPackage(packageName)) {
+                protocolTypes.add(classInfo.name().toString());
+            }
+        }
+        for (DotName packageName : PROTOBUF_MESSAGE_PACKAGES) {
+            for (ClassInfo classInfo : index.getClassesInPackage(packageName)) {
+                if (derivesFromProtobuf(classInfo)) {
+                    protocolTypes.add(classInfo.name().toString());
+                }
+            }
+        }
+
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(protocolTypes.toArray(new String[0]))
+                .constructors()
+                .methods()
+                .fields()
+                .reason(A2AServerProcessor.class.getSimpleName() + ": serialized by the A2A SDK")
+                .build());
+    }
+
+    /**
+     * Without these, every error the gRPC binding reports reaches the client as
+     * {@code INTERNAL: Generated message class "com.google.rpc.ErrorInfo" missing method "getReason"} instead of
+     * the status the error maps to.
+     */
+    @BuildStep
+    void registerGrpcErrorTypesForReflection(CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+        if (indexBuildItem.getIndex().getAnnotations(ExposeA2AAgent.class).isEmpty()
+                || !QuarkusClassLoader.isClassPresentAtRuntime(GRPC_REFERENCE_IMPL)) {
+            return;
+        }
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(GRPC_ERROR_TYPES)
+                .constructors()
+                .methods()
+                .fields()
+                .reason(A2AServerProcessor.class.getSimpleName() + ": error responses of the gRPC binding")
+                .build());
+    }
+
+    private static boolean derivesFromProtobuf(ClassInfo classInfo) {
+        if (classInfo.superName() != null && classInfo.superName().toString().startsWith(PROTOBUF_PACKAGE_PREFIX)) {
+            return true;
+        }
+        for (DotName interfaceName : classInfo.interfaceNames()) {
+            if (interfaceName.toString().startsWith(PROTOBUF_PACKAGE_PREFIX)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A non-{@code String} result is serialized into JSON, which reaches it reflectively, along with every type
+     * reachable from it: the arguments of a generic result and the types of its fields. The core extension already
+     * registers that graph for the result of an AI Service, since it parses the model's answer into it, but an
+     * agentic workflow is not an AI Service to it, so the graph of a workflow's result is registered here.
+     */
+    private void registerResultForReflection(MethodInfo aiServiceMethod,
+            BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer) {
+        Type returnType = unwrapAgenticScope(aiServiceMethod.returnType());
+        if (DotNames.STRING.equals(returnType.name()) || returnType.kind() == Type.Kind.VOID
+                || returnType.kind() == Type.Kind.TYPE_VARIABLE) {
+            return;
+        }
+        reflectiveHierarchyProducer.produce(ReflectiveHierarchyBuildItem.builder(returnType)
+                .source(A2AServerProcessor.class.getSimpleName() + ": serialized into an A2A DataPart")
+                .build());
+    }
+
+    /**
      * Identifies which parameter carries the text the client sent, following the same rules an AI Service uses:
      * an explicit {@code @UserMessage} wins, otherwise the only parameter that is not a memory id qualifies.
      */
@@ -326,8 +535,8 @@ public class A2AServerProcessor {
     }
 
     /**
-     * Maps a parameter of the AI Service method onto the part of the A2A request that feeds it. Only one source
-     * exists: the text the client sent.
+     * Maps a parameter of the AI Service method onto the part of the A2A request that feeds it. Only two sources
+     * exist: the text the client sent, and the context the request belongs to.
      */
     private ResultHandle loadParameter(MethodCreator invoke, MethodParameterInfo parameter,
             MethodParameterInfo userMessageParam) {
@@ -340,8 +549,14 @@ public class A2AServerProcessor {
                     MethodDescriptor.ofMethod(RequestContext.class, "getUserInput", String.class, String.class),
                     invoke.getMethodParam(0), invoke.load("\n"));
         }
+        if (parameter.hasAnnotation(MEMORY_ID)) {
+            return invoke.invokeStaticMethod(
+                    MethodDescriptor.ofMethod(QuarkusBaseAgentExecutor.class, "memoryId", String.class,
+                            RequestContext.class),
+                    invoke.getMethodParam(0));
+        }
         throw new DeploymentException("Parameter '" + parameterLabel(parameter) + "' cannot be filled from an A2A "
-                + "request. Only the message itself is available");
+                + "request. Only the message itself and a '@MemoryId' are available");
     }
 
     private String parameterLabel(MethodParameterInfo parameter) {
@@ -395,7 +610,7 @@ public class A2AServerProcessor {
         List<AgentExtension> extensions = Collections.emptyList();
 
         List<String> defaultInputModes = List.of(mediaTypeOf(determineUserMessageParameter(aiServiceMethod).type()));
-        List<String> defaultOutputModes = List.of(mediaTypeOf(aiServiceMethod.returnType()));
+        List<String> defaultOutputModes = List.of(mediaTypeOf(unwrapAgenticScope(aiServiceMethod.returnType())));
 
         AnnotationInstance[] skillInstances = exposeInstance.value("skills").asNestedArray();
         List<AgentSkill> skills = new ArrayList<>();
@@ -455,9 +670,9 @@ public class A2AServerProcessor {
      * }
      * </pre>
      * <p>
-     * The {@code String} result travels as a {@code TextPart}, matching the output mode the Agent Card advertises.
-     * The class is named after the full binary name of the target, so member interfaces with the same simple name do
-     * not collide.
+     * A {@code String} result travels as a {@code TextPart} and anything else as a {@code DataPart}, matching the
+     * output mode the Agent Card advertises. The class is named after the full binary name of the target, so
+     * member interfaces with the same simple name do not collide.
      */
     private void generateAgentExecutor(ClassInfo classInfo, MethodInfo aiServiceMethod, ClassOutput classOutput) {
         String implClassName = classInfo.name().toString() + "$AgentExecutor";
@@ -501,8 +716,23 @@ public class A2AServerProcessor {
                         invoke.readInstanceField(aiServiceField, invoke.getThis()),
                         aiServiceMethodParamHandles.toArray(new ResultHandle[aiServiceMethodParams.size()]));
 
+                Type returnType = aiServiceMethod.returnType();
+                if (RESULT_WITH_AGENTIC_SCOPE.equals(returnType.name())) {
+                    aiServiceResultHandle = invoke.invokeVirtualMethod(
+                            MethodDescriptor.ofMethod(RESULT_WITH_AGENTIC_SCOPE.toString(), "result",
+                                    Object.class.getName()),
+                            aiServiceResultHandle);
+                    returnType = unwrapAgenticScope(returnType);
+                    if (DotNames.STRING.equals(returnType.name())) {
+                        aiServiceResultHandle = invoke.checkCast(aiServiceResultHandle, String.class);
+                    }
+                }
+
+                boolean returnsString = DotNames.STRING.equals(returnType.name());
                 ResultHandle result = invoke.invokeVirtualMethod(
-                        MethodDescriptor.ofMethod(implClassName, "stringResultToParts", List.class, String.class),
+                        MethodDescriptor.ofMethod(implClassName,
+                                returnsString ? "stringResultToParts" : "objectResultToParts", List.class,
+                                returnsString ? String.class : Object.class),
                         invoke.getThis(), aiServiceResultHandle);
 
                 invoke.returnValue(result);

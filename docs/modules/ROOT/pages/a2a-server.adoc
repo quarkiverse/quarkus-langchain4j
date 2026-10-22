@@ -7,7 +7,7 @@ include::./includes/customization.adoc[]
 The https://a2a-protocol.org/latest/specification/[Agent2Agent (A2A) protocol] is an open standard that lets independent AI agents discover each other and collaborate as peers.
 Where MCP connects an agent to _tools_, A2A connects an agent to _other agents_.
 
-This extension exposes a Quarkus LangChain4j AI Service as an A2A agent: it publishes an Agent Card describing what the agent can do and serves the protocol endpoints that let other agents talk to it.
+This extension exposes a Quarkus LangChain4j AI Service, or a workflow of the agentic module, as an A2A agent: it publishes an Agent Card describing what the agent can do and serves the protocol endpoints that let other agents talk to it.
 
 [IMPORTANT]
 ====
@@ -113,12 +113,81 @@ That is not always one other machines can reach: some Linux distributions resolv
 quarkus.langchain4j.a2a.server.url=https://agents.example.com
 ----
 
+== Exposing an agentic workflow
+
+`@ExposeA2AAgent` also works on a declarative workflow from the xref:agentic.adoc[agentic module], which lets a whole orchestration be reachable as a single agent:
+
+[source,java]
+----
+@ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(
+        id = "write_story",
+        name = "Write a story",
+        description = "Writes and polishes a story about a topic",
+        tags = "writing"))
+public interface StoryCreator {
+
+    @SequenceAgent(outputKey = "story", subAgents = { StoryWriter.class, StoryPolisher.class })
+    String create(@V("topic") String topic);
+}
+----
+
+The agentic module does not need to be present for the extension to work; it is detected when it is.
+
 == Supported method signatures
 
-The exposed type must be an AI Service interface with exactly one abstract method. Its parameter has to be a `String`, which is filled with the text the client sent.
+The exposed type must be an interface with exactly one method to expose (for an AI Service, one abstract method; for an agentic workflow, one method carrying a workflow annotation). Every parameter has to be a `String`, and each is filled from the incoming A2A request:
 
-Any other parameter fails the build, since there would be nothing to fill it with, and so does one of any other type.
-The method also has to return the answer itself as a `String`: its return value is what the client receives as a text part, so a `void` method fails the build, and so does one returning any other type, `Multi`, `Uni`, `CompletionStage`, `Future`, `TokenStream` and `Result` included.
+|===
+|Parameter |Filled with
+
+|The message parameter, annotated `@UserMessage` or the only parameter that is not a memory id
+|The text the client sent
+
+|A parameter annotated `@MemoryId`
+|The A2A `contextId`, which groups the interactions belonging to one conversation
+|===
+
+A parameter that matches neither fails the build, since there would be nothing to fill it with, and so does one of any other type, including a `@MemoryId` that is not a `String`.
+The method also has to return the answer itself: its return value is what the client receives as an artifact, so a `void` method fails the build as well, and so does one returning `Multi`, `Uni`, `CompletionStage`, `Future`, `TokenStream` or `Result`.
+
+=== Holding a conversation
+
+Mapping the `contextId` onto the memory id is only half of what an agent needs to remember a conversation. The other half is the AI Service outliving the request that created it:
+
+[source,java]
+----
+@ApplicationScoped // <1>
+@RegisterAiService
+@ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(...))
+public interface WeatherAgent {
+
+    String chat(@MemoryId String conversationId, @UserMessage String question);
+}
+----
+<1> Without this the agent forgets every message the moment it answers it
+
+An AI Service left in the default request scope has its chat memory cleared when that request ends.
+Each A2A message arrives on a request of its own, so an agent in the default scope meets every message as if it were the first: no error, no warning, just an agent that never remembers.
+
+The return type decides how the answer travels back, and what the card advertises as an output mode:
+
+|===
+|Return type |Sent as |Output mode
+
+|`String`
+|A text part
+|`text/plain`
+
+|Any other type
+|A data part holding its JSON form
+|`application/json`
+
+|`ResultWithAgenticScope<T>`
+|As `T` above, since the scope is internal bookkeeping and is not sent
+|Depends on `T`
+|===
+
+A data part holds a protobuf `Value`, whose numbers are 64-bit floating point, so a `BigDecimal` or a `long` beyond 2^53^ reaches the client rounded. Return such a value as a `String` field when its exact digits matter.
 
 == Protocol version negotiation
 
@@ -216,7 +285,8 @@ Enabling the capability without producing the bean leaves clients being told the
 
 The endpoints are served by the A2A SDK's reference implementations as Vert.x routes on the application's HTTP
 server. The extension adds no authentication of its own, so an application that brings no security extension serves
-them anonymously: anyone who can reach the port can send a message. Which tasks they can list and read is up to the
+them anonymously: anyone who can reach the port can send a message and continue any conversation whose `contextId`
+they know, along with the chat memory that belongs to it. Which tasks they can list and read is up to the
 `TaskAuthorizationProvider`; see <<Task authorization>>.
 
 Quarkus security applies to these routes like it does to any other. Adding an extension such as `quarkus-oidc` or
@@ -319,10 +389,12 @@ Raise it through the SDK's own property, which is not namespaced under `quarkus.
 a2a.blocking.agent.timeout.seconds=120
 ----
 
+A client that asks for `returnImmediately` can cancel the task while the agent is still working on it. The task is reported as cancelled at once, but the call into the model is not interrupted: it runs to completion, and its answer is discarded rather than attached to the cancelled task.
+
 == Current limitations
 
 - *Streaming carries the task's lifecycle, not the answer as it is produced.* `@ExposeA2AAgent(streaming = true)` serves https://a2a-protocol.org/latest/specification/#312-send-streaming-message[`SendStreamingMessage`], so a client is told how the task progresses, but the exposed method returns once and its result reaches the client as a single artifact.
-- *Task ownership is not modelled.* The extension's own `TaskAuthorizationProvider` denies everything, so restricting each task to whoever created it takes a provider of the application's own; once the application turns the check off, any caller reaching the endpoint can list and read every task. See <<Task authorization>>.
+- *Task ownership is not modelled.* The extension's own `TaskAuthorizationProvider` denies everything, so restricting each task to whoever created it takes a provider of the application's own; once the application turns the check off, any caller reaching the endpoint can list and read every task. Conversations are not owned either: the `contextId` a client sends selects the chat memory, so a caller who knows another's `contextId` continues that conversation. See <<Task authorization>>.
 - *The Agent Card declares no security schemes.* An application that protects its endpoints has to say so on the card itself, through `AgentCardBuilderCustomizer`. See <<Security>>.
 - *Push notifications are not advertised, but the SDK still serves them.* `@ExposeA2AAgent(pushNotifications = true)` only sets the capability on the card; the SDK's push notification endpoints are enabled whatever the card says, through its own `a2a.push-notification.enabled` property. Its support is also known to diverge from the specification. See https://github.com/a2aproject/a2a-java/issues/952[a2a-java#952].
 - *The gRPC interface is advertised with an `http://` URL.* The specification asks for `hostname:port` on a gRPC interface, and the extension publishes the same URL for every interface it detects, `quarkus.langchain4j.a2a.server.url` included. A client that builds a gRPC channel from the card has to strip the scheme.

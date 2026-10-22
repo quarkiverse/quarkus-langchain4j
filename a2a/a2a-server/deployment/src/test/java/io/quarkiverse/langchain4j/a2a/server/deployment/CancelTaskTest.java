@@ -19,7 +19,8 @@ import io.quarkus.test.QuarkusUnitTest;
 /**
  * A client that waits for the answer receives the task once it is already terminal, so cancelling it afterwards is
  * refused. The SDK answers that from the task store, before the executor is consulted, and these tests pin the
- * answers a client receives.
+ * answers a client receives. Cancelling a task the agent is still working on is covered by
+ * {@link CancelRunningTaskTest}.
  */
 public class CancelTaskTest extends OpenAiBaseTest {
 

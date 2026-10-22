@@ -14,8 +14,8 @@ import io.quarkiverse.langchain4j.a2a.server.ExposeA2AAgent;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * The message is the only thing an A2A request offers a parameter, so a second parameter fails the build rather
- * than being passed something made up.
+ * The message and the context id are the only two things an A2A request offers a parameter, so a third parameter
+ * fails the build rather than being passed something made up.
  */
 public class UnfillableParameterTest {
 

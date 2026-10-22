@@ -17,7 +17,8 @@ import io.quarkiverse.langchain4j.a2a.server.ExposeA2AAgent;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * An A2A request carries text, so every parameter the generated executor fills has to be a {@code String}.
+ * An A2A request carries text, so every parameter the generated executor fills has to be a {@code String},
+ * including the memory id, which is taken from the request's context id.
  */
 public class NonStringParameterTest {
 
