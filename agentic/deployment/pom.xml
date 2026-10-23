@@ -53,6 +53,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-context-propagation</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>dev.langchain4j</groupId>
       <artifactId>langchain4j-agentic-a2a</artifactId>
       <scope>test</scope>

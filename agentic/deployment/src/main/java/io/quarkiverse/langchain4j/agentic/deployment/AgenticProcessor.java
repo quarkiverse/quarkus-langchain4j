@@ -24,7 +24,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
+import jakarta.inject.Named;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -114,9 +116,8 @@ public class AgenticProcessor {
             AgenticLangChain4jDotNames.TOOL_SUPPLIER,
             AgenticLangChain4jDotNames.TOOL_PROVIDER_SUPPLIER,
             AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER,
-            AgenticLangChain4jDotNames.MCP_CLIENT_SUPPLIER
-    // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
-    );
+            AgenticLangChain4jDotNames.MCP_CLIENT_SUPPLIER,
+            AgenticLangChain4jDotNames.PARALLEL_EXECUTOR);
 
     private static final DotName INTERCEPTOR_BINDING = DotName.createSimple(jakarta.interceptor.InterceptorBinding.class);
 
@@ -411,7 +412,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.EXECUTOR), annotationToValidate);
         }
     }
@@ -698,6 +698,8 @@ public class AgenticProcessor {
     }
 
     private static final DotName CDI_QUALIFIER = DotName.createSimple(jakarta.inject.Qualifier.class);
+    private static final Set<DotName> BUILTIN_CDI_QUALIFIERS = Set.of(
+            DotName.createSimple(Any.class), DotName.createSimple(Default.class), DotName.createSimple(Named.class));
 
     /**
      * Returns all CDI-resolvable parameters across all supplier methods in the
@@ -729,12 +731,19 @@ public class AgenticProcessor {
 
     private static boolean hasQualifierAnnotation(MethodParameterInfo param, IndexView index) {
         for (AnnotationInstance ann : param.declaredAnnotations()) {
-            ClassInfo annClass = index.getClassByName(ann.name());
-            if (annClass != null && annClass.hasAnnotation(CDI_QUALIFIER)) {
+            if (isCdiQualifier(ann.name(), index)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isCdiQualifier(DotName annotationName, IndexView index) {
+        if (BUILTIN_CDI_QUALIFIERS.contains(annotationName)) {
+            return true;
+        }
+        ClassInfo annotationClass = index.getClassByName(annotationName);
+        return annotationClass != null && annotationClass.hasAnnotation(CDI_QUALIFIER);
     }
 
     @BuildStep
@@ -749,8 +758,7 @@ public class AgenticProcessor {
                 if (ann.name().equals(AgenticLangChain4jDotNames.CDI_BEAN)) {
                     continue;
                 }
-                ClassInfo annClass = index.getClassByName(ann.name());
-                if (annClass != null && annClass.hasAnnotation(CDI_QUALIFIER)) {
+                if (isCdiQualifier(ann.name(), index)) {
                     qualifierNames.add(ann.name().toString());
                 }
             }
