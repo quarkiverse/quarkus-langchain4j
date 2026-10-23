@@ -81,6 +81,9 @@ public class VertexAiGeminiRecorder {
 
             builder.outputDimensionality(embeddingModelConfig.outputDimension().orElse(null));
             builder.taskType(embeddingModelConfig.taskType().orElse(null));
+            if (embeddingModelConfig.timeout().isPresent()) {
+                builder.timeout(embeddingModelConfig.timeout().get());
+            }
 
             return new Function<>() {
                 @Override
