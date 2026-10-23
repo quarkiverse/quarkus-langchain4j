@@ -245,6 +245,9 @@ public class QuarkusToolExecutor implements ToolExecutor {
         if (invocationParams != null && methodMetadata.getInvocationParamsParamPosition() != null) {
             finalArgs[methodMetadata.getInvocationParamsParamPosition()] = invocationParams;
         }
+        if (methodMetadata.getInvocationContextParamPosition() != null) {
+            finalArgs[methodMetadata.getInvocationContextParamPosition()] = invocationContext;
+        }
         return finalArgs;
     }
 
