@@ -42,6 +42,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final Integer maxToolCallingRoundTrips;
     private final Integer maxToolCallsPerResponse;
     private final boolean allowContinuousForcedToolCalling;
+    private final Boolean executeToolsConcurrently;
     private final boolean makeDefaultBean;
     private final boolean shouldThrowExceptionOnEventError;
     private final DotName chatMemoryFlushStrategySupplierClassDotName;
@@ -76,6 +77,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             Integer maxToolCallingRoundTrips,
             Integer maxToolCallsPerResponse,
             boolean allowContinuousForcedToolCalling,
+            Boolean executeToolsConcurrently,
             boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
             DotName chatMemoryFlushStrategySupplierClassDotName,
             List<String> skillNames,
@@ -107,6 +109,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.maxToolCallingRoundTrips = maxToolCallingRoundTrips;
         this.maxToolCallsPerResponse = maxToolCallsPerResponse;
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
+        this.executeToolsConcurrently = executeToolsConcurrently;
         this.makeDefaultBean = makeDefaultBean;
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
         this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
@@ -249,6 +252,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public boolean isAllowContinuousForcedToolCalling() {
         return allowContinuousForcedToolCalling;
+    }
+
+    public Boolean getExecuteToolsConcurrently() {
+        return executeToolsConcurrently;
     }
 
     public DotName getChatMemoryFlushStrategySupplierClassDotName() {
