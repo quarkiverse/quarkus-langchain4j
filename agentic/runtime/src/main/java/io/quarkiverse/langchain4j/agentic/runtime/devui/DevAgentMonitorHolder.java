@@ -6,35 +6,32 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import dev.langchain4j.agentic.observability.AgentMonitor;
+import dev.langchain4j.agentic.planner.AgentInstance;
 
 public class DevAgentMonitorHolder {
 
     public static volatile Set<String> allowedAgentClassNames = Collections.emptySet();
 
-    private static final List<AgentMonitor> MONITORS = new CopyOnWriteArrayList<>();
-    private static final List<Object> ROOT_AGENTS = new CopyOnWriteArrayList<>();
+    private static final List<MonitoredRoot> ROOTS = new CopyOnWriteArrayList<>();
 
     private DevAgentMonitorHolder() {
     }
 
-    public static void register(AgentMonitor monitor) {
-        MONITORS.add(monitor);
+    public static void register(AgentInstance rootAgent, AgentMonitor monitor) {
+        ROOTS.add(new MonitoredRoot(rootAgent, monitor));
     }
 
-    public static void registerRootAgent(Object rootAgent) {
-        ROOT_AGENTS.add(rootAgent);
-    }
-
-    public static List<AgentMonitor> monitors() {
-        return MONITORS;
-    }
-
-    public static List<Object> rootAgents() {
-        return ROOT_AGENTS;
+    public static List<MonitoredRoot> roots() {
+        return ROOTS;
     }
 
     public static void reset() {
-        MONITORS.clear();
-        ROOT_AGENTS.clear();
+        ROOTS.clear();
+    }
+
+    /**
+     * A root agent of an agentic system together with the {@link AgentMonitor} attached at that root.
+     */
+    public record MonitoredRoot(AgentInstance agent, AgentMonitor monitor) {
     }
 }

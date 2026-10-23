@@ -14,7 +14,6 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
 
-import dev.langchain4j.agentic.observability.MonitoredAgent;
 import io.quarkiverse.langchain4j.agentic.deployment.AgenticLangChain4jDotNames;
 import io.quarkiverse.langchain4j.agentic.deployment.DetectedAiAgentBuildItem;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
@@ -88,7 +87,7 @@ public class AgenticDevUIProcessor {
         return card;
     }
 
-    @BuildStep
+    @BuildStep(onlyIf = IsDevelopment.class)
     void jsonRpcProvider(BuildProducer<JsonRPCProvidersBuildItem> producers) {
         producers.produce(new JsonRPCProvidersBuildItem(AgenticJsonRpcService.class));
     }
@@ -115,13 +114,17 @@ public class AgenticDevUIProcessor {
     @Consume(SyntheticBeansRuntimeInitBuildItem.class)
     void enableDevModeMonitoring(List<DetectedAiAgentBuildItem> agents,
             AgenticRecorder recorder) {
-        DotName monitoredAgentName = DotName.createSimple(MonitoredAgent.class.getName());
-        Set<String> monitoredRootAgentClassNames = filterUserAgents(agents).stream()
-                .filter(a -> a.getIface().interfaceNames().stream().anyMatch(dn -> dn.equals(monitoredAgentName)))
-                .map(a -> a.getIface().name().toString())
-                .collect(Collectors.toSet());
-        if (!monitoredRootAgentClassNames.isEmpty()) {
-            recorder.enableDevModeMonitoring(monitoredRootAgentClassNames);
+        List<DetectedAiAgentBuildItem> userAgents = filterUserAgents(agents);
+        Set<String> subAgentClassNames = collectAllSubAgentClassNames(userAgents);
+        Set<String> rootAgentClassNames = new HashSet<>();
+        for (DetectedAiAgentBuildItem agent : userAgents) {
+            String className = agent.getIface().name().toString();
+            if (!subAgentClassNames.contains(className)) {
+                rootAgentClassNames.add(className);
+            }
+        }
+        if (!rootAgentClassNames.isEmpty()) {
+            recorder.enableDevModeMonitoring(rootAgentClassNames);
         }
     }
 
