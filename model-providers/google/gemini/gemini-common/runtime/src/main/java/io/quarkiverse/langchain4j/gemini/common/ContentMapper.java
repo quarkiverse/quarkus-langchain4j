@@ -28,6 +28,7 @@ import dev.langchain4j.data.message.VideoContent;
 import dev.langchain4j.data.video.Video;
 import dev.langchain4j.internal.CustomMimeTypesFileTypeDetector;
 import dev.langchain4j.internal.JsonSchemaElementUtils;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
@@ -41,6 +42,7 @@ public final class ContentMapper {
     public static GenerateContentRequest map(
             List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications,
+            ToolChoice toolChoice,
             GenerationConfig generationConfig,
             String modelId,
             boolean useGoogleSearch) {
@@ -151,7 +153,20 @@ public final class ContentMapper {
         return new GenerateContentRequest(contents,
                 !systemPrompts.isEmpty() ? GenerateContentRequest.SystemInstruction.ofContent(systemPrompts) : null,
                 toTools(modelId, toolSpecifications, useGoogleSearch),
+                toToolConfig(toolChoice),
                 generationConfig);
+    }
+
+    private static GenerateContentRequest.ToolConfig toToolConfig(ToolChoice toolChoice) {
+        if (toolChoice == null) {
+            return null;
+        }
+        GenerateContentRequest.ToolConfig.Mode mode = switch (toolChoice) {
+            case AUTO -> GenerateContentRequest.ToolConfig.Mode.AUTO;
+            case REQUIRED -> GenerateContentRequest.ToolConfig.Mode.ANY;
+            case NONE -> GenerateContentRequest.ToolConfig.Mode.NONE;
+        };
+        return new GenerateContentRequest.ToolConfig(new GenerateContentRequest.ToolConfig.FunctionCallingConfig(mode));
     }
 
     private static List<GenerateContentRequest.Tool> toTools(
