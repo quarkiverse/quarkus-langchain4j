@@ -6,11 +6,14 @@
         <artifactId>quarkus-langchain4j-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-langchain4j-a2a-apicurio-registry-parent</artifactId>
-    <name>Quarkus LangChain4j - A2A Apicurio Registry - Parent</name>
+    <artifactId>quarkus-langchain4j-apicurio-registry-parent</artifactId>
+    <name>Quarkus LangChain4j - Apicurio Registry - Parent</name>
     <packaging>pom</packaging>
+
     <modules>
-        <module>deployment</module>
-        <module>runtime</module>
+        <module>a2a</module>
+        <module>mcp</module>
+        <module>prompt</module>
     </modules>
+
 </project>
