@@ -60,8 +60,8 @@ public class VertexAiGeminiRecorder {
             if (DUMMY_KEY.equals(projectId)) {
                 throw new ConfigValidationException(createConfigProblems("project-id", configName));
             }
-            Optional<String> baseUrl = vertexAiConfig.baseUrl()
-                    .or(() -> Optional.of("https://" + location + "-aiplatform.googleapis.com"));
+            Optional<String> baseUrl = Optional
+                    .of(vertexAiConfig.baseUrl().orElse(VertxAiGeminiRestApi.defaultBaseUrl(location)));
 
             var builder = VertexAiGeminiEmbeddingModel.builder()
                     .configName(configName)
