@@ -73,6 +73,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         applyThinkingConfig(generationConfigBuilder);
         GenerationConfig generationConfig = generationConfigBuilder.build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
+                requestParameters.toolChoice(),
                 generationConfig, this.modelId, this.useGoogleSearch);
 
         ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
