@@ -28,6 +28,7 @@ import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.*;
+import io.quarkiverse.langchain4j.mcp.runtime.http.McpRequestSender;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
@@ -43,6 +44,13 @@ import io.vertx.core.http.HttpClientOptions;
 
 @Recorder
 public class McpRecorder {
+
+    /**
+     * The default of langchain4j, which isn't configurable in Quarkus.
+     */
+    private static final int MULTI_ROUND_TRIP_MAX_RETRIES = 3;
+
+    private static final Duration TRACING_MAX_SPAN_AGE_WITHOUT_TIMEOUT = Duration.ofHours(1);
 
     public static Map<String, LocalLaunchParams> claudeConfigContents = Collections.emptyMap();
 
@@ -140,7 +148,9 @@ public class McpRecorder {
                 addObservability(builder, key, addMetrics,
                         openTelemetryEnabled != null &&
                                 openTelemetryEnabled.getValue() &&
-                                mcpRuntimeConfiguration.getValue().tracingEnabled());
+                                mcpRuntimeConfiguration.getValue().tracingEnabled(),
+                        mcpTransportType, runtimeConfig.url().orElse(null), transport, tracingMaxSpanAge(runtimeConfig),
+                        vertx);
                 runtimeConfig.protocolVersion().ifPresent(builder::protocolVersion);
                 builder.subscribeToToolListChanges(runtimeConfig.subscribeToToolListChanges());
                 builder.subscribeToPromptListChanges(runtimeConfig.subscribeToPromptListChanges());
@@ -167,13 +177,25 @@ public class McpRecorder {
         };
     }
 
-    private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing) {
+    private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing,
+            McpTransportType transportType, String url, McpTransport transport, Duration tracingMaxSpanAge,
+            Supplier<Vertx> vertx) {
         if (addMetrics) {
             builder.addListener(createMetricsListener(key));
         }
         if (addTracing) {
-            builder.addListener(createTracingListener());
-            builder.metaSupplier(createTracingMetaSupplier());
+            Supplier<String> sessionIdSupplier = transport instanceof QuarkusStreamableHttpMcpTransport httpTransport
+                    ? httpTransport::mcpSessionId
+                    : null;
+            Object tracingListener = createTracingListener(transportType,
+                    transportType == McpTransportType.STDIO ? null : url, sessionIdSupplier, tracingMaxSpanAge, vertx.get());
+            // the tracing listener also propagates the trace context of its spans in the _meta of MCP messages
+            builder.addListener((McpClientListener) tracingListener);
+            builder.metaSupplier((McpMetaSupplier) tracingListener);
+            // and makes the spans of the HTTP requests carrying the messages children of the spans of the messages
+            if (transport instanceof QuarkusStreamableHttpMcpTransport httpTransport) {
+                httpTransport.setRequestSender((McpRequestSender) tracingListener);
+            }
         }
     }
 
@@ -189,33 +211,36 @@ public class McpRecorder {
         }
     }
 
-    private McpClientListener createTracingListener() {
+    /**
+     * How long an MCP span may stay in progress before the tracing listener ends it as abandoned: longer than any
+     * operation of the client can take. An operation can take its timeout once for the request and once for each
+     * multi round-trip retry.
+     */
+    static Duration tracingMaxSpanAge(McpClientRuntimeConfig config) {
+        // the prompts and initialization timeouts aren't configurable, the defaults of langchain4j are 60s and 30s
+        Duration longestTimeout = Duration.ofSeconds(60);
+        for (Duration timeout : List.of(config.toolExecutionTimeout(), config.resourcesTimeout())) {
+            if (timeout.isZero()) {
+                // no timeout
+                return TRACING_MAX_SPAN_AGE_WITHOUT_TIMEOUT;
+            }
+            if (timeout.compareTo(longestTimeout) > 0) {
+                longestTimeout = timeout;
+            }
+        }
+        return longestTimeout.multipliedBy(1 + MULTI_ROUND_TRIP_MAX_RETRIES).plus(Duration.ofMinutes(1));
+    }
+
+    private Object createTracingListener(McpTransportType transportType, String url, Supplier<String> sessionIdSupplier,
+            Duration maxSpanAge, Vertx vertx) {
         try {
             // avoid direct dependency on the TracingMcpClientListener class, it would break native
             // compilation if the optional OpenTelemetry dependency isn't present
-            Object tracer = Arc.container().select(
-                    Thread.currentThread().getContextClassLoader()
-                            .loadClass("io.opentelemetry.api.trace.Tracer"))
-                    .get();
-            return (McpClientListener) Thread.currentThread()
+            return Thread.currentThread()
                     .getContextClassLoader()
                     .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener")
-                    .getConstructor(Thread.currentThread().getContextClassLoader()
-                            .loadClass("io.opentelemetry.api.trace.Tracer"))
-                    .newInstance(tracer);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private McpMetaSupplier createTracingMetaSupplier() {
-        try {
-            // avoid direct dependency on the TracingMcpMetaSupplier class, it would break native
-            // compilation if the optional OpenTelemetry dependency isn't present
-            return (McpMetaSupplier) Thread.currentThread()
-                    .getContextClassLoader()
-                    .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpMetaSupplier")
-                    .getConstructor().newInstance();
+                    .getConstructor(McpTransportType.class, String.class, Supplier.class, Duration.class, Vertx.class)
+                    .newInstance(transportType, url, sessionIdSupplier, maxSpanAge, vertx);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
