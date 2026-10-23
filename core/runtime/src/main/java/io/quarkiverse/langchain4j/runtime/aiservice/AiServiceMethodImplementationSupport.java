@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -103,7 +104,6 @@ import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.service.tool.ToolServiceContext;
 import dev.langchain4j.service.tool.search.ToolSearchService;
-import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.PdfUrl;
@@ -142,18 +142,21 @@ public class AiServiceMethodImplementationSupport {
                                                                                                        // be improved
 
     static {
-        var defaultMemoryIdProviders = ServiceHelper.loadFactories(
-                DefaultMemoryIdProvider.class);
+        // This SPI is use-all (all providers are kept, sorted by priority), so it is loaded with
+        // ServiceLoader rather than langchain4j's ServiceHelper, whose classpath-order-dependent
+        // "using X, ignoring Y" warning does not apply here
+        var defaultMemoryIdProviders = new ArrayList<DefaultMemoryIdProvider>();
+        ServiceLoader.load(DefaultMemoryIdProvider.class).forEach(defaultMemoryIdProviders::add);
         if (defaultMemoryIdProviders.isEmpty()) {
             DEFAULT_MEMORY_ID_PROVIDERS = Collections.emptyList();
         } else {
-            DEFAULT_MEMORY_ID_PROVIDERS = new ArrayList<>(defaultMemoryIdProviders);
-            DEFAULT_MEMORY_ID_PROVIDERS.sort(new Comparator<>() {
+            defaultMemoryIdProviders.sort(new Comparator<>() {
                 @Override
                 public int compare(DefaultMemoryIdProvider o1, DefaultMemoryIdProvider o2) {
                     return Integer.compare(o1.priority(), o2.priority());
                 }
             });
+            DEFAULT_MEMORY_ID_PROVIDERS = defaultMemoryIdProviders;
         }
     }
 
