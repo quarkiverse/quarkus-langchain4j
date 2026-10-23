@@ -51,6 +51,7 @@ import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.model.chat.request.json.JsonArraySchema;
 import dev.langchain4j.model.chat.request.json.JsonBooleanSchema;
@@ -113,12 +114,13 @@ public class ToolProcessor {
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
     private static final DotName JSON_IGNORE = DotName.createSimple(JsonIgnore.class);
     private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
+    private static final DotName INVOCATION_CONTEXT = DotName.createSimple(InvocationContext.class);
 
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
     private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
             .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class, Integer.class,
-                    Map.class);
+                    Integer.class, Map.class);
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
@@ -369,6 +371,7 @@ public class ToolProcessor {
 
                     MethodParameterInfo memoryIdParameter = null;
                     MethodParameterInfo invocationParamsParameter = null;
+                    MethodParameterInfo invocationContextParameter = null;
                     for (MethodParameterInfo parameter : toolMethod.parameters()) {
                         if (parameter.hasAnnotation(TOOL_MEMORY_ID)) {
                             memoryIdParameter = parameter;
@@ -376,6 +379,11 @@ public class ToolProcessor {
                         }
                         if (parameter.type().name().equals(INVOCATION_PARAMETERS)) {
                             invocationParamsParameter = parameter;
+                            continue;
+                        }
+                        // supplied by the framework, so it must not be part of the schema shown to the LLM
+                        if (parameter.type().name().equals(INVOCATION_CONTEXT)) {
+                            invocationContextParameter = parameter;
                             continue;
                         }
 
@@ -442,6 +450,7 @@ public class ToolProcessor {
                     String invokerClassName = generateInvoker(toolMethod, classOutput, nameToParamPosition,
                             memoryIdParameter != null ? memoryIdParameter.position() : null,
                             invocationParamsParameter != null ? invocationParamsParameter.position() : null,
+                            invocationContextParameter != null ? invocationContextParameter.position() : null,
                             methodSignature, defaultValues);
                     generatedInvokerClasses.add(invokerClassName);
                     String argumentMapperClassName = generateArgumentMapper(toolMethod, classOutput,
@@ -874,7 +883,7 @@ public class ToolProcessor {
 
     private static String generateInvoker(MethodInfo methodInfo, ClassOutput classOutput,
             Map<String, Integer> nameToParamPosition, Short memoryIdParamPosition, Short invocationParamsParamPosition,
-            String methodSignature, Map<String, String> defaultValues) {
+            Short invocationContextParamPosition, String methodSignature, Map<String, String> defaultValues) {
         String implClassName = methodInfo.declaringClass().name() + "$$QuarkusInvoker$" + methodInfo.name() + "_"
                 + HashUtil.sha1(methodSignature);
         try (ClassCreator classCreator = ClassCreator.builder()
@@ -939,6 +948,9 @@ public class ToolProcessor {
                             : methodMetadataMc.loadNull(),
                     invocationParamsParamPosition != null
                             ? methodMetadataMc.load(Integer.valueOf(invocationParamsParamPosition))
+                            : methodMetadataMc.loadNull(),
+                    invocationContextParamPosition != null
+                            ? methodMetadataMc.load(Integer.valueOf(invocationContextParamPosition))
                             : methodMetadataMc.loadNull(),
                     defaultValuesHandle);
             methodMetadataMc.returnValue(resultHandle);
