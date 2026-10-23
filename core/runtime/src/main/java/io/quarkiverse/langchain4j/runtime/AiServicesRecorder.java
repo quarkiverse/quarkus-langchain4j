@@ -32,6 +32,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceEvents;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
@@ -390,6 +391,14 @@ public class AiServicesRecorder {
                     }
 
                     quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());
+
+                    // a value set on the annotation wins, otherwise the global property applies
+                    boolean executeToolsConcurrently = info.executeToolsConcurrently() != null
+                            ? info.executeToolsConcurrently()
+                            : AiServiceMethodImplementationSupport.isExecuteToolsConcurrentlyGloballyEnabled();
+                    if (executeToolsConcurrently) {
+                        quarkusAiServices.executeToolsConcurrently();
+                    }
 
                     if (info.chatMemoryFlushStrategySupplierClassName() != null) {
                         Supplier<? extends ChatMemoryFlushStrategy> supplier = createSupplier(
