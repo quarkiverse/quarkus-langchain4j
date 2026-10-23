@@ -16,6 +16,8 @@
     <module>runtime</module>
     <module>runtime-dev</module>
     <module>devmode-tests</module>
+    <module>test-extension/runtime</module>
+    <module>test-extension/deployment</module>
   </modules>
 
 
