@@ -32,4 +32,14 @@ public interface AiServiceConfig {
      */
     @WithDefault("" + DEFAULT_MAX_TOOL_CALLING_ROUND_TRIPS)
     int maxToolCallingRoundTrips();
+
+    /**
+     * Whether the tool calls requested in a single LLM response should be executed concurrently.
+     * When enabled, the tools are executed using the Quarkus managed executor, which propagates
+     * the CDI request context to the tool invocations.
+     * This can also be enabled for a specific AI service using {@code @RegisterAiService(executeToolsConcurrently = true)}.
+     * This currently only applies to AI service methods that do not stream their response.
+     */
+    @WithDefault("false")
+    boolean executeToolsConcurrently();
 }
