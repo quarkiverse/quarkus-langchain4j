@@ -38,6 +38,7 @@
     <module>mcp-conformance</module>
     <module>mcp-native</module>
     <module>secure-mcp</module>
+    <module>skills</module>
   </modules>
 
 
@@ -176,6 +177,11 @@
                   <dependency>
                       <groupId>io.quarkiverse.langchain4j</groupId>
                       <artifactId>quarkus-langchain4j-pgvector</artifactId>
+                      <version>999-SNAPSHOT</version>
+                  </dependency>
+                  <dependency>
+                      <groupId>io.quarkiverse.langchain4j</groupId>
+                      <artifactId>quarkus-langchain4j-skills</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
                   <dependency>
