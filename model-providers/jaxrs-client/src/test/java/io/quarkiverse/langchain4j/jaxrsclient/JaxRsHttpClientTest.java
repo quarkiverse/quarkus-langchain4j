@@ -217,6 +217,47 @@ class JaxRsHttpClientTest {
     }
 
     @Test
+    void executeSseShouldReportHttpExceptionForErrorResponse() throws InterruptedException {
+        server.createContext("/error", this::handleError);
+        server.start();
+
+        HttpClient client = new JaxRsHttpClientBuilder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .readTimeout(Duration.ofSeconds(2))
+                .build();
+
+        HttpRequest request = HttpRequest.builder()
+                .method(GET)
+                .url(baseUrl + "/error")
+                .build();
+
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        CountDownLatch finished = new CountDownLatch(1);
+        client.execute(request, new ServerSentEventListener() {
+            @Override
+            public void onEvent(ServerSentEvent event) {
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                error.set(throwable);
+            }
+
+            @Override
+            public void onClose() {
+                finished.countDown();
+            }
+        });
+
+        assertEquals(true, finished.await(3, TimeUnit.SECONDS));
+        // the same exception as on the blocking path, so LangChain4j's exception mapper can classify it
+        QuarkusHttpException exception = assertInstanceOf(QuarkusHttpException.class, error.get());
+        assertEquals(400, exception.statusCode());
+        assertEquals("bad-request", exception.getMessage());
+        assertEquals(Optional.of("7"), exception.header("retry-after"));
+    }
+
+    @Test
     void executeSseShouldDeliverEventsBeforeResponseCompletes() throws InterruptedException {
         // The server sends the first event immediately, then holds the connection open
         // for 5 seconds before sending the second event.
