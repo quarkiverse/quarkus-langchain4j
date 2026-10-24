@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.jaxrsclient;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
@@ -33,6 +36,7 @@ import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkus.tls.TlsConfiguration;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.net.KeyCertOptions;
+import io.vertx.core.net.ProxyType;
 import io.vertx.core.net.SSLOptions;
 import io.vertx.core.net.TrustOptions;
 
@@ -49,6 +53,12 @@ public class JaxRsHttpClient implements HttpClient {
                 .readTimeout(builder.readTimeout().getSeconds(), TimeUnit.SECONDS);
         for (Object provider : builder.clientProviders()) {
             clientBuilder.register(provider);
+        }
+        Proxy proxy = builder.proxy();
+        if (proxy != null && proxy.type() != Proxy.Type.DIRECT) {
+            InetSocketAddress address = (InetSocketAddress) proxy.address();
+            clientBuilder.proxy(address.getHostString(), address.getPort());
+            clientBuilder.proxyType(proxy.type() == Proxy.Type.SOCKS ? ProxyType.SOCKS5 : ProxyType.HTTP);
         }
         if (builder.tlsConfiguration() != null) {
             TlsConfiguration tlsConfiguration = builder.tlsConfiguration();
@@ -158,8 +168,7 @@ public class JaxRsHttpClient implements HttpClient {
 
     private static SuccessfulHttpResponse toSuccessfulHttpResponse(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            throw new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
-                    response.getStringHeaders());
+            throw toHttpException(response);
         }
 
         return SuccessfulHttpResponse.builder()
@@ -167,6 +176,23 @@ public class JaxRsHttpClient implements HttpClient {
                 .headers(response.getStringHeaders())
                 .body(response.readEntity(String.class))
                 .build();
+    }
+
+    private static QuarkusHttpException toHttpException(Response response) {
+        return new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
+                response.getStringHeaders());
+    }
+
+    /**
+     * A non-2xx status on the streaming path surfaces as a {@link WebApplicationException} carrying the response. It is
+     * converted to the same {@link QuarkusHttpException} the blocking path throws, so that LangChain4j's exception
+     * mapper can turn it into the matching {@code InvalidRequestException}, {@code AuthenticationException}, ...
+     */
+    private static Throwable toHttpExceptionIfPossible(Throwable throwable) {
+        if (throwable instanceof WebApplicationException wae && wae.getResponse() != null) {
+            return toHttpException(wae.getResponse());
+        }
+        return throwable;
     }
 
     @Override
@@ -227,7 +253,7 @@ public class JaxRsHttpClient implements HttpClient {
 
                     @Override
                     public void onFailure(Throwable throwable) {
-                        listener.onError(throwable);
+                        listener.onError(toHttpExceptionIfPossible(throwable));
                         listener.onClose();
                     }
 

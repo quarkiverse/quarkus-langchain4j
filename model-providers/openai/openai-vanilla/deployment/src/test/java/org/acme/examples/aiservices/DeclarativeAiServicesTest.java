@@ -532,7 +532,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     private void doTestImageDescriber(Supplier<String> describerSupplier) throws IOException {
         wiremock().register(post(urlEqualTo("/v1/chat/completions"))
-                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
+                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-6-luna")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
@@ -607,7 +607,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
     @Test
     public void test_multi_image_describer() throws Exception {
         wiremock().register(post(urlEqualTo("/v1/chat/completions"))
-                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
+                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-6-luna")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
