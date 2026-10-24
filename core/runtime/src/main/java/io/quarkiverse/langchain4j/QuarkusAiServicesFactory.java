@@ -126,6 +126,13 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
             performBasicValidation();
 
+            // build the guardrail service right away: building it resolves an SPI factory through the
+            // context classloader of the current thread, and when this AI service was created at
+            // application startup (an agent bean), the first invocation can happen on a thread whose
+            // context classloader cannot be adopted (e.g. the jdk.internal.misc.InnocuousThread used
+            // by java.lang.ref.Cleaner)
+            quarkusAiServiceContext().guardrailService();
+
             Collection<AiServiceMethodCreateInfo> methodCreateInfos = classCreateInfo.methodMap().values();
             for (var methodCreateInfo : methodCreateInfos) {
                 if (methodCreateInfo.isRequiresModeration() && ((context.moderationModel == null))) {
