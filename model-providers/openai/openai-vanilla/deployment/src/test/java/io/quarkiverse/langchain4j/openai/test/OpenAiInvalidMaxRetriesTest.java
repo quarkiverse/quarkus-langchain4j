@@ -19,6 +19,8 @@ public class OpenAiInvalidMaxRetriesTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.openai.api-key", "somekey")
+            // max-retries is only used (and therefore only validated) by the chat-completions path
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion")
             .overrideConfigKey("quarkus.langchain4j.openai.max-retries", "0")
             .assertException(t -> {
                 assertThat(t)

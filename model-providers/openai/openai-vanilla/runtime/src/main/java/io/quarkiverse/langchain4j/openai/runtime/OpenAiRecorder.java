@@ -121,8 +121,52 @@ public class OpenAiRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
-    @SuppressWarnings("deprecation")
     public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+        if (!openAiConfig.enableIntegration()) {
+            // the mode is irrelevant for a disabled model, both paths produce a DisabledChatModel
+            return chatCompletionChatModel(configName);
+        }
+        ChatModelConfig.Mode mode = resolveMode(openAiConfig);
+        if (openAiConfig.chatModel().mode().isEmpty()) {
+            log.infof("OpenAI chat model%s targets the %s API: no mode was configured, so it was selected from the base URL"
+                    + " (%s). Set quarkus.langchain4j.openai%schat-model.mode to override.",
+                    NamedConfigUtil.isDefault(configName) ? "" : " '" + configName + "'",
+                    mode == ChatModelConfig.Mode.RESPONSES ? "Responses" : "Chat Completions",
+                    openAiConfig.baseUrl(),
+                    NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."));
+        }
+        return mode == ChatModelConfig.Mode.RESPONSES
+                ? responsesChatModel(configName)
+                : chatCompletionChatModel(configName);
+    }
+
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+        if (!openAiConfig.enableIntegration()) {
+            return chatCompletionStreamingChatModel(configName);
+        }
+        return resolveMode(openAiConfig) == ChatModelConfig.Mode.RESPONSES
+                ? responsesStreamingChatModel(configName)
+                : chatCompletionStreamingChatModel(configName);
+    }
+
+    /**
+     * An explicit mode always wins. Otherwise the Responses API is selected when talking to OpenAI itself (GPT-6 models
+     * cannot use tools on Chat Completions unless reasoning is disabled), while OpenAI-compatible endpoints reachable
+     * through a custom base URL generally only implement Chat Completions.
+     */
+    private static ChatModelConfig.Mode resolveMode(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
+        ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+        if (chatModelConfig.mode().isPresent()) {
+            return chatModelConfig.mode().get();
+        }
+        boolean openAiBaseUrl = normalizeBaseUrl(openAiConfig.baseUrl()).equals(normalizeBaseUrl(OPENAI_BASE_URL));
+        return openAiBaseUrl ? ChatModelConfig.Mode.RESPONSES : ChatModelConfig.Mode.CHAT_COMPLETION;
+    }
+
+    @SuppressWarnings("deprecation")
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatCompletionChatModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
@@ -202,7 +246,8 @@ public class OpenAiRecorder {
     }
 
     @SuppressWarnings("deprecation")
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> chatCompletionStreamingChatModel(
+            String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
@@ -267,7 +312,7 @@ public class OpenAiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> responsesChatModel(String configName) {
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> responsesChatModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
@@ -380,7 +425,7 @@ public class OpenAiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> responsesStreamingChatModel(
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> responsesStreamingChatModel(
             String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 

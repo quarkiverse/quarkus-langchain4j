@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
@@ -158,8 +159,7 @@ public class JaxRsHttpClient implements HttpClient {
 
     private static SuccessfulHttpResponse toSuccessfulHttpResponse(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            throw new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
-                    response.getStringHeaders());
+            throw toHttpException(response);
         }
 
         return SuccessfulHttpResponse.builder()
@@ -167,6 +167,23 @@ public class JaxRsHttpClient implements HttpClient {
                 .headers(response.getStringHeaders())
                 .body(response.readEntity(String.class))
                 .build();
+    }
+
+    private static QuarkusHttpException toHttpException(Response response) {
+        return new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
+                response.getStringHeaders());
+    }
+
+    /**
+     * A non-2xx status on the streaming path surfaces as a {@link WebApplicationException} carrying the response. It is
+     * converted to the same {@link QuarkusHttpException} the blocking path throws, so that LangChain4j's exception
+     * mapper can turn it into the matching {@code InvalidRequestException}, {@code AuthenticationException}, ...
+     */
+    private static Throwable toHttpExceptionIfPossible(Throwable throwable) {
+        if (throwable instanceof WebApplicationException wae && wae.getResponse() != null) {
+            return toHttpException(wae.getResponse());
+        }
+        return throwable;
     }
 
     @Override
@@ -227,7 +244,7 @@ public class JaxRsHttpClient implements HttpClient {
 
                     @Override
                     public void onFailure(Throwable throwable) {
-                        listener.onError(throwable);
+                        listener.onError(toHttpExceptionIfPossible(throwable));
                         listener.onClose();
                     }
 
