@@ -52,7 +52,7 @@ public class ResponsesChatModelSmokeTest extends OpenAiBaseTest {
 
         Map<String, Object> requestBody = getRequestAsMap();
         assertThat(requestBody)
-                .containsEntry("model", "gpt-4o-mini")
+                .containsEntry("model", "gpt-6-luna")
                 .containsEntry("store", false)
                 .containsEntry("max_output_tokens", 100)
                 .containsKey("input")
