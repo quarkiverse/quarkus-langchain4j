@@ -1,12 +1,11 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_CHAT_MODEL;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_TIME_LIMIT;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_API;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -14,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Date;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -33,14 +31,15 @@ import com.ibm.watsonx.ai.chat.model.UserMessage;
 import dev.langchain4j.exception.ContentFilteredException;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.watsonx.WatsonxChatResponseMetadata;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ChatModerationTest extends WireMockAbstract {
+public class ChatModerationTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.moderations.hap.input", "0.8")
@@ -51,14 +50,7 @@ public class ChatModerationTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.moderations.pii.mask", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.moderations.granite-guardian.input", "0.85")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.moderations.granite-guardian.mask", "true")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response("my_super_token", new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     ChatModel chatModel;
@@ -102,16 +94,17 @@ public class ChatModerationTest extends WireMockAbstract {
                 .moderations(moderations)
                 .build();
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
-                .build();
+        mock.chat().reply(ChatReply.text("AI Response").usage(59, 47));
 
         var response = chatModel.chat(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
         assertEquals("AI Response", response.aiMessage().text());
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_CHAT_API);
+        assertJsonBody(request, body);
     }
 
     @Test
@@ -165,9 +158,7 @@ public class ChatModerationTest extends WireMockAbstract {
                     }
                 }""";
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WATSONX_CHAT_API).reply(200, response);
 
         var chatResponse = chatModel.chat(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -184,6 +175,9 @@ public class ChatModerationTest extends WireMockAbstract {
 
         assertNotNull(metadata.detections());
         assertEquals(1, metadata.detections().get("output").size());
+
+        assertThat(apiRequests()).singleElement()
+                .satisfies(request -> assertWatsonxRequest(request, URL_WATSONX_CHAT_API));
     }
 
     @Test
@@ -209,12 +203,13 @@ public class ChatModerationTest extends WireMockAbstract {
                     }
                 }""";
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WATSONX_CHAT_API).reply(200, response);
 
         assertThrows(ContentFilteredException.class, () -> chatModel.chat(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
                 dev.langchain4j.data.message.UserMessage.from("UserMessage")));
+
+        assertThat(apiRequests()).singleElement()
+                .satisfies(request -> assertWatsonxRequest(request, URL_WATSONX_CHAT_API));
     }
 }

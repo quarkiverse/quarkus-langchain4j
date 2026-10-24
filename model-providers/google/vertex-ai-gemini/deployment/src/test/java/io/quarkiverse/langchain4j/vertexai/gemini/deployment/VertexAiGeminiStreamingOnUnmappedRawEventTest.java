@@ -1,13 +1,10 @@
 package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +15,7 @@ import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -26,21 +24,34 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class VertexAiGeminiStreamingOnUnmappedRawEventTest extends WiremockAware {
+public class VertexAiGeminiStreamingOnUnmappedRawEventTest {
 
     private static final String API_KEY = "somekey";
     private static final String CHAT_MODEL_ID = "gemini-2.5-flash";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig());
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
+
+    private static final String STREAM_PATH = String.format(
+            "/vertexai-gemini/v1/projects/mock-project/locations/us-central1/publishers/google/models/%s:streamGenerateContent",
+            CHAT_MODEL_ID);
 
     @Inject
     StreamingChatModel streamingChatModel;
+
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
 
     @Test
     void onUnmappedRawEventReceivesRawServerSentEvent() throws InterruptedException {
@@ -56,14 +67,8 @@ public class VertexAiGeminiStreamingOnUnmappedRawEventTest extends WiremockAware
 
                 """;
 
-        wiremock().register(
-                post(urlPathEqualTo(
-                        String.format("/v1/projects/dummy/locations/dummy/publishers/google/models/%s:streamGenerateContent",
-                                CHAT_MODEL_ID)))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "text/event-stream")
-                                .withBody(eventStream)));
+        mock.raw().on("POST", STREAM_PATH)
+                .replies(RawResponse.of(200, Map.of("Content-Type", "text/event-stream"), eventStream));
 
         AtomicReference<ChatResponse> response = new AtomicReference<>();
         List<Object> rawEvents = new CopyOnWriteArrayList<>();
@@ -103,6 +108,11 @@ public class VertexAiGeminiStreamingOnUnmappedRawEventTest extends WiremockAware
                 .isNotEmpty()
                 .doesNotContainNull()
                 .allSatisfy(rawEvent -> assertThat(rawEvent).isInstanceOf(ServerSentEvent.class));
+
+        assertThat(mock.requests()).singleElement().satisfies(request -> {
+            assertThat(request.path()).isEqualTo(STREAM_PATH);
+            assertThat(request.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        });
     }
 
     @Singleton

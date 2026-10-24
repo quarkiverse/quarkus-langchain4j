@@ -1,9 +1,5 @@
 package io.quarkiverse.langchain4j.vertexai.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -15,27 +11,28 @@ import jakarta.inject.Singleton;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-
 import dev.langchain4j.model.chat.ChatModel;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkiverse.langchain4j.vertexai.runtime.VertexAiChatLanguageModel;
 import io.quarkiverse.langchain4j.vertexai.runtime.VertxAiRestApi;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class VertexAiChatLanguageModelSmokeTest extends WiremockAware {
+public class VertexAiChatLanguageModelSmokeTest {
 
     private static final String API_KEY = "somekey";
     private static final String CHAT_MODEL_ID = "chat-bison";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.log-requests", "true")
             .setLogRecordPredicate(record -> true)
             .assertLogRecords(VertexAiChatLanguageModelSmokeTest::verifyLogRecords);
@@ -43,106 +40,33 @@ public class VertexAiChatLanguageModelSmokeTest extends WiremockAware {
     @Inject
     ChatModel chatLanguageModel;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     void test() {
         assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(VertexAiChatLanguageModel.class);
 
-        wiremock().register(
-                post(urlEqualTo(
-                        String.format("/v1/projects/dummy/locations/dummy/publishers/google/models/%s:predict", CHAT_MODEL_ID)))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody("""
-                                        {
-                                          "predictions": [
-                                            {
-                                              "safetyAttributes": [
-                                                {
-                                                  "blocked": false,
-                                                  "categories": [
-                                                    "Death, Harm & Tragedy",
-                                                    "Finance",
-                                                    "Insult",
-                                                    "Legal",
-                                                    "Politics",
-                                                    "Sexual"
-                                                  ],
-                                                  "safetyRatings": [
-                                                    {
-                                                      "category": "Dangerous Content",
-                                                      "probabilityScore": 0.2,
-                                                      "severityScore": 0,
-                                                      "severity": "NEGLIGIBLE"
-                                                    },
-                                                    {
-                                                      "severityScore": 0,
-                                                      "category": "Harassment",
-                                                      "severity": "NEGLIGIBLE",
-                                                      "probabilityScore": 0.1
-                                                    },
-                                                    {
-                                                      "category": "Hate Speech",
-                                                      "severity": "NEGLIGIBLE",
-                                                      "severityScore": 0.1,
-                                                      "probabilityScore": 0
-                                                    },
-                                                    {
-                                                      "probabilityScore": 0.1,
-                                                      "severity": "NEGLIGIBLE",
-                                                      "category": "Sexually Explicit",
-                                                      "severityScore": 0
-                                                    }
-                                                  ],
-                                                  "scores": [
-                                                    0.1,
-                                                    1,
-                                                    0.1,
-                                                    0.1,
-                                                    0.3,
-                                                    0.1
-                                                  ]
-                                                }
-                                              ],
-                                              "groundingMetadata": [
-                                                {}
-                                              ],
-                                              "candidates": [
-                                                {
-                                                  "content": "Nice to meet you",
-                                                  "author": "1"
-                                                }
-                                              ],
-                                              "citationMetadata": [
-                                                {
-                                                  "citations": [
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          ],
-                                          "metadata": {
-                                            "tokenMetadata": {
-                                              "inputTokenCount": {
-                                                "totalBillableCharacters": 45,
-                                                "totalTokens": 11
-                                              },
-                                              "outputTokenCount": {
-                                                "totalBillableCharacters": 158,
-                                                "totalTokens": 37
-                                              }
-                                            }
-                                          }
-                                        }
-                                        """)));
+        mock.chat().reply(ChatReply.text("Nice to meet you").usage(11, 37));
 
         String response = chatLanguageModel.chat("hello");
         assertThat(response).isEqualTo("Nice to meet you");
 
-        LoggedRequest loggedRequest = singleLoggedRequest();
-        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Quarkus REST Client");
-        String requestBody = new String(loggedRequest.getBody());
-        assertThat(requestBody).contains("hello");
+        CapturedRequest loggedRequest = mock.chat().singleRequest();
+        // the mock fills in the project-id and location the test leaves blank
+        assertThat(loggedRequest.path()).isEqualTo(String.format(
+                "/vertexai/v1/projects/mock-project/locations/us-central1/publishers/google/models/%s:predict",
+                CHAT_MODEL_ID));
+        assertThat(loggedRequest.query()).isNull();
+        // the test's own AuthProvider wins over the mock's default one
+        assertThat(loggedRequest.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        assertThat(loggedRequest.header("User-Agent")).isEqualTo("Quarkus REST Client");
+        assertThat(loggedRequest.body()).contains("hello");
     }
 
     private static void verifyLogRecords(List<LogRecord> logRecords) {

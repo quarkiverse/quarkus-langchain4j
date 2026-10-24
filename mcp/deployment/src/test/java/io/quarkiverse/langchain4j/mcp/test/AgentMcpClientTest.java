@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.mcp.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -28,19 +25,21 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
 import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatRequestView;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that an agent declaring {@link McpToolBox} receives the tools of the MCP server.
  */
-public class AgentMcpClientTest extends OpenAiBaseTest {
+public class AgentMcpClientTest extends WiremockAware {
 
     private static final String MCP_PATH = "/mcp/agent";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Sequence.class, AgentWithMcpTools.class)
                     .addPackage(McpMockServer.class.getPackage())
@@ -54,12 +53,14 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
                             quarkus.langchain4j.mcp.client1.tool-execution-timeout=1s
                             """.formatted(ModernMcpMockServer.PROTOCOL_VERSION, wiremockUrlForConfig(MCP_PATH))),
                             "application.properties"))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever");
 
     @Inject
     Sequence sequence;
+
+    @Inject
+    MockModelServer mock;
 
     public interface Sequence {
 
@@ -76,6 +77,7 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
 
     @BeforeEach
     void setUpMcpServer() {
+        mock.reset();
         McpMockServer.modern(wiremock(), MCP_PATH)
                 .reset()
                 .stubInitialization()
@@ -85,38 +87,16 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
     @Test
     @ActivateRequestContext
     public void agentHasTools() {
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", "application/json")
-                                        .withBody("""
-                                                {
-                                                        "id": "chatcmpl-8GRu6o9Qf9JFAebDqpj76H5fl6Naz",
-                                                        "object": "chat.completion",
-                                                        "created": 1698931202,
-                                                        "model": "gpt-3.5-turbo-0613",
-                                                        "choices": [
-                                                          {
-                                                            "index": 0,
-                                                            "message": {
-                                                              "role": "assistant",
-                                                              "content": "dummy"
-                                                            },
-                                                            "finish_reason": "stop"
-                                                          }
-                                                        ],
-                                                        "usage": {
-                                                          "prompt_tokens": 159,
-                                                          "completion_tokens": 13,
-                                                          "total_tokens": 172
-                                                        }
-                                                      }
-                                                  \s""")));
+        mock.chat().reply("dummy");
 
         var response = sequence.toolsList("test");
         assertEquals("dummy", response);
         assertThat(ToolsInterceptor.TOOLS_NAMES).containsExactly("add");
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.query()).isNull();
+        assertThat(request.asChat().tools()).extracting(ChatRequestView.ToolDefinition::name).containsExactly("add");
     }
 
     @Singleton

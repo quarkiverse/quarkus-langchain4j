@@ -1,20 +1,16 @@
 package org.acme.examples.aiservices;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
+import static org.acme.examples.aiservices.OpenAiRequestAssertions.assertMultipleRequestMessage;
+import static org.acme.examples.aiservices.OpenAiRequestAssertions.assertSingleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import java.io.IOException;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,7 +19,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Priority;
@@ -37,15 +32,14 @@ import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InterceptorBinding;
 import jakarta.interceptor.InvocationContext;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.acme.examples.aiservices.OpenAiRequestAssertions.MessageContent;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.image.Image;
@@ -63,28 +57,30 @@ import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class DeclarativeAiServicesTest extends OpenAiBaseTest {
+public class DeclarativeAiServicesTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class))
+                    () -> ShrinkWrap.create(JavaArchive.class).addClass(OpenAiRequestAssertions.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
 
     @BeforeEach
     void setup() {
-        resetRequests();
-        resetMappings();
+        mock.reset();
     }
 
     interface AssistantBase {
@@ -99,24 +95,27 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
     }
 
     @Inject
+    MockModelServer mock;
+
+    @Inject
     Assistant assistant;
 
     @Test
     @ActivateRequestContext
-    public void test_simple_instruction_with_single_argument_and_no_annotations_from_super() throws IOException {
+    public void test_simple_instruction_with_single_argument_and_no_annotations_from_super() {
         String result = assistant.chat("Tell me a joke about developers");
         assertThat(result).isNotBlank();
 
-        assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about developers");
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), "Tell me a joke about developers");
     }
 
     @Test
     @ActivateRequestContext
-    public void test_simple_instruction_with_single_argument_and_no_annotations_from_iface() throws IOException {
+    public void test_simple_instruction_with_single_argument_and_no_annotations_from_iface() {
         String result = assistant.chat2("Tell me a joke about developers");
         assertThat(result).isNotBlank();
 
-        assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about developers");
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), "Tell me a joke about developers");
     }
 
     public static class DummyRetriever implements RetrievalAugmentor {
@@ -156,11 +155,11 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    public void test_simple_instruction_with_retriever() throws IOException {
+    public void test_simple_instruction_with_retriever() {
         String result = assistantWithRetriever.chat("Tell me a joke about developers");
         assertThat(result).isNotBlank();
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Tell me a joke about developers\n\nAnswer using the following information:\ndummy");
     }
 
@@ -182,51 +181,24 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    void test_extract_enum() throws IOException {
-        setChatCompletionMessageContent("POSITIVE");
+    void test_extract_enum() {
+        mock.chat().reply("POSITIVE");
 
         Sentiment sentiment = sentimentAnalyzer
                 .analyzeSentimentOf("This LaptopPro X15 is wicked fast and that 4K screen is a dream.");
 
         assertThat(sentiment).isEqualTo(Sentiment.POSITIVE);
 
-        assertSingleRequestMessage(getRequestAsMap(),
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 "Analyze sentiment of This LaptopPro X15 is wicked fast and that 4K screen is a dream.\nYou must answer strictly with one of these enums:\nPOSITIVE\nNEUTRAL\nNEGATIVE");
     }
 
     @Singleton
     static class Calculator {
 
-        private final Runnable after;
-
-        Calculator(CalculatorAfter after) {
-            this.after = after;
-        }
-
         @Tool("calculates the square root of the provided number")
         double squareRoot(double number) {
-            var result = Math.sqrt(number);
-            after.run();
-            return result;
-        }
-    }
-
-    private static final String scenario = "tools";
-    private static final String secondState = "second";
-
-    @Singleton
-    public static class CalculatorAfter implements Runnable {
-
-        private final Integer wiremockPort;
-
-        public CalculatorAfter(@ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
-            this.wiremockPort = wiremockPort;
-        }
-
-        @Override
-        public void run() {
-            WireMock wireMock = new WireMock(wiremockPort);
-            wireMock.setSingleScenarioState(scenario, secondState);
+            return Math.sqrt(number);
         }
     }
 
@@ -274,7 +246,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    void should_execute_tool_then_answer() throws IOException {
+    void should_execute_tool_then_answer() {
         var firstResponse = """
                 {
                   "id": "chatcmpl-8D88Dag1gAKnOPP9Ed4bos7vSpaNz",
@@ -327,24 +299,10 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                         }
                 """;
 
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer whatever"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(firstResponse)));
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer whatever"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(secondState)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(secondResponse)));
-
-        wiremock().setSingleScenarioState(scenario, Scenario.STARTED);
+        // the fixtures use the legacy function_call format, which the neutral model cannot express
+        mock.raw().on("POST", "/v1/chat/completions").replies(
+                RawResponse.json(200, firstResponse),
+                RawResponse.json(200, secondResponse));
 
         String userMessage = "What is the square root of 485906798473894056 in scientific notation?";
 
@@ -353,11 +311,18 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertThat(answer).isEqualTo(
                 "The square root of 485,906,798,473,894,056 in scientific notation is approximately 6.97070153193991E8.");
 
-        assertThat(wiremock().getServeEvents()).hasSize(2);
+        List<CapturedRequest> requests = mock.requests();
+        assertThat(requests).hasSize(2);
+        assertThat(requests).allSatisfy(request -> {
+            assertThat(request.path()).isEqualTo("/v1/chat/completions");
+            assertThat(request.query()).isNull();
+            assertThat(request.header("Authorization")).isEqualTo("Bearer whatever");
+        });
 
-        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(1))),
+        // the second request carries the tool result
+        assertSingleRequestMessage(requests.get(0).bodyAsJson(),
                 "What is the square root of 485906798473894056 in scientific notation?");
-        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0))),
+        assertMultipleRequestMessage(requests.get(1).bodyAsJson(),
                 List.of(
                         new MessageContent("user",
                                 "What is the square root of 485906798473894056 in scientific notation?"),
@@ -376,7 +341,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    void should_keep_separate_chat_memory_for_each_user_in_store() throws IOException {
+    void should_keep_separate_chat_memory_for_each_user_in_store() {
 
         ChatMemoryStore store = Arc.container().instance(ChatMemoryStore.class).get();
 
@@ -385,14 +350,14 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         /* **** First request for user 1 **** */
         String firstMessageFromFirstUser = "Hello, my name is Klaus";
-        setChatCompletionMessageContent("Nice to meet you Klaus");
+        mock.chat().reply("Nice to meet you Klaus");
         String firstAiResponseToFirstUser = chatWithSeparateMemoryForEachUser.chat(firstMemoryId, firstMessageFromFirstUser);
 
         // assert response
         assertThat(firstAiResponseToFirstUser).isEqualTo("Nice to meet you Klaus");
 
         // assert request
-        assertSingleRequestMessage(getRequestAsMap(), firstMessageFromFirstUser);
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), firstMessageFromFirstUser);
 
         // assert chat memory
         assertThat(store.getMessages(firstMemoryId)).hasSize(2)
@@ -400,17 +365,17 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         /* **** First request for user 2 **** */
-        resetRequests();
+        mock.reset();
 
         String firstMessageFromSecondUser = "Hello, my name is Francine";
-        setChatCompletionMessageContent("Nice to meet you Francine");
+        mock.chat().reply("Nice to meet you Francine");
         String firstAiResponseToSecondUser = chatWithSeparateMemoryForEachUser.chat(secondMemoryId, firstMessageFromSecondUser);
 
         // assert response
         assertThat(firstAiResponseToSecondUser).isEqualTo("Nice to meet you Francine");
 
         // assert request
-        assertSingleRequestMessage(getRequestAsMap(), firstMessageFromSecondUser);
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), firstMessageFromSecondUser);
 
         // assert chat memory
         assertThat(store.getMessages(secondMemoryId)).hasSize(2)
@@ -418,17 +383,17 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         /* **** Second request for user 1 **** */
-        resetRequests();
+        mock.reset();
 
         String secondsMessageFromFirstUser = "What is my name?";
-        setChatCompletionMessageContent("Your name is Klaus");
+        mock.chat().reply("Your name is Klaus");
         String secondAiMessageToFirstUser = chatWithSeparateMemoryForEachUser.chat(firstMemoryId, secondsMessageFromFirstUser);
 
         // assert response
         assertThat(secondAiMessageToFirstUser).contains("Klaus");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("user", firstMessageFromFirstUser),
                         new MessageContent("assistant", firstAiResponseToFirstUser),
@@ -441,10 +406,10 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
         /* **** Second request for user 2 **** */
-        resetRequests();
+        mock.reset();
 
         String secondsMessageFromSecondUser = "What is my name?";
-        setChatCompletionMessageContent("Your name is Francine");
+        mock.chat().reply("Your name is Francine");
         String secondAiMessageToSecondUser = chatWithSeparateMemoryForEachUser.chat(secondMemoryId,
                 secondsMessageFromSecondUser);
 
@@ -452,7 +417,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertThat(secondAiMessageToSecondUser).contains("Francine");
 
         // assert request
-        assertMultipleRequestMessage(getRequestAsMap(),
+        assertMultipleRequestMessage(mock.chat().singleRequest().bodyAsJson(),
                 List.of(
                         new MessageContent("user", firstMessageFromSecondUser),
                         new MessageContent("assistant", firstAiResponseToSecondUser),
@@ -476,29 +441,29 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    void no_memory_should_be_used() throws IOException {
+    void no_memory_should_be_used() {
 
         String firstUserMessage = "Hello, my name is Klaus";
-        setChatCompletionMessageContent("Nice to meet you Klaus");
+        mock.chat().reply("Nice to meet you Klaus");
         String firstAiResponse = noMemoryService.chat(firstUserMessage);
 
         // assert response
         assertThat(firstAiResponse).isEqualTo("Nice to meet you Klaus");
 
         // assert request
-        assertSingleRequestMessage(getRequestAsMap(), firstUserMessage);
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), firstUserMessage);
 
-        resetRequests();
+        mock.reset();
 
         String secondUserMessage = "What is my name";
-        setChatCompletionMessageContent("I don't know");
+        mock.chat().reply("I don't know");
         String secondAiResponse = noMemoryService.chat(secondUserMessage);
 
         // assert response
         assertThat(secondAiResponse).isEqualTo("I don't know");
 
         // assert request only contains the second request, so no memory is used
-        assertSingleRequestMessage(getRequestAsMap(), secondUserMessage);
+        assertSingleRequestMessage(mock.chat().singleRequest().bodyAsJson(), secondUserMessage);
     }
 
     @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
@@ -530,37 +495,9 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         unwrapped.getClass().getConstructor(QuarkusAiServiceContext.class).getAnnotation(Inject.class);
     }
 
-    private void doTestImageDescriber(Supplier<String> describerSupplier) throws IOException {
-        wiremock().register(post(urlEqualTo("/v1/chat/completions"))
-                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "chatcmpl-123",
-                                  "object": "chat.completion",
-                                  "created": 1677652288,
-                                  "model": "gpt-4o-mini",
-                                  "system_fingerprint": "fp_44709d6fcb",
-                                  "choices": [{
-                                    "index": 0,
-                                    "message": {
-                                      "role": "assistant",
-                                      "content": "https://image.io"
-                                    },
-                                    "logprobs": null,
-                                    "finish_reason": "stop"
-                                  }],
-                                  "usage": {
-                                    "prompt_tokens": 9,
-                                    "completion_tokens": 12,
-                                    "total_tokens": 21,
-                                    "completion_tokens_details": {
-                                      "reasoning_tokens": 0
-                                    }
-                                  }
-                                }
-                                """)));
+    private void doTestImageDescriber(Supplier<String> describerSupplier) {
+        mock.reset();
+        mock.chat().reply(ChatReply.text("https://image.io").usage(9, 12));
 
         String response = describerSupplier.get();
 
@@ -568,28 +505,21 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertThat(response).isEqualTo("https://image.io");
 
         // assert request
-        Map<String, Object> requestAsMap = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0)));
-        assertMessages(requestAsMap, new Consumer<>() {
-            @Override
-            public void accept(List<? extends Map> maps) {
-                assertThat(maps).singleElement().satisfies((Consumer<Map>) map -> {
-                    assertThat(map).containsEntry("role", "user").containsKey("content");
-                    assertThat(map.get("content")).isInstanceOfSatisfying(List.class, contents -> {
-                        assertThat(contents).hasSize(2);
-                        assertThat(contents.get(0)).isInstanceOfSatisfying(Map.class, content -> {
-                            assertThat(content).containsEntry("type", "text").containsEntry("text",
-                                    "This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond with only the Java code. If it is not, respond with 'NOT_AN_IMAGE'");
-                        });
-                        assertThat(contents.get(1)).isInstanceOfSatisfying(Map.class, content -> {
-                            assertThat(content).containsEntry("type", "image_url");
-                            assertThat(content.get("image_url")).isInstanceOfSatisfying(Map.class,
-                                    imageUrlMap -> {
-                                        assertThat(imageUrlMap).containsEntry("url", "https://foo.bar");
-                                    });
-                        });
-                    });
-                });
-            }
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.query()).isNull();
+        JsonNode requestBody = request.bodyAsJson();
+        assertThat(requestBody.path("model").textValue()).isEqualTo("gpt-6-luna");
+        assertThat(requestBody.get("messages")).singleElement().satisfies(message -> {
+            assertThat(message.path("role").textValue()).isEqualTo("user");
+            JsonNode contents = message.get("content");
+            assertThat(contents.isArray()).isTrue();
+            assertThat(contents).hasSize(2);
+            assertThat(contents.get(0).path("type").textValue()).isEqualTo("text");
+            assertThat(contents.get(0).path("text").textValue()).isEqualTo(
+                    "This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond with only the Java code. If it is not, respond with 'NOT_AN_IMAGE'");
+            assertThat(contents.get(1).path("type").textValue()).isEqualTo("image_url");
+            assertThat(contents.get(1).path("image_url").path("url").textValue()).isEqualTo("https://foo.bar");
         });
     }
 
@@ -606,36 +536,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     public void test_multi_image_describer() throws Exception {
-        wiremock().register(post(urlEqualTo("/v1/chat/completions"))
-                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "chatcmpl-123",
-                                  "object": "chat.completion",
-                                  "created": 1677652288,
-                                  "model": "gpt-4o-mini",
-                                  "system_fingerprint": "fp_44709d6fcb",
-                                  "choices": [{
-                                    "index": 0,
-                                    "message": {
-                                      "role": "assistant",
-                                      "content": "Two images described"
-                                    },
-                                    "logprobs": null,
-                                    "finish_reason": "stop"
-                                  }],
-                                  "usage": {
-                                    "prompt_tokens": 9,
-                                    "completion_tokens": 12,
-                                    "total_tokens": 21,
-                                    "completion_tokens_details": {
-                                      "reasoning_tokens": 0
-                                    }
-                                  }
-                                }
-                                """)));
+        mock.chat().reply(ChatReply.text("Two images described").usage(9, 12));
 
         var images = List.of(
                 Image.builder().url("https://example.com/img1.png").build(),
@@ -645,34 +546,25 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         assertThat(response).isEqualTo("Two images described");
 
-        Map<String, Object> requestAsMap = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0)));
-        assertMessages(requestAsMap, new Consumer<>() {
-            @Override
-            public void accept(List<? extends Map> maps) {
-                assertThat(maps).singleElement().satisfies((Consumer<Map>) map -> {
-                    assertThat(map).containsEntry("role", "user").containsKey("content");
-                    assertThat(map.get("content")).isInstanceOfSatisfying(List.class, contents -> {
-                        // text + 2 images = 3 content parts
-                        assertThat(contents).hasSize(3);
-                        assertThat(contents.get(0)).isInstanceOfSatisfying(Map.class, content -> {
-                            assertThat(content).containsEntry("type", "text")
-                                    .containsEntry("text", "Describe all 2 images");
-                        });
-                        assertThat(contents.get(1)).isInstanceOfSatisfying(Map.class, content -> {
-                            assertThat(content).containsEntry("type", "image_url");
-                            assertThat(content.get("image_url")).isInstanceOfSatisfying(Map.class,
-                                    imageUrlMap -> assertThat(imageUrlMap).containsEntry("url",
-                                            "https://example.com/img1.png"));
-                        });
-                        assertThat(contents.get(2)).isInstanceOfSatisfying(Map.class, content -> {
-                            assertThat(content).containsEntry("type", "image_url");
-                            assertThat(content.get("image_url")).isInstanceOfSatisfying(Map.class,
-                                    imageUrlMap -> assertThat(imageUrlMap).containsEntry("url",
-                                            "https://example.com/img2.png"));
-                        });
-                    });
-                });
-            }
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.query()).isNull();
+        JsonNode requestBody = request.bodyAsJson();
+        assertThat(requestBody.path("model").textValue()).isEqualTo("gpt-6-luna");
+        assertThat(requestBody.get("messages")).singleElement().satisfies(message -> {
+            assertThat(message.path("role").textValue()).isEqualTo("user");
+            JsonNode contents = message.get("content");
+            assertThat(contents.isArray()).isTrue();
+            // text + 2 images = 3 content parts
+            assertThat(contents).hasSize(3);
+            assertThat(contents.get(0).path("type").textValue()).isEqualTo("text");
+            assertThat(contents.get(0).path("text").textValue()).isEqualTo("Describe all 2 images");
+            assertThat(contents.get(1).path("type").textValue()).isEqualTo("image_url");
+            assertThat(contents.get(1).path("image_url").path("url").textValue())
+                    .isEqualTo("https://example.com/img1.png");
+            assertThat(contents.get(2).path("type").textValue()).isEqualTo("image_url");
+            assertThat(contents.get(2).path("image_url").path("url").textValue())
+                    .isEqualTo("https://example.com/img2.png");
         });
     }
 
@@ -721,11 +613,11 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     @ActivateRequestContext
-    public void test_custom_cdi_interceptor() throws IOException {
+    public void test_custom_cdi_interceptor() {
         String result = cannedAssistant.chat("Tell me a joke about developers");
         assertThat(result).isEqualTo("canned");
 
-        assertThat(wiremock().getServeEvents()).hasSize(0);
+        assertThat(mock.requests()).isEmpty();
     }
 
     @RegisterAiService
@@ -747,7 +639,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         /* **** First request for user 1 **** */
         String firstMessageFromFirstUser = "Hello, my name is Klaus";
-        setChatCompletionMessageContent("Nice to meet you Klaus");
+        mock.chat().reply("Nice to meet you Klaus");
         String firstAiResponseToFirstUser = hasChatMemoryAccess.chat(firstMemoryId, firstMessageFromFirstUser);
 
         // assert response
@@ -758,10 +650,10 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId).messages()).hasSize(2);
 
         /* **** First request for user 2 **** */
-        resetRequests();
+        mock.reset();
 
         String firstMessageFromSecondUser = "Hello, my name is Francine";
-        setChatCompletionMessageContent("Nice to meet you Francine");
+        mock.chat().reply("Nice to meet you Francine");
         String firstAiResponseToSecondUser = hasChatMemoryAccess.chat(secondMemoryId, firstMessageFromSecondUser);
 
         // assert response
@@ -772,10 +664,10 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertThat(hasChatMemoryAccess.getChatMemory(secondMemoryId).messages()).hasSize(2);
 
         /* **** Second request for user 1 **** */
-        resetRequests();
+        mock.reset();
 
         String secondsMessageFromFirstUser = "What is my name?";
-        setChatCompletionMessageContent("Your name is Klaus");
+        mock.chat().reply("Your name is Klaus");
         String secondAiMessageToFirstUser = hasChatMemoryAccess.chat(firstMemoryId, secondsMessageFromFirstUser);
 
         // assert response

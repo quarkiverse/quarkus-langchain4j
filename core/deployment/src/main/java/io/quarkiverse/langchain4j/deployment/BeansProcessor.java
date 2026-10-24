@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -58,18 +59,23 @@ import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BeanStream;
 import io.quarkus.arc.processor.InjectionPointInfo;
+import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
+import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.deployment.logging.LogCleanupFilterBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
 public class BeansProcessor {
+
+    private static final Logger log = Logger.getLogger(BeansProcessor.class);
 
     private static final String FEATURE = "langchain4j";
 
@@ -754,5 +760,16 @@ public class BeansProcessor {
         producer.produce(new RuntimeInitializedClassBuildItem(QuarkusJsonCodecFactory.ObjectMapperHolder.class.getName()));
         producer.produce(
                 new RuntimeInitializedClassBuildItem(QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.class.getName()));
+    }
+
+    // a step must produce something to run; the warning is only informational, so it anchors on service start
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    void warnWhenTheMockApiIsEnabledWithoutItsExtension(LangChain4jBuildConfig config) {
+        if (config.mockApi().enabled()
+                && !QuarkusClassLoader.isClassPresentAtRuntime("io.quarkiverse.langchain4j.mockapi.MockModelServer")) {
+            log.warn("quarkus.langchain4j.mock-api.enabled is true but the quarkus-langchain4j-mock-api extension is not"
+                    + " present: no mock is started and the LangChain4j dev services stay disabled");
+        }
     }
 }

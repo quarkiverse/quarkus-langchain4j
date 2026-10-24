@@ -1,0 +1,80 @@
+=== Decision
+--> POST /typesafe/v1/systemone
+{
+  "model" : "jev-latest",
+  "state" : {
+    "ticket" : "Help! My payouts have been failing for 3 days."
+  },
+  "questions" : {
+    "team" : {
+      "type" : "choice",
+      "instructions" : "Which team should handle this?",
+      "criteria" : {
+        "billing" : "Payments, invoicing, refunds",
+        "support" : "Bugs and outages"
+      }
+    },
+    "urgent" : {
+      "type" : "noul",
+      "instructions" : "Does this need attention today?",
+      "criteria" : {
+        "true" : "Money is not reaching the customer",
+        "false" : "It can wait"
+      }
+    }
+  }
+}
+<-- 200 [application/json]
+{
+  "model" : "jev-latest",
+  "answers" : {
+    "team" : {
+      "type" : "choice",
+      "choice" : "billing",
+      "probabilities" : {
+        "billing" : 0.88,
+        "support" : 0.12
+      },
+      "confidence" : 0.81
+    },
+    "urgent" : {
+      "type" : "noul",
+      "noul" : 0.95
+    }
+  },
+  "usage" : {
+    "input_tokens" : 318,
+    "output_tokens" : 34
+  }
+}
+
+=== Error
+--> POST /typesafe/v1/systemone
+{
+  "model" : "jev-latest",
+  "state" : {
+    "ticket" : "Help! My payouts have been failing for 3 days."
+  },
+  "questions" : {
+    "team" : {
+      "type" : "choice",
+      "instructions" : "Which team should handle this?",
+      "criteria" : {
+        "billing" : "Payments, invoicing, refunds",
+        "support" : "Bugs and outages"
+      }
+    },
+    "urgent" : {
+      "type" : "noul",
+      "instructions" : "Does this need attention today?",
+      "criteria" : {
+        "true" : "Money is not reaching the customer",
+        "false" : "It can wait"
+      }
+    }
+  }
+}
+<-- 429 [application/json]
+{
+  "error" : "slow down"
+}

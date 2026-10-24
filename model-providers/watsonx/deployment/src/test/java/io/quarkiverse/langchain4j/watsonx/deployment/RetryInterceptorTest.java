@@ -1,35 +1,25 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_EMBEDDING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SCORING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_EMBEDDING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_SCORING_API;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -37,26 +27,23 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.scoring.ScoringModel;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.EmbeddingReply;
+import io.quarkiverse.langchain4j.mockapi.ErrorReply;
+import io.quarkiverse.langchain4j.mockapi.Reply;
+import io.quarkiverse.langchain4j.mockapi.ScoringReply;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class RetryInterceptorTest extends WireMockAbstract {
+public class RetryInterceptorTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideConfigKey("quarkus.log.category.\"io.quarkiverse.langchain4j.watsonx.runtime.client\".level", "DEBUG")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
-                .response(BEARER_TOKEN, new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WatsonxTestUtil.class));
 
     @Inject
     ChatModel chatModel;
@@ -73,59 +60,16 @@ public class RetryInterceptorTest extends WireMockAbstract {
     @Test
     void test_on_retryable_status_code_retry_for_chat_model() {
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 429)
-                .scenario(Scenario.STARTED, "to_503")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 503)
-                .scenario("to_503", "to_504")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 504)
-                .scenario("to_504", "to_520")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 520)
-                .scenario("to_520", "to_200")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .scenario("to_200", Scenario.STARTED)
-                .response(RESPONSE_WATSONX_CHAT_API)
-                .build();
+        mock.chat().replies(retryableErrorsThen(ChatReply.text("AI Response").usage(59, 47)));
 
         assertDoesNotThrow(() -> chatModel.chat("Hello"));
-        watsonxServer.verify(5, postRequestedFor(urlPathEqualTo("/ml/v1/text/chat")));
+        assertRetried(mock.chat().requests(), URL_WATSONX_CHAT_API);
     }
 
     @Test
     void test_on_retryable_status_code_retry_for_streaming_chat_model() throws InterruptedException {
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 429)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario(Scenario.STARTED, "to_503")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 503)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario("to_503", "to_504")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 504)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario("to_504", "to_520")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 520)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario("to_520", "to_200")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario("to_200", Scenario.STARTED)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
-                .build();
+        mock.chat().replies(retryableErrorsThen(ChatReply.text("Hello").usage(38, 3)));
 
         CountDownLatch latch = new CountDownLatch(1);
         assertDoesNotThrow(() -> streamingChatModel.chat("Hello", new StreamingChatResponseHandler() {
@@ -144,73 +88,37 @@ public class RetryInterceptorTest extends WireMockAbstract {
         }));
 
         assertTrue(latch.await(3, TimeUnit.SECONDS));
-        watsonxServer.verify(5, postRequestedFor(urlPathEqualTo("/ml/v1/text/chat_stream")));
+        assertRetried(mock.chat().requests(), URL_WATSONX_CHAT_STREAMING_API);
     }
 
     @Test
     void test_on_retryable_status_code_retry_for_embedding_model() {
 
-        mockWatsonxBuilder(URL_WATSONX_EMBEDDING_API, 429)
-                .scenario(Scenario.STARTED, "to_503")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_EMBEDDING_API, 503)
-                .scenario("to_503", "to_504")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_EMBEDDING_API, 504)
-                .scenario("to_504", "to_520")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_EMBEDDING_API, 520)
-                .scenario("to_520", "to_200")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_EMBEDDING_API, 200)
-                .scenario("to_200", Scenario.STARTED)
-                .response(RESPONSE_WATSONX_EMBEDDING_API)
-                .build();
+        mock.embeddings().replies(retryableErrorsThen(
+                EmbeddingReply.of(new float[] { -0.006929283f, -0.005336422f, -0.024047505f })));
 
         assertDoesNotThrow(() -> embeddingModel.embed("Hello"));
-        watsonxServer.verify(5, postRequestedFor(urlPathEqualTo("/ml/v1/text/embeddings")));
+        assertRetried(mock.embeddings().requests(), URL_WATSONX_EMBEDDING_API);
     }
 
     @Test
     void test_on_retryable_status_code_retry_for_score_model() {
 
-        mockWatsonxBuilder(URL_WATSONX_SCORING_API, 429)
-                .scenario(Scenario.STARTED, "to_503")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_SCORING_API, 503)
-                .scenario("to_503", "to_504")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_SCORING_API, 504)
-                .scenario("to_504", "to_520")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_SCORING_API, 520)
-                .scenario("to_520", "to_200")
-                .build();
-
-        mockWatsonxBuilder(URL_WATSONX_SCORING_API, 200)
-                .scenario("to_200", Scenario.STARTED)
-                .response("""
-                        {
-                            "model_id": "cross-encoder/ms-marco-minilm-l-12-v2",
-                            "created_at": "2024-10-18T06:57:42.032Z",
-                            "results": [
-                                {
-                                    "index": 0,
-                                    "score": -2.5847978591918945
-                                }
-                            ],
-                            "input_token_count": 318
-                        }""")
-                .build();
+        mock.scoring().replies(retryableErrorsThen(ScoringReply.of(-2.5847978591918945)));
 
         assertDoesNotThrow(() -> scoringModel.score("Hello", "Hello"));
-        watsonxServer.verify(5, postRequestedFor(urlPathEqualTo("/ml/v1/text/rerank")));
+        assertRetried(mock.scoring().requests(), URL_WATSONX_SCORING_API);
+    }
+
+    /**
+     * One reply for each status code the client retries, then the given reply.
+     */
+    private static List<Reply> retryableErrorsThen(Reply reply) {
+        return List.of(ErrorReply.of(429, "Too Many Requests"), ErrorReply.of(503, "Service Unavailable"),
+                ErrorReply.of(504, "Gateway Timeout"), ErrorReply.of(520, "Unknown Error"), reply);
+    }
+
+    private static void assertRetried(List<CapturedRequest> requests, String path) {
+        assertThat(requests).hasSize(5).allSatisfy(request -> assertWatsonxRequest(request, path));
     }
 }

@@ -4,19 +4,19 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class AnthropicToolSearchToolRegexDeferLoadingTest extends AnthropicToolSearchToolDeferLoadingTest {
     private static final String MODEL_ID = "claude-sonnet-4-6"; // model that supports tools calling
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.chat-model.model-name", MODEL_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.chat-model.tool-search.enabled", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.chat-model.tool-search.type", "regex")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.chat-model.tool-search.type", "regex");
 
     @Override
     String expectedToolName() {

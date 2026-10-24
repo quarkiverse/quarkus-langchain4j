@@ -1,17 +1,13 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_GATEWAY_EMBEDDING_MODEL;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GATEWAY_EMBEDDING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GATEWAY_EMBEDDING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_GATEWAY_EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_GATEWAY_EMBEDDING_API;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.util.Date;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -29,20 +25,19 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.watsonx.WatsonxGatewayEmbeddingModel;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.EmbeddingReply;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class GatewayEmbeddingModelTest extends WireMockAbstract {
+public class GatewayEmbeddingModelTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.gateway-embedding-model.model-name",
                     DEFAULT_GATEWAY_EMBEDDING_MODEL)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-embedding-model.model-name",
                     DEFAULT_GATEWAY_EMBEDDING_MODEL)
@@ -52,14 +47,7 @@ public class GatewayEmbeddingModelTest extends WireMockAbstract {
                     "quarkus.langchain4j.watsonx.\"all-properties\".gateway-embedding-model.encoding-format", "base64")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-embedding-model.user",
                     "my-user")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response("my_super_token", new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     EmbeddingModel embeddingModel;
@@ -93,15 +81,16 @@ public class GatewayEmbeddingModelTest extends WireMockAbstract {
         var input = "Embedding THIS!";
         var body = new ModelGatewayEmbeddingPayload(DEFAULT_GATEWAY_EMBEDDING_MODEL, List.of(input), null, null, null);
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_EMBEDDING_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(RESPONSE_WATSONX_GATEWAY_EMBEDDING_API)
-                .build();
+        mock.embeddings().reply(EmbeddingReply.of(new float[] { -0.006929283f, -0.005336422f, -0.024047505f }));
 
         Response<Embedding> response = embeddingModel.embed(input);
         assertNotNull(response);
         assertNotNull(response.content());
         assertEquals(List.of(-0.006929283f, -0.005336422f, -0.024047505f), response.content().vectorAsList());
+
+        CapturedRequest request = mock.embeddings().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_GATEWAY_EMBEDDING_API);
+        assertJsonBody(request, body);
     }
 
     @Test
@@ -111,14 +100,15 @@ public class GatewayEmbeddingModelTest extends WireMockAbstract {
         var body = new ModelGatewayEmbeddingPayload(DEFAULT_GATEWAY_EMBEDDING_MODEL, List.of(input), 512, "base64",
                 "my-user");
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_EMBEDDING_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(RESPONSE_WATSONX_GATEWAY_EMBEDDING_API)
-                .build();
+        mock.embeddings().reply(EmbeddingReply.of(new float[] { -0.006929283f, -0.005336422f, -0.024047505f }));
 
         Response<Embedding> response = allPropertiesEmbeddingModel.embed(input);
         assertNotNull(response);
         assertNotNull(response.content());
         assertEquals(List.of(-0.006929283f, -0.005336422f, -0.024047505f), response.content().vectorAsList());
+
+        CapturedRequest request = mock.embeddings().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_GATEWAY_EMBEDDING_API);
+        assertJsonBody(request, body);
     }
 }

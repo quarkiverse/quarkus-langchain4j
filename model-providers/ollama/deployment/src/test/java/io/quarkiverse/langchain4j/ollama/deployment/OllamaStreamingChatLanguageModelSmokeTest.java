@@ -1,24 +1,23 @@
 package io.quarkiverse.langchain4j.ollama.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.AiMessage;
@@ -26,17 +25,42 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
-public class OllamaStreamingChatLanguageModelSmokeTest extends WiremockAware {
+public class OllamaStreamingChatLanguageModelSmokeTest {
+
+    private static final String SUM_TOOL = """
+            {
+              "type" : "function",
+              "function" : {
+                "name" : "sum",
+                "description" : "Execute the sum of two numbers",
+                "parameters" : {
+                  "type" : "object",
+                  "properties" : {
+                    "firstNumber" : {
+                      "type" : "integer"
+                    },
+                    "secondNumber" : {
+                      "type" : "integer"
+                    }
+                  },
+                  "required" : [ "firstNumber", "secondNumber" ]
+                }
+              }
+            }
+            """;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(Calculator.class))
-            .overrideConfigKey("quarkus.langchain4j.ollama.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideConfigKey("quarkus.langchain4j.devservices.enabled", "false");
 
     @Singleton
@@ -70,50 +94,50 @@ public class OllamaStreamingChatLanguageModelSmokeTest extends WiremockAware {
     @Inject
     ChatMemoryStore memory;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
-    void test_1() {
-        wiremock().register(
-                post(urlEqualTo("/api/chat"))
-                        .withRequestBody(equalToJson("""
-                                {
-                                  "model" : "llama3.2",
-                                  "messages" : [ {
-                                    "role" : "user",
-                                    "content" : "Hello"
-                                  }],
-                                  "options" : {
-                                    "temperature" : 0.8,
-                                    "top_k" : 40,
-                                    "top_p" : 0.9
-                                  },
-                                  "stream" : true
-                                }
-                                """))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/x-ndjson")
-                                .withBody(
-                                        """
-                                                {"model":"llama3.2","created_at":"2024-11-30T09:03:42.312611426Z","message":{"role":"assistant","content":"Hello"},"done":false}
-                                                {"model":"llama3.2","created_at":"2024-11-30T09:03:42.514215351Z","message":{"role":"assistant","content":"!"},"done":false}
-                                                {"model":"llama3.2","created_at":"2024-11-30T09:03:44.109059873Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"total_duration":4821417857,"load_duration":2508844071,"prompt_eval_count":11,"prompt_eval_duration":514000000,"eval_count":10,"eval_duration":1797000000}""")));
+    void test_1() throws Exception {
+        mock.chat().reply(ChatReply.text("Hello!").chunks(List.of("Hello", "!")));
 
         var result = aiServiceWithoutTool.streaming("Hello").collect().asList().await().indefinitely();
         assertEquals(List.of("Hello", "!"), result);
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/ollama/api/chat");
+        assertThat(request.bodyAsJson()).isEqualTo(new ObjectMapper().readTree("""
+                {
+                  "model" : "llama3.2",
+                  "messages" : [ {
+                    "role" : "user",
+                    "content" : "Hello"
+                  }],
+                  "options" : {
+                    "temperature" : 0.8,
+                    "top_k" : 40,
+                    "top_p" : 0.9
+                  },
+                  "stream" : true
+                }
+                """));
     }
 
     @Test
     void emitsThinkingEvents() {
-        wiremock().register(
-                post(urlEqualTo("/api/chat"))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/x-ndjson")
-                                .withBody(
-                                        """
-                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.422542932Z","message":{"role":"assistant","content":"","thinking":"Let me "},"done":false}
-                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.522542932Z","message":{"role":"assistant","content":"","thinking":"think."},"done":false}
-                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.622542932Z","message":{"role":"assistant","content":"Hello"},"done":false}
-                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.722542932Z","message":{"role":"assistant","content":"!"},"done":false}
-                                                {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.822542932Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"prompt_eval_count":11,"eval_count":10}""")));
+        // raw stub: the thinking arrives in two chunks, while a neutral reply streams its thinking in one object
+        mock.raw().on("POST", "/ollama/api/chat").replies(RawResponse.of(200, Map.of("Content-Type", "application/x-ndjson"),
+                """
+                        {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.422542932Z","message":{"role":"assistant","content":"","thinking":"Let me "},"done":false}
+                        {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.522542932Z","message":{"role":"assistant","content":"","thinking":"think."},"done":false}
+                        {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.622542932Z","message":{"role":"assistant","content":"Hello"},"done":false}
+                        {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.722542932Z","message":{"role":"assistant","content":"!"},"done":false}
+                        {"model":"qwen3:1.7b","created_at":"2024-12-11T15:21:23.822542932Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"prompt_eval_count":11,"eval_count":10}"""));
 
         List<ChatEvent> events = aiServiceWithoutTool.streamingEvents("Hello")
                 .collect().asList().await().indefinitely();
@@ -127,167 +151,42 @@ public class OllamaStreamingChatLanguageModelSmokeTest extends WiremockAware {
         ChatEvent.ChatCompletedEvent completed = (ChatEvent.ChatCompletedEvent) events.get(4);
         assertEquals("Hello!", completed.getChatResponse().aiMessage().text());
         assertEquals("Let me think.", completed.getChatResponse().aiMessage().thinking());
+
+        assertThat(mock.requests()).singleElement().satisfies(r -> assertThat(r.path()).isEqualTo("/ollama/api/chat"));
     }
 
     @Test
-    void test_2() {
-        wiremock().register(
-                post(urlEqualTo("/api/chat"))
-                        .withRequestBody(equalToJson("""
-                                {
-                                  "model" : "llama3.2",
-                                  "messages" : [ {
-                                    "role" : "user",
-                                    "content" : "Hello"
-                                  }],
-                                  "tools" : [ {
-                                    "type" : "function",
-                                    "function" : {
-                                      "name" : "sum",
-                                      "description" : "Execute the sum of two numbers",
-                                      "parameters" : {
-                                        "type" : "object",
-                                        "properties" : {
-                                          "firstNumber" : {
-                                            "type" : "integer"
-                                          },
-                                          "secondNumber" : {
-                                            "type" : "integer"
-                                          }
-                                        },
-                                        "required" : [ "firstNumber", "secondNumber" ]
-                                      }
-                                    }
-                                  } ],
-                                  "options" : {
-                                    "temperature" : 0.8,
-                                    "top_k" : 40,
-                                    "top_p" : 0.9
-                                  },
-                                  "stream" : true
-                                }
-                                """))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/x-ndjson")
-                                .withBody(
-                                        """
-                                                {"model":"llama3.2","created_at":"2024-11-30T09:03:42.312611426Z","message":{"role":"assistant","content":"Hello"},"done":false}
-                                                {"model":"llama3.2","created_at":"2024-11-30T09:03:42.514215351Z","message":{"role":"assistant","content":"!"},"done":false}
-                                                {"model":"llama3.2","created_at":"2024-11-30T09:03:44.109059873Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"total_duration":4821417857,"load_duration":2508844071,"prompt_eval_count":11,"prompt_eval_duration":514000000,"eval_count":10,"eval_duration":1797000000}""")));
+    void test_2() throws Exception {
+        mock.chat().reply(ChatReply.text("Hello!").chunks(List.of("Hello", "!")));
 
         var result = aiServiceWithTool.streaming("1", "Hello").collect().asList().await().indefinitely();
         assertEquals(List.of("Hello", "!"), result);
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/ollama/api/chat");
+        assertThat(request.bodyAsJson()).isEqualTo(new ObjectMapper().readTree("""
+                {
+                  "model" : "llama3.2",
+                  "messages" : [ {
+                    "role" : "user",
+                    "content" : "Hello"
+                  }],
+                  "tools" : [ %s ],
+                  "options" : {
+                    "temperature" : 0.8,
+                    "top_k" : 40,
+                    "top_p" : 0.9
+                  },
+                  "stream" : true
+                }
+                """.formatted(SUM_TOOL)));
     }
 
     @Test
-    void test_3() {
-        wiremock()
-                .register(
-                        post(urlEqualTo("/api/chat"))
-                                .inScenario("")
-                                .whenScenarioStateIs(Scenario.STARTED)
-                                .willSetStateTo("TOOL_CALL")
-                                .withRequestBody(equalToJson("""
-                                        {
-                                          "model" : "llama3.2",
-                                          "messages" : [ {
-                                            "role" : "user",
-                                            "content" : "1 + 1"
-                                          }],
-                                          "tools" : [ {
-                                            "type" : "function",
-                                            "function" : {
-                                              "name" : "sum",
-                                              "description" : "Execute the sum of two numbers",
-                                              "parameters" : {
-                                                "type" : "object",
-                                                "properties" : {
-                                                  "firstNumber" : {
-                                                    "type" : "integer"
-                                                  },
-                                                  "secondNumber" : {
-                                                    "type" : "integer"
-                                                  }
-                                                },
-                                                "required" : [ "firstNumber", "secondNumber" ]
-                                              }
-                                            }
-                                          } ],
-                                          "options" : {
-                                            "temperature" : 0.8,
-                                            "top_k" : 40,
-                                            "top_p" : 0.9
-                                          },
-                                          "stream" : true
-                                        }
-                                        """))
-
-                                .willReturn(aResponse()
-                                        .withHeader("Content-Type", "application/x-ndjson")
-                                        .withBody(
-                                                """
-                                                        {"model":"llama3.1","created_at":"2024-11-30T16:36:02.833930413Z","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"sum","arguments":{"firstNumber":1,"secondNumber":1}}}]},"done":false}
-                                                        {"model":"llama3.1","created_at":"2024-11-30T16:36:04.368016152Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"total_duration":28825672145,"load_duration":29961281,"prompt_eval_count":169,"prompt_eval_duration":3906000000,"eval_count":22,"eval_duration":24887000000}""")));
-
-        wiremock()
-                .register(
-                        post(urlEqualTo("/api/chat"))
-                                .inScenario("")
-                                .whenScenarioStateIs("TOOL_CALL")
-                                .willSetStateTo("AI_RESPONSE")
-                                .withRequestBody(equalToJson("""
-                                        {
-                                          "model" : "llama3.2",
-                                          "messages" : [ {
-                                            "role" : "user",
-                                            "content" : "1 + 1"
-                                          }, {
-                                            "role" : "assistant",
-                                            "tool_calls" : [ {
-                                              "function" : {
-                                                "name" : "sum",
-                                                "arguments" : {
-                                                  "firstNumber" : 1,
-                                                  "secondNumber" : 1
-                                                }
-                                              }
-                                            } ]
-                                          }, {
-                                            "role" : "tool",
-                                            "content" : "2"
-                                          } ],
-                                          "tools" : [ {
-                                            "type" : "function",
-                                            "function" : {
-                                              "name" : "sum",
-                                              "description" : "Execute the sum of two numbers",
-                                              "parameters" : {
-                                                "type" : "object",
-                                                "properties" : {
-                                                  "firstNumber" : {
-                                                    "type" : "integer"
-                                                  },
-                                                  "secondNumber" : {
-                                                    "type" : "integer"
-                                                  }
-                                                },
-                                                "required" : [ "firstNumber", "secondNumber" ]
-                                              }
-                                            }
-                                          } ],
-                                          "options" : {
-                                            "temperature" : 0.8,
-                                            "top_k" : 40,
-                                            "top_p" : 0.9
-                                          },
-                                          "stream" : true
-                                        }
-                                        """))
-                                .willReturn(aResponse()
-                                        .withHeader("Content-Type", "application/x-ndjson")
-                                        .withBody(
-                                                """
-                                                        {"model":"llama3.1","created_at":"2024-11-30T16:36:04.368016152Z","message":{"role":"assistant","content":"The result is 2"},"done_reason":"stop","done":true,"total_duration":28825672145,"load_duration":29961281,"prompt_eval_count":169,"prompt_eval_duration":3906000000,"eval_count":22,"eval_duration":24887000000}""")));
+    void test_3() throws Exception {
+        mock.chat().replies(List.of(
+                ChatReply.toolCall("sum", "{\"firstNumber\":1,\"secondNumber\":1}"),
+                ChatReply.text("The result is 2").chunks(List.of("The result is 2"))));
 
         var result = aiServiceWithTool.streaming("2", "1 + 1").collect().asList().await().indefinitely();
         assertEquals(List.of("The result is 2"), result);
@@ -308,5 +207,55 @@ public class OllamaStreamingChatLanguageModelSmokeTest extends WiremockAware {
         } else {
             fail("The third message is not of type ToolExecutionResultMessage");
         }
+
+        List<CapturedRequest> requests = mock.chat().requests();
+        assertThat(requests).hasSize(2);
+        ObjectMapper mapper = new ObjectMapper();
+        assertThat(requests.get(0).bodyAsJson()).isEqualTo(mapper.readTree("""
+                {
+                  "model" : "llama3.2",
+                  "messages" : [ {
+                    "role" : "user",
+                    "content" : "1 + 1"
+                  }],
+                  "tools" : [ %s ],
+                  "options" : {
+                    "temperature" : 0.8,
+                    "top_k" : 40,
+                    "top_p" : 0.9
+                  },
+                  "stream" : true
+                }
+                """.formatted(SUM_TOOL)));
+        assertThat(requests.get(1).bodyAsJson()).isEqualTo(mapper.readTree("""
+                {
+                  "model" : "llama3.2",
+                  "messages" : [ {
+                    "role" : "user",
+                    "content" : "1 + 1"
+                  }, {
+                    "role" : "assistant",
+                    "tool_calls" : [ {
+                      "function" : {
+                        "name" : "sum",
+                        "arguments" : {
+                          "firstNumber" : 1,
+                          "secondNumber" : 1
+                        }
+                      }
+                    } ]
+                  }, {
+                    "role" : "tool",
+                    "content" : "2"
+                  } ],
+                  "tools" : [ %s ],
+                  "options" : {
+                    "temperature" : 0.8,
+                    "top_k" : 40,
+                    "top_p" : 0.9
+                  },
+                  "stream" : true
+                }
+                """.formatted(SUM_TOOL)));
     }
 }

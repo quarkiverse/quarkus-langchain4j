@@ -1,15 +1,11 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_DEPLOYMENT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_DEPLOYMENT_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_DEPLOYMENT_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_DEPLOYMENT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_TIME_LIMIT;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_DEPLOYMENT_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_DEPLOYMENT_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.streamingChatResponseHandler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,12 +13,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -43,26 +37,22 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.watsonx.WatsonxChatRequestParameters;
 import dev.langchain4j.model.watsonx.WatsonxDeploymentChatModel;
 import dev.langchain4j.model.watsonx.WatsonxDeploymentStreamingChatModel;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class DeploymentChatModelTest extends WireMockAbstract {
+public class DeploymentChatModelTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            // a deployment needs no project: an empty value keeps the mock's placeholder out
+            .overrideConfigKey("quarkus.langchain4j.watsonx.project-id", "")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.deployment-chat-model.deployment-id",
                     DEFAULT_DEPLOYMENT_ID)
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response("my_super_token", new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     ChatModel chatModel;
@@ -88,10 +78,7 @@ public class DeploymentChatModelTest extends WireMockAbstract {
     @Test
     void chat() throws Exception {
 
-        mockWatsonxBuilder(URL_WATSONX_DEPLOYMENT_CHAT_API.formatted(DEFAULT_DEPLOYMENT_ID), 200)
-                .body(mapper.writeValueAsString(defaultRequest()))
-                .response(RESPONSE_WATSONX_CHAT_API)
-                .build();
+        mock.chat().reply(ChatReply.text("AI Response").usage(59, 47).modelName("mistralai/mistral-large"));
 
         var chatResponse = chatModel.chat(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -100,16 +87,17 @@ public class DeploymentChatModelTest extends WireMockAbstract {
         assertEquals("AI Response", chatResponse.aiMessage().text());
         assertEquals("mistralai/mistral-large", chatResponse.metadata().modelName());
         assertEquals(106, chatResponse.metadata().tokenUsage().totalTokenCount());
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_DEPLOYMENT_CHAT_API.formatted(DEFAULT_DEPLOYMENT_ID));
+        assertJsonBody(request, defaultRequest());
     }
 
     @Test
     void chat_streaming() throws Exception {
 
-        mockWatsonxBuilder(URL_WATSONX_DEPLOYMENT_CHAT_STREAMING_API.formatted(DEFAULT_DEPLOYMENT_ID), 200)
-                .body(mapper.writeValueAsString(defaultRequest()))
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
-                .build();
+        mock.chat().reply(ChatReply.text("Hello").usage(38, 3).id("chatcmpl-5d8c131decbb6978cba5df10267aa3ff")
+                .modelName("meta-llama/llama-4-maverick-17b-128e-instruct-fp8"));
 
         var messages = List.of(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -127,6 +115,10 @@ public class DeploymentChatModelTest extends WireMockAbstract {
         assertEquals("chatcmpl-5d8c131decbb6978cba5df10267aa3ff", metadata.id());
         assertEquals("meta-llama/llama-4-maverick-17b-128e-instruct-fp8", metadata.modelName());
         assertEquals(41, metadata.tokenUsage().totalTokenCount());
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_DEPLOYMENT_CHAT_STREAMING_API.formatted(DEFAULT_DEPLOYMENT_ID));
+        assertJsonBody(request, defaultRequest());
     }
 
     @Test
@@ -146,6 +138,7 @@ public class DeploymentChatModelTest extends WireMockAbstract {
                 .build();
 
         assertThrows(UnsupportedFeatureException.class, () -> chatModel.chat(chatRequest));
+        assertThat(apiRequests()).isEmpty();
     }
 
     private TextChatRequest defaultRequest() {

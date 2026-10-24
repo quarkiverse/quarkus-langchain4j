@@ -1,28 +1,18 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.DELETE;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.GET;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.POST;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.PUT;
 import static com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type.HTML;
 import static com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type.JSON;
 import static com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type.MD;
 import static com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type.PAGE_IMAGES;
 import static com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type.PLAIN_TEXT;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_COS_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TEXT_EXTRACTION_RESULT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TEXT_EXTRACTION_START_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.BEARER_TOKEN;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.COS_PATH;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_IAM_GENERATE_TOKEN;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_TEXT_EXTRACTION_RESULT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_TEXT_EXTRACTION_START_API;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -36,17 +26,19 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.core.exception.model.WatsonxError;
 import com.ibm.watsonx.ai.textprocessing.CosReference;
@@ -61,9 +53,11 @@ import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionRequest;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionResponse;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class TextExtractionTest extends WireMockAbstract {
+public class TextExtractionTest extends WatsonxMockTestBase {
 
     static String CONNECTION_ID = "my-connection-id";
     static String BUCKET_NAME = "my-bucket-name";
@@ -71,12 +65,13 @@ public class TextExtractionTest extends WireMockAbstract {
     static String PROCESS_EXTRACTION_ID = "my-id";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-extraction.cos-url", URL_COS_SERVER)
+            // Cloud Object Storage has its own host, which the mock does not take over
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-extraction.cos-url",
+                    "${quarkus.langchain4j.mock-api.url}" + COS_PATH)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-extraction.document-reference.connection",
                     CONNECTION_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name",
@@ -86,15 +81,22 @@ public class TextExtractionTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name",
                     BUCKET_NAME)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClass(WireMockUtil.class)
+                    .addClass(WatsonxTestUtil.class)
                     .addAsResource(FILE_NAME));
 
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
-                .response(BEARER_TOKEN, new Date())
-                .build();
+    /**
+     * The extraction requests the stubs expect, see {@link #mockServers}.
+     */
+    List<TextExtractionRequest> expectedRequests = new ArrayList<>();
+
+    /**
+     * A token that expires at once, so that every test requests its own, as the token refresh of
+     * {@link #deleteFileTest()} needs.
+     */
+    @BeforeEach
+    void mockIamToken() {
+        expectedRequests.clear();
+        mock.raw().on("POST", URL_IAM_GENERATE_TOKEN).replies(iamToken(BEARER_TOKEN, new Date()));
     }
 
     @Inject
@@ -116,12 +118,13 @@ public class TextExtractionTest extends WireMockAbstract {
         textExtracted = textExtraction.extractAndFetch(fileAlreadyUploaded);
         assertEquals("Hello", textExtracted);
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(2, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(2, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(2);
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).hasSize(2);
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -141,12 +144,13 @@ public class TextExtractionTest extends WireMockAbstract {
         textExtracted = textExtraction.uploadExtractAndFetch(inputStream, fileName);
         assertEquals("Hello", textExtracted);
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(2, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(2, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(2, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(2);
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(2);
+        assertThat(requests("GET", cosFile(outputFileName))).hasSize(2);
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -165,12 +169,13 @@ public class TextExtractionTest extends WireMockAbstract {
         textExtracted = textExtraction.uploadExtractAndFetch(file);
         assertEquals("Hello", textExtracted);
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(2, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(2, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(2, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(2);
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(2);
+        assertThat(requests("GET", cosFile(outputFileName))).hasSize(2);
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -185,12 +190,13 @@ public class TextExtractionTest extends WireMockAbstract {
         assertThrows(FileNotFoundException.class,
                 () -> textExtraction.uploadExtractAndFetch(file));
 
-        watsonxServer.verify(0, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).isEmpty();
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -209,12 +215,13 @@ public class TextExtractionTest extends WireMockAbstract {
         processId = textExtraction.startExtraction(fileAlreadyUploaded).metadata().id();
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -233,12 +240,13 @@ public class TextExtractionTest extends WireMockAbstract {
         processId = textExtraction.uploadAndStartExtraction(file).metadata().id();
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(2, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(2);
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -256,12 +264,13 @@ public class TextExtractionTest extends WireMockAbstract {
         assertEquals(ex.code(), "file_not_found");
         assertTrue(ex.getCause() instanceof FileNotFoundException);
 
-        watsonxServer.verify(0, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).isEmpty();
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -281,19 +290,17 @@ public class TextExtractionTest extends WireMockAbstract {
         processId = textExtraction.uploadAndStartExtraction(inputStream, fileName).metadata().id();
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(2, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(2);
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
     void forceRemoveOutputAndUploadedFiles() throws Exception {
-
-        watsonxServer.resetAll();
-        cosServer.resetAll();
 
         String outputFileName = "myNewOutput.json";
         File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
@@ -324,37 +331,40 @@ public class TextExtractionTest extends WireMockAbstract {
                 () -> textExtraction.uploadAndStartExtraction(file, options),
                 "The asynchronous version of startExtraction doesn't allow the use of the \"removeOutputFile\" and \"removeUploadedFile\" options");
 
-        watsonxServer.verify(0, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).isEmpty();
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
 
         String extractedText = textExtraction.extractAndFetch(FILE_NAME, options);
         assertEquals("Hello", extractedText);
         Thread.sleep(200); // Wait for the async calls.
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(1, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(1, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(1, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(1, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(1);
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).hasSize(1);
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).hasSize(1);
+        assertThat(requests("DELETE", cosFile(outputFileName))).hasSize(1);
 
-        watsonxServer.resetAll();
-        cosServer.resetAll();
+        assertStubbedRequests();
+
+        mock.reset();
+        mockIamToken();
 
         mockServers(body, outputFileName, true, true);
 
         extractedText = textExtraction.uploadExtractAndFetch(file, options);
         assertEquals("Hello", extractedText);
         Thread.sleep(200); // Wait for the async calls.
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(1, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(1, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(1, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(1, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(1, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(1);
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(1);
+        assertThat(requests("GET", cosFile(outputFileName))).hasSize(1);
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).hasSize(1);
+        assertThat(requests("DELETE", cosFile(outputFileName))).hasSize(1);
+        assertStubbedRequests();
     }
 
     @Test
@@ -371,12 +381,13 @@ public class TextExtractionTest extends WireMockAbstract {
         mockServers(body, outputFileName, false, false);
 
         textExtraction.startExtraction(FILE_NAME);
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -393,12 +404,13 @@ public class TextExtractionTest extends WireMockAbstract {
         mockServers(body, outputFileName, false, false);
 
         textExtraction.startExtraction(FILE_NAME, TextExtractionParameters.builder().requestedOutputs(JSON).build());
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -415,12 +427,13 @@ public class TextExtractionTest extends WireMockAbstract {
         mockServers(body, outputFileName, false, false);
 
         textExtraction.startExtraction(FILE_NAME, TextExtractionParameters.builder().requestedOutputs(PLAIN_TEXT).build());
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -437,12 +450,13 @@ public class TextExtractionTest extends WireMockAbstract {
         mockServers(body, outputFolderName, false, false);
 
         textExtraction.startExtraction(FILE_NAME, TextExtractionParameters.builder().requestedOutputs(PAGE_IMAGES).build());
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFolderName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFolderName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -460,12 +474,13 @@ public class TextExtractionTest extends WireMockAbstract {
 
         textExtraction.startExtraction(FILE_NAME,
                 TextExtractionParameters.builder().requestedOutputs(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML).build());
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("GET", cosFile(outputFolderName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFolderName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -523,7 +538,8 @@ public class TextExtractionTest extends WireMockAbstract {
                         .outputDpi(32)
                         .build());
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertStubbedRequests();
     }
 
     @Test
@@ -592,6 +608,7 @@ public class TextExtractionTest extends WireMockAbstract {
         assertEquals("fetch_operation_not_allowed", ex.code());
         assertEquals("The fetch operation cannot be executed if more than one file is to be generated",
                 ex.getMessage());
+        assertStubbedRequests();
     }
 
     @Test
@@ -641,6 +658,7 @@ public class TextExtractionTest extends WireMockAbstract {
         assertEquals("fetch_operation_not_allowed", ex.code());
         assertEquals("The fetch operation cannot be executed for the type \"page_images\"",
                 ex.getMessage());
+        assertStubbedRequests();
     }
 
     @Test
@@ -649,33 +667,22 @@ public class TextExtractionTest extends WireMockAbstract {
         String outputFileName = FILE_NAME.replace(".pdf", ".md");
 
         TextExtractionRequest body = createDefaultRequest();
+        expectedRequests.add(body);
 
-        mockTextExtractionBuilder(POST, URL_WATSONX_TEXT_EXTRACTION_START_API, 200)
-                .body(body)
-                .response(body, PROCESS_EXTRACTION_ID, "submitted")
-                .scenario(Scenario.STARTED, "firstIteration")
-                .build();
+        mock.raw().on("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)
+                .reply(200, job(body, PROCESS_EXTRACTION_ID, "submitted"));
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID), 200)
-                .response(body, PROCESS_EXTRACTION_ID, "running")
-                .scenario("firstIteration", "secondIteration")
-                .build();
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID)).replies(
+                RawResponse.json(200, job(body, PROCESS_EXTRACTION_ID, "running")),
+                RawResponse.json(200, job(body, PROCESS_EXTRACTION_ID, "completed")));
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(body, PROCESS_EXTRACTION_ID, "completed")
-                .scenario("secondIteration", Scenario.STARTED)
-                .build();
-
-        mockCosBuilder(GET, BUCKET_NAME, outputFileName, 200)
-                .response("Hello")
-                .build();
+        mock.raw().on("GET", cosFile(outputFileName)).replies(cosFileContent("Hello"));
 
         String extractedValue = textExtraction.extractAndFetch(FILE_NAME);
         assertEquals("Hello", extractedValue);
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(2, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(2);
+        assertStubbedRequests();
     }
 
     @Test
@@ -684,36 +691,21 @@ public class TextExtractionTest extends WireMockAbstract {
         String outputFileName = FILE_NAME.replace(".pdf", ".md");
 
         TextExtractionRequest body = createDefaultRequest();
+        expectedRequests.add(body);
 
-        mockTextExtractionBuilder(POST, URL_WATSONX_TEXT_EXTRACTION_START_API, 200)
-                .body(body)
-                .response(body, PROCESS_EXTRACTION_ID, "submitted")
-                .scenario(Scenario.STARTED, "firstIteration")
-                .build();
+        mock.raw().on("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)
+                .reply(200, job(body, PROCESS_EXTRACTION_ID, "submitted"));
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(body, PROCESS_EXTRACTION_ID, "running")
-                .scenario("firstIteration", "secondIteration")
-                .build();
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID)).replies(
+                RawResponse.json(200, job(body, PROCESS_EXTRACTION_ID, "running")),
+                RawResponse.json(200, job(body, PROCESS_EXTRACTION_ID, "completed")));
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(body, PROCESS_EXTRACTION_ID, "completed")
-                .scenario("secondIteration", Scenario.STARTED)
-                .build();
+        mock.raw().on("GET", cosFile(outputFileName)).replies(cosFileContent("Hello"));
 
-        mockCosBuilder(GET, BUCKET_NAME, outputFileName, 200)
-                .response("Hello")
-                .build();
+        mock.raw().on("DELETE", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))
+                .replies(RawResponse.of(204, Map.of(), null));
 
-        mockTextExtractionBuilder(DELETE,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID), 204)
-                .build();
-
-        mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 200)
-                .response("Hello")
-                .build();
+        mock.raw().on("DELETE", cosFile(FILE_NAME)).replies(cosFileContent("Hello"));
 
         TextExtractionParameters options = TextExtractionParameters.builder()
                 .timeout(Duration.ofMillis(100))
@@ -726,8 +718,9 @@ public class TextExtractionTest extends WireMockAbstract {
         assertEquals("Execution to extract test.pdf file took longer than the timeout set by 100 milliseconds",
                 ex.getMessage());
 
-        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(1, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(1);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(1);
+        assertStubbedRequests();
     }
 
     @Test
@@ -737,31 +730,25 @@ public class TextExtractionTest extends WireMockAbstract {
         File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
 
         TextExtractionRequest request = createDefaultRequest();
+        expectedRequests.add(request);
 
         TextExtractionParameters parameters = TextExtractionParameters.builder()
                 .removeOutputFile(true)
                 .removeUploadedFile(true)
                 .build();
 
-        mockCosBuilder(PUT, BUCKET_NAME, FILE_NAME, 200).build();
-        mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 200).build();
+        mock.raw().on("PUT", cosFile(FILE_NAME)).replies(cosFileContent(null));
+        mock.raw().on("DELETE", cosFile(FILE_NAME)).replies(cosFileContent(null));
 
-        mockTextExtractionBuilder(POST, URL_WATSONX_TEXT_EXTRACTION_START_API, 200)
-                .body(request)
-                .response(request, PROCESS_EXTRACTION_ID, "submitted")
-                .build();
+        mock.raw().on("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)
+                .reply(200, job(request, PROCESS_EXTRACTION_ID, "submitted"));
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(request, PROCESS_EXTRACTION_ID, "running")
-                .scenario(Scenario.STARTED, "failed")
-                .build();
-
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .failResponse(request, PROCESS_EXTRACTION_ID)
-                .scenario("failed", Scenario.STARTED)
-                .build();
+        // every extraction is running when first polled and has failed when polled again
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID)).replies(
+                RawResponse.json(200, job(request, PROCESS_EXTRACTION_ID, "running")),
+                RawResponse.json(200, failedJob(request, PROCESS_EXTRACTION_ID)),
+                RawResponse.json(200, job(request, PROCESS_EXTRACTION_ID, "running")),
+                RawResponse.json(200, failedJob(request, PROCESS_EXTRACTION_ID)));
 
         var ex = assertThrows(
                 TextExtractionException.class,
@@ -778,12 +765,13 @@ public class TextExtractionTest extends WireMockAbstract {
         assertEquals(ex.getMessage(), "error message");
 
         Thread.sleep(200); // Wait for the async calls.
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(4, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(1, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(2, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(4);
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(1);
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).hasSize(2);
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -792,18 +780,16 @@ public class TextExtractionTest extends WireMockAbstract {
         String outputFileName = FILE_NAME.replace(".pdf", ".md");
         File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
 
-        mockCosBuilder(PUT, BUCKET_NAME, FILE_NAME, 404)
-                .response("""
-                        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                        <Error>
-                            <Code>NoSuchBucket</Code>
-                            <Message>The specified bucket does not exist.</Message>
-                            <Resource>/my-bucket-name/test.pdf</Resource>
-                            <RequestId>my-request-id</RequestId>
-                            <httpStatusCode>404</httpStatusCode>
-                        </Error>
-                        """.trim())
-                .build();
+        mock.raw().on("PUT", cosFile(FILE_NAME)).replies(RawResponse.of(404, Map.of("Content-Type", "application/xml"), """
+                <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <Error>
+                    <Code>NoSuchBucket</Code>
+                    <Message>The specified bucket does not exist.</Message>
+                    <Resource>/my-bucket-name/test.pdf</Resource>
+                    <RequestId>my-request-id</RequestId>
+                    <httpStatusCode>404</httpStatusCode>
+                </Error>
+                """.trim()));
 
         assertThrows(
                 WatsonxException.class,
@@ -815,12 +801,13 @@ public class TextExtractionTest extends WireMockAbstract {
                 () -> textExtraction.uploadExtractAndFetch(file),
                 "The specified bucket does not exist.");
 
-        watsonxServer.verify(0, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(2, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).isEmpty();
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).isEmpty();
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(2);
+        assertThat(requests("GET", cosFile(outputFileName))).isEmpty();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
@@ -830,10 +817,11 @@ public class TextExtractionTest extends WireMockAbstract {
         File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
 
         TextExtractionRequest body = createDefaultRequest();
+        expectedRequests.add(body);
 
-        mockCosBuilder(PUT, BUCKET_NAME, FILE_NAME, 200).build();
-        mockCosBuilder(GET, BUCKET_NAME, outputFileName, 404)
-                .response("""
+        mock.raw().on("PUT", cosFile(FILE_NAME)).replies(cosFileContent(null));
+        mock.raw().on("GET", cosFile(outputFileName)).replies(RawResponse.of(404, Map.of("Content-Type", "application/xml"),
+                """
                         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                         <Error>
                             <Code>NoSuchKey</Code>
@@ -842,18 +830,13 @@ public class TextExtractionTest extends WireMockAbstract {
                             <RequestId>my-request-id</RequestId>
                             <httpStatusCode>404</httpStatusCode>
                         </Error>
-                        """.trim())
-                .build();
+                        """.trim()));
 
-        mockTextExtractionBuilder(POST, URL_WATSONX_TEXT_EXTRACTION_START_API, 200)
-                .body(body)
-                .response(body, PROCESS_EXTRACTION_ID, "submitted")
-                .build();
+        mock.raw().on("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)
+                .reply(200, job(body, PROCESS_EXTRACTION_ID, "submitted"));
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(body, PROCESS_EXTRACTION_ID, "completed")
-                .build();
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))
+                .reply(200, job(body, PROCESS_EXTRACTION_ID, "completed"));
 
         assertThrows(
                 WatsonxException.class,
@@ -865,35 +848,35 @@ public class TextExtractionTest extends WireMockAbstract {
                 () -> textExtraction.uploadExtractAndFetch(file),
                 "The specified key does not exist.");
 
-        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
-        watsonxServer.verify(2, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
-        cosServer.verify(1, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(2, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
-        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).hasSize(2);
+        assertThat(requests("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))).hasSize(2);
+        assertThat(requests("PUT", cosFile(FILE_NAME))).hasSize(1);
+        assertThat(requests("GET", cosFile(outputFileName))).hasSize(2);
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).isEmpty();
+        assertThat(requests("DELETE", cosFile(outputFileName))).isEmpty();
+        assertStubbedRequests();
     }
 
     @Test
     void textExtractionEventDoesntExistTest() {
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 404)
-                .response("""
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID)).reply(404, """
+                    {
+                        "trace": "9ddfccd50f6649d9913810df36578d38",
+                        "errors": [
                             {
-                                "trace": "9ddfccd50f6649d9913810df36578d38",
-                                "errors": [
-                                    {
-                                        "code": "text_extraction_event_does_not_exist",
-                                        "message": "Text extraction request does not exist."
-                                    }
-                                ]
+                                "code": "text_extraction_event_does_not_exist",
+                                "message": "Text extraction request does not exist."
                             }
-                        """)
-                .build();
+                        ]
+                    }
+                """);
 
         var ex = assertThrows(WatsonxException.class,
                 () -> textExtraction.fetchExtractionRequest(PROCESS_EXTRACTION_ID));
         assertTrue(ex.details().orElseThrow().errors().get(0).is(WatsonxError.Code.TEXT_EXTRACTION_EVENT_DOES_NOT_EXIST));
+        assertThat(apiRequests()).hasSize(1);
+        assertStubbedRequests();
     }
 
     @Test
@@ -901,10 +884,8 @@ public class TextExtractionTest extends WireMockAbstract {
 
         TextExtractionRequest request = createDefaultRequest();
 
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(request, PROCESS_EXTRACTION_ID, "COMPLETED")
-                .build();
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))
+                .reply(200, job(request, PROCESS_EXTRACTION_ID, "COMPLETED"));
 
         TextExtractionResponse response = textExtraction.fetchExtractionRequest(PROCESS_EXTRACTION_ID);
         assertEquals(request.documentReference(), response.entity().documentReference());
@@ -917,6 +898,8 @@ public class TextExtractionTest extends WireMockAbstract {
         assertNull(response.entity().results().error());
         assertEquals(1, response.entity().results().numberPagesProcessed());
         assertNotNull(response.entity().results().runningAt());
+        assertThat(apiRequests()).hasSize(1);
+        assertStubbedRequests();
     }
 
     @Test
@@ -935,26 +918,21 @@ public class TextExtractionTest extends WireMockAbstract {
                 CosReference.of(NEW_CONNECTION_ID, NEW_BUCKET_NAME).toDataReference(outputFileName),
                 Parameters.of(List.of(MD.value())),
                 null);
+        expectedRequests.add(request);
 
         // Mock the upload local file operation.
-        mockCosBuilder(PUT, NEW_BUCKET_NAME, FILE_NAME, 200).build();
+        mock.raw().on("PUT", COS_PATH + "/" + NEW_BUCKET_NAME + "/" + FILE_NAME).replies(cosFileContent(null));
 
         // Mock extracted file result.
-        mockCosBuilder(GET, NEW_BUCKET_NAME, outputFileName, 200)
-                .response("Hello")
-                .build();
+        mock.raw().on("GET", COS_PATH + "/" + NEW_BUCKET_NAME + "/" + outputFileName).replies(cosFileContent("Hello"));
 
         // Mock start extraction.
-        mockTextExtractionBuilder(POST, URL_WATSONX_TEXT_EXTRACTION_START_API, 200)
-                .body(request)
-                .response(request, PROCESS_EXTRACTION_ID, "submitted")
-                .build();
+        mock.raw().on("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)
+                .reply(200, job(request, PROCESS_EXTRACTION_ID, "submitted"));
 
         // Mock result extraction.
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(request, PROCESS_EXTRACTION_ID, "completed")
-                .build();
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))
+                .reply(200, job(request, PROCESS_EXTRACTION_ID, "completed"));
 
         TextExtractionParameters options = TextExtractionParameters.builder()
                 .documentReference(CosReference.of(NEW_CONNECTION_ID, NEW_BUCKET_NAME))
@@ -969,16 +947,15 @@ public class TextExtractionTest extends WireMockAbstract {
         assertDoesNotThrow(() -> textExtraction.startExtraction(FILE_NAME, options));
         assertDoesNotThrow(() -> textExtraction.uploadAndStartExtraction(file, options));
         assertDoesNotThrow(() -> textExtraction.uploadExtractAndFetch(file, options));
+        assertStubbedRequests();
     }
 
     @Test
     void deleteFileTest() {
 
-        mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 200).build();
-        assertDoesNotThrow(() -> textExtraction.deleteFile(BUCKET_NAME, FILE_NAME));
-
-        mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 404)
-                .response("""
+        mock.raw().on("DELETE", cosFile(FILE_NAME)).replies(
+                cosFileContent(null),
+                RawResponse.of(404, Map.of("Content-Type", "application/xml"), """
                         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                         <Error>
                         <Code>NoSuchBucket</Code>
@@ -986,23 +963,23 @@ public class TextExtractionTest extends WireMockAbstract {
                         <Resource>/andreaproject-donotdelete-pr-xnran4g4ptd1wos/ciao.pdf</Resource>
                         <RequestId>27482371-17d6-47c7-a526-5a655074bed2</RequestId>
                         <httpStatusCode>404</httpStatusCode>
-                        </Error>""".trim()).build();
+                        </Error>""".trim()));
+
+        assertDoesNotThrow(() -> textExtraction.deleteFile(BUCKET_NAME, FILE_NAME));
         assertThrows(WatsonxException.class, () -> textExtraction.deleteFile(BUCKET_NAME, FILE_NAME));
+        assertStubbedRequests();
+        assertThat(requests("DELETE", cosFile(FILE_NAME))).hasSize(2);
 
-        // Return an expired token.
-        mockIAMBuilder(200)
-                .scenario(Scenario.STARTED, "retry")
-                .response("expired_token", Date.from(Instant.now().minusSeconds(3)))
-                .build();
+        mock.reset();
 
-        // Second call (retryOn) returns 200
-        mockIAMBuilder(200)
-                .scenario("retry", Scenario.STARTED)
-                .response("my_super_token", Date.from(Instant.now().plusMillis(2000)))
-                .build();
+        // Return an expired token, then (retryOn) a valid one.
+        mock.raw().on("POST", URL_IAM_GENERATE_TOKEN).replies(
+                iamToken("expired_token", Date.from(Instant.now().minusSeconds(3))),
+                iamToken("my_super_token", Date.from(Instant.now().plusMillis(2000))));
 
-        mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 403)
-                .response("""
+        // The expired token is denied, the valid one accepted.
+        mock.raw().on("DELETE", cosFile(FILE_NAME)).replies(
+                RawResponse.of(403, Map.of("Content-Type", "application/xml"), """
                         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                         <Error>
                             <Code>AccessDenied</Code>
@@ -1010,49 +987,73 @@ public class TextExtractionTest extends WireMockAbstract {
                             <Resource>/andreaproject-donotdelete-pr-xnran4g4ptd1wo/ciao.pdf</Resource>
                             <RequestId>df887c2b-43c3-4933-a3a1-b0e19e7c2231</RequestId>
                             <httpStatusCode>403</httpStatusCode>
-                        </Error>""".trim())
-                .token("expired_token")
-                .scenario(Scenario.STARTED, "retry")
-                .build();
-
-        mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 200)
-                .scenario("retry", Scenario.STARTED)
-                .build();
+                        </Error>""".trim()),
+                cosFileContent(null));
 
         assertDoesNotThrow(() -> textExtraction.deleteFile(BUCKET_NAME, FILE_NAME));
+
+        assertThat(iamRequests()).hasSize(2);
+        List<CapturedRequest> deletes = requests("DELETE", cosFile(FILE_NAME));
+        assertThat(deletes).hasSize(2);
+        assertThat(deletes.get(0).header("Authorization")).isEqualTo("Bearer expired_token");
+        assertThat(deletes.get(1).header("Authorization")).isEqualTo("Bearer my_super_token");
     }
 
     private void mockServers(TextExtractionRequest body, String outputFileName, boolean deleteUploadedFile,
             boolean deleteOutputFile) {
+        expectedRequests.add(body);
+
         // Mock the upload local file operation.
-        mockCosBuilder(PUT, BUCKET_NAME, FILE_NAME, 200).build();
+        mock.raw().on("PUT", cosFile(FILE_NAME)).replies(cosFileContent(null));
 
         // Mock extracted file result.
-        mockCosBuilder(GET, BUCKET_NAME, outputFileName, 200)
-                .response("Hello")
-                .build();
+        mock.raw().on("GET", cosFile(outputFileName)).replies(cosFileContent("Hello"));
 
         if (deleteUploadedFile) {
             // Mock delete uploaded file.
-            mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 200).build();
+            mock.raw().on("DELETE", cosFile(FILE_NAME)).replies(cosFileContent(null));
         }
 
         if (deleteOutputFile) {
             // Mock delete extracted file.
-            mockCosBuilder(DELETE, BUCKET_NAME, outputFileName, 200).build();
+            mock.raw().on("DELETE", cosFile(outputFileName)).replies(cosFileContent(null));
         }
 
         // Mock start extraction.
-        mockTextExtractionBuilder(POST, URL_WATSONX_TEXT_EXTRACTION_START_API, 200)
-                .body(body)
-                .response(body, PROCESS_EXTRACTION_ID, "submitted")
-                .build();
+        mock.raw().on("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)
+                .reply(200, job(body, PROCESS_EXTRACTION_ID, "submitted"));
 
         // Mock result extraction.
-        mockTextExtractionBuilder(GET,
-                URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID, PROJECT_ID), 200)
-                .response(body, PROCESS_EXTRACTION_ID, "completed")
-                .build();
+        mock.raw().on("GET", URL_WATSONX_TEXT_EXTRACTION_RESULT_API.formatted(PROCESS_EXTRACTION_ID))
+                .reply(200, job(body, PROCESS_EXTRACTION_ID, "completed"));
+    }
+
+    /**
+     * Checks what the stubs matched on: the IAM token on every request, a dated version on the watsonx.ai requests,
+     * and one of the expected bodies on every extraction request.
+     */
+    private void assertStubbedRequests() {
+        assertThat(apiRequests()).allSatisfy(request -> {
+            if (request.path().startsWith(COS_PATH)) {
+                assertThat(request.query()).isNull();
+                assertThat(request.header("Authorization")).isEqualTo("Bearer " + BEARER_TOKEN);
+            } else {
+                assertWatsonxRequest(request, request.path(), BEARER_TOKEN);
+            }
+        });
+        assertThat(requests("POST", URL_WATSONX_TEXT_EXTRACTION_START_API)).allSatisfy(request -> assertThat(
+                expectedRequests).anySatisfy(expected -> assertJsonBody(request, expected)));
+    }
+
+    private static String cosFile(String fileName) {
+        return COS_PATH + "/" + BUCKET_NAME + "/" + fileName;
+    }
+
+    /**
+     * A Cloud Object Storage response, which the stubs gave as XML.
+     */
+    private static RawResponse cosFileContent(String content) {
+        return RawResponse.of(200, Map.of("Content-Type", "application/xml"), content);
     }
 
     private TextExtractionRequest createDefaultRequest() {
@@ -1066,5 +1067,106 @@ public class TextExtractionTest extends WireMockAbstract {
                         null, null, null, null, null, null, null, null, null),
                 null);
 
+    }
+
+    /**
+     * A {@code TextExtractionResponse} for the given request.
+     */
+    private static String job(TextExtractionRequest request, String id, String status) {
+        return """
+                {
+                  "metadata": {
+                    "id": "%s",
+                    "created_at": "2023-05-02T16:27:51Z",
+                    "project_id": "%s",
+                    "name": "extract"
+                  },
+                  "entity": {
+                    "document_reference": {
+                      "type": "connection_asset",
+                      "connection": {
+                        "id": "%s"
+                      },
+                      "location": {
+                        "file_name": "%s",
+                        "bucket": "%s"
+                      }
+                    },
+                    "results_reference": {
+                      "type": "connection_asset",
+                      "connection": {
+                        "id": "%s"
+                      },
+                      "location": {
+                        "file_name": "%s",
+                        "bucket": "%s"
+                      }
+                    },
+                    "results": {
+                      "status": "%s",
+                      "number_pages_processed": 1,
+                      "running_at": "2023-05-02T16:28:03Z",
+                      "completed_at": "2023-05-02T16:28:03Z"
+                    }
+                  }
+                }""".formatted(
+                id,
+                request.projectId(),
+                request.documentReference().connection().id(),
+                request.documentReference().location().fileName(),
+                request.documentReference().location().bucket(),
+                request.resultsReference().connection().id(),
+                request.resultsReference().location().fileName(),
+                request.resultsReference().location().bucket(),
+                status);
+    }
+
+    /**
+     * A failed {@code TextExtractionResponse} for the given request.
+     */
+    private static String failedJob(TextExtractionRequest request, String id) {
+        return """
+                {
+                      "metadata": {
+                        "id": "%s",
+                        "created_at": "2023-05-02T16:27:51Z",
+                        "project_id": "%s",
+                        "name": "extract"
+                      },
+                      "entity": {
+                        "document_reference": {
+                          "type": "connection_asset",
+                          "connection": {
+                            "id": "%s"
+                          },
+                          "location": {
+                            "file_name": "%s"
+                          }
+                        },
+                        "results_reference": {
+                          "type": "connection_asset",
+                          "connection": {
+                            "id": "%s"
+                          },
+                          "location": {
+                            "file_name": "%s"
+                          }
+                        },
+                        "results": {
+                            "error": {
+                                "code": "file_download_error",
+                                "message": "error message"
+                            },
+                            "number_pages_processed": 0,
+                            "status": "failed"
+                        }
+                      }
+                    }""".formatted(
+                id,
+                request.projectId(),
+                request.documentReference().connection().id(),
+                request.documentReference().location().fileName(),
+                request.resultsReference().connection().id(),
+                request.resultsReference().location().fileName());
     }
 }

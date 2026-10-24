@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.openai.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Map;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -11,15 +13,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Tests that customizers are correctly scoped when both default and named models are configured.
@@ -28,13 +28,13 @@ import io.quarkus.test.QuarkusUnitTest;
  * coexist. The default customizer should only apply to the default model, and the named customizer
  * should only apply to the named model.
  */
-public class ModelBuilderCustomizerMultiModelTest extends OpenAiBaseTest {
+public class ModelBuilderCustomizerMultiModelTest {
 
     @ApplicationScoped
     public static class DefaultCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
         @Override
         public void customize(OpenAiChatModel.OpenAiChatModelBuilder builder) {
-            builder.customHeaders(java.util.Map.of("X-Default-Customizer", "default-value"));
+            builder.customHeaders(Map.of("X-Default-Customizer", "default-value"));
         }
     }
 
@@ -43,20 +43,20 @@ public class ModelBuilderCustomizerMultiModelTest extends OpenAiBaseTest {
     public static class SecondCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
         @Override
         public void customize(OpenAiChatModel.OpenAiChatModelBuilder builder) {
-            builder.customHeaders(java.util.Map.of("X-Second-Customizer", "second-value"));
+            builder.customHeaders(Map.of("X-Second-Customizer", "second-value"));
         }
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(DefaultCustomizer.class, SecondCustomizer.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion")
+            .overrideConfigKey("quarkus.langchain4j.openai.second.chat-model.mode", "chat-completion")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "defaultKey")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.second.api-key", "secondKey")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.second.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.second.api-key", "secondKey");
 
     @Inject
     ChatModel defaultModel;
@@ -65,27 +65,34 @@ public class ModelBuilderCustomizerMultiModelTest extends OpenAiBaseTest {
     @ModelName("second")
     ChatModel secondModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setup() {
-        setChatCompletionMessageContent("hello");
-        resetRequests();
+        mock.reset();
+        mock.chat().reply("hello");
     }
 
     @Test
     void defaultCustomizerAppliedToDefaultModel() {
-        defaultModel.chat("test");
+        assertThat(defaultModel.chat("test")).isEqualTo("hello");
 
-        LoggedRequest request = singleLoggedRequest();
-        assertThat(request.getHeader("X-Default-Customizer")).isEqualTo("default-value");
-        assertThat(request.getHeader("X-Second-Customizer")).isNull();
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.header("Authorization")).isEqualTo("Bearer defaultKey");
+        assertThat(request.header("X-Default-Customizer")).isEqualTo("default-value");
+        assertThat(request.header("X-Second-Customizer")).isNull();
     }
 
     @Test
     void namedCustomizerAppliedToNamedModel() {
-        secondModel.chat("test");
+        assertThat(secondModel.chat("test")).isEqualTo("hello");
 
-        LoggedRequest request = singleLoggedRequest();
-        assertThat(request.getHeader("X-Second-Customizer")).isEqualTo("second-value");
-        assertThat(request.getHeader("X-Default-Customizer")).isNull();
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.header("Authorization")).isEqualTo("Bearer secondKey");
+        assertThat(request.header("X-Second-Customizer")).isEqualTo("second-value");
+        assertThat(request.header("X-Default-Customizer")).isNull();
     }
 }

@@ -12340,6 +12340,90 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-mock-api-enabled]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-mock-api-enabled[`+++quarkus.langchain4j.mock-api.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the mock model API is enabled. Requires the quarkus-langchain4j-mock-api extension; when enabled, the LangChain4j dev services are not started because every model is pointed at the mock.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-mock-api-port]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-mock-api-port[`+++quarkus.langchain4j.mock-api.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The port the mock server listens on. When not set, a random free port is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-mock-api-default-chat-reply]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-mock-api-default-chat-reply[`+++quarkus.langchain4j.mock-api.default-chat-reply+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.default-chat-reply+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The reply returned for chat requests when no stub matches.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_DEFAULT_CHAT_REPLY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_DEFAULT_CHAT_REPLY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++This is a mock reply from the Quarkus LangChain4j mock model API.+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-mock-api-default-embedding-dimension]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-mock-api-default-embedding-dimension[`+++quarkus.langchain4j.mock-api.default-embedding-dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.default-embedding-dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embeddings returned when no stub matches.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_DEFAULT_EMBEDDING_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_DEFAULT_EMBEDDING_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++4+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-response-schema]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-response-schema[`+++quarkus.langchain4j.response-schema+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.response-schema+++[]
@@ -21270,29 +21354,6 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-mode]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-mode[`+++quarkus.langchain4j.openai.chat-model.mode+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.mode+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Which OpenAI API the chat model should target.
-
-`chat-completion` (the default) uses the `/v1/chat/completions` endpoint, while `responses` uses the newer `/v1/responses` endpoint. The `responses` mode is required for models that are only available through the Responses API and unlocks Responses-specific settings under `quarkus.langchain4j.openai.chat-model.responses.++*++`.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODE+++`
-endif::add-copy-button-to-env-var[]
---
-a|`chat-completion`, `responses`
-|`+++chat-completion+++`
-
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-enabled[`+++quarkus.langchain4j.openai.embedding-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai.embedding-model.enabled+++[]
@@ -21636,6 +21697,31 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-mode]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-mode[`+++quarkus.langchain4j.openai.chat-model.mode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Which OpenAI API the chat model should target.
+
+`chat-completion` uses the `/v1/chat/completions` endpoint, while `responses` uses the newer `/v1/responses` endpoint. The `responses` mode is required for models that are only available through the Responses API, is the only way to use tools (function calling) with GPT-6 models when reasoning is enabled, and unlocks Responses-specific settings under `quarkus.langchain4j.openai.chat-model.responses.++*++`.
+
+When not set, the mode is selected automatically: `responses` if the base URL is the OpenAI API (`https://api.openai.com/v1/`), otherwise `chat-completion`, which is what OpenAI-compatible endpoints (Ollama, vLLM, LM Studio, ...) implement. The resolved mode is logged at startup.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`chat-completion`, `responses`
+|`+++auto+++`
+
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-model-name[`+++quarkus.langchain4j.openai.chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.model-name+++[]
@@ -21655,7 +21741,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODEL_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gpt-4o-mini+++`
+|`+++gpt-6-luna+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-temperature[`+++quarkus.langchain4j.openai.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -22917,29 +23003,6 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-mode]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-mode[`+++quarkus.langchain4j.openai."model-name".chat-model.mode+++`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.mode+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Which OpenAI API the chat model should target.
-
-`chat-completion` (the default) uses the `/v1/chat/completions` endpoint, while `responses` uses the newer `/v1/responses` endpoint. The `responses` mode is required for models that are only available through the Responses API and unlocks Responses-specific settings under `quarkus.langchain4j.openai.chat-model.responses.++*++`.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MODE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MODE+++`
-endif::add-copy-button-to-env-var[]
---
-a|`chat-completion`, `responses`
-|`+++chat-completion+++`
-
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-embedding-model-enabled[`+++quarkus.langchain4j.openai."model-name".embedding-model.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai."model-name".embedding-model.enabled+++[]
@@ -23283,6 +23346,31 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-mode]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-mode[`+++quarkus.langchain4j.openai."model-name".chat-model.mode+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Which OpenAI API the chat model should target.
+
+`chat-completion` uses the `/v1/chat/completions` endpoint, while `responses` uses the newer `/v1/responses` endpoint. The `responses` mode is required for models that are only available through the Responses API, is the only way to use tools (function calling) with GPT-6 models when reasoning is enabled, and unlocks Responses-specific settings under `quarkus.langchain4j.openai.chat-model.responses.++*++`.
+
+When not set, the mode is selected automatically: `responses` if the base URL is the OpenAI API (`https://api.openai.com/v1/`), otherwise `chat-completion`, which is what OpenAI-compatible endpoints (Ollama, vLLM, LM Studio, ...) implement. The resolved mode is logged at startup.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`chat-completion`, `responses`
+|`+++auto+++`
+
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-model-name[`+++quarkus.langchain4j.openai."model-name".chat-model.model-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.model-name+++[]
@@ -23302,7 +23390,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gpt-4o-mini+++`
+|`+++gpt-6-luna+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-temperature[`+++quarkus.langchain4j.openai."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -38428,6 +38516,53 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
+
+
+h|[.extension-name]##Quarkus LangChain4j Mock Model API##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-url]] [.property-path]##link:#quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-url[`+++quarkus.langchain4j.mock-api.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the running mock.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-overrides]] [.property-path]##link:#quarkus-langchain4j-mock-api_quarkus-langchain4j-mock-api-overrides[`+++quarkus.langchain4j.mock-api.overrides+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mock-api.overrides+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The endpoint config keys of every model in use, each as `key=url`, that the mock points at itself.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MOCK_API_OVERRIDES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MOCK_API_OVERRIDES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
 
 
 h|[.extension-name]##Quarkus LangChain4j Skills##

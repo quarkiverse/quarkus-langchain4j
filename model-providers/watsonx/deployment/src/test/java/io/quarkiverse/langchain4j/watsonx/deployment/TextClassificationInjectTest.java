@@ -1,15 +1,10 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_COS_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.COS_PATH;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.util.Date;
 
 import jakarta.inject.Inject;
 
@@ -21,17 +16,17 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService;
 
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class TextClassificationInjectTest extends WireMockAbstract {
+public class TextClassificationInjectTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-classification.cos-url", URL_COS_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-classification.cos-url",
+                    "${quarkus.langchain4j.mock-api.url}" + COS_PATH)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-classification.document-reference.connection",
                     "document-connection")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-classification.document-reference.bucket-name",
@@ -40,8 +35,8 @@ public class TextClassificationInjectTest extends WireMockAbstract {
                     "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.text-classification.log-responses",
                     "false")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.iam.base-url", URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.text-classification.cos-url", URL_COS_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.text-classification.cos-url",
+                    "${quarkus.langchain4j.mock-api.url}" + COS_PATH)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.text-classification.document-reference.connection",
                     "custom-document-connection")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.text-classification.document-reference.bucket-name",
@@ -50,15 +45,7 @@ public class TextClassificationInjectTest extends WireMockAbstract {
                     "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.text-classification.log-responses",
                     "true")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
-                .response(BEARER_TOKEN, new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WatsonxTestUtil.class));
 
     @Inject
     TextClassificationService textClassification;

@@ -1,12 +1,10 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_GATEWAY_IMAGE_MODEL;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GATEWAY_IMAGE_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GATEWAY_IMAGE_API_URL;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GATEWAY_IMAGE_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.DEFAULT_GATEWAY_IMAGE_MODEL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.RESPONSE_WATSONX_GATEWAY_IMAGE_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.RESPONSE_WATSONX_GATEWAY_IMAGE_API_URL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_GATEWAY_IMAGE_API;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -14,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.URI;
-import java.util.Date;
 
 import jakarta.inject.Inject;
 
@@ -37,19 +34,16 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.watsonx.WatsonxGatewayImageModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class GatewayImageModelTest extends WireMockAbstract {
+public class GatewayImageModelTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.gateway-image-model.model-name",
                     DEFAULT_GATEWAY_IMAGE_MODEL)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-image-model.model-name",
                     DEFAULT_GATEWAY_IMAGE_MODEL)
@@ -68,14 +62,7 @@ public class GatewayImageModelTest extends WireMockAbstract {
                     "1024x1024")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-image-model.style", "vivid")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"all-properties\".gateway-image-model.user", "my-user")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .response("my_super_token", new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     ImageModel imageModel;
@@ -122,10 +109,7 @@ public class GatewayImageModelTest extends WireMockAbstract {
         var body = new ModelGatewayImageGenerationRequest(
                 DEFAULT_GATEWAY_IMAGE_MODEL, prompt, null, null, null, null, null, null, null, null, null, null, null);
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_IMAGE_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(RESPONSE_WATSONX_GATEWAY_IMAGE_API)
-                .build();
+        mock.raw().on("POST", URL_WATSONX_GATEWAY_IMAGE_API).reply(200, RESPONSE_WATSONX_GATEWAY_IMAGE_API);
 
         Response<Image> response = imageModel.generate(prompt);
         assertNotNull(response);
@@ -137,6 +121,8 @@ public class GatewayImageModelTest extends WireMockAbstract {
         assertEquals(10, response.tokenUsage().inputTokenCount());
         assertEquals(20, response.tokenUsage().outputTokenCount());
         assertEquals(30, response.tokenUsage().totalTokenCount());
+
+        assertImageRequest(body);
     }
 
     @Test
@@ -146,16 +132,15 @@ public class GatewayImageModelTest extends WireMockAbstract {
         var body = new ModelGatewayImageGenerationRequest(
                 DEFAULT_GATEWAY_IMAGE_MODEL, prompt, null, null, null, null, null, null, null, null, null, null, null);
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_IMAGE_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(RESPONSE_WATSONX_GATEWAY_IMAGE_API_URL)
-                .build();
+        mock.raw().on("POST", URL_WATSONX_GATEWAY_IMAGE_API).reply(200, RESPONSE_WATSONX_GATEWAY_IMAGE_API_URL);
 
         Response<Image> response = imageModel.generate(prompt);
         assertNotNull(response);
         assertNull(response.content().base64Data());
         assertEquals(URI.create("https://example.com/image.png"), response.content().url());
         assertEquals("image/png", response.content().mimeType());
+
+        assertImageRequest(body);
     }
 
     @Test
@@ -166,14 +151,13 @@ public class GatewayImageModelTest extends WireMockAbstract {
                 DEFAULT_GATEWAY_IMAGE_MODEL, prompt, "opaque", "low", null, 80, "png", null, "high", "b64_json",
                 "1024x1024", "vivid", "my-user");
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_IMAGE_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(RESPONSE_WATSONX_GATEWAY_IMAGE_API)
-                .build();
+        mock.raw().on("POST", URL_WATSONX_GATEWAY_IMAGE_API).reply(200, RESPONSE_WATSONX_GATEWAY_IMAGE_API);
 
         Response<Image> response = allPropertiesImageModel.generate(prompt);
         assertNotNull(response);
         assertEquals("aGVsbG8gd29ybGQ=", response.content().base64Data());
+
+        assertImageRequest(body);
     }
 
     @Test
@@ -205,10 +189,7 @@ public class GatewayImageModelTest extends WireMockAbstract {
                     }
                 }""";
 
-        mockWatsonxBuilder(URL_WATSONX_GATEWAY_IMAGE_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WATSONX_GATEWAY_IMAGE_API).reply(200, response);
 
         Response<java.util.List<Image>> images = imageModel.generate(prompt, 2);
         assertNotNull(images);
@@ -225,5 +206,14 @@ public class GatewayImageModelTest extends WireMockAbstract {
         assertEquals("Revised 2", second.revisedPrompt());
 
         assertEquals(50, images.tokenUsage().totalTokenCount());
+
+        assertImageRequest(body);
+    }
+
+    private void assertImageRequest(ModelGatewayImageGenerationRequest body) {
+        assertThat(apiRequests()).singleElement().satisfies(request -> {
+            assertWatsonxRequest(request, URL_WATSONX_GATEWAY_IMAGE_API);
+            assertJsonBody(request, body);
+        });
     }
 }

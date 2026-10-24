@@ -2,9 +2,6 @@ package io.quarkiverse.langchain4j.openai.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.util.Map;
-
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -13,36 +10,40 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatModel;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import com.fasterxml.jackson.databind.JsonNode;
 
-public class ChatModelGlobalTemperatureTest extends OpenAiBaseTest {
+import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
+
+public class ChatModelGlobalTemperatureTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.temperature", "0.5")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key");
 
     @Inject
     ChatModel chatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
-    void globalTemperatureIsStillHonored() throws IOException {
-        setChatCompletionMessageContent("whatever");
+    void globalTemperatureIsStillHonored() {
+        mock.chat().reply("whatever");
 
-        chatModel.chat("hello");
+        assertThat(chatModel.chat("hello")).isEqualTo("whatever");
 
-        Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody).containsEntry("temperature", 0.5).doesNotContainKey("top_p");
+        JsonNode requestBody = mock.chat().singleRequest().bodyAsJson();
+        assertThat(requestBody.get("temperature").doubleValue()).isEqualTo(0.5);
+        assertThat(requestBody.has("top_p")).isFalse();
     }
 }

@@ -29,20 +29,17 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Timer;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class AgentMetricsTest extends OpenAiBaseTest {
+public class AgentMetricsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(SimpleAgent.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     public interface SimpleAgent {
 
@@ -77,8 +74,6 @@ public class AgentMetricsTest extends OpenAiBaseTest {
 
     @Test
     void tokenUsageMetricsFromAgentAndDirectCallHaveConsistentTagKeys() {
-        setChatCompletionMessageContent("test response");
-
         agent.ask("question via agent");
         chatModel.chat("question via direct call");
 
@@ -93,8 +88,6 @@ public class AgentMetricsTest extends OpenAiBaseTest {
 
     @Test
     void durationMetricsFromAgentAndDirectCallHaveConsistentTagKeys() {
-        setChatCompletionMessageContent("test response");
-
         agent.ask("question via agent");
         chatModel.chat("question via direct call");
 

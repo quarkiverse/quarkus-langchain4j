@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.deployment.config;
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
 import java.util.Map;
+import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
@@ -35,6 +36,11 @@ public interface LangChain4jBuildConfig {
      * DevServices related configuration
      */
     DevServicesConfig devservices();
+
+    /**
+     * Mock model API (quarkus-langchain4j-mock-api) configuration
+     */
+    MockApiConfig mockApi();
 
     /**
      * Configuration property to enable or disable the use of the {response schema} placeholder in
@@ -103,5 +109,32 @@ public interface LangChain4jBuildConfig {
          */
         @WithDefault("true")
         boolean preload();
+    }
+
+    @ConfigGroup
+    interface MockApiConfig {
+        /**
+         * Whether the mock model API is enabled. Requires the quarkus-langchain4j-mock-api extension; when enabled, the
+         * LangChain4j dev services are not started because every model is pointed at the mock.
+         */
+        @WithDefault("false")
+        boolean enabled();
+
+        /**
+         * The port the mock server listens on. When not set, a random free port is used.
+         */
+        OptionalInt port();
+
+        /**
+         * The reply returned for chat requests when no stub matches.
+         */
+        @WithDefault("This is a mock reply from the Quarkus LangChain4j mock model API.")
+        String defaultChatReply();
+
+        /**
+         * The dimension of the embeddings returned when no stub matches.
+         */
+        @WithDefault("4")
+        int defaultEmbeddingDimension();
     }
 }

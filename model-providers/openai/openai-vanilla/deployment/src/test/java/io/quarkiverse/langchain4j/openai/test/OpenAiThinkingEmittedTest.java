@@ -1,12 +1,10 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -22,12 +20,13 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingEmitted;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class OpenAiThinkingEmittedTest extends OpenAiBaseTest {
+public class OpenAiThinkingEmittedTest {
 
     static final List<ThinkingEmitted> EVENTS = new ArrayList<>();
 
@@ -40,21 +39,24 @@ public class OpenAiThinkingEmittedTest extends OpenAiBaseTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ThinkingAssistant.class, ReturnThinkingCustomizer.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever");
 
     @Inject
     ThinkingAssistant assistant;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void clearEvents() {
         EVENTS.clear();
-        wiremock().resetMappings();
-        wiremock().resetRequests();
+        mock.reset();
     }
 
     @Test
@@ -71,37 +73,41 @@ public class OpenAiThinkingEmittedTest extends OpenAiBaseTest {
         assertThat(event.methodName()).isEqualTo("solve");
         assertThat(event.serviceClass()).isEqualTo(ThinkingAssistant.class);
         assertThat(event.emittedAt()).isNotNull();
+
+        assertThat(mock.requests()).hasSize(1);
+        CapturedRequest request = mock.requests().get(0);
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.query()).isNull();
     }
 
     private void stubChatWithThinking() {
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody("""
-                                        {
-                                          "id": "chatcmpl-thinking",
-                                          "object": "chat.completion",
-                                          "created": 1733923283,
-                                          "model": "gpt-4o-mini",
-                                          "choices": [
-                                            {
-                                              "index": 0,
-                                              "message": {
-                                                "role": "assistant",
-                                                "content": "4",
-                                                "reasoning_content": "Let me compute: 2+2 = 4."
-                                              },
-                                              "finish_reason": "stop"
-                                            }
-                                          ],
-                                          "usage": {
-                                            "prompt_tokens": 12,
-                                            "completion_tokens": 8,
-                                            "total_tokens": 20
-                                          }
-                                        }
-                                        """)));
+        // the mock does not render ChatReply.thinking for chat completions: the reasoning_content fixture is served as is
+        mock.raw().on("POST", "/v1/chat/completions").replies(RawResponse.of(200,
+                Map.of("Content-Type", "application/json"),
+                """
+                        {
+                          "id": "chatcmpl-thinking",
+                          "object": "chat.completion",
+                          "created": 1733923283,
+                          "model": "gpt-4o-mini",
+                          "choices": [
+                            {
+                              "index": 0,
+                              "message": {
+                                "role": "assistant",
+                                "content": "4",
+                                "reasoning_content": "Let me compute: 2+2 = 4."
+                              },
+                              "finish_reason": "stop"
+                            }
+                          ],
+                          "usage": {
+                            "prompt_tokens": 12,
+                            "completion_tokens": 8,
+                            "total_tokens": 20
+                          }
+                        }
+                        """));
     }
 
     @RegisterAiService

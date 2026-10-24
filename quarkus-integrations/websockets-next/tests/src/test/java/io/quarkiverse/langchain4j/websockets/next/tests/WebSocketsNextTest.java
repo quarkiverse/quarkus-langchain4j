@@ -31,9 +31,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.websockets.next.OnOpen;
 import io.quarkus.websockets.next.OnTextMessage;
@@ -42,15 +42,18 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.WebSocketClient;
 
 @DisabledIfSystemProperty(named = "ci", matches = "true", disabledReason = "Does not work on CI, must be investigated")
-public class WebSocketsNextTest extends OpenAiBaseTest {
+public class WebSocketsNextTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(RequestScopedChatBot.class, RestChatBot.class,
                             TrackingInMemoryChatMemoryStore.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
+    @Inject
+    MockModelServer mock;
 
     @Inject
     TrackingInMemoryChatMemoryStore chatMemoryStore;
@@ -63,6 +66,7 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
 
     @BeforeEach
     void setUp() {
+        mock.reset();
         chatMemoryStore.idsFromGetMessages.clear();
         chatMemoryStore.idsFromDeleteMessaged.clear();
     }
@@ -89,6 +93,16 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
         assertThat(chatMemoryStore.idsFromGetMessages).hasSize(2)
                 .hasOnlyElementsOfType(String.class);
         assertThat(chatMemoryStore.idsFromGetMessages).hasSameElementsAs(chatMemoryStore.idsFromDeleteMessaged);
+
+        // each REST request has its own memory, so each chat request carries only its own user message
+        List<CapturedRequest> requests = mock.chat().requests();
+        assertThat(requests).hasSize(2).allSatisfy(request -> {
+            assertThat(request.path()).isEqualTo("/v1/chat/completions");
+            assertThat(request.asChat().messages()).singleElement().satisfies(message -> {
+                assertThat(message.role()).isEqualTo("user");
+                assertThat(message.text()).isEqualTo("what is you name?");
+            });
+        });
     }
 
     @Test

@@ -1,19 +1,15 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_COS_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.COS_PATH;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Date;
-
 import jakarta.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -25,17 +21,17 @@ import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
 
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class SchemaInjectTest extends WireMockAbstract {
+public class SchemaInjectTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.schema.create.cos-url", URL_COS_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.schema.create.cos-url",
+                    "${quarkus.langchain4j.mock-api.url}" + COS_PATH)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.schema.create.document-reference.connection",
                     "document-connection")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.schema.create.document-reference.bucket-name",
@@ -44,8 +40,8 @@ public class SchemaInjectTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.schema.improve.log-requests", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.schema.merge.log-requests", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.schema.cluster.log-requests", "false")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.iam.base-url", URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.schema.create.cos-url", URL_COS_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.schema.create.cos-url",
+                    "${quarkus.langchain4j.mock-api.url}" + COS_PATH)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.schema.create.document-reference.connection",
                     "custom-document-connection")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.schema.create.document-reference.bucket-name",
@@ -54,15 +50,10 @@ public class SchemaInjectTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.schema.improve.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.schema.merge.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.custom.schema.cluster.log-requests", "true")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WatsonxTestUtil.class));
 
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
-                .response(BEARER_TOKEN, new Date())
-                .build();
-    }
+    @ConfigProperty(name = "quarkus.langchain4j.mock-api.url")
+    String mockUrl;
 
     @Inject
     CreateSchemaService createSchemaService;
@@ -108,7 +99,7 @@ public class SchemaInjectTest extends WireMockAbstract {
     void schemaPropertiesTest() {
         var schemaConfig = langchain4jWatsonConfig.defaultConfig().schema();
         var createSchemaConfig = schemaConfig.create().orElseThrow();
-        assertEquals(URL_COS_SERVER, createSchemaConfig.cosUrl());
+        assertEquals(mockUrl + COS_PATH, createSchemaConfig.cosUrl());
         assertEquals("document-connection", createSchemaConfig.documentReference().connection());
         assertEquals("document-bucket-name", createSchemaConfig.documentReference().bucketName());
         assertEquals(false, createSchemaConfig.logRequests().orElse(false));

@@ -1,10 +1,5 @@
 package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -14,28 +9,37 @@ import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.EmbeddingReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiEmbeddingModel;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class VertexAiGeminiEmbeddingModelSmokeTest extends WiremockAware {
+public class VertexAiGeminiEmbeddingModelSmokeTest {
 
     private static final String API_KEY = "dummy";
     private static final String EMBED_MODEL_ID = "text-embedding-004";
+    private static final String PREDICT_PATH = String.format(
+            "/vertexai-gemini/v1/projects/test-project/locations/test-location/publishers/google/models/%s:predict",
+            EMBED_MODEL_ID);
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.location", "test-location")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.project-id", "test-project")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.log-requests", "true");
@@ -43,88 +47,48 @@ public class VertexAiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     @Inject
     EmbeddingModel embeddingModel;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
-    void testBatch() {
-        wiremock().register(
-                post(urlEqualTo(
-                        String.format("/v1/projects/test-project/locations/test-location/publishers/google/models/%s:predict",
-                                EMBED_MODEL_ID)))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .withRequestBody(equalToJson("""
-                                { "instances": [ { "content": "Hello" } ], "parameters": { "autoTruncate": true } }
-                                        """))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody("""
-                                         {
-                                           "predictions": [
-                                             {
-                                               "embeddings": {
-                                                 "values": [
-                                                   -0.010632273,
-                                                   0.019375853,
-                                                   0.020965198,
-                                                   0.0007706437,
-                                                   -0.061464068,
-                                                   -0.007153866,
-                                                   -0.028534686
-                                                 ],
-                                                 "statistics": {
-                                                   "truncated": false,
-                                                   "token_count": 1
-                                                 }
-                                               }
-                                             }
-                                           ]
-                                          }
-                                        """)));
+    void testBatch() throws JsonProcessingException {
+        mock.embeddings().reply(EmbeddingReply.of(new float[] { -0.010632273f, 0.019375853f, 0.020965198f,
+                0.0007706437f, -0.061464068f, -0.007153866f, -0.028534686f }));
 
         List<TextSegment> textSegments = List.of(TextSegment.from("Hello")); // Only one for gemini-embedding-001
         Response<List<Embedding>> response = embeddingModel.embedAll(textSegments);
 
         assertThat(response.content()).hasSize(1);
+
+        CapturedRequest request = mock.embeddings().singleRequest();
+        assertThat(request.path()).isEqualTo(PREDICT_PATH);
+        assertThat(request.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        assertThat(request.bodyAsJson()).isEqualTo(new ObjectMapper().readTree("""
+                { "instances": [ { "content": "Hello" } ], "parameters": { "autoTruncate": true } }
+                """));
     }
 
     @Test
-    void test() {
+    void test() throws JsonProcessingException {
         assertThat(ClientProxy.unwrap(embeddingModel)).isInstanceOf(VertexAiGeminiEmbeddingModel.class);
 
-        wiremock().register(
-                post(urlEqualTo(
-                        String.format("/v1/projects/test-project/locations/test-location/publishers/google/models/%s:predict",
-                                EMBED_MODEL_ID)))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .withRequestBody(equalToJson("""
-                                { "instances": [ { "content": "Hello World" } ], "parameters": { "autoTruncate": true } }
-                                        """))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody("""
-                                         {
-                                           "predictions": [
-                                             {
-                                               "embeddings": {
-                                                 "values": [
-                                                   0.013168517,
-                                                   -0.00871193,
-                                                   -0.046782672,
-                                                   0.00069969177,
-                                                   -0.009518872,
-                                                   -0.008720178,
-                                                   0.06010358
-                                                 ],
-                                                 "statistics": {
-                                                   "truncated": false,
-                                                   "token_count": 2
-                                                 }
-                                               }
-                                             }
-                                           ]
-                                          }
-                                        """)));
+        mock.embeddings().reply(EmbeddingReply.of(new float[] { 0.013168517f, -0.00871193f, -0.046782672f,
+                0.00069969177f, -0.009518872f, -0.008720178f, 0.06010358f }));
 
         Response<List<Embedding>> response = embeddingModel.embedAll(List.of(TextSegment.from("Hello World")));
         assertThat(response.content().get(0).vector()).hasSize(7);
+
+        CapturedRequest request = mock.embeddings().singleRequest();
+        assertThat(request.path()).isEqualTo(PREDICT_PATH);
+        assertThat(request.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        assertThat(request.bodyAsJson()).isEqualTo(new ObjectMapper().readTree("""
+                { "instances": [ { "content": "Hello World" } ], "parameters": { "autoTruncate": true } }
+                """));
     }
 
     @Singleton

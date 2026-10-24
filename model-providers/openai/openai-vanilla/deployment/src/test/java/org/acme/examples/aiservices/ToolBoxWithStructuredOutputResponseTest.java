@@ -1,56 +1,55 @@
 package org.acme.examples.aiservices;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 
-import java.io.IOException;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.output.structured.Description;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class ToolBoxWithStructuredOutputResponseTest extends OpenAiBaseTest {
+public class ToolBoxWithStructuredOutputResponseTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.response-format", "json_schema")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.strict-json-schema", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
+    @Inject
+    MockModelServer mock;
 
-    private static final String scenario = "tools";
-    private static final String secondState = "second";
+    @Inject
+    DivisionAfter divisionAfter;
 
     @BeforeEach
     void setUp() {
-        wiremock().resetMappings();
-        wiremock().resetRequests();
+        mock.reset();
+        divisionAfter.reset();
     }
 
     record DivisionResponse(
@@ -81,16 +80,19 @@ public class ToolBoxWithStructuredOutputResponseTest extends OpenAiBaseTest {
     @Singleton
     public static class DivisionAfter implements Runnable {
 
-        private final Integer wiremockPort;
-
-        public DivisionAfter(@ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
-            this.wiremockPort = wiremockPort;
-        }
+        private final AtomicInteger calls = new AtomicInteger();
 
         @Override
         public void run() {
-            WireMock wireMock = new WireMock(wiremockPort);
-            wireMock.setSingleScenarioState(scenario, secondState);
+            calls.incrementAndGet();
+        }
+
+        int calls() {
+            return calls.get();
+        }
+
+        void reset() {
+            calls.set(0);
         }
     }
 
@@ -112,7 +114,7 @@ public class ToolBoxWithStructuredOutputResponseTest extends OpenAiBaseTest {
     }
 
     @Test
-    public void testStructuredResponseWithTool() throws IOException {
+    public void testStructuredResponseWithTool() throws JsonProcessingException {
         var firstResponse = """
                 {
                   "id": "chatcmpl-BL2ebUEkjiLbhDCacCFFsLF7HAFCf",
@@ -165,50 +167,40 @@ public class ToolBoxWithStructuredOutputResponseTest extends OpenAiBaseTest {
                         }
                 """;
 
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer whatever"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(firstResponse)));
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer whatever"))
-                        .inScenario(scenario)
-                        .whenScenarioStateIs(secondState)
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(secondResponse)));
-
-        wiremock().setSingleScenarioState(scenario, Scenario.STARTED);
+        // the fixtures use the legacy function_call format, which the neutral model cannot express
+        mock.raw().on("POST", "/v1/chat/completions").replies(
+                RawResponse.json(200, firstResponse),
+                RawResponse.json(200, secondResponse));
 
         DivisionResponse response = mathAgent.divide(52, 5);
 
         assertThat(response.quotient).isEqualTo(10);
         assertThat(response.remainder).isEqualTo(2);
 
-        Map<String, Object> requestAsMap = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0)));
-        assertThat(requestAsMap).hasEntrySatisfying("response_format", (v) -> {
-            assertThat(v).asInstanceOf(map(String.class, Object.class)).satisfies(responseFormatMap -> {
-                assertThat(responseFormatMap).containsEntry("type", "json_schema");
-                assertThat(responseFormatMap).extracting("json_schema").satisfies(js -> {
-                    assertThat(js).asInstanceOf(map(String.class, Object.class)).satisfies(jsonSchemaMap -> {
-                        assertThat(jsonSchemaMap).containsEntry("name", "DivisionResponse").containsKey("schema");
-                        assertThat(jsonSchemaMap).extracting("schema").satisfies(sjs -> {
-                            assertThat(sjs).asInstanceOf(map(String.class, Object.class)).satisfies(schemaMap -> {
-                                assertThat(schemaMap).containsKey("properties");
-                                assertThat(schemaMap).extracting("properties").satisfies(pjs -> {
-                                    assertThat(pjs).asInstanceOf(map(String.class, Object.class)).satisfies(propertiesMap -> {
-                                        assertThat(propertiesMap).containsKey("quotient").containsKey("remainder");
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
-            });
+        assertThat(divisionAfter.calls()).isEqualTo(1);
+
+        List<CapturedRequest> requests = mock.requests();
+        assertThat(requests).hasSize(2);
+        assertThat(requests).allSatisfy(request -> {
+            assertThat(request.path()).isEqualTo("/v1/chat/completions");
+            assertThat(request.query()).isNull();
+            assertThat(request.header("Authorization")).isEqualTo("Bearer whatever");
         });
+
+        JsonNode secondApiRequest = requests.get(1).bodyAsJson();
+        JsonNode lastMessage = secondApiRequest.get("messages").get(secondApiRequest.get("messages").size() - 1);
+        assertThat(lastMessage.path("role").textValue()).isEqualTo("function");
+        assertThat(lastMessage.path("name").textValue()).isEqualTo("divide");
+        assertThat(new ObjectMapper().readTree(lastMessage.path("content").textValue()))
+                .isEqualTo(new ObjectMapper().readTree("{\"quotient\": 20, \"remainder\": 2}"));
+
+        JsonNode responseFormat = secondApiRequest.get("response_format");
+        assertThat(responseFormat.path("type").textValue()).isEqualTo("json_schema");
+        JsonNode jsonSchema = responseFormat.get("json_schema");
+        assertThat(jsonSchema.path("name").textValue()).isEqualTo("DivisionResponse");
+        assertThat(jsonSchema.has("schema")).isTrue();
+        JsonNode properties = jsonSchema.get("schema").get("properties");
+        assertThat(properties.has("quotient")).isTrue();
+        assertThat(properties.has("remainder")).isTrue();
     }
 }

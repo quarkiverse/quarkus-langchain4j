@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
 import dev.langchain4j.model.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
@@ -59,12 +59,12 @@ public class MultipleChatProvidersTest {
 
     @Test
     void defaultModel() {
-        assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiChatModel.class);
+        assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiResponsesChatModel.class);
     }
 
     @Test
     void firstNamedModel() {
-        assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(OpenAiChatModel.class);
+        assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(OpenAiResponsesChatModel.class);
     }
 
     @Test

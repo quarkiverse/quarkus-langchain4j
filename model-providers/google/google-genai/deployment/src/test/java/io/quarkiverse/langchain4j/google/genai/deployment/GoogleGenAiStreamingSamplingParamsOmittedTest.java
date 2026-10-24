@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.google.genai.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -13,36 +10,40 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class GoogleGenAiStreamingSamplingParamsOmittedTest extends WiremockAware {
+public class GoogleGenAiStreamingSamplingParamsOmittedTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.google.genai.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.google.genai.api-key", "dummy");
 
     @Inject
     StreamingChatModel streamingChatModel;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     void temperatureIsNotSentWhenUnconfigured() throws InterruptedException {
-        var eventStream = """
-                data: {"candidates":[{"content":{"role":"model","parts":[{"text":"hi"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":1,"candidatesTokenCount":2,"totalTokenCount":3}}
-
-                """;
-        wiremock().register(post(urlMatching(".*:streamGenerateContent.*"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "text/event-stream")
-                        .withBody(eventStream)));
+        mock.chat().reply(ChatReply.text("hi").usage(1, 2));
 
         var latch = new CountDownLatch(1);
         streamingChatModel.chat("hello", new StreamingChatResponseHandler() {
@@ -65,6 +66,8 @@ public class GoogleGenAiStreamingSamplingParamsOmittedTest extends WiremockAware
             fail("Streaming did not complete in time");
         }
 
-        assertThat(new String(requestBodyOfSingleRequest())).doesNotContain("\"temperature\"");
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).endsWith(":streamGenerateContent");
+        assertThat(request.body()).doesNotContain("\"temperature\"");
     }
 }

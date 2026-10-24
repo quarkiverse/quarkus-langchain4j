@@ -1,38 +1,40 @@
 package org.acme.examples.aiservices;
 
 import static java.time.Month.JULY;
+import static org.acme.examples.aiservices.OpenAiRequestAssertions.assertSingleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 
-import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class StructuredOutputResponseTest extends OpenAiBaseTest {
+public class StructuredOutputResponseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class))
+                    () -> ShrinkWrap.create(JavaArchive.class).addClass(OpenAiRequestAssertions.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.response-format", "json_schema")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.strict-json-schema", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
 
     record Person(String firstName, String lastName, LocalDate birthDate) {
     }
@@ -48,11 +50,17 @@ public class StructuredOutputResponseTest extends OpenAiBaseTest {
     @Inject
     PersonExtractor personExtractor;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
-    public void testPojo() throws IOException {
-        setChatCompletionMessageContent(
-                // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"firstName\\\": \\\"John\\\",\\n\\\"lastName\\\": \\\"Doe\\\",\\n\\\"birthDate\\\": \\\"1968-07-04\\\"\\n}");
+    public void testPojo() {
+        mock.chat().reply("{\n\"firstName\": \"John\",\n\"lastName\": \"Doe\",\n\"birthDate\": \"1968-07-04\"\n}");
 
         String text = "In 1968, amidst the fading echoes of Independence Day, "
                 + "a child named John arrived under the calm evening sky. "
@@ -64,21 +72,18 @@ public class StructuredOutputResponseTest extends OpenAiBaseTest {
         assertThat(result.lastName).isEqualTo("Doe");
         assertThat(result.birthDate).isEqualTo(LocalDate.of(1968, JULY, 4));
 
-        Map<String, Object> requestAsMap = getRequestAsMap();
-        assertSingleRequestMessage(requestAsMap,
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        JsonNode requestAsJson = request.bodyAsJson();
+        assertSingleRequestMessage(requestAsJson,
                 "Extract information about a person from In 1968, amidst the fading echoes of Independence Day, " +
                         "a child named John arrived under the calm evening sky. This newborn, bearing the surname Doe, " +
                         "marked the start of a new journey.");
-        assertThat(requestAsMap).hasEntrySatisfying("response_format", (v) -> {
-            assertThat(v).asInstanceOf(map(String.class, Object.class)).satisfies(responseFormatMap -> {
-                assertThat(responseFormatMap).containsEntry("type", "json_schema");
-                assertThat(responseFormatMap).extracting("json_schema").satisfies(js -> {
-                    assertThat(js).asInstanceOf(map(String.class, Object.class)).satisfies(jsonSchemaMap -> {
-                        assertThat(jsonSchemaMap).containsEntry("name", "Person").containsKey("schema");
-                    });
-                });
-            });
-        });
+        JsonNode responseFormat = requestAsJson.get("response_format");
+        assertThat(responseFormat.path("type").textValue()).isEqualTo("json_schema");
+        JsonNode jsonSchema = responseFormat.get("json_schema");
+        assertThat(jsonSchema.path("name").textValue()).isEqualTo("Person");
+        assertThat(jsonSchema.has("schema")).isTrue();
 
     }
 }

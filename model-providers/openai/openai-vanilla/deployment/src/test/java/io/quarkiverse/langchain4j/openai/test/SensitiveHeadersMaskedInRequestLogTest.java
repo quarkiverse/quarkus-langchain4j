@@ -16,16 +16,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class SensitiveHeadersMaskedInRequestLogTest extends OpenAiBaseTest {
+public class SensitiveHeadersMaskedInRequestLogTest {
 
     private static final String API_KEY = "sk-secret-key-123456";
     private static final String GATEWAY_TOKEN = "tok-secret-1111";
@@ -39,12 +37,13 @@ public class SensitiveHeadersMaskedInRequestLogTest extends OpenAiBaseTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(GatewayTokenCustomizer.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.log-requests", "true")
             .setLogRecordPredicate(record -> true)
             .assertLogRecords(SensitiveHeadersMaskedInRequestLogTest::verifyLogRecords);
@@ -52,20 +51,25 @@ public class SensitiveHeadersMaskedInRequestLogTest extends OpenAiBaseTest {
     @Inject
     ChatModel chatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
     void apiKeyAndCustomHeadersAreMaskedInRequestLog() {
-        setChatCompletionMessageContent("response");
+        mock.chat().reply("response");
 
         assertThat(chatModel.chat("hello")).isEqualTo("response");
 
-        LoggedRequest loggedRequest = singleLoggedRequest();
-        assertThat(loggedRequest.getHeader("Authorization")).isEqualTo("Bearer " + API_KEY);
-        assertThat(loggedRequest.getHeader("X-Gateway-Token")).isEqualTo(GATEWAY_TOKEN);
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.query()).isNull();
+        assertThat(request.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        assertThat(request.header("X-Gateway-Token")).isEqualTo(GATEWAY_TOKEN);
     }
 
     private static void verifyLogRecords(List<LogRecord> logRecords) {
