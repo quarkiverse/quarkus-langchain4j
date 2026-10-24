@@ -42,9 +42,11 @@ abstract class ListenersProcessorAbstractSpanChatModelListenerTest {
     static JavaArchive appWithInMemorySpanExporter() {
         var applicationProperties = """
                 # Since using a InMemorySpanExporter inside our tests,
-                # these properties reduce the export timeout and schedule delay from the BatchSpanProcessor
+                # these properties reduce the export timeout and schedule delay from the BatchSpanProcessor.
+                # The queue size is left at its default: a queue of 1 drops spans when several end
+                # back-to-back on the same thread, e.g. the turn span and the span of the work
+                # following the chat in ListenersProcessorStreamingSpanChatModelListenerTest.
                 quarkus.otel.bsp.schedule.delay=PT0.001S
-                quarkus.otel.bsp.max.queue.size=1
                 quarkus.otel.bsp.max.export.batch.size=1
                 """;
         return ShrinkWrap.create(JavaArchive.class)
@@ -58,43 +60,52 @@ abstract class ListenersProcessorAbstractSpanChatModelListenerTest {
     }
 
     @Test
-    void shouldCreateSpanOnSuccess() {
+    void shouldCreateOpeningAndClosingSpansOnSuccess() {
         var ctx = MockedContexts.create();
 
         spanChatModelListener.onRequest(ctx.requestContext());
         spanChatModelListener.onResponse(ctx.responseContext());
 
-        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(1));
-        var actualSpan = exporter.getFinishedSpanItems().get(0);
-        assertThat(actualSpan.getName()).isEqualTo("completion --mock-model-name--");
-        verifySuccessfulSpan(actualSpan);
-    }
-
-    protected void verifySuccessfulSpan(SpanData actualSpan) {
-        // nothing here
+        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(2));
+        SpanData openingSpan = span("chat --mock-model-name-- open");
+        SpanData closingSpan = span("chat --mock-model-name-- close");
+        assertThat(closingSpan.getParentSpanId()).isEqualTo(openingSpan.getSpanId());
+        verifySuccessfulSpan(openingSpan, closingSpan);
     }
 
     @Test
-    void shouldCreateAndEndSpanOnFailure() {
+    void shouldCreateOpeningAndClosingSpansOnFailure() {
         var ctx = MockedContexts.create();
 
         spanChatModelListener.onRequest(ctx.requestContext());
         spanChatModelListener.onError(ctx.errorContext());
 
-        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(1));
-        var actualSpan = exporter.getFinishedSpanItems().get(0);
-        assertThat(actualSpan.getName()).isEqualTo("completion --mock-model-name--");
-        assertThat(actualSpan.getEvents())
+        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(2));
+        SpanData openingSpan = span("chat --mock-model-name-- open");
+        SpanData closingSpan = span("chat --mock-model-name-- close");
+        assertThat(closingSpan.getParentSpanId()).isEqualTo(openingSpan.getSpanId());
+        assertThat(closingSpan.getEvents())
                 .hasSize(1)
                 .first()
                 .extracting("exception")
                 .extracting("message")
                 .isEqualTo("--failed--");
-        verifyFailedSpan(actualSpan);
+        verifyFailedSpan(openingSpan, closingSpan);
     }
 
-    protected void verifyFailedSpan(SpanData actualSpan) {
+    protected void verifySuccessfulSpan(SpanData openingSpan, SpanData closingSpan) {
         // nothing here
+    }
+
+    protected void verifyFailedSpan(SpanData openingSpan, SpanData closingSpan) {
+        // nothing here
+    }
+
+    protected SpanData span(String name) {
+        return exporter.getFinishedSpanItems().stream()
+                .filter(s -> s.getName().equals(name))
+                .findFirst()
+                .orElseThrow();
     }
 
     public static class InMemorySpanExporterProducer {
