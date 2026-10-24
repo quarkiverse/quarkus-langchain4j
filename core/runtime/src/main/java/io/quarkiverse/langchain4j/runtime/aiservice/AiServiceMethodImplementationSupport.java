@@ -31,10 +31,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -135,6 +138,7 @@ public class AiServiceMethodImplementationSupport {
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
     private static final int DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final int DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE = 0;
+    private static final boolean DEFAULT_EXECUTE_TOOLS_CONCURRENTLY = false;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this
@@ -522,6 +526,15 @@ public class AiServiceMethodImplementationSupport {
             if (maxToolCallsPerResponse > 0) {
                 log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
             }
+            // Only the tools within the limit are executed; the loop below throws ToolCallsLimitExceededException
+            // once it reaches the limit
+            int toolsToExecute = maxToolCallsPerResponse > 0
+                    ? Math.min(toolExecutionRequests.size(), maxToolCallsPerResponse)
+                    : toolExecutionRequests.size();
+            List<ToolExecutionResult> toolExecutionResults = executeTools(context, invocationContext, toolExecutors,
+                    toolExecutionRequests.subList(0, toolsToExecute));
+            // The loop below processes the results in request order: it fires the events,
+            // adds the results to the chat memory and determines the return behavior.
             int toolCallsCount = 0;
             List<ReturnBehavior> returnBehaviors = new ArrayList<>(toolExecutionRequests.size());
             boolean anyToolErrored = false;
@@ -529,11 +542,9 @@ public class AiServiceMethodImplementationSupport {
                 if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
                     throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
                 }
-                toolCallsCount++;
-                log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-                ToolExecutionResult toolExecutionResult = context.toolService.executeTool(
-                        invocationContext, toolExecutors, toolExecutionRequest, null, null);
+                ToolExecutionResult toolExecutionResult = toolExecutionResults.get(toolCallsCount);
+                toolCallsCount++;
 
                 // New firing
                 context.eventListenerRegistrar.fireEvent(
@@ -1374,7 +1385,69 @@ public class AiServiceMethodImplementationSupport {
                 .orElse(DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE);
     }
 
-    private static Executor createExecutor() {
+    public static boolean isExecuteToolsConcurrentlyGloballyEnabled() {
+        return ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.ai-service.execute-tools-concurrently", Boolean.class)
+                .orElse(DEFAULT_EXECUTE_TOOLS_CONCURRENTLY);
+    }
+
+    /**
+     * Executes the requested tools, concurrently if the AI service is configured to do so and more than one tool
+     * was requested, sequentially otherwise. The results are returned in request order.
+     */
+    private static List<ToolExecutionResult> executeTools(QuarkusAiServiceContext context,
+            InvocationContext invocationContext, Map<String, ToolExecutor> toolExecutors,
+            List<ToolExecutionRequest> toolExecutionRequests) {
+        if (toolExecutionRequests.size() > 1 && context.executeToolsConcurrently) {
+            return executeToolsConcurrently(context, invocationContext, toolExecutors, toolExecutionRequests);
+        }
+        return executeToolsSequentially(context, invocationContext, toolExecutors, toolExecutionRequests);
+    }
+
+    private static List<ToolExecutionResult> executeToolsSequentially(QuarkusAiServiceContext context,
+            InvocationContext invocationContext, Map<String, ToolExecutor> toolExecutors,
+            List<ToolExecutionRequest> toolExecutionRequests) {
+        List<ToolExecutionResult> results = new ArrayList<>(toolExecutionRequests.size());
+        for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+            log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
+            results.add(context.toolService.executeTool(invocationContext, toolExecutors, toolExecutionRequest, null,
+                    null));
+        }
+        return results;
+    }
+
+    private static List<ToolExecutionResult> executeToolsConcurrently(QuarkusAiServiceContext context,
+            InvocationContext invocationContext, Map<String, ToolExecutor> toolExecutors,
+            List<ToolExecutionRequest> toolExecutionRequests) {
+        Executor executor = context.toolService.effectiveToolExecutor();
+        List<CompletableFuture<ToolExecutionResult>> futures = new ArrayList<>(toolExecutionRequests.size());
+        for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+            log.debugv("Attempting to execute tool {0} concurrently", toolExecutionRequest);
+            futures.add(CompletableFuture.supplyAsync(new Supplier<>() {
+                @Override
+                public ToolExecutionResult get() {
+                    return context.toolService.executeTool(invocationContext, toolExecutors, toolExecutionRequest, null,
+                            null);
+                }
+            }, executor));
+        }
+        // like LangChain4j, the results are awaited in request order and the first failure is rethrown
+        // TODO: replace with structured concurrency (StructuredTaskScope) once the minimum JDK supports it
+        List<ToolExecutionResult> results = new ArrayList<>(futures.size());
+        for (CompletableFuture<ToolExecutionResult> future : futures) {
+            try {
+                results.add(future.join());
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof RuntimeException re) {
+                    throw re;
+                }
+                throw new RuntimeException(e.getCause());
+            }
+        }
+        return results;
+    }
+
+    public static Executor createExecutor() {
         InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
         return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
     }

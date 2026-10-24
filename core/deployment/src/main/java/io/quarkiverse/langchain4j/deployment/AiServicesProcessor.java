@@ -583,6 +583,10 @@ public class AiServicesProcessor {
                     ? instance.value("allowContinuousForcedToolCalling").asBoolean()
                     : false;
 
+            boolean executeToolsConcurrently = instance.value("executeToolsConcurrently") != null
+                    ? instance.value("executeToolsConcurrently").asBoolean()
+                    : false;
+
             boolean shouldThrowExceptionOnEventError = instance.value("shouldThrowExceptionOnEventError") != null
                     ? instance.value("shouldThrowExceptionOnEventError").asBoolean()
                     : false;
@@ -652,6 +656,7 @@ public class AiServicesProcessor {
                     maxToolCallingRoundTrips,
                     maxToolCallsPerResponse,
                     allowContinuousForcedToolCalling,
+                    executeToolsConcurrently,
                     // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
                     impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
                     shouldThrowExceptionOnEventError,
@@ -1185,6 +1190,7 @@ public class AiServicesProcessor {
                                     maxToolCallingRoundTrips,
                                     bi.getMaxToolCallsPerResponse(),
                                     allowContinuousForcedToolCalling,
+                                    bi.isExecuteToolsConcurrently(),
                                     bi.isShouldThrowExceptionOnEventError(),
                                     defaultMemoryIdProviderClassName,
                                     bi.getSkillNames())))

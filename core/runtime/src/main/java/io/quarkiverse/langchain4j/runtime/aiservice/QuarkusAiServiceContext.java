@@ -35,6 +35,10 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public Integer maxToolCallingRoundTrips;
     public Integer maxToolCallsPerResponse;
     public boolean allowContinuousForcedToolCalling;
+    /**
+     * Whether the tools are executed concurrently, using the executor of the {@link ToolService}
+     */
+    public boolean executeToolsConcurrently;
     public DefaultMemoryIdProvider defaultMemoryIdProvider;
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
     public ToolSearchService toolSearchService;

@@ -220,6 +220,14 @@ public @interface RegisterAiService {
     boolean allowContinuousForcedToolCalling() default false;
 
     /**
+     * Whether the tool calls requested in a single LLM response should be executed concurrently.
+     * If not enabled for a specific AI service, the AI service will use the value of the common
+     * {@code quarkus.langchain4j.ai-service.execute-tools-concurrently} property.
+     * This currently only applies to AI service methods that do not stream their response.
+     */
+    boolean executeToolsConcurrently() default false;
+
+    /**
      * Configures a system message provider to dynamically supply a system message at runtime.
      * Provide either a {@link SystemMessageProvider} (based on the memory ID) or a
      * {@link SystemMessageProviderWithContext} (based on the invocation context, so the system message can vary by model).
