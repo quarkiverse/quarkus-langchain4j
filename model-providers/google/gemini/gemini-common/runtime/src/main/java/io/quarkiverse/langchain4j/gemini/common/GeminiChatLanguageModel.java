@@ -103,7 +103,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
             final FinishReason finishReason = aiMessage.hasToolExecutionRequests()
                     ? FinishReason.TOOL_EXECUTION
                     : FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
-            final Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage);
+            final Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage, finishReason);
 
             ChatResponse modelListenerResponse = createModelListenerResponse(
                     null,
@@ -172,9 +172,8 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
 
         return ChatResponse.builder()
                 .aiMessage(response.content())
-                .finishReason(response.finishReason())
                 .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
-                        .tokenUsage(response.tokenUsage()).build())
+                        .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
                 .build();
     }
 
