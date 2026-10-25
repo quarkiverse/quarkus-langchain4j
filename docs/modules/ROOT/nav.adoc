@@ -97,6 +97,7 @@
 ** xref:rag-query.adoc[Query-Time Augmentation]
 ** xref:rag-easy-rag.adoc[EasyRAG]
 ** xref:rag-contextual-rag.adoc[Contextual RAG]
+** xref:secure-rag.adoc[Secure RAG]
 ** xref:reranking.adoc[Reranking]
 ** Embedding Stores
 *** xref:rag-chroma-store.adoc[Chroma]

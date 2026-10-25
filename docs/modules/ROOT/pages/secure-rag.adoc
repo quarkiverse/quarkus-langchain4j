@@ -1,0 +1,188 @@
+= Secure RAG
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+== Overview
+
+Many applications call the model provider with a single company API key while serving many authenticated users.
+When RAG is enabled with a shared retriever, every user would receive the same retrieved documents, which is not acceptable when each user owns private augmentation content: an HR assistant where employees ask about their own benefits, a support bot where each customer sees only their own contracts, or any multi-tenant assistant.
+
+This guide describes a complete, working pattern to keep RAG content private to the user who owns it in Quarkus LangChain4j:
+
+1. The application authenticates each request with Quarkus security, so a `SecurityIdentity` is available.
+2. Documents are kept in a store keyed by the principal name.
+3. A custom `RetrievalAugmentor` resolves the current user at augmentation time and injects only that user's documents into the prompt.
+4. The chat memory id is tied to the user, so conversation history is isolated as well.
+5. The augmentor can branch per AI service method through the `InvocationContext` that Quarkus LangChain4j exposes during augmentation.
+
+The same pattern works for blocking and streaming AI services, because augmentation happens before the model is invoked.
+
+== Prerequisites: an Authenticated User
+
+The pattern relies on the `SecurityIdentity` provided by whichever Quarkus security mechanism the application uses: OIDC, JWT, SmallRye JWT, basic authentication and so on.
+Only the way the identity is established changes, the rest of the pattern stays the same.
+
+The examples below use basic authentication with users defined in the configuration through the `quarkus-elytron-security-properties-file` extension, which is convenient for development and testing:
+
+[source,properties]
+----
+quarkus.http.auth.basic=true
+quarkus.security.users.embedded.enabled=true
+quarkus.security.users.embedded.plain-text=true
+quarkus.security.users.embedded.users.alice=alice
+quarkus.security.users.embedded.users.bob=bob
+----
+
+WARNING: Plain-text users are only suitable for development and tests. In production, authenticate with OIDC, JWT or another identity store that does not keep plain-text passwords in the configuration.
+
+IMPORTANT: The retrieval must happen for the user of the current request, never for a user id accepted from the client: the principal name comes from the `SecurityIdentity`, not from a method parameter that a caller could forge.
+
+== Step 1. A Document Store Keyed by User
+
+The first component is a store that keeps the augmentation documents of each user under the principal name.
+The example uses a simple in-memory map, but in a real application this is where you would query your database, per-user embedding store or any other tenant-scoped source:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/usersrag/UserDocuments.java[]
+----
+
+== Step 2. The User-Aware Retrieval Augmentor
+
+Quarkus LangChain4j wires a `RetrievalAugmentor` into an AI service from a `Supplier<RetrievalAugmentor>` bean.
+The augmentor below resolves the current user on every `augment` call:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/usersrag/UserRetrievalAugmentor.java[]
+----
+
+`SecurityIdentity` is a request-scoped bean. Injecting it into the application-scoped supplier gives a CDI client proxy, and every method call on that proxy resolves the identity of the current request. That is why `identity.getPrincipal().getName()` inside `augment` returns the user of the request being served, for both blocking and streaming AI services.
+
+WARNING: Do not resolve the user in the supplier `get()` method. The supplier runs when the AI service bean is created, and the `RetrievalAugmentor` it returns is reused by every invocation of that bean, so with an `@ApplicationScoped` AI service the first caller's documents would be served to everyone. Avoid this:
+
+[source,java]
+----
+@Override
+public RetrievalAugmentor get() {
+    String username = identity.getPrincipal().getName();
+    return new FixedUserAugmentor(documents, username);
+}
+----
+
+If the application does not use an embedding store per user, this is all that is needed.
+If it does, the same structure applies: build an `EmbeddingStoreContentRetriever` that carries the username (for example a request-scoped retriever bean, or an embedding store that filters on a `username` metadata field) and compose it with `DefaultRetrievalAugmentor`.
+
+== Step 3. The AI Service with a Per-User Memory Id
+
+The AI service references the augmentor and keeps the conversation of each user separate by passing the principal name as the `@MemoryId`:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/usersrag/UserAssistant.java[]
+----
+
+Using the principal name as the memory id gives each user a private conversation window for free, since the default chat memory provider keeps one memory per id.
+When user-specific documents are retrieved, tying the memory to the same user avoids another silent leak: without it, all users would share the same conversation history and the answers grounded in one user's documents.
+The memory is shared by the methods of the same user, so a `summarize` call sees the conversation created by earlier `chat` calls of that user.
+
+NOTE: If the memory id must be something other than the username, `@RegisterAiService` also accepts a custom `chatMemoryProviderSupplier`; the provider receives the memory id and can isolate storage per user the same way the document store does.
+If the client sends a conversation id, compose the memory id on the server from the principal name and that conversation id, or check in the provider that the conversation belongs to the principal, because the memory id is a method argument and can be forged.
+
+== Step 4. The REST Endpoint
+
+The endpoint injects the `SecurityIdentity` and passes its principal name to the AI service:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/usersrag/UserChatResource.java[]
+----
+
+Each user can then ask the same question and only see their own content:
+
+[source,bash]
+----
+curl -u alice:alice http://localhost:8080/chat/chat
+# the answer is grounded in Alice's private document
+
+curl -u bob:bob http://localhost:8080/chat/chat
+# the answer is grounded in Bob's private document
+----
+
+== Branching per Method with the Invocation Context
+
+Quarkus LangChain4j builds a `dev.langchain4j.invocation.InvocationContext` for every AI service invocation and hands it to the augmentor through `request.metadata().invocationContext()`.
+It exposes:
+
+* `methodName()` and `interfaceName()`: which AI service method is being invoked
+* `methodArguments()`: the arguments of the invocation, including the memory id
+* `chatMemoryId()`: the memory id in use, the same value the `ChatMemoryProvider` receives
+* `invocationParameters()`: the `InvocationParameters` argument of the AI service method, when the method declares one
+* `modelProvider()` and `defaultRequestParameters()`: the model the request is sent to
+
+The augmentor in Step 2 already uses `invocationContext().methodName()` to give the `summarize` method a shorter instruction than the `chat` method, and it could just as well select a completely different document set per method:
+
+[source,java]
+----
+@Override
+public AugmentationResult augment(AugmentationRequest request) {
+    var invocationContext = request.metadata().invocationContext();
+    String username = identity.getPrincipal().getName();
+    List<Content> contents = "summarize".equals(invocationContext.methodName())
+            ? summarizeDocuments(username)
+            : userDocuments(username);
+    return new AugmentationResult(inject(request.chatMessage(), contents), contents);
+}
+----
+
+The snippet reuses the `identity` bean of Step 2, and `summarizeDocuments`, `userDocuments` and `inject` stand for whatever retrieval and prompt composition the application needs.
+Compare `methodName()` against a constant instead of switching on it: it can be `null` when the augmentation is not triggered by a regular AI service method call, for example from the Dev UI chat, and a `switch` on a `null` string throws a `NullPointerException`.
+
+The `chatMemoryId()` of the invocation context (also available as `request.metadata().chatMemoryId()`) tells the augmentor which conversation is being served.
+Do not use it to decide whose documents to retrieve: it is a method argument, and as soon as the memory id becomes a client-supplied conversation id it can be forged.
+Always take the user from the `SecurityIdentity`, as Step 2 does.
+
+== Streaming
+
+Nothing changes for streaming AI services.
+Augmentation runs before the model is called. When a streaming method is invoked from the event loop, Quarkus LangChain4j runs it on a worker thread at subscription time and propagates the request context, so the `SecurityIdentity` of the request is still available to the augmentor.
+If the application calls the AI service from threads it creates itself, use a `ManagedExecutor` (see the Quarkus link:https://quarkus.io/guides/context-propagation[Context Propagation] guide): the identity is not propagated to a plain `CompletableFuture.supplyAsync`.
+The `stream` method of the AI service and the `/chat/stream` endpoint above are wired exactly like the blocking variants, and they are covered by the same user isolation.
+
+== Verifying User Isolation
+
+The pattern is easy to verify in tests: start the application with the embedded users above, call the endpoint as each user and assert that each answer mentions only that user's content:
+
+[source,java]
+----
+@Test
+void aliceSeesOnlyHerDocuments() {
+    String answer = given().auth().preemptive().basic("alice", "alice")
+            .when().get("/chat/chat")
+            .then().statusCode(200)
+            .extract().asString();
+
+    assertThat(answer).contains("Alice's private document");
+    assertThat(answer).doesNotContain("Bob's private document");
+}
+----
+
+The assertion also verifies the negative case: cross-user leakage would fail the `doesNotContain` check.
+The `quarkus-langchain4j-core` test suite contains a full version of this test that covers the blocking and streaming paths.
+
+== Summary
+
+* Authenticate users with Quarkus security, so every request has a `SecurityIdentity`.
+* Keep augmentation documents in a store keyed by the principal name.
+* Resolve the current user inside `RetrievalAugmentor.augment` through the injected `SecurityIdentity` client proxy, never when the supplier is created.
+* Tie the `@MemoryId` to the user so chat memory is isolated like the documents.
+* Use `request.metadata().invocationContext()` to branch per method. Take the user from the `SecurityIdentity`, never from `chatMemoryId()` or other method arguments.
+
+== References
+
+* xref:rag.adoc[RAG Overview]
+* xref:rag-query.adoc[Query-Time Augmentation]
+* xref:messages-and-memory.adoc[Messages and Memory]
+* xref:security.adoc[Security and Privacy Recommendations]
