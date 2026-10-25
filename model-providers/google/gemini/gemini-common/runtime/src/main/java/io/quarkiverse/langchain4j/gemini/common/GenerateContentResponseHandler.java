@@ -78,10 +78,12 @@ public final class GenerateContentResponseHandler {
     }
 
     public static TokenUsage getTokenUsage(GenerateContentResponse.UsageMetadata usageMetadata) {
-        return new TokenUsage(
+        return new GeminiTokenUsage(
                 usageMetadata.promptTokenCount(),
                 usageMetadata.candidatesTokenCount(),
-                usageMetadata.totalTokenCount());
+                usageMetadata.totalTokenCount(),
+                usageMetadata.cachedContentTokenCount(),
+                usageMetadata.thoughtsTokenCount());
     }
 
     public static List<ToolExecutionRequest> getToolExecutionRequests(GenerateContentResponse response) {
