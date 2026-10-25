@@ -62,6 +62,94 @@ image::ingestion.png[Ingestion pipeline, width=600]
 .RAG query-time augmentation pipeline
 image::quering.png[Query-time augmentation pipeline, width=600]
 
+== Per-method augmentation
+
+When a `RetrievalAugmentor` is configured on `@RegisterAiService` (or is discovered as a CDI bean), it applies to every method of the AI service.
+Some methods however need different documents, and some do not need retrieval at all, in which case augmenting them only results in wasted retrieval calls.
+The `@AugmentWith` annotation allows configuring retrieval augmentation on individual methods.
+
+=== Overriding the class-level augmentor
+
+A method annotated with `@AugmentWith` uses the `RetrievalAugmentor` provided by the referenced supplier, overriding the class-level configuration:
+
+[source,java]
+----
+@RegisterAiService(retrievalAugmentor = GeneralAugmentorSupplier.class)
+public interface Assistant {
+
+    String chat(String userMessage);
+
+    @AugmentWith(TechnicalDocsAugmentorSupplier.class)
+    String answerTechnicalQuestion(String userMessage);
+}
+----
+
+Here `chat` uses `GeneralAugmentorSupplier`, while `answerTechnicalQuestion` uses `TechnicalDocsAugmentorSupplier`.
+
+The supplier is resolved as a CDI bean when one exists (consider adding a bean-defining annotation to it), otherwise Quarkus creates an instance by calling its no-arg constructor.
+Its `get()` method is called on the first invocation of the annotated method for each AI service instance, the same instance lifecycle as the class-level supplier of `RegisterAiService#retrievalAugmentor()`.
+
+=== Disabling augmentation for a method
+
+Use `AugmentWith.None` when a method should not be augmented at all, even when the AI service declares an augmentor:
+
+[source,java]
+----
+@RegisterAiService(retrievalAugmentor = GeneralAugmentorSupplier.class)
+public interface Assistant {
+
+    String chat(String userMessage);
+
+    @AugmentWith(AugmentWith.None.class)
+    String translate(String text);
+}
+----
+
+Here `chat` is augmented with `GeneralAugmentorSupplier`, while no retrieval is performed for `translate`.
+
+Methods without `@AugmentWith` keep the behavior defined by `@RegisterAiService`, so sibling methods are unaffected.
+`@AugmentWith` is ignored on `default` methods and on image generation methods.
+
+=== Dynamic alternative
+
+When the choice of documents cannot be made statically, a single custom `RetrievalAugmentor` can delegate to other augmentors based on the invoked method, which is available in the augmentation metadata:
+
+[source,java]
+----
+@ApplicationScoped
+public class MethodAwareAugmentorSupplier implements Supplier<RetrievalAugmentor> {
+
+    @Inject
+    TechnicalDocsAugmentor technicalDocs;
+
+    @Inject
+    GeneralAugmentor general;
+
+    @Override
+    public RetrievalAugmentor get() {
+        return new MethodAwareAugmentor(technicalDocs, general);
+    }
+}
+
+public class MethodAwareAugmentor implements RetrievalAugmentor {
+
+    private final RetrievalAugmentor technicalDocs;
+    private final RetrievalAugmentor general;
+
+    public MethodAwareAugmentor(RetrievalAugmentor technicalDocs, RetrievalAugmentor general) {
+        this.technicalDocs = technicalDocs;
+        this.general = general;
+    }
+
+    @Override
+    public AugmentationResult augment(AugmentationRequest augmentationRequest) {
+        String methodName = augmentationRequest.metadata().invocationContext().methodName();
+        RetrievalAugmentor delegate = "answerTechnicalQuestion".equals(methodName) ? technicalDocs : general;
+        return delegate.augment(augmentationRequest);
+    }
+}
+----
+
 == What’s Next?
 
 This page introduces the fundamental concepts of RAG.

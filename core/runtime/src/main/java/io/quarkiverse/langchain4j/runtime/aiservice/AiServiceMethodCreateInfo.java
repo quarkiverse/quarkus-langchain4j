@@ -15,6 +15,7 @@ import org.eclipse.microprofile.config.ConfigProvider;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
+import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
@@ -23,6 +24,8 @@ import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.impl.LazyValue;
 import io.quarkus.runtime.annotations.RecordableConstructor;
 
@@ -65,6 +68,8 @@ public final class AiServiceMethodCreateInfo {
     private final String outputTokenAccumulatorClassName;
     private OutputTokenAccumulator accumulator;
 
+    private final String retrievalAugmentorSupplierClassName;
+
     private final LazyValue<Integer> quarkusGuardrailsMaxRetry;
     private final boolean switchToWorkerThreadForToolExecution;
 
@@ -90,7 +95,8 @@ public final class AiServiceMethodCreateInfo {
             String outputTokenAccumulatorClassName,
             String responseAugmenterClassName,
             InputGuardrailsLiteral inputGuardrails,
-            OutputGuardrailsLiteral outputGuardrails) {
+            OutputGuardrailsLiteral outputGuardrails,
+            String retrievalAugmentorSupplierClassName) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.parameterInfo = parameterInfo;
@@ -127,6 +133,7 @@ public final class AiServiceMethodCreateInfo {
         });
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
         this.responseAugmenterClassName = responseAugmenterClassName;
+        this.retrievalAugmentorSupplierClassName = retrievalAugmentorSupplierClassName;
     }
 
     public String getInterfaceName() {
@@ -258,6 +265,32 @@ public final class AiServiceMethodCreateInfo {
 
     public OutputTokenAccumulator getOutputTokenAccumulator() {
         return accumulator;
+    }
+
+    public String getRetrievalAugmentorSupplierClassName() {
+        return retrievalAugmentorSupplierClassName;
+    }
+
+    /**
+     * Creates the {@link RetrievalAugmentor} of the {@code @AugmentWith} supplier of this method, using the supplier
+     * CDI bean if present, otherwise its no-arg constructor.
+     */
+    public RetrievalAugmentor createMethodRetrievalAugmentor() {
+        try {
+            Class<?> supplierClass = Thread.currentThread().getContextClassLoader()
+                    .loadClass(retrievalAugmentorSupplierClassName);
+            Supplier<?> supplier;
+            InstanceHandle<?> handle = Arc.container().instance(supplierClass);
+            if (handle.isAvailable()) {
+                supplier = (Supplier<?>) handle.get();
+            } else {
+                supplier = (Supplier<?>) supplierClass.getConstructor().newInstance();
+            }
+            return (RetrievalAugmentor) supplier.get();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(
+                    "Could not create RetrievalAugmentor from supplier '" + retrievalAugmentorSupplierClassName + "'", e);
+        }
     }
 
     public String getUserMessageTemplate() {
