@@ -172,6 +172,59 @@ void aliceSeesOnlyHerDocuments() {
 The assertion also verifies the negative case: cross-user leakage would fail the `doesNotContain` check.
 The `quarkus-langchain4j-core` test suite contains a full version of this test that covers the blocking and streaming paths.
 
+== Restricting Access by Role
+
+The pattern above decides which documents a caller sees.
+Some stores are instead shared but restricted: only callers with a given role may retrieve from them at all.
+The same mechanism covers it, because the `RetrievalAugmentor` runs on every call, before the model, with the request context of the caller available.
+
+Implement `RetrievalAugmentor` in a CDI bean that checks the identity before retrieving anything:
+
+[source,java]
+----
+@ApplicationScoped
+public class RestrictedRetrievalAugmentor implements RetrievalAugmentor {
+
+    private final RetrievalAugmentor delegate;
+
+    @Inject
+    SecurityIdentity identity;
+
+    RestrictedRetrievalAugmentor(EmbeddingStore store, EmbeddingModel model) {
+        ContentRetriever retriever = EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(store)
+                .embeddingModel(model)
+                .maxResults(3)
+                .build();
+        this.delegate = DefaultRetrievalAugmentor.builder()
+                .contentRetriever(retriever)
+                .build();
+    }
+
+    @Override
+    public AugmentationResult augment(AugmentationRequest request) {
+        if (!identity.hasRole("docs-reader")) {
+            throw new ForbiddenException("Access to the document store requires the docs-reader role");
+        }
+        return delegate.augment(request);
+    }
+}
+
+@RegisterAiService
+public interface Assistant {
+
+    String ask(@UserMessage String question);
+}
+----
+
+The check covers blocking and streaming methods alike: a caller without the role is denied, the model never receives content that caller may not read, and in REST applications the `io.quarkus.security.ForbiddenException` surfaces as HTTP 403.
+Call `identity.checkPermissionBlocking(...)` instead of `identity.hasRole(...)` to enforce permissions rather than roles.
+
+AI services whose `retrievalAugmentor` attribute is left at its default use this bean automatically, as long as it is the only bean of type `RetrievalAugmentor` in the application.
+When more than one exists, none of them is used, without any error, and the AI service runs without retrieval augmentation.
+In that case, reference the restricted augmentor explicitly through a `Supplier<RetrievalAugmentor>` bean that injects it.
+As in Step 2, keep the check in `augment(...)`: the supplier runs only when the AI service bean is created, so it is not a reliable place for a per-caller check.
+
 == Summary
 
 * Authenticate users with Quarkus security, so every request has a `SecurityIdentity`.
@@ -179,6 +232,7 @@ The `quarkus-langchain4j-core` test suite contains a full version of this test t
 * Resolve the current user inside `RetrievalAugmentor.augment` through the injected `SecurityIdentity` client proxy, never when the supplier is created.
 * Tie the `@MemoryId` to the user so chat memory is isolated like the documents.
 * Use `request.metadata().invocationContext()` to branch per method. Take the user from the `SecurityIdentity`, never from `chatMemoryId()` or other method arguments.
+* To restrict a whole store to a role, check the `SecurityIdentity` in `RetrievalAugmentor.augment` and throw a `ForbiddenException` before retrieving anything.
 
 == References
 
