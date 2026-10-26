@@ -5,10 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ContentType;
 import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.VideoContent;
 import io.quarkus.jackson.JacksonMixin;
 
 @JacksonMixin(Content.class)
@@ -17,6 +20,9 @@ import io.quarkus.jackson.JacksonMixin;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = TextContent.class, name = "TEXT"),
         @JsonSubTypes.Type(value = ImageContent.class, name = "IMAGE"),
+        @JsonSubTypes.Type(value = AudioContent.class, name = "AUDIO"),
+        @JsonSubTypes.Type(value = VideoContent.class, name = "VIDEO"),
+        @JsonSubTypes.Type(value = PdfFileContent.class, name = "PDF"),
 })
 public abstract class ContextMixin {
 
