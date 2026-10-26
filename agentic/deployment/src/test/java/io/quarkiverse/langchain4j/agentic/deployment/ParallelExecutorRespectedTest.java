@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
@@ -24,11 +23,9 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class ParallelExecutorRespectedTest extends OpenAiBaseTest {
+public class ParallelExecutorRespectedTest {
 
     static final AtomicReference<String> capturedThreadName = new AtomicReference<>();
 
@@ -37,10 +34,8 @@ public class ParallelExecutorRespectedTest extends OpenAiBaseTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ThreadCapturingAgent.class, SimpleAgent.class,
                             CustomExecutorParallelAgent.class, ThreadCapturingChatModel.class,
-                            Agents.FixedResponseChatModel.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "test-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+                            Agents.FixedResponseChatModel.class, CustomExecutorProviderTestSupport.NamedExecutor.class))
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "unused");
 
     /**
      * A ChatModel that captures the thread name during doChat -- this runs on the
@@ -85,11 +80,7 @@ public class ParallelExecutorRespectedTest extends OpenAiBaseTest {
 
         @ParallelExecutor
         static Executor executor() {
-            return Executors.newFixedThreadPool(2, r -> {
-                Thread t = new Thread(r);
-                t.setName("custom-parallel-" + t.getId());
-                return t;
-            });
+            return new CustomExecutorProviderTestSupport.NamedExecutor("custom-parallel-worker");
         }
     }
 

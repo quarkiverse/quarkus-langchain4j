@@ -738,7 +738,8 @@ public class BeansProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     @Consume(SyntheticBeansRuntimeInitBuildItem.class)
-    void registerDefaultExecutorProvider(LangChain4jRecorder recorder, List<ServiceProviderBuildItem> serviceProviders,
+    void registerDefaultExecutorProvider(LangChain4jRecorder recorder, ShutdownContextBuildItem shutdown,
+            List<ServiceProviderBuildItem> serviceProviders,
             List<GeneratedServiceProviderBuildItem> generatedServiceProviders) {
         String serviceName = ExecutorProvider.class.getName();
         String serviceDescriptor = ServiceProviderBuildItem.SPI_ROOT + serviceName;
@@ -753,7 +754,7 @@ public class BeansProcessor {
                 return;
             }
         }
-        recorder.registerDefaultExecutorProvider();
+        recorder.registerDefaultExecutorProvider(shutdown);
     }
 
     @BuildStep

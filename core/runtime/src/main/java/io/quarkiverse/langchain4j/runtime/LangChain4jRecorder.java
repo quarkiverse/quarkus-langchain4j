@@ -18,7 +18,7 @@ public class LangChain4jRecorder {
     private static final Logger log = Logger.getLogger(LangChain4jRecorder.class);
 
     @RuntimeInit
-    public void registerDefaultExecutorProvider() {
+    public void registerDefaultExecutorProvider(ShutdownContext shutdown) {
         if (ExecutorProvider.get() != null) {
             return;
         }
@@ -28,10 +28,19 @@ public class LangChain4jRecorder {
                     + "without CDI/OTel/Security context propagation");
             return;
         }
-        ExecutorProvider.set(new ExecutorProvider() {
+        ExecutorProvider provider = new ExecutorProvider() {
             @Override
             public Executor executor() {
                 return managedExecutor;
+            }
+        };
+        ExecutorProvider.set(provider);
+        shutdown.addShutdownTask(new Runnable() {
+            @Override
+            public void run() {
+                if (ExecutorProvider.get() == provider) {
+                    ExecutorProvider.set(null);
+                }
             }
         });
     }
