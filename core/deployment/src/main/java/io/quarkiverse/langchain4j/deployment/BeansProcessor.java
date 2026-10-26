@@ -30,6 +30,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.scoring.ScoringModel;
+import dev.langchain4j.spi.ExecutorProvider;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
@@ -55,17 +56,21 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderB
 import io.quarkiverse.langchain4j.runtime.LangChain4jRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.SyntheticBeansRuntimeInitBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BeanStream;
 import io.quarkus.arc.processor.InjectionPointInfo;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.GeneratedServiceProviderBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.logging.LogCleanupFilterBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
@@ -723,6 +728,32 @@ public class BeansProcessor {
         }
         // a user provided bean exists, so there is no need to fail
         return null;
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem registerExecutorProviders() {
+        return ServiceProviderBuildItem.allProvidersFromClassPath(ExecutorProvider.class.getName());
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    @Consume(SyntheticBeansRuntimeInitBuildItem.class)
+    void registerDefaultExecutorProvider(LangChain4jRecorder recorder, List<ServiceProviderBuildItem> serviceProviders,
+            List<GeneratedServiceProviderBuildItem> generatedServiceProviders) {
+        String serviceName = ExecutorProvider.class.getName();
+        String serviceDescriptor = ServiceProviderBuildItem.SPI_ROOT + serviceName;
+        for (ServiceProviderBuildItem serviceProvider : serviceProviders) {
+            if (serviceDescriptor.equals(serviceProvider.serviceDescriptorFile()) && !serviceProvider.providers().isEmpty()) {
+                return;
+            }
+        }
+        // Generated service descriptors are not visible to the classpath scan.
+        for (GeneratedServiceProviderBuildItem serviceProvider : generatedServiceProviders) {
+            if (serviceName.equals(serviceProvider.getServiceInterfaceName())) {
+                return;
+            }
+        }
+        recorder.registerDefaultExecutorProvider();
     }
 
     @BuildStep

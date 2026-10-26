@@ -275,10 +275,12 @@ Both `FoodExpert` and `MovieExpert` run at the same time. Their results are stor
 
 ==== Default executor and context propagation
 
-At runtime initialization, the agentic extension configures Quarkus `ManagedExecutor` as the global
-LangChain4j default executor if no programmatic `ExecutorProvider` or ServiceLoader provider is configured.
+At runtime initialization, the core extension configures Quarkus `ManagedExecutor` as the global
+LangChain4j default executor if no programmatic `ExecutorProvider` or SPI provider registered through
+`META-INF/services/dev.langchain4j.spi.ExecutorProvider` is configured.
 This propagates the contexts supported by the installed Quarkus extensions to parallel agent workers.
-The setting applies to all LangChain4j operations that use its default executor, not only parallel agents.
+The setting applies to all LangChain4j operations that use its default executor, not only parallel agents,
+and does not require the agentic extension.
 
 An explicit `@ParallelExecutor` takes precedence for its workflow. A programmatic provider registered
 with `ExecutorProvider.set(...)` takes precedence over a ServiceLoader provider; both take precedence
