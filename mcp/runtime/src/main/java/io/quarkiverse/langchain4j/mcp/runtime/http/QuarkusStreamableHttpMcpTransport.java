@@ -20,14 +20,11 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.common.util.MultivaluedTreeMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.transport.McpHeaderEncoding;
+import dev.langchain4j.mcp.client.transport.McpJson;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.protocol.McpClientMessage;
@@ -50,7 +47,6 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private final Duration timeout;
     private final boolean logResponses;
     private final boolean logRequests;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final AtomicReference<String> mcpSessionId = new AtomicReference<>();
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
@@ -167,6 +163,10 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         });
     }
 
+    private static String text(Map<?, ?> map, String key) {
+        return map.get(key) instanceof String value ? value : null;
+    }
+
     private Uni<String> execute(McpClientMessage operation, boolean isRetry, boolean expectsResponse) {
         return execute(new McpCallContext(null, operation), isRetry, expectsResponse);
     }
@@ -181,8 +181,8 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         }
         String body;
         try {
-            body = objectMapper.writeValueAsString(request);
-        } catch (JsonProcessingException e) {
+            body = McpJson.serialize(request);
+        } catch (RuntimeException e) {
             future.completeExceptionally(e);
             return uni;
         }
@@ -202,25 +202,25 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
             }
             // Extract method from JSON-RPC message
             try {
-                JsonNode bodyNode = objectMapper.readTree(body);
-                String method = bodyNode.path("method").asText(null);
+                Map<String, Object> bodyMap = McpJson.toMap(body);
+                String method = text(bodyMap, "method");
                 if (method != null) {
                     options.addHeader("Mcp-Method", method);
                 }
                 // Extract name for tools/call, resources/read, prompts/get
-                JsonNode params = bodyNode.path("params");
+                Map<?, ?> params = bodyMap.get("params") instanceof Map<?, ?> map ? map : Map.of();
                 if ("tools/call".equals(method) || "prompts/get".equals(method)) {
-                    String name = params.path("name").asText(null);
+                    String name = text(params, "name");
                     if (name != null) {
                         options.addHeader("Mcp-Name", McpHeaderEncoding.encode(name));
                     }
                 } else if ("resources/read".equals(method)) {
-                    String uri = params.path("uri").asText(null);
+                    String uri = text(params, "uri");
                     if (uri != null) {
                         options.addHeader("Mcp-Name", McpHeaderEncoding.encode(uri));
                     }
                 }
-            } catch (JsonProcessingException e) {
+            } catch (RuntimeException e) {
                 // If we can't parse the body, continue without method/name headers
                 log.warn("Failed to parse request body for modern protocol headers", e);
             }
@@ -331,15 +331,16 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                             // Try to parse as JSON-RPC error response
                                             if (id != null && responseString != null && !responseString.isEmpty()) {
                                                 try {
-                                                    JsonNode node = objectMapper.readTree(responseString);
-                                                    if (node.has("error") && node.has("jsonrpc")) {
+                                                    Map<String, Object> node = McpJson.toMap(responseString);
+                                                    if (node.containsKey("error") && node.containsKey("jsonrpc")) {
                                                         if (logResponses) {
                                                             log.info("Response: " + responseString);
                                                         }
                                                         operationHandler.onMessage(responseString);
                                                         return;
                                                     }
-                                                } catch (JsonProcessingException ignored) {
+                                                } catch (RuntimeException ignored) {
+                                                    // the error body is not JSON-RPC (e.g. a proxy's HTML error page); the HTTP status is the failure
                                                 }
                                             }
                                             future.completeExceptionally(
