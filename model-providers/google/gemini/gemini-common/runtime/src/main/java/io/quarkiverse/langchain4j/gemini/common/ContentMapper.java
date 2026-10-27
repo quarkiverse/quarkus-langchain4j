@@ -69,7 +69,7 @@ public final class ContentMapper {
                             URI uri = image.url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(image.mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob(image.mimeType(), image.base64Data())));
@@ -78,7 +78,7 @@ public final class ContentMapper {
                             URI uri = fc.pdfFile().url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(fc.pdfFile().mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob("application/pdf", fc.pdfFile().base64Data())));
@@ -88,7 +88,7 @@ public final class ContentMapper {
                             URI uri = video.url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(video.mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob(video.mimeType(), video.base64Data())));
@@ -98,7 +98,7 @@ public final class ContentMapper {
                             URI uri = audio.url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(audio.mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob(audio.mimeType(), audio.base64Data())));
@@ -167,6 +167,10 @@ public final class ContentMapper {
             case NONE -> GenerateContentRequest.ToolConfig.Mode.NONE;
         };
         return new GenerateContentRequest.ToolConfig(new GenerateContentRequest.ToolConfig.FunctionCallingConfig(mode));
+    }
+
+    private static FileData fileData(String mimeType, URI uri) {
+        return new FileData(mimeType != null ? mimeType : mimeTypeDetector.probeContentType(uri), uri.toString());
     }
 
     private static List<GenerateContentRequest.Tool> toTools(
