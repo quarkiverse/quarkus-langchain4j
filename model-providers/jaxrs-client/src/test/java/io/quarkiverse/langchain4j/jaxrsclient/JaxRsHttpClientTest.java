@@ -217,6 +217,55 @@ class JaxRsHttpClientTest {
     }
 
     @Test
+    void executeSseShouldCallOnOpenWithStatusAndHeadersBeforeFirstEvent() throws InterruptedException {
+        server.createContext("/sse", this::handleSse);
+        server.start();
+
+        HttpClient client = new JaxRsHttpClientBuilder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .readTimeout(Duration.ofSeconds(2))
+                .build();
+
+        HttpRequest request = HttpRequest.builder()
+                .method(GET)
+                .url(baseUrl + "/sse")
+                .build();
+
+        AtomicReference<SuccessfulHttpResponse> opened = new AtomicReference<>();
+        List<String> callbacks = new CopyOnWriteArrayList<>();
+        CountDownLatch finished = new CountDownLatch(1);
+
+        client.execute(request, new ServerSentEventListener() {
+            @Override
+            public void onOpen(SuccessfulHttpResponse response) {
+                opened.set(response);
+                callbacks.add("onOpen");
+            }
+
+            @Override
+            public void onEvent(ServerSentEvent event) {
+                callbacks.add("onEvent");
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                callbacks.add("onError");
+            }
+
+            @Override
+            public void onClose() {
+                callbacks.add("onClose");
+                finished.countDown();
+            }
+        });
+
+        assertEquals(true, finished.await(3, TimeUnit.SECONDS));
+        assertEquals(List.of("onOpen", "onEvent", "onClose"), callbacks);
+        assertEquals(200, opened.get().statusCode());
+        assertEquals(List.of("42"), opened.get().headers().get("x-ratelimit-remaining-tokens"));
+    }
+
+    @Test
     void executeSseShouldReportHttpExceptionForErrorResponse() throws InterruptedException {
         server.createContext("/error", this::handleError);
         server.start();
@@ -232,8 +281,14 @@ class JaxRsHttpClientTest {
                 .build();
 
         AtomicReference<Throwable> error = new AtomicReference<>();
+        AtomicBoolean opened = new AtomicBoolean(false);
         CountDownLatch finished = new CountDownLatch(1);
         client.execute(request, new ServerSentEventListener() {
+            @Override
+            public void onOpen(SuccessfulHttpResponse response) {
+                opened.set(true);
+            }
+
             @Override
             public void onEvent(ServerSentEvent event) {
             }
@@ -250,6 +305,7 @@ class JaxRsHttpClientTest {
         });
 
         assertEquals(true, finished.await(3, TimeUnit.SECONDS));
+        assertEquals(false, opened.get());
         // the same exception as on the blocking path, so LangChain4j's exception mapper can classify it
         QuarkusHttpException exception = assertInstanceOf(QuarkusHttpException.class, error.get());
         assertEquals(400, exception.statusCode());
@@ -363,6 +419,7 @@ class JaxRsHttpClientTest {
     private void handleSse(HttpExchange exchange) throws IOException {
         byte[] responseBody = "data: hello\n\n".getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "text/event-stream");
+        exchange.getResponseHeaders().add("X-RateLimit-Remaining-Tokens", "42");
         exchange.sendResponseHeaders(200, responseBody.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBody);
