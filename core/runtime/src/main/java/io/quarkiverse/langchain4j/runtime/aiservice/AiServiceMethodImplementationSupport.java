@@ -387,7 +387,7 @@ public class AiServiceMethodImplementationSupport {
                     .toolExecutors(toolExecutors)
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
-                    .invocationContext(InvocationContext.builder().chatMemoryId(memoryId).build())
+                    .invocationContext(invocationContext)
                     .methodKey(methodCreateInfo)
                     .toolArgumentsErrorHandler((e, c) -> {
                         throw new RuntimeException(e);
