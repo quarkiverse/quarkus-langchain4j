@@ -6,6 +6,7 @@ import static io.quarkiverse.langchain4j.runtime.aiservice.ChatRequestParameters
 import static java.util.Objects.nonNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -85,7 +86,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolExecutors;
+    private final Map<String, ReturnBehavior> toolReturnBehaviors;
     private final ToolServiceContext toolSearchContext;
+    private final DynamicToolProviders dynamicToolProviders;
     private final Context executionContext;
     private final boolean mustSwitchToWorkerThread;
     private final boolean switchToWorkerForEmission;
@@ -112,7 +115,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             TokenUsage tokenUsage,
             List<ToolSpecification> toolSpecifications,
             Map<String, ToolExecutor> toolExecutors,
+            Map<String, ReturnBehavior> toolReturnBehaviors,
             ToolServiceContext toolSearchContext,
+            DynamicToolProviders dynamicToolProviders,
             boolean mustSwitchToWorkerThread,
             boolean switchToWorkerForEmission,
             Context cxtx,
@@ -140,7 +145,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
+        this.toolReturnBehaviors = copyIfNotNull(toolReturnBehaviors);
         this.toolSearchContext = toolSearchContext;
+        this.dynamicToolProviders = dynamicToolProviders;
 
         this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.executionContext = cxtx;
@@ -169,7 +176,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Consumer<Response<AiMessage>> completionHandler,
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
             List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
-            ToolServiceContext toolSearchContext,
+            Map<String, ReturnBehavior> toolReturnBehaviors, ToolServiceContext toolSearchContext,
+            DynamicToolProviders dynamicToolProviders,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
             ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             AtomicBoolean cancelled, int toolCallingRoundTripsLeft) {
@@ -190,7 +198,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.tokenUsage = sum;
         this.toolSpecifications = toolSpecifications;
         this.toolExecutors = toolExecutors;
+        this.toolReturnBehaviors = toolReturnBehaviors;
         this.toolSearchContext = toolSearchContext;
+        this.dynamicToolProviders = dynamicToolProviders;
         this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.switchToWorkerForEmission = switchToWorkerForEmission;
         this.executionContext = executionContext;
@@ -453,6 +463,16 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         nextToolSearchContext = ToolSearchService.addFoundTools(toolSearchContext, rawToolResults);
                         nextToolSpecifications = new ArrayList<>(nextToolSearchContext.effectiveTools());
                     }
+                    List<ChatMessage> nextMessages = messagesToSend(memoryId);
+                    Map<String, ToolExecutor> nextToolExecutors = toolExecutors;
+                    Map<String, ReturnBehavior> nextToolReturnBehaviors = toolReturnBehaviors;
+                    if (dynamicToolProviders != null) {
+                        nextToolSpecifications = new ArrayList<>(nextToolSpecifications);
+                        nextToolExecutors = new HashMap<>(toolExecutors);
+                        nextToolReturnBehaviors = new HashMap<>(toolReturnBehaviors);
+                        nextToolSearchContext = dynamicToolProviders.refresh(nextMessages, nextToolSpecifications,
+                                nextToolExecutors, nextToolReturnBehaviors, nextToolSearchContext);
+                    }
 
                     DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
                     parametersBuilder.toolSpecifications(nextToolSpecifications);
@@ -477,7 +497,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     ChatRequestParameters effectiveParams = effectiveChatRequestParameters(defaultParams, userParams);
 
                     ChatRequest chatRequest = ChatRequest.builder()
-                            .messages(messagesToSend(memoryId))
+                            .messages(nextMessages)
                             .parameters(effectiveParams)
                             .build();
                     QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
@@ -497,8 +517,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             temporaryMemory,
                             TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
                             nextToolSpecifications,
-                            toolExecutors,
+                            nextToolExecutors,
+                            nextToolReturnBehaviors,
                             nextToolSearchContext,
+                            dynamicToolProviders,
                             mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
                             methodArgs,
                             cancelled, toolCallingRoundTripsLeft);
@@ -520,6 +542,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         ToolExecutor toolExecutor = toolExecutors == null ? null : toolExecutors.get(toolName);
         if (toolExecutor instanceof QuarkusToolExecutor quarkusToolExecutor) {
             return quarkusToolExecutor.returnBehavior();
+        }
+        if (toolReturnBehaviors != null && toolReturnBehaviors.containsKey(toolName)) {
+            return toolReturnBehaviors.get(toolName);
         }
         if (toolSearchContext != null) {
             return toolSearchContext.returnBehavior(toolName);
