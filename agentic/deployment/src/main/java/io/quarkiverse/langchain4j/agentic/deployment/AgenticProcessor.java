@@ -6,6 +6,7 @@ import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.valid
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateStaticMethod;
 import static io.quarkiverse.langchain4j.deployment.AiServicesProcessor.AGENTIC_PACKAGE_PREFIX;
 import static io.quarkiverse.langchain4j.deployment.AiServicesProcessor.TOOLBOX;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -52,6 +53,7 @@ import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.AgentClassCreateInfo;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
+import io.quarkiverse.langchain4j.deployment.AiServicesProcessor;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.FallbackToDummyUserMessageBuildItem;
@@ -63,6 +65,7 @@ import io.quarkiverse.langchain4j.deployment.SkipToolBoxProcessingBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
@@ -776,6 +779,8 @@ public class AgenticProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
+            CustomScopeAnnotationsBuildItem customScopes,
+
             InterceptorResolverBuildItem interceptorResolverBuildItem,
             BeanDiscoveryFinishedBuildItem beanDiscovery,
             CombinedIndexBuildItem indexBuildItem,
@@ -824,6 +829,12 @@ public class AgenticProcessor {
                                             hasInterceptorBindings, hasMcpToolBox)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
+
+            // Since subagents are beans, they must be added as injection points to
+            // make sure these beans are available to lookup within the subagent resolver
+            // if you don't add these injection points, beans might not be created yet
+            addSubagentInjectionPoints(index, customScopes, detectedAiAgentBuildItem, beanConfigurator);
+
             if (hasInterceptorBindings) {
                 beanConfigurator.injectInterceptionProxy();
             }
@@ -869,6 +880,34 @@ public class AgenticProcessor {
         }
 
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
+    }
+
+    private static void addSubagentInjectionPoints(IndexView index, CustomScopeAnnotationsBuildItem customScopes,
+            DetectedAiAgentBuildItem agent,
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator) {
+        for (MethodInfo agentMethod : agent.getAgenticMethods()) {
+            AnnotationInstance val = null;
+            for (DotName agentAnnotation : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
+                val = agentMethod.annotation(agentAnnotation);
+                if (val != null) {
+                    break;
+                }
+            }
+            if (val == null) {
+                continue;
+            }
+            AnnotationValue subAgents = val.value("subAgents");
+            if (subAgents != null) {
+                for (Type subagent : subAgents.asClassArray()) {
+                    ClassInfo subagentInfo = index.getClassByName(subagent.name());
+                    // no bean is created for non-ai-agent classes
+                    if (!subagentInfo.isInterface() && AiServicesProcessor.cdiScope(customScopes, subagentInfo, null) == null) {
+                        continue;
+                    }
+                    configurator.addInjectionPoint(subagent);
+                }
+            }
+        }
     }
 
     private static boolean isInterceptorBindingAnnotation(AnnotationInstance ann, IndexView index) {
@@ -1238,13 +1277,13 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo methodInfo = ai.target().asMethod();
-            if (methodInfo.declaringClass().isInterface()) {
-                ClassInfo iface = methodInfo.declaringClass();
-                addMethodToMap(methodInfo, iface, ifaceToAgentMethodsMap);
-                index.getAllKnownSubinterfaces(iface.name())
+            ClassInfo declaring = methodInfo.declaringClass();
+            if (declaring.isInterface() && !declaring.hasAnnotation(REGISTER_AI_SERVICES)) {
+                addMethodToMap(methodInfo, declaring, ifaceToAgentMethodsMap);
+                index.getAllKnownSubinterfaces(declaring.name())
                         .forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
             } else {
-                addMethodToMap(methodInfo, methodInfo.declaringClass(), classToNonAiAgentMethodsMap);
+                addMethodToMap(methodInfo, declaring, classToNonAiAgentMethodsMap);
             }
         }
     }

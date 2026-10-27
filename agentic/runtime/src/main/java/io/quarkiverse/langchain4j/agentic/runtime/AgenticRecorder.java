@@ -1,9 +1,11 @@
 package io.quarkiverse.langchain4j.agentic.runtime;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -14,9 +16,11 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.AgenticServices.AgentConfigurator;
 import dev.langchain4j.agentic.declarative.DeclarativeUtil;
+import dev.langchain4j.agentic.internal.AgentUtil;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
@@ -183,8 +187,20 @@ public class AgenticRecorder {
                 return null;
             }
 
+            Object resolved = Arc.container().select(subAgentClass).orNull();
+            if (resolved == null) {
+                return null;
+            }
+            // Quarkus manages all AI services.
+            Optional<Method> method = AgentUtil.getAnnotatedMethodOnClass(subAgentClass, Agent.class);
+            if (method.isPresent()) {
+                return AgentUtil.nonAiAgentToExecutor(resolved, method.get());
+            }
+
+            // non @Agent agents (i.e. SequenceAgent)
+            // Note, this code assumes that the scope of these beans are @ApplicationScoped
             try {
-                return unwrapProxies(Arc.container().select(subAgentClass).orNull());
+                return unwrapProxies(resolved);
             } catch (Exception e) {
                 log.debugf(e,
                         "Unable to resolve CDI sub-agent '%s'; falling back to LangChain4j internal creation",
