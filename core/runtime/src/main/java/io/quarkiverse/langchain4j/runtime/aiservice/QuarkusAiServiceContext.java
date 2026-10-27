@@ -17,6 +17,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolService;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.ModelName;
@@ -208,7 +209,9 @@ public class QuarkusAiServiceContext extends AiServiceContext {
 
     /**
      * Makes the upstream LangChain4j {@code AiServiceTokenStream} execute tools on the thread they require when a
-     * {@code TokenStream} method of this AI service has tools that cannot run on an event loop. The upstream
+     * {@code TokenStream} method of this AI service has tools that cannot run on an event loop, or when this AI service
+     * has a {@linkplain ToolProvider#isDynamic() dynamic} tool provider, which is re-evaluated after the tools are
+     * executed and may block. The upstream
      * implementation does not pass the method to the model, so the wrapped model is used by every {@code TokenStream}
      * method of the AI service, while the {@code Multi} methods, implemented in Quarkus, keep using the delegate.
      */
@@ -224,10 +227,22 @@ public class QuarkusAiServiceContext extends AiServiceContext {
                 switchToWorkerThreadForToolExecution |= methodCreateInfo.isSwitchToWorkerThreadForToolExecution();
             }
         }
-        if (switchToWorkerThreadForToolExecution) {
+        if (switchToWorkerThreadForToolExecution || (!tokenStreamMethodCreateInfos.isEmpty() && hasDynamicToolProvider())) {
             streamingChatModel = new ToolExecutionDispatchingStreamingChatModel(streamingChatModel, this,
                     tokenStreamMethodCreateInfos);
         }
+    }
+
+    /**
+     * @return whether one of the tool providers of this AI service is {@linkplain ToolProvider#isDynamic() dynamic}
+     */
+    boolean hasDynamicToolProvider() {
+        for (ToolProvider toolProvider : toolService.toolProviders()) {
+            if (toolProvider.isDynamic()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private StreamingChatModel unwrappedStreamingChatModel() {

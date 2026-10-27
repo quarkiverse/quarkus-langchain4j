@@ -297,6 +297,33 @@ public class MyCustomToolProvider implements ToolProvider {
 }
 ----
 
+By default, a `ToolProvider` is called once, at the beginning of each AI service invocation.
+If the tools to provide depend on how the conversation unfolds during the invocation (for example on the results of the tools executed so far), override `isDynamic()` to return `true`.
+A dynamic provider is called before each LLM call of the invocation, and `request.messages()` contains the messages about to be sent to the LLM.
+Tools returned by a dynamic provider are only ever added: once provided, a tool stays available for the remainder of the invocation.
+
+[source, java]
+----
+@ApplicationScoped
+public class MyDynamicToolProvider implements ToolProvider {
+    @Inject PaymentTool paymentTool;
+
+    public ToolProviderResult provideTools(ToolProviderRequest request) {
+        boolean bookingCreated = request.messages().stream()
+                .anyMatch(m -> m instanceof ToolExecutionResultMessage r && r.toolName().equals("createBooking"));
+        if (!bookingCreated) {
+            return ToolProviderResult.builder().build();
+        }
+        return buildToolProviderResult(List.of(paymentTool)); // Payment is only offered once a booking exists
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
+    }
+}
+----
+
 === Alternative: Using `ToolSpecification` and `ToolExecutor`
 
 If you prefer more control, you can work directly with `ToolSpecification` and `ToolExecutor` to provide tools.

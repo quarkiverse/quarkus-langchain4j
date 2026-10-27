@@ -290,6 +290,10 @@ public class AiServiceMethodImplementationSupport {
         toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
         toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
         for (ToolProvider toolProvider : context.toolService.toolProviders()) {
+            if (toolProvider.isDynamic()) {
+                // evaluated before each LLM call instead, see DynamicToolProviders
+                continue;
+            }
             ToolProviderRequest request = new QuarkusToolProviderRequest(invocationContext, userMessage,
                     methodCreateInfo.getMcpClientNames());
             ToolProviderResult result = toolProvider.provideTools(request);
@@ -299,6 +303,12 @@ public class AiServiceMethodImplementationSupport {
                 toolExecutors.put(specification.name(), result.tools().get(specification));
             }
         }
+        List<ToolProvider> dynamicProviders = context.toolService.toolProviders().stream()
+                .filter(ToolProvider::isDynamic)
+                .toList();
+        DynamicToolProviders dynamicToolProviders = dynamicProviders.isEmpty() ? null
+                : new DynamicToolProviders(dynamicProviders, invocationContext, userMessage,
+                        methodCreateInfo.getMcpClientNames());
 
         // @Skills annotation support — resolve per-method or class-level skills
         List<String> effectiveSkillNames = methodCreateInfo.getSkillNames();
@@ -381,10 +391,20 @@ public class AiServiceMethodImplementationSupport {
             // Upstream supports it
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
+            if (dynamicToolProviders != null) {
+                // the upstream streaming handler re-evaluates the dynamic providers before the subsequent LLM calls
+                dynamicToolProviders.refresh(messagesToSend, toolSpecifications, toolExecutors, toolReturnBehaviors,
+                        null);
+            }
             var aiServiceTokenStreamParams = AiServiceTokenStreamParameters.builder()
                     .messages(messagesToSend)
-                    .toolSpecifications(toolSpecifications)
-                    .toolExecutors(toolExecutors)
+                    .toolServiceContext(ToolServiceContext.builder()
+                            .effectiveTools(toolSpecifications)
+                            .availableTools(toolSpecifications)
+                            .toolExecutors(toolExecutors)
+                            .returnBehaviors(toolReturnBehaviors)
+                            .dynamicToolProviders(dynamicToolProviders != null ? dynamicToolProviders.providers() : null)
+                            .build())
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
                     .invocationContext(invocationContext)
@@ -413,9 +433,12 @@ public class AiServiceMethodImplementationSupport {
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
             var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
-            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
+            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors, toolReturnBehaviors,
+                    dynamicToolProviders,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, invocationContext, memoryId,
-                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread,
+                    // the dynamic tool providers are re-evaluated where the tools are executed, and may block
+                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution() || dynamicToolProviders != null,
+                    isRunningOnWorkerThread,
                     methodCreateInfo, methodArgs);
 
             if (hasUpstreamGuardrails) {
@@ -470,6 +493,10 @@ public class AiServiceMethodImplementationSupport {
                     messagesToSend, invocationContext);
             toolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
             toolExecutors = new HashMap<>(toolSearchContext.toolExecutors());
+        }
+        if (dynamicToolProviders != null) {
+            toolSearchContext = dynamicToolProviders.refresh(messagesToSend, toolSpecifications, toolExecutors,
+                    toolReturnBehaviors, toolSearchContext);
         }
 
         log.debug("Attempting to obtain AI response");
@@ -657,6 +684,10 @@ public class AiServiceMethodImplementationSupport {
             if (toolSearchService != null) {
                 toolSearchContext = ToolSearchService.addFoundTools(toolSearchContext, rawToolResults);
                 toolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
+            }
+            if (dynamicToolProviders != null) {
+                toolSearchContext = dynamicToolProviders.refresh(committableChatMemory.messages(), toolSpecifications,
+                        toolExecutors, toolReturnBehaviors, toolSearchContext);
             }
 
             log.debug("Attempting to obtain AI response");

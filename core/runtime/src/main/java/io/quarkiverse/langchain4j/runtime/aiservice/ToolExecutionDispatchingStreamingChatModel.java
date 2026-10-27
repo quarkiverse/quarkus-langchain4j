@@ -45,6 +45,8 @@ import io.vertx.core.Vertx;
  * based model clients, so a response requesting tools is handed to the thread required by these tools: it stays on the
  * event loop when they can run there, and goes to a virtual thread when they all run on virtual threads, or to a worker
  * thread otherwise, including for the tools that are not known in advance, such as the ones of a {@code ToolProvider}.
+ * A response is never handled on the event loop when the AI service has a dynamic {@code ToolProvider}, as it is
+ * re-evaluated after the tools are executed.
  */
 public class ToolExecutionDispatchingStreamingChatModel implements StreamingChatModel {
 
@@ -121,6 +123,10 @@ public class ToolExecutionDispatchingStreamingChatModel implements StreamingChat
         ToolThread toolThread = ToolThread.EVENT_LOOP;
         for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
             toolThread = mostPermissive(toolThread, toolThread(toolExecutionRequest.name()));
+        }
+        if (toolThread == ToolThread.EVENT_LOOP && context.hasDynamicToolProvider()) {
+            // the dynamic tool providers are re-evaluated on this thread after the tools are executed, and may block
+            return ToolThread.WORKER_THREAD;
         }
         return toolThread;
     }
