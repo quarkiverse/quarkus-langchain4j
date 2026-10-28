@@ -1,9 +1,5 @@
 package io.quarkiverse.langchain4j.ai.gemini.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
@@ -12,13 +8,14 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
@@ -26,23 +23,33 @@ import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonRawSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class AiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
+public class AiGeminiRawJsonSchemaSmokeTest {
 
     private static final String API_KEY = "dummy";
     private static final String CHAT_MODEL_ID = "gemini-2.5-flash";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true");
 
     @Inject
     ChatModel chatModel;
+
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
 
     @Test
     void should_support_raw_json_schema() throws JsonProcessingException {
@@ -114,45 +121,21 @@ public class AiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
                 .jsonSchema(jsonSchema)
                 .build();
 
-        wiremock().register(
-                post(urlEqualTo(
-                        String.format("/models/%s:generateContent", CHAT_MODEL_ID)))
-                        .withHeader("x-goog-api-key", equalTo(API_KEY))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(String.format("""
-                                        {
-                                          "candidates": [
-                                            {
-                                              "content": {
-                                                "role": "model",
-                                                "parts": [
-                                                  {
-                                                    "text": %s
-                                                  }
-                                                ]
-                                              },
-                                              "finishReason": "STOP"
-                                            }
-                                          ],
-                                          "usageMetadata": {
-                                            "promptTokenCount": 50,
-                                            "candidatesTokenCount": 100,
-                                            "totalTokenCount": 150
-                                          }
-                                        }
-                                        """, new ObjectMapper().writeValueAsString(responseJson)))));
+        mock.chat().reply(ChatReply.text(responseJson).usage(50, 100));
 
         ChatResponse response = chatModel.chat(ChatRequest.builder()
-                .messages(dev.langchain4j.data.message.UserMessage.from("Tell me about Sherlock Holmes"))
+                .messages(UserMessage.from("Tell me about Sherlock Holmes"))
                 .responseFormat(responseFormat)
                 .build());
 
-        assertThat(response.aiMessage().text()).isNotBlank();
+        assertThat(response.aiMessage().text()).isEqualTo(responseJson);
 
         // Verify the request body contains responseJsonSchema (raw) and not responseSchema (mapped)
-        LoggedRequest loggedRequest = singleLoggedRequest();
-        String requestBody = new String(loggedRequest.getBody());
+        CapturedRequest capturedRequest = mock.chat().singleRequest();
+        assertThat(capturedRequest.path())
+                .isEqualTo(String.format("/ai-gemini/v1beta/models/%s:generateContent", CHAT_MODEL_ID));
+        assertThat(capturedRequest.header("x-goog-api-key")).isEqualTo(API_KEY);
+        String requestBody = capturedRequest.body();
 
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> request = mapper.readValue(requestBody, Map.class);

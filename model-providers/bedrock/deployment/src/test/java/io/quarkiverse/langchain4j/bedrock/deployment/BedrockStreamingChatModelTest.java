@@ -1,18 +1,6 @@
 package io.quarkiverse.langchain4j.bedrock.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static io.quarkiverse.langchain4j.bedrock.deployment.BedrockStreamHelper.createContentBlockDelta;
-import static io.quarkiverse.langchain4j.bedrock.deployment.BedrockStreamHelper.createContentBlockStop;
-import static io.quarkiverse.langchain4j.bedrock.deployment.BedrockStreamHelper.createMessageStart;
-import static io.quarkiverse.langchain4j.bedrock.deployment.BedrockStreamHelper.createMessageStop;
-import static io.quarkiverse.langchain4j.bedrock.deployment.BedrockStreamHelper.createMetadata;
-import static io.quarkiverse.langchain4j.bedrock.deployment.BedrockStreamHelper.decode;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
 
 import jakarta.inject.Inject;
 
@@ -28,24 +16,24 @@ import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockTokenUsage;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.output.FinishReason;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
-import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
-import software.amazon.awssdk.services.bedrockruntime.model.StopReason;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class BedrockStreamingChatModelTest extends BedrockTestBase {
+class BedrockStreamingChatModelTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(TestCredentialsProvider.class)
                     .addClass(BedrockStreamHelper.class)
                     .addClass(CountingChatModelListener.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.model-id", "amazon.titan-text-express-v1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.region", "eu-central-1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.endpoint-override",
-                    "http://localhost:%d".formatted(WM_PORT))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.credentials-provider",
                     "TestCredentialsProvider")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-requests", "true")
@@ -59,9 +47,13 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
     @Inject
     CountingChatModelListener listener;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset_listener_counters() {
         listener.reset();
+        mock.reset();
     }
 
     @Test
@@ -78,19 +70,7 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
     void should_answer_a_chat_message() throws Throwable {
         // given
         var helper = BedrockStreamHelper.create();
-        var expected = List.of(
-                createMessageStart(ConversationRole.ASSISTANT),
-                createContentBlockDelta(0, "Hello, how are you today?"),
-                createContentBlockStop(0),
-                createMessageStop(StopReason.END_TURN),
-                createMetadata(100, 10, 17));
-        stubFor(post(anyUrl())
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/vnd.amazon.eventstream") //
-                        .withHeader("Transfer-Encoding", "chunked") //
-                        .withHeader("Connection", "keep-alive")
-                        .withBody(decode(expected))));
+        mock.chat().reply(ChatReply.text("Hello, how are you today?").usage(10, 17));
 
         // when
         streamingChatModel.chat("Hello, how are you today?", helper);
@@ -109,5 +89,9 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
         assertThat(listener.onRequestCount()).isEqualTo(1);
         assertThat(listener.onResponseCount()).isEqualTo(1);
         assertThat(listener.onErrorCount()).isEqualTo(0);
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/bedrock/model/amazon.titan-text-express-v1/converse-stream");
+        assertThat(request.asChat().messages()).singleElement()
+                .satisfies(m -> assertThat(m.text()).isEqualTo("Hello, how are you today?"));
     }
 }

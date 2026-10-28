@@ -1,9 +1,6 @@
 package io.quarkiverse.langchain4j.ollama.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jakarta.inject.Inject;
@@ -11,19 +8,23 @@ import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class OllamaTextOutputTest extends WiremockAware {
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
+
+public class OllamaTextOutputTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideConfigKey("quarkus.langchain4j.ollama.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideConfigKey("quarkus.langchain4j.devservices.enabled", "false");
 
     @Singleton
@@ -35,50 +36,41 @@ public class OllamaTextOutputTest extends WiremockAware {
     @Inject
     AiService aiService;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
-    void extract() {
-        wiremock().register(
-                post(urlEqualTo("/api/chat"))
-                        .withRequestBody(equalToJson(
-                                """
-                                        {
-                                            "model": "llama3.2",
-                                            "messages": [
-                                                {
-                                                    "role": "user",
-                                                    "content": "Tell me something about Alan Wake"
-                                                }
-                                            ],
-                                            "stream": false,
-                                            "options": {
-                                                "temperature": 0.8,
-                                                "top_k": 40,
-                                                "top_p": 0.9,
-                                                "stop" : [ ]
-                                            },
-                                            "tools" : [ ]
-                                        }"""))
-                        .willReturn(aResponse()
-                                .withHeader("Content-Type", "application/json")
-                                .withBody("""
-                                        {
-                                            "model": "llama3.2",
-                                            "created_at": "2024-12-11T15:21:23.422542932Z",
-                                            "message": {
-                                                "role": "assistant",
-                                                "content": "He is a writer!"
-                                            },
-                                            "done_reason": "stop",
-                                            "done": true,
-                                            "total_duration": 8125806496,
-                                            "load_duration": 4223887064,
-                                            "prompt_eval_count": 31,
-                                            "prompt_eval_duration": 1331000000,
-                                            "eval_count": 18,
-                                            "eval_duration": 2569000000
-                                        }""")));
+    void extract() throws Exception {
+        mock.chat().reply("He is a writer!");
 
         var result = aiService.question("Tell me something about Alan Wake");
         assertEquals("He is a writer!", result);
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/ollama/api/chat");
+        assertThat(request.bodyAsJson()).isEqualTo(new ObjectMapper().readTree(
+                """
+                        {
+                            "model": "llama3.2",
+                            "messages": [
+                                {
+                                    "role": "user",
+                                    "content": "Tell me something about Alan Wake"
+                                }
+                            ],
+                            "stream": false,
+                            "options": {
+                                "temperature": 0.8,
+                                "top_k": 40,
+                                "top_p": 0.9,
+                                "stop" : [ ]
+                            },
+                            "tools" : [ ]
+                        }"""));
     }
 }

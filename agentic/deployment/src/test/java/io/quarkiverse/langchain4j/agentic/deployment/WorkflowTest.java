@@ -25,14 +25,12 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents.*;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class WorkflowTest extends OpenAiBaseTest {
+public class WorkflowTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Agents.class, StoryCreator.class, StoryCreatorWithErrorRecovery.class,
                             StoryCreatorWithBeforeCall.class,
@@ -44,8 +42,7 @@ public class WorkflowTest extends OpenAiBaseTest {
                             ViolenceInputGuardrail.class, LengthOutputGuardrail.class,
                             GuardedStoryCreator.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     public interface StoryCreator {
 

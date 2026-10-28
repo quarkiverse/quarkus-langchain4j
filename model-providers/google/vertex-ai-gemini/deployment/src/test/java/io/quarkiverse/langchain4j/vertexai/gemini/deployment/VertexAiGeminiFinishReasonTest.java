@@ -1,11 +1,9 @@
 package io.quarkiverse.langchain4j.vertexai.gemini.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import jakarta.inject.Inject;
@@ -24,28 +22,18 @@ import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class VertexAiGeminiFinishReasonTest extends WiremockAware {
+public class VertexAiGeminiFinishReasonTest {
 
     private static final String CHAT_MODEL_ID = "gemini-3-flash-preview";
-    private static final String MODEL_URL = "/v1/projects/dummy/locations/dummy/publishers/google/models/" + CHAT_MODEL_ID;
-
-    private static final String TOOL_CALL_RESPONSE = """
-            {"candidates":[{"content":{"role":"model","parts":[
-                {"functionCall":{"name":"getWeather","args":{"city":"Paris"}},"thoughtSignature":"signature-1"}
-             ]},"finishReason":"STOP"}],
-             "usageMetadata":{"promptTokenCount":1,"candidatesTokenCount":1,"totalTokenCount":2}}""";
-
-    private static final String TEXT_RESPONSE = """
-            {"candidates":[{"content":{"role":"model","parts":[{"text":"Hi"}]},"finishReason":"STOP"}],
-             "usageMetadata":{"promptTokenCount":1,"candidatesTokenCount":1,"totalTokenCount":2}}""";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-id", CHAT_MODEL_ID);
 
     @Inject
@@ -54,15 +42,19 @@ public class VertexAiGeminiFinishReasonTest extends WiremockAware {
     @Inject
     RecordingListener listener;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setUp() {
-        resetRequests();
+        mock.reset();
         listener.responses.clear();
     }
 
     @Test
     void toolCallTurnReportsToolExecution() {
-        stub(TOOL_CALL_RESPONSE);
+        // Gemini ends a function call turn with STOP, as the mock renders it
+        mock.chat().reply(ChatReply.toolCall("getWeather", Map.of("city", "Paris")));
 
         ChatResponse response = chatModel.chat(UserMessage.from("What is the weather in Paris?"));
 
@@ -72,7 +64,7 @@ public class VertexAiGeminiFinishReasonTest extends WiremockAware {
 
     @Test
     void listenerReceivesToolExecutionFinishReason() {
-        stub(TOOL_CALL_RESPONSE);
+        mock.chat().reply(ChatReply.toolCall("getWeather", Map.of("city", "Paris")));
 
         chatModel.chat(UserMessage.from("What is the weather in Paris?"));
 
@@ -83,7 +75,7 @@ public class VertexAiGeminiFinishReasonTest extends WiremockAware {
 
     @Test
     void listenerReceivesFinishReasonForTextResponse() {
-        stub(TEXT_RESPONSE);
+        mock.chat().reply("Hi");
 
         ChatResponse response = chatModel.chat(UserMessage.from("hello"));
 
@@ -91,11 +83,6 @@ public class VertexAiGeminiFinishReasonTest extends WiremockAware {
         assertThat(listener.responses).singleElement()
                 .satisfies(context -> assertThat(context.chatResponse().finishReason())
                         .isEqualTo(FinishReason.STOP));
-    }
-
-    private void stub(String body) {
-        wiremock().register(post(urlPathEqualTo(MODEL_URL + ":generateContent"))
-                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody(body)));
     }
 
     @Singleton

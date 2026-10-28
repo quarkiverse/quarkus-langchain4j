@@ -1,0 +1,43 @@
+=== Chat
+--> POST /huggingface/chat
+{
+  "inputs" : "Hi",
+  "parameters" : {
+    "return_full_text" : false
+  },
+  "options" : {
+    "wait_for_model" : true
+  }
+}
+<-- 200 [application/json]
+[ {
+  "generated_text" : "Hello from the mock"
+} ]
+
+=== Embeddings
+--> POST /huggingface/embeddings
+{
+  "inputs" : [ "Hello" ],
+  "options" : {
+    "wait_for_model" : true
+  }
+}
+<-- 200 [application/json]
+[ [ 0.1, 0.2, 0.3 ] ]
+
+=== Error
+--> POST /huggingface/chat
+{
+  "inputs" : "Hi",
+  "parameters" : {
+    "return_full_text" : false
+  },
+  "options" : {
+    "wait_for_model" : true
+  }
+}
+<-- 429 [application/json]
+{
+  "error" : "slow down",
+  "error_type" : "overloaded"
+}

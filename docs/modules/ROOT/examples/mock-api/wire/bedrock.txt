@@ -1,0 +1,150 @@
+=== Chat
+--> POST /bedrock/model/us.amazon.nova-lite-v1%3A0/converse
+{
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 200 [application/json]
+{
+  "output" : {
+    "message" : {
+      "role" : "assistant",
+      "content" : [ {
+        "text" : "Hello from the mock"
+      } ]
+    }
+  },
+  "stopReason" : "end_turn",
+  "usage" : {
+    "inputTokens" : 12,
+    "outputTokens" : 7,
+    "totalTokens" : 19
+  },
+  "metrics" : {
+    "latencyMs" : 0
+  }
+}
+
+=== Chat with a tool call
+--> POST /bedrock/model/us.amazon.nova-lite-v1%3A0/converse
+{
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "text" : "What is the weather in Athens?"
+    } ]
+  } ],
+  "toolConfig" : {
+    "tools" : [ {
+      "toolSpec" : {
+        "name" : "get_weather",
+        "description" : "Returns the weather in a city",
+        "inputSchema" : {
+          "json" : {
+            "type" : "object",
+            "properties" : {
+              "city" : {
+                "type" : "string"
+              }
+            },
+            "required" : [ "city" ]
+          }
+        }
+      }
+    } ]
+  }
+}
+<-- 200 [application/json]
+{
+  "output" : {
+    "message" : {
+      "role" : "assistant",
+      "content" : [ {
+        "toolUse" : {
+          "toolUseId" : "tooluse_mock_0",
+          "name" : "get_weather",
+          "input" : {
+            "city" : "Athens"
+          }
+        }
+      } ]
+    }
+  },
+  "stopReason" : "tool_use",
+  "usage" : {
+    "inputTokens" : 0,
+    "outputTokens" : 0,
+    "totalTokens" : 0
+  },
+  "metrics" : {
+    "latencyMs" : 0
+  }
+}
+
+=== Streaming chat
+--> POST /bedrock/model/us.amazon.nova-lite-v1%3A0/converse-stream
+{
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 200 [application/vnd.amazon.eventstream]
+event-type: messageStart {"role":"assistant"}
+event-type: contentBlockDelta {"delta":{"text":"Hello"},"contentBlockIndex":0}
+event-type: contentBlockDelta {"delta":{"text":" from"},"contentBlockIndex":0}
+event-type: contentBlockDelta {"delta":{"text":" the"},"contentBlockIndex":0}
+event-type: contentBlockDelta {"delta":{"text":" mock"},"contentBlockIndex":0}
+event-type: contentBlockStop {"contentBlockIndex":0}
+event-type: messageStop {"stopReason":"end_turn"}
+event-type: metadata {"usage":{"inputTokens":12,"outputTokens":7,"totalTokens":19},"metrics":{"latencyMs":0}}
+
+=== Embeddings (Titan)
+--> POST /bedrock/model/amazon.titan-embed-text-v2%3A0/invoke
+{
+  "inputText" : "Hello"
+}
+<-- 200 [application/json]
+{
+  "embedding" : [ 0.1, 0.2, 0.3 ],
+  "inputTextTokenCount" : 1,
+  "embeddingsByType" : {
+    "float" : [ 0.1, 0.2, 0.3 ]
+  }
+}
+
+=== Embeddings (Cohere)
+--> POST /bedrock/model/cohere.embed-english-v3/invoke
+{
+  "texts" : [ "Hello" ],
+  "input_type" : "search_document"
+}
+<-- 200 [application/json]
+{
+  "id" : "mock-embed-1",
+  "response_type" : "embeddings_floats",
+  "embeddings" : [ [ 0.1, 0.2, 0.3 ] ],
+  "texts" : [ "Hello" ]
+}
+
+=== Error
+--> POST /bedrock/model/us.amazon.nova-lite-v1%3A0/converse
+{
+  "messages" : [ {
+    "role" : "user",
+    "content" : [ {
+      "text" : "Hi"
+    } ]
+  } ]
+}
+<-- 429 [application/json]
+x-amzn-ErrorType: ThrottlingException
+{
+  "message" : "slow down"
+}

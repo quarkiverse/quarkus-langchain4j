@@ -26,7 +26,6 @@
         <module>openai/azure-openai</module>
         <module>openai/openai-common</module>
         <module>openai/openai-vanilla</module>
-        <module>openai/testing-internal</module>
         <module>openshift-ai</module>
         <module>typesafe</module>
         <module>watsonx</module>

@@ -1,13 +1,5 @@
 package io.quarkiverse.langchain4j.anthropic.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.absent;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.not;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -18,75 +10,64 @@ import jakarta.inject.Inject;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
+
+    private static final String ANSWER = "Hello! As an AI language model, I don't have feelings or a physical state, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?";
+
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-responses", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT))
             .setLogRecordPredicate(record -> true)
             .assertLogRecords(AnthropicChatLanguageModelSmokeTest::verifyLogRecords);
 
     @Inject
     ChatModel chatModel;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     void blocking() {
         assertThat(ClientProxy.unwrap(chatModel))
                 .isInstanceOf(AnthropicChatModel.class);
 
-        // NOTE: I got this response JSON directly from Claude
-        // See https://docs.anthropic.com/claude/reference/messages_post
-        wireMockServer.stubFor(
-                post(urlPathEqualTo("/messages"))
-                        .withHeader("x-api-key", equalTo(API_KEY))
-                        .withHeader("anthropic-version", not(absent()))
-                        .willReturn(
-                                okJson("""
-                                          {
-                                            "id": "msg_01EwYzt25EaVu4rNUewCkdP3",
-                                            "type": "message",
-                                            "role": "assistant",
-                                            "content": [
-                                                {
-                                                    "type": "text",
-                                                    "text": "Hello! As an AI language model, I don't have feelings or a physical state, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?"
-                                                }
-                                            ],
-                                            "model": "claude-3-haiku-20240307",
-                                            "stop_reason": "end_turn",
-                                            "stop_sequence": null,
-                                            "usage": {
-                                                "input_tokens": 14,
-                                                "output_tokens": 47
-                                            }
-                                        }
-                                        """)));
+        mock.chat().reply(ChatReply.text(ANSWER).usage(14, 47));
 
         var response = chatModel.chat("Hello, how are you today?");
         assertThat(response)
                 .isNotNull()
-                .isEqualTo(
-                        "Hello! As an AI language model, I don't have feelings or a physical state, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?");
+                .isEqualTo(ANSWER);
 
-        assertThat(wireMockServer.getAllServeEvents())
+        assertThat(mock.requests())
                 .hasSize(1);
 
-        var serveEvent = wireMockServer.getAllServeEvents().get(0);
-        var loggedRequest = serveEvent.getRequest();
-
-        assertThat(loggedRequest.getHeader("User-Agent"))
+        CapturedRequest loggedRequest = mock.chat().singleRequest();
+        assertThat(loggedRequest.path()).isEqualTo("/anthropic/v1/messages");
+        assertThat(loggedRequest.header("User-Agent"))
                 .isEqualTo("Quarkus REST Client");
+        assertThat(loggedRequest.header("x-api-key")).isEqualTo(API_KEY);
+        assertThat(loggedRequest.header("anthropic-version")).isNotNull();
 
         var requestBody = """
                 {
@@ -102,16 +83,9 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                   "stream" : false
                 }""";
 
-        assertThat(new String(loggedRequest.getBody()))
+        assertThat(loggedRequest.body())
                 .isEqualTo(requestBody)
                 .contains(CHAT_MODEL_ID);
-
-        wireMockServer.verify(
-                1,
-                postRequestedFor(urlPathEqualTo("/messages"))
-                        .withHeader("x-api-key", equalTo(API_KEY))
-                        .withHeader("anthropic-version", not(absent()))
-                        .withRequestBody(equalToJson(requestBody)));
     }
 
     private static void verifyLogRecords(List<LogRecord> logRecords) {

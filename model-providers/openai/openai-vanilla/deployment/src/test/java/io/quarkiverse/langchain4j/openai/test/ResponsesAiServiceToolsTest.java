@@ -1,11 +1,8 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,14 +16,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusExtensionTest;
 
 /**
@@ -34,7 +32,7 @@ import io.quarkus.test.QuarkusExtensionTest;
  * sent back as a {@code function_call_output} item and the final answer is returned. A follow-up call on the same
  * memory id then proves that the exchange was stored in chat memory.
  */
-public class ResponsesAiServiceToolsTest extends OpenAiBaseTest {
+public class ResponsesAiServiceToolsTest {
 
     @Singleton
     public static class Calculator {
@@ -54,131 +52,74 @@ public class ResponsesAiServiceToolsTest extends OpenAiBaseTest {
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(Calculator.class, Assistant.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.mode", "responses")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
-
-    private static final String SCENARIO = "tool-loop";
-    private static final String TOOL_EXECUTED = "tool-executed";
-    private static final String ANSWERED = "answered";
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key");
 
     @Inject
     Assistant assistant;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setUp() {
-        resetMappings();
-        resetRequests();
+        mock.reset();
     }
 
     @Test
     @ActivateRequestContext
-    void toolLoopAndMemoryOverResponsesApi() throws IOException {
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .inScenario(SCENARIO)
-                .whenScenarioStateIs(Scenario.STARTED)
-                .willSetStateTo(TOOL_EXECUTED)
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "resp_1",
-                                  "model": "gpt-6-luna",
-                                  "status": "completed",
-                                  "output": [
-                                    {
-                                      "type": "function_call",
-                                      "call_id": "call_1",
-                                      "name": "squareRoot",
-                                      "arguments": "{\\"number\\": 16}"
-                                    }
-                                  ],
-                                  "usage": { "input_tokens": 1, "output_tokens": 2, "total_tokens": 3 }
-                                }
-                                """)));
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .inScenario(SCENARIO)
-                .whenScenarioStateIs(TOOL_EXECUTED)
-                .willSetStateTo(ANSWERED)
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(messageResponse("resp_2", "The square root of 16 is 4."))));
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .inScenario(SCENARIO)
-                .whenScenarioStateIs(ANSWERED)
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(messageResponse("resp_3", "You're welcome."))));
-        wiremock().setSingleScenarioState(SCENARIO, Scenario.STARTED);
+    void toolLoopAndMemoryOverResponsesApi() {
+        mock.chat().reply(ChatReply.toolCall("squareRoot", Map.of("number", 16)),
+                ChatReply.text("The square root of 16 is 4."),
+                ChatReply.text("You're welcome."));
 
         assertThat(assistant.chat("user-1", "What is the square root of 16?")).isEqualTo("The square root of 16 is 4.");
         assertThat(assistant.chat("user-1", "Thanks")).isEqualTo("You're welcome.");
 
-        // serve events are newest first
-        assertThat(wiremock().getServeEvents()).hasSize(3);
-        Map<String, Object> firstRequest = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(2)));
-        Map<String, Object> secondRequest = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(1)));
-        Map<String, Object> thirdRequest = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0)));
+        List<CapturedRequest> requests = mock.chat().requests();
+        assertThat(requests).hasSize(3).allSatisfy(request -> assertThat(request.path()).isEqualTo("/v1/responses"));
+        JsonNode firstRequest = requests.get(0).bodyAsJson();
+        JsonNode secondRequest = requests.get(1).bodyAsJson();
+        JsonNode thirdRequest = requests.get(2).bodyAsJson();
 
         // the tool is advertised using the flat Responses function format
-        assertThat(items(firstRequest, "tools")).singleElement().satisfies(tool -> {
-            assertThat(tool).containsEntry("type", "function").containsEntry("name", "squareRoot");
-        });
-        assertThat(items(firstRequest, "input")).singleElement().satisfies(item -> {
-            assertThat(item).containsEntry("role", "user");
-            assertThat(text(item)).isEqualTo("What is the square root of 16?");
-        });
+        assertThat(firstRequest.get("tools").size()).isEqualTo(1);
+        assertThat(firstRequest.get("tools").get(0).path("type").textValue()).isEqualTo("function");
+        assertThat(firstRequest.get("tools").get(0).path("name").textValue()).isEqualTo("squareRoot");
+        assertThat(firstRequest.get("input").size()).isEqualTo(1);
+        assertThat(firstRequest.get("input").get(0).path("role").textValue()).isEqualTo("user");
+        assertThat(text(firstRequest.get("input").get(0))).isEqualTo("What is the square root of 16?");
 
-        // the tool call and its result are replayed as function_call / function_call_output items
-        List<Map<String, Object>> secondInput = items(secondRequest, "input");
-        assertThat(secondInput).hasSize(3);
-        assertThat(secondInput.get(0)).containsEntry("role", "user");
-        assertThat(secondInput.get(1))
-                .containsEntry("type", "function_call")
-                .containsEntry("call_id", "call_1")
-                .containsEntry("name", "squareRoot");
-        assertThat(secondInput.get(2))
-                .containsEntry("type", "function_call_output")
-                .containsEntry("call_id", "call_1")
-                .containsEntry("output", "4.0");
+        // the tool call and its result are replayed as function_call / function_call_output items; call_mock_0 is the id
+        // the mock gives the first tool call of a reply
+        JsonNode secondInput = secondRequest.get("input");
+        assertThat(secondInput.size()).isEqualTo(3);
+        assertThat(secondInput.get(0).path("role").textValue()).isEqualTo("user");
+        assertThat(secondInput.get(1).path("type").textValue()).isEqualTo("function_call");
+        assertThat(secondInput.get(1).path("call_id").textValue()).isEqualTo("call_mock_0");
+        assertThat(secondInput.get(1).path("name").textValue()).isEqualTo("squareRoot");
+        assertThat(secondInput.get(2).path("type").textValue()).isEqualTo("function_call_output");
+        assertThat(secondInput.get(2).path("call_id").textValue()).isEqualTo("call_mock_0");
+        assertThat(secondInput.get(2).path("output").textValue()).isEqualTo("4.0");
 
         // the follow-up call carries the whole previous exchange from chat memory
-        List<Map<String, Object>> thirdInput = items(thirdRequest, "input");
-        assertThat(thirdInput).extracting(item -> item.get("type"))
+        JsonNode thirdInput = thirdRequest.get("input");
+        assertThat(types(thirdInput))
                 .containsExactly("message", "function_call", "function_call_output", "message", "message");
-        assertThat(thirdInput.get(3)).containsEntry("role", "assistant");
+        assertThat(thirdInput.get(3).path("role").textValue()).isEqualTo("assistant");
         assertThat(text(thirdInput.get(3))).isEqualTo("The square root of 16 is 4.");
-        assertThat(thirdInput.get(4)).containsEntry("role", "user");
+        assertThat(thirdInput.get(4).path("role").textValue()).isEqualTo("user");
         assertThat(text(thirdInput.get(4))).isEqualTo("Thanks");
     }
 
-    @SuppressWarnings("unchecked")
-    private static List<Map<String, Object>> items(Map<String, Object> request, String key) {
-        return (List<Map<String, Object>>) request.get(key);
+    private static List<String> types(JsonNode items) {
+        List<String> types = new ArrayList<>();
+        items.forEach(item -> types.add(item.path("type").textValue()));
+        return types;
     }
 
-    @SuppressWarnings("unchecked")
-    private static String text(Map<String, Object> messageItem) {
-        List<Map<String, Object>> content = (List<Map<String, Object>>) messageItem.get("content");
-        return (String) content.get(0).get("text");
-    }
-
-    private static String messageResponse(String id, String text) {
-        return """
-                {
-                  "id": "%s",
-                  "model": "gpt-6-luna",
-                  "status": "completed",
-                  "output": [
-                    {
-                      "type": "message",
-                      "role": "assistant",
-                      "content": [ { "type": "output_text", "text": "%s" } ]
-                    }
-                  ],
-                  "usage": { "input_tokens": 1, "output_tokens": 2, "total_tokens": 3 }
-                }
-                """.formatted(id, text);
+    private static String text(JsonNode messageItem) {
+        return messageItem.get("content").get(0).path("text").textValue();
     }
 }

@@ -19,14 +19,12 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.CdiBean;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class CdiSupplierParameterResolverTest extends OpenAiBaseTest {
+public class CdiSupplierParameterResolverTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(
@@ -37,8 +35,7 @@ public class CdiSupplierParameterResolverTest extends OpenAiBaseTest {
                                     Agents.FixedResponseChatModel.class, Agents.EchoResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.echo.api-key", "echo")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.fixed.api-key", "fixed")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     static final String SELECTED_RESPONSE = "selected-by-cdi-bean";
 

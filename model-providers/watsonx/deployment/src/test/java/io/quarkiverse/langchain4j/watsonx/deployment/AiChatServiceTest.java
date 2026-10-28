@@ -1,32 +1,25 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WATSONX_CHAT_STREAMING_API;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.Date;
 import java.util.List;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.ibm.watsonx.ai.chat.model.AssistantMessage;
 import com.ibm.watsonx.ai.chat.model.ChatMessage;
 import com.ibm.watsonx.ai.chat.model.Image.Detail;
@@ -46,32 +39,25 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 
-public class AiChatServiceTest extends WireMockAbstract {
+public class AiChatServiceTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideConfigKey("quarkus.langchain4j.watsonx.log-requests", "true")
             .overrideConfigKey("quarkus.langchain4j.watsonx.log-responses", "true")
             .overrideConfigKey("quarkus.langchain4j.watsonx.timeout", "60s")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class, Calculator.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
-                .response(BEARER_TOKEN, new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WatsonxTestUtil.class, Calculator.class));
 
     @Singleton
     @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
@@ -135,12 +121,13 @@ public class AiChatServiceTest extends WireMockAbstract {
                 com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
                 com.ibm.watsonx.ai.chat.model.UserMessage.text("This is a userMessage Hello"));
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
-                .response(RESPONSE_WATSONX_CHAT_API)
-                .build();
+        mock.chat().reply(ChatReply.text("AI Response").usage(59, 47));
 
         assertEquals("AI Response", aiService.chat("Hello"));
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_CHAT_API);
+        assertJsonBody(request, generateChatRequest(messages, null));
     }
 
     @Test
@@ -151,34 +138,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                         TextContent.of("Tell me more about this image"),
                         ImageContent.of("jpeg", "test", Detail.LOW)));
 
-        var RESPONSE = """
-                {
-                    "id": "chat-0102753c2c33412fa639a6b0eb5401da",
-                    "model_id": "meta-llama/llama-3-2-90b-vision-instruct",
-                    "choices": [
-                        {
-                            "index": 0,
-                            "message": {
-                                "role": "assistant",
-                                "content": "The image depicts a white cat with yellow eyes."
-                            },
-                            "finish_reason": "stop"
-                        }
-                    ],
-                    "created": 1729517211,
-                    "model_version": "3.2.0",
-                    "created_at": "2024-10-21T13:26:57.471Z",
-                    "usage": {
-                        "completion_tokens": 123,
-                        "prompt_tokens": 6422,
-                        "total_tokens": 6545
-                    }
-                }""";
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
-                .response(RESPONSE)
-                .build();
+        mock.chat().reply(ChatReply.text("The image depicts a white cat with yellow eyes.").usage(6422, 123));
 
         Image image = Image.builder()
                 .base64Data("test")
@@ -187,6 +147,10 @@ public class AiChatServiceTest extends WireMockAbstract {
 
         assertEquals("The image depicts a white cat with yellow eyes.",
                 imageDescriptor.chat(image, "Tell me more about this image"));
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_CHAT_API);
+        assertJsonBody(request, generateChatRequest(messages, null));
     }
 
     @Test
@@ -196,73 +160,16 @@ public class AiChatServiceTest extends WireMockAbstract {
                 com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
                 com.ibm.watsonx.ai.chat.model.UserMessage.text("Execute the sum of 1 + 1"));
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(generateChatRequest(STARTED, tools)))
-                .scenario(Scenario.STARTED, "TOOL_CALL")
-                .response(
-                        """
-                                {
-                                    "id": "chat-2e8d342d8ced41d89c0ff4efd32b3f9d",
-                                    "model_id": "mistralai/mistral-large",
-                                    "choices": [{
-                                        "index": 0,
-                                        "message": {
-                                            "role": "assistant",
-                                            "tool_calls": [
-                                                {
-                                                    "id": "chatcmpl-tool-3f621ce6ad9240da963d661215621711",
-                                                    "type": "function",
-                                                    "function": {
-                                                        "name": "sum",
-                                                        "arguments": "{\\\"first\\\":1, \\\"second\\\":1}"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        "finish_reason": "tool_calls"
-                                    }],
-                                    "created": 1728808696,
-                                    "model_version": "2.0.0",
-                                    "created_at": "2024-10-13T08:38:16.960Z",
-                                    "usage": {
-                                        "completion_tokens": 25,
-                                        "prompt_tokens": 84,
-                                        "total_tokens": 109
-                                    }
-                                }""")
-                .build();
+        mock.chat().replies(List.of(
+                ChatReply.toolCall("sum", "{\"first\":1, \"second\":1}").usage(84, 25),
+                ChatReply.text("The result is 2").usage(59, 47)));
 
         var TOOL_CALL = List.<ChatMessage> of(
                 com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
                 com.ibm.watsonx.ai.chat.model.UserMessage.text("Execute the sum of 1 + 1"),
                 AssistantMessage.tools(
-                        ToolCall.of("chatcmpl-tool-3f621ce6ad9240da963d661215621711", "sum", "{\"first\":1, \"second\":1}")),
-                ToolMessage.of("2", "chatcmpl-tool-3f621ce6ad9240da963d661215621711"));
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(generateChatRequest(TOOL_CALL, tools)))
-                .scenario("TOOL_CALL", "AI_RESPONSE")
-                .response("""
-                        {
-                            "id": "cmpl-15475d0dea9b4429a55843c77997f8a9",
-                            "model_id": "mistralai/mistral-large",
-                            "created": 1728806666,
-                            "created_at": "2024-10-13T08:04:26.200Z",
-                            "choices": [{
-                                "index": 0,
-                                "message": {
-                                    "role": "assistant",
-                                    "content": "The result is 2"
-                                },
-                                "finish_reason": "stop"
-                            }],
-                            "usage": {
-                                "completion_tokens": 47,
-                                "prompt_tokens": 59,
-                                "total_tokens": 106
-                            }
-                        }""")
-                .build();
+                        ToolCall.of("call_mock_0", "sum", "{\"first\":1, \"second\":1}")),
+                ToolMessage.of("2", "call_mock_0"));
 
         var result = aiServiceWithTool.chat("no_streaming", "Execute the sum of 1 + 1");
         assertEquals("The result is 2", result);
@@ -284,6 +191,13 @@ public class AiChatServiceTest extends WireMockAbstract {
         } else {
             fail("The fourth message is not of type ToolExecutionResultMessage");
         }
+
+        List<CapturedRequest> requests = mock.chat().requests();
+        assertThat(requests).hasSize(2);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_CHAT_API);
+        assertJsonBody(requests.get(0), generateChatRequest(STARTED, tools));
+        assertWatsonxRequest(requests.get(1), URL_WATSONX_CHAT_API);
+        assertJsonBody(requests.get(1), generateChatRequest(TOOL_CALL, tools));
     }
 
     @Test
@@ -293,14 +207,14 @@ public class AiChatServiceTest extends WireMockAbstract {
                 com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
                 com.ibm.watsonx.ai.chat.model.UserMessage.text("This is a userMessage Hello"));
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
-                .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
-                .build();
+        mock.chat().reply(ChatReply.text("Hello").chunks(List.of("He", "llo")).usage(38, 3));
 
         var result = aiService.streaming("Hello").collect().asList().await().indefinitely();
         assertEquals(List.of("He", "llo"), result);
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertWatsonxRequest(request, URL_WATSONX_CHAT_STREAMING_API);
+        assertJsonBody(request, generateChatRequest(messages, null));
     }
 
     @Test
@@ -310,12 +224,10 @@ public class AiChatServiceTest extends WireMockAbstract {
                 com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
                 com.ibm.watsonx.ai.chat.model.UserMessage.text("Execute the sum of 1 + 1"));
 
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
-                .body(mapper.writeValueAsString(generateChatRequest(STARTED, tools)))
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario(Scenario.STARTED, "TOOL_CALL")
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API)
-                .build();
+        // the tool call arguments arrive in several fragments, which the neutral stream does not produce
+        mock.chat().replies(List.of(
+                sse(RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API),
+                ChatReply.text("The result is 2").chunks(List.of("The res", "ult is 2")).usage(88, 36)));
 
         var TOOL_CALL = List.<ChatMessage> of(
                 com.ibm.watsonx.ai.chat.model.SystemMessage.of("This is a systemMessage"),
@@ -323,31 +235,6 @@ public class AiChatServiceTest extends WireMockAbstract {
                 AssistantMessage.tools(
                         ToolCall.of("chatcmpl-tool-7cf5dfd7c52441e59a7585243b22a86a", "sum", "{\"first\": 1, \"second\": 1}")),
                 ToolMessage.of("2", "chatcmpl-tool-7cf5dfd7c52441e59a7585243b22a86a"));
-
-        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
-                .body(mapper.writeValueAsString(generateChatRequest(TOOL_CALL, tools)))
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario("TOOL_CALL", "AI_RESPONSE")
-                .response(
-                        """
-                                id: 1
-                                event: message
-                                data: {"id":"chat-049e3ff7ff08416fb5c334d05af059da","model_id":"mistralai/mistral-large","choices":[{"index":0,"finish_reason":null,"delta":{"role":"assistant"}}],"created":1728810714,"model_version":"2.0.0","created_at":"2024-10-13T09:11:55.072Z","usage":{"prompt_tokens":88,"total_tokens":88},"system":{"warnings":[{"message":"This model is a Non-IBM Product governed by a third-party license that may impose use restrictions and other obligations. By using this model you agree to its terms as identified in the following URL.","id":"disclaimer_warning","more_info":"https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx"},{"message":"The value of 'time_limit' for this model must be larger than 0 and not larger than 10m0s; it was set to 10m0s","id":"time_limit_out_of_range","additional_properties":{"limit":600000,"new_value":600000,"parameter":"time_limit","value":999000}}]}}
-
-                                id: 2
-                                event: message
-                                data: {"id":"chat-049e3ff7ff08416fb5c334d05af059da","model_id":"mistralai/mistral-large","choices":[{"index":0,"finish_reason":null,"delta":{"content":"The res"}}],"created":1728810714,"model_version":"2.0.0","created_at":"2024-10-13T09:11:55.073Z","usage":{"completion_tokens":1,"prompt_tokens":88,"total_tokens":89}}
-
-                                id: 3
-                                event: message
-                                data: {"id":"chat-049e3ff7ff08416fb5c334d05af059da","model_id":"mistralai/mistral-large","choices":[{"index":0,"finish_reason":"stop","delta":{"content":"ult is 2"}}],"created":1728810714,"model_version":"2.0.0","created_at":"2024-10-13T09:11:55.090Z","usage":{"completion_tokens":2,"prompt_tokens":88,"total_tokens":90}}
-
-                                id: 4
-                                event: message
-                                data: {"id":"chat-049e3ff7ff08416fb5c334d05af059da","model_id":"mistralai/mistral-large","choices":[],"created":1728810714,"model_version":"2.0.0","created_at":"2024-10-13T09:11:55.715Z","usage":{"completion_tokens":36,"prompt_tokens":88,"total_tokens":124}}
-
-                                """)
-                .build();
 
         var result = aiServiceWithTool.streaming("streaming", "Execute the sum of 1 + 1")
                 .collect().asList().await().indefinitely();
@@ -370,6 +257,13 @@ public class AiChatServiceTest extends WireMockAbstract {
         } else {
             fail("The fourth message is not of type ToolExecutionResultMessage");
         }
+
+        List<CapturedRequest> requests = mock.chat().requests();
+        assertThat(requests).hasSize(2);
+        assertWatsonxRequest(requests.get(0), URL_WATSONX_CHAT_STREAMING_API);
+        assertJsonBody(requests.get(0), generateChatRequest(STARTED, tools));
+        assertWatsonxRequest(requests.get(1), URL_WATSONX_CHAT_STREAMING_API);
+        assertJsonBody(requests.get(1), generateChatRequest(TOOL_CALL, tools));
     }
 
     private TextChatRequest generateChatRequest(List<ChatMessage> messages, List<Tool> tools) {

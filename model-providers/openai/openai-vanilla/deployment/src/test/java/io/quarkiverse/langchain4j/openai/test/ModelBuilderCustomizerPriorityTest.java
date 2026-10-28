@@ -7,23 +7,22 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Tests that customizer priority ordering works correctly.
  * A higher-priority customizer runs first; a lower-priority one runs after and can override.
  */
-public class ModelBuilderCustomizerPriorityTest extends OpenAiBaseTest {
+public class ModelBuilderCustomizerPriorityTest {
 
     @ApplicationScoped
     public static class LowPriorityCustomizer implements ModelBuilderCustomizer<OpenAiChatModel.OpenAiChatModelBuilder> {
@@ -52,22 +51,30 @@ public class ModelBuilderCustomizerPriorityTest extends OpenAiBaseTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(LowPriorityCustomizer.class, HighPriorityCustomizer.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
-
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
     @Inject
     ChatModel chatModel;
 
-    @Test
-    void lowerPriorityCustomizerRunsLastAndWins() throws Exception {
-        setChatCompletionMessageContent("hello");
-        chatModel.chat("test");
+    @Inject
+    MockModelServer mock;
 
-        LoggedRequest request = singleLoggedRequest();
-        java.util.Map<String, Object> body = getRequestAsMap(request.getBody());
-        assertThat(body.get("model")).isEqualTo("low-priority-model");
+    @BeforeEach
+    void setup() {
+        mock.reset();
+    }
+
+    @Test
+    void lowerPriorityCustomizerRunsLastAndWins() {
+        mock.chat().reply("hello");
+        assertThat(chatModel.chat("test")).isEqualTo("hello");
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/chat/completions");
+        assertThat(request.bodyAsJson().get("model").textValue()).isEqualTo("low-priority-model");
     }
 }

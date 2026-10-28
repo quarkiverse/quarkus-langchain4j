@@ -1,18 +1,11 @@
 package io.quarkiverse.langchain4j.anthropic.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.absent;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.not;
-import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
@@ -20,6 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -28,20 +22,31 @@ import dev.langchain4j.model.anthropic.AnthropicTokenUsage;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-requests", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-responses", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-responses", "true");
 
     @Inject
     StreamingChatModel streamingChatModel;
+
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
 
     @Test
     void streaming() {
@@ -185,11 +190,9 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
 
                 """;
 
-        wireMockServer.stubFor(
-                post(urlPathEqualTo("/messages"))
-                        .withHeader("x-api-key", equalTo(API_KEY))
-                        .withHeader("anthropic-version", not(absent()))
-                        .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
+        // a raw stub: the neutral reply cannot carry the cache creation and cache read token counts
+        mock.raw().on("POST", "/anthropic/v1/messages")
+                .replies(RawResponse.of(200, Map.of("Content-Type", MediaType.SERVER_SENT_EVENTS), eventStream));
 
         var streamingResponse = new AtomicReference<ChatResponse>();
         streamingChatModel.chat("Hello, how are you today?", new StreamingChatResponseHandler() {
@@ -227,14 +230,15 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
         assertThat(tokenUsage.cacheCreationInputTokens()).isEqualTo(100);
         assertThat(tokenUsage.cacheReadInputTokens()).isEqualTo(50);
 
-        assertThat(wireMockServer.getAllServeEvents())
+        assertThat(mock.requests())
                 .hasSize(1);
 
-        var serveEvent = wireMockServer.getAllServeEvents().get(0);
-        var loggedRequest = serveEvent.getRequest();
+        CapturedRequest loggedRequest = mock.requests().get(0);
 
-        assertThat(loggedRequest.getHeader("User-Agent"))
+        assertThat(loggedRequest.header("User-Agent"))
                 .isEqualTo("Quarkus REST Client");
+        assertThat(loggedRequest.header("x-api-key")).isEqualTo(API_KEY);
+        assertThat(loggedRequest.header("anthropic-version")).isNotNull();
 
         var requestBody = """
                 {
@@ -249,15 +253,8 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                   "max_tokens" : 1024,
                   "stream" : true
                 }""";
-        assertThat(new String(loggedRequest.getBody()))
+        assertThat(loggedRequest.body())
                 .isEqualTo(requestBody)
                 .contains(CHAT_MODEL_ID);
-
-        wireMockServer.verify(
-                1,
-                postRequestedFor(urlPathEqualTo("/messages"))
-                        .withHeader("x-api-key", equalTo(API_KEY))
-                        .withHeader("anthropic-version", not(absent()))
-                        .withRequestBody(equalToJson(requestBody)));
     }
 }

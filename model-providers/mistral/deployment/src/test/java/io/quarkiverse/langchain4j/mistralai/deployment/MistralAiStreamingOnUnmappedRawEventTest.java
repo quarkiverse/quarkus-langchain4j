@@ -1,9 +1,5 @@
 package io.quarkiverse.langchain4j.mistralai.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -14,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -27,46 +22,38 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.mistralai.MistralAiChatResponseMetadata;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
-class MistralAiStreamingOnUnmappedRawEventTest extends WiremockAware {
+class MistralAiStreamingOnUnmappedRawEventTest {
 
     private static final String API_KEY = "somekey";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.api-key", API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.api-key", API_KEY);
 
     @Inject
     StreamingChatModel streamingChatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setup() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
     void onUnmappedRawEventReceivesRawServerSentEvent() throws InterruptedException {
-        // The first frame carries a text delta (mapped via onPartialResponse). The second frame has an empty
-        // delta with only a finish_reason and usage, so it maps to no typed callback and must be forwarded to
+        // The neutral stream sends the text delta (mapped via onPartialResponse), then a frame with an empty delta
+        // carrying only the finish_reason and the usage, which maps to no typed callback and must be forwarded to
         // onUnmappedRawEvent.
-        String eventStream = """
-                data: {"id":"cmpl-1","object":"chat.completion.chunk","created":1,"model":"mistral-tiny","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"finish_reason":null}]}
-
-                data: {"id":"cmpl-1","object":"chat.completion.chunk","created":1,"model":"mistral-tiny","choices":[{"index":0,"delta":{"content":null},"finish_reason":"stop"}],"usage":{"prompt_tokens":1,"total_tokens":2,"completion_tokens":1}}
-
-                data: [DONE]
-
-                """;
-
-        wiremock().register(
-                post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
-                        .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
+        mock.chat().reply(ChatReply.text("Hello").usage(1, 1));
 
         AtomicReference<ChatResponse> response = new AtomicReference<>();
         List<Object> rawEvents = new CopyOnWriteArrayList<>();
@@ -108,5 +95,11 @@ class MistralAiStreamingOnUnmappedRawEventTest extends WiremockAware {
         assertThat(response.get().metadata()).isInstanceOf(MistralAiChatResponseMetadata.class);
         var metadata = (MistralAiChatResponseMetadata) response.get().metadata();
         assertThat(metadata.rawServerSentEvents()).isNotEmpty();
+
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/mistralai/v1/chat/completions");
+        assertThat(request.query()).isNull();
+        assertThat(request.header("Authorization")).isEqualTo("Bearer " + API_KEY);
+        assertThat(request.asChat().stream()).isTrue();
     }
 }

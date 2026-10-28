@@ -17,39 +17,30 @@ import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.Unremovable;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class DynamicModelSelectionTest extends OpenAiBaseTest {
+public class DynamicModelSelectionTest {
 
     static final String FIRST_MODEL_RESPONSE = "first";
     static final String SECOND_MODEL_RESPONSE = "second";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(EchoAgent.class, DynamicSequenceAgent.class, DynamicModelAgent.class,
                                     ChatModelProducers.class, DynamicModelSelector.class,
                                     Agents.FixedResponseChatModel.class, Agents.EchoResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.echoModel.chat-model.provider", "openai")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.echoModel.api-key", "named-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.echoModel.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.firstModel.chat-model.provider", "openai")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.firstModel.api-key", "named-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.firstModel.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.secondModel.chat-model.provider", "openai")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.secondModel.api-key", "named-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.secondModel.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.secondModel.api-key", "named-key");
 
     public interface EchoAgent {
 

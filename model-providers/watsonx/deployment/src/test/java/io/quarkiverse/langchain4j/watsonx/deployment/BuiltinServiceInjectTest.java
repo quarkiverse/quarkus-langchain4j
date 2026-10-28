@@ -1,15 +1,12 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WX_AGENT_TOOL_RUN;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxTestUtil.URL_WX_AGENT_TOOL_RUN;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Date;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -29,14 +26,16 @@ import com.ibm.watsonx.ai.tool.builtin.WeatherTool;
 import com.ibm.watsonx.ai.tool.builtin.WebCrawlerTool;
 import com.ibm.watsonx.ai.tool.builtin.WikipediaTool;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
-public class BuiltinServiceInjectTest extends WireMockAbstract {
+public class BuiltinServiceInjectTest extends WatsonxMockTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-tool.base-url", URL_WX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // the built-in tools have their own host, which the mock does not take over
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-tool.base-url",
+                    "${quarkus.langchain4j.mock-api.url}/wx")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-tool.tavily-search.api-key", "tavily-api-key")
@@ -47,15 +46,7 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-tool.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-tool.log-responses", "true")
 
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Override
-    void handlerBeforeEach() {
-        mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
-                .response(BEARER_TOKEN, new Date())
-                .build();
-    }
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WatsonxTestUtil.class));
 
     @Inject
     WebCrawlerTool webCrawlerTool;
@@ -102,13 +93,11 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 "\\\\n\\\\nExplore jobs\\\\n\\\\nStart learning\\\\\\\"}\\\"\"\n" +
                 "}";
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         String result = webCrawlerTool.process("https://www.ibm.com/us-en");
         assertTrue(result.startsWith("IBM - United States"));
+        assertToolRequest(body);
     }
 
     @Test
@@ -129,13 +118,11 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         String result = weatherTool.find("naples", "italy");
         assertTrue(result.startsWith("Current weather in Naples:"));
+        assertToolRequest(body);
     }
 
     @Test
@@ -156,13 +143,11 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         String result = wikipediaTool.search("pc");
         assertEquals("Page: PC\nSummary: PC or pc may refer to:\n\n\n== Arts and entertainment", result);
+        assertToolRequest(body);
     }
 
     @Test
@@ -186,10 +171,7 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                     "output": "[{\\"url\\":\\"https://example.com/test1\\",\\"title\\":\\"Title 1\\",\\"content\\":\\"Test 1\\",\\"score\\":0.63,\\"raw_content\\":null},{\\"url\\":\\"https://example.com/test2\\",\\"title\\":\\"Title 2\\",\\"content\\":\\"Test 2\\",\\"score\\":0.55,\\"raw_content\\":null}]"
                 }""";
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         List<TavilySearchResult> result = tavilySearchTool.search("test", 2);
         assertEquals(2, result.size());
@@ -201,6 +183,7 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
         assertEquals("Test 2", result.get(1).content());
         assertEquals(0.55, result.get(1).score());
         assertEquals("https://example.com/test2", result.get(1).url());
+        assertToolRequest(body);
     }
 
     @Test
@@ -223,13 +206,11 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                   "output": "Hello World!"
                 }""";
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         var result = pythonInterpreterTool.run("print(\"Hello World\")");
         assertEquals(result, "Hello World!");
+        assertToolRequest(body);
     }
 
     @Test
@@ -254,13 +235,11 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         List<GoogleSearchResult> results = googleSearchTool.search("What was the weather in Toronto on January 13th 2025?");
         assertEquals(3, results.size());
+        assertToolRequest(body);
     }
 
     @Test
@@ -285,14 +264,12 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         List<GoogleSearchResult> results = googleSearchTool.search("What was the weather in Toronto on January 13th 2025?",
                 3);
         assertEquals(3, results.size());
+        assertToolRequest(body);
     }
 
     @Test
@@ -314,12 +291,18 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
-                .body(body)
-                .response(response)
-                .build();
+        mock.raw().on("POST", URL_WX_AGENT_TOOL_RUN).reply(200, response);
 
         String result = ragQueryTool.query("input");
         assertEquals("output", result);
+        assertToolRequest(body);
+    }
+
+    private void assertToolRequest(String body) {
+        assertThat(apiRequests()).singleElement().satisfies(request -> {
+            assertThat(request.path()).isEqualTo(URL_WX_AGENT_TOOL_RUN);
+            assertThat(request.header("Authorization")).isEqualTo("Bearer " + MOCK_TOKEN);
+            assertJsonBody(request, body);
+        });
     }
 }

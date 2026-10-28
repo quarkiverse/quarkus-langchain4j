@@ -1,12 +1,6 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.util.Map;
 
 import jakarta.inject.Inject;
 
@@ -16,55 +10,46 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatModel;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import com.fasterxml.jackson.databind.JsonNode;
 
-public class ResponsesExplicitSamplingParamsTest extends OpenAiBaseTest {
+import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
+
+public class ResponsesExplicitSamplingParamsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "responses")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.temperature", "0.3")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.top-p", "0.8")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.top-p", "0.8");
 
     @Inject
     ChatModel chatModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void reset() {
-        resetRequests();
+        mock.reset();
     }
 
     @Test
-    void explicitlyConfiguredValuesAreSent() throws IOException {
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "resp_123",
-                                  "model": "gpt-4o-mini",
-                                  "status": "completed",
-                                  "output": [
-                                    {
-                                      "type": "message",
-                                      "role": "assistant",
-                                      "content": [ { "type": "output_text", "text": "hi" } ]
-                                    }
-                                  ],
-                                  "usage": { "input_tokens": 1, "output_tokens": 2, "total_tokens": 3 }
-                                }
-                                """)));
+    void explicitlyConfiguredValuesAreSent() {
+        mock.chat().reply("hi");
 
-        chatModel.chat("hello");
+        assertThat(chatModel.chat("hello")).isEqualTo("hi");
 
-        Map<String, Object> requestBody = getRequestAsMap();
-        assertThat(requestBody).containsEntry("temperature", 0.3).containsEntry("top_p", 0.8);
+        CapturedRequest request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/v1/responses");
+        assertThat(request.query()).isNull();
+        JsonNode requestBody = request.bodyAsJson();
+        assertThat(requestBody.path("temperature").doubleValue()).isEqualTo(0.3);
+        assertThat(requestBody.path("top_p").doubleValue()).isEqualTo(0.8);
     }
 }

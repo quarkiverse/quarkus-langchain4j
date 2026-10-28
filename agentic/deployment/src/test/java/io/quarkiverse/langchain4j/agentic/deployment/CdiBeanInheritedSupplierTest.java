@@ -15,24 +15,21 @@ import dev.langchain4j.agentic.declarative.ChatModelSupplier;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.agentic.runtime.CdiBean;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that @CdiBean parameters on supplier methods declared on parent interfaces
  * are marked as unremovable, preventing UnsatisfiedResolutionException at runtime.
  */
-public class CdiBeanInheritedSupplierTest extends OpenAiBaseTest {
+public class CdiBeanInheritedSupplierTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ModelSelector.class, BaseAgent.class, ConcreteAgent.class,
                             Agents.FixedResponseChatModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "test-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     /** CDI bean that selects a model — declared as @CdiBean parameter on a parent interface supplier. */
     @Singleton

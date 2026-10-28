@@ -1,10 +1,5 @@
 package io.quarkiverse.langchain4j.anthropic.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.okForContentType;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
@@ -13,10 +8,12 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import jakarta.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -24,7 +21,9 @@ import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * A gateway in front of Anthropic authenticates on its own header, so {@code customHeaders} passed
@@ -38,83 +37,49 @@ class AnthropicCustomHeadersSmokeTest extends AnthropicSmokeTest {
     private static final String GATEWAY_VALUE = "gateway-secret";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url",
-                    "http://localhost:%d".formatted(WIREMOCK_PORT));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY);
+
+    // the mock points the configured base URL at itself
+    @ConfigProperty(name = "quarkus.langchain4j.anthropic.base-url")
+    String baseUrl;
+
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
 
     @Test
     void customHeadersReachBlockingRequests() {
-        wireMockServer.stubFor(
-                post(urlPathEqualTo("/messages"))
-                        .withHeader(GATEWAY_HEADER, equalTo(GATEWAY_VALUE))
-                        .willReturn(okJson("""
-                                {
-                                  "id": "msg_01EwYzt25EaVu4rNUewCkdP3",
-                                  "type": "message",
-                                  "role": "assistant",
-                                  "content": [
-                                    {
-                                      "type": "text",
-                                      "text": "Hello!"
-                                    }
-                                  ],
-                                  "model": "claude-3-haiku-20240307",
-                                  "stop_reason": "end_turn",
-                                  "stop_sequence": null,
-                                  "usage": {
-                                    "input_tokens": 14,
-                                    "output_tokens": 5
-                                  }
-                                }
-                                """)));
+        mock.chat().reply(ChatReply.text("Hello!").usage(14, 5));
 
         AnthropicChatModel model = AnthropicChatModel.builder()
                 .apiKey(API_KEY)
-                .baseUrl("http://localhost:%d".formatted(WIREMOCK_PORT))
+                .baseUrl(baseUrl)
                 .customHeaders(Map.of(GATEWAY_HEADER, GATEWAY_VALUE))
                 .build();
 
         assertThat(model.chat("hello")).isEqualTo("Hello!");
 
-        var request = wireMockServer.getAllServeEvents().get(0).getRequest();
-        assertThat(request.getHeader(GATEWAY_HEADER)).isEqualTo(GATEWAY_VALUE);
+        var request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/anthropic/v1/messages");
+        assertThat(request.header(GATEWAY_HEADER)).isEqualTo(GATEWAY_VALUE);
         // The provider credential still travels on its own header.
-        assertThat(request.getHeader("x-api-key")).isEqualTo(API_KEY);
+        assertThat(request.header("x-api-key")).isEqualTo(API_KEY);
     }
 
     @Test
     void customHeadersReachStreamingRequests() {
-        var eventStream = """
-                event: message_start
-                data: {"type":"message_start","message":{"id":"msg_01","type":"message","role":"assistant","content":[],"model":"claude-3-haiku-20240307","stop_reason":null,"usage":{"input_tokens":10,"output_tokens":1}}}
-
-                event: content_block_start
-                data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}
-
-                event: content_block_delta
-                data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello!"}}
-
-                event: content_block_stop
-                data: {"type":"content_block_stop","index":0}
-
-                event: message_delta
-                data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"output_tokens":20}}
-
-                event: message_stop
-                data: {"type":"message_stop"}
-
-                """;
-
-        wireMockServer.stubFor(
-                post(urlPathEqualTo("/messages"))
-                        .withHeader(GATEWAY_HEADER, equalTo(GATEWAY_VALUE))
-                        .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
+        mock.chat().reply(ChatReply.text("Hello!").usage(10, 20));
 
         AnthropicStreamingChatModel model = AnthropicStreamingChatModel.builder()
                 .apiKey(API_KEY)
-                .baseUrl("http://localhost:%d".formatted(WIREMOCK_PORT))
+                .baseUrl(baseUrl)
                 .customHeaders(Map.of(GATEWAY_HEADER, GATEWAY_VALUE))
                 .build();
 
@@ -138,8 +103,9 @@ class AnthropicCustomHeadersSmokeTest extends AnthropicSmokeTest {
         await().atMost(Duration.ofSeconds(10)).until(() -> response.get() != null);
         assertThat(response.get().aiMessage().text()).isEqualTo("Hello!");
 
-        var request = wireMockServer.getAllServeEvents().get(0).getRequest();
-        assertThat(request.getHeader(GATEWAY_HEADER)).isEqualTo(GATEWAY_VALUE);
-        assertThat(request.getHeader("x-api-key")).isEqualTo(API_KEY);
+        var request = mock.chat().singleRequest();
+        assertThat(request.path()).isEqualTo("/anthropic/v1/messages");
+        assertThat(request.header(GATEWAY_HEADER)).isEqualTo(GATEWAY_VALUE);
+        assertThat(request.header("x-api-key")).isEqualTo(API_KEY);
     }
 }
