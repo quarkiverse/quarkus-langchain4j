@@ -89,6 +89,8 @@ import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.spi.classloading.ClassInstanceFactory;
 import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
+import dev.langchain4j.spi.guardrail.config.InputGuardrailsConfigBuilderFactory;
+import dev.langchain4j.spi.guardrail.config.OutputGuardrailsConfigBuilderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
@@ -156,6 +158,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveHierarchyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
@@ -232,10 +235,14 @@ public class AiServicesProcessor {
     private static final Set<DotName> GUARDRAIL_ANNOTATIONS = Set.of(
             TOOL_INPUT_GUARDRAIL, TOOL_INPUT_GUARDRAILS, TOOL_OUTPUT_GUARDRAIL, TOOL_OUTPUT_GUARDRAILS);
 
+    private static final Set<DotName> STRUCTURED_OUTPUT_WRAPPERS = Set.of(DotNames.MULTI, DotNames.UNI,
+            DotNames.COMPLETION_STAGE, LangChain4jDotNames.RESULT);
+
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer,
             BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
         IndexView index = indexBuildItem.getIndex();
         Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.DESCRIPTION);
@@ -253,6 +260,7 @@ public class AiServicesProcessor {
         }
         Set<DotName> returnTypesToRegister = new HashSet<>();
         for (AiServicesMethodBuildItem aiServicesMethodBuildItem : aiServicesMethodBuildItems) {
+            registerStructuredOutputHierarchy(aiServicesMethodBuildItem.getMethodInfo(), reflectiveHierarchyProducer);
             Type type = aiServicesMethodBuildItem.getMethodInfo().returnType();
             if (type.kind() == Type.Kind.PRIMITIVE) {
                 continue;
@@ -278,6 +286,10 @@ public class AiServicesProcessor {
                 ClassMetadataProviderFactory.class.getName()));
         serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 ClassInstanceFactory.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                InputGuardrailsConfigBuilderFactory.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                OutputGuardrailsConfigBuilderFactory.class.getName()));
 
         // needed because various LLMs use these, so let's be proactive
         // there isn't one great place to put this, so this is probably as good as any
@@ -347,6 +359,33 @@ public class AiServicesProcessor {
                 checkGuardrailOnAiServiceMethod(serviceMethodInfo);
             }
         }
+    }
+
+    /**
+     * The model's answer is parsed into the method's return type, and that reaches every type the result is made of:
+     * those behind its fields and those behind its type arguments, as in a {@code List<Forecast>} or a record nested
+     * in another. Registering the return type alone leaves them out, and a native image then fails to construct them
+     * when the answer is parsed.
+     */
+    private static void registerStructuredOutputHierarchy(MethodInfo method,
+            BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer) {
+        Type type = method.returnType();
+        // the answer may come wrapped in a type that hands it back later or adds metadata to it
+        while (type.kind() == Type.Kind.PARAMETERIZED_TYPE && STRUCTURED_OUTPUT_WRAPPERS.contains(type.name())
+                && type.asParameterizedType().arguments().size() == 1) {
+            type = type.asParameterizedType().arguments().get(0);
+        }
+        if (type.kind() != Type.Kind.CLASS && type.kind() != Type.Kind.PARAMETERIZED_TYPE
+                && type.kind() != Type.Kind.ARRAY) {
+            return;
+        }
+        if (DotNames.STRING.equals(type.name()) || LangChain4jDotNames.TOKEN_STREAM.equals(type.name())) {
+            return;
+        }
+        reflectiveHierarchyProducer.produce(ReflectiveHierarchyBuildItem.builder(type)
+                .source(AiServicesProcessor.class.getSimpleName() + ": structured output of " + method.declaringClass().name()
+                        + "#" + method.name())
+                .build());
     }
 
     /**
