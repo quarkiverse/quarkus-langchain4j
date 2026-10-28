@@ -596,7 +596,7 @@ public class AiServiceMethodImplementationSupport {
                         dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
                                 .invocationContext(invocationContext)
                                 .request(toolExecutionRequest)
-                                .resultText(toolExecutionResult.resultText())
+                                .resultContents(toolExecutionResult.resultContents())
                                 .build());
 
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil

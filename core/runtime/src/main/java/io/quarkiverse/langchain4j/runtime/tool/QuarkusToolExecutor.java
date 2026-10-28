@@ -127,8 +127,10 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 invocationResult = ((Uni<?>) invocationResult).await().indefinitely();
             }
             if (invocationResult instanceof ToolExecutionResult ter) {
-                log.debugv("Tool execution result passed through. result: {0} | resultText: {1}", ter.result(),
-                        ter.resultText());
+                // resultContents(), not resultText(): the latter throws when the tool returned image or
+                // multiple content elements, and debugv evaluates its arguments eagerly
+                log.debugv("Tool execution result passed through. result: {0} | resultContents: {1}", ter.result(),
+                        ter.resultContents());
                 return ter;
             }
             String result = handleResult(invokerInstance, invocationResult);
