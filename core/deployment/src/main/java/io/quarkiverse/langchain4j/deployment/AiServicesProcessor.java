@@ -2128,6 +2128,7 @@ public class AiServicesProcessor {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
+        boolean resumeConversation = method.hasAnnotation(LangChain4jDotNames.RESUME_CONVERSATION);
         java.lang.reflect.Type returnType = javaLangReturnType(method);
 
         List<MethodParameterInfo> params = method.parameters();
@@ -2161,6 +2162,11 @@ public class AiServicesProcessor {
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, index, templateParams,
                 systemMessageInfo, fallbackToDummyUserMessagePredicate, chatRequestParametersParamPosition);
+        if (resumeConversation
+                && (userMessageInfo.template().isPresent() || userMessageInfo.paramPosition().isPresent())) {
+            throw illegalConfigurationForMethod(
+                    "A method annotated with @ResumeConversation must not define a user message", method);
+        }
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
                 systemMessageInfo,
@@ -2212,7 +2218,7 @@ public class AiServicesProcessor {
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), parameterInfoList,
                 systemMessageInfo,
-                userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
+                userMessageInfo, memoryIdParamPosition, requiresModeration, resumeConversation, methodReturnTypeSignature,
                 overrideChatModelParamPosition, chatRequestParametersParamPosition,
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
