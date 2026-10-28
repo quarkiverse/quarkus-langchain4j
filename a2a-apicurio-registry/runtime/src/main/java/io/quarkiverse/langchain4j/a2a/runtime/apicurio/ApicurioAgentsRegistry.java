@@ -12,13 +12,13 @@ import java.util.stream.Stream;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.planner.AgentInstance;
 import dev.langchain4j.agentic.planner.AgentsRegistry;
 import io.apicurio.registry.rest.client.RegistryClient;
 import io.apicurio.registry.rest.client.models.SearchedArtifact;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
 
 public class ApicurioAgentsRegistry implements AgentsRegistry {
 
@@ -31,7 +31,7 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
 
     // Page size for each search request. Discovery pages through all matching artifacts
     // regardless of this value, so it only affects the number of round trips.
-    private static final int DEFAULT_PAGE_SIZE = 100;
+    private static final int PAGE_SIZE = 100;
 
     // Safety net against an unbounded loop if the registry ever returns a reported count that
     // never catches up with the offset (for example a server bug that ignores the offset
@@ -43,27 +43,18 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
     // producers) write the lowercase form.
     private static final String JSONRPC_BINDING = "JSONRPC";
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private final RegistryClient registryClient;
     private final List<String> defaultInputKeys;
-    private final int pageSize;
 
     public ApicurioAgentsRegistry(RegistryClient registryClient) {
         this(registryClient, FALLBACK_INPUT_KEYS);
     }
 
     public ApicurioAgentsRegistry(RegistryClient registryClient, List<String> defaultInputKeys) {
-        this(registryClient, defaultInputKeys, DEFAULT_PAGE_SIZE);
-    }
-
-    // visible for testing: lets paging tests use a small page size instead of a large fixture.
-    ApicurioAgentsRegistry(RegistryClient registryClient, List<String> defaultInputKeys, int pageSize) {
         this.registryClient = registryClient;
         this.defaultInputKeys = defaultInputKeys == null || defaultInputKeys.isEmpty()
                 ? FALLBACK_INPUT_KEYS
                 : List.copyOf(defaultInputKeys);
-        this.pageSize = pageSize;
     }
 
     @Override
@@ -107,7 +98,7 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
                 final int currentOffset = offset;
                 var results = registryClient.search().artifacts().get(config -> {
                     config.queryParameters.artifactType = AGENT_CARD_TYPE;
-                    config.queryParameters.limit = pageSize;
+                    config.queryParameters.limit = PAGE_SIZE;
                     config.queryParameters.offset = currentOffset;
                 });
 
@@ -145,7 +136,7 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
                 if (total != null && offset >= total) {
                     break;
                 }
-                if (fetched < pageSize) {
+                if (fetched < PAGE_SIZE) {
                     // A short page means there is nothing more to fetch, even if the reported
                     // count is missing or does not match what was actually returned.
                     break;
@@ -236,7 +227,7 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
 
         try (InputStream content = registryClient.groups().byGroupId(groupId).artifacts()
                 .byArtifactId(artifactId).versions().byVersionExpression("branch=latest").content().get()) {
-            JsonNode card = OBJECT_MAPPER.readTree(content);
+            JsonNode card = ObjectMapperHolder.MAPPER.readTree(content);
             JsonNode interfaces = card.get("supportedInterfaces");
             if (interfaces == null || !interfaces.isArray()) {
                 log.warnf("Artifact %s/%s has no '%s' label and its card declares no supportedInterfaces; "

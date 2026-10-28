@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
@@ -21,6 +20,7 @@ import io.apicurio.registry.rest.client.RegistryClient;
 import io.apicurio.registry.rest.client.models.ArtifactMetaData;
 import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.SearchedArtifact;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientOptions;
@@ -43,8 +43,6 @@ public class ApicurioRegistryMcpTools {
     // server.json's `variables` map. A registry-discovered server has no per-user substitution
     // step, so a remaining placeholder means the URL is not actually usable as-is.
     private static final Pattern UNRESOLVED_VARIABLE = Pattern.compile("\\{[^{}]+\\}");
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final RegistryClient registryClient;
     private final McpToolProvider mcpToolProvider;
@@ -156,7 +154,7 @@ public class ApicurioRegistryMcpTools {
         JsonNode server;
         try (InputStream content = registryClient.groups().byGroupId(groupId).artifacts()
                 .byArtifactId(artifactId).versions().byVersionExpression("branch=latest").content().get()) {
-            server = OBJECT_MAPPER.readTree(content);
+            server = ObjectMapperHolder.MAPPER.readTree(content);
         } catch (Exception e) {
             return RemoteResolution.error("could not read or parse the server's registered content ("
                     + e.getMessage() + ")");
