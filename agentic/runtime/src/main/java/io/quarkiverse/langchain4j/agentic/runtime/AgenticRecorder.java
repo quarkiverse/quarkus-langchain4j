@@ -20,12 +20,13 @@ import dev.langchain4j.agentic.declarative.DeclarativeUtil;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
-import dev.langchain4j.agentic.observability.MonitoredAgent;
+import dev.langchain4j.agentic.observability.ComposedAgentListener;
 import dev.langchain4j.agentic.scope.AgenticScopeSerializer;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
+import io.quarkiverse.langchain4j.agentic.runtime.devui.DevModeAgentMonitor;
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
@@ -43,7 +44,7 @@ public class AgenticRecorder {
     private static volatile Map<String, List<String>> agentsWithToolBox = Map.of();
     private static volatile Map<String, List<String>> agentsWithSkills = Map.of();
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
-    private static volatile boolean devModeMonitoringEnabled = false;
+    private static volatile Set<String> devModeRootAgentClassNames = Collections.emptySet();
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
 
     private static final Function<InternalAgent, Object> AGENT_INSTANCE_FACTORY = internalAgent -> {
@@ -113,7 +114,7 @@ public class AgenticRecorder {
     @RuntimeInit
     public void enableDevModeMonitoring(Set<String> rootAgentClassNames) {
         DevAgentMonitorHolder.reset();
-        AgenticRecorder.devModeMonitoringEnabled = true;
+        AgenticRecorder.devModeRootAgentClassNames = Collections.unmodifiableSet(rootAgentClassNames);
         for (String className : rootAgentClassNames) {
             try {
                 Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
@@ -146,6 +147,11 @@ public class AgenticRecorder {
                         new AgentConfigurator(new QuarkusAgenticContextConsumer(cdiContext, info),
                                 QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY));
 
+                if (devModeRootAgentClassNames.contains(info.agentClassName())
+                        && agent instanceof InternalAgent rootAgent) {
+                    registerDevModeMonitor(rootAgent);
+                }
+
                 if (info.hasInterceptorBindings()) {
                     Object originalAgent = agent;
                     agent = cdiContext.getInterceptionProxy().create(originalAgent);
@@ -156,17 +162,22 @@ public class AgenticRecorder {
                         throw new RuntimeException("Failed to set agent proxy on " + originalAgent.getClass(), e);
                     }
                 }
-
-                if (devModeMonitoringEnabled && agent instanceof MonitoredAgent monitoredAgent) {
-                    AgentMonitor monitor = monitoredAgent.agentMonitor();
-                    if (monitor != null) {
-                        DevAgentMonitorHolder.register(monitor);
-                        DevAgentMonitorHolder.registerRootAgent(agent);
-                    }
-                }
                 return agent;
             }
         };
+    }
+
+    /**
+     * Attaches an {@link AgentMonitor} at the root of a dev mode agentic system, where it is inherited by every
+     * sub-agent, reusing the monitor of a {@code MonitoredAgent} root instead of adding a second one.
+     */
+    private static void registerDevModeMonitor(InternalAgent rootAgent) {
+        AgentMonitor monitor = ComposedAgentListener.listenerOfType(rootAgent.listener(), AgentMonitor.class);
+        if (monitor == null) {
+            monitor = new DevModeAgentMonitor(rootAgent);
+            rootAgent.registerInheritedParentListener(monitor);
+        }
+        DevAgentMonitorHolder.register(rootAgent, monitor);
     }
 
     private static final class QuarkusSubAgentResolver implements Function<Class<?>, Object> {
