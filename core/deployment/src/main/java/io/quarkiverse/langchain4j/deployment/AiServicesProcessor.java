@@ -643,7 +643,7 @@ public class AiServicesProcessor {
                     determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
                     determineThinkingHandler(declarativeAiServiceClassInfo, generatedClassOutput),
                     systemMessageProviderClassDotName,
-                    cdiScope(customScopes, declarativeAiServiceClassInfo),
+                    cdiScope(customScopes, declarativeAiServiceClassInfo, BuiltinScope.REQUEST.getName()),
                     chatModelName,
                     moderationModelName,
                     imageModelName,
@@ -749,8 +749,13 @@ public class AiServicesProcessor {
         return beanName;
     }
 
-    private static DotName cdiScope(CustomScopeAnnotationsBuildItem customScopes, ClassInfo declarativeAiServiceClassInfo) {
-        DotName cdiScope = BuiltinScope.REQUEST.getInfo().getDotName();
+    private static DotName cdiScope(CustomScopeAnnotationsBuildItem customScopes, ClassInfo declarativeAiServiceClassInfo,
+            DotName defaultScope) {
+        BuiltinScope builtinScope = BuiltinScope.from(declarativeAiServiceClassInfo);
+        if (builtinScope != null) {
+            return builtinScope.getName();
+        }
+        DotName cdiScope = defaultScope;
         Optional<AnnotationInstance> scopeAnnotation = customScopes.getScope(declarativeAiServiceClassInfo.annotations());
         if (scopeAnnotation.isPresent()) {
             cdiScope = scopeAnnotation.get().name();
