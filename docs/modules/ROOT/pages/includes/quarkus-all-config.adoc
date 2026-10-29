@@ -17307,6 +17307,32 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+h|[.extension-name]##Quarkus LangChain4j - Memory Store - Hibernate##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-hibernate_quarkus-langchain4j-memorystore-hibernate-persistence-unit-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-hibernate_quarkus-langchain4j-memorystore-hibernate-persistence-unit-name[`+++quarkus.langchain4j.memorystore.hibernate.persistence-unit-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.memorystore.hibernate.persistence-unit-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Quarkus Hibernate ORM persistence unit to use. If unset, uses the default persistence unit. The chat memory entity is registered only in this unit.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_HIBERNATE_PERSISTENCE_UNIT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_HIBERNATE_PERSISTENCE_UNIT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+
 h|[.extension-name]##Quarkus Langchain4j - Memory Store - MongoDB##
 h|Type
 h|Default
