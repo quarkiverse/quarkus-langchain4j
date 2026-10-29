@@ -50,6 +50,7 @@ import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
+import io.quarkiverse.langchain4j.SharedMemory;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
@@ -146,6 +147,8 @@ public class LangChain4jDotNames {
             QuarkusAiServiceContextQualifier.class);
 
     static final DotName SEED_MEMORY = DotName.createSimple(SeedMemory.class);
+
+    static final DotName SHARED_MEMORY = DotName.createSimple(SharedMemory.class);
 
     static final DotName NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoSystemMessageProviderSupplier.class);
