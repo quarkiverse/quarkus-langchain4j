@@ -91,6 +91,7 @@ import dev.langchain4j.spi.classloading.ClassInstanceFactory;
 import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.SharedMemory;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem.DeclarativeAiServiceInputGuardrails;
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem.DeclarativeAiServiceOutputGuardrails;
@@ -2178,6 +2179,7 @@ public class AiServicesProcessor {
                             .formatted(ResponseSchemaUtil.placeholder(), method.declaringClass()));
 
         Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamPosition(method);
+        Optional<String> sharedMemoryName = gatherSharedMemoryName(method);
         Optional<Integer> overrideChatModelParamPosition = gatherOverrideChatModelParameterPosition(method);
         Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> metricsTimedInfo = gatherMetricsTimedInfo(method,
                 addMicrometerMetrics);
@@ -2212,7 +2214,7 @@ public class AiServicesProcessor {
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), parameterInfoList,
                 systemMessageInfo,
-                userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
+                userMessageInfo, memoryIdParamPosition, sharedMemoryName, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, chatRequestParametersParamPosition,
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
@@ -2433,6 +2435,23 @@ public class AiServicesProcessor {
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)));
         }
         return Optional.empty();
+    }
+
+    private static Optional<String> gatherSharedMemoryName(MethodInfo method) {
+        AnnotationInstance instance = method.declaredAnnotation(LangChain4jDotNames.SHARED_MEMORY);
+        if (instance == null) {
+            instance = method.declaringClass().declaredAnnotation(LangChain4jDotNames.SHARED_MEMORY);
+        }
+        if (instance == null) {
+            return Optional.empty();
+        }
+        AnnotationValue value = instance.value();
+        String name = value != null ? value.asString() : SharedMemory.DEFAULT;
+        if (name.isBlank()) {
+            throw new IllegalConfigurationException("The value of @SharedMemory cannot be blank. Offending method is '"
+                    + method.declaringClass().name() + "#" + method.name() + "'");
+        }
+        return Optional.of(name);
     }
 
     private Optional<Integer> gatherMemoryIdParamPosition(MethodInfo method) {

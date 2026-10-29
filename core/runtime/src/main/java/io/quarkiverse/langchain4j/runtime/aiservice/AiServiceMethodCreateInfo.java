@@ -34,6 +34,7 @@ public final class AiServiceMethodCreateInfo {
     private final Optional<TemplateInfo> systemMessageInfo;
     private final UserMessageInfo userMessageInfo;
     private final Optional<Integer> memoryIdParamPosition;
+    private final Optional<String> sharedMemoryName;
     private final boolean requiresModeration;
     private final String returnTypeSignature; // transient so bytecode recording ignores it
     private final Optional<Integer> overrideChatModelParamPosition;
@@ -75,6 +76,7 @@ public final class AiServiceMethodCreateInfo {
             Optional<TemplateInfo> systemMessageInfo,
             UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
+            Optional<String> sharedMemoryName,
             boolean requiresModeration,
             String returnTypeSignature,
             Optional<Integer> overrideChatModelParamPosition,
@@ -97,6 +99,7 @@ public final class AiServiceMethodCreateInfo {
         this.systemMessageInfo = systemMessageInfo;
         this.userMessageInfo = userMessageInfo;
         this.memoryIdParamPosition = memoryIdParamPosition;
+        this.sharedMemoryName = sharedMemoryName;
         this.requiresModeration = requiresModeration;
         this.returnTypeSignature = returnTypeSignature;
         this.overrideChatModelParamPosition = overrideChatModelParamPosition;
@@ -151,6 +154,10 @@ public final class AiServiceMethodCreateInfo {
 
     public Optional<Integer> getMemoryIdParamPosition() {
         return memoryIdParamPosition;
+    }
+
+    public Optional<String> getSharedMemoryName() {
+        return sharedMemoryName;
     }
 
     public boolean isRequiresModeration() {
