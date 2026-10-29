@@ -12,10 +12,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import software.amazon.awssdk.eventstream.HeaderValue;
+import software.amazon.awssdk.eventstream.Message;
 import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
 import software.amazon.awssdk.services.bedrockruntime.model.StopReason;
-import software.amazon.eventstream.HeaderValue;
-import software.amazon.eventstream.Message;
 
 public class BedrockStreamHelper implements StreamingChatResponseHandler {
 

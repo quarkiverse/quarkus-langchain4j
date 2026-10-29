@@ -92,7 +92,7 @@ public class TypeSafeDecisionModelTest extends WiremockAware {
             """;
 
     private static final DecisionRequest REQUEST = DecisionRequest.builder()
-            .input(Map.of("ticket", "Help! My payouts have been failing for 3 days."))
+            .inputFields(Map.of("ticket", "Help! My payouts have been failing for 3 days."))
             .question(
                     "team",
                     ChoiceQuestion.builder()

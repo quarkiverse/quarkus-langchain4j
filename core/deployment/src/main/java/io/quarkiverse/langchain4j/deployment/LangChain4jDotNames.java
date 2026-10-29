@@ -98,6 +98,10 @@ public class LangChain4jDotNames {
 
     public static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
     public static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
+    public static final DotName REGISTER_DECISION_SERVICE = DotName
+            .createSimple("io.quarkiverse.langchain4j.RegisterDecisionService");
+    public static final DotName THRESHOLD_PROVIDER = DotName
+            .createSimple("dev.langchain4j.service.decision.ThresholdProvider");
 
     static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanChatLanguageModelSupplier.class);

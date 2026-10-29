@@ -59,7 +59,7 @@ DecisionRequest request = DecisionRequest.builder()
                 .option("billing", "Payments, payouts, invoices, refunds")
                 .option("support", "Problems using the product")
                 .build())
-        .question("urgent", YesNoQuestion.of("Does this need attention today?"))
+        .question("urgent", YesNoQuestion.from("Does this need attention today?"))
         .build();
 
 DecisionResponse response = decisionModel.decide(request);
@@ -68,11 +68,13 @@ ChoiceAnswer team = response.choice("team");      // team.value() is "billing", 
 YesNoAnswer urgent = response.yesNo("urgent");    // urgent.probability() is the probability of "yes"
 ----
 
-The input can be a `String`, a `Map` of named values, or a list of `TextContent` and `ImageContent`.
+The input can be a `String` with `input(...)`, named values with `inputFields(...)`, a list of `TextContent` and `ImageContent` with `inputContents(...)`, or a conversation with `inputMessages(...)`.
 Images must be inline, as base64 data or `data:` URLs.
 The API can refuse to answer a single question: `response.isRefused("team")` tells it apart from a regular answer.
 
 `decideAsync(...)` returns a `CompletableFuture<DecisionResponse>` for non-blocking callers.
+
+Rather than building the requests yourself, you can declare a xref:decision-services.adoc[Decision Service], an interface implemented by the decision model, or a xref:agentic.adoc#_decision_agents[decision agent] in an agentic system.
 
 All CDI beans implementing `DecisionModelListener` are automatically registered with the model, and
 `ModelBuilderCustomizer<OpenAiDecisionModel.OpenAiDecisionModelBuilder>` beans can tune the underlying builder.

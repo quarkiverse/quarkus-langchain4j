@@ -40,7 +40,6 @@ import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
-import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
@@ -49,15 +48,22 @@ import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusAgent;
+import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusDecisionAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.AgentClassCreateInfo;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
+import io.quarkiverse.langchain4j.agentic.runtime.DecisionAgentInfo;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
+import io.quarkiverse.langchain4j.deployment.DecisionTypes;
 import io.quarkiverse.langchain4j.deployment.DotNames;
+import io.quarkiverse.langchain4j.deployment.ExcludeFromImpliedAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.FallbackToDummyUserMessageBuildItem;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.PreventToolValidationErrorBuildItem;
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
+import io.quarkiverse.langchain4j.deployment.RequestDecisionModelBeanBuildItem;
+import io.quarkiverse.langchain4j.deployment.RequestImageModelBeanBuildItem;
+import io.quarkiverse.langchain4j.deployment.RequestModerationModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipToolBoxProcessingBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -69,6 +75,10 @@ import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeansRuntimeInitBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
+import io.quarkus.arc.processor.BeanInfo;
+import io.quarkus.arc.processor.BeanResolver;
 import io.quarkus.arc.processor.BuiltinScope;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -96,27 +106,33 @@ public class AgenticProcessor {
     private static final MethodDescriptor HANDLER_INVOKE = MethodDescriptor.ofMethod(
             InvocationHandler.class, "invoke", Object.class, Object.class, Method.class, Object[].class);
 
-    private static final Set<DotName> CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS = Set.of(
-            AgenticLangChain4jDotNames.A2A_AGENT,
-            AgenticLangChain4jDotNames.SEQUENCE_AGENT,
-            AgenticLangChain4jDotNames.PARALLEL_AGENT,
-            AgenticLangChain4jDotNames.PARALLEL_MAPPER_AGENT,
-            AgenticLangChain4jDotNames.LOOP_AGENT,
-            AgenticLangChain4jDotNames.CONDITIONAL_AGENT,
-            AgenticLangChain4jDotNames.MCP_CLIENT_AGENT);
+    /**
+     * The annotations of the agents that langchain4j-agentic implements with an AI service built from their interface:
+     * only the AI agents, decision agents being excluded separately. Workflows, planners, supervisors, human-in-the-loop
+     * and remote agents are implemented otherwise, so their interfaces are not AI services.
+     */
+    private static final List<DotName> AI_SERVICE_AGENT_ANNOTATIONS = List.of(AgenticLangChain4jDotNames.AGENT);
 
-    private static final List<DotName> ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS = List.of(
-            AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
-            AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER,
-            AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER,
-            AgenticLangChain4jDotNames.CONTENT_RETRIEVER_SUPPLIER,
-            AgenticLangChain4jDotNames.RETRIEVAL_AUGMENTER_SUPPLIER,
-            AgenticLangChain4jDotNames.TOOL_SUPPLIER,
-            AgenticLangChain4jDotNames.TOOL_PROVIDER_SUPPLIER,
-            AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER,
-            AgenticLangChain4jDotNames.MCP_CLIENT_SUPPLIER
-    // PARALLEL_EXECUTOR excluded: executor config annotation, validated to have no parameters
-    );
+    /**
+     * The annotations of the agents that use the chat model of their agentic system: the AI agents, and the supervisors,
+     * whose planner is an LLM. The other agents only forward it to the sub-agents that langchain4j-agentic creates itself,
+     * while Quarkus provides them as beans, with their own chat model.
+     */
+    private static final Set<DotName> CHAT_MODEL_AGENT_ANNOTATIONS = Set.of(AgenticLangChain4jDotNames.AGENT,
+            AgenticLangChain4jDotNames.SUPERVISOR_AGENT);
+
+    /**
+     * The annotations of the static methods that langchain4j-agentic invokes, and whose parameters can be resolved
+     * from CDI: the helper methods, and the static agent methods of non-AI and human-in-the-loop agents.
+     */
+    private static final List<DotName> CDI_RESOLVABLE_METHOD_ANNOTATIONS;
+
+    static {
+        List<DotName> annotations = new ArrayList<>(AgenticLangChain4jDotNames.ALL_HELPER_ANNOTATIONS);
+        annotations.add(AgenticLangChain4jDotNames.AGENT);
+        annotations.add(AgenticLangChain4jDotNames.HUMAN_IN_THE_LOOP);
+        CDI_RESOLVABLE_METHOD_ANNOTATIONS = List.copyOf(annotations);
+    }
 
     private static final DotName INTERCEPTOR_BINDING = DotName.createSimple(jakarta.interceptor.InterceptorBinding.class);
 
@@ -165,36 +181,145 @@ public class AgenticProcessor {
             List<MethodInfo> skillsMethods = methods.stream()
                     .filter(mi -> mi.hasAnnotation(AgenticLangChain4jDotNames.SKILLS)).toList();
             DetectedAiAgentBuildItem item = new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null),
-                    modelName, mcpToolBoxMethods, toolBoxMethods, skillsMethods);
-            validate(item);
+                    modelName, mcpToolBoxMethods, toolBoxMethods, skillsMethods,
+                    detectDecisionAgent(classInfo, methods, index));
+            validate(item, index);
             producer.produce(
                     item);
         });
     }
 
-    private void validate(DetectedAiAgentBuildItem item) {
+    /**
+     * Returns the facts about the given agent interface when it is a decision agent, an interface whose {@code @Agent}
+     * method is annotated with {@code @Decide}, or that declares a {@code @DecisionModelSupplier} method, or whose
+     * {@code @Agent} method returns an object with fields annotated with {@code @Decide}, like a record. Upstream only
+     * applies the last rule together with one of the others, so these agents are built by
+     * {@code AgenticRecorder.createDecisionAgent}.
+     */
+    private static DetectedAiAgentBuildItem.DecisionAgent detectDecisionAgent(ClassInfo iface, List<MethodInfo> methods,
+            IndexView index) {
+        MethodInfo agentMethod = methods.stream()
+                .filter(m -> m.hasDeclaredAnnotation(AgenticLangChain4jDotNames.AGENT))
+                .findFirst().orElse(null);
+        if (agentMethod == null) {
+            return null;
+        }
+        // like upstream, the suppliers are looked up among the methods of the interface itself
+        MethodInfo modelSupplier = declaredMethodWith(iface, AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER);
+        MethodInfo thresholdSupplier = declaredMethodWith(iface, AgenticLangChain4jDotNames.DECISION_THRESHOLD_SUPPLIER);
+        Type contentType = DecisionTypes.contentType(agentMethod.returnType());
+        if (!agentMethod.hasDeclaredAnnotation(DecisionTypes.DECIDE) && modelSupplier == null
+                && DecisionTypes.objectAnswerType(contentType, index) == null) {
+            return null;
+        }
+        String agentName = explicitAgentName(agentMethod.declaredAnnotation(AgenticLangChain4jDotNames.AGENT));
+        return new DetectedAiAgentBuildItem.DecisionAgent(agentMethod,
+                agentName != null ? agentName : agentMethod.name(), modelSupplier, thresholdSupplier,
+                DecisionTypes.hasBooleanAnswer(contentType, index));
+    }
+
+    private static MethodInfo declaredMethodWith(ClassInfo iface, DotName annotation) {
+        return iface.methods().stream().filter(m -> m.hasDeclaredAnnotation(annotation)).findFirst().orElse(null);
+    }
+
+    private void validate(DetectedAiAgentBuildItem item, IndexView index) {
         ClassInfo iface = item.getIface();
-        validateA2AServerUrlSupplier(iface);
+        validateDecisionAgent(item, index);
+        validateA2AServerUrlSupplier(iface, index);
         validateActivationCondition(iface);
         validateAgentListenerSupplier(iface);
-        validateBeforeCall(iface);
-        validateChatMemoryProviderSupplier(iface);
+        validateBeforeCall(iface, index);
+        validateChatMemoryProviderSupplier(iface, index);
         validateChatMemorySupplier(iface);
         validateChatModelSupplier(iface);
         validateContentRetrieverSupplier(iface);
-        validateErrorHandler(iface);
+        validateErrorHandler(iface, index);
         validateExitCondition(iface);
         validateHumanInTheLoop(iface);
         validateMcpClientSupplier(iface);
         validateMcpToolBox(item);
         validateOutput(iface);
-        validateParallelExecutor(iface);
+        validateParallelExecutor(iface, index);
         validateRetrievalAugmentorSupplier(iface);
         validateToolProviderSupplier(iface);
         validateToolSupplier(iface);
     }
 
-    private void validateA2AServerUrlSupplier(ClassInfo iface) {
+    private void validateDecisionAgent(DetectedAiAgentBuildItem item, IndexView index) {
+        ClassInfo iface = item.getIface();
+        DetectedAiAgentBuildItem.DecisionAgent decisionAgent = item.getDecisionAgent();
+        if (decisionAgent == null) {
+            for (DotName supplier : List.of(AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER,
+                    AgenticLangChain4jDotNames.DECISION_THRESHOLD_SUPPLIER)) {
+                if (!iface.annotations(supplier).isEmpty()) {
+                    throw new IllegalConfigurationException(("Agent interface '%s' declares a method annotated with @%s, "
+                            + "but it is not a decision agent: a decision agent is an interface whose @Agent method is "
+                            + "annotated with @Decide or returns an object with @Decide fields")
+                            .formatted(iface.name(), supplier.withoutPackagePrefix()));
+                }
+            }
+            return;
+        }
+
+        MethodInfo agentMethod = decisionAgent.agentMethod();
+        for (DotName prompt : List.of(LangChain4jDotNames.USER_MESSAGE, LangChain4jDotNames.SYSTEM_MESSAGE)) {
+            if (agentMethod.hasDeclaredAnnotation(prompt) || iface.hasDeclaredAnnotation(prompt)) {
+                throw new IllegalConfigurationException(("Decision agent '%s' must not use @%s: a decision agent has no "
+                        + "prompt, its question is the one of @Decide").formatted(iface.name(), prompt.withoutPackagePrefix()));
+            }
+        }
+        if (item.getModelName() != null && decisionAgent.decisionModelSupplier() != null) {
+            throw new IllegalConfigurationException(("Decision agent '%s' cannot use both @DecisionModelSupplier and "
+                    + "@ModelName. Use one or the other to specify the DecisionModel.").formatted(iface.name()));
+        }
+        for (DotName chatModelSupplier : List.of(AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
+                AgenticLangChain4jDotNames.STREAMING_CHAT_MODEL_SUPPLIER)) {
+            if (!iface.annotations(chatModelSupplier).isEmpty()) {
+                throw new IllegalConfigurationException(("Decision agent '%s' must not declare a @%s method: a decision "
+                        + "agent uses a decision model and no chat model").formatted(iface.name(),
+                                chatModelSupplier.withoutPackagePrefix()));
+            }
+        }
+        for (DotName unsupported : List.of(TOOLBOX, LangChain4jDotNames.MCP_TOOLBOX, AgenticLangChain4jDotNames.SKILLS)) {
+            if (agentMethod.hasDeclaredAnnotation(unsupported)) {
+                throw new IllegalConfigurationException(("Decision agent '%s' must not use @%s: a decision agent has no "
+                        + "tools").formatted(iface.name(), unsupported.withoutPackagePrefix()));
+            }
+        }
+
+        MethodInfo modelSupplier = decisionAgent.decisionModelSupplier();
+        if (modelSupplier != null) {
+            validateStaticMethod(modelSupplier, AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER);
+            validateAllowedReturnTypes(modelSupplier, Set.of(LangChain4jDotNames.DECISION_MODEL),
+                    AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER);
+        }
+        MethodInfo thresholdSupplier = decisionAgent.decisionThresholdSupplier();
+        if (thresholdSupplier != null) {
+            DotName annotation = AgenticLangChain4jDotNames.DECISION_THRESHOLD_SUPPLIER;
+            validateStaticMethod(thresholdSupplier, annotation);
+            validateAllowedReturnTypes(thresholdSupplier,
+                    Set.of(DotNames.PRIMITIVE_DOUBLE, DotNames.DOUBLE), annotation);
+            validateRequiredParameterTypes(thresholdSupplier, List.of(AgenticLangChain4jDotNames.THRESHOLD_CONTEXT),
+                    annotation, index);
+            if (!decisionAgent.booleanAnswer() && isAnswerTypeKnown(agentMethod, index)) {
+                throw new IllegalConfigurationException(("Decision agent '%s' declares a @DecisionThresholdSupplier "
+                        + "method, but it has no boolean answer, so a threshold would never be used: apply it to the "
+                        + "probabilities of a YesNoAnswer, Choice or Scale answer instead").formatted(iface.name()));
+            }
+        }
+    }
+
+    /**
+     * Whether the type of the answer of the given decision method is one of those analyzed at build time, so that
+     * whether it has a {@code boolean} answer is known.
+     */
+    private static boolean isAnswerTypeKnown(MethodInfo agentMethod, IndexView index) {
+        Type contentType = DecisionTypes.contentType(agentMethod.returnType());
+        return DecisionTypes.isAnswerType(contentType, index)
+                || DecisionTypes.objectAnswerType(contentType, index) != null;
+    }
+
+    private void validateA2AServerUrlSupplier(ClassInfo iface, IndexView index) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.A2A_SERVER_URL_SUPPLIER;
         List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
         for (AnnotationInstance instance : instances) {
@@ -204,7 +329,7 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
+            validateNoMethodParameters(method, annotationToValidate, index);
             validateAllowedReturnTypes(method, Set.of(DotNames.STRING), annotationToValidate);
         }
     }
@@ -238,7 +363,7 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateBeforeCall(ClassInfo iface) {
+    private void validateBeforeCall(ClassInfo iface, IndexView index) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.BEFORE_CALL;
         List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
         for (AnnotationInstance instance : instances) {
@@ -249,11 +374,12 @@ public class AgenticProcessor {
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE), annotationToValidate);
+            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE), annotationToValidate,
+                    index);
         }
     }
 
-    private void validateChatMemoryProviderSupplier(ClassInfo iface) {
+    private void validateChatMemoryProviderSupplier(ClassInfo iface, IndexView index) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER;
         List<AnnotationInstance> instances = iface
                 .annotations(annotationToValidate);
@@ -264,7 +390,7 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(DotNames.OBJECT), annotationToValidate);
+            validateRequiredParameterTypes(method, List.of(DotNames.OBJECT), annotationToValidate, index);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.CHAT_MEMORY), annotationToValidate);
         }
     }
@@ -314,7 +440,7 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateErrorHandler(ClassInfo iface) {
+    private void validateErrorHandler(ClassInfo iface, IndexView index) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.ERROR_HANDLER;
         List<AnnotationInstance> instances = iface
                 .annotations(annotationToValidate);
@@ -325,7 +451,8 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.ERROR_CONTEXT), annotationToValidate);
+            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.ERROR_CONTEXT), annotationToValidate,
+                    index);
             validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.ERROR_RECOVERY_RESULT), annotationToValidate);
         }
     }
@@ -400,7 +527,7 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateParallelExecutor(ClassInfo iface) {
+    private void validateParallelExecutor(ClassInfo iface, IndexView index) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.PARALLEL_EXECUTOR;
         List<AnnotationInstance> instances = iface
                 .annotations(annotationToValidate);
@@ -411,7 +538,7 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
+            validateNoMethodParameters(method, annotationToValidate, index);
             validateAllowedReturnTypes(method, Set.of(DotNames.EXECUTOR), annotationToValidate);
         }
     }
@@ -478,10 +605,21 @@ public class AgenticProcessor {
 
     @BuildStep
     AnnotationsImpliesAiServiceBuildItem implyAiService() {
-        List<DotName> annotations = AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
-                .filter(a -> !CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS.contains(a))
-                .toList();
-        return new AnnotationsImpliesAiServiceBuildItem(annotations);
+        return new AnnotationsImpliesAiServiceBuildItem(AI_SERVICE_AGENT_ANNOTATIONS);
+    }
+
+    /**
+     * A decision agent is implemented by a call to a decision model, so it must not be registered as an AI service,
+     * which would request a chat model for it.
+     */
+    @BuildStep
+    void excludeDecisionAgentsFromAiServices(List<DetectedAiAgentBuildItem> agents,
+            BuildProducer<ExcludeFromImpliedAiServiceBuildItem> excludedProducer) {
+        for (DetectedAiAgentBuildItem agent : agents) {
+            if (agent.isDecisionAgent()) {
+                excludedProducer.produce(new ExcludeFromImpliedAiServiceBuildItem(agent.getIface().name()));
+            }
+        }
     }
 
     @BuildStep
@@ -537,26 +675,30 @@ public class AgenticProcessor {
     void registerAgenticScopeDeserializationTypes(
             DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
             DetectedNonAiAgentAsMapBuildItem detectedNonAiAgentAsMapBuildItem,
+            CombinedIndexBuildItem indexBuildItem,
             AgenticRecorder recorder) {
         Set<String> domainClassNames = new HashSet<>();
+        IndexView index = indexBuildItem.getIndex();
 
-        collectDomainTypes(detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap(), domainClassNames);
-        collectDomainTypes(detectedNonAiAgentAsMapBuildItem.getClassToNonAiAgentMethodsMap(), domainClassNames);
+        collectDomainTypes(detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap(), domainClassNames, index);
+        collectDomainTypes(detectedNonAiAgentAsMapBuildItem.getClassToNonAiAgentMethodsMap(), domainClassNames, index);
 
         if (!domainClassNames.isEmpty()) {
             recorder.registerAgenticScopeDeserializationTypes(domainClassNames);
         }
     }
 
-    private static void collectDomainTypes(Map<DotName, List<MethodInfo>> methodsMap, Set<String> domainClassNames) {
+    private static void collectDomainTypes(Map<DotName, List<MethodInfo>> methodsMap, Set<String> domainClassNames,
+            IndexView index) {
         for (List<MethodInfo> methods : methodsMap.values()) {
             for (MethodInfo method : methods) {
                 if (method.declaringClass().name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
                     continue;
                 }
                 collectDomainType(method.returnType(), domainClassNames);
-                for (int i = 0; i < method.parametersCount(); i++) {
-                    collectDomainType(method.parameterType(i), domainClassNames);
+                // the parameters resolved from CDI are never stored in the AgenticScope
+                for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(method, index)) {
+                    collectDomainType(parameter.type(), domainClassNames);
                 }
             }
         }
@@ -697,29 +839,36 @@ public class AgenticProcessor {
         }
     }
 
-    private static final DotName CDI_QUALIFIER = DotName.createSimple(jakarta.inject.Qualifier.class);
-
     /**
-     * Returns all CDI-resolvable parameters across all supplier methods in the
-     * transitive interface hierarchy of the given agents. A parameter is CDI-resolvable
-     * if it carries {@code @CdiBean} or any {@code @jakarta.inject.Qualifier}-annotated annotation.
+     * Returns the parameters resolved from CDI of the static methods that langchain4j-agentic invokes on the detected
+     * agents: the helper methods, like suppliers, conditions and outputs, and the static agent methods of non-AI and
+     * human-in-the-loop agents, declared on the agent types or on their supertypes. A parameter is resolved from CDI if
+     * it carries {@code @CdiBean} or any {@code @jakarta.inject.Qualifier}-annotated annotation.
      */
-    private static List<MethodParameterInfo> cdiResolvableSupplierParams(
-            List<DetectedAiAgentBuildItem> agents, IndexView index) {
+    private static List<MethodParameterInfo> cdiResolvableParams(List<DetectedAiAgentBuildItem> aiAgents,
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents, IndexView index) {
+        Set<ClassInfo> agentTypes = new LinkedHashSet<>();
+        for (DetectedAiAgentBuildItem agent : aiAgents) {
+            agentTypes.addAll(ValidationUtil.typeHierarchy(agent.getIface(), index));
+        }
+        for (List<MethodInfo> agentMethods : nonAiAgents.getClassToNonAiAgentMethodsMap().values()) {
+            for (MethodInfo agentMethod : agentMethods) {
+                agentTypes.addAll(ValidationUtil.typeHierarchy(agentMethod.declaringClass(), index));
+            }
+        }
         List<MethodParameterInfo> result = new ArrayList<>();
-        for (DetectedAiAgentBuildItem agent : agents) {
-            for (ClassInfo classInfo : ValidationUtil.transitiveInterfaces(agent.getIface(), index)) {
-                for (MethodInfo method : classInfo.methods()) {
-                    boolean isSupplierMethod = ALL_CDI_CAPABLE_SUPPLIER_ANNOTATIONS.stream()
-                            .anyMatch(method::hasAnnotation);
-                    if (!isSupplierMethod) {
-                        continue;
-                    }
-                    for (MethodParameterInfo param : method.parameters()) {
-                        if (param.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)
-                                || hasQualifierAnnotation(param, index)) {
-                            result.add(param);
-                        }
+        for (ClassInfo agentType : agentTypes) {
+            if (agentType.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                continue;
+            }
+            for (MethodInfo method : agentType.methods()) {
+                if (!Modifier.isStatic(method.flags())
+                        || CDI_RESOLVABLE_METHOD_ANNOTATIONS.stream().noneMatch(method::hasDeclaredAnnotation)) {
+                    continue;
+                }
+                for (MethodParameterInfo param : method.parameters()) {
+                    if (ValidationUtil.isCdiResolvable(param, index)) {
+                        result.add(param);
                     }
                 }
             }
@@ -727,49 +876,139 @@ public class AgenticProcessor {
         return result;
     }
 
-    private static boolean hasQualifierAnnotation(MethodParameterInfo param, IndexView index) {
-        for (AnnotationInstance ann : param.declaredAnnotations()) {
-            ClassInfo annClass = index.getClassByName(ann.name());
-            if (annClass != null && annClass.hasAnnotation(CDI_QUALIFIER)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void registerSupplierParameterResolver(List<DetectedAiAgentBuildItem> agents,
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents,
             CombinedIndexBuildItem indexBuildItem,
             AgenticRecorder recorder) {
         IndexView index = indexBuildItem.getIndex();
         Set<String> qualifierNames = new HashSet<>();
-        for (MethodParameterInfo param : cdiResolvableSupplierParams(agents, index)) {
-            for (AnnotationInstance ann : param.declaredAnnotations()) {
-                if (ann.name().equals(AgenticLangChain4jDotNames.CDI_BEAN)) {
-                    continue;
-                }
-                ClassInfo annClass = index.getClassByName(ann.name());
-                if (annClass != null && annClass.hasAnnotation(CDI_QUALIFIER)) {
-                    qualifierNames.add(ann.name().toString());
-                }
+        for (MethodParameterInfo param : cdiResolvableParams(agents, nonAiAgents, index)) {
+            for (AnnotationInstance qualifier : ValidationUtil.qualifiers(param, index)) {
+                qualifierNames.add(qualifier.name().toString());
             }
         }
         recorder.registerSupplierParameterResolver(qualifierNames);
     }
 
     /**
-     * Marks @CdiBean-annotated parameters on supplier methods as unremovable, walking
-     * the full transitive interface hierarchy so that parameters declared on parent
-     * interfaces are not removed by Arc's unused-bean pruning.
+     * Marks the beans of the parameters resolved from CDI as unremovable, walking the full type hierarchy of the
+     * agents so that parameters declared on parent types are not removed by Arc's unused-bean pruning.
      */
     @BuildStep
     void markCdiBeanParametersAsUnremovable(
             List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents,
             CombinedIndexBuildItem indexBuildItem,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
-        for (MethodParameterInfo param : cdiResolvableSupplierParams(detectedAiAgentBuildItems, indexBuildItem.getIndex())) {
+        for (MethodParameterInfo param : cdiResolvableParams(detectedAiAgentBuildItems, nonAiAgents,
+                indexBuildItem.getIndex())) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+        }
+    }
+
+    /**
+     * Requests the model beans of the providers for the parameters resolved from CDI whose type is a model, like
+     * {@code @CdiBean DecisionModel} or {@code @ModelName("planner") ChatModel}: the providers only create the model
+     * beans that are requested, and these parameters are not injection points. Parameters with other qualifiers are
+     * expected to be resolved by beans of the application.
+     */
+    @BuildStep
+    void requestModelBeansOfCdiResolvableParams(List<DetectedAiAgentBuildItem> aiAgents,
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents,
+            CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<RequestChatModelBeanBuildItem> requestChatModelProducer,
+            BuildProducer<RequestDecisionModelBeanBuildItem> requestDecisionModelProducer,
+            BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelProducer,
+            BuildProducer<RequestImageModelBeanBuildItem> requestImageModelProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        Set<String> chatModels = new HashSet<>();
+        Set<String> decisionModels = new HashSet<>();
+        Set<String> moderationModels = new HashSet<>();
+        Set<String> imageModels = new HashSet<>();
+        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents, index)) {
+            String modelName = modelName(ValidationUtil.qualifiers(param, index));
+            if (modelName == null) {
+                continue;
+            }
+            DotName type = param.type().name();
+            if (type.equals(LangChain4jDotNames.CHAT_MODEL)) {
+                chatModels.add(modelName);
+            } else if (type.equals(LangChain4jDotNames.DECISION_MODEL)) {
+                decisionModels.add(modelName);
+            } else if (type.equals(LangChain4jDotNames.MODERATION_MODEL)) {
+                moderationModels.add(modelName);
+            } else if (type.equals(LangChain4jDotNames.IMAGE_MODEL)) {
+                imageModels.add(modelName);
+            }
+        }
+        chatModels.forEach(name -> requestChatModelProducer.produce(new RequestChatModelBeanBuildItem(name)));
+        decisionModels.forEach(name -> requestDecisionModelProducer.produce(new RequestDecisionModelBeanBuildItem(name)));
+        moderationModels
+                .forEach(name -> requestModerationModelProducer.produce(new RequestModerationModelBeanBuildItem(name)));
+        imageModels.forEach(name -> requestImageModelProducer.produce(new RequestImageModelBeanBuildItem(name)));
+    }
+
+    /**
+     * The name of the model selected by the given qualifiers: the default model without qualifier, the one of
+     * {@code @ModelName}, or {@code null} for other qualifiers.
+     */
+    private static String modelName(List<AnnotationInstance> qualifiers) {
+        if (qualifiers.isEmpty()) {
+            return NamedConfigUtil.DEFAULT_NAME;
+        }
+        if (qualifiers.size() == 1 && qualifiers.get(0).name().equals(LangChain4jDotNames.MODEL_NAME)) {
+            return qualifiers.get(0).value().asString();
+        }
+        return null;
+    }
+
+    /**
+     * Fails the build when a parameter resolved from CDI does not resolve to exactly one bean, instead of failing when
+     * the agent invokes the method declaring it.
+     */
+    @BuildStep
+    void validateCdiResolvableParams(List<DetectedAiAgentBuildItem> aiAgents,
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents,
+            CombinedIndexBuildItem indexBuildItem,
+            ValidationPhaseBuildItem validationPhase,
+            BuildProducer<ValidationErrorBuildItem> validationErrors) {
+        IndexView index = indexBuildItem.getIndex();
+        BeanResolver beanResolver = validationPhase.getBeanResolver();
+        List<Throwable> errors = new ArrayList<>();
+        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents, index)) {
+            Set<AnnotationInstance> qualifiers = new HashSet<>(ValidationUtil.qualifiers(param, index));
+            if (qualifiers.isEmpty()) {
+                qualifiers.add(AnnotationInstance.builder(io.quarkus.arc.processor.DotNames.DEFAULT).build());
+            }
+            // like at runtime, the bean is looked up by the raw type of the parameter
+            Type type = ClassType.create(param.type().name());
+            Set<BeanInfo> beans = beanResolver.resolveBeans(type, qualifiers);
+            String parameterDescription = "parameter no.%d of method '%s' of class '%s'".formatted(
+                    param.position(), param.method().name(), param.method().declaringClass().name());
+            if (beans.isEmpty()) {
+                errors.add(new IllegalConfigurationException(
+                        "No CDI bean of type '%s' with qualifiers %s is available for %s".formatted(
+                                type.name(), qualifiers, parameterDescription)));
+                continue;
+            }
+            BeanInfo bean;
+            try {
+                bean = beanResolver.resolveAmbiguity(beans);
+            } catch (RuntimeException e) {
+                errors.add(new IllegalConfigurationException(
+                        "Ambiguous CDI beans of type '%s' with qualifiers %s for %s: %s".formatted(
+                                type.name(), qualifiers, parameterDescription, beans)));
+                continue;
+            }
+            if (BuiltinScope.DEPENDENT.is(bean.getScope())) {
+                log.warnf("The @Dependent bean %s is created again, and never destroyed, at each invocation of %s. "
+                        + "Consider giving it a normal scope, like @ApplicationScoped.", bean, parameterDescription);
+            }
+        }
+        if (!errors.isEmpty()) {
+            validationErrors.produce(new ValidationErrorBuildItem(errors));
         }
     }
 
@@ -781,11 +1020,13 @@ public class AgenticProcessor {
             CombinedIndexBuildItem indexBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
+            BuildProducer<RequestDecisionModelBeanBuildItem> requestDecisionModelBeanProducer,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
 
         Set<DotName> interceptorBindings = interceptorResolverBuildItem.getInterceptorBindings();
         IndexView index = indexBuildItem.getIndex();
         Set<String> requestedChatModelNames = new HashSet<>();
+        Set<String> requestedDecisionModelNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
             AiAgentCreateInfo.ChatModelInfo chatModelInfo;
             if (detectedAiAgentBuildItem.getChatModelSupplier() != null) {
@@ -800,9 +1041,21 @@ public class AgenticProcessor {
                 chatModelInfo = new AiAgentCreateInfo.ChatModelInfo.NotNeeded();
             }
 
+            AiAgentCreateInfo.DecisionModelInfo decisionModelInfo = null;
+            if (detectedAiAgentBuildItem.isDecisionAgent()) {
+                if (detectedAiAgentBuildItem.getDecisionAgent().decisionModelSupplier() != null) {
+                    decisionModelInfo = new AiAgentCreateInfo.DecisionModelInfo.FromAnnotation();
+                } else {
+                    String decisionModelName = detectedAiAgentBuildItem.getModelName() != null
+                            ? detectedAiAgentBuildItem.getModelName()
+                            : NamedConfigUtil.DEFAULT_NAME;
+                    requestedDecisionModelNames.add(decisionModelName);
+                    decisionModelInfo = new AiAgentCreateInfo.DecisionModelInfo.FromBeanWithName(decisionModelName);
+                }
+            }
+
             boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings, index);
-            String ifaceName = detectedAiAgentBuildItem.getIface().name().toString();
-            String implClassName = ifaceName + "$$QuarkusAgentImpl";
+            String implClassName = implClassName(detectedAiAgentBuildItem);
 
             boolean hasMcpToolBox = !detectedAiAgentBuildItem.getMcpToolBoxMethods().isEmpty();
 
@@ -821,7 +1074,7 @@ public class AgenticProcessor {
                     .createWith(recorder
                             .createAiAgent(
                                     new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,
-                                            hasInterceptorBindings, hasMcpToolBox)))
+                                            hasInterceptorBindings, hasMcpToolBox, decisionModelInfo)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
             if (hasInterceptorBindings) {
@@ -836,6 +1089,10 @@ public class AgenticProcessor {
                 }
                 beanConfigurator.addInjectionPoint(
                         ClassType.create(DotName.createSimple(dev.langchain4j.model.chat.ChatModel.class)), qualifier);
+            }
+            if (decisionModelInfo instanceof AiAgentCreateInfo.DecisionModelInfo.FromBeanWithName f) {
+                beanConfigurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.DECISION_MODEL),
+                        modelQualifier(f.name()));
             }
             beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                     new Type[] { ClassType.create(LangChain4jDotNames.TOOL_PROVIDER) }, null));
@@ -869,6 +1126,20 @@ public class AgenticProcessor {
         }
 
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
+        requestedDecisionModelNames
+                .forEach(name -> requestDecisionModelBeanProducer.produce(new RequestDecisionModelBeanBuildItem(name)));
+    }
+
+    private static AnnotationInstance modelQualifier(String modelName) {
+        if (NamedConfigUtil.isDefault(modelName)) {
+            return AnnotationInstance.builder(Default.class).build();
+        }
+        return AnnotationInstance.builder(ModelName.class).add("value", modelName).build();
+    }
+
+    private static String implClassName(DetectedAiAgentBuildItem agent) {
+        return agent.getIface().name().toString()
+                + (agent.isDecisionAgent() ? "$$QuarkusDecisionAgentImpl" : "$$QuarkusAgentImpl");
     }
 
     private static boolean isInterceptorBindingAnnotation(AnnotationInstance ann, IndexView index) {
@@ -922,11 +1193,13 @@ public class AgenticProcessor {
     }
 
     private static boolean requiresChatModel(DetectedAiAgentBuildItem agent) {
+        if (agent.isDecisionAgent()) {
+            return false;
+        }
         return agent.getAgenticMethods().stream()
                 .flatMap(m -> m.annotations().stream())
                 .map(AnnotationInstance::name)
-                .anyMatch(name -> AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.contains(name)
-                        && !CHAT_MODEL_NOT_REQUIRED_ANNOTATIONS.contains(name));
+                .anyMatch(CHAT_MODEL_AGENT_ANNOTATIONS::contains);
     }
 
     @BuildStep
@@ -941,19 +1214,65 @@ public class AgenticProcessor {
         IndexView index = indexBuildItem.getIndex();
         Map<String, AgentClassCreateInfo> metadata = new HashMap<>();
 
+        Map<String, DecisionAgentInfo> decisionAgents = new HashMap<>();
+
         for (DetectedAiAgentBuildItem bi : detectedAiAgentBuildItems) {
             String ifaceName = bi.getIface().name().toString();
-            String implClassName = ifaceName + "$$QuarkusAgentImpl";
+            String implClassName = implClassName(bi);
             boolean isLeaf = bi.getAgenticMethods().stream()
                     .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.AGENT));
 
-            generateAgentClass(classOutput, bi.getIface(), implClassName, isLeaf, index);
+            generateAgentClass(classOutput, bi.getIface(), implClassName, isLeaf, bi.isDecisionAgent(), index);
 
             metadata.put(ifaceName, new AgentClassCreateInfo(implClassName));
             reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(implClassName).build());
+
+            DetectedAiAgentBuildItem.DecisionAgent decisionAgent = bi.getDecisionAgent();
+            if (decisionAgent != null) {
+                decisionAgents.put(ifaceName, new DecisionAgentInfo(decisionAgent.agentName(),
+                        decisionAgent.booleanAnswer(), decisionAgent.decisionThresholdSupplier() != null));
+            }
         }
 
         recorder.setAgentClassMetadata(metadata);
+        recorder.setDecisionAgents(decisionAgents);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void validateDecisionAgentConfig(AgenticRecorder recorder) {
+        recorder.validateDecisionAgentConfig();
+    }
+
+    /**
+     * Registers for reflection what upstream reads by reflection to implement a decision agent, which is not loaded at
+     * build time: the agent interface, whose {@code @Agent} method is looked up, the object returned by the method, the
+     * enums of its answers, whose constant fields are read for {@code @Description}, and the objects sent to the model,
+     * which are converted with the JSON codec.
+     */
+    @BuildStep
+    void registerDecisionAgentsForReflection(List<DetectedAiAgentBuildItem> agents, CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        Set<String> interfaces = new HashSet<>();
+        Set<String> types = new HashSet<>();
+        for (DetectedAiAgentBuildItem agent : agents) {
+            if (agent.isDecisionAgent()) {
+                for (ClassInfo iface : ValidationUtil.transitiveInterfaces(agent.getIface(), index)) {
+                    interfaces.add(iface.name().toString());
+                }
+                DecisionTypes.reflectiveTypes(agent.getDecisionAgent().agentMethod(), index)
+                        .forEach(type -> types.add(type.toString()));
+            }
+        }
+        if (!interfaces.isEmpty()) {
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(interfaces.toArray(new String[0]))
+                    .methods().reason(AgenticProcessor.class.getName()).build());
+        }
+        if (!types.isEmpty()) {
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(types.toArray(new String[0]))
+                    .constructors().methods().fields().reason(AgenticProcessor.class.getName()).build());
+        }
     }
 
     /**
@@ -965,7 +1284,6 @@ public class AgenticProcessor {
      *         extends AbstractQuarkusAgent
      *         implements CarConditionFeedbackAgent,
      *         ChatMemoryAccess,
-     *         ChatMessagesAccess,
      *         AiServiceResponseReceivedListener {
      *     private static Method METHOD_agent_analyzeForCondition_1;
      *
@@ -1004,29 +1322,30 @@ public class AgenticProcessor {
      * </pre>
      */
     private void generateAgentClass(ClassOutput classOutput, ClassInfo agentIface, String implClassName,
-            boolean isLeaf, IndexView index) {
+            boolean isLeaf, boolean isDecisionAgent, IndexView index) {
         String ifaceName = agentIface.name().toString();
+        // the base class of a decision agent brings no chat interface
+        Class<?> superClass = isDecisionAgent ? AbstractQuarkusDecisionAgent.class : AbstractQuarkusAgent.class;
 
         List<String> interfaces = new ArrayList<>();
         interfaces.add(ifaceName);
-        if (isLeaf) {
+        if (!isDecisionAgent && isLeaf) {
             interfaces.add(ChatMemoryAccess.class.getName());
-            interfaces.add(ChatMessagesAccess.class.getName());
             interfaces.add(AiServiceResponseReceivedListener.class.getName());
-        } else {
+        } else if (!isDecisionAgent) {
             interfaces.add(AgenticScopeAccess.class.getName());
         }
 
         try (ClassCreator cc = ClassCreator.builder()
                 .classOutput(classOutput)
                 .className(implClassName)
-                .superClass(AbstractQuarkusAgent.class.getName())
+                .superClass(superClass.getName())
                 .interfaces(interfaces.toArray(new String[0]))
                 .build()) {
 
             try (MethodCreator ctor = cc.getMethodCreator(MethodDescriptor.INIT, "V")) {
                 ctor.setModifiers(Modifier.PUBLIC);
-                ctor.invokeSpecialMethod(MethodDescriptor.ofConstructor(AbstractQuarkusAgent.class), ctor.getThis());
+                ctor.invokeSpecialMethod(MethodDescriptor.ofConstructor(superClass), ctor.getThis());
                 ctor.returnVoid();
             }
 
@@ -1034,7 +1353,7 @@ public class AgenticProcessor {
                     InternalAgent.class.getName())) {
                 ctor.setModifiers(Modifier.PUBLIC);
                 ctor.invokeSpecialMethod(
-                        MethodDescriptor.ofConstructor(AbstractQuarkusAgent.class, InternalAgent.class),
+                        MethodDescriptor.ofConstructor(superClass, InternalAgent.class),
                         ctor.getThis(), ctor.getMethodParam(0));
                 ctor.returnVoid();
             }
@@ -1261,6 +1580,7 @@ public class AgenticProcessor {
         Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap = detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap();
         Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap = detectedNonAiAgentAsMapBuildItem
                 .getClassToNonAiAgentMethodsMap();
+        IndexView index = indexBuildItem.getIndex();
 
         OutputKeyBuildItem.Builder builder = OutputKeyBuildItem.of();
         for (var entry : ifaceToAgentMethodsMap.entrySet()) {
@@ -1279,8 +1599,10 @@ public class AgenticProcessor {
                         if (subAgentsValue != null) {
                             // The first argument of the subagent method of a ParallelMapperAgent is implicitly passed by the mapper
                             subagentMethod(subAgentsValue.asClass().name(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap)
-                                    .ifPresent(subAgentMethod -> {
-                                        String parameterName = determineParameterName(subAgentMethod.parameters().get(0));
+                                    .map(subAgentMethod -> ValidationUtil.nonCdiParameters(subAgentMethod, index))
+                                    .filter(parameters -> !parameters.isEmpty())
+                                    .ifPresent(parameters -> {
+                                        String parameterName = determineParameterName(parameters.get(0));
                                         builder.addUserProvidedKey(parameterName);
                                     });
                         }
@@ -1323,7 +1645,6 @@ public class AgenticProcessor {
 
         // we need to go through the supervisor agents and mark the method parameters of all agents that are part
         // of the supervisor agent system
-        IndexView index = indexBuildItem.getIndex();
         index.getAnnotations(AgenticLangChain4jDotNames.SUPERVISOR_AGENT).forEach(instance -> {
             AnnotationValue subAgentsValue = instance.value("subAgents");
             if (subAgentsValue == null) {
@@ -1339,7 +1660,7 @@ public class AgenticProcessor {
             });
             for (Type subAgentType : subAgentsValue.asClassArray()) {
                 ifaceToAgentMethodsMap.getOrDefault(subAgentType.name(), Collections.emptyList()).forEach(mi -> {
-                    List<MethodParameterInfo> parameters = mi.parameters();
+                    List<MethodParameterInfo> parameters = ValidationUtil.nonCdiParameters(mi, index);
                     parameters.forEach(pi -> {
                         String parameterName = determineParameterName(pi);
                         builder.addSupervisedKeys(parameterName);
@@ -1353,7 +1674,7 @@ public class AgenticProcessor {
             DotName requiredName = ip.getRequiredType().name();
             List<MethodInfo> agentMethods = ifaceToAgentMethodsMap.getOrDefault(requiredName, Collections.emptyList());
             agentMethods.forEach(mi -> {
-                List<MethodParameterInfo> parameters = mi.parameters();
+                List<MethodParameterInfo> parameters = ValidationUtil.nonCdiParameters(mi, index);
                 parameters.forEach(pi -> {
                     String parameterName = determineParameterName(pi);
                     builder.addUserProvidedKey(parameterName);
@@ -1419,6 +1740,10 @@ public class AgenticProcessor {
                 List<MethodParameterInfo> parameters = method.parameters();
                 for (int i = 0; i < parameters.size(); i++) {
                     MethodParameterInfo parameter = parameters.get(i);
+                    // resolved from CDI, not from the AgenticScope
+                    if (ValidationUtil.isCdiResolvable(parameter, index)) {
+                        continue;
+                    }
                     String parameterName = determineParameterName(parameter);
                     if ((parameterName == null)) {
                         continue;

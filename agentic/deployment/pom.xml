@@ -58,6 +58,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>dev.langchain4j</groupId>
+      <artifactId>langchain4j-agentic-patterns</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-skills-deployment</artifactId>
       <version>${project.version}</version>
