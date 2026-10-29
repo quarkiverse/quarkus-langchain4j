@@ -40,7 +40,6 @@ import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
-import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
@@ -965,7 +964,6 @@ public class AgenticProcessor {
      *         extends AbstractQuarkusAgent
      *         implements CarConditionFeedbackAgent,
      *         ChatMemoryAccess,
-     *         ChatMessagesAccess,
      *         AiServiceResponseReceivedListener {
      *     private static Method METHOD_agent_analyzeForCondition_1;
      *
@@ -1011,7 +1009,6 @@ public class AgenticProcessor {
         interfaces.add(ifaceName);
         if (isLeaf) {
             interfaces.add(ChatMemoryAccess.class.getName());
-            interfaces.add(ChatMessagesAccess.class.getName());
             interfaces.add(AiServiceResponseReceivedListener.class.getName());
         } else {
             interfaces.add(AgenticScopeAccess.class.getName());

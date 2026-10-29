@@ -80,6 +80,7 @@
 *** xref:azure-openai-audio-transcription-model.adoc[Azure OpenAI]
 *** xref:openai-audio-transcription-model.adoc[OpenAI]
 ** Decision Models
+*** xref:ollama-decision-model.adoc[Ollama]
 *** xref:openai-decision-model.adoc[OpenAI]
 *** xref:typesafe-decision-model.adoc[TypeSafe]
 ** xref:enable-disable-integrations.adoc[Enabling and Disabling Integrations]

@@ -185,7 +185,7 @@ public class OpenAiDecisionModelTest extends OpenAiBaseTest {
                         .confidence(0.81)
                         .options(List.of("billing", "support"))
                         .build());
-        assertThat(response.yesNo("urgent")).isEqualTo(YesNoAnswer.of(0.95));
+        assertThat(response.yesNo("urgent")).isEqualTo(YesNoAnswer.from(0.95));
         assertThat(response.scale("frustration"))
                 .isEqualTo(ScaleAnswer.builder()
                         .mean(1.44)
@@ -245,10 +245,10 @@ public class OpenAiDecisionModelTest extends OpenAiBaseTest {
                         """)));
 
         DecisionResponse response = defaultModel.decide(DecisionRequest.builder()
-                .input(List.of(
+                .inputContents(List.of(
                         TextContent.from("The customer attached this photo."),
                         ImageContent.from("iVBORw0KGgo=", "image/png", ImageContent.DetailLevel.LOW)))
-                .question("damaged", YesNoQuestion.of("Is the item visibly damaged?"))
+                .question("damaged", YesNoQuestion.from("Is the item visibly damaged?"))
                 .build());
 
         assertThat(response.yesNo("damaged").probability()).isEqualTo(0.2);
