@@ -1,0 +1,212 @@
+= Decision Services
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+A _Decision Service_ is an interface whose methods are each implemented by a single call to a decision model.
+The questions come from the `@Decide` annotations of the methods, the input of the decision from their arguments, and the answers are mapped to their return types.
+It is to a decision model what an xref:ai-services.adoc[AI Service] is to a chat model: a typed, injectable facade that hides the requests and the responses of the model.
+
+A decision model evaluates an input against named, typed questions and returns one answer per question, with its probabilities, instead of generated text.
+This makes Decision Services a good fit for classification, routing, gating and grading: they are cheaper and faster than a chat model, and their answers can't be malformed.
+
+WARNING: Decision Services and the `DecisionModel` API are experimental in LangChain4j and may change in future releases.
+
+== Declaring a Decision Service
+
+Annotate an interface with `@RegisterDecisionService`, and each of its methods with `@Decide`, which contains the question:
+
+[source,java]
+----
+import dev.langchain4j.service.decision.Decide;
+import io.quarkiverse.langchain4j.RegisterDecisionService;
+
+@RegisterDecisionService
+public interface SpamFilter {
+
+    @Decide("Is this message spam?")
+    boolean isSpam(String message);
+}
+----
+
+Then inject it as any other bean:
+
+[source,java]
+----
+@Inject
+SpamFilter spamFilter;
+
+public void receive(String message) {
+    if (spamFilter.isSpam(message)) {
+        // ...
+    }
+}
+----
+
+The arguments of a method are the input of the decision, sent to the model with the parameter names.
+Strings, numbers and booleans are sent as they are, enums as their names, maps and lists item by item, and other objects are converted to maps.
+`Content` and `Image` arguments, like an `ImageContent`, are sent as contents.
+A `DecisionRequestParameters` parameter is not part of the input: it overrides the parameters of the request, like the model name, for one invocation.
+
+The default and `static` methods of the interface are not implemented by the decision model, and the methods of its parent interfaces are.
+
+== Return Types
+
+The return type of a method determines the questions asked:
+
+|===
+|Return type |Question |Answer
+
+|`boolean`
+|A yes/no question
+|`true` when the probability of "yes" reaches the threshold, see <<_thresholds>>
+
+|`YesNoAnswer`
+|A yes/no question
+|The probability of "yes"
+
+|An enum
+|A choice among its constants, described to the model by their `@Description`, if any
+|The chosen constant
+
+|`Choice<E>`
+|A choice among the constants of the enum `E`
+|The chosen constant and the probability of each of them
+
+|`Scale<E>`
+|A scale whose levels are the constants of the enum `E`, in declaration order
+|The mean level and the probability of each level
+
+|A record or a class whose fields are annotated with `@Decide`
+|One question per field, of one of the types above, all asked in a single call
+|An instance with the answers in its fields
+|===
+
+Each of them can be wrapped in `DecisionResult`, to also get the response of the model, with its token usage and model name, and in `CompletableFuture`, to invoke the model asynchronously.
+
+[source,java]
+----
+public enum Team {
+    @Description("Payments, payouts, invoices and refunds")
+    BILLING,
+    @Description("Problems using the product")
+    SUPPORT
+}
+
+public record Triage(
+        @Decide("Which team should handle this ticket?") Team team,
+        @Decide("Does this ticket need attention today?") boolean urgent) {
+}
+
+@RegisterDecisionService
+public interface TicketDesk {
+
+    @Decide("Which team should handle this ticket?")
+    Choice<Team> route(String ticket);
+
+    // no @Decide on the method: the questions are the ones of the fields of Triage
+    Triage triage(String ticket);
+
+    @Decide("Does this ticket need attention today?")
+    CompletableFuture<DecisionResult<Boolean>> isUrgent(String ticket, ImageContent screenshot);
+}
+----
+
+The build fails when a method has another return type, when a method returning a single answer is not annotated with `@Decide`, when a method returning an object is, or when the interface uses `@UserMessage` or `@SystemMessage`.
+The other rules, like the presence of the parameter names, are checked when the service bean is created.
+
+== Choosing the Decision Model
+
+A Decision Service uses the default `DecisionModel` bean, configured through the decision model provider, for instance xref:openai-decision-model.adoc[OpenAI] or xref:typesafe-decision-model.adoc[TypeSafe].
+The `modelName` attribute selects a named decision model:
+
+[source,java]
+----
+@RegisterDecisionService(modelName = "fraud")
+public interface FraudCheck {
+
+    @Decide("Does this transaction look fraudulent?")
+    boolean isFraudulent(Transaction transaction);
+}
+----
+
+[source,properties]
+----
+quarkus.langchain4j.openai.fraud.api-key=sk-...
+quarkus.langchain4j.openai.fraud.decision-model.model-name=gpt-6-luna
+----
+
+== Thresholds
+
+A `boolean` answer is `true` when the probability of "yes" is at least the threshold, which is 0.5 by default.
+Thresholds are specific to a decision model and to its version, so they can be configured for each service, and for each model answering it, using the simple name of the interface:
+
+[source,properties]
+----
+quarkus.langchain4j.decision-service."FraudCheck".threshold=0.7
+quarkus.langchain4j.decision-service."FraudCheck".threshold-by-model."gpt-6-luna"=0.6
+----
+
+The threshold of the model that answered takes precedence over the one of the service.
+The configuration is read once at startup.
+
+For thresholds that depend on the question, or that change at runtime, declare a bean implementing `ThresholdProvider`.
+It is used by every Decision Service, which can be told apart with `ThresholdContext.serviceInterface()`, and it takes precedence over the configuration:
+
+[source,java]
+----
+@ApplicationScoped
+public class Thresholds implements ThresholdProvider {
+
+    @Inject
+    FraudSettings settings;
+
+    @Override
+    public Double threshold(ThresholdContext context) {
+        if (context.serviceInterface() == FraudCheck.class) {
+            return settings.threshold(context.modelName());
+        }
+        return null; // the default of 0.5
+    }
+}
+----
+
+The application fails to start when a threshold is not between 0 and 1, or when it is configured for a service that has no `boolean` answer or while a `ThresholdProvider` bean exists, since it would have no effect, and when several `ThresholdProvider` beans exist.
+A key that matches no Decision Service logs a warning.
+
+== Scope and Interceptors
+
+The bean of a Decision Service is `@ApplicationScoped`, since it keeps no state.
+The `scope` attribute of `@RegisterDecisionService` changes it.
+
+Interceptor bindings declared on the interface or on its methods are applied, for instance the annotations of SmallRye Fault Tolerance:
+
+[source,java]
+----
+@RegisterDecisionService
+public interface SpamFilter {
+
+    @Decide("Is this message spam?")
+    @Retry(maxRetries = 2)
+    @Timeout(2000)
+    boolean isSpam(String message);
+}
+----
+
+== Native Image
+
+The interfaces of the Decision Services, the records, classes and enums of their answers, and the types of their arguments that are converted to maps are registered for reflection automatically.
+
+== Decision Services and Decision Agents
+
+A Decision Service is meant to be called from application code.
+Inside an xref:agentic.adoc[agentic system], use a xref:agentic.adoc#_decision_agents[decision agent] instead: its arguments are read from the `AgenticScope`, its answer is written to it, and it is reported to the listeners and to the monitor of the system.
+Invoking a decision agent directly works, but logs a warning.
+
+== Related Guides
+
+[.lead]
+* xref:openai-decision-model.adoc[OpenAI Decision Models]
+* xref:typesafe-decision-model.adoc[TypeSafe Decision Models]
+* xref:agentic.adoc#_decision_agents[Decision Agents]

@@ -96,6 +96,7 @@ public class BeansProcessor {
             List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
             List<RequestModerationModelBeanBuildItem> requestModerationModelBeanBuildItems,
             List<RequestImageModelBeanBuildItem> requestImageModelBeanBuildItems,
+            List<RequestDecisionModelBeanBuildItem> requestDecisionModelBeanBuildItems,
             List<ImplicitlyUserConfiguredChatProviderBuildItem> userConfiguredProviderBuildItems,
             LangChain4jBuildConfig buildConfig,
             Optional<AutoCreateEmbeddingModelBuildItem> autoCreateEmbeddingModelBuildItem,
@@ -180,6 +181,9 @@ public class BeansProcessor {
         }
         for (var bi : requestImageModelBeanBuildItems) {
             requestedImageModels.add(bi.getConfigName());
+        }
+        for (var bi : requestDecisionModelBeanBuildItems) {
+            requestedDecisionModels.add(bi.getConfigName());
         }
 
         if (!requestedChatModels.isEmpty() || !requestedStreamingChatModels.isEmpty() || !tokenCountEstimators.isEmpty()) {

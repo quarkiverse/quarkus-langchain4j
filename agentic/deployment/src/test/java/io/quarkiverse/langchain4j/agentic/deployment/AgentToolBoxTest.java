@@ -25,12 +25,12 @@ import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class AgentToolBoxTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(CalculatorTool.class, ToolBoxAgent.class, ToolCallModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")

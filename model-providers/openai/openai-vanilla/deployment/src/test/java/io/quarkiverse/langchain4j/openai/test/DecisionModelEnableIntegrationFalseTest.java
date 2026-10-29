@@ -28,7 +28,7 @@ public class DecisionModelEnableIntegrationFalseTest extends OpenAiBaseTest {
 
     private static final DecisionRequest REQUEST = DecisionRequest.builder()
             .input("Congratulations! You won a free cruise!")
-            .question("spam", YesNoQuestion.of("Is this message spam?"))
+            .question("spam", YesNoQuestion.from("Is this message spam?"))
             .build();
 
     @Inject

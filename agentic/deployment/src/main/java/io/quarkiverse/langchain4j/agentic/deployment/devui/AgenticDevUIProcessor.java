@@ -37,6 +37,8 @@ public class AgenticDevUIProcessor {
 
     private static final List<DotName> CONFIG_ANNOTATIONS = List.of(
             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER,
+            AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER,
+            AgenticLangChain4jDotNames.DECISION_THRESHOLD_SUPPLIER,
             AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER,
             AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER,
             AgenticLangChain4jDotNames.CONTENT_RETRIEVER_SUPPLIER,
@@ -203,6 +205,10 @@ public class AgenticDevUIProcessor {
                 // First matching agent annotation wins (an agent method has exactly one)
                 break;
             }
+        }
+
+        if (agent.isDecisionAgent()) {
+            agentType = "DecisionAgent";
         }
 
         List<String> methods = agent.getAgenticMethods().stream()

@@ -97,6 +97,53 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+h|[.extension-name]##LangChain4j Agentic##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-agentic_quarkus-langchain4j-agentic-decision-agent-agent-name-threshold]] [.property-path]##link:#quarkus-langchain4j-agentic_quarkus-langchain4j-agentic-decision-agent-agent-name-threshold[`+++quarkus.langchain4j.agentic.decision-agent."agent-name".threshold+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.agentic.decision-agent."agent-name".threshold+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The threshold of the `boolean` answers of this agent, between 0 and 1: an answer is `true` when the probability of "yes" is at least the threshold. 0.5 when absent.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AGENTIC_DECISION_AGENT__AGENT_NAME__THRESHOLD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AGENTIC_DECISION_AGENT__AGENT_NAME__THRESHOLD+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-agentic_quarkus-langchain4j-agentic-decision-agent-agent-name-threshold-by-model-model-name]] [.property-path]##link:#quarkus-langchain4j-agentic_quarkus-langchain4j-agentic-decision-agent-agent-name-threshold-by-model-model-name[`+++quarkus.langchain4j.agentic.decision-agent."agent-name".threshold-by-model."model-name"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.agentic.decision-agent."agent-name".threshold-by-model."model-name"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The threshold to use when the given decision model answered, keyed by model name, overriding `threshold`. Thresholds are specific to a decision model and to its version.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AGENTIC_DECISION_AGENT__AGENT_NAME__THRESHOLD_BY_MODEL__MODEL_NAME_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AGENTIC_DECISION_AGENT__AGENT_NAME__THRESHOLD_BY_MODEL__MODEL_NAME_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,Double>
+|
+
+
 h|[.extension-name]##LangChain4j Easy RAG##
 h|Type
 h|Default
@@ -12676,6 +12723,48 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold[`+++quarkus.langchain4j.decision-service."decision-service-name".threshold+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.decision-service."decision-service-name".threshold+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The threshold of the `boolean` answers of this Decision Service, between 0 and 1: an answer is `true` when the probability of "yes" is at least the threshold. 0.5 when absent.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold-by-model-model-name]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold-by-model-model-name[`+++quarkus.langchain4j.decision-service."decision-service-name".threshold-by-model."model-name"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.decision-service."decision-service-name".threshold-by-model."model-name"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The threshold to use when the given decision model answered, keyed by model name, overriding `threshold`. Thresholds are specific to a decision model and to its version.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD_BY_MODEL__MODEL_NAME_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD_BY_MODEL__MODEL_NAME_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,Double>
+|
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions[[.line-through]#`+++quarkus.langchain4j.ai-service.max-tool-executions+++`#]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ai-service.max-tool-executions+++[]
@@ -19736,6 +19825,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-enabled]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-enabled[`+++quarkus.langchain4j.ollama.decision-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.decision-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-enabled[`+++quarkus.langchain4j.ollama.devservices.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ollama.devservices.enabled+++[]
@@ -19863,6 +19973,27 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`+++nomic-embed-text+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-model-id[`+++quarkus.langchain4j.ollama.decision-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.decision-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model to use. Ollama runs link:https://docs.ollama.com/capabilities/decision[decision models] such as `nimble`, `tev1` and `clef` locally, the model must be pulled first (`ollama pull nimble`)
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++nimble+++`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url[`+++quarkus.langchain4j.ollama.base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -20541,6 +20672,48 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-log-requests[`+++quarkus.langchain4j.ollama.decision-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.decision-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether decision model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-decision-model-log-responses[`+++quarkus.langchain4j.ollama.decision-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.decision-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether decision model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DECISION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 h|[[quarkus-langchain4j-ollama_section_quarkus-langchain4j-ollama]] [.section-name.section-level0]##link:#quarkus-langchain4j-ollama_section_quarkus-langchain4j-ollama[Named model config]##
 h|Type
 h|Default
@@ -20586,6 +20759,27 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`+++nomic-embed-text+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-decision-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-decision-model-model-id[`+++quarkus.langchain4j.ollama."model-name".decision-model.model-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".decision-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model to use. Ollama runs link:https://docs.ollama.com/capabilities/decision[decision models] such as `nimble`, `tev1` and `clef` locally, the model must be pulled first (`ollama pull nimble`)
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__DECISION_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__DECISION_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++nimble+++`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url[`+++quarkus.langchain4j.ollama."model-name".base-url+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -21259,6 +21453,48 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MO
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-decision-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-decision-model-log-requests[`+++quarkus.langchain4j.ollama."model-name".decision-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".decision-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether decision model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__DECISION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__DECISION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-decision-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-decision-model-log-responses[`+++quarkus.langchain4j.ollama."model-name".decision-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".decision-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether decision model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__DECISION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__DECISION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

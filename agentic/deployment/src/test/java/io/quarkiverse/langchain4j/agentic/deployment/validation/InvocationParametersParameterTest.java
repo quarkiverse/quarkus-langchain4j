@@ -15,7 +15,7 @@ import dev.langchain4j.agentic.declarative.BeforeCall;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.invocation.InvocationParameters;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * A sub-agent can declare an {@link InvocationParameters} parameter that no agent outputs: langchain4j-agentic fills it
@@ -24,7 +24,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class InvocationParametersParameterTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject

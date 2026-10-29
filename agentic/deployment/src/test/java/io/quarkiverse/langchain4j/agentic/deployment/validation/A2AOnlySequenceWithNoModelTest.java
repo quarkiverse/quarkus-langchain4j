@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agentic.declarative.A2AClientAgent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.service.V;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that https://github.com/quarkiverse/quarkus-langchain4j/issues/2630 is fixed:
@@ -23,7 +23,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class A2AOnlySequenceWithNoModelTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(StoryGenerator.class, StoryEditor.class, StoryPipeline.class));
 

@@ -3,12 +3,15 @@ package io.quarkiverse.langchain4j.runtime.config;
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j")
@@ -57,4 +60,13 @@ public interface LangChain4jConfig {
      * AI Service configuration
      */
     AiServiceConfig aiService();
+
+    /**
+     * The thresholds of the {@code boolean} answers of the Decision Services registered with
+     * {@code @RegisterDecisionService}, keyed by the simple name of their interface. They are used when there is no
+     * {@code ThresholdProvider} bean, and are read once at startup.
+     */
+    @WithName("decision-service")
+    @ConfigDocMapKey("decision-service-name")
+    Map<String, DecisionServiceThresholdsConfig> decisionServices();
 }

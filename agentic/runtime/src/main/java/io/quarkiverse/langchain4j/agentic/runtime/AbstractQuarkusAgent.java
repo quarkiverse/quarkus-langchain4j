@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
@@ -17,10 +16,7 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.agentic.scope.AgenticScopeRegistry;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
-import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.observability.api.event.AiServiceEvent;
 import dev.langchain4j.observability.api.listener.AiServiceListener;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
@@ -37,10 +33,6 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
 
     private static final Method METHOD_getChatMemory;
     private static final Method METHOD_evictChatMemory;
-    private static final Method METHOD_lastUserMessage;
-    private static final Method METHOD_lastChatRequest;
-    private static final Method METHOD_lastChatResponse;
-    private static final Method METHOD_removeLastResponseEvent;
     private static final Method METHOD_getEventClass;
     private static final Method METHOD_onEvent;
     private static final Method METHOD_getAgenticScope;
@@ -55,10 +47,6 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
 
             METHOD_getChatMemory = ChatMemoryAccess.class.getMethod("getChatMemory", Object.class);
             METHOD_evictChatMemory = ChatMemoryAccess.class.getMethod("evictChatMemory", Object.class);
-            METHOD_lastUserMessage = ChatMessagesAccess.class.getMethod("lastUserMessage", Object.class);
-            METHOD_lastChatRequest = ChatMessagesAccess.class.getMethod("lastChatRequest", Object.class);
-            METHOD_lastChatResponse = ChatMessagesAccess.class.getMethod("lastChatResponse", Object.class);
-            METHOD_removeLastResponseEvent = ChatMessagesAccess.class.getMethod("removeLastResponseEvent", Object.class);
             METHOD_getEventClass = AiServiceListener.class.getMethod("getEventClass");
             METHOD_onEvent = AiServiceListener.class.getMethod("onEvent", AiServiceEvent.class);
             METHOD_getAgenticScope = AgenticScopeAccess.class.getMethod("getAgenticScope", Object.class);
@@ -258,48 +246,6 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
     public boolean evictChatMemory(Object memoryId) {
         try {
             return (boolean) invokeOnAgent(METHOD_evictChatMemory, new Object[] { memoryId });
-        } catch (RuntimeException | Error e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // ChatMessagesAccess delegation
-
-    public UserMessage lastUserMessage(Object memoryId) {
-        try {
-            return (UserMessage) invokeOnAgent(METHOD_lastUserMessage, new Object[] { memoryId });
-        } catch (RuntimeException | Error e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public ChatRequest lastChatRequest(Object memoryId) {
-        try {
-            return (ChatRequest) invokeOnAgent(METHOD_lastChatRequest, new Object[] { memoryId });
-        } catch (RuntimeException | Error e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public ChatResponse lastChatResponse(Object memoryId) {
-        try {
-            return (ChatResponse) invokeOnAgent(METHOD_lastChatResponse, new Object[] { memoryId });
-        } catch (RuntimeException | Error e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void removeLastResponseEvent(Object memoryId) {
-        try {
-            invokeOnAgent(METHOD_removeLastResponseEvent, new Object[] { memoryId });
         } catch (RuntimeException | Error e) {
             throw e;
         } catch (Throwable e) {
