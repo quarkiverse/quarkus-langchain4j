@@ -17,7 +17,7 @@
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>4.0.0.Beta1</quarkus.platform.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
-        <quarkus-langchain4j.version>2.0.0.Beta1</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
     </properties>
 
     <dependencyManagement>
@@ -59,6 +59,10 @@
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-workload-model-auth-provider</artifactId>
             <version>${quarkus-langchain4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-spiffe-client</artifactId>
         </dependency>
     </dependencies>
 
