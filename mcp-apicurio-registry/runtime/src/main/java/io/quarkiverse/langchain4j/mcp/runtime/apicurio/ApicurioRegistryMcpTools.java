@@ -1,8 +1,14 @@
 package io.quarkiverse.langchain4j.mcp.runtime.apicurio;
 
+import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
@@ -14,6 +20,7 @@ import io.apicurio.registry.rest.client.RegistryClient;
 import io.apicurio.registry.rest.client.models.ArtifactMetaData;
 import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.SearchedArtifact;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientOptions;
@@ -28,6 +35,14 @@ import io.vertx.core.http.HttpClientOptions;
 public class ApicurioRegistryMcpTools {
 
     private static final String DEFAULT_GROUP = "default";
+    private static final String MCP_TOOL_TYPE = "MCP_TOOL";
+    private static final String MCP_SERVER_TYPE = "MCP_SERVER";
+    private static final String STREAMABLE_HTTP = "streamable-http";
+
+    // Matches an unsubstituted {variable} placeholder left in a remote's url, as declared by
+    // server.json's `variables` map. A registry-discovered server has no per-user substitution
+    // step, so a remaining placeholder means the URL is not actually usable as-is.
+    private static final Pattern UNRESOLVED_VARIABLE = Pattern.compile("\\{[^{}]+\\}");
 
     private final RegistryClient registryClient;
     private final McpToolProvider mcpToolProvider;
@@ -40,23 +55,26 @@ public class ApicurioRegistryMcpTools {
         this.vertx = vertx;
     }
 
-    @Tool("Search Apicurio Registry for available MCP servers. "
-            + "The query matches against server name, description, and artifactId. "
-            + "Returns groupId, artifactId, name, and description for each match.")
+    @Tool("Search Apicurio Registry for available MCP servers and tools. "
+            + "The query matches against name, description, and artifactId. "
+            + "Returns groupId, artifactId, name, description and artifact type for each match.")
     public String searchMcpServers(@P("Search query to find MCP servers") String query) {
-        var results = registryClient.search().artifacts().get(config -> {
-            config.queryParameters.description = query;
-            config.queryParameters.artifactType = "MCP_TOOL";
-            config.queryParameters.limit = 20;
-        });
-
-        if (results == null || results.getArtifacts() == null || results.getArtifacts().isEmpty()) {
-            return "No MCP servers found matching '" + query + "'";
-        }
-
-        return results.getArtifacts().stream()
+        String formatted = Stream.concat(
+                search(query, MCP_SERVER_TYPE).stream(),
+                search(query, MCP_TOOL_TYPE).stream())
                 .map(this::formatArtifact)
                 .collect(Collectors.joining("\n\n"));
+
+        return formatted.isEmpty() ? "No MCP servers found matching '" + query + "'" : formatted;
+    }
+
+    private List<SearchedArtifact> search(String query, String artifactType) {
+        var results = registryClient.search().artifacts().get(config -> {
+            config.queryParameters.description = query;
+            config.queryParameters.artifactType = artifactType;
+            config.queryParameters.limit = 20;
+        });
+        return results == null || results.getArtifacts() == null ? List.of() : results.getArtifacts();
     }
 
     @Tool("Connect to an MCP server discovered from the registry by its artifactId. "
@@ -77,26 +95,28 @@ public class ApicurioRegistryMcpTools {
             ArtifactMetaData metadata = registryClient.groups().byGroupId(resolvedGroup)
                     .artifacts().byArtifactId(artifactId).get();
 
-            Labels labels = metadata.getLabels();
-            Map<String, Object> labelData = labels != null ? labels.getAdditionalData() : null;
-            if (labelData == null || labelData.isEmpty()) {
-                return "Failed to connect to MCP server '" + key
-                        + "': artifact has no labels with connection metadata";
+            String url;
+            if (MCP_SERVER_TYPE.equals(metadata.getArtifactType())) {
+                RemoteResolution resolution = resolveRemoteUrl(resolvedGroup, artifactId);
+                if (resolution.error() != null) {
+                    return "Failed to connect to MCP server '" + key + "': " + resolution.error();
+                }
+                url = resolution.url();
+            } else {
+                // MCP_TOOL (or any other type): preserve the existing label-based connection path.
+                Labels labels = metadata.getLabels();
+                Map<String, Object> labelData = labels != null ? labels.getAdditionalData() : null;
+                if (labelData == null || labelData.isEmpty()) {
+                    return "Failed to connect to MCP server '" + key
+                            + "': artifact has no labels with connection metadata";
+                }
+                url = labelData.get("mcp-server-url") != null ? labelData.get("mcp-server-url").toString() : null;
+                if (url == null || url.isBlank()) {
+                    return "Failed to connect to MCP server '" + key + "': missing 'mcp-server-url' label";
+                }
             }
 
-            String url = labelData.get("mcp-server-url") != null
-                    ? labelData.get("mcp-server-url").toString()
-                    : null;
-            String transportType = labelData.get("mcp-transport-type") != null
-                    ? labelData.get("mcp-transport-type").toString()
-                    : null;
-            if (url == null || url.isBlank()) {
-                return "Failed to connect to MCP server '" + key
-                        + "': missing 'mcp-server-url' label";
-            }
-
-            McpServerDefinition serverDef = new McpServerDefinition(url,
-                    transportType != null ? transportType : "streamable-http");
+            McpServerDefinition serverDef = new McpServerDefinition(url, STREAMABLE_HTTP);
 
             McpClient client = createMcpClient(key, serverDef);
             connectedServers.put(key, client);
@@ -121,6 +141,68 @@ public class ApicurioRegistryMcpTools {
         } catch (Exception e) {
             String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
             return "Failed to connect to MCP server '" + key + "': " + msg;
+        }
+    }
+
+    /**
+     * Picks a usable remote URL from an {@code MCP_SERVER} artifact's {@code server.json}, or
+     * explains why none is usable. Only {@code streamable-http} is supported for
+     * registry-discovered servers, so an {@code sse}-only or {@code packages}-only (stdio)
+     * declaration is reported clearly instead of silently defaulting to streamable-http.
+     */
+    private RemoteResolution resolveRemoteUrl(String groupId, String artifactId) {
+        JsonNode server;
+        try (InputStream content = registryClient.groups().byGroupId(groupId).artifacts()
+                .byArtifactId(artifactId).versions().byVersionExpression("branch=latest").content().get()) {
+            server = ObjectMapperHolder.MAPPER.readTree(content);
+        } catch (Exception e) {
+            return RemoteResolution.error("could not read or parse the server's registered content ("
+                    + e.getMessage() + ")");
+        }
+
+        JsonNode remotes = server.get("remotes");
+        if (remotes != null && remotes.isArray() && !remotes.isEmpty()) {
+            String sseUrl = null;
+            for (JsonNode remote : (Iterable<JsonNode>) remotes::elements) {
+                JsonNode type = remote.get("type");
+                JsonNode url = remote.get("url");
+                if (type == null || url == null || url.asText().isBlank()) {
+                    continue;
+                }
+                if (STREAMABLE_HTTP.equals(type.asText())) {
+                    String remoteUrl = url.asText();
+                    if (UNRESOLVED_VARIABLE.matcher(remoteUrl).find()) {
+                        return RemoteResolution.error("its streamable-http remote url '" + remoteUrl
+                                + "' still contains an unresolved variable placeholder");
+                    }
+                    return RemoteResolution.ok(remoteUrl);
+                }
+                if ("sse".equals(type.asText()) && sseUrl == null) {
+                    sseUrl = url.asText();
+                }
+            }
+            if (sseUrl != null) {
+                return RemoteResolution.error("it only declares an sse remote (" + sseUrl
+                        + "); only streamable-http is supported for registry-discovered servers");
+            }
+        }
+
+        JsonNode packages = server.get("packages");
+        if (packages != null && packages.isArray() && !packages.isEmpty()) {
+            return RemoteResolution.error("it only declares local packages (stdio); only streamable-http "
+                    + "remote transport is supported for registry-discovered servers");
+        }
+
+        return RemoteResolution.error("it declares no remotes or packages to connect to");
+    }
+
+    private record RemoteResolution(String url, String error) {
+        static RemoteResolution ok(String url) {
+            return new RemoteResolution(url, null);
+        }
+
+        static RemoteResolution error(String error) {
+            return new RemoteResolution(null, error);
         }
     }
 
@@ -172,7 +254,8 @@ public class ApicurioRegistryMcpTools {
     // Only streamable-http transport is supported for dynamically discovered servers.
     // STDIO is not applicable since registry-discovered servers are network-accessible.
     // Server authentication is not yet supported — a future enhancement could read
-    // auth hints from artifact labels and wire them into the transport.
+    // auth hints from artifact labels (MCP_TOOL) or server.json headers/variables (MCP_SERVER)
+    // and wire them into the transport.
     private McpClient createMcpClient(String key, McpServerDefinition serverDef) {
         QuarkusStreamableHttpMcpTransport transport = new QuarkusStreamableHttpMcpTransport.Builder()
                 .url(serverDef.url())
@@ -199,6 +282,7 @@ public class ApicurioRegistryMcpTools {
         if (artifact.getName() != null) {
             sb.append(" (").append(artifact.getName()).append(")");
         }
+        sb.append(" [").append(artifact.getArtifactType()).append("]");
         if (artifact.getDescription() != null) {
             sb.append("\n  ").append(artifact.getDescription());
         }
