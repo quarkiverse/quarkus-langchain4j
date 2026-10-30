@@ -24,7 +24,7 @@ import io.quarkus.logging.Log;
 
 // FIXME: this should extend EmbeddingStoreWithFilteringIT, but that class
 // contains tests parametrized through @MethodSource, which is not supported
-// by the quarkus-junit5-internal testing framework
+// by the quarkus-junit-internal testing framework
 abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreIT {
 
     private static final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();

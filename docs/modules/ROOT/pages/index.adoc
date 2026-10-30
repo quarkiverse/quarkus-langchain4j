@@ -1,5 +1,6 @@
 [.landing]
 = Quarkus LangChain4j
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -44,7 +45,7 @@ Use it to:
 *Build chat-based assistants* that can guide users, invoke tools, or answer questions based on custom knowledge.
 
 [.lead]
-*Implement intelligent search* using Retrieval-Augmented Generation (RAG), combining LLMs with vector-based document stores for context-aware responses.
+*Implement intelligent search* using Retrieval-Augmented Generation (RAG), combining LLMs with embedding stores for context-aware responses.
 
 == Where to Go Next?
 

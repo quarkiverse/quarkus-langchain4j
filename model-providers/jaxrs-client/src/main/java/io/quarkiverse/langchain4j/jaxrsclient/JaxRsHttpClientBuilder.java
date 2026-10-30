@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.jaxrsclient;
 
+import java.net.Proxy;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ public class JaxRsHttpClientBuilder implements HttpClientBuilder {
     private Duration readTimeout;
     private final List<Object> clientProviders = new ArrayList<>();
     private TlsConfiguration tlsConfiguration;
+    private Proxy proxy;
 
     @Override
     public Duration connectTimeout() {
@@ -53,6 +55,19 @@ public class JaxRsHttpClientBuilder implements HttpClientBuilder {
 
     public TlsConfiguration tlsConfiguration() {
         return tlsConfiguration;
+    }
+
+    /**
+     * Routes the traffic through the given HTTP or SOCKS proxy; {@link Proxy#NO_PROXY} and {@code null} mean a direct
+     * connection.
+     */
+    public JaxRsHttpClientBuilder proxy(Proxy proxy) {
+        this.proxy = proxy;
+        return this;
+    }
+
+    public Proxy proxy() {
+        return proxy;
     }
 
     @Override

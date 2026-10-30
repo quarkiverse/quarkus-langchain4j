@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -16,11 +17,13 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolService;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.config.AiServiceConfig;
+import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
@@ -33,6 +36,10 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public Integer maxToolCallingRoundTrips;
     public Integer maxToolCallsPerResponse;
     public boolean allowContinuousForcedToolCalling;
+    /**
+     * Whether the tools are executed concurrently, using the executor of the {@link ToolService}
+     */
+    public boolean executeToolsConcurrently;
     public DefaultMemoryIdProvider defaultMemoryIdProvider;
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
     public ToolSearchService toolSearchService;
@@ -113,6 +120,21 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         }
     }
 
+    /**
+     * This is called by the {@code manageChatMemory(Object... ids)} method of AiServices when a user manually requests that
+     * the AI service manage the lifecycle of chat memories provided
+     * via {@link io.quarkiverse.langchain4j.ChatMemoryRemover}
+     */
+    @SuppressWarnings("unused")
+    public void manageChatMemoryIds(Object... ids) {
+        if (!hasChatMemory()) {
+            return;
+        }
+        for (Object id : ids) {
+            chatMemoryService.getOrCreateChatMemory(id);
+        }
+    }
+
     @SuppressWarnings("unused")
     public Collection<Object> getAllChatMemoryIds() {
         if (!hasChatMemory()) {
@@ -182,13 +204,58 @@ public class QuarkusAiServiceContext extends AiServiceContext {
             // we have verified at build time that this is of type String
             return effectiveStreamingChatModel((String) methodArgs[createInfo.getOverrideChatModelParamPosition().get()]);
         }
+        return unwrappedStreamingChatModel();
+    }
+
+    /**
+     * Makes the upstream LangChain4j {@code AiServiceTokenStream} execute tools on the thread they require when a
+     * {@code TokenStream} method of this AI service has tools that cannot run on an event loop, or when this AI service
+     * has a {@linkplain ToolProvider#isDynamic() dynamic} tool provider, which is re-evaluated after the tools are
+     * executed and may block. The upstream
+     * implementation does not pass the method to the model, so the wrapped model is used by every {@code TokenStream}
+     * method of the AI service, while the {@code Multi} methods, implemented in Quarkus, keep using the delegate.
+     */
+    public void dispatchTokenStreamToolExecution(Collection<AiServiceMethodCreateInfo> methodCreateInfos) {
+        if (streamingChatModel == null || streamingChatModel instanceof ToolExecutionDispatchingStreamingChatModel) {
+            return;
+        }
+        List<AiServiceMethodCreateInfo> tokenStreamMethodCreateInfos = new ArrayList<>();
+        boolean switchToWorkerThreadForToolExecution = false;
+        for (AiServiceMethodCreateInfo methodCreateInfo : methodCreateInfos) {
+            if (TypeUtil.isTokenStream(methodCreateInfo.getReturnType())) {
+                tokenStreamMethodCreateInfos.add(methodCreateInfo);
+                switchToWorkerThreadForToolExecution |= methodCreateInfo.isSwitchToWorkerThreadForToolExecution();
+            }
+        }
+        if (switchToWorkerThreadForToolExecution || (!tokenStreamMethodCreateInfos.isEmpty() && hasDynamicToolProvider())) {
+            streamingChatModel = new ToolExecutionDispatchingStreamingChatModel(streamingChatModel, this,
+                    tokenStreamMethodCreateInfos);
+        }
+    }
+
+    /**
+     * @return whether one of the tool providers of this AI service is {@linkplain ToolProvider#isDynamic() dynamic}
+     */
+    boolean hasDynamicToolProvider() {
+        for (ToolProvider toolProvider : toolService.toolProviders()) {
+            if (toolProvider.isDynamic()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private StreamingChatModel unwrappedStreamingChatModel() {
+        if (streamingChatModel instanceof ToolExecutionDispatchingStreamingChatModel wrapper) {
+            return wrapper.delegate();
+        }
         return streamingChatModel;
     }
 
     private StreamingChatModel effectiveStreamingChatModel(String modelName) {
         if (modelName == null) {
             // happens when @ModelName parameter exists but the caller passed null
-            return streamingChatModel;
+            return unwrappedStreamingChatModel();
         }
         InstanceHandle<StreamingChatModel> instance = Arc.container().instance(StreamingChatModel.class,
                 ModelName.Literal.of(modelName));

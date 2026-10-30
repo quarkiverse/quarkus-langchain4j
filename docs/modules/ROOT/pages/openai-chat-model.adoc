@@ -1,4 +1,5 @@
 = OpenAI Chat Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-openai
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -76,7 +77,7 @@ You can define multiple configurations to support different OpenAI models:
 [source,properties,subs=attributes+]
 ----
 # Default OpenAI model configuration
-quarkus.langchain4j.openai.chat-model.model-name=gpt-4o-mini
+quarkus.langchain4j.openai.chat-model.model-name=gpt-6-luna
 quarkus.langchain4j.openai.api-key=sk-...
 # Custom OpenAI model configuration
 quarkus.langchain4j.openai.some-name.chat-model.model-name=o3
@@ -113,18 +114,30 @@ If no model name is specified, the default configuration is used.
 
 == Responses API
 
-By default, the chat model targets OpenAI's `/v1/chat/completions` endpoint. OpenAI also offers the newer
-https://platform.openai.com/docs/api-reference/responses[Responses API] (`/v1/responses`), which is required for models
-that are only exposed through it (for example `gpt-5-pro`, `o1-pro`) and which unlocks Responses-specific settings.
+OpenAI offers two chat APIs: the classic `/v1/chat/completions` endpoint and the newer
+https://platform.openai.com/docs/api-reference/responses[Responses API] (`/v1/responses`). The Responses API is required
+for models that are only exposed through it (for example `gpt-5-pro`, `o1-pro`), is the only way to use tools (function
+calling, including xref:skills.adoc[skills]) with GPT-6 models when reasoning is enabled (see <<gpt-6-models>>), and unlocks
+Responses-specific settings.
 
-To switch the chat model to the Responses API, set the build-time `mode` property:
+Which API the chat model targets is controlled by the `quarkus.langchain4j.openai.chat-model.mode` property
+(`chat-completion` or `responses`). When it is not set, the mode is selected automatically:
+
+* `responses` when the base URL is the OpenAI API (`https://api.openai.com/v1/`, the default);
+* `chat-completion` for any other base URL, which is what OpenAI-compatible endpoints such as Ollama, vLLM, llama.cpp or
+  LM Studio implement.
+
+The resolved mode is logged at startup. To pin a mode explicitly, for example to keep using Chat Completions against OpenAI
+or to use the Responses API against a compatible gateway, set the property:
 
 [source,properties,subs=attributes+]
 ----
-quarkus.langchain4j.openai.chat-model.mode=responses
+quarkus.langchain4j.openai.chat-model.mode=chat-completion
 quarkus.langchain4j.openai.api-key=sk-...
-quarkus.langchain4j.openai.chat-model.model-name=gpt-5-pro
 ----
+
+`mode` is a runtime property: it can be changed without rebuilding the application and can be set per named configuration
+(`quarkus.langchain4j.openai.<name>.chat-model.mode`).
 
 Both the blocking `ChatModel` and the `StreamingChatModel` are supported in this mode, including tool/function calling and
 structured outputs. The injection points and AI service usage are unchanged — only the underlying API and endpoint differ.
@@ -141,11 +154,80 @@ quarkus.langchain4j.openai.chat-model.responses.max-output-tokens=1024
 [NOTE]
 ====
 In `responses` mode the model communicates over a Quarkus REST Client-based HTTP client (the same engine used elsewhere,
-so native image and TLS registry configuration continue to work). A few features of the chat-completions path do not apply:
-`quarkus.langchain4j.openai.log-requests-curl` and proxy configuration (`quarkus.langchain4j.openai.proxy-configuration-name`)
-are not honored for Responses traffic. Request/response logging still works via the standard
-`log-requests`/`log-responses` settings.
+so native image, TLS registry configuration, proxy configuration and `ModelAuthProvider` implementations continue to
+work). Request/response logging works via the standard `log-requests`/`log-responses` settings, but
+`quarkus.langchain4j.openai.log-requests-curl` is not available on this path.
 ====
+
+=== Migrating from Chat Completions
+
+Because the Responses API is now selected automatically for `https://api.openai.com/v1/`, an existing configuration
+written for Chat Completions is affected as follows:
+
+* `quarkus.langchain4j.openai.chat-model.max-completion-tokens` and the deprecated `max-tokens` keep capping the output:
+  when `quarkus.langchain4j.openai.chat-model.responses.max-output-tokens` is not set, `max-completion-tokens` is used
+  as the Responses output limit, and `max-tokens` after that.
+* `quarkus.langchain4j.openai.chat-model.presence-penalty`, `frequency-penalty` and `stop` have no equivalent on the
+  Responses API and are ignored.
+* `quarkus.langchain4j.openai.max-retries` is ignored, see the warning below.
+* `quarkus.langchain4j.openai.log-requests-curl` is ignored.
+
+When the mode was selected automatically and one of the ignored settings is set explicitly, a warning listing them is
+logged at startup. Set `quarkus.langchain4j.openai.chat-model.mode=chat-completion` to keep the previous behavior.
+
+[WARNING]
+.Retries are not performed on the Responses API
+====
+`quarkus.langchain4j.openai.max-retries` is deprecated and is **not honored** on the Responses API: a request that fails
+with a rate limit, a server error or a timeout is not retried, and the exception reaches your code immediately. If you
+relied on this setting, your application loses its retries when the mode switches to `responses`, which happens
+automatically against `https://api.openai.com/v1/`.
+
+Retries are not going to be added to the Responses path. Use MicroProfile Fault Tolerance instead, which works with both
+APIs and gives you control over delays, jitter and which exceptions are retried:
+
+[source,java]
+----
+import java.time.temporal.ChronoUnit;
+
+import org.eclipse.microprofile.faulttolerance.Retry;
+
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+@RegisterAiService
+public interface Assistant {
+
+    @Retry(maxRetries = 3, delay = 1, delayUnit = ChronoUnit.SECONDS)
+    String chat(String message);
+}
+----
+
+This requires the `quarkus-smallrye-fault-tolerance` extension. Be careful with `@Retry` when the AI service uses tools or
+skills: `max-retries` retried a single HTTP call, whereas `@Retry` re-runs the whole method, so tools that already
+executed before the failure run again. Keep tools idempotent or scope the retry to a method without side effects. See
+xref:guide-fault-tolerance.adoc[Fault Tolerance] for the full guide.
+====
+
+[[gpt-6-models]]
+=== Using GPT-6 models
+
+GPT-6 models are reasoning models, and OpenAI applies a server-side default reasoning effort of `medium` when
+`quarkus.langchain4j.openai.chat-model.reasoning-effort` is not set. On the Chat Completions endpoint, OpenAI rejects
+requests that combine tools with any reasoning effort other than `none`, and not every GPT-6 model accepts `none`:
+
+[cols="1,1,2",options="header"]
+|===
+|Model |Supports `reasoning-effort=none` |Tools on Chat Completions
+
+|`gpt-6-luna` |yes |only with `reasoning-effort=none`
+|`gpt-6-sol` |yes |only with `reasoning-effort=none`
+|`gpt-6-astra` |no (lowest is `low`) |no, the Responses API is required
+|`gpt-6.1-sol` |no (defaults to `medium`) |no, the Responses API is required
+|===
+
+With the automatic mode selection described above, models used against OpenAI target the Responses API, where tools work
+with any reasoning effort. If you force `mode=chat-completion` with a GPT-6 model, either avoid tools or set
+`quarkus.langchain4j.openai.chat-model.reasoning-effort=none` with a model that supports it.
 
 == Advanced usage
 

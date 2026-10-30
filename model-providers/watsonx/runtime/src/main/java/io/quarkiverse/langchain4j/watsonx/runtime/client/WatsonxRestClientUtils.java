@@ -21,6 +21,7 @@ import com.ibm.watsonx.ai.core.exception.model.WatsonxError;
 import com.ibm.watsonx.ai.core.http.BaseHttpClient;
 import com.ibm.watsonx.ai.core.http.interceptors.RetryInterceptor;
 
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkiverse.langchain4j.watsonx.runtime.QuarkusChatSubscriber;
 import io.quarkus.logging.Log;
 
@@ -41,12 +42,14 @@ public final class WatsonxRestClientUtils {
     static WatsonxException responseToWatsonxException(Response response) {
         MediaType mediaType = response.getMediaType();
         String body = response.readEntity(String.class);
+        var httpException = new QuarkusHttpException(response.getStatus(), body, response.getStringHeaders());
 
         if (isNull(body) || body.isEmpty())
-            return new WatsonxException("Status code: " + response.getStatus(), response.getStatus(), null);
+            return withCause(new WatsonxException("Status code: " + response.getStatus(), response.getStatus(), null),
+                    httpException);
 
         if (isNull(mediaType))
-            return new WatsonxException(body, response.getStatus(), null);
+            return withCause(new WatsonxException(body, response.getStatus(), null), httpException);
 
         var error = HttpUtils.parseErrorBody(response.getStatus(), body, mediaType.toString());
         var joiner = new StringJoiner("\n");
@@ -56,7 +59,14 @@ public final class WatsonxRestClientUtils {
                 joiner.add("%s: %s".formatted(errorDetail.code(), errorDetail.message()));
         }
 
-        return HttpUtils.mapWatsonxException(new WatsonxException(joiner.toString(), response.getStatus(), error));
+        var exception = withCause(new WatsonxException(joiner.toString(), response.getStatus(), error), httpException);
+        return withCause(HttpUtils.mapWatsonxException(exception), httpException);
+    }
+
+    private static WatsonxException withCause(WatsonxException exception, QuarkusHttpException cause) {
+        if (isNull(exception.getCause()))
+            exception.initCause(cause);
+        return exception;
     }
 
     public static boolean shouldRetry(Throwable e) {
@@ -91,7 +101,7 @@ public final class WatsonxRestClientUtils {
 
             } catch (WatsonxException e) {
 
-                if (shouldRetry(e)) {
+                if (i < maxRetries && shouldRetry(e)) {
                     try {
 
                         Log.debugf(

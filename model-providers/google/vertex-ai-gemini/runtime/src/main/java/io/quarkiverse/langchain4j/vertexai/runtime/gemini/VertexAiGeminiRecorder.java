@@ -60,10 +60,11 @@ public class VertexAiGeminiRecorder {
             if (DUMMY_KEY.equals(projectId)) {
                 throw new ConfigValidationException(createConfigProblems("project-id", configName));
             }
-            Optional<String> baseUrl = vertexAiConfig.baseUrl()
-                    .or(() -> Optional.of("https://" + location + "-aiplatform.googleapis.com"));
+            Optional<String> baseUrl = Optional
+                    .of(vertexAiConfig.baseUrl().orElse(VertxAiGeminiRestApi.defaultBaseUrl(location)));
 
             var builder = VertexAiGeminiEmbeddingModel.builder()
+                    .configName(configName)
                     .baseUrl(baseUrl)
                     .location(location)
                     .projectId(projectId)
@@ -80,6 +81,9 @@ public class VertexAiGeminiRecorder {
 
             builder.outputDimensionality(embeddingModelConfig.outputDimension().orElse(null));
             builder.taskType(embeddingModelConfig.taskType().orElse(null));
+            if (embeddingModelConfig.timeout().isPresent()) {
+                builder.timeout(embeddingModelConfig.timeout().get());
+            }
 
             return new Function<>() {
                 @Override
@@ -116,6 +120,7 @@ public class VertexAiGeminiRecorder {
                 throw new ConfigValidationException(createConfigProblems("project-id", configName));
             }
             var builder = VertexAiGeminiChatLanguageModel.builder()
+                    .configName(configName)
                     .baseUrl(baseUrl)
                     .location(location)
                     .projectId(projectId)
@@ -184,6 +189,7 @@ public class VertexAiGeminiRecorder {
             }
 
             var builder = VertexAiGeminiStreamingChatLanguageModel.builder()
+                    .configName(configName)
                     .baseUrl(baseUrl)
                     .location(location)
                     .projectId(projectId)

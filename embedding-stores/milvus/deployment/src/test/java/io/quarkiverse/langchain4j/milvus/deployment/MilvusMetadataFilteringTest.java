@@ -31,7 +31,7 @@ import io.quarkus.test.QuarkusUnitTest;
 
 // temporary solution until we figure out how to extend EmbeddingStoreWithFilteringIT
 // (which contains tests parametrized through @MethodSource, which is not supported
-// by the quarkus-junit5-internal testing framework)
+// by the quarkus-junit-internal testing framework)
 public class MilvusMetadataFilteringTest {
 
     public static final String COLLECTION_NAME = "test_embeddings";

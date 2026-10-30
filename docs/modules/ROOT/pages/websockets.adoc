@@ -1,4 +1,5 @@
 = Using AI services in WebSockets
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-websockets-next
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -14,8 +15,6 @@ Using a chatbot in a WebSockets environment is quite common, which is why the ex
     <artifactId>quarkus-websockets-next</artifactId>
 </dependency>
 ----
-+
-IMPORTANT: `quarkus-websockets-next` is available as of Quarkus 3.9.
 
 . Annotate your AI service with `@SessionScoped`
 +

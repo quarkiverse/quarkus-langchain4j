@@ -37,6 +37,7 @@ public record DeclarativeAiServiceCreateInfo(
         Integer maxToolCallingRoundTrips,
         Integer maxToolCallsPerResponse,
         boolean allowContinuousForcedToolCalling,
+        Boolean executeToolsConcurrently,
         boolean shouldThrowExceptionOnEventError,
         String defaultMemoryIdProviderClassName,
         List<String> skillNames) {

@@ -1,4 +1,5 @@
 = IBM watsonx.ai Image Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-watsonx
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

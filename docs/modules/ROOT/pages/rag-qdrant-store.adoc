@@ -1,4 +1,5 @@
 = Qdrant Embedding Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-qdrant
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

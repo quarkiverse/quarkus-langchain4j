@@ -1,4 +1,5 @@
 = Security and Privacy Recommendations
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -196,5 +197,6 @@ Logging is essential for debugging but can also be a security liability if it ex
 
 * *Dependency Management*: Keep your Quarkus and Langchain4j dependencies up to date. Security vulnerabilities are regularly discovered and patched in open-source libraries.
 * *Model Provenance*: Be aware of the origin and training data of the models you use, especially when using open-source or fine-tuned models. A model trained on biased or insecure data can produce biased or insecure outputs.
+* *Per-User Retrieval*: When the documents retrieved for RAG are private to individual users, resolve the user from the `SecurityIdentity` at augmentation time and never when the `RetrievalAugmentor` is created. See xref:secure-rag.adoc[Secure RAG].
 * *Rate Limiting*: Implement rate limiting on your API endpoints that interact with LLMs to prevent denial-of-service attacks and control costs.
 * *Community & Enterprise Support*: If you require support make sure to check the Quarkus resources under https://quarkus.io/support/[https://quarkus.io/support/]

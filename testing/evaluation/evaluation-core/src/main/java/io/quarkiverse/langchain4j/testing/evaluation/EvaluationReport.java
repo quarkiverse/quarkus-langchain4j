@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +18,14 @@ import java.util.Map;
  */
 public class EvaluationReport<T> {
 
+    /**
+     * z value of a two-sided 95% confidence interval under the normal approximation.
+     */
+    private static final double Z_95 = 1.96;
+
     private final List<Scorer.EvaluationResult<T>> evaluations;
+    private final List<Scorer.EvaluationResult<T>> blockingEvaluations;
+    private final int trials;
     private final double score;
 
     /**
@@ -24,16 +34,142 @@ public class EvaluationReport<T> {
      * @param evaluations the evaluations, must not be {@code null}.
      */
     public EvaluationReport(List<Scorer.EvaluationResult<T>> evaluations) {
+        this(evaluations, 1);
+    }
+
+    /**
+     * Create a new evaluation report for evaluations produced by running each sample several times.
+     *
+     * @param evaluations the evaluations, must not be {@code null}.
+     * @param trials the number of times each sample was executed, at least 1
+     */
+    public EvaluationReport(List<Scorer.EvaluationResult<T>> evaluations, int trials) {
+        if (trials < 1) {
+            throw new IllegalArgumentException("Trials must be at least 1, got: " + trials);
+        }
         this.evaluations = evaluations;
-        this.score = evaluations.isEmpty() ? 0.0
+        // The evaluations that count toward the score: those not produced by an advisory strategy.
+        this.blockingEvaluations = evaluations.stream().filter(e -> !e.advisory()).toList();
+        this.trials = trials;
+        this.score = scoreOf(blockingEvaluations);
+    }
+
+    /**
+     * @return the global score, between 0.0 and 100.0. Advisory evaluations are not counted.
+     */
+    public double score() {
+        return score;
+    }
+
+    /**
+     * The score of the advisory evaluations, which do not count toward {@link #score()}.
+     *
+     * @return the percentage of passed advisory evaluations, between 0.0 and 100.0, or 0.0 if there are none
+     */
+    public double advisoryScore() {
+        return scoreOf(evaluations.stream().filter(Scorer.EvaluationResult::advisory).toList());
+    }
+
+    /**
+     * @return the number of times each sample was executed
+     */
+    public int trials() {
+        return trials;
+    }
+
+    /**
+     * Compute the score of a single sample over all its trials and strategies.
+     *
+     * @param name the sample name, must not be {@code null}
+     * @return the percentage of passed evaluations for that sample, between 0.0 and 100.0, or 0.0 if the sample is unknown
+     */
+    public double scoreForSample(String name) {
+        return scoreOf(blockingEvaluations.stream().filter(e -> e.sample().name().equals(name)).toList());
+    }
+
+    /**
+     * The standard error of the global score, in percentage points.
+     * <p>
+     * The function under test is usually not deterministic, so the score is an estimate. The standard error is
+     * computed over the per-sample scores (not over the individual trials, which are not independent) and is
+     * 0.0 when the report holds fewer than two samples.
+     * </p>
+     *
+     * @return the standard error of the global score, in percentage points
+     */
+    public double standardError() {
+        return standardErrorOf(blockingEvaluations);
+    }
+
+    /**
+     * The standard error of the score for a given tag, in percentage points.
+     *
+     * @param tag the tag, must not be {@code null}
+     * @return the standard error, see {@link #standardError()}
+     */
+    public double standardErrorForTag(String tag) {
+        return standardErrorOf(blockingEvaluations.stream().filter(e -> e.sample().tags().contains(tag)).toList());
+    }
+
+    /**
+     * The 95% confidence interval of the global score.
+     * <p>
+     * A second run of the same evaluation would land inside this interval 95% of the time. Treat two scores whose
+     * intervals overlap as indistinguishable. The interval is {@code [score, score]} when the report holds fewer than
+     * two samples.
+     * </p>
+     *
+     * @return the interval, clamped to {@code [0.0, 100.0]}
+     */
+    public Interval confidenceInterval() {
+        return Interval.around(score, standardError());
+    }
+
+    /**
+     * The 95% confidence interval of the score for a given tag.
+     *
+     * @param tag the tag, must not be {@code null}
+     * @return the interval, see {@link #confidenceInterval()}
+     */
+    public Interval confidenceIntervalForTag(String tag) {
+        return Interval.around(scoreForTag(tag), standardErrorForTag(tag));
+    }
+
+    private static double scoreOf(List<? extends Scorer.EvaluationResult<?>> evaluations) {
+        return evaluations.isEmpty() ? 0.0
                 : 100.0 * evaluations.stream().filter(Scorer.EvaluationResult::passed).count() / evaluations.size();
     }
 
     /**
-     * @return the global score, between 0.0 and 100.0.
+     * Standard error of the mean of the per-sample pass rates, in percentage points.
      */
-    public double score() {
-        return score;
+    private static double standardErrorOf(List<? extends Scorer.EvaluationResult<?>> evaluations) {
+        Map<String, List<Scorer.EvaluationResult<?>>> bySample = new LinkedHashMap<>();
+        for (Scorer.EvaluationResult<?> evaluation : evaluations) {
+            bySample.computeIfAbsent(evaluation.sample().name(), n -> new ArrayList<>()).add(evaluation);
+        }
+        int n = bySample.size();
+        if (n < 2) {
+            return 0.0;
+        }
+        double[] rates = bySample.values().stream().mapToDouble(list -> scoreOf(list) / 100.0).toArray();
+        double mean = Arrays.stream(rates).average().orElse(0.0);
+        double variance = Arrays.stream(rates).map(r -> (r - mean) * (r - mean)).sum() / (n - 1);
+        return 100.0 * Math.sqrt(variance / n);
+    }
+
+    /**
+     * A confidence interval of a score, in percent.
+     *
+     * @param low the lower bound, between 0.0 and 100.0
+     * @param high the upper bound, between 0.0 and 100.0
+     */
+    public record Interval(double low, double high) {
+
+        private static Interval around(double score, double standardError) {
+            double margin = Z_95 * standardError;
+            return new Interval(Math.max(0.0, score - margin), Math.min(100.0, score + margin));
+        }
     }
 
     /**
@@ -50,13 +186,7 @@ public class EvaluationReport<T> {
      * @return the score for the given tag, between 0.0 and 100.0.
      */
     public double scoreForTag(String tag) {
-        long total = evaluations.stream().filter(e -> e.sample().tags().contains(tag)).count();
-        if (total == 0) {
-            return 0.0;
-        }
-        return 100.0 * evaluations.stream().filter(e -> e.sample().tags().contains(tag))
-                .filter(Scorer.EvaluationResult::passed).count()
-                / total;
+        return scoreOf(blockingEvaluations.stream().filter(e -> e.sample().tags().contains(tag)).toList());
     }
 
     /**

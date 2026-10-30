@@ -19,17 +19,22 @@ import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.decision.DecisionModel;
+import dev.langchain4j.model.decision.listener.DecisionModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.ollama.OllamaDecisionModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
+import io.quarkiverse.langchain4j.ollama.DisabledDecisionModel;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.OllamaModelAuthProviderFilter;
 import io.quarkiverse.langchain4j.ollama.OllamaStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.ollama.runtime.config.DecisionModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
@@ -61,6 +66,10 @@ public class OllamaRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OllamaStreamingChatLanguageModel.Builder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OllamaEmbeddingModel.Builder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<DecisionModelListener>> DECISION_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OllamaDecisionModel.OllamaDecisionModelBuilder>>> DECISION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
@@ -137,23 +146,7 @@ public class OllamaRecorder {
                             context.getInjectedReference(CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             ollamaChatModelBuilder, configName);
 
-                    // TODO: we should obtain this from the context
-                    Optional<ModelAuthProvider> maybeModelAuthProvider = ModelAuthProvider
-                            .resolve(NamedConfigUtil.isDefault(configName) ? null : configName);
-                    if (maybeModelAuthProvider.isPresent()) {
-                        httpClientBuilder.addClientProvider(new OllamaModelAuthProviderFilter(maybeModelAuthProvider.get()));
-                    }
-
-                    // TODO: we should obtain this from the context
-                    Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current()
-                            .select(TlsConfigurationRegistry.class);
-                    if (tlsConfigurationRegistry.isResolvable()) {
-                        Optional<TlsConfiguration> maybeTlsConfiguration = TlsConfiguration.from(tlsConfigurationRegistry.get(),
-                                ollamaConfig.tlsConfigurationName());
-                        if (maybeTlsConfiguration.isPresent()) {
-                            httpClientBuilder.tlsConfiguration(maybeTlsConfiguration.get());
-                        }
-                    }
+                    configureAuthAndTls(httpClientBuilder, ollamaConfig, configName);
 
                     return ollamaChatModelBuilder.build();
                 }
@@ -296,6 +289,70 @@ public class OllamaRecorder {
                     return new DisabledStreamingChatModel();
                 }
             };
+        }
+    }
+
+    public Function<SyntheticCreationalContext<DecisionModel>, DecisionModel> decisionModel(String configName) {
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig.getValue(), configName);
+        LangChain4jOllamaFixedRuntimeConfig.OllamaConfig ollamaFixedConfig = correspondingOllamaFixedConfig(fixedRuntimeConfig,
+                configName);
+
+        if (ollamaConfig.enableIntegration()) {
+            DecisionModelConfig decisionModelConfig = ollamaConfig.decisionModel();
+
+            JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+
+            OllamaDecisionModel.OllamaDecisionModelBuilder builder = OllamaDecisionModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
+                    .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
+                    .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .maxRetries(1)
+                    .logRequests(firstOrDefault(false, decisionModelConfig.logRequests(), ollamaConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, decisionModelConfig.logResponses(), ollamaConfig.logResponses()))
+                    .modelName(ollamaFixedConfig.decisionModel().modelId());
+
+            return new Function<>() {
+                @Override
+                public DecisionModel apply(SyntheticCreationalContext<DecisionModel> context) {
+                    builder.listeners(context.getInjectedReference(DECISION_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(DECISION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+
+                    configureAuthAndTls(httpClientBuilder, ollamaConfig, configName);
+
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public DecisionModel apply(SyntheticCreationalContext<DecisionModel> context) {
+                    return new DisabledDecisionModel();
+                }
+            };
+        }
+    }
+
+    private static void configureAuthAndTls(JaxRsHttpClientBuilder httpClientBuilder,
+            LangChain4jOllamaConfig.OllamaConfig ollamaConfig, String configName) {
+        // TODO: we should obtain this from the context
+        Optional<ModelAuthProvider> maybeModelAuthProvider = ModelAuthProvider
+                .resolve(NamedConfigUtil.isDefault(configName) ? null : configName);
+        if (maybeModelAuthProvider.isPresent()) {
+            httpClientBuilder.addClientProvider(new OllamaModelAuthProviderFilter(maybeModelAuthProvider.get()));
+        }
+
+        // TODO: we should obtain this from the context
+        Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current()
+                .select(TlsConfigurationRegistry.class);
+        if (tlsConfigurationRegistry.isResolvable()) {
+            Optional<TlsConfiguration> maybeTlsConfiguration = TlsConfiguration.from(tlsConfigurationRegistry.get(),
+                    ollamaConfig.tlsConfigurationName());
+            if (maybeTlsConfiguration.isPresent()) {
+                httpClientBuilder.tlsConfiguration(maybeTlsConfiguration.get());
+            }
         }
     }
 

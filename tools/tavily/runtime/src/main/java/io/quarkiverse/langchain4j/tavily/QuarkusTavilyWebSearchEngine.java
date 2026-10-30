@@ -20,6 +20,7 @@ import dev.langchain4j.web.search.WebSearchInformationResult;
 import dev.langchain4j.web.search.WebSearchOrganicResult;
 import dev.langchain4j.web.search.WebSearchRequest;
 import dev.langchain4j.web.search.WebSearchResults;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkiverse.langchain4j.tavily.runtime.TavilyClient;
 import io.quarkiverse.langchain4j.tavily.runtime.TavilyResponse;
 import io.quarkiverse.langchain4j.tavily.runtime.TavilySearchRequest;
@@ -179,6 +180,9 @@ public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
+                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                            headerValue = SensitiveHeaderMasker.mask(headerValue);
+                        }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));

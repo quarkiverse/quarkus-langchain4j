@@ -27,7 +27,6 @@ public class McpClaudeConfigTest {
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class)
                     .addAsResource(new StringAsset("""
                             {
                               "mcpServers": {
@@ -67,7 +66,7 @@ public class McpClaudeConfigTest {
             .overrideConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "streamable-http")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.protocol-version", "2025-11-25")
-            .overrideConfigKey("quarkus.langchain4j.mcp.client1.url", "http://localhost:8081/mock-mcp/mcp")
+            .overrideConfigKey("quarkus.langchain4j.mcp.client1.url", "http://localhost/never-contacted/mcp")
             .overrideConfigKey("quarkus.langchain4j.mcp.\"file.system\".log-requests", "true")
             .overrideConfigKey("quarkus.langchain4j.mcp.MCP_DOCKER.log-responses", "true")
             .overrideConfigKey("quarkus.langchain4j.mcp.MCP_DOCKER.command", "podman,run,-i,--rm,alpine/socat")

@@ -48,6 +48,7 @@ import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.model.chat.request.json.JsonArraySchema;
 import dev.langchain4j.model.chat.request.json.JsonBooleanSchema;
@@ -112,12 +113,13 @@ public class ToolProcessor {
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
     private static final DotName JSON_IGNORE = DotName.createSimple(JsonIgnore.class);
     private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
+    private static final DotName INVOCATION_CONTEXT = DotName.createSimple(InvocationContext.class);
 
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
     private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
             .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class, Integer.class,
-                    Map.class);
+                    Integer.class, Map.class);
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
@@ -368,6 +370,7 @@ public class ToolProcessor {
 
                     MethodParameterInfo memoryIdParameter = null;
                     MethodParameterInfo invocationParamsParameter = null;
+                    MethodParameterInfo invocationContextParameter = null;
                     for (MethodParameterInfo parameter : toolMethod.parameters()) {
                         if (parameter.hasAnnotation(TOOL_MEMORY_ID)) {
                             memoryIdParameter = parameter;
@@ -375,6 +378,11 @@ public class ToolProcessor {
                         }
                         if (parameter.type().name().equals(INVOCATION_PARAMETERS)) {
                             invocationParamsParameter = parameter;
+                            continue;
+                        }
+                        // supplied by the framework, so it must not be part of the schema shown to the LLM
+                        if (parameter.type().name().equals(INVOCATION_CONTEXT)) {
+                            invocationContextParameter = parameter;
                             continue;
                         }
 
@@ -405,8 +413,9 @@ public class ToolProcessor {
                             }
                         }
 
-                        boolean isRequired = (pInstance == null)
-                                || ((pInstance.value("required") != null) && pInstance.value("required").asBoolean());
+                        AnnotationValue requiredValue = pInstance != null ? pInstance.value("required") : null;
+                        // @P#required defaults to true, and Jandex does not materialize annotation defaults
+                        boolean isRequired = requiredValue == null || requiredValue.asBoolean();
                         if (!hasDefaultValue && isRequired) {
                             required.add(parameter.name());
                         }
@@ -440,6 +449,7 @@ public class ToolProcessor {
                     String invokerClassName = generateInvoker(toolMethod, classOutput, nameToParamPosition,
                             memoryIdParameter != null ? memoryIdParameter.position() : null,
                             invocationParamsParameter != null ? invocationParamsParameter.position() : null,
+                            invocationContextParameter != null ? invocationContextParameter.position() : null,
                             methodSignature, defaultValues);
                     generatedInvokerClasses.add(invokerClassName);
                     String argumentMapperClassName = generateArgumentMapper(toolMethod, classOutput,
@@ -453,7 +463,7 @@ public class ToolProcessor {
                     ToolMethodCreateInfo methodCreateInfo = new ToolMethodCreateInfo(
                             toolMethod.name(), invokerClassName,
                             toolSpecification, argumentMapperClassName, determineExecutionModel(toolMethod),
-                            returnBehaviorEnum,
+                            returnsAsyncResult(toolMethod), returnBehaviorEnum,
                             inputGuardrails,
                             outputGuardrails);
 
@@ -872,7 +882,7 @@ public class ToolProcessor {
 
     private static String generateInvoker(MethodInfo methodInfo, ClassOutput classOutput,
             Map<String, Integer> nameToParamPosition, Short memoryIdParamPosition, Short invocationParamsParamPosition,
-            String methodSignature, Map<String, String> defaultValues) {
+            Short invocationContextParamPosition, String methodSignature, Map<String, String> defaultValues) {
         String implClassName = methodInfo.declaringClass().name() + "$$QuarkusInvoker$" + methodInfo.name() + "_"
                 + HashUtil.sha1(methodSignature);
         try (ClassCreator classCreator = ClassCreator.builder()
@@ -937,6 +947,9 @@ public class ToolProcessor {
                             : methodMetadataMc.loadNull(),
                     invocationParamsParamPosition != null
                             ? methodMetadataMc.load(Integer.valueOf(invocationParamsParamPosition))
+                            : methodMetadataMc.loadNull(),
+                    invocationContextParamPosition != null
+                            ? methodMetadataMc.load(Integer.valueOf(invocationContextParamPosition))
                             : methodMetadataMc.loadNull(),
                     defaultValuesHandle);
             methodMetadataMc.returnValue(resultHandle);
@@ -1052,13 +1065,13 @@ public class ToolProcessor {
 
             return JsonEnumSchema.builder()
                     .enumValues(enums)
-                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)))
+                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type, index)))
                     .build();
         }
 
         if (isComplexType(type)) {
             var builder = JsonObjectSchema.builder()
-                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)));
+                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type, index)));
 
             ClassInfo targetClass = index.getClassByName(type.name());
 
@@ -1114,8 +1127,20 @@ public class ToolProcessor {
         return (description != null) ? String.join(" ", description) : null;
     }
 
-    private static String descriptionFrom(Type type) {
-        return Optional.ofNullable(type.annotation(DESCRIPTION))
+    /**
+     * Reads a class-level {@code @Description} from the <em>declaration</em> of the given type.
+     * <p>
+     * {@link Type#annotation(DotName)} only reports <em>type-use</em> annotations, written at the usage site.
+     * {@code @Description} is declared {@code @Target({FIELD, TYPE})}, so it can never appear there and the
+     * declaration has to be resolved through the index instead. Mirrors
+     * {@code JsonSchemaElementUtils#descriptionFrom(Class)} in langchain4j core.
+     */
+    private static String descriptionFrom(Type type, IndexView index) {
+        ClassInfo classInfo = index.getClassByName(type.name());
+        if (classInfo == null) {
+            return null;
+        }
+        return Optional.ofNullable(classInfo.declaredAnnotation(DESCRIPTION))
                 .map(annotationInstance -> descriptionFrom(annotationInstance.value().asStringArray()))
                 .orElse(null);
     }
@@ -1128,8 +1153,25 @@ public class ToolProcessor {
 
     private static String descriptionFrom(MethodParameterInfo parameter) {
         return Optional.ofNullable(parameter.annotation(P))
-                .map(p -> p.value() != null ? p.value().asString() : null)
+                .map(ToolProcessor::descriptionFrom)
                 .orElse(null);
+    }
+
+    /**
+     * {@code @P#description()} and {@code @P#value()} are aliases; a blank one means "not set", so that it does not
+     * shadow a description declared on the parameter's type.
+     */
+    private static String descriptionFrom(AnnotationInstance pAnnotation) {
+        String description = stringValueOrNull(pAnnotation, "description");
+        return description != null ? description : stringValueOrNull(pAnnotation, "value");
+    }
+
+    private static String stringValueOrNull(AnnotationInstance annotation, String member) {
+        AnnotationValue value = annotation.value(member);
+        if (value == null || value.asString().isBlank()) {
+            return null;
+        }
+        return value.asString();
     }
 
     private static Object[] enumConstants(Type type) {
@@ -1172,6 +1214,11 @@ public class ToolProcessor {
             return ToolMethodCreateInfo.ExecutionModel.VIRTUAL_THREAD;
         }
         return ToolMethodCreateInfo.ExecutionModel.BLOCKING;
+    }
+
+    private static boolean returnsAsyncResult(MethodInfo methodInfo) {
+        DotName returnedType = methodInfo.returnType().name();
+        return UNI.equals(returnedType) || MULTI.equals(returnedType) || COMPLETION_STAGE.equals(returnedType);
     }
 
     /**

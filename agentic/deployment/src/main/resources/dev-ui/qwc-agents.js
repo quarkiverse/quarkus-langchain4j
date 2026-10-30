@@ -31,6 +31,7 @@ export class QwcAgents extends LitElement {
             color: var(--lumo-primary-contrast-color);
         }
         .badge-Agent { background-color: var(--lumo-primary-color); }
+        .badge-DecisionAgent { background-color: var(--lumo-primary-color-10pct); color: var(--lumo-primary-text-color); }
         .badge-SequenceAgent { background-color: var(--lumo-success-color); }
         .badge-ParallelAgent { background-color: var(--lumo-warning-color); }
         .badge-ParallelMapperAgent { background-color: var(--lumo-warning-color); }

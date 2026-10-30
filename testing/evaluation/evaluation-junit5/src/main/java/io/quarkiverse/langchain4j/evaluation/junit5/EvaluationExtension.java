@@ -51,7 +51,7 @@ public class EvaluationExtension implements BeforeEachCallback, AfterEachCallbac
                 Scorer sc;
                 if (field.isAnnotationPresent(ScorerConfiguration.class)) {
                     ScorerConfiguration annotation = field.getAnnotation(ScorerConfiguration.class);
-                    sc = new Scorer(annotation.concurrency());
+                    sc = new Scorer(annotation.concurrency(), annotation.trials());
                 } else {
                     sc = new Scorer();
                 }
@@ -215,7 +215,7 @@ public class EvaluationExtension implements BeforeEachCallback, AfterEachCallbac
         if (parameterContext.getParameter().getType().isAssignableFrom(Scorer.class)) {
             if (parameterContext.getParameter().isAnnotationPresent(ScorerConfiguration.class)) {
                 ScorerConfiguration annotation = parameterContext.getParameter().getAnnotation(ScorerConfiguration.class);
-                return new Scorer(annotation.concurrency());
+                return new Scorer(annotation.concurrency(), annotation.trials());
             } else {
                 return new Scorer();
             }

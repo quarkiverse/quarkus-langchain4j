@@ -15,6 +15,7 @@ import jakarta.inject.Singleton;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -24,31 +25,34 @@ import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
+import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
+import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
+import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Test MCP clients over an HTTP transport.
- * This is a very rudimentary test that runs against a mock MCP server. The plan is
- * to replace it with a more proper MCP server once we have an appropriate Java SDK ready for it.
+ * Verifies that an agent declaring {@link McpToolBox} receives the tools of the MCP server.
  */
 public class AgentMcpClientTest extends OpenAiBaseTest {
+
+    private static final String MCP_PATH = "/mcp/agent";
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class, Sequence.class,
-                            AgentWithMcpTools.class)
+                    .addClasses(Sequence.class, AgentWithMcpTools.class)
+                    .addPackage(McpMockServer.class.getPackage())
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever
                             quarkus.langchain4j.mcp.client1.transport-type=streamable-http
-                            quarkus.langchain4j.mcp.client1.protocol-version=2025-11-25
-                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/mcp
+                            quarkus.langchain4j.mcp.client1.protocol-version=%s
+                            quarkus.langchain4j.mcp.client1.url=%s
                             quarkus.log.category."dev.langchain4j".level=DEBUG
                             quarkus.log.category."io.quarkiverse".level=DEBUG
                             quarkus.langchain4j.mcp.client1.tool-execution-timeout=1s
-                            """),
+                            """.formatted(ModernMcpMockServer.PROTOCOL_VERSION, wiremockUrlForConfig(MCP_PATH))),
                             "application.properties"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
@@ -68,6 +72,14 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
         @Agent(outputKey = "toolsList")
         @McpToolBox
         String toolsList(@V("userMessage") String userMessage);
+    }
+
+    @BeforeEach
+    void setUpMcpServer() {
+        McpMockServer.modern(wiremock(), MCP_PATH)
+                .reset()
+                .stubInitialization()
+                .stubTools(McpTool.ADD);
     }
 
     @Test
@@ -104,7 +116,7 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
 
         var response = sequence.toolsList("test");
         assertEquals("dummy", response);
-        assertThat(ToolsInterceptor.TOOLS_NAMES).hasSize(3);
+        assertThat(ToolsInterceptor.TOOLS_NAMES).containsExactly("add");
     }
 
     @Singleton

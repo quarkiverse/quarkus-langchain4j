@@ -1,4 +1,5 @@
 = Ingestion Pipeline
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -126,10 +127,10 @@ EmbeddingModel embeddingModel;
 
 Refer to xref:models.adoc#_embedding_models[Embedding Models] for details on available options.
 
-== Vector Stores
+== Embedding Stores
 
-Vector stores (aka embedding stores) store the segments and their vectors for later retrieval.
-Quarkus LangChain4j provides many options for vector stores, allowing you to choose the one that best fits your needs, such as:
+Embedding stores store the segments and their vectors for later retrieval.
+Quarkus LangChain4j provides many options for embedding stores, allowing you to choose the one that best fits your needs, such as:
 
 * PGVector
 * Redis
@@ -188,7 +189,7 @@ public class RagIngestion {
                        EmbeddingStore store, EmbeddingModel embeddingModel,
                        @ConfigProperty(name = "rag.location") Path documents) {
 
-        store.removeAll(); // Reset the vector store (for demo purposes only)
+        store.removeAll(); // Reset the embedding store (for demo purposes only)
         List<Document> list = FileSystemDocumentLoader.loadDocumentsRecursively(documents);
 
         EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
@@ -269,7 +270,7 @@ You should re-ingest your documents when:
 * You switch to a different embedding model
 * Your chunking strategy evolves
 
-In this case, you should clean the vector store or track metadata to avoid duplicates.
+In this case, you should clean the embedding store or track metadata to avoid duplicates.
 
 == Summary
 
@@ -278,7 +279,7 @@ The ingestion pipeline transforms documents into searchable vectors:
 1. Documents are loaded and split into segments
 2. Segments are enriched with metadata and optionally context
 3. Embeddings are computed using a model
-4. Segments and embeddings are stored into a vector store
+4. Segments and embeddings are stored into an embedding store
 
 This process ensures efficient and relevant retrieval at query time.
 

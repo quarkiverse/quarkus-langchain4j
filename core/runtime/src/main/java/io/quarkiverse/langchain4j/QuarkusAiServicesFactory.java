@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j;
 import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 
 import java.util.Collection;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -15,6 +16,7 @@ import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
@@ -107,6 +109,20 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
+        @Override
+        public AiServices<T> executeToolsConcurrently() {
+            return executeToolsConcurrently(null);
+        }
+
+        @Override
+        public AiServices<T> executeToolsConcurrently(Executor executor) {
+            quarkusAiServiceContext().executeToolsConcurrently = true;
+            // like upstream, the executor is held by the ToolService; the default one propagates the CDI request context
+            context.toolService.executeToolsConcurrently(
+                    executor != null ? executor : AiServiceMethodImplementationSupport.createToolExecutor());
+            return this;
+        }
+
         public AiServices<T> chatMemoryFlushStrategy(
                 ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
             quarkusAiServiceContext().chatMemoryFlushStrategy = chatMemoryFlushStrategy;
@@ -135,6 +151,13 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                                     + "annotation.");
                 }
             }
+
+            if (!quarkusAiServiceContext().executeToolsConcurrently
+                    && AiServiceMethodImplementationSupport.isExecuteToolsConcurrentlyGloballyEnabled()) {
+                executeToolsConcurrently();
+            }
+
+            quarkusAiServiceContext().dispatchTokenStreamToolExecution(methodCreateInfos);
 
             try {
                 return (T) Class.forName(classCreateInfo.implClassName(), true, Thread.currentThread()

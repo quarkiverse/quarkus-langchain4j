@@ -414,6 +414,69 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++10+++`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-ai-service-execute-tools-concurrently]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-ai-service-execute-tools-concurrently[`+++quarkus.langchain4j.ai-service.execute-tools-concurrently+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai-service.execute-tools-concurrently+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the tool calls requested in a single LLM response should be executed concurrently. When enabled, the tools are executed on virtual threads (or on dedicated platform threads when virtual threads are not available) and the CDI request context is propagated to the tool invocations. A specific AI service can override this using `@RegisterAiService(executeToolsConcurrently = ...)`. This currently only applies to AI service methods that do not stream their response.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_SERVICE_EXECUTE_TOOLS_CONCURRENTLY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_SERVICE_EXECUTE_TOOLS_CONCURRENTLY+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold[`+++quarkus.langchain4j.decision-service."decision-service-name".threshold+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.decision-service."decision-service-name".threshold+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The threshold of the `boolean` answers of this Decision Service, between 0 and 1: an answer is `true` when the probability of "yes" is at least the threshold. 0.5 when absent.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold-by-model-model-name]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-decision-service-decision-service-name-threshold-by-model-model-name[`+++quarkus.langchain4j.decision-service."decision-service-name".threshold-by-model."model-name"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.decision-service."decision-service-name".threshold-by-model."model-name"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The threshold to use when the given decision model answered, keyed by model name, overriding `threshold`. Thresholds are specific to a decision model and to its version.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD_BY_MODEL__MODEL_NAME_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DECISION_SERVICE__DECISION_SERVICE_NAME__THRESHOLD_BY_MODEL__MODEL_NAME_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,Double>
+|
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-executions[[.line-through]#`+++quarkus.langchain4j.ai-service.max-tool-executions+++`#]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ai-service.max-tool-executions+++[]

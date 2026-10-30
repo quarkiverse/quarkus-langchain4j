@@ -9,6 +9,8 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.inject.Singleton;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Disabled;
@@ -22,22 +24,36 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.exception.ToolArgumentsException;
+import dev.langchain4j.internal.Json;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
+import io.quarkus.jackson.JsonMapperBuilderCustomizer;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Uni;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 class ToolExecutorTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(PrettyPrintCustomizer.class));
 
     TestTool testTool = new TestTool();
     DefaultValueTool defaultValueTool = new DefaultValueTool();
+
+    @Singleton
+    public static class PrettyPrintCustomizer implements JsonMapperBuilderCustomizer {
+
+        @Override
+        public void customize(JsonMapper.Builder builder) {
+            builder.enable(SerializationFeature.INDENT_OUTPUT);
+        }
+    }
 
     public enum SortBy {
         RELEVANCE,
@@ -162,6 +178,21 @@ class ToolExecutorTest {
         @Tool
         ArgObject objectResult() {
             return new ArgObject("ABC", SortBy.DATE);
+        }
+
+        @Tool
+        ArgObject objectResultWithWhitespace() {
+            return new ArgObject("A B\nC", SortBy.DATE);
+        }
+
+        @Tool
+        List<ArgObject> listResult() {
+            return List.of(objectResult());
+        }
+
+        @Tool
+        Uni<ArgObject> objectResultUni() {
+            return Uni.createFrom().item(objectResult());
         }
 
         @Tool
@@ -467,12 +498,32 @@ class ToolExecutorTest {
     }
 
     @Test
-    void should_json_encode_non_string_result() {
-        ToolExecutionRequest request = ToolExecutionRequest.builder().arguments("{}").build();
+    void should_json_encode_non_string_result_compactly() {
+        executeAndAssert("{}", "objectResult", "{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+    }
 
-        String result = getToolExecutor("objectResult").execute(request, null);
+    @Test
+    void should_preserve_whitespace_in_json_string_values() {
+        executeAndAssert("{}", "objectResultWithWhitespace", "{\"name\":\"A B\\nC\",\"sortBy\":\"DATE\"}");
+    }
 
-        assertThat(result.replaceAll("\\s", "")).isEqualTo("{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+    @Test
+    void should_json_encode_list_result_compactly() {
+        executeAndAssert("{}", "listResult", "[{\"name\":\"ABC\",\"sortBy\":\"DATE\"}]");
+    }
+
+    @Test
+    void should_json_encode_non_string_result_of_uni_compactly() {
+        executeAndAssert("{}", "objectResultUni", "{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+    }
+
+    @Test
+    void should_keep_general_json_serialization_pretty_printed() {
+        executeAndAssert("{}", "objectResult", "{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+
+        ArgObject result = new ArgObject("ABC", SortBy.DATE);
+        assertThat(Json.toJson(result)).contains("\n");
+        assertThat(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(result)).contains("\n");
     }
 
     @Test

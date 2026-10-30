@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -48,6 +49,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final List<ChatMessage> messages;
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolExecutors;
+    private final Map<String, ReturnBehavior> toolReturnBehaviors;
+    private final DynamicToolProviders dynamicToolProviders;
     private final List<Content> retrievedContents;
     private final QuarkusAiServiceContext context;
     private final InvocationContext invocationContext;
@@ -86,6 +89,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     public QuarkusAiServiceTokenStream(List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications,
             Map<String, ToolExecutor> toolExecutors,
+            Map<String, ReturnBehavior> toolReturnBehaviors,
+            DynamicToolProviders dynamicToolProviders,
             List<Content> retrievedContents,
             QuarkusAiServiceContext context, InvocationContext invocationContext,
             Object memoryId, Context ctxt, boolean switchToWorkerThreadForToolExecution,
@@ -94,6 +99,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         this.messages = ensureNotEmpty(messages, "messages");
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
+        this.toolReturnBehaviors = copyIfNotNull(toolReturnBehaviors);
+        this.dynamicToolProviders = dynamicToolProviders;
         this.retrievedContents = retrievedContents;
         this.context = ensureNotNull(context, "context");
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
@@ -197,6 +204,14 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
             effectiveToolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
             effectiveToolExecutors = new HashMap<>(toolSearchContext.toolExecutors());
         }
+        Map<String, ReturnBehavior> effectiveToolReturnBehaviors = toolReturnBehaviors;
+        if (dynamicToolProviders != null) {
+            effectiveToolSpecifications = new ArrayList<>(effectiveToolSpecifications);
+            effectiveToolExecutors = new HashMap<>(effectiveToolExecutors);
+            effectiveToolReturnBehaviors = new HashMap<>(effectiveToolReturnBehaviors);
+            toolSearchContext = dynamicToolProviders.refresh(messages, effectiveToolSpecifications,
+                    effectiveToolExecutors, effectiveToolReturnBehaviors, toolSearchContext);
+        }
 
         ChatRequest chatRequest;
         var userParams = AiServiceMethodImplementationSupport
@@ -243,7 +258,9 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 new TokenUsage(),
                 effectiveToolSpecifications,
                 effectiveToolExecutors,
+                effectiveToolReturnBehaviors,
                 toolSearchContext,
+                dynamicToolProviders,
                 switchToWorkerThreadForToolExecution,
                 switchToWorkerForEmission,
                 cxtx, methodCreateInfo, methodArgs,

@@ -22,11 +22,13 @@ import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.LangChain4jAiGeminiConfig;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
@@ -92,7 +94,7 @@ public class AiGeminiRecorder {
                             configName);
                     if (apiKey == null) {
                         httpClientBuilder
-                                .addClientProvider(new ModelAuthProviderFilter(embeddingModelConfig.modelId()));
+                                .addClientProvider(new ModelAuthProviderFilter(configName));
                     }
 
                     ModelBuilderCustomizer.applyCustomizers(
@@ -160,7 +162,7 @@ public class AiGeminiRecorder {
                             .collect(Collectors.toList()));
 
                     if (apiKey == null) {
-                        httpClientBuilder.addClientProvider(new ModelAuthProviderFilter(chatModelConfig.modelId()));
+                        httpClientBuilder.addClientProvider(new ModelAuthProviderFilter(configName));
                     }
 
                     ModelBuilderCustomizer.applyCustomizers(
@@ -186,10 +188,21 @@ public class AiGeminiRecorder {
 
     private void configureThinking(ChatModelConfig chatModelConfig,
             GoogleAiGeminiChatModel.GoogleAiGeminiChatModelBaseBuilder builder) {
+        ChatModelConfig.ThinkingConfig thinking = chatModelConfig.thinking();
+        if (thinking.thinkingBudget().isPresent() && thinking.thinkingLevel().isPresent()) {
+            throw new IllegalArgumentException(
+                    "Cannot configure both thinking-budget and thinking-level. "
+                            + "thinking-budget remains for Gemini 2.5 and upcoming models return 400 if it is sent. "
+                            + "Use thinking-level (minimal, low, medium, high) for Gemini 3 and later.");
+        }
         GeminiThinkingConfig.Builder geminiThinkingConfigBuilder = GeminiThinkingConfig.builder()
-                .includeThoughts(chatModelConfig.thinking().includeThoughts());
-        if (chatModelConfig.thinking().thinkingBudget().isPresent()) {
-            geminiThinkingConfigBuilder.thinkingBudget(chatModelConfig.thinking().thinkingBudget().getAsInt());
+                .includeThoughts(thinking.includeThoughts());
+        if (thinking.thinkingBudget().isPresent()) {
+            geminiThinkingConfigBuilder.thinkingBudget(thinking.thinkingBudget().getAsInt());
+        }
+        if (thinking.thinkingLevel().isPresent()) {
+            geminiThinkingConfigBuilder.thinkingLevel(
+                    GeminiThinkingConfig.GeminiThinkingLevel.valueOf(thinking.thinkingLevel().get().name()));
         }
         builder.thinkingConfig(geminiThinkingConfigBuilder.build());
     }
@@ -242,7 +255,7 @@ public class AiGeminiRecorder {
                             .collect(Collectors.toList()));
 
                     if (apiKey == null) {
-                        httpClientBuilder.addClientProvider(new ModelAuthProviderFilter(chatModelConfig.modelId()));
+                        httpClientBuilder.addClientProvider(new ModelAuthProviderFilter(configName));
                     }
 
                     ModelBuilderCustomizer.applyCustomizers(
@@ -268,6 +281,10 @@ public class AiGeminiRecorder {
     }
 
     private static <T> boolean isAuthProviderAvailable(SyntheticCreationalContext<T> context, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)
+                && Arc.container().instance(ModelAuthProvider.class, ModelName.Literal.of(configName)).isAvailable()) {
+            return true;
+        }
         return context.getInjectedReference(MODEL_AUTH_PROVIDER_TYPE_LITERAL).isResolvable();
     }
 

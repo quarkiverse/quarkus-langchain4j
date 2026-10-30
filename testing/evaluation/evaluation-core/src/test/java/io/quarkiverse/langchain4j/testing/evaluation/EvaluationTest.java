@@ -217,6 +217,66 @@ class EvaluationTest {
     }
 
     @Test
+    void shouldRunEachSampleForTheConfiguredNumberOfTrials() {
+        EvaluationSample<String> sample1 = new EvaluationSample<>(
+                "Sample1",
+                new Parameters().add("input1"),
+                "expected1",
+                List.of());
+
+        EvaluationSample<String> sample2 = new EvaluationSample<>(
+                "Sample2",
+                new Parameters().add("input2"),
+                "expected2",
+                List.of());
+
+        Samples<String> samples = new Samples<>(sample1, sample2);
+
+        List<String> calls = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Function<Parameters, String> function = params -> {
+            String input = params.get(0);
+            calls.add(input);
+            return "expected" + input.substring(5);
+        };
+
+        EvaluationStrategy<String> strategy = (sample, actual) -> EvaluationResult
+                .fromBoolean(actual.equals(sample.expectedOutput()));
+
+        var builder = Evaluation.<String> builder()
+                .withSamples(samples)
+                .withTrials(3)
+                .evaluate(function)
+                .using(strategy);
+
+        // run() honours the trials
+        EvaluationReport<String> report = builder.run();
+        assertThat(report.trials()).isEqualTo(3);
+        assertThat(report.evaluations()).hasSize(6);
+        assertThat(calls).hasSize(6);
+        assertThat(calls.stream().filter("input1"::equals)).hasSize(3);
+
+        // build() carries the trials over to the runner
+        calls.clear();
+        EvaluationReport<String> runnerReport = builder.build().run();
+        assertThat(runnerReport.trials()).isEqualTo(3);
+        assertThat(runnerReport.evaluations()).hasSize(6);
+        assertThat(calls).hasSize(6);
+    }
+
+    @Test
+    void shouldThrowExceptionForInvalidTrials() {
+        assertThatThrownBy(() -> {
+            Evaluation.<String> builder().withTrials(0);
+        }).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Trials must be at least 1");
+
+        assertThatThrownBy(() -> {
+            Evaluation.<String> builder().withTrials(-1);
+        }).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Trials must be at least 1");
+    }
+
+    @Test
     void shouldThrowExceptionForNullSamples() {
         assertThatThrownBy(() -> {
             Evaluation.<String> builder().withSamples((Samples<String>) null);

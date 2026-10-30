@@ -6,9 +6,13 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+import java.util.logging.LogRecord;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -32,7 +36,9 @@ public class VertexAiChatLanguageModelSmokeTest extends WiremockAware {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.base-url", WiremockAware.wiremockUrlForConfig())
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.log-requests", "true");
+            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.log-requests", "true")
+            .setLogRecordPredicate(record -> true)
+            .assertLogRecords(VertexAiChatLanguageModelSmokeTest::verifyLogRecords);
 
     @Inject
     ChatModel chatLanguageModel;
@@ -137,6 +143,15 @@ public class VertexAiChatLanguageModelSmokeTest extends WiremockAware {
         assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Quarkus REST Client");
         String requestBody = new String(loggedRequest.getBody());
         assertThat(requestBody).contains("hello");
+    }
+
+    private static void verifyLogRecords(List<LogRecord> logRecords) {
+        assertThat(logRecords.stream()
+                .map(record -> ((ExtLogRecord) record).getFormattedMessage())
+                .filter(message -> message.startsWith("Request:")))
+                .isNotEmpty()
+                .allSatisfy(message -> assertThat(message).doesNotContain(API_KEY))
+                .anySatisfy(message -> assertThat(message).contains("[Authorization: Beare...ey]"));
     }
 
     @Singleton

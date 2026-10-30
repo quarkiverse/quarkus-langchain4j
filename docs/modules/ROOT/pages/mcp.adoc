@@ -1,4 +1,5 @@
 = Model Context Protocol (MCP) Integration
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-mcp
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -15,8 +16,11 @@ Quarkus LangChain4j provides comprehensive MCP client support, enabling your AI 
 
 [IMPORTANT]
 ====
-This MCP client implements the specification https://modelcontextprotocol.io/specification/2025-11-25[MCP Specification v2025-11-25].
-Make sure your MCP servers are compatible with this version of the specification for optimal interoperability.
+This MCP client implements two versions of the MCP specification: https://modelcontextprotocol.io/specification/2026-07-28[2026-07-28] and https://modelcontextprotocol.io/specification/2025-11-25[2025-11-25].
+By default, the client tries 2026-07-28 first, and falls back to 2025-11-25 when the MCP server does not implement 2026-07-28.
+Make sure that your MCP servers implement one of these versions.
+To skip this detection and always use one version, set the `quarkus.langchain4j.mcp."client-name".protocol-version` property.
+Resource subscriptions and roots work differently in the two versions.
 ====
 
 [TIP]
@@ -761,7 +765,10 @@ The `McpResourceUpdatedEvent` includes:
 - `uri()`: The URI of the updated resource
 - `mcpClientKey()`: The name of the MCP client that received the notification
 
-To receive notifications, you must first subscribe to a specific resource using the `McpClient` API:
+To receive notifications, you must first subscribe to the resources that you want to observe by using the `McpClient` API.
+The methods to call depend on the MCP protocol version that the client uses with the server.
+
+With protocol version 2026-07-28, subscribe to a list of resources in one call:
 
 [source,java]
 ----
@@ -769,12 +776,27 @@ To receive notifications, you must first subscribe to a specific resource using 
 @McpClientName("myserver")
 McpClient mcpClient;
 
+// Subscribe to updates for one or more resources
+long subscriptionId = mcpClient.subscribeToResources(List.of("file:///path/to/resource"));
+
+// Later, unsubscribe when no longer interested
+mcpClient.unsubscribeFromResources(subscriptionId);
+----
+
+With protocol version 2025-11-25, subscribe to one resource at a time.
+These two methods are deprecated:
+
+[source,java]
+----
 // Subscribe to updates for a specific resource
 mcpClient.subscribeToResource("file:///path/to/resource");
 
 // Later, unsubscribe when no longer interested
 mcpClient.unsubscribeFromResource("file:///path/to/resource");
 ----
+
+Each pair of methods throws an `UnsupportedOperationException` when the client uses the other protocol version.
+To make sure that the client uses the version that your code expects, set the `quarkus.langchain4j.mcp."client-name".protocol-version` property.
 
 [NOTE]
 ====
@@ -808,6 +830,7 @@ Quarkus automatically registers a readiness health check for all configured MCP 
 ----
 
 The health check verifies that all MCP servers are responsive by sending an MCP protocol **ping** message and waiting for a **pong** response.
+With protocol version 2026-07-28, which has no `ping` message, the client sends a `server/discover` request instead, and the `ping-timeout` setting applies to it in the same way.
 This works for all transport types (STDIO, HTTP, WebSocket).
 
 For HTTP-based MCP servers, you can optionally use a MicroProfile Health endpoint instead (see below).
@@ -958,6 +981,13 @@ You can configure initial roots in your application properties:
 quarkus.langchain4j.mcp.myserver.roots=workspace1=/path/to/workspace1,workspace2=/path/to/workspace2
 ----
 
+[IMPORTANT]
+====
+The client provides roots to an MCP server only when it uses MCP protocol version 2025-11-25.
+Protocol version 2026-07-28 deprecates roots, and with that version, `McpClient.setRoots` throws an `UnsupportedOperationException`.
+To use roots, set `quarkus.langchain4j.mcp.myserver.protocol-version=2025-11-25`.
+====
+
 [TIP]
 ====
 Roots are particularly useful for:
@@ -966,7 +996,7 @@ Roots are particularly useful for:
 - Multi-project environments where different servers operate on different codebases
 - Security boundaries to prevent servers from accessing unauthorized locations
 
-The root list can be updated programmatically at runtime using the `McpClient` API if the server needs to adapt to changing workspace configurations.
+With protocol version 2025-11-25, the root list can be updated programmatically at runtime using the `McpClient` API if the server needs to adapt to changing workspace configurations.
 ====
 
 === TLS Configuration

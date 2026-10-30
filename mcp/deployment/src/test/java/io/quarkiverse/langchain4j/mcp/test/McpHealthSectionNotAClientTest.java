@@ -20,13 +20,12 @@ public class McpHealthSectionNotAClientTest {
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever
                             quarkus.langchain4j.mcp.health.enabled=true
                             quarkus.langchain4j.mcp.client1.transport-type=streamable-http
                             quarkus.langchain4j.mcp.client1.protocol-version=2025-11-25
-                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/mcp
+                            quarkus.langchain4j.mcp.client1.url=http://localhost/never-contacted/mcp
                             """),
                             "application.properties"));
 

@@ -1,4 +1,5 @@
 = Function Calling
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -228,7 +229,7 @@ More details on virtual thread support in Quarkus can be found in the https://qu
 
 === Streaming Support
 
-When AI service methods return streams (`Multi<String>`), the model emits each token on the event loop.
+When AI service methods return streams (`Multi<String>`, `Flow.Publisher<String>` or `TokenStream`), the model emits each token on the event loop.
 
 Blocking tools cannot run on the event loop.
 Thus, Quarkus LangChain4j automatically shifts to a worker thread or virtual thread when required.
@@ -246,6 +247,9 @@ Multi<Fraud> detectAmountFraudForCustomerStreamed(long customerId);
 
 When the request scope is active, tool invocations can inherit it, enabling propagation of transactional or security contexts.
 This applies even when running on virtual threads or worker threads.
+
+Security annotations such as `@RolesAllowed` on a tool method of a CDI bean are enforced against the identity of the caller of the AI service, provided the request scope is propagated as described above.
+When the check fails, the tool is not invoked and the failure is reported as a tool execution error: by default it is logged and returned to the model, and it can be customized with `@HandleToolExecutionError`.
 
 == Dynamically Providing Tools
 
@@ -289,6 +293,33 @@ public class MyCustomToolProvider implements ToolProvider {
             return ToolProviderResult.builder().build(); // No tools
         }
         return buildToolProviderResult(List.of(bookingTool)); // Only the booking tool will be provided in this case
+    }
+}
+----
+
+By default, a `ToolProvider` is called once, at the beginning of each AI service invocation.
+If the tools to provide depend on how the conversation unfolds during the invocation (for example on the results of the tools executed so far), override `isDynamic()` to return `true`.
+A dynamic provider is called before each LLM call of the invocation, and `request.messages()` contains the messages about to be sent to the LLM.
+Tools returned by a dynamic provider are only ever added: once provided, a tool stays available for the remainder of the invocation.
+
+[source, java]
+----
+@ApplicationScoped
+public class MyDynamicToolProvider implements ToolProvider {
+    @Inject PaymentTool paymentTool;
+
+    public ToolProviderResult provideTools(ToolProviderRequest request) {
+        boolean bookingCreated = request.messages().stream()
+                .anyMatch(m -> m instanceof ToolExecutionResultMessage r && r.toolName().equals("createBooking"));
+        if (!bookingCreated) {
+            return ToolProviderResult.builder().build();
+        }
+        return buildToolProviderResult(List.of(paymentTool)); // Payment is only offered once a booking exists
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
     }
 }
 ----

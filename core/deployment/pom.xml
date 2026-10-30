@@ -79,6 +79,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <!-- only the annotations: having quarkus-opentelemetry on the test classpath slows down every test, -->
             <!-- so tests that need it belong in the opentelemetry-tests module -->
             <groupId>io.opentelemetry.instrumentation</groupId>
@@ -105,6 +110,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-elytron-security-properties-file</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

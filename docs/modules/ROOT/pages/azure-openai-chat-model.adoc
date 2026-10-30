@@ -1,4 +1,5 @@
 = Azure OpenAI Chat Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-azure-openai
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

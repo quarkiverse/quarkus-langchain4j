@@ -1,10 +1,8 @@
 package io.quarkiverse.langchain4j.mcp.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIterable;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -14,6 +12,7 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -31,38 +30,46 @@ import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
+import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
+import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
+import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Test MCP clients over an HTTP transport.
- * This is a very rudimentary test that runs against a mock MCP server. The plan is
- * to replace it with a more proper MCP server once we have an appropriate Java SDK ready for it.
+ * Verifies how tools of multiple MCP clients are combined and selected. Each client connects
+ * to its own mock MCP server that provides a single tool.
  */
-public class MultipleMcpClientsTest {
+public class MultipleMcpClientsTest extends WiremockAware {
+
+    private static final String CLIENT1_PATH = "/mcp/multiple-clients/client1";
+    private static final String CLIENT2_PATH = "/mcp/multiple-clients/client2";
+    private static final String CLIENT3_PATH = "/mcp/multiple-clients/client3";
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class, Mock2HttpMcpServer.class,
-                            Mock3HttpMcpServer.class, AllToolsService.class, SelectedToolsService.class,
-                            SingleToolService.class)
+                    .addClasses(AllToolsService.class, SelectedToolsService.class, SingleToolService.class)
+                    .addPackage(McpMockServer.class.getPackage())
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever
                             quarkus.langchain4j.mcp.client1.transport-type=streamable-http
-                            quarkus.langchain4j.mcp.client1.protocol-version=2025-11-25
-                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/mcp
+                            quarkus.langchain4j.mcp.client1.protocol-version=%1$s
+                            quarkus.langchain4j.mcp.client1.url=%2$s
                             quarkus.langchain4j.mcp.client2.transport-type=streamable-http
-                            quarkus.langchain4j.mcp.client2.protocol-version=2025-11-25
-                            quarkus.langchain4j.mcp.client2.url=http://localhost:8081/mock2-mcp/mcp
+                            quarkus.langchain4j.mcp.client2.protocol-version=%1$s
+                            quarkus.langchain4j.mcp.client2.url=%3$s
                             quarkus.langchain4j.mcp.client3.transport-type=streamable-http
-                            quarkus.langchain4j.mcp.client3.protocol-version=2025-11-25
-                            quarkus.langchain4j.mcp.client3.url=http://localhost:8081/mock3-mcp/mcp
+                            quarkus.langchain4j.mcp.client3.protocol-version=%1$s
+                            quarkus.langchain4j.mcp.client3.url=%4$s
                             quarkus.log.category."dev.langchain4j".level=DEBUG
                             quarkus.log.category."io.quarkiverse".level=DEBUG
-                            quarkus.langchain4j.mcp.client1.tool-execution-timeout=1s
-                            """),
+                            """.formatted(ModernMcpMockServer.PROTOCOL_VERSION,
+                            wiremockUrlForConfig(CLIENT1_PATH),
+                            wiremockUrlForConfig(CLIENT2_PATH),
+                            wiremockUrlForConfig(CLIENT3_PATH))),
                             "application.properties"));
 
     @Inject
@@ -80,16 +87,20 @@ public class MultipleMcpClientsTest {
     @Inject
     NoToolService noToolService;
 
+    @BeforeEach
+    void setUpMcpServers() {
+        McpMockServer.modern(wiremock(), CLIENT1_PATH).reset().stubInitialization().stubTools(McpTool.ADD);
+        McpMockServer.modern(wiremock(), CLIENT2_PATH).reset().stubInitialization().stubTools(McpTool.SUBTRACT);
+        McpMockServer.modern(wiremock(), CLIENT3_PATH).reset().stubInitialization().stubTools(McpTool.MULTIPLY);
+    }
+
     @Test
     public void providingAllTools() {
         ToolProviderResult toolProviderResult = toolProvider.provideTools(null);
 
-        assertThat(toolProviderResult.tools()).hasSize(5);
-        Set<String> toolNames = toolProviderResult.tools().keySet().stream()
-                .map(ToolSpecification::name)
-                .collect(Collectors.toSet());
-        assertThatIterable(toolNames)
-                .containsExactlyInAnyOrder("add", "subtract", "multiply", "longRunningOperation", "logging");
+        assertThat(toolProviderResult.tools().keySet())
+                .extracting(ToolSpecification::name)
+                .containsExactlyInAnyOrder("add", "subtract", "multiply");
     }
 
     @Test
@@ -101,12 +112,9 @@ public class MultipleMcpClientsTest {
                 List.of("client1", "client3"));
         ToolProviderResult toolProviderResult = toolProvider.provideTools(request);
 
-        assertThat(toolProviderResult.tools()).hasSize(4);
-        Set<String> toolNames = toolProviderResult.tools().keySet().stream()
-                .map(ToolSpecification::name)
-                .collect(Collectors.toSet());
-        assertThatIterable(toolNames)
-                .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging");
+        assertThat(toolProviderResult.tools().keySet())
+                .extracting(ToolSpecification::name)
+                .containsExactlyInAnyOrder("add", "multiply");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
@@ -120,9 +128,7 @@ public class MultipleMcpClientsTest {
     @ActivateRequestContext
     public void serviceHasAllTools() {
         String[] toolNames = allToolsService.toolsList("test").split(",");
-        assertThat(toolNames)
-                .hasSize(5)
-                .containsExactlyInAnyOrder("add", "subtract", "multiply", "longRunningOperation", "logging");
+        assertThat(toolNames).containsExactlyInAnyOrder("add", "subtract", "multiply");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
@@ -136,9 +142,7 @@ public class MultipleMcpClientsTest {
     @ActivateRequestContext
     public void serviceHasOnlySelectedTools() {
         String[] toolNames = selectedToolsService.toolsList("test").split(",");
-        assertThat(toolNames)
-                .hasSize(4)
-                .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging");
+        assertThat(toolNames).containsExactlyInAnyOrder("add", "multiply");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
@@ -152,8 +156,7 @@ public class MultipleMcpClientsTest {
     @ActivateRequestContext
     public void serviceHasOneTool() {
         String[] toolNames = singleToolService.toolsList("test").split(",");
-        assertThat(toolNames).hasSize(1);
-        assertThat(toolNames[0]).isEqualTo("subtract");
+        assertThat(toolNames).containsExactly("subtract");
     }
 
     public static class MyChatModelSupplier implements Supplier<ChatModel> {

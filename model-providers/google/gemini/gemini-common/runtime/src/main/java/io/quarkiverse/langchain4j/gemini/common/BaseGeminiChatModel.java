@@ -26,11 +26,18 @@ public class BaseGeminiChatModel {
     protected final List<ChatModelListener> listeners;
     protected final Long thinkingBudget;
     protected final boolean includeThoughts;
+    protected final ThinkingLevel thinkingLevel;
     protected final boolean useGoogleSearch;
 
     public BaseGeminiChatModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK, Double topP,
             ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
-            boolean includeThoughts, boolean useGoogleSearch) {
+            boolean includeThoughts, ThinkingLevel thinkingLevel, boolean useGoogleSearch) {
+        if (thinkingBudget != null && thinkingLevel != null) {
+            throw new IllegalArgumentException(
+                    "Cannot configure both thinkingBudget and thinkingLevel. "
+                            + "thinkingBudget remains for Gemini 2.5 and upcoming models return 400 if it is sent. "
+                            + "Use thinkingLevel (minimal, low, medium, high) for Gemini 3 and later.");
+        }
         this.modelId = modelId;
         this.temperature = temperature;
         this.maxOutputTokens = maxOutputTokens;
@@ -40,7 +47,15 @@ public class BaseGeminiChatModel {
         this.listeners = listeners;
         this.thinkingBudget = thinkingBudget;
         this.includeThoughts = includeThoughts;
+        this.thinkingLevel = thinkingLevel;
         this.useGoogleSearch = useGoogleSearch;
+    }
+
+    protected void applyThinkingConfig(GenerationConfig.Builder generationConfigBuilder) {
+        if (thinkingBudget != null || includeThoughts || thinkingLevel != null) {
+            generationConfigBuilder
+                    .thinkingConfig(new ThinkingConfig(thinkingBudget, includeThoughts, thinkingLevel));
+        }
     }
 
     /**

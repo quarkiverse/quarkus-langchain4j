@@ -118,7 +118,7 @@ public class EvaluationTestExtension implements TestTemplateInvocationContextPro
             EvaluationStrategy<Object> strategy = instantiateStrategy(annotation.strategy());
 
             // Run evaluation
-            Scorer scorer = new Scorer();
+            Scorer scorer = new Scorer(1, annotation.trials());
             EvaluationReport<Object> report;
             try {
                 report = scorer.evaluate(samples, function, strategy);

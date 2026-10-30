@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ollama.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.DECISION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
@@ -17,15 +18,18 @@ import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.ollama.OllamaDecisionModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.devservice.Langchain4jDevServicesEnabled;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.DecisionModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.DevServicesChatModelRequiredBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.DevServicesEmbeddingModelRequiredBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImplicitlyUserConfiguredChatProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedDecisionModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.OllamaStreamingChatLanguageModel;
@@ -63,6 +67,8 @@ public class OllamaProcessor {
             .createSimple(OllamaStreamingChatLanguageModel.Builder.class);
     private static final DotName OLLAMA_EMBEDDING_MODEL_BUILDER = DotName
             .createSimple(OllamaEmbeddingModel.Builder.class);
+    private static final DotName OLLAMA_DECISION_MODEL_BUILDER = DotName
+            .createSimple(OllamaDecisionModel.OllamaDecisionModelBuilder.class);
 
     private static final AnnotationInstance ANY = AnnotationInstance.builder(DotName.createSimple(
             Any.class)).build();
@@ -89,6 +95,12 @@ public class OllamaProcessor {
         reflectiveHierarchyProducer
                 .produce(ReflectiveHierarchyBuildItem.builder("dev.langchain4j.model.ollama.OllamaChatResponse")
                         .source(getClass().getSimpleName()).ignoreNested(false).build());
+        reflectiveHierarchyProducer
+                .produce(ReflectiveHierarchyBuildItem.builder("dev.langchain4j.model.ollama.OllamaDecisionRequest")
+                        .source(getClass().getSimpleName()).ignoreNested(false).build());
+        reflectiveHierarchyProducer
+                .produce(ReflectiveHierarchyBuildItem.builder("dev.langchain4j.model.ollama.OllamaDecisionResponse")
+                        .source(getClass().getSimpleName()).ignoreNested(false).build());
         reflectiveClassProducer.produce(ReflectiveClassBuildItem
                 .builder("dev.langchain4j.model.ollama.FormatSerializer", "dev.langchain4j.model.ollama.OllamaDateDeserializer")
                 .constructors().methods(false).fields(false).build());
@@ -97,12 +109,16 @@ public class OllamaProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<DecisionModelProviderCandidateBuildItem> decisionProducer,
             LangChain4jOllamaOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+        }
+        if (config.decisionModel().enabled().isEmpty() || config.decisionModel().enabled().get()) {
+            decisionProducer.produce(new DecisionModelProviderCandidateBuildItem(PROVIDER));
         }
     }
 
@@ -171,6 +187,7 @@ public class OllamaProcessor {
     void generateBeans(OllamaRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedDecisionModelProviderBuildItem> selectedDecision,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -227,6 +244,26 @@ public class OllamaProcessor {
             }
         }
 
+        for (var selected : selectedDecision) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String configName = selected.getConfigName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(DECISION_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.DECISION_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OLLAMA_DECISION_MODEL_BUILDER) }, null) },
+                                null), ANY)
+                        .createWith(recorder.decisionModel(configName));
+                addQualifierIfNecessary(builder, configName);
+                beanProducer.produce(builder.done());
+            }
+        }
     }
 
     private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {

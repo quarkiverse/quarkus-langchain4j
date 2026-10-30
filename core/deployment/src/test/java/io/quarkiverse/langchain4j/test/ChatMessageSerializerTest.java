@@ -23,11 +23,15 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageSerializer;
 import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.VideoContent;
 import io.quarkus.test.QuarkusUnitTest;
 
 class ChatMessageSerializerTest {
@@ -61,6 +65,61 @@ class ChatMessageSerializerTest {
     @Test
     void should_serialize_and_deserialize_user_message_with_image_content() {
         UserMessage message = UserMessage.from(ImageContent.from("http://image.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_audio_content() {
+        UserMessage message = UserMessage.from(AudioContent.from("http://audio.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_video_content() {
+        UserMessage message = UserMessage.from(VideoContent.from("http://video.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_pdf_file_content() {
+        UserMessage message = UserMessage.from(PdfFileContent.from("http://pdf.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_base64_audio_content() {
+        UserMessage message = UserMessage.from(AudioContent.from("dGVzdA==", "audio/mp3"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_all_content_types() {
+        UserMessage message = UserMessage.from(
+                TextContent.from("describe these"),
+                ImageContent.from("http://image.url"),
+                AudioContent.from("http://audio.url"),
+                VideoContent.from("http://video.url"),
+                PdfFileContent.from("http://pdf.url"));
 
         String json = messageToJson(message);
         ChatMessage deserializedMessage = messageFromJson(json);

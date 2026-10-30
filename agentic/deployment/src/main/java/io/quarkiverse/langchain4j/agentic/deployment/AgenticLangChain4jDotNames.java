@@ -32,6 +32,7 @@ import dev.langchain4j.agentic.declarative.ToolsSupplier;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.service.MemoryId;
 
 public final class AgenticLangChain4jDotNames {
@@ -60,6 +61,7 @@ public final class AgenticLangChain4jDotNames {
 
     public static final DotName CHAT_MODEL_SUPPLIER = DotName.createSimple(ChatModelSupplier.class.getName());
     public static final DotName AGENTIC_SCOPE = DotName.createSimple(AgenticScope.class);
+    public static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
     public static final DotName RESULT_WITH_AGENTIC_SCOPE = DotName.createSimple(ResultWithAgenticScope.class);
 
     public static final DotName ACTIVATION_CONDITION = DotName.createSimple(ActivationCondition.class.getName());
@@ -93,6 +95,39 @@ public final class AgenticLangChain4jDotNames {
             .createSimple(ToolProviderSupplier.class.getName());
     public static final DotName TOOL_SUPPLIER = DotName
             .createSimple(ToolsSupplier.class.getName());
+    public static final DotName STREAMING_CHAT_MODEL_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".StreamingChatModelSupplier");
+    public static final DotName SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".SystemMessageProviderSupplier");
+    public static final DotName USER_MESSAGE_PROVIDER_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".UserMessageProviderSupplier");
+    public static final DotName PLANNER_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".PlannerSupplier");
+    public static final DotName SUPERVISOR_REQUEST = DotName
+            .createSimple(AGENTIC_PACKAGE + ".SupervisorRequest");
+    public static final DotName A2A_CLIENT_CUSTOMIZER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".A2AClientCustomizer");
+    public static final DotName DECISION_MODEL_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".DecisionModelSupplier");
+    public static final DotName DECISION_THRESHOLD_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".DecisionThresholdSupplier");
+    public static final DotName THRESHOLD_CONTEXT = DotName
+            .createSimple("dev.langchain4j.service.decision.ThresholdContext");
+
+    /**
+     * The annotations of the static helper methods of an agent, that langchain4j-agentic invokes while creating or
+     * running the agent.
+     */
+    public static final List<DotName> ALL_HELPER_ANNOTATIONS = List.of(
+            // suppliers
+            CHAT_MODEL_SUPPLIER, STREAMING_CHAT_MODEL_SUPPLIER, CHAT_MEMORY_SUPPLIER, CHAT_MEMORY_PROVIDER_SUPPLIER,
+            CONTENT_RETRIEVER_SUPPLIER, RETRIEVAL_AUGMENTER_SUPPLIER, TOOL_SUPPLIER, TOOL_PROVIDER_SUPPLIER,
+            AGENT_LISTENER_SUPPLIER, SYSTEM_MESSAGE_PROVIDER_SUPPLIER, USER_MESSAGE_PROVIDER_SUPPLIER,
+            MCP_CLIENT_SUPPLIER, PLANNER_SUPPLIER, A2A_SERVER_URL_SUPPLIER, PARALLEL_EXECUTOR, DECISION_MODEL_SUPPLIER,
+            DECISION_THRESHOLD_SUPPLIER,
+            // workflow helpers
+            EXIT_CONDITION, ACTIVATION_CONDITION, OUTPUT, BEFORE_CALL, ERROR_HANDLER, SUPERVISOR_REQUEST,
+            A2A_CLIENT_CUSTOMIZER);
 
     public static final DotName SKILLS = DotName.createSimple("io.quarkiverse.langchain4j.skills.Skills");
 

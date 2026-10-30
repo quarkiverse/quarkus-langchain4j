@@ -31,7 +31,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that an interceptor binding on a parent interface class declaration is detected by
@@ -46,7 +46,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class InterceptorInheritanceTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Traced.class, TracingInterceptor.class, TracedBase.class,
                             ChildAgent.class, FixedChatModel.class))

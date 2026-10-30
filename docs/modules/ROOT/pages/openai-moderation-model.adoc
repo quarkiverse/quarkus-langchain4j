@@ -1,4 +1,5 @@
 = OpenAI Moderation Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-openai
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -36,7 +37,7 @@ You can use moderation models in Quarkus LangChain4j either declaratively via @M
 import dev.langchain4j.model.moderation.Moderation;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.moderation.Moderate;
+import dev.langchain4j.service.Moderate;
 
 @RegisterAiService
 public interface MyModerationService {
