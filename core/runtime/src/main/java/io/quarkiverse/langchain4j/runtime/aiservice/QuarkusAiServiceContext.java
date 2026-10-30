@@ -6,7 +6,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
@@ -16,6 +18,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolService;
@@ -44,6 +47,8 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public ChatMemoryFlushStrategy chatMemoryFlushStrategy = ChatMemoryFlushStrategy.DEFERRED;
     public ToolSearchService toolSearchService;
     public List<String> classLevelSkillNames;
+
+    private final Map<AiServiceMethodCreateInfo, RetrievalAugmentor> methodRetrievalAugmentors = new ConcurrentHashMap<>();
 
     private boolean hasChatMemoryProvider;
 
@@ -163,6 +168,23 @@ public class QuarkusAiServiceContext extends AiServiceContext {
             return null;
         }
         return chatMemoryService.getChatMemory(id);
+    }
+
+    /**
+     * Returns the {@code @AugmentWith} augmentor of the given method, created once per AI service instance,
+     * the same lifecycle as the class-level augmentor.
+     */
+    public RetrievalAugmentor methodRetrievalAugmentor(AiServiceMethodCreateInfo createInfo) {
+        RetrievalAugmentor augmentor = methodRetrievalAugmentors.get(createInfo);
+        if (augmentor != null) {
+            return augmentor;
+        }
+        augmentor = createInfo.createMethodRetrievalAugmentor();
+        if (augmentor == null) {
+            return null;
+        }
+        RetrievalAugmentor previous = methodRetrievalAugmentors.putIfAbsent(createInfo, augmentor);
+        return previous != null ? previous : augmentor;
     }
 
     public ChatModel effectiveChatModel(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {

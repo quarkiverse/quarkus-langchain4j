@@ -89,6 +89,7 @@ import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.spi.classloading.ClassInstanceFactory;
 import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
+import io.quarkiverse.langchain4j.AugmentWith;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SharedMemory;
@@ -1913,6 +1914,13 @@ public class AiServicesProcessor {
                                     .map(UnremovableBeanBuildItem::beanTypes)
                                     .forEach(unremovableBeanProducer::produce);
                         }
+                        String retrievalAugmentorSupplierClassName = methodCreateInfo
+                                .getRetrievalAugmentorSupplierClassName();
+                        if (retrievalAugmentorSupplierClassName != null
+                                && !AugmentWith.None.class.getName().equals(retrievalAugmentorSupplierClassName)) {
+                            validateSupplierAndRegister(DotName.createSimple(retrievalAugmentorSupplierClassName),
+                                    index, reflectiveClassProducer, unremovableBeanProducer);
+                        }
                         perMethodMetadata.put(methodId, methodCreateInfo);
 
                         { // actual method we need to implement
@@ -2201,6 +2209,7 @@ public class AiServicesProcessor {
         List<String> methodSkillNames = gatherMethodSkillNames(method, skipToolBoxPredicate);
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
         String responseAugmenterClassName = AiServicesMethodBuildItem.gatherResponseAugmenter(method);
+        String retrievalAugmentorSupplierClassName = gatherMethodRetrievalAugmentorSupplierClassName(method);
 
         //  Detect if tools execution may block the caller thread.
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
@@ -2224,7 +2233,8 @@ public class AiServicesProcessor {
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
                 accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
-                gatherOutputGuardrails(method, methodReturnTypeSignature));
+                gatherOutputGuardrails(method, methodReturnTypeSignature),
+                retrievalAugmentorSupplierClassName);
     }
 
     private static InputGuardrailsLiteral gatherInputGuardrails(MethodInfo method) {
@@ -2969,6 +2979,21 @@ public class AiServicesProcessor {
         }
 
         return List.of();
+    }
+
+    private String gatherMethodRetrievalAugmentorSupplierClassName(MethodInfo method) {
+        AnnotationInstance augmentWithInstance = method.declaredAnnotation(LangChain4jDotNames.AUGMENT_WITH);
+        if (augmentWithInstance == null) {
+            return null;
+        }
+        DotName supplierName = augmentWithInstance.value().asClass().name();
+        if (LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER.equals(supplierName)
+                || LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER.equals(supplierName)) {
+            throw new IllegalConfigurationException("@AugmentWith on method '" + method.name() + "' of '"
+                    + method.declaringClass().name() + "' cannot reference '" + supplierName
+                    + "'. Use AugmentWith.None to disable retrieval augmentation for a method.");
+        }
+        return supplierName.toString();
     }
 
     private DotName determineThinkingHandler(ClassInfo iface, ClassOutput classOutput) {

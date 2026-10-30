@@ -97,6 +97,7 @@ import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
+import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
@@ -114,6 +115,7 @@ import dev.langchain4j.service.tool.ToolServiceContext;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
+import io.quarkiverse.langchain4j.AugmentWith;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.VideoUrl;
@@ -330,7 +332,8 @@ public class AiServiceMethodImplementationSupport {
         }
 
         AugmentationResult augmentationResult = null;
-        if (context.retrievalAugmentor != null) {
+        RetrievalAugmentor effectiveRetrievalAugmentor = effectiveRetrievalAugmentor(context, methodCreateInfo);
+        if (effectiveRetrievalAugmentor != null) {
             Metadata metadata = Metadata.builder()
                     .chatMessage(userMessage)
                     .chatMemory(committableChatMemory.messages())
@@ -338,7 +341,7 @@ public class AiServiceMethodImplementationSupport {
                     .build();
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
 
-            augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
+            augmentationResult = effectiveRetrievalAugmentor.augment(augmentationRequest);
             userMessage = (UserMessage) augmentationResult.chatMessage();
         }
 
@@ -998,6 +1001,18 @@ public class AiServiceMethodImplementationSupport {
         ChatMemory chatMemory = context.chatMemoryService.getChatMemory(memoryId);
         // if the chat memory is not empty, so we don't seed it
         return chatMemory.messages().isEmpty();
+    }
+
+    private static RetrievalAugmentor effectiveRetrievalAugmentor(QuarkusAiServiceContext context,
+            AiServiceMethodCreateInfo methodCreateInfo) {
+        String supplierClassName = methodCreateInfo.getRetrievalAugmentorSupplierClassName();
+        if (supplierClassName == null) {
+            return context.retrievalAugmentor;
+        }
+        if (AugmentWith.None.class.getName().equals(supplierClassName)) {
+            return null;
+        }
+        return context.methodRetrievalAugmentor(methodCreateInfo);
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

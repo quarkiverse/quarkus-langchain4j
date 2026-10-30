@@ -40,6 +40,7 @@ import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.AudioUrl;
+import io.quarkiverse.langchain4j.AugmentWith;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.DefaultToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.HandleToolArgumentError;
@@ -128,6 +129,8 @@ public class LangChain4jDotNames {
 
     static final DotName NO_RETRIEVAL_AUGMENTOR_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoRetrievalAugmentorSupplier.class);
+
+    static final DotName AUGMENT_WITH = DotName.createSimple(AugmentWith.class);
 
     static final DotName BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsModerationModelSupplier.class);
