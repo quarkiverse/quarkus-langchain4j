@@ -17,7 +17,7 @@ import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that the MCP client auto-detects and falls back to the legacy protocol
@@ -29,7 +29,7 @@ class McpVersionAutoDetectionLegacyStreamableHttpTest {
     private static Process process;
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class))
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "streamable-http")

@@ -29,12 +29,12 @@ import com.ibm.watsonx.ai.tool.builtin.WeatherTool;
 import com.ibm.watsonx.ai.tool.builtin.WebCrawlerTool;
 import com.ibm.watsonx.ai.tool.builtin.WikipediaTool;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class BuiltinServiceInjectTest extends WireMockAbstract {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-tool.base-url", URL_WX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

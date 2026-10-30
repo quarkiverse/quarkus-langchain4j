@@ -17,12 +17,12 @@ import dev.langchain4j.model.decision.request.YesNoQuestion;
 import io.quarkiverse.langchain4j.openai.DisabledDecisionModel;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class DecisionModelEnableIntegrationFalseTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.enable-integration", "false");
 

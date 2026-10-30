@@ -27,12 +27,12 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ChatScopeMemoryTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(AiService.class, MirrorModelSupplier.class,
                             CustomChatMemoryStore.class));

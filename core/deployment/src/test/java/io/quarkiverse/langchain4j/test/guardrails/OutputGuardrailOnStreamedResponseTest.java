@@ -33,13 +33,13 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 public class OutputGuardrailOnStreamedResponseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class,
                             MyChatModelSupplier.class, MyMemoryProviderSupplier.class, ValidationException.class));

@@ -12,12 +12,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.ModelDisabledException;
 import dev.langchain4j.model.scoring.ScoringModel;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class JinferScoringBeanTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.jinfer.enable-integration", "false");
 

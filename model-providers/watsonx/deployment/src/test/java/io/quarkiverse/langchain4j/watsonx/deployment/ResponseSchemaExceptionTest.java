@@ -16,7 +16,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ResponseSchemaExceptionTest {
 
@@ -78,7 +78,7 @@ public class ResponseSchemaExceptionTest {
     @Nested
     class ResponseSchemaSystemMessage {
         @RegisterExtension
-        static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+        static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
                 .overrideConfigKey("quarkus.langchain4j.response-schema", "false")
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(AiServiceSystemMessage.class))
                 .assertException(t -> {
@@ -95,7 +95,7 @@ public class ResponseSchemaExceptionTest {
     @Nested
     class ResponseSchemaUserMessage {
         @RegisterExtension
-        static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+        static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
                 .overrideConfigKey("quarkus.langchain4j.response-schema", "false")
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(AiServiceUserMessage.class))
                 .assertException(t -> {
@@ -112,7 +112,7 @@ public class ResponseSchemaExceptionTest {
     @Nested
     class ResponseSchemaStructuredPrompt {
         @RegisterExtension
-        static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+        static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(AiServiceStructuredPrompt.class,
                         PoemPrompt.class))
                 .assertException(t -> {
@@ -130,7 +130,7 @@ public class ResponseSchemaExceptionTest {
     @Nested
     class ResponseSchemaSystemMessageOnClass {
         @RegisterExtension
-        static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+        static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
                 .overrideConfigKey("quarkus.langchain4j.response-schema", "false")
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(AiServiceSystemMessageOnClass.class))
                 .assertException(t -> {

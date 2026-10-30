@@ -18,7 +18,7 @@ import dev.langchain4j.model.moderation.Moderation;
 import dev.langchain4j.model.moderation.ModerationModel;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class MistralAiModerationModelSmokeTest extends WiremockAware {
 
@@ -26,7 +26,7 @@ class MistralAiModerationModelSmokeTest extends WiremockAware {
     private static final String CHAT_MODEL_ID = "mistral-moderation-latest";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.log-requests", "true")

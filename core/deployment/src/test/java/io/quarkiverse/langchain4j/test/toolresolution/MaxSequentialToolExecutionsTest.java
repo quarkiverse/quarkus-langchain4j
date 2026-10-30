@@ -21,7 +21,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verify functionality of {@link RegisterAiService#maxSequentialToolInvocations()}
@@ -29,7 +29,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class MaxSequentialToolExecutionsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses());
 

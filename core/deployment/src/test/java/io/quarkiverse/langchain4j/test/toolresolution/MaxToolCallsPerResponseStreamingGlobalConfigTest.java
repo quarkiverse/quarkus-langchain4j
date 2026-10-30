@@ -24,7 +24,7 @@ import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 /**
@@ -33,7 +33,7 @@ import io.smallrye.mutiny.Multi;
 public class MaxToolCallsPerResponseStreamingGlobalConfigTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Tools.class, StreamingModelSupplier.class))
             .overrideConfigKey("quarkus.langchain4j.ai-service.max-tool-calls-per-response", "3");

@@ -30,13 +30,13 @@ import io.quarkiverse.langchain4j.openai.common.OpenAiApiException;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class OpenAiRestApiSmokeTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
     private static final String TOKEN = "whatever";
     private static final String ORGANIZATION = "org";

@@ -24,7 +24,7 @@ import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionParameters.Type;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @EnabledIfEnvironmentVariable(named = "WATSONX_API_KEY", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_PROJECT_ID", matches = ".+")
@@ -46,7 +46,7 @@ public class TextExtractionITTest {
     static final String CLOUD_OBJECT_STORAGE_URL = System.getenv("CLOUD_OBJECT_STORAGE_URL");
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)

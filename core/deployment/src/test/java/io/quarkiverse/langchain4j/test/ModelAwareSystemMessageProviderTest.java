@@ -30,7 +30,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Tests that a {@link SystemMessageProvider} can produce a system message based on the
@@ -40,7 +40,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ModelAwareSystemMessageProviderTest {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             Assistant.class,

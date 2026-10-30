@@ -42,7 +42,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -56,7 +56,7 @@ import tools.jackson.databind.ObjectMapper;
 public class ToolGuardrailWithObjectTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             MyAiService.class,

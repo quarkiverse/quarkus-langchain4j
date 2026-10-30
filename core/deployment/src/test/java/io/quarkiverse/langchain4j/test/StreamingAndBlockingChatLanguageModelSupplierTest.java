@@ -20,7 +20,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 public class StreamingAndBlockingChatLanguageModelSupplierTest {
@@ -80,7 +80,7 @@ public class StreamingAndBlockingChatLanguageModelSupplierTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyResource.class, MyService.class, MyModelSupplier.class, MyStreamingModelSupplier.class));
 

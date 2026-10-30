@@ -39,7 +39,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.ForbiddenException;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Context;
@@ -58,7 +58,7 @@ public class ToolRolesAllowedTest {
     private static final String EVENT_LOOP = "eventloop";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withEmptyApplication()
             .overrideConfigKey("quarkus.http.auth.basic", "true")
             .overrideConfigKey("quarkus.security.users.embedded.enabled", "true")

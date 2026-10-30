@@ -29,7 +29,7 @@ import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * An {@link InvocationContext} tool parameter is supplied by the framework, just like a
@@ -40,7 +40,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolInvocationContextParameterTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, ContextTools.class,
                             MyChatModelSupplier.class, MyChatModel.class, Lists.class));

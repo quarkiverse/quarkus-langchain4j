@@ -27,7 +27,7 @@ import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import tools.jackson.databind.ObjectMapper;
 
 public class VertexAiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
@@ -36,7 +36,7 @@ public class VertexAiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
     private static final String CHAT_MODEL_ID = "gemini-2.5-flash";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.log-requests", "true");

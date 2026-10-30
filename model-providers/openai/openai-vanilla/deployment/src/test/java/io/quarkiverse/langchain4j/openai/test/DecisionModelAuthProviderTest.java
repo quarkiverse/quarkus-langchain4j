@@ -22,7 +22,7 @@ import dev.langchain4j.model.decision.request.YesNoQuestion;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * No API key is configured: the {@link ModelAuthProvider} bean must be enough, and its token must reach the request.
@@ -30,7 +30,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class DecisionModelAuthProviderTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(DummyModelAuthProvider.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", WiremockAware.wiremockUrlForConfig("/v1"));
 

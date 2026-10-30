@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import dev.langchain4j.internal.Json;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Copied from {@code dev.langchain4j.internal.JsonTest} to ensure that our integration behaves as expected
@@ -25,7 +25,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class JsonTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Test

@@ -15,7 +15,7 @@ import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.service.decision.Decide;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterDecisionService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Every model answers "yes" with a probability of 0.6.
@@ -23,7 +23,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class DecisionServiceThresholdConfigTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(FixedDecisionModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.decision-service.StrictService.threshold", "0.7")
             .overrideRuntimeConfigKey("quarkus.langchain4j.decision-service.TunedService.threshold", "0.7")

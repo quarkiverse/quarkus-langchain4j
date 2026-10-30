@@ -41,12 +41,12 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ChatAllPropertiesTest extends WireMockAbstract {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.space-id", "my-space-id")

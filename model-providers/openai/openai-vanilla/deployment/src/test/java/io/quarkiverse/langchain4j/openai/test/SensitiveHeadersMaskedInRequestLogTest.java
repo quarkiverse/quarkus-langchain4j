@@ -23,7 +23,7 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class SensitiveHeadersMaskedInRequestLogTest extends OpenAiBaseTest {
 
@@ -39,7 +39,7 @@ public class SensitiveHeadersMaskedInRequestLogTest extends OpenAiBaseTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(GatewayTokenCustomizer.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", API_KEY)

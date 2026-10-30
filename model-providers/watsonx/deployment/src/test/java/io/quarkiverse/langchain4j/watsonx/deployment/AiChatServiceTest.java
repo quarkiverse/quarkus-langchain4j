@@ -48,14 +48,14 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 
 public class AiChatServiceTest extends WireMockAbstract {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)

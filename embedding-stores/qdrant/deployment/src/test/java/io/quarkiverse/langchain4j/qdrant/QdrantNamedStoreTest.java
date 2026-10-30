@@ -11,12 +11,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class QdrantNamedStoreTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.qdrant.products.collection-name", "product_embeddings")
             .overrideConfigKey("quarkus.langchain4j.qdrant.products.client-name", "secondary")

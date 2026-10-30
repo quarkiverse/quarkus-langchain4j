@@ -25,7 +25,7 @@ import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkiverse.langchain4j.vertexai.runtime.VertexAiChatLanguageModel;
 import io.quarkiverse.langchain4j.vertexai.runtime.VertxAiRestApi;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class VertexAiChatLanguageModelSmokeTest extends WiremockAware {
 
@@ -33,7 +33,7 @@ public class VertexAiChatLanguageModelSmokeTest extends WiremockAware {
     private static final String CHAT_MODEL_ID = "chat-bison";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.log-requests", "true")

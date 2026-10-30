@@ -29,7 +29,7 @@ import dev.langchain4j.model.bedrock.BedrockTokenUsage;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.output.FinishReason;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
 import software.amazon.awssdk.services.bedrockruntime.model.StopReason;
 
@@ -37,7 +37,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.StopReason;
 class BedrockStreamingChatModelTest extends BedrockTestBase {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(TestCredentialsProvider.class)
                     .addClass(BedrockStreamHelper.class)

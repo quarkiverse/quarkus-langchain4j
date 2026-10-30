@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * The server treats a lone route as the default one even without {@code @DefaultChatRoute}, so the
@@ -28,7 +28,7 @@ public class SingleRouteJsApiTest {
     private static final String API = "/_static/quarkus-chat-scopes-api/chatscopes-api.js";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(OnlyChatService.class));
 
     @ApplicationScoped

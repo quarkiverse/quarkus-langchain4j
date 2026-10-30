@@ -22,12 +22,12 @@ import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class ToolGuardrailsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             TestTools.class,

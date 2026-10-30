@@ -18,7 +18,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.tls.TlsConfiguration;
 import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.certs.Format;
@@ -38,7 +38,7 @@ import io.vertx.ext.web.Router;
 public class OpenAiChatLanguageModelTlsConfigurationTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withApplicationRoot((jar) -> jar
                     .addClasses(Setup.class)
                     .addAsResource(new File("target/certs/lc4j-keystore.p12"), "keystore.p12")

@@ -12,12 +12,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.chat.ChatModel;
 import io.quarkus.runtime.configuration.ConfigurationException;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class NoChatLanguageProviderTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .assertException(t -> assertThat(t).isInstanceOf(ConfigurationException.class));
 

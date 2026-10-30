@@ -38,7 +38,7 @@ import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.test.Lists;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Vertx;
 
@@ -54,7 +54,7 @@ import io.vertx.core.Vertx;
 public class ToolExecutionModelWithStreamingErrorHandlingTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, Lists.class));
 

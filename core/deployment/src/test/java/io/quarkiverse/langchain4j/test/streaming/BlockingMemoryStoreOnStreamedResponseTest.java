@@ -21,7 +21,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Context;
@@ -31,7 +31,7 @@ import io.vertx.core.internal.ContextInternal;
 public class BlockingMemoryStoreOnStreamedResponseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(StreamTestUtils.class));
 

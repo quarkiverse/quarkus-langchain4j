@@ -24,11 +24,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-requests", "true")

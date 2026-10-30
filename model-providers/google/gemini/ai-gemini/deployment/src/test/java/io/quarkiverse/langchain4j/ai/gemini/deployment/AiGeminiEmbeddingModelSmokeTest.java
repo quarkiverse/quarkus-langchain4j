@@ -23,7 +23,7 @@ import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
@@ -33,7 +33,7 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     private static final int OUTPUT_DIMENSION = 7;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)

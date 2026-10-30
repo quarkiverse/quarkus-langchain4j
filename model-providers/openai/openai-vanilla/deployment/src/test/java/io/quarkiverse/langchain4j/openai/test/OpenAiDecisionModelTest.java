@@ -49,7 +49,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Exercises {@code OpenAiDecisionModel} through the CDI bean, the Quarkus configuration and the Quarkus HTTP client.
@@ -57,7 +57,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class OpenAiDecisionModelTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(RecordingListener.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", WiremockAware.wiremockUrlForConfig("/v1"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "default-key")

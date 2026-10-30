@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * When a {@code ToolSearchStrategy} CDI bean exists, an AI service that does not opt out should let it narrow the
@@ -22,7 +22,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolSearchStrategyTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ToolSearchModel.class,
                             ToolSearchModelSupplier.class,

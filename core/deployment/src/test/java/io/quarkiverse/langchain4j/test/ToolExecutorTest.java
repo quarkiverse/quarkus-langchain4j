@@ -32,7 +32,7 @@ import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkus.jackson.JsonMapperBuilderCustomizer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Uni;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -40,7 +40,7 @@ import tools.jackson.databind.json.JsonMapper;
 class ToolExecutorTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(PrettyPrintCustomizer.class));
 
     TestTool testTool = new TestTool();

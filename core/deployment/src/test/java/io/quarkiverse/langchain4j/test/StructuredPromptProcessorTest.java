@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Copied from {@code dev.langchain4j.model.input.structured.StructuredPromptProcessorTest}
@@ -22,7 +22,7 @@ import io.quarkus.test.QuarkusUnitTest;
 class StructuredPromptProcessorTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @StructuredPrompt("Hello, my name is {{name}}")

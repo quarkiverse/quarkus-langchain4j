@@ -17,14 +17,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.McpClient;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class OidcClientMcpRootsCallbackTest {
 
     private static Process process;
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class, MockOidcTokenEndpoint.class))
             .overrideConfigKey("quarkus.devservices.enabled", "false")

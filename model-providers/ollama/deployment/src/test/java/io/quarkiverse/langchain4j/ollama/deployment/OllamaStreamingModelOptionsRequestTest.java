@@ -18,13 +18,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 public class OllamaStreamingModelOptionsRequestTest extends WiremockAware {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.ollama.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-name", "qwen3:1.7b")

@@ -27,7 +27,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Since ChatMemoryStore usually is implemented via remote operations, we need to make sure
@@ -37,7 +37,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ChatMemoryStoreHitCountTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AiService.class, CustomChatMemoryStore.class, MirrorModelSupplier.class,
                             ChatMemoryStoreSupplier.class));

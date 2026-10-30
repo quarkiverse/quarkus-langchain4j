@@ -33,12 +33,12 @@ import dev.langchain4j.exception.ModelNotFoundException;
 import dev.langchain4j.exception.RateLimitException;
 import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.QuarkusHttpException;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class HttpErrorTest extends WireMockAbstract {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

@@ -14,13 +14,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
 import io.quarkiverse.langchain4j.chatscopes.internal.ChatScopeManagedContext;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.QuarkusTestResource;
 
 @QuarkusTestResource(RedisTestResource.class)
 public class PassivationTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(
                             CounterBean.class, AppScopedCounter.class, SingletonCounter.class))

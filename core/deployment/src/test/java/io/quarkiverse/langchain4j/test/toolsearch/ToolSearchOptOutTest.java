@@ -14,7 +14,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.RegisterAiService.NoToolSearchStrategySupplier;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Even when a {@code ToolSearchStrategy} CDI bean exists, a service that opts out with
@@ -23,7 +23,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolSearchOptOutTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ToolSearchModel.class,
                             ToolSearchModelSupplier.class,

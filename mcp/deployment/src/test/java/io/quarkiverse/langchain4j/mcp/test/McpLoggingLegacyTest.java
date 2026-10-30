@@ -27,7 +27,7 @@ import io.quarkiverse.langchain4j.mcp.test.mock.LegacyMcpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Executes a tool that sends a log message to the client on the SSE stream of the tool call
@@ -42,7 +42,7 @@ public class McpLoggingLegacyTest extends WiremockAware {
     private static final String MCP_PATH = "/mcp/logging-legacy";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(LogMessageCollector.class)
                     .addPackage(McpMockServer.class.getPackage())

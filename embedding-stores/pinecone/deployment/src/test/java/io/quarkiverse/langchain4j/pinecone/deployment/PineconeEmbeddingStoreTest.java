@@ -23,7 +23,7 @@ import io.quarkiverse.langchain4j.pinecone.runtime.PineconeVectorOperationsApi;
 import io.quarkiverse.langchain4j.pinecone.runtime.QueryRequest;
 import io.quarkiverse.langchain4j.pinecone.runtime.VectorMatch;
 import io.quarkus.logging.Log;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Prerequisites for this test: A pinecone index must exist (can be in the starter region)
@@ -49,7 +49,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class PineconeEmbeddingStoreTest extends EmbeddingStoreIT {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset(
                             // to enable rest client logging:

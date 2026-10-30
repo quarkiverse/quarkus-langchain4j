@@ -13,12 +13,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.response.ResponseAugmenter;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ImperativeResponseAugmenterTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ResponseAugmenterTestUtils.FakeChatModelSupplier.class,
                             ResponseAugmenterTestUtils.FakeChatModel.class,

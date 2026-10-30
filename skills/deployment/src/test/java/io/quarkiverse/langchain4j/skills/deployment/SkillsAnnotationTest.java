@@ -13,14 +13,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkiverse.langchain4j.skills.runtime.DefaultSkillsConfigurator;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class SkillsAnnotationTest {
 
     private static final Path SKILLS_DIR = Path.of("src/test/resources/skills").toAbsolutePath();
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.skills.directories", SKILLS_DIR.toString());
 
     @Inject

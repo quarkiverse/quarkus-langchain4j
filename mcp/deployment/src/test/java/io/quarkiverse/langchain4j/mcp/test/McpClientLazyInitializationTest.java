@@ -24,7 +24,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verify that when an AI service declares to use specific MCP clients,
@@ -39,7 +39,7 @@ public class McpClientLazyInitializationTest extends WiremockAware {
     private static final String CLIENT2_PATH = "/mcp/lazy-initialization/client2";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever

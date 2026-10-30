@@ -26,7 +26,7 @@ import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ManagedContext;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class RemovableChatMemoryTest extends OpenAiBaseTest {
 
@@ -34,7 +34,7 @@ public class RemovableChatMemoryTest extends OpenAiBaseTest {
     public static final int SECOND_MEMORY_ID = 2;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",

@@ -9,13 +9,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import tools.jackson.databind.ObjectMapper;
 
 public class JsonParsingTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Test

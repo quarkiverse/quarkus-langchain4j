@@ -15,14 +15,14 @@ import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2Quantize
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class QdrantEmbeddingStoreTest extends EmbeddingStoreIT {
 
     public static final String COLLECTION_NAME = "qdrant_test_embeddings";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(QdrantEmbeddingStoreTest::archive);
 
     @Inject

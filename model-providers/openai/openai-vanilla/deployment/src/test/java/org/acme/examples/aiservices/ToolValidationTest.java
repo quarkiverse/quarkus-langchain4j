@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.Tool;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @DisplayName("@Tool validation")
 public class ToolValidationTest {
@@ -23,7 +23,7 @@ public class ToolValidationTest {
     @DisplayName("Abstract tool detection")
     class AbstractTools {
         @RegisterExtension
-        static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+        static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyAbstractTool.class))
                 .assertException(t -> {
                     assertThat(t)
@@ -42,7 +42,7 @@ public class ToolValidationTest {
     @DisplayName("Interface tool detection")
     class InterfaceTools {
         @RegisterExtension
-        static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+        static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyAbstractTool.class))
                 .assertException(t -> {
                     assertThat(t)

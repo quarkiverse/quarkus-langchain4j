@@ -28,14 +28,14 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.mistralai.MistralAiChatResponseMetadata;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class MistralAiStreamingOnUnmappedRawEventTest extends WiremockAware {
 
     private static final String API_KEY = "somekey";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.base-url",

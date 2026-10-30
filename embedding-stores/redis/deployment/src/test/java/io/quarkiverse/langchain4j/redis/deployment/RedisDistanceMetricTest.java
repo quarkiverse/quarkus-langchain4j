@@ -20,12 +20,12 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class RedisDistanceMetricTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.redis.default-store-enabled=false

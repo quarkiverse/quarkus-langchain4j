@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class McpPromptsStreamableHttpTest extends McpPromptsTestBase {
 
@@ -19,7 +19,7 @@ class McpPromptsStreamableHttpTest extends McpPromptsTestBase {
     private static Process process;
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class))
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "streamable-http")

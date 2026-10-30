@@ -42,7 +42,7 @@ import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaDeleteParamet
 import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaFetchParameters;
 import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class CreateSchemaTest extends WireMockAbstract {
 
@@ -77,7 +77,7 @@ public class CreateSchemaTest extends WireMockAbstract {
             }""";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

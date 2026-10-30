@@ -16,12 +16,12 @@ import dev.langchain4j.service.decision.Decide;
 import dev.langchain4j.service.decision.ThresholdContext;
 import dev.langchain4j.service.decision.ThresholdProvider;
 import io.quarkiverse.langchain4j.RegisterDecisionService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class DecisionServiceThresholdProviderTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(FixedDecisionModel.class));
 
     @RegisterDecisionService

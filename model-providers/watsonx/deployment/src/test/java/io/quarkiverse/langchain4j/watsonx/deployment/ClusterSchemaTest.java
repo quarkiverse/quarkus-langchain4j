@@ -44,7 +44,7 @@ import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemas;
 
 import io.quarkiverse.langchain4j.watsonx.runtime.client.QuarkusRestClientConfig;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ClusterSchemaTest extends WireMockAbstract {
 
@@ -89,7 +89,7 @@ public class ClusterSchemaTest extends WireMockAbstract {
             }""";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

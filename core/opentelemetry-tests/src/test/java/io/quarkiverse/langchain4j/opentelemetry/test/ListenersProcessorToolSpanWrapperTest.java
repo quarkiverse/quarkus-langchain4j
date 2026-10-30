@@ -28,7 +28,7 @@ import io.quarkiverse.langchain4j.runtime.tool.ToolExecutionResponseContext;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanContributor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanWrapper;
 import io.quarkus.arc.All;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class ListenersProcessorToolSpanWrapperTest {
     @Inject
@@ -42,7 +42,7 @@ class ListenersProcessorToolSpanWrapperTest {
     InMemorySpanExporter exporter;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(
                             new StringAsset(

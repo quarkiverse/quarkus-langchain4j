@@ -37,7 +37,7 @@ import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Context;
@@ -51,7 +51,7 @@ import io.vertx.core.Vertx;
 public class DynamicToolProviderThreadTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(StreamingAssistant.class, NonBlockingTools.class, DynamicToolProvider.class,
                             EventLoopStreamingChatModelSupplier.class));
