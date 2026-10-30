@@ -597,6 +597,7 @@ public class AiServiceMethodImplementationSupport {
                                 .invocationContext(invocationContext)
                                 .request(toolExecutionRequest)
                                 .resultContents(toolExecutionResult.resultContents())
+                                .isError(toolExecutionResult.isError())
                                 .build());
 
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil

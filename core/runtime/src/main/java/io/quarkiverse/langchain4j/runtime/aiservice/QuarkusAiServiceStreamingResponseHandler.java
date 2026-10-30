@@ -23,7 +23,6 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.StreamingResponseHandler;
@@ -226,11 +225,12 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                 .build());
     }
 
-    private void fireToolExecutedEvent(ToolExecutionRequest request, List<Content> resultContents) {
+    private void fireToolExecutedEvent(ToolExecutionRequest request, ToolExecutionResult result) {
         context.eventListenerRegistrar.fireEvent(ToolExecutedEvent.builder()
                 .invocationContext(invocationContext)
                 .request(request)
-                .resultContents(resultContents)
+                .resultContents(result.resultContents())
+                .isError(result.isError())
                 .build());
     }
 
@@ -434,7 +434,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                                 invocationContext, toolExecutors, toolExecutionRequest,
                                 beforeToolExecutionHandler, toolExecuteHandler);
 
-                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultContents());
+                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult);
                         rawToolResults.add(toolExecutionResult);
                         anyToolErrored = anyToolErrored || toolExecutionResult.isError();
                         returnBehaviors.add(returnBehaviorOf(toolExecutionRequest.name()));
