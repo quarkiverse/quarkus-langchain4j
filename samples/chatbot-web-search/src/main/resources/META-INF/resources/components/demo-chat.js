@@ -11,7 +11,7 @@ export class DemoChat extends LitElement {
             chatBot.hideAllLoading();
             chatBot.sendMessage(event.data, {
                 right: false,
-                sender: {name: 'Bob', id: '007'}
+                sender: {name: 'Sam', id: '007'}
             });
         }
 
@@ -21,7 +21,7 @@ export class DemoChat extends LitElement {
                 socket.send(e.detail.message.message);
                 chatBot.sendMessage("", {
                     right: false,
-                    sender: {name: 'Bob', id: '007'},
+                    sender: {name: 'Sam', id: '007'},
                     loading: true
                 });
             }

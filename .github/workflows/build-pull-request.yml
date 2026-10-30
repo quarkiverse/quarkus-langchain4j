@@ -25,7 +25,7 @@ jobs:
   # Artifacts will be reused in the other jobs
   quick-build:
     name: Quick Build
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=linux
     # Skip draft PRs, rerun as soon as its removed
     if: >-
       github.event_name != 'pull_request' || (
@@ -39,6 +39,8 @@ jobs:
       in_process_embedding_modules: ${{ steps.matrices.outputs.in_process_embedding_modules }}
 
     steps:
+      - uses: runs-on/action@v2
+
       - uses: actions/checkout@v4
 
       - name: Reclaim Disk Space
@@ -77,15 +79,14 @@ jobs:
                 | jq -R -s -c 'split("\n")[:-1]')
 
           # Integration tests (without the in-process embedding models)
-          # Remove JLama, Llama3 and GPU Llama3 from the list
+          # Remove Jinfer and JitLLM from the list
           cd integration-tests
           IT_MODULES=$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
-                | grep -v jlama \
-                | grep -v llama3-java \
-                | grep -v gpu-llama3 \
+                | grep -v jinfer \
+                | grep -v jitllm \
                 | grep -v mcp-conformance \
                 | grep -v in-process-embedding-models \
                 | jq -R -s -c 'split("\n")[:-1]')
@@ -120,10 +121,26 @@ jobs:
 
   documentation-check:
     name: Documentation check
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=linux
 
     steps:
+      - uses: runs-on/action@v2
+
       - uses: actions/checkout@v4
+
+      - name: Validate guide metadata
+        run: |
+          MISSING=$(for f in docs/modules/ROOT/pages/*.adoc; do
+            awk '/^$/{exit} /^:extensions:/{found=1} END{exit !found}' "$f" || echo "$f"
+          done)
+          if [ -n "$MISSING" ]; then
+            echo "These guides have no :extensions: attribute in their header:"
+            echo "$MISSING"
+            echo "Add it right below the title, before the first blank line, e.g.:"
+            echo "  :extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core"
+            echo "It sets the source of the guide's chunks in the documentation RAG artifact."
+            exit 1
+          fi
 
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
@@ -160,8 +177,10 @@ jobs:
         java: [ 17, 21, 25 ]
         module: ${{fromJson(needs.quick-build.outputs.all_modules)}}
     name: JVM tests - ${{ matrix.module }} - Java ${{ matrix.java }}
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}-${{ strategy.job-index }}/runner=linux
     steps:
+      - uses: runs-on/action@v2
+
       - uses: actions/checkout@v4
 
       - name: Set up JDK ${{ matrix.java }}
@@ -183,25 +202,18 @@ jobs:
         run: |
           tar -xzf ../maven-repo.tgz -C ~
 
-      # Build Jlama if JDK >= 21
+      # Build JitLLM if JDK >= 21
       # It's not build by default as it requires Java 21+
-      - name: Build JLama extension
+      - name: Build JitLLM extension
         if: ${{ matrix.java >= 21 }}
         run: |
-          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jlama/pom.xml
+          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jitllm/pom.xml
 
-      # Build Jlama if JDK >= 21
-      # It's not build by default as it requires Java 21+
-      - name: Build GPU Llama3 extension
-        if: ${{ matrix.java >= 21 }}
+      # Build Jinfer if JDK >= 25. It requires Java 25 (Qxotic jinfer floor) and is not built by default.
+      - name: Build Jinfer extension
+        if: ${{ matrix.java >= 25 }}
         run: |
-          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/gpu-llama3/pom.xml
-
-      # Build Llama3.java if JDK >= 22. See https://x.com/tjake/status/1849141171475399083?t=EpgVJCPLC17fCXio0FvnhA&s=19 for the reason
-      - name: Build Llama3-java extension
-        if: ${{ matrix.java >= 22 }}
-        run: |
-          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/llama3-java/pom.xml
+          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jinfer/pom.xml
 
       - name: Run tests of ${{ matrix.module }} with JDK ${{ matrix.java }}
         run: |
@@ -231,8 +243,10 @@ jobs:
       fail-fast: false
       matrix:
         module: ${{fromJson(needs.quick-build.outputs.it_modules)}}
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}-${{ strategy.job-index }}/runner=linux
     steps:
+      - uses: runs-on/action@v2
+
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -282,8 +296,10 @@ jobs:
       fail-fast: false
       matrix:
         module: ${{fromJson(needs.quick-build.outputs.in_process_embedding_modules)}}
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}-${{ strategy.job-index }}/runner=linux
     steps:
+      - uses: runs-on/action@v2
+
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -327,8 +343,10 @@ jobs:
   mcp-conformance-tests:
     needs: quick-build
     name: MCP Conformance tests
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=linux
     steps:
+      - uses: runs-on/action@v2
+
       - uses: actions/checkout@v4
 
       # ubuntu-latest comes with Node 20, but MCP conformance tests require 24
@@ -364,11 +382,13 @@ jobs:
 
 
   build-report:
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}/runner=linux
     name: Build report
     needs: [quick-build, jvm-tests, native-tests, in-process-embedding-model-tests]
     if: always()
     steps:
+      - uses: runs-on/action@v2
+
       - uses: actions/download-artifact@v4
         with:
           path: build-reports-artifacts

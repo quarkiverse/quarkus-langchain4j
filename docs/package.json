@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "diagrams": "bash diagrams/generate.sh"
+  },
   "devDependencies": {
     "@antora/cli": "3.1.10",
     "@antora/site-generator": "3.1.10"
@@ -6,7 +9,6 @@
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^11.6.0",
     "asciidoctor": "^3.0.4",
-    "asciidoctor-kroki": "^0.18.1",
     "phantomjs": "^2.1.7"
   }
 }

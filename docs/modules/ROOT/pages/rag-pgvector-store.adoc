@@ -1,4 +1,5 @@
-= PGVector Document Store
+= PGVector Embedding Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-pgvector
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -6,9 +7,14 @@ include::./includes/customization.adoc[]
 The PGVector extension allows you to use PostgreSQL as a vector database for Retrieval-Augmented Generation (RAG) with Quarkus LangChain4j.
 It leverages the `pgvector` extension in PostgreSQL to store and search vector embeddings efficiently.
 
+== Alternative
+
+The https://docs.quarkiverse.io/quarkus-langchain4j/dev/rag-hibernate-store.html[Hibernate extension] is an alternative
+to this, which supports additional database kinds, features and customizations.
+
 == Prerequisites
 
-To use PGVector as a document store:
+To use PGVector as an embedding store:
 
 * A PostgreSQL instance with the `pgvector` extension installed is required.
 * A Quarkus datasource must be configured.
@@ -143,7 +149,7 @@ quarkus.langchain4j.pgvector.default-store-enabled=false
 
 == Summary
 
-To use PostgreSQL and PGVector as a document store with Quarkus LangChain4j:
+To use PostgreSQL and PGVector as an embedding store with Quarkus LangChain4j:
 
 * Ensure the `pgvector` extension is installed in your PostgreSQL instance.
 * Add the extension dependency.

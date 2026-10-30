@@ -8,7 +8,7 @@
     <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-chat-scopes-websocket</artifactId>
-  <name>Quarkus LangChain4j - Chat Scopes - Runtime</name>
+  <name>Quarkus LangChain4j - Chat Scopes - Websocket</name>
   <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

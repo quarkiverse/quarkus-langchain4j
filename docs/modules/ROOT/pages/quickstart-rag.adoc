@@ -1,4 +1,5 @@
 = Getting Started with Retrieval-Augmented Generation (RAG)
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -8,45 +9,20 @@ Retrieval-Augmented Generation (RAG) enhances LLM responses by allowing them to 
 
 RAG typically involves two main phases:
 
-- **Ingestion Phase**: Documents are indexed and stored as embeddings in a vector store.
+- **Ingestion Phase**: Documents are indexed and stored as embeddings in an embedding store.
 - **Retrieval Phase**: At runtime, relevant document segments are retrieved and provided to the LLM for generating enriched answers.
 
 The ingestion phase parses documents, splits them into manageable segments, and generates embeddings that capture their semantic meaning.
 These embeddings are then stored in a vector database, allowing for efficient similarity searches.
 
-[mermaid,ingestion,svg,float=left]
-----
-graph LR
-    A[Documents] e1@--> B[DocumentLoader reads content]
-    B e2@--> C[Splitter cuts documents into segments]
-    C e3@--> D[EmbeddingModel generates embeddings for each segment]
-    D e4@-->|Stores embeddings| E[(Embedding Store)]
-
-    class A,B,C,D,E,F node;
-    class e1,e2,e3,e4 edge
-    classDef node fill:#4A93E9,stroke:white,color:white
-    classDef edge stroke-width:3px,stroke:#DF1862
-----
+// Generated from diagrams/quickstart-rag-ingestion.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::quickstart-rag-ingestion.svg[Ingestion phase,align="center"]
 
 
 The retrieval phase uses the embeddings to find relevant segments based on user queries. The retrieved segments are then used to provide context for the LLM, enabling it to generate more accurate and context-aware responses:
 
-[mermaid,retrieval,svg]
-----
-graph LR
-    A[User asks question] e1@--> B[1 - The AI Service processes request]
-    B e2@--> C[2 - The document retriever orchestrates the retrieval process]
-    C e3@<--> D[3 - The embedding model is used to generate an embedding for the query]
-    C e4@<--> |4 - Query the embedding store| E[(Embedding Store)]
-    C e5@-->|5 - Provides the segments| B
-    B e6@<--> F[6 - LLM generates answer based on segments]
-    B e7@-->|7 - Return the response| A
-
-    class A,B,C,D,E,F node;
-    classDef node fill:#4A93E9,stroke:white,color:white
-    class e1,e2,e3,e4,e5,e6,e7 edge
-    classDef edge stroke-width:3px,stroke:#DF1862
-----
+// Generated from diagrams/quickstart-rag-retrieval.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::quickstart-rag-retrieval.svg[Retrieval phase]
 
 
 == Example Overview
@@ -95,9 +71,9 @@ quarkus.langchain4j.openai.api-key=sk-...
 ----
 
 [NOTE]
-.Other Vector Stores
+.Other Embedding Stores
 ====
-Quarkus LangChain4j supports multiple vector stores. See the xref:index.adoc[supported vector stores] documentation for alternatives.
+Quarkus LangChain4j supports multiple embedding stores. See the xref:index.adoc[supported embedding stores] documentation for alternatives.
 // TODO Change link to the actual page when available
 ====
 

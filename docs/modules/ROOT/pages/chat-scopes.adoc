@@ -1,4 +1,5 @@
 = Quarkus Chat Scopes
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-chat-scopes
 
 include::./includes/attributes.adoc[]
 
@@ -203,6 +204,98 @@ public MyBean {
 }
 ----
 
+=== Passivating Chat Scopes
+
+If you need your conversations to survive a server restart, both `@ChatScoped` and `@PerChatScoped` support passivation with some constraints.
+
+* Beans are serialized to/from JSON using Jackson.  You can use Jackson as needed to fine-tune serialization.
+* `transient` fields will be ignored.
+* Use `@io.quarkiverse.langchain4j.chatscopes.PrePassivate` and `@PostActivate` on bean methods to receive a callbacks before
+and after passivation/activate
+* `@PrePassivate` and `@PostActivate` annotations do not work on dependent bean instances.
+* The container creates bean instances, injects, and calls @PostConstruct before activating the bean and restoring state from the
+passivation store.  Use the `@PostActivate` annotation if you need to do things after deserialization.
+* Interceptor instances attached to the bean are NOT passivated. (decorator serialize DOES WORK!)
+* Works best if `@Inject` and qualifiers are only on fields.  Use setter and constructor injection at your own risk.  Container
+may not be able to ignore unserializable fields.
+* fields annotated with `@Inject` or injection qualifier annotations are ignored when serialization happens unless
+you annotate the field with `@io.quarkiverse.langchain4j.chatscopes.Passivate`
+* Do not use ``@JsonAnyGetter` and ``@JsonAnySetter` annotations.  This will screw up the deserializer processing.
+* The `ObjectMapper` used for passivation is in `io.quarkiverse.langchain4j.chatscopes.passivation.JsonPassivation.mapper`.  Use
+a startup method to add any configuration to it.
+* Make sure you test passivation in your testsuite!
+
+The following backends are supported:
+
+#### Flat File Passivation
+[source,xml]
+----
+<dependency>
+   <groupId>io.quarkiverse.langchain4j</groupId>
+   <artifactId>quarkus-chat-scopes-passivation-file</artifactId>
+</dependency>
+----
+
+By default, passivation files are created within `/tmp/chatscopes`.  This can be changed by:
+
+[source,properties,subs=attributes+]
+----
+quarkiverse.langchain4j.chatscopes.passivation.file.path=/home/mydir/.passivation
+----
+
+#### MongoDB Passivation
+
+[source,xml]
+----
+<dependency>
+   <groupId>io.quarkiverse.langchain4j</groupId>
+   <artifactId>quarkus-chat-scopes-passivation-mongo</artifactId>
+</dependency>
+----
+
+This extension builds on the https://quarkus.io/guides/mongodb[Quarkus MongoDB client]. Configure the MongoDB connection as described in that guide, for example:
+
+[source,properties,subs=attributes+]
+----
+quarkus.mongodb.connection-string=mongodb://localhost:27017
+----
+
+In dev and test mode, if no connection string is configured, the MongoDB Dev Services start a MongoDB container automatically.
+
+By default, the store uses the default MongoDB client. To use a named MongoDB client instead, set its name:
+[source,properties,subs=attributes+]
+----
+quarkus.mongodb.chatscopes.connection-string=mongodb://memory-host:27017
+quarkus.langchain4j.chatscopes.store.mongodb.client-name=chatscopes
+----
+
+#### Redis Passivation
+
+[source,xml]
+----
+<dependency>
+   <groupId>io.quarkiverse.langchain4j</groupId>
+   <artifactId>quarkus-chat-scopes-passivation-redis</artifactId>
+</dependency>
+----
+
+This extension builds on the https://quarkus.io/guides/redis-reference/#redis-configuration-reference[Quarkus Redis client]. Configure the Redis connection as described in that guide, for example:
+
+[source,properties,subs=attributes+]
+----
+quarkus.redis.hosts=redis://localhost:6379
+----
+
+By default, the store uses the default Redis client. To use a named MongoDB client instead, set its name:
+[source,properties,subs=attributes+]
+----
+quarkus.redis.chatscopes.hosts=redis://localhost:6379
+quarkus.langchain4j.chatscopes.store.redist.client-name=chatscopes
+----
+
+
+
+
 == Another new CDI scope: `@InvocationScoped`
 
 For `@InvocationScoped` beans, their lifecycle begins and ends with the top level method call on a `@InvocationScoped` bean.
@@ -321,7 +414,7 @@ public interface RagBot {
 
     @ChatRoute("RagBot")
     @SystemMessage("""
-            You are an AI named Bob answering questions about financial products.
+            You are an AI named Sam answering questions about financial products.
             Your response must be polite, use the same language as the question, and be relevant to the question.
 
             When you don't know, respond that you don't know the answer and the bank will contact the customer directly.
@@ -351,7 +444,7 @@ public interface RagBot {
 
     @ChatRoute("RagBot")
     @SystemMessage("""
-            You are an AI named Bob answering questions about financial products.
+            You are an AI named Sam answering questions about financial products.
             Your response must be polite, use the same language as the question, and be relevant to the question.
 
             When you don't know, respond that you don't know the answer and the bank will contact the customer directly.
@@ -582,7 +675,7 @@ public interface RagBot {
     @ChatRoute("RagBot")
     @DefaultRoute
     @SystemMessage("""
-            You are an AI named Bob answering questions about financial products.
+            You are an AI named Sam answering questions about financial products.
             Your response must be polite, use the same language as the question, and be relevant to the question.
 
             When you don't know, respond that you don't know the answer and the bank will contact the customer directly.
@@ -828,11 +921,31 @@ Websocket chat routes automatically come with a javascript client whose code liv
 
 `/_chat/javascript/chatscopes.js`
 
-Simply include it as a script:
+It is an ES module, so import what you need from it:
 
 [source,html]
 ----
-<script src="/_chat/javascript/chatscopes.js"></script>
+<script type="module">
+    import { ChatScopesClient } from '/_chat/javascript/chatscopes.js';
+</script>
+----
+
+The extension also publishes the module to the UI extensions in Quarkus
+(https://quarkus.io/guides/web-dependency-locator[Web Dependency Locator] and
+https://docs.quarkiverse.io/quarkus-web-bundler/dev/[Web Bundler]). If one of those is on the classpath,
+the specifier `@quarkiverse/chat-scopes` resolves to the URL above, so you don't have to hardcode it:
+
+[source,javascript]
+----
+import { ChatScopesClient } from '@quarkiverse/chat-scopes';
+----
+
+With the Web Dependency Locator that needs the generated import map on the page, before any module that
+uses the specifier:
+
+[source,html]
+----
+<script src="/_importmap/generated_importmap.js"></script>
 ----
 
 Here's how it looks:
@@ -840,7 +953,7 @@ Here's how it looks:
 [source,javascript]
 ----
 client = new ChatScopesClient();
-await client.open("ws://localhost:8080/_chat/routes");
+await client.open();
 
 builder = client.builder();
 builder.messageHandler(handleMessage);
@@ -852,6 +965,59 @@ function handleMessage(data) {
     // output string message from server
     console.log("Message: " + data);
 }
+----
+
+`open()` connects to the chat routes of the server that served the page. Pass a url if you need to talk
+to a different one.
+
+==== Generated route module
+
+Spelling out route names as strings is easy to get wrong. The extension also generates a module from the
+`@ChatRoute` methods it finds, under the specifier `@quarkiverse/chat-scopes-api`, with one entry per route:
+
+[source,javascript]
+----
+import { theRoute } from '@quarkiverse/chat-scopes-api';
+
+const session = await theRoute.connect({ messageHandler: handleMessage });
+session.chat("hello world");
+----
+
+`connect()` opens the websocket on first use, so there is no `open()` call to remember. Its argument is an
+object of `SessionBuilder` handlers, and an unknown handler name fails loudly instead of being ignored. Use
+`eventHandlers` for your own event types:
+
+[source,javascript]
+----
+const session = await theRoute.connect({
+    messageHandler: handleMessage,
+    eventHandlers: {
+        PushPlaceholder: pushPlaceholder,
+        PopPlaceholder: popPlaceholder
+    }
+});
+----
+
+A route is only exported under its own name when that name can be used as one. Routes declared without an
+explicit name are called `<class>::<method>`, which cannot, so every route is also reachable through
+`routes`, along with the one annotated `@DefaultChatRoute`:
+
+[source,javascript]
+----
+import { routes, defaultRoute, client } from '@quarkiverse/chat-scopes-api';
+
+const session = await routes['com.acme.TravelAgent::book'].connect({ messageHandler: handleMessage });
+----
+
+Each route carries a `streaming` flag, true when the server method returns a `Multi<String>`. Those routes
+answer through `streamHandler` rather than `messageHandler`:
+
+[source,javascript]
+----
+import { ticker } from '@quarkiverse/chat-scopes-api';
+
+// ticker.streaming === true
+const session = await ticker.connect({ streamHandler: chunk => console.log(chunk) });
 ----
 
 Here's the full javascript API.  The API tries to mirror the local java one.

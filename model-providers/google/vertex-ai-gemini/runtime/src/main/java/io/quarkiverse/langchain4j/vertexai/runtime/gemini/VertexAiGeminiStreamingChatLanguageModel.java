@@ -17,7 +17,6 @@ import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.gemini.common.GeminiStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
-import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
@@ -29,7 +28,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
     private VertexAiGeminiStreamingChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
-                builder.listeners, builder.useGoogleSearch);
+                builder.listeners, null, false, null, builder.useGoogleSearch);
 
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
@@ -40,7 +39,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
                 .build();
 
         try {
-            String baseUrl = builder.baseUrl.orElse(String.format("https://%s-aiplatform.googleapis.com", builder.location));
+            String baseUrl = builder.baseUrl.orElse(VertxAiGeminiRestApi.defaultBaseUrl(builder.location));
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
@@ -62,7 +61,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
                 restApiBuilder.clientLogger(new VertxAiGeminiRestApi.VertxAiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
-            restApiBuilder.register(new ModelAuthProviderFilter(builder.modelId));
+            restApiBuilder.register(new ModelAuthProviderFilter(builder.configName));
             restApi = restApiBuilder.build(VertxAiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -70,7 +69,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
     }
 
     @Override
-    protected Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request) {
+    protected Multi<SseEvent<String>> generateStreamContext(GenerateContentRequest request) {
         return restApi.generateContentStream(request, apiMetadata, "sse");
     }
 
@@ -83,6 +82,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
         private Optional<String> baseUrl = Optional.empty();
         private String projectId;
         private String location;
+        private String configName;
         private String modelId;
         private String publisher;
         private Double temperature;
@@ -109,6 +109,11 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
         public Builder location(String location) {
             this.location = location;
+            return this;
+        }
+
+        public Builder configName(String configName) {
+            this.configName = configName;
             return this;
         }
 

@@ -1,0 +1,117 @@
+= MongoDB Chat Memory Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-memory-store-mongodb
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+By default, Quarkus LangChain4j keeps chat memory in the application's memory, so conversations are lost when the application stops or restarts.
+The MongoDB chat memory store persists the chat memory of your AI services in a MongoDB collection.
+Conversations then survive restarts, and several instances of the application can share them.
+
+See xref:messages-and-memory.adoc[Messages and Memory] for background on how chat memory works.
+
+== Dependency
+
+To use MongoDB as the chat memory store, add the following Maven dependency:
+
+:provider-artifact: quarkus-langchain4j-memory-store-mongodb
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+This extension builds on the https://quarkus.io/guides/mongodb[Quarkus MongoDB client].
+Configure the MongoDB connection as described in that guide, for example:
+
+[source,properties]
+----
+quarkus.mongodb.connection-string=mongodb://localhost:27017
+----
+
+In dev and test mode, if no connection string is configured, the MongoDB Dev Services start a MongoDB container automatically.
+
+== Usage
+
+The extension registers a `ChatMemoryStore` bean backed by MongoDB.
+Because it replaces the default in-memory store, AI services use it with no code changes:
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+public interface Assistant {
+
+    String chat(@MemoryId String conversationId, @UserMessage String message);
+}
+----
+
+Each memory ID is stored as one document in the configured collection.
+The memory window settings (such as `quarkus.langchain4j.chat-memory.memory-window.max-messages`) still apply: the store only holds the messages kept by the chat memory.
+
+To delete a conversation from MongoDB, use `ChatMemoryRemover`:
+
+[source,java]
+----
+ChatMemoryRemover.remove(assistant, conversationId);
+----
+
+== Document Format
+
+The `_id` field holds the memory ID, converted to a string.
+The `messages` field holds the conversation as an array of BSON subdocuments, one per message:
+
+[source,javascript]
+----
+{
+  _id: "01",
+  messages: [
+    {
+      contents: [
+        {
+          text: "Hello, my name is Ricardo",
+          type: "TEXT"
+        }
+      ],
+      attributes: {},
+      type: "USER"
+    },
+    {
+      toolExecutionRequests: [],
+      text: "Nice to meet you Ricardo",
+      attributes: {},
+      type: "AI"
+    }
+  ]
+}
+----
+
+Because messages are stored as subdocuments, you can query and index their fields directly.
+For example, the following query finds all conversations that contain an AI response:
+
+[source,javascript]
+----
+db.chat_memory.find({ "messages.type": "AI" })
+----
+
+[IMPORTANT]
+.Upgrading from earlier versions
+====
+Earlier versions stored the `messages` field as a single JSON string.
+The store still reads documents in that format, and converts them to the BSON array format the next time the conversation is updated.
+
+Downgrading is not supported: once a document has been written in the BSON array format, older versions of the extension cannot read it.
+====
+
+== Using a Named MongoDB Client
+
+By default, the store uses the default MongoDB client.
+To use a https://quarkus.io/guides/mongodb#multiple-mongodb-clients[named MongoDB client] instead, set its name:
+
+[source,properties]
+----
+quarkus.mongodb.memory.connection-string=mongodb://memory-host:27017
+quarkus.langchain4j.memorystore.mongodb.client-name=memory
+----
+
+== Configuration Reference
+
+All of these properties are fixed at build time.
+
+include::includes/quarkus-langchain4j-memory-store-mongodb.adoc[leveloffset=+1,opts=optional]

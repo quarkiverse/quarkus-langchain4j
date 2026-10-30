@@ -9,6 +9,7 @@ import dev.langchain4j.agentic.agent.ErrorContext;
 import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.declarative.ActivationCondition;
 import dev.langchain4j.agentic.declarative.AgentListenerSupplier;
+import dev.langchain4j.agentic.declarative.BeforeCall;
 import dev.langchain4j.agentic.declarative.ChatMemoryProviderSupplier;
 import dev.langchain4j.agentic.declarative.ChatMemorySupplier;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
@@ -31,6 +32,7 @@ import dev.langchain4j.agentic.declarative.ToolsSupplier;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.service.MemoryId;
 
 public final class AgenticLangChain4jDotNames {
@@ -40,6 +42,7 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName AGENT = DotName.createSimple(Agent.class.getName());
     public static final DotName HUMAN_IN_THE_LOOP_AGENT = DotName.createSimple(HumanInTheLoop.class.getName());
     public static final DotName A2A_AGENT = DotName.createSimple(AGENTIC_PACKAGE + ".A2AClientAgent");
+    public static final DotName A2A_SERVER_URL_SUPPLIER = DotName.createSimple(AGENTIC_PACKAGE + ".A2AServerUrlSupplier");
     public static final DotName SUPERVISOR_AGENT = DotName.createSimple(SupervisorAgent.class.getName());
     public static final DotName SEQUENCE_AGENT = DotName.createSimple(SequenceAgent.class.getName());
     public static final DotName PARALLEL_AGENT = DotName.createSimple(ParallelAgent.class.getName());
@@ -47,14 +50,18 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName LOOP_AGENT = DotName.createSimple(LoopAgent.class.getName());
     public static final DotName CONDITIONAL_AGENT = DotName.createSimple(ConditionalAgent.class.getName());
     public static final DotName PLANNER_AGENT = DotName.createSimple(PlannerAgent.class.getName());
+    public static final DotName MCP_CLIENT_AGENT = DotName.createSimple(AGENTIC_PACKAGE + ".McpClientAgent");
+    public static final DotName MCP_CLIENT_SUPPLIER = DotName.createSimple(AGENTIC_PACKAGE + ".McpClientSupplier");
 
     public static final List<DotName> ALL_AGENT_ANNOTATIONS = List.of(AGENT, HUMAN_IN_THE_LOOP_AGENT, SUPERVISOR_AGENT,
-            SEQUENCE_AGENT, PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT, A2A_AGENT);
+            SEQUENCE_AGENT, PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT, A2A_AGENT,
+            MCP_CLIENT_AGENT);
     public static final List<DotName> AGENT_ANNOTATIONS_WITH_SUB_AGENTS = List.of(SUPERVISOR_AGENT, SEQUENCE_AGENT,
             PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT);
 
     public static final DotName CHAT_MODEL_SUPPLIER = DotName.createSimple(ChatModelSupplier.class.getName());
     public static final DotName AGENTIC_SCOPE = DotName.createSimple(AgenticScope.class);
+    public static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
     public static final DotName RESULT_WITH_AGENTIC_SCOPE = DotName.createSimple(ResultWithAgenticScope.class);
 
     public static final DotName ACTIVATION_CONDITION = DotName.createSimple(ActivationCondition.class.getName());
@@ -66,6 +73,8 @@ public final class AgenticLangChain4jDotNames {
             .createSimple(ChatMemorySupplier.class.getName());
     public static final DotName CONTENT_RETRIEVER_SUPPLIER = DotName
             .createSimple(ContentRetrieverSupplier.class.getName());
+    public static final DotName BEFORE_CALL = DotName
+            .createSimple(BeforeCall.class.getName());
     public static final DotName ERROR_HANDLER = DotName
             .createSimple(ErrorHandler.class.getName());
     public static final DotName ERROR_CONTEXT = DotName
@@ -86,6 +95,41 @@ public final class AgenticLangChain4jDotNames {
             .createSimple(ToolProviderSupplier.class.getName());
     public static final DotName TOOL_SUPPLIER = DotName
             .createSimple(ToolsSupplier.class.getName());
+    public static final DotName STREAMING_CHAT_MODEL_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".StreamingChatModelSupplier");
+    public static final DotName SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".SystemMessageProviderSupplier");
+    public static final DotName USER_MESSAGE_PROVIDER_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".UserMessageProviderSupplier");
+    public static final DotName PLANNER_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".PlannerSupplier");
+    public static final DotName SUPERVISOR_REQUEST = DotName
+            .createSimple(AGENTIC_PACKAGE + ".SupervisorRequest");
+    public static final DotName A2A_CLIENT_CUSTOMIZER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".A2AClientCustomizer");
+    public static final DotName DECISION_MODEL_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".DecisionModelSupplier");
+    public static final DotName DECISION_THRESHOLD_SUPPLIER = DotName
+            .createSimple(AGENTIC_PACKAGE + ".DecisionThresholdSupplier");
+    public static final DotName THRESHOLD_CONTEXT = DotName
+            .createSimple("dev.langchain4j.service.decision.ThresholdContext");
+
+    /**
+     * The annotations of the static helper methods of an agent, that langchain4j-agentic invokes while creating or
+     * running the agent.
+     */
+    public static final List<DotName> ALL_HELPER_ANNOTATIONS = List.of(
+            // suppliers
+            CHAT_MODEL_SUPPLIER, STREAMING_CHAT_MODEL_SUPPLIER, CHAT_MEMORY_SUPPLIER, CHAT_MEMORY_PROVIDER_SUPPLIER,
+            CONTENT_RETRIEVER_SUPPLIER, RETRIEVAL_AUGMENTER_SUPPLIER, TOOL_SUPPLIER, TOOL_PROVIDER_SUPPLIER,
+            AGENT_LISTENER_SUPPLIER, SYSTEM_MESSAGE_PROVIDER_SUPPLIER, USER_MESSAGE_PROVIDER_SUPPLIER,
+            MCP_CLIENT_SUPPLIER, PLANNER_SUPPLIER, A2A_SERVER_URL_SUPPLIER, PARALLEL_EXECUTOR, DECISION_MODEL_SUPPLIER,
+            DECISION_THRESHOLD_SUPPLIER,
+            // workflow helpers
+            EXIT_CONDITION, ACTIVATION_CONDITION, OUTPUT, BEFORE_CALL, ERROR_HANDLER, SUPERVISOR_REQUEST,
+            A2A_CLIENT_CUSTOMIZER);
+
+    public static final DotName SKILLS = DotName.createSimple("io.quarkiverse.langchain4j.skills.Skills");
 
     public static final DotName CDI_BEAN = DotName.createSimple("io.quarkiverse.langchain4j.agentic.runtime.CdiBean");
 

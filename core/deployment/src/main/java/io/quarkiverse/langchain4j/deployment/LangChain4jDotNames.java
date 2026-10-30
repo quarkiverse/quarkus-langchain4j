@@ -13,6 +13,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -49,6 +50,7 @@ import io.quarkiverse.langchain4j.OnThinking;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
+import io.quarkiverse.langchain4j.SharedMemory;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
@@ -66,6 +68,7 @@ public class LangChain4jDotNames {
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     public static final DotName AUDIO_TRANSCRIPTION_MODEL = DotName.createSimple(AudioTranscriptionModel.class);
+    public static final DotName DECISION_MODEL = DotName.createSimple(DecisionModel.class);
     public static final DotName CHAT_MESSAGE = DotName.createSimple(ChatMessage.class);
     public static final DotName TOKEN_STREAM = DotName.createSimple(TokenStream.class);
     public static final DotName OUTPUT_GUARDRAILS = DotName.createSimple(OutputGuardrails.class);
@@ -96,6 +99,10 @@ public class LangChain4jDotNames {
 
     public static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
     public static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
+    public static final DotName REGISTER_DECISION_SERVICE = DotName
+            .createSimple("io.quarkiverse.langchain4j.RegisterDecisionService");
+    public static final DotName THRESHOLD_PROVIDER = DotName
+            .createSimple("dev.langchain4j.service.decision.ThresholdProvider");
 
     static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanChatLanguageModelSupplier.class);
@@ -145,6 +152,8 @@ public class LangChain4jDotNames {
 
     static final DotName SEED_MEMORY = DotName.createSimple(SeedMemory.class);
 
+    static final DotName SHARED_MEMORY = DotName.createSimple(SharedMemory.class);
+
     static final DotName NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoSystemMessageProviderSupplier.class);
 
@@ -153,6 +162,10 @@ public class LangChain4jDotNames {
 
     static final DotName DEFAULT_CHAT_MEMORY_FLUSH_STRATEGY_SUPPLIER = DotName.createSimple(
             RegisterAiService.DefaultChatMemoryFlushStrategySupplier.class);
+
+    static final DotName SKILLS = DotName.createSimple("io.quarkiverse.langchain4j.skills.Skills");
+    static final DotName SKILLS_CONFIGURATOR = DotName
+            .createSimple("io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator");
 
     static final DotName HANDLE_TOOL_ARGUMENT_ERROR = DotName.createSimple(HandleToolArgumentError.class);
     static final DotName HANDLE_TOOL_EXECUTION_ERROR = DotName.createSimple(HandleToolExecutionError.class);
@@ -163,6 +176,7 @@ public class LangChain4jDotNames {
     static final DotName AUDIO = DotName.createSimple(dev.langchain4j.data.audio.Audio.class);
     static final DotName PDF_FILE = DotName.createSimple(PdfFile.class);
     static final DotName VIDEO = DotName.createSimple(dev.langchain4j.data.video.Video.class);
+    static final DotName CONTENT = DotName.createSimple(dev.langchain4j.data.message.Content.class);
     static final DotName RESULT = DotName.createSimple(Result.class);
     public static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
     public static final DotName TOOL_SEARCH_STRATEGY = DotName

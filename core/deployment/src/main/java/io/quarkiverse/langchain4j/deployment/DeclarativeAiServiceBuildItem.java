@@ -42,9 +42,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final Integer maxToolCallingRoundTrips;
     private final Integer maxToolCallsPerResponse;
     private final boolean allowContinuousForcedToolCalling;
+    private final Boolean executeToolsConcurrently;
     private final boolean makeDefaultBean;
     private final boolean shouldThrowExceptionOnEventError;
     private final DotName chatMemoryFlushStrategySupplierClassDotName;
+    private final List<String> skillNames;
+    private final boolean hasMethodLevelSkills;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -74,8 +77,11 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             Integer maxToolCallingRoundTrips,
             Integer maxToolCallsPerResponse,
             boolean allowContinuousForcedToolCalling,
+            Boolean executeToolsConcurrently,
             boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError,
-            DotName chatMemoryFlushStrategySupplierClassDotName) {
+            DotName chatMemoryFlushStrategySupplierClassDotName,
+            List<String> skillNames,
+            boolean hasMethodLevelSkills) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -103,9 +109,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.maxToolCallingRoundTrips = maxToolCallingRoundTrips;
         this.maxToolCallsPerResponse = maxToolCallsPerResponse;
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
+        this.executeToolsConcurrently = executeToolsConcurrently;
         this.makeDefaultBean = makeDefaultBean;
         this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
         this.chatMemoryFlushStrategySupplierClassDotName = chatMemoryFlushStrategySupplierClassDotName;
+        this.skillNames = skillNames;
+        this.hasMethodLevelSkills = hasMethodLevelSkills;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -245,6 +254,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return allowContinuousForcedToolCalling;
     }
 
+    public Boolean getExecuteToolsConcurrently() {
+        return executeToolsConcurrently;
+    }
+
     public DotName getChatMemoryFlushStrategySupplierClassDotName() {
         return chatMemoryFlushStrategySupplierClassDotName;
     }
@@ -256,4 +269,17 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     public void setDefaultMemoryIdProviderClassDotName(DotName defaultMemoryIdProviderClassDotName) {
         this.defaultMemoryIdProviderClassDotName = defaultMemoryIdProviderClassDotName;
     }
+
+    /**
+     * @return the skill names from {@code @Skills}, or null if not configured.
+     *         An empty list means all skills.
+     */
+    public List<String> getSkillNames() {
+        return skillNames;
+    }
+
+    public boolean hasMethodLevelSkills() {
+        return hasMethodLevelSkills;
+    }
+
 }

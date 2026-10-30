@@ -63,6 +63,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-hibernate</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-pinecone</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -105,6 +110,10 @@
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-security</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.antora</groupId>
@@ -257,6 +266,19 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-hibernate-deployment</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hugging-face-deployment</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
@@ -322,6 +344,19 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-typesafe-deployment</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-watsonx-deployment</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
@@ -336,6 +371,32 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp-deployment</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-mcp-apicurio-registry-deployment</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-a2a-apicurio-registry-deployment</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
             <scope>test</scope>
@@ -567,6 +628,19 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-workload-model-auth-provider-deployment</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <!-- JDK-gated like in model-providers/pom.xml: these modules only compile on JDK 21+/22+. -->
@@ -579,20 +653,7 @@
             <dependencies>
                 <dependency>
                     <groupId>io.quarkiverse.langchain4j</groupId>
-                    <artifactId>quarkus-langchain4j-jlama-deployment</artifactId>
-                    <version>${project.version}</version>
-                    <type>pom</type>
-                    <scope>test</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>*</groupId>
-                            <artifactId>*</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>io.quarkiverse.langchain4j</groupId>
-                    <artifactId>quarkus-langchain4j-gpu-llama3-deployment</artifactId>
+                    <artifactId>quarkus-langchain4j-jitllm-deployment</artifactId>
                     <version>${project.version}</version>
                     <type>pom</type>
                     <scope>test</scope>
@@ -606,14 +667,14 @@
             </dependencies>
         </profile>
         <profile>
-            <id>jdk22-plus</id>
+            <id>jdk25-plus</id>
             <activation>
-                <jdk>[22,)</jdk>
+                <jdk>[25,)</jdk>
             </activation>
             <dependencies>
                 <dependency>
                     <groupId>io.quarkiverse.langchain4j</groupId>
-                    <artifactId>quarkus-langchain4j-llama3-java-deployment</artifactId>
+                    <artifactId>quarkus-langchain4j-jinfer-deployment</artifactId>
                     <version>${project.version}</version>
                     <type>pom</type>
                     <scope>test</scope>
@@ -666,6 +727,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <targetDirectory>${project.basedir}/modules/ROOT/pages/includes/</targetDirectory>
+                    <skip>${quarkus.config.doc.skip}</skip>
                 </configuration>
                 <executions>
                   <execution>

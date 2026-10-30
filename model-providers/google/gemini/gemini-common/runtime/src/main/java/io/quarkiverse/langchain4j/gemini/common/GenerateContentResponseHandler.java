@@ -28,14 +28,14 @@ public final class GenerateContentResponseHandler {
                 List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
                 if (parts != null && !parts.isEmpty()) {
                     for (GenerateContentResponse.Candidate.Part part : parts) {
-                        if (part.thought() == null || !part.thought()) {
+                        if ((part.thought() == null || !part.thought()) && part.text() != null) {
                             text.append(part.text());
                         }
                     }
                 }
             }
         }
-        return text.toString();
+        return text.isEmpty() ? null : text.toString();
     }
 
     public static String getThoughts(GenerateContentResponse response) {
@@ -63,25 +63,36 @@ public final class GenerateContentResponseHandler {
     }
 
     public static GenerateContentResponse.FinishReason getFinishReason(GenerateContentResponse response) {
-        if (response.candidates().size() != 1) {
+        int candidateCount = response.candidates() == null ? 0 : response.candidates().size();
+        if (candidateCount == 0 && response.promptFeedback() != null && response.promptFeedback().blockReason() != null) {
+            throw new IllegalArgumentException(
+                    "The prompt is blocked with reason " + response.promptFeedback().blockReason() + ".");
+        }
+        if (candidateCount != 1) {
             throw new IllegalArgumentException(
                     String.format(
                             "This response should have exactly 1 candidate, but it has %s.",
-                            response.candidates().size()));
+                            candidateCount));
         }
         return response.candidates().get(0).finishReason();
     }
 
     public static TokenUsage getTokenUsage(GenerateContentResponse.UsageMetadata usageMetadata) {
-        return new TokenUsage(
+        return new GeminiTokenUsage(
                 usageMetadata.promptTokenCount(),
                 usageMetadata.candidatesTokenCount(),
-                usageMetadata.totalTokenCount());
+                usageMetadata.totalTokenCount(),
+                usageMetadata.cachedContentTokenCount(),
+                usageMetadata.thoughtsTokenCount());
     }
 
     public static List<ToolExecutionRequest> getToolExecutionRequests(GenerateContentResponse response) {
-        List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
         List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>();
+        GenerateContentResponse.Candidate.Content content = response.candidates().get(0).content();
+        if (content == null || content.parts() == null) {
+            return toolExecutionRequests;
+        }
+        List<GenerateContentResponse.Candidate.Part> parts = content.parts();
         for (GenerateContentResponse.Candidate.Part part : parts) {
             FunctionCall functionCall = part.functionCall();
             if (functionCall == null) {
@@ -92,7 +103,7 @@ public final class GenerateContentResponseHandler {
         return toolExecutionRequests;
     }
 
-    private static ToolExecutionRequest toToolExecutionRequest(GenerateContentResponse.Candidate.Part part) {
+    static ToolExecutionRequest toToolExecutionRequest(GenerateContentResponse.Candidate.Part part) {
         try {
             return ToolExecutionRequest.builder()
                     .name(part.functionCall().name())

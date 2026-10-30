@@ -1,0 +1,138 @@
+= Ollama Decision Models
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-ollama
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+A decision model evaluates an input against a set of named, typed questions and returns one typed answer per question, instead of generated text.
+Typical uses are classification, routing, gating and grading.
+
+Ollama runs https://docs.ollama.com/capabilities/decision[decision models] such as `nimble`, `tev1` and `clef` locally, through its https://docs.ollama.com/api/systemone[System One API] (Ollama v0.35.0 or later).
+
+WARNING: The `DecisionModel` API is experimental in LangChain4j and may change in future releases.
+
+== Prerequisites
+
+=== Ollama Installation
+
+To use decision models, you must have a working Ollama setup. Refer to xref:./ollama-chat-model.adoc[Ollama Chat Models] for details on installation.
+
+Pull the decision model you want to use before starting the application:
+
+[source,shell]
+----
+ollama pull nimble
+----
+
+NOTE: The Ollama Dev Service only pulls chat and embedding models, so decision models must be pulled manually.
+
+== Enabling Ollama
+
+To use Ollama decision models in your Quarkus application, add the `quarkus-langchain4j-ollama` extension:
+
+:provider-artifact: quarkus-langchain4j-ollama
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+== Default Model
+
+By default, the decision model is set to `nimble`.
+
+You can override this using:
+
+[source,properties]
+----
+quarkus.langchain4j.ollama.decision-model.model-id=tev1
+----
+
+You may also wish to configure logging during development:
+
+[source,properties]
+----
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
+----
+
+== Using the Decision Model
+
+Inject the `DecisionModel` bean and call `decide(...)` with a `DecisionRequest`:
+
+[source,java]
+----
+import dev.langchain4j.model.decision.DecisionModel;
+import dev.langchain4j.model.decision.request.ChoiceQuestion;
+import dev.langchain4j.model.decision.request.DecisionRequest;
+import dev.langchain4j.model.decision.request.YesNoQuestion;
+import dev.langchain4j.model.decision.response.ChoiceAnswer;
+import dev.langchain4j.model.decision.response.DecisionResponse;
+import dev.langchain4j.model.decision.response.YesNoAnswer;
+
+@Inject DecisionModel decisionModel;
+
+DecisionRequest request = DecisionRequest.builder()
+        .input("Help! My payouts have been failing for 3 days.")
+        .question("team", ChoiceQuestion.builder()
+                .text("Which team should handle this ticket?")
+                .option("billing", "Payments, payouts, invoices, refunds")
+                .option("support", "Problems using the product")
+                .build())
+        .question("urgent", YesNoQuestion.from("Does this need attention today?"))
+        .build();
+
+DecisionResponse response = decisionModel.decide(request);
+
+ChoiceAnswer team = response.choice("team");      // team.value() is "billing", team.probabilities() has one entry per option
+YesNoAnswer urgent = response.yesNo("urgent");    // urgent.probability() is the probability of "yes"
+----
+
+The input can be text, named fields, a list of `TextContent` and `ImageContent`, or a conversation.
+Images are only judged by models with vision, such as `clef`, and are sent alongside the input, which refers to each of them by its position, for example `[image 1]`.
+
+`decideAsync(...)` returns a `CompletableFuture<DecisionResponse>` for non-blocking callers.
+
+All CDI beans implementing `DecisionModelListener` are automatically registered with the model, and
+`ModelBuilderCustomizer<OllamaDecisionModel.OllamaDecisionModelBuilder>` beans can tune the underlying builder.
+
+=== Multiple models
+
+As with the other model types, multiple decision models can be configured by name and injected using `@ModelName`:
+
+[source,properties]
+----
+quarkus.langchain4j.ollama.m1.base-url=http://localhost:11434
+quarkus.langchain4j.ollama.m1.decision-model.model-id=tev1
+----
+
+[source,java]
+----
+@Inject @ModelName("m1") DecisionModel decisionModel;
+----
+
+When multiple extensions providing a `DecisionModel` are present, select one with `quarkus.langchain4j.decision-model.provider=ollama` (or `quarkus.langchain4j.m1.decision-model.provider` for a named model).
+
+=== Disabling the model
+
+Set `quarkus.langchain4j.ollama.decision-model.enabled=false` at build time to stop the extension from providing a `DecisionModel` bean.
+Set `quarkus.langchain4j.ollama.enable-integration=false` at runtime to keep the bean but make every call fail with a `ModelDisabledException`, as for the other Ollama models.
+
+== Dynamic Authorization
+
+To provide dynamic authorization headers, implement `ModelAuthProvider`:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class MyAuthProvider implements ModelAuthProvider {
+
+    @Override
+    public String getAuthorization(Input input) {
+        return "Bearer " + fetchToken();
+    }
+}
+----
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-ollama.adoc[leveloffset=+1,opts=optional]

@@ -3,9 +3,6 @@ package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -23,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
@@ -34,6 +32,20 @@ import io.vertx.core.http.HttpClientResponse;
 @Path("v1/projects/{projectId}/locations/{location}/publishers/{publisher}/models")
 public interface VertxAiGeminiRestApi {
 
+    /**
+     * The global location and the {@code us} and {@code eu} multi-regions have their own endpoints rather than a
+     * {@code <location>-aiplatform.googleapis.com} one.
+     */
+    static String defaultBaseUrl(String location) {
+        if ("global".equals(location)) {
+            return "https://aiplatform.googleapis.com";
+        }
+        if ("us".equals(location) || "eu".equals(location)) {
+            return "https://aiplatform." + location + ".rep.googleapis.com";
+        }
+        return "https://" + location + "-aiplatform.googleapis.com";
+    }
+
     @Path("{modelId}:predict")
     @POST
     PredictResponse predict(PredictRequest request, @BeanParam ApiMetadata apiMetadata);
@@ -42,10 +54,15 @@ public interface VertxAiGeminiRestApi {
     @POST
     GenerateContentResponse generateContent(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);
 
+    /**
+     * Streams content as raw {@link SseEvent}s. Access to the original Server-Sent Event (rather than only the parsed
+     * {@link GenerateContentResponse}) is required so that frames mapping to no typed callback can be surfaced via
+     * {@code StreamingChatResponseHandler#onUnmappedRawEvent}, matching langchain4j's own client.
+     */
     @Path("{modelId}:streamGenerateContent")
     @POST
     @Produces(MediaType.SERVER_SENT_EVENTS)
-    Multi<SseEvent<GenerateContentResponse>> generateContentStream(GenerateContentRequest request,
+    Multi<SseEvent<String>> generateContentStream(GenerateContentRequest request,
             @BeanParam ApiMetadata apiMetadata, @QueryParam("alt") String sse);
 
     @ClientObjectMapper
@@ -112,8 +129,6 @@ public interface VertxAiGeminiRestApi {
     class VertxAiClientLogger implements ClientLogger {
         private static final Logger log = Logger.getLogger(VertxAiClientLogger.class);
 
-        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{2})(\\w|\\.|-|_)+(\\w{2})");
-
         private final boolean logRequests;
         private final boolean logResponses;
 
@@ -177,29 +192,12 @@ public interface VertxAiGeminiRestApi {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (headerKey.equals("Authorization")) {
-                            headerValue = maskAuthorizationHeaderValue(headerValue);
+                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                            headerValue = SensitiveHeaderMasker.mask(headerValue);
                         }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));
-        }
-
-        private static String maskAuthorizationHeaderValue(String authorizationHeaderValue) {
-            try {
-
-                Matcher matcher = BEARER_PATTERN.matcher(authorizationHeaderValue);
-
-                StringBuilder sb = new StringBuilder();
-                while (matcher.find()) {
-                    matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "..." + matcher.group(4));
-                }
-                matcher.appendTail(sb);
-
-                return sb.toString();
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
         }
     }
 }

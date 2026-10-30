@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.invocation.InvocationContext;
@@ -21,6 +22,8 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private final List<ChatMessage> messagesToSend;
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolsExecutors;
+    private final Map<String, ReturnBehavior> toolReturnBehaviors;
+    private final DynamicToolProviders dynamicToolProviders;
     private final List<Content> contents;
     private final QuarkusAiServiceContext context;
     private final InvocationContext invocationContext;
@@ -31,7 +34,8 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private final Object[] methodArgs;
 
     TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
-            Map<String, ToolExecutor> toolExecutors,
+            Map<String, ToolExecutor> toolExecutors, Map<String, ReturnBehavior> toolReturnBehaviors,
+            DynamicToolProviders dynamicToolProviders,
             List<Content> contents, QuarkusAiServiceContext context, InvocationContext invocationContext, Object memoryId,
             boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread,
             AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs) {
@@ -39,6 +43,8 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         this.messagesToSend = messagesToSend;
         this.toolSpecifications = toolSpecifications;
         this.toolsExecutors = toolExecutors;
+        this.toolReturnBehaviors = toolReturnBehaviors;
+        this.dynamicToolProviders = dynamicToolProviders;
         this.contents = contents;
         this.context = context;
         this.invocationContext = invocationContext;
@@ -82,7 +88,8 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private QuarkusAiServiceTokenStream createTokenStream(UnicastProcessor<ChatEvent> processor, Context vertxContext,
             AtomicBoolean cancelled) {
         QuarkusAiServiceTokenStream stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
-                toolsExecutors, contents, context, invocationContext, memoryId, vertxContext,
+                toolsExecutors, toolReturnBehaviors, dynamicToolProviders, contents, context, invocationContext, memoryId,
+                vertxContext,
                 switchToWorkerThreadForToolExecution, isCallerRunningOnWorkerThread, methodCreateInfo, methodArgs, cancelled);
         stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))

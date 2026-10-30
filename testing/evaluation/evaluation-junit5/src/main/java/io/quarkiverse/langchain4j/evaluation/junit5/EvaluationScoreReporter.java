@@ -72,8 +72,8 @@ public class EvaluationScoreReporter implements TestWatcher {
     private void logScore(ExtensionContext context, EvaluationReport<?> report, String testStatus) {
         String testName = context.getDisplayName();
         double score = report.score();
-        int total = report.evaluations().size();
-        long passed = report.evaluations().stream().filter(e -> e.passed()).count();
+        int total = (int) report.evaluations().stream().filter(e -> !e.advisory()).count();
+        long passed = report.evaluations().stream().filter(e -> !e.advisory() && e.passed()).count();
         long failed = total - passed;
 
         // Format: "Test Name: Score XX.XX% (N/M passed)"
@@ -91,8 +91,9 @@ public class EvaluationScoreReporter implements TestWatcher {
                     failed == 1 ? "" : "s");
         }
 
-        // Add tag-specific scores if available
+        // Add tag-specific scores if available, from the evaluations that count toward the score
         var allTags = report.evaluations().stream()
+                .filter(e -> !e.advisory())
                 .flatMap(e -> e.sample().tags().stream())
                 .distinct()
                 .toList();

@@ -1,15 +1,16 @@
 package io.quarkiverse.langchain4j.redis;
 
 import static dev.langchain4j.internal.Utils.randomUUID;
+import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
@@ -25,6 +26,7 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.filter.Filter;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.redis.runtime.RedisFilterMapper;
 import io.quarkiverse.langchain4j.redis.runtime.RedisSchema;
@@ -49,6 +51,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
     private boolean warnedAboutWrongDimension = false;
 
     private static final String SCORE_FIELD_NAME = "vector_score";
+    private static final int DELETE_BATCH_SIZE = 1000;
 
     public static Builder builder() {
         return new Builder();
@@ -168,6 +171,8 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
         QueryArgs args = new QueryArgs()
                 .sortByAscending(SCORE_FIELD_NAME)
                 .param("BLOB", request.queryEmbedding().vector())
+                // without an explicit LIMIT, FT.SEARCH returns at most 10 documents
+                .limit(0, request.maxResults())
                 .dialect(2);
         Uni<SearchQueryResponse> search = ds.search()
                 .ftSearch(schema.getIndexName(), query, args);
@@ -185,7 +190,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             JsonNode embedded = jsonNode.get(schema.getScalarFieldName());
             Embedding embedding = new Embedding(
                     Json.fromJson(jsonNode.get(schema.getVectorFieldName()).toString(), float[].class));
-            double score = (2 - document.property(SCORE_FIELD_NAME).asDouble()) / 2;
+            double score = toRelevanceScore(document.property(SCORE_FIELD_NAME).asDouble());
             String id = document.key().substring(schema.getPrefix().length());
             Map<String, Object> textualMetadata = schema.getTextualMetadataFields().stream()
                     .filter(jsonNode::has)
@@ -194,13 +199,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             Map<String, Object> numericMetadata = schema.getNumericMetadataFields().stream()
                     .filter(jsonNode::has)
                     .collect(Collectors.toMap(metadataFieldName -> metadataFieldName,
-                            (name) -> {
-                                if (jsonNode.get(name).isLong()) {
-                                    return jsonNode.get(name).asLong();
-                                } else {
-                                    return jsonNode.get(name).asDouble();
-                                }
-                            }));
+                            (name) -> toNumber(jsonNode.get(name))));
             Map<String, Object> allMetadata = new HashMap<>();
             allMetadata.putAll(textualMetadata);
             allMetadata.putAll(numericMetadata);
@@ -212,18 +211,90 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
 
     }
 
+    @Override
+    public void removeAll(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        deleteKeys(ids.stream().map(id -> schema.getPrefix() + id).toList());
+    }
+
+    @Override
+    public void removeAll(Filter filter) {
+        ensureNotNull(filter, "filter");
+        String query = new RedisFilterMapper().map(filter);
+        // deleted documents disappear from the index, so keep fetching the first page until nothing matches
+        while (true) {
+            QueryArgs args = new QueryArgs()
+                    .nocontent()
+                    .limit(0, DELETE_BATCH_SIZE)
+                    .dialect(2);
+            List<String> keys = ds.search().ftSearch(schema.getIndexName(), query, args)
+                    .await().indefinitely()
+                    .documents().stream()
+                    .map(Document::key)
+                    .toList();
+            if (keys.isEmpty() || deleteKeys(keys) == 0) {
+                return;
+            }
+        }
+    }
+
+    /**
+     * JSON does not preserve the original Java type of a number, so integral values are returned
+     * as {@code Integer} when they fit, {@code Long} otherwise, and other values as {@code Double}.
+     */
+    private static Number toNumber(JsonNode node) {
+        if (node.isIntegralNumber()) {
+            if (node.canConvertToInt()) {
+                return node.intValue();
+            }
+            return node.longValue();
+        }
+        return node.doubleValue();
+    }
+
+    /**
+     * Converts the distance computed by Redis for the configured metric into a relevance score in the range [0, 1].
+     */
+    private double toRelevanceScore(double distance) {
+        return switch (schema.getDistanceMetric()) {
+            // COSINE distance is 1 - cosine similarity, IP distance is 1 - inner product
+            // (which equals cosine similarity for normalized vectors)
+            case COSINE, IP -> (2 - distance) / 2;
+            // L2 distance is unbounded
+            case L2 -> 1 / (1 + distance);
+        };
+    }
+
     /**
      * Deletes all keys with the prefix that is used by this embedding store.
      */
-    public void deleteAll() {
+    @Override
+    public void removeAll() {
         KeyScanArgs args = new KeyScanArgs().match(schema.getPrefix() + "*");
-        Set<String> keysToDelete = ds.key().scan(args).toMulti().collect().asSet().await().indefinitely();
-        if (!keysToDelete.isEmpty()) {
-            Request command = Request.cmd(Command.DEL);
-            keysToDelete.forEach(command::arg);
-            ds.getRedis().send(command).await().indefinitely();
-            LOG.debug("Deleted " + keysToDelete.size() + " keys");
+        List<String> keysToDelete = ds.key().scan(args).toMulti().collect().asList().await().indefinitely();
+        int deleted = deleteKeys(keysToDelete);
+        LOG.debug("Deleted " + deleted + " keys");
+    }
+
+    /**
+     * Deletes all keys with the prefix that is used by this embedding store.
+     *
+     * @deprecated use {@link #removeAll()} instead
+     */
+    @Deprecated(forRemoval = true)
+    public void deleteAll() {
+        removeAll();
+    }
+
+    private int deleteKeys(List<String> keys) {
+        int deleted = 0;
+        for (int i = 0; i < keys.size(); i += DELETE_BATCH_SIZE) {
+            List<String> batch = keys.subList(i, Math.min(i + DELETE_BATCH_SIZE, keys.size()));
+            deleted += ds.key().del(batch.toArray(new String[0])).await().indefinitely();
         }
+        return deleted;
     }
 
     public static class Builder {

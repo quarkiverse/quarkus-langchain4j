@@ -27,8 +27,9 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.ibm.watsonx.ai.chat.model.BaseChatParameters.JsonSchemaObject;
 import com.ibm.watsonx.ai.chat.model.ChatMessage;
-import com.ibm.watsonx.ai.chat.model.ChatParameters.JsonSchemaObject;
+import com.ibm.watsonx.ai.chat.model.ChatParameters;
 import com.ibm.watsonx.ai.chat.model.SystemMessage;
 import com.ibm.watsonx.ai.chat.model.TextChatRequest;
 import com.ibm.watsonx.ai.chat.model.UserMessage;
@@ -37,6 +38,7 @@ import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
@@ -54,6 +56,8 @@ public class ChatJsonSchemaTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.response-format", "json_schema")
+            // The strict mode is enabled by default, this test covers the explicit opt-out.
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.strict-json-schema", "false")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -101,15 +105,10 @@ public class ChatJsonSchemaTest extends WireMockAbstract {
                 .projectId(projectId)
                 .messages(messages)
                 .timeLimit(DEFAULT_TIME_LIMIT.toMillis())
-                .frequencyPenalty(0.0)
                 .maxCompletionTokens(1024)
-                .presencePenalty(0.0)
                 .temperature(1.0)
-                .logprobs(false)
-                .topP(1.0)
-                .stop(List.of())
-                .responseFormat(com.ibm.watsonx.ai.chat.model.ChatParameters.ResponseFormat.JSON_SCHEMA.value())
-                .jsonSchema(new JsonSchemaObject("test", JsonSchemaElementUtils.toMap(jsonSchema.rootElement()), true))
+                .responseFormat(ChatParameters.ResponseFormat.JSON_SCHEMA.value())
+                .jsonSchema(new JsonSchemaObject("test", JsonSchemaElementUtils.toMap(jsonSchema.rootElement()), false))
                 .build();
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
@@ -121,7 +120,7 @@ public class ChatJsonSchemaTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
-        var chatRequest = dev.langchain4j.model.chat.request.ChatRequest.builder()
+        var chatRequest = ChatRequest.builder()
                 .messages(chatMessages)
                 .responseFormat(ResponseFormat.builder().type(ResponseFormatType.JSON).jsonSchema(jsonSchema).build())
                 .build();

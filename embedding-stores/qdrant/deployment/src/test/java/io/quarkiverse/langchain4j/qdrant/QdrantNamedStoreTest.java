@@ -9,8 +9,8 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.store.embedding.qdrant.QdrantEmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
+import io.quarkiverse.langchain4j.qdrant.runtime.QdrantEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class QdrantNamedStoreTest {
@@ -19,7 +19,8 @@ public class QdrantNamedStoreTest {
     static final QuarkusUnitTest test = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.qdrant.products.collection-name", "product_embeddings")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.qdrant.products.host", "localhost");
+            .overrideConfigKey("quarkus.langchain4j.qdrant.products.client-name", "secondary")
+            .overrideConfigKey("quarkus.qdrant.\"secondary\".host", "localhost");
 
     @Inject
     QdrantEmbeddingStore defaultEmbeddingStore;

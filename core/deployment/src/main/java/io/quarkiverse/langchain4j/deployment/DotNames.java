@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Flow;
 
 import jakarta.enterprise.inject.Instance;
 
@@ -22,6 +23,7 @@ import org.jboss.jandex.DotName;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.decision.listener.DecisionModelListener;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
@@ -60,6 +62,7 @@ public class DotNames {
     public static final DotName LIST = DotName.createSimple(List.class);
     public static final DotName SET = DotName.createSimple(Set.class);
     public static final DotName MULTI = DotName.createSimple(Multi.class);
+    public static final DotName FLOW_PUBLISHER = DotName.createSimple(Flow.Publisher.class);
     public static final DotName UNI = DotName.createSimple(Uni.class);
     public static final DotName BLOCKING = DotName.createSimple(Blocking.class);
     public static final DotName NON_BLOCKING = DotName.createSimple(NonBlocking.class);
@@ -86,6 +89,7 @@ public class DotNames {
     public static final DotName EXCEPTION = DotName.createSimple(Exception.class);
 
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
+    public static final DotName DECISION_MODEL_LISTENER = DotName.createSimple(DecisionModelListener.class);
     public static final DotName MODEL_AUTH_PROVIDER = DotName.createSimple(ModelAuthProvider.class);
     public static final DotName MODEL_BUILDER_CUSTOMIZER = DotName.createSimple(ModelBuilderCustomizer.class);
     public static final DotName TOOL = DotName.createSimple(Tool.class);

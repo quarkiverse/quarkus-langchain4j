@@ -1,4 +1,5 @@
 = AI Services Reference
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -100,6 +101,11 @@ Marks an interface as an AI Service managed by CDI, creating a bean for interact
 |10, but see the note
 |If not set, the value of the `quarkus.langchain4j.ai-service.max-tool-executions` property will be used. The default value of that property is 10.
 
+|`executeToolsConcurrently`
+|Whether the tool calls requested in a single LLM response are executed concurrently.
+|`false`
+|If not set, the value of the `quarkus.langchain4j.ai-service.execute-tools-concurrently` property will be used. A value set here takes precedence over that property. See <<executing-tools-concurrently>> for details.
+
 |===
 
 In most cases, using an empty `@RegisterAiService` is sufficient, as it defaults to the configured model:
@@ -130,9 +136,9 @@ The system message can be set on the AI Service interface itself or on individua
 - `fromResource`: load message from a resource file.
 
 When the system message needs to be computed at runtime, implement a provider and reference it from `@RegisterAiService(systemMessageProviderSupplier = ...)`.
-Implement `SystemMessageProvider` when the message only depends on the memory ID, or `SystemMessageProviderWithContext` when it needs to inspect the model in use (provider and model name).
+Implement `SystemMessageProvider` when the message only depends on the memory ID, or `SystemMessageProviderWithContext` when it needs to inspect the model in use.
 
-To customize the system message for a specific model while keeping a default for all others, return the model-specific message in the matching branch and the default at the end (the fallback):
+`InvocationContext` exposes the model at two levels of granularity: `modelProvider()` gives the provider (e.g. `ModelProvider.OPEN_AI`), while `defaultRequestParameters().modelName()` gives the exact model name in use (e.g. `gpt-4o` vs `gpt-4o-mini`), which lets the system message vary per model, not just per provider:
 
 [source,java]
 ----
@@ -140,11 +146,25 @@ public class ModelAwareSystemMessageProvider implements SystemMessageProviderWit
 
     @Override
     public Optional<String> getSystemMessage(InvocationContext context) {
+        String modelName = context.defaultRequestParameters().modelName();
+        if ("gpt-4o-mini".equals(modelName)) {
+            return Optional.of("You are a helpful assistant. Be very concise, this model has a small context window.");
+        }
         if (context.modelProvider() == ModelProvider.OPEN_AI) {
             return Optional.of("You are a helpful assistant. Be concise.");
         }
         return Optional.of("You are a helpful assistant."); // fallback for every other model
     }
+}
+----
+
+Register it on the AI service with `systemMessageProviderSupplier`:
+
+[source,java]
+----
+@RegisterAiService(systemMessageProviderSupplier = ModelAwareSystemMessageProvider.class)
+public interface Assistant {
+    String chat(String message);
 }
 ----
 
@@ -267,6 +287,8 @@ AI Services can stream responses from the LLM token-by-token. Define the method 
 ----
 Multi<String> chat(@UserMessage String userMessage);
 ----
+
+`Flow.Publisher<String>` and `Flow.Publisher<ChatEvent>` are supported as well, and behave like their `Multi` counterparts.
 
 You can consume the stream internally:
 
@@ -394,6 +416,36 @@ public interface MyAiService {
 ----
 
 More details on function calling and tool integration can be found in the xref:function-calling.adoc[Function Calling guide].
+
+[[executing-tools-concurrently]]
+=== Executing Tools Concurrently
+
+By default, when the LLM requests several tool calls in a single response, the tools are executed one after the other.
+They can instead be executed concurrently, either for a specific AI service:
+
+[source,java]
+----
+@RegisterAiService(executeToolsConcurrently = true)
+public interface MyAiService {
+    // ...
+}
+----
+
+or for all AI services, by setting the `quarkus.langchain4j.ai-service.execute-tools-concurrently` configuration property to `true`.
+A value set on the annotation takes precedence over the property, so `@RegisterAiService(executeToolsConcurrently = false)` keeps a specific AI service sequential when the property is `true`.
+AI services built programmatically can use `AiServices.builder(...).executeToolsConcurrently()`, or `executeToolsConcurrently(Executor)` to supply a custom executor.
+
+The tools are executed on virtual threads, and the CDI request context of the AI service invocation is propagated to them.
+The tool results are always sent to the LLM in the order in which the tool calls were requested.
+If a tool fails in a way that fails the AI service invocation (for example because of invalid arguments), the first such failure in request order is reported.
+
+[NOTE]
+====
+* Concurrent tool execution currently only applies to AI service methods that do not stream their response. Tools called from streaming methods are still executed sequentially.
+* The request context is shared, not copied, between the concurrently executing tools. `@RequestScoped` beans used by tools must therefore be thread-safe when this option is enabled.
+* When `maxToolCallsPerResponse` is set, only the tool calls within the limit are executed before the `ToolCallsLimitExceededException` is thrown.
+* The tools are deliberately not executed on the worker pool, because the AI service is often invoked from a worker thread (for example from a blocking REST endpoint) that then waits for the tools. If virtual threads are not available (Java 17) or are disabled via `quarkus.virtual-threads.enabled=false`, a dedicated unbounded pool of platform threads is used instead.
+====
 
 === Tool Error Handling
 

@@ -51,7 +51,7 @@ public interface LocalChatRoutes {
         /**
          * Invoke current chat route, using a promise to handle the result asynchronously
          *
-         * @param message
+         * @param userMessage the user message to send to the chat route
          */
         Promise<Void> chatPromise(String userMessage);
 

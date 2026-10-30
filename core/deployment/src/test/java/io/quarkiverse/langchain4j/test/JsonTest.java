@@ -38,7 +38,7 @@ public class JsonTest {
         String json = Json.toJson(testData);
 
         assertThat(json)
-                .isEqualTo(
+                .isEqualToNormalizingNewlines(
                         "{\n" +
                                 "  \"sampleDate\" : \"2023-01-15\",\n" +
                                 "  \"sampleDateTime\" : \"2023-01-15T10:20:00\",\n" +

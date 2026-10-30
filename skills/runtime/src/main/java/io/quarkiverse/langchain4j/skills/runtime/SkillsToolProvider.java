@@ -1,8 +1,11 @@
 package io.quarkiverse.langchain4j.skills.runtime;
 
+import java.util.List;
+
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
+import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
 
 /**
@@ -14,10 +17,12 @@ public class SkillsToolProvider implements ToolProvider {
 
     private final ToolProvider delegate;
     private final Skills skills;
+    private final List<Skill> allSkills;
 
-    public SkillsToolProvider(ToolProvider delegate, Skills skills) {
+    public SkillsToolProvider(ToolProvider delegate, Skills skills, List<Skill> allSkills) {
         this.delegate = delegate;
         this.skills = skills;
+        this.allSkills = allSkills != null ? List.copyOf(allSkills) : List.of();
     }
 
     @Override
@@ -27,5 +32,9 @@ public class SkillsToolProvider implements ToolProvider {
 
     public Skills getSkills() {
         return skills;
+    }
+
+    public List<Skill> getAllSkills() {
+        return allSkills;
     }
 }

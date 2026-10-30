@@ -8,7 +8,9 @@ import java.util.OptionalInt;
 import dev.langchain4j.model.bedrock.BedrockCachePointPlacement;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
+import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
+import software.amazon.awssdk.services.bedrockruntime.model.CacheTTL;
 
 @ConfigGroup
 public interface ChatModelConfig extends AwsClientConfig {
@@ -110,11 +112,44 @@ public interface ChatModelConfig extends AwsClientConfig {
     Optional<BedrockCachePointPlacement> promptCaching();
 
     /**
+     * How long the prompt cache entries live. Only applies when {@code prompt-caching} is set.
+     * <p>
+     * <strong>Allowable values:</strong> <code>[5m, 1h]</code> (the SDK constant names {@code VALUE_5_M} and
+     * {@code VALUE_1_H} are accepted as well)
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html">AWS Bedrock Prompt Caching</a>
+     */
+    @ConfigDocDefault("5m")
+    @WithConverter(CacheTtlConverter.class)
+    Optional<CacheTTL> promptCachingTtl();
+
+    /**
      * Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
+     * <p>
+     * This uses the legacy budget-based reasoning configuration ({@code reasoning_config.type=enabled} with
+     * {@code budget_tokens}), which is not accepted by newer models such as Claude Opus 4.7+. For those models use
+     * {@code reasoning-effort} instead.
      *
      * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html">AWS Bedrock inference
      *      reasoning</a>.
      */
     OptionalInt reasoning();
+
+    /**
+     * Enables adaptive reasoning with the given effort level ({@code reasoning_config.type=adaptive} with
+     * {@code output_config.effort}). This is the only reasoning configuration accepted by newer models such as Claude
+     * Opus 4.7+, which reject the legacy budget-based {@code reasoning} configuration. When set, it takes precedence
+     * over the {@code reasoning} token budget.
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html">AWS Bedrock inference
+     *      reasoning</a>.
+     */
+    Optional<ReasoningEffort> reasoningEffort();
+
+    enum ReasoningEffort {
+        LOW,
+        MEDIUM,
+        HIGH
+    }
 
 }

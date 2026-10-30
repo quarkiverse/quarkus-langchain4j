@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.redis.runtime;
 
+import java.util.regex.Pattern;
+
 import dev.langchain4j.store.embedding.filter.Filter;
 import dev.langchain4j.store.embedding.filter.comparison.IsEqualTo;
 import dev.langchain4j.store.embedding.filter.comparison.IsGreaterThan;
@@ -17,6 +19,10 @@ import dev.langchain4j.store.embedding.filter.logical.Or;
  * Maps {@link dev.langchain4j.store.embedding.filter.Filter} instances to predicates for Redis queries.
  */
 public class RedisFilterMapper {
+
+    private static final Pattern UNSUPPORTED_CHARACTERS = Pattern.compile("[\\p{Cntrl}\\p{Cs}]");
+
+    private static final Pattern SPECIAL_CHARACTERS = Pattern.compile("[\\p{Punct}\\s&&[^_]]");
 
     public String map(Filter filter) {
         if (filter == null) {
@@ -59,7 +65,7 @@ public class RedisFilterMapper {
             throw new UnsupportedOperationException(
                     "Redis embedding store currently only supports filtering based on numeric fields.");
         }
-        return "@" + op.key() + ":[" + op.comparisonValue() + " " + op.comparisonValue() + "]";
+        return field(op.key()) + ":[" + op.comparisonValue() + " " + op.comparisonValue() + "]";
     }
 
     private String mapNotEqual(IsNotEqualTo op) {
@@ -67,7 +73,7 @@ public class RedisFilterMapper {
             throw new UnsupportedOperationException(
                     "Redis embedding store currently only supports filtering based on numeric fields.");
         }
-        return "-@" + op.key() + ":[" + op.comparisonValue() + " " + op.comparisonValue() + "]";
+        return "-" + field(op.key()) + ":[" + op.comparisonValue() + " " + op.comparisonValue() + "]";
     }
 
     private String mapGreaterThan(IsGreaterThan op) {
@@ -75,7 +81,7 @@ public class RedisFilterMapper {
             throw new UnsupportedOperationException(
                     "Redis embedding store currently only supports filtering based on numeric fields.");
         }
-        return "@" + op.key() + ":[(" + op.comparisonValue() + " inf]";
+        return field(op.key()) + ":[(" + op.comparisonValue() + " inf]";
     }
 
     private String mapGreaterThanOrEqual(IsGreaterThanOrEqualTo op) {
@@ -83,7 +89,7 @@ public class RedisFilterMapper {
             throw new UnsupportedOperationException(
                     "Redis embedding store currently only supports filtering based on numeric fields.");
         }
-        return "@" + op.key() + ":[" + op.comparisonValue() + " inf]";
+        return field(op.key()) + ":[" + op.comparisonValue() + " inf]";
     }
 
     private String mapLessThan(IsLessThan op) {
@@ -91,7 +97,7 @@ public class RedisFilterMapper {
             throw new UnsupportedOperationException(
                     "Redis embedding store currently only supports filtering based on numeric fields.");
         }
-        return "@" + op.key() + ":[-inf (" + op.comparisonValue() + "]";
+        return field(op.key()) + ":[-inf (" + op.comparisonValue() + "]";
     }
 
     private String mapLessThanOrEqual(IsLessThanOrEqualTo op) {
@@ -99,7 +105,7 @@ public class RedisFilterMapper {
             throw new UnsupportedOperationException(
                     "Redis embedding store currently only supports filtering based on numeric fields.");
         }
-        return "@" + op.key() + ":[-inf " + op.comparisonValue() + "]";
+        return field(op.key()) + ":[-inf " + op.comparisonValue() + "]";
     }
 
     private String mapIn(IsIn op) {
@@ -120,6 +126,19 @@ public class RedisFilterMapper {
 
     private String mapOr(Or op) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Renders a metadata key as a RediSearch field reference. Punctuation and whitespace are escaped, so the key always
+     * denotes a single field and can never contribute query syntax of its own. Control characters and unpaired
+     * surrogates (which reach Redis as '?') cannot be escaped, hence keys containing them are rejected.
+     */
+    private static String field(String key) {
+        if (UNSUPPORTED_CHARACTERS.matcher(key).find()) {
+            throw new IllegalArgumentException(
+                    "Redis embedding store cannot filter on metadata keys with control characters or unpaired surrogates.");
+        }
+        return "@" + SPECIAL_CHARACTERS.matcher(key).replaceAll("\\\\$0");
     }
 
 }

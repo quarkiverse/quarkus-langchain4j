@@ -11,9 +11,24 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
+     * Which OpenAI API the chat model should target.
+     * <p>
+     * {@code chat-completion} uses the {@code /v1/chat/completions} endpoint, while {@code responses} uses the newer
+     * {@code /v1/responses} endpoint. The {@code responses} mode is required for models that are only available through
+     * the Responses API, is the only way to use tools (function calling) with GPT-6 models when reasoning is enabled, and
+     * unlocks Responses-specific settings under {@code quarkus.langchain4j.openai.chat-model.responses.*}.
+     * <p>
+     * When not set, the mode is selected automatically: {@code responses} if the base URL is the OpenAI API
+     * ({@code https://api.openai.com/v1/}), otherwise {@code chat-completion}, which is what OpenAI-compatible endpoints
+     * (Ollama, vLLM, LM Studio, ...) implement. The resolved mode is logged at startup.
+     */
+    @ConfigDocDefault("auto")
+    Optional<Mode> mode();
+
+    /**
      * Model name to use
      */
-    @WithDefault("gpt-4o-mini")
+    @WithDefault("gpt-6-luna")
     String modelName();
 
     /**
@@ -22,8 +37,11 @@ public interface ChatModelConfig {
      * A value of 0.9 is good for more creative applications, while 0 (argmax sampling) is good for ones with a well-defined
      * answer.
      * It is recommended to alter this or topP, but not both.
+     * <p>
+     * If not set, the parameter is omitted from the request and the model's own default applies.
      */
-    @WithDefault("${quarkus.langchain4j.temperature:1.0}")
+    @ConfigDocDefault("the model's default")
+    @WithDefault("${quarkus.langchain4j.temperature}")
     Optional<Double> temperature();
 
     /**
@@ -31,8 +49,10 @@ public interface ChatModelConfig {
      * with topP probability mass.
      * 0.1 means only the tokens comprising the top 10% probability mass are considered.
      * It is recommended to alter this or temperature, but not both.
+     * <p>
+     * If not set, the parameter is omitted from the request and the model's own default applies.
      */
-    @WithDefault("1.0")
+    @ConfigDocDefault("the model's default")
     Optional<Double> topP();
 
     /**
@@ -121,4 +141,14 @@ public interface ChatModelConfig {
      */
     @ConfigDocDefault("default")
     Optional<String> serviceTier();
+
+    /**
+     * Settings that only apply when the chat model targets the Responses API, see {@code mode}.
+     */
+    ResponsesChatModelConfig responses();
+
+    enum Mode {
+        CHAT_COMPLETION,
+        RESPONSES
+    }
 }

@@ -32,6 +32,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceEvents;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
@@ -39,11 +40,13 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProviderWithContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingHandler;
+import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkiverse.langchain4j.runtime.tool.LoggingToolExecutionErrorHandler;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.arc.runtime.BeanContainer;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
@@ -259,9 +262,7 @@ public class AiServicesRecorder {
                             // if-exists provider
                             Instance<ToolProvider> instance = creationalContext
                                     .getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
-                            // if the service has explicit tools and a BeanIfExistsToolProviderSupplier,
-                            // just give priority to the explicit tools, don't throw an error
-                            if (instance.isResolvable() && !hasExplicitTools) {
+                            if (instance.isResolvable()) {
                                 quarkusAiServices.toolProvider(instance.get());
                             }
                         }
@@ -391,6 +392,14 @@ public class AiServicesRecorder {
 
                     quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());
 
+                    // a value set on the annotation wins, otherwise the global property applies
+                    boolean executeToolsConcurrently = info.executeToolsConcurrently() != null
+                            ? info.executeToolsConcurrently()
+                            : AiServiceMethodImplementationSupport.isExecuteToolsConcurrentlyGloballyEnabled();
+                    if (executeToolsConcurrently) {
+                        quarkusAiServices.executeToolsConcurrently();
+                    }
+
                     if (info.chatMemoryFlushStrategySupplierClassName() != null) {
                         Supplier<? extends ChatMemoryFlushStrategy> supplier = createSupplier(
                                 info.chatMemoryFlushStrategySupplierClassName());
@@ -399,6 +408,14 @@ public class AiServicesRecorder {
 
                     aiServiceContext.eventListenerRegistrar
                             .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
+
+                    // @Skills annotation support — store class-level names for per-method resolution in doImplement0()
+                    if (info.skillNames() != null) {
+                        aiServiceContext.classLevelSkillNames = info.skillNames();
+                    }
+
+                    aiServiceContext.dispatchTokenStreamToolExecution(
+                            metadata.get(info.serviceClassName()).methodMap().values());
 
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {
@@ -416,6 +433,15 @@ public class AiServicesRecorder {
         };
     }
 
+    public void validateSkillNames(BeanContainer beanContainer, List<String> skillNames) {
+        SkillsConfigurator configurator = beanContainer.beanInstance(SkillsConfigurator.class);
+        if (configurator == null) {
+            throw new IllegalStateException(
+                    "@Skills annotation requires the quarkus-langchain4j-skills extension");
+        }
+        configurator.createToolProvider(skillNames);
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> Supplier<T> createSupplier(String className) throws InstantiationException, IllegalAccessException,
             InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
@@ -429,4 +455,5 @@ public class AiServicesRecorder {
         }
 
     }
+
 }

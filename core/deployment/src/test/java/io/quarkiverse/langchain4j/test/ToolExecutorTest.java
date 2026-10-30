@@ -7,6 +7,9 @@ import static org.assertj.core.api.Assertions.fail;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
+
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -16,31 +19,51 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.exception.ToolArgumentsException;
+import dev.langchain4j.internal.Json;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
+import io.quarkus.jackson.ObjectMapperCustomizer;
 import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.mutiny.Uni;
 
 class ToolExecutorTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(PrettyPrintCustomizer.class));
 
     TestTool testTool = new TestTool();
     DefaultValueTool defaultValueTool = new DefaultValueTool();
+
+    @Singleton
+    public static class PrettyPrintCustomizer implements ObjectMapperCustomizer {
+
+        @Override
+        public void customize(ObjectMapper objectMapper) {
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        }
+    }
 
     public enum SortBy {
         RELEVANCE,
         DATE,
         RATING
+    }
+
+    public record ArgObject(String name, SortBy sortBy) {
     }
 
     private static class DefaultValueTool {
@@ -121,6 +144,66 @@ class ToolExecutorTest {
         @Tool
         int singleInt(int n) {
             return n;
+        }
+
+        @Tool
+        String listOfEnum(List<SortBy> arg0) {
+            return arg0.get(0).name();
+        }
+
+        @Tool
+        String listOfString(List<String> arg0) {
+            return String.join(",", arg0);
+        }
+
+        @Tool
+        String listOfObject(List<ArgObject> arg0) {
+            ArgObject object = arg0.get(0);
+            return object.name() + ":" + object.sortBy();
+        }
+
+        @Tool
+        String mappedEnum(Map<String, SortBy> arg0) {
+            return arg0.get("first").name();
+        }
+
+        @Tool
+        String markdownDocument() {
+            return "# Title\nKind: file\n\nBody.";
+        }
+
+        @Tool
+        String nullDocument() {
+            return null;
+        }
+
+        @Tool
+        Uni<String> markdownDocumentUni() {
+            return Uni.createFrom().item("# Title\nKind: file\n\nBody.");
+        }
+
+        @Tool
+        ArgObject objectResult() {
+            return new ArgObject("ABC", SortBy.DATE);
+        }
+
+        @Tool
+        ArgObject objectResultWithWhitespace() {
+            return new ArgObject("A B\nC", SortBy.DATE);
+        }
+
+        @Tool
+        List<ArgObject> listResult() {
+            return List.of(objectResult());
+        }
+
+        @Tool
+        Uni<ArgObject> objectResultUni() {
+            return Uni.createFrom().item(objectResult());
+        }
+
+        @Tool
+        void voidResult() {
         }
     }
 
@@ -311,6 +394,25 @@ class ToolExecutorTest {
     }
 
     @Test
+    void should_deserialize_generic_tool_arguments() {
+        executeAndAssert("{\"arg0\":[\"DATE\"]}", "listOfEnum", "DATE");
+
+        executeAndAssert("{\"arg0\":[\"A\",\"B\"]}", "listOfString", "A,B");
+
+        executeAndAssert("{\"arg0\":[{\"name\":\"ABC\",\"sortBy\":\"DATE\"}]}", "listOfObject", "ABC:DATE");
+
+        executeAndAssert("{\"arg0\":{\"first\":\"DATE\"}}", "mappedEnum", "DATE");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"arg0\":[\"INVALID\"]}"
+    })
+    void should_reject_invalid_generic_enum_argument_before_tool_invocation(String arguments) {
+        executeAndExpectFailure(arguments, "listOfEnum");
+    }
+
+    @Test
     void should_use_default_value_for_omitted_int_parameter() {
         ToolExecutionRequest request = ToolExecutionRequest.builder()
                 .arguments("{\"query\": \"test\"}")
@@ -320,7 +422,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:10\"");
+        assertThat(result).isEqualTo("test:10");
     }
 
     @Test
@@ -333,7 +435,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:25\"");
+        assertThat(result).isEqualTo("test:25");
     }
 
     @Test
@@ -346,7 +448,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:USD\"");
+        assertThat(result).isEqualTo("test:USD");
     }
 
     @Test
@@ -359,7 +461,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:RELEVANCE\"");
+        assertThat(result).isEqualTo("test:RELEVANCE");
     }
 
     @Test
@@ -372,7 +474,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"test:true\"");
+        assertThat(result).isEqualTo("test:true");
     }
 
     @Test
@@ -385,7 +487,7 @@ class ToolExecutorTest {
 
         String result = toolExecutor.execute(request, null);
 
-        assertThat(result).isEqualTo("\"5:DESC\"");
+        assertThat(result).isEqualTo("5:DESC");
     }
 
     @Test
@@ -401,6 +503,55 @@ class ToolExecutorTest {
         JsonObjectSchema schema = withDefaultInt.toolSpecification().parameters();
         assertThat(schema.required()).containsExactly("query");
         assertThat(schema.properties().keySet()).containsExactlyInAnyOrder("query", "limit");
+    }
+
+    @Test
+    void should_return_string_result_as_is() {
+        executeAndAssert("{}", "markdownDocument", "# Title\nKind: file\n\nBody.");
+    }
+
+    @Test
+    void should_return_string_result_of_uni_as_is() {
+        executeAndAssert("{}", "markdownDocumentUni", "# Title\nKind: file\n\nBody.");
+    }
+
+    @Test
+    void should_render_null_string_result_as_null_literal() {
+        executeAndAssert("{}", "nullDocument", "null");
+    }
+
+    @Test
+    void should_json_encode_non_string_result_compactly() {
+        executeAndAssert("{}", "objectResult", "{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+    }
+
+    @Test
+    void should_preserve_whitespace_in_json_string_values() {
+        executeAndAssert("{}", "objectResultWithWhitespace", "{\"name\":\"A B\\nC\",\"sortBy\":\"DATE\"}");
+    }
+
+    @Test
+    void should_json_encode_list_result_compactly() {
+        executeAndAssert("{}", "listResult", "[{\"name\":\"ABC\",\"sortBy\":\"DATE\"}]");
+    }
+
+    @Test
+    void should_json_encode_non_string_result_of_uni_compactly() {
+        executeAndAssert("{}", "objectResultUni", "{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+    }
+
+    @Test
+    void should_keep_general_json_serialization_pretty_printed() throws JsonProcessingException {
+        executeAndAssert("{}", "objectResult", "{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
+
+        ArgObject result = new ArgObject("ABC", SortBy.DATE);
+        assertThat(Json.toJson(result)).contains("\n");
+        assertThat(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(result)).contains("\n");
+    }
+
+    @Test
+    void should_report_success_for_void_result() {
+        executeAndAssert("{}", "voidResult", "Success");
     }
 
     private void executeAndAssert(String arguments, String methodName,

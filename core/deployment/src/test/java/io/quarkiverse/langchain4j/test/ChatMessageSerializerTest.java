@@ -14,6 +14,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -22,10 +23,15 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageSerializer;
 import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.PdfFileContent;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.VideoContent;
 import io.quarkus.test.QuarkusUnitTest;
 
 class ChatMessageSerializerTest {
@@ -67,6 +73,61 @@ class ChatMessageSerializerTest {
     }
 
     @Test
+    void should_serialize_and_deserialize_user_message_with_audio_content() {
+        UserMessage message = UserMessage.from(AudioContent.from("http://audio.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_video_content() {
+        UserMessage message = UserMessage.from(VideoContent.from("http://video.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_pdf_file_content() {
+        UserMessage message = UserMessage.from(PdfFileContent.from("http://pdf.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_base64_audio_content() {
+        UserMessage message = UserMessage.from(AudioContent.from("dGVzdA==", "audio/mp3"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_user_message_with_all_content_types() {
+        UserMessage message = UserMessage.from(
+                TextContent.from("describe these"),
+                ImageContent.from("http://image.url"),
+                AudioContent.from("http://audio.url"),
+                VideoContent.from("http://video.url"),
+                PdfFileContent.from("http://pdf.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
     void should_serialize_and_deserialize_empty_list() {
 
         List<ChatMessage> messages = emptyList();
@@ -96,6 +157,22 @@ class ChatMessageSerializerTest {
     }
 
     @Test
+    void should_serialize_and_deserialize_system_message_with_attributes() {
+
+        List<ChatMessage> messages = singletonList(SystemMessage.builder()
+                .text("hello")
+                .attributes(Map.of("prompt_cache_breakpoint", "explicit"))
+                .build());
+
+        String json = messagesToJson(messages);
+        assertThat(json).isEqualTo(
+                "[{\"text\":\"hello\",\"attributes\":{\"prompt_cache_breakpoint\":\"explicit\"},\"type\":\"SYSTEM\"}]");
+
+        List<ChatMessage> deserializedMessages = messagesFromJson(json);
+        assertThat(deserializedMessages).isEqualTo(messages);
+    }
+
+    @Test
     void should_serialize_and_deserialize_list_with_all_types_of_messages() {
 
         List<ChatMessage> messages = asList(
@@ -110,7 +187,7 @@ class ChatMessageSerializerTest {
 
         String json = ChatMessageSerializer.messagesToJson(messages);
         assertThat(json).isEqualTo("[" +
-                "{\"text\":\"Hello from system\",\"type\":\"SYSTEM\"}," +
+                "{\"text\":\"Hello from system\",\"attributes\":{},\"type\":\"SYSTEM\"}," +
                 "{\"contents\":[{\"text\":\"Hello from user\",\"type\":\"TEXT\"}],\"attributes\":{},\"type\":\"USER\"}," +
                 "{\"name\":\"Klaus\",\"contents\":[{\"text\":\"Hello from Klaus\",\"type\":\"TEXT\"}],\"attributes\":{},\"type\":\"USER\"},"
                 +

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <title>{{_title_}}</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	</head>
+	<body>
+    <h2>Movie Similarity Search</h2> 
+    <input type="text" id="movie-box" placeholder="Enter a movie title">
+    <h3 hidden="true" id="movie-results-heading">Click on of the movies below</h3>
+    <ul id="search-results"></ul>
+    <img id="movie-poster"><img>
+    <div id="movie-overview"></div>
+    <h3 hidden="true" id="similar-heading">Similar movies</h3>
+    <ul id="similar-results"></ul>
+
+    <script>
+    document.getElementById("movie-box").addEventListener("input", async function() {
+        const query = this.value.trim();
+        if (query.length === 0) {
+          document.getElementById("search-results").innerHTML = "";
+          return;
+        }
+      const response = await fetch(`/movies/by-title/${encodeURIComponent(query)}`);
+        const movies = await response.json();
+
+        if (movies.length > 0) {
+          document.getElementById("movie-results-heading").hidden = false;
+        }
+        movies.forEach(movie => {
+          const li = document.createElement("li");
+          li.textContent = movie.title;
+          li.addEventListener("click", () => displayMovie(movie));
+          document.getElementById("search-results").appendChild(li);
+        });
+    });
+
+    async function displayMovie(movie) {
+      console.log('Displaying movie:', movie);
+      document.getElementById("search-results").innerHTML = "";
+      document.getElementById("movie-poster").src = movie.link;
+      document.getElementById("movie-poster").style.display = "block";
+      document.getElementById("movie-overview").textContent = movie.overview;
+      document.getElementById("similar-heading").hidden = false;
+      document.getElementById("movie-results-heading").hidden = true;
+      document.getElementById("similar-results").innerHTML = "";
+
+      const response = await fetch(`/movies/similar/${encodeURIComponent(movie.id)}`);
+      const similarMovies = await response.json();
+        similarMovies.forEach(similarMovie => {
+           const li = document.createElement("li");
+           li.textContent = similarMovie.title;
+           li.addEventListener("click", () => displayMovie(similarMovie));
+           document.getElementById("similar-results").appendChild(li);
+        });
+    }
+    </script>
+	</body>
+</html>

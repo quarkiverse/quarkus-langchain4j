@@ -74,15 +74,15 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
         assertEquals(false, runtimeConfig.logRequestsCurl().orElse(false));
         assertTrue(runtimeConfig.version().isEmpty());
         assertEquals(DEFAULT_CHAT_MODEL, runtimeConfig.chatModel().modelName());
-        assertEquals(0, runtimeConfig.chatModel().frequencyPenalty());
-        assertEquals(false, runtimeConfig.chatModel().logprobs());
+        assertEquals(Optional.empty(), runtimeConfig.chatModel().frequencyPenalty());
+        assertEquals(Optional.empty(), runtimeConfig.chatModel().logprobs());
         assertTrue(runtimeConfig.chatModel().topLogprobs().isEmpty());
         assertEquals(1024, runtimeConfig.chatModel().maxOutputTokens());
-        assertEquals(0, runtimeConfig.chatModel().presencePenalty());
+        assertEquals(Optional.empty(), runtimeConfig.chatModel().presencePenalty());
         assertEquals(Optional.empty(), runtimeConfig.chatModel().seed());
         assertEquals(Optional.empty(), runtimeConfig.chatModel().stop());
         assertEquals(1.0, runtimeConfig.chatModel().temperature());
-        assertEquals(1.0, runtimeConfig.chatModel().topP());
+        assertEquals(Optional.empty(), runtimeConfig.chatModel().topP());
         assertEquals(Optional.empty(), runtimeConfig.chatModel().toolChoice());
         assertNull(runtimeConfig.iam().grantType().orElse(null));
         assertEquals(false, langchain4jWatsonConfig.builtInTool().logRequests().orElse(false));
@@ -107,13 +107,8 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
                 .modelId(DEFAULT_CHAT_MODEL)
                 .projectId(PROJECT_ID)
                 .messages(messages)
-                .frequencyPenalty(0.0)
-                .logprobs(false)
                 .maxCompletionTokens(1024)
-                .presencePenalty(0.0)
                 .temperature(1.0)
-                .topP(1.0)
-                .stop(List.of())
                 .timeLimit(DEFAULT_TIME_LIMIT.toMillis())
                 .build();
 
@@ -137,13 +132,8 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
                 .modelId(DEFAULT_CHAT_MODEL)
                 .projectId(PROJECT_ID)
                 .messages(messagesToSend)
-                .frequencyPenalty(0.0)
-                .logprobs(false)
                 .maxCompletionTokens(1024)
-                .presencePenalty(0.0)
                 .temperature(1.0)
-                .topP(1.0)
-                .stop(List.of())
                 .timeLimit(DEFAULT_TIME_LIMIT.toMillis())
                 .build();
 

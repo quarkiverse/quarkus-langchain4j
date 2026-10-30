@@ -26,15 +26,15 @@ import jakarta.ws.rs.ext.WriterInterceptorContext;
 
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.resteasy.reactive.RestStreamElementType;
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
-import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingData;
+import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.smallrye.mutiny.Multi;
@@ -52,15 +52,22 @@ public interface AnthropicRestApi {
     @POST
     AnthropicCreateMessageResponse createMessage(AnthropicCreateMessageRequest request, @BeanParam ApiMetadata apiMetadata);
 
+    /**
+     * Streams a message response as raw {@link SseEvent}s. Exposing the original Server-Sent Events (rather than only
+     * the parsed {@code AnthropicStreamingData}) is required so that frames mapping to no typed callback can be
+     * surfaced via {@code StreamingChatResponseHandler#onUnmappedRawEvent} and so the raw frames can be attached to
+     * {@code AnthropicChatResponseMetadata#rawServerSentEvents()}, matching langchain4j's own client.
+     */
     @Path("/messages")
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    Multi<AnthropicStreamingData> streamMessage(AnthropicCreateMessageRequest request, @BeanParam ApiMetadata apiMetadata);
+    Multi<SseEvent<String>> streamMessage(AnthropicCreateMessageRequest request, @BeanParam ApiMetadata apiMetadata);
 
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            return new HttpException(response.getStatus(), response.readEntity(String.class));
+            return new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
+                    response.getStringHeaders());
         }
         return null;
     }
@@ -76,10 +83,6 @@ public interface AnthropicRestApi {
         public final String beta;
 
         private ApiMetadata(String apiKey, String anthropicVersion, String beta) {
-            if ((apiKey == null) || apiKey.isBlank()) {
-                throw new IllegalArgumentException("apiKey cannot be null or blank");
-            }
-
             if ((anthropicVersion == null) || anthropicVersion.isBlank()) {
                 throw new IllegalArgumentException("anthropicVersion cannot be null or blank");
             }

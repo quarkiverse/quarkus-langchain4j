@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.deployment.items;
 
 import org.jboss.jandex.MethodInfo;
 
-import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkus.builder.item.MultiBuildItem;
 
@@ -40,14 +39,6 @@ public final class ToolMethodBuildItem extends MultiBuildItem {
      * @return true if the method requires a switch to a worker thread
      */
     public boolean requiresSwitchToWorkerThread() {
-        return !(toolMethodCreateInfo.executionModel() == ToolMethodCreateInfo.ExecutionModel.NON_BLOCKING
-                && isImperativeMethod());
-    }
-
-    private boolean isImperativeMethod() {
-        var type = toolsMethodInfo.returnType();
-        return !DotNames.UNI.equals(type.name())
-                && !DotNames.MULTI.equals(type.name())
-                && !DotNames.COMPLETION_STAGE.equals(type.name());
+        return !toolMethodCreateInfo.canRunOnEventLoop();
     }
 }

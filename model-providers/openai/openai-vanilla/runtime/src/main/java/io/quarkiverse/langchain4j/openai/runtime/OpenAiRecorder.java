@@ -8,6 +8,8 @@ import java.net.Proxy.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.util.TypeLiteral;
 
 import org.jboss.logging.Logger;
@@ -25,6 +28,9 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.decision.DecisionModel;
+import dev.langchain4j.model.decision.listener.DecisionModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
@@ -34,32 +40,47 @@ import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.openai.OpenAiAudioTranscriptionModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
+import dev.langchain4j.model.openai.OpenAiDecisionModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.openai.DisabledAudioTranscriptionModel;
+import io.quarkiverse.langchain4j.openai.DisabledDecisionModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiAudioTranscriptionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiDecisionModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.openai.runtime.config.AudioTranscriptionModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.DecisionModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.ResponsesChatModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.proxy.ProxyConfiguration;
 import io.quarkus.proxy.ProxyConfigurationRegistry;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.quarkus.tls.TlsConfiguration;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.config.ConfigValidationException;
 
 @Recorder
@@ -73,6 +94,10 @@ public class OpenAiRecorder {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder>>> STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesChatModel.Builder>>> RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesStreamingChatModel.Builder>>> RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder>>> EMBEDDING_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiModerationModel.OpenAiModerationModelBuilder>>> MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
@@ -80,6 +105,12 @@ public class OpenAiRecorder {
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<QuarkusOpenAiImageModel.Builder>>> IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiAudioTranscriptionModel.Builder>>> AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<DecisionModelListener>> DECISION_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiDecisionModel.OpenAiDecisionModelBuilder>>> DECISION_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private static final String DUMMY_KEY = "dummy";
@@ -91,15 +122,100 @@ public class OpenAiRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
-    @SuppressWarnings("deprecation")
     public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+        if (!openAiConfig.enableIntegration()) {
+            // the mode is irrelevant for a disabled model, both paths produce a DisabledChatModel
+            return chatCompletionChatModel(configName);
+        }
+        ChatModelConfig.Mode mode = resolveMode(openAiConfig);
+        if (openAiConfig.chatModel().mode().isEmpty()) {
+            String modelLabel = NamedConfigUtil.isDefault(configName) ? "" : " '" + configName + "'";
+            String propertyPrefix = NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + ".");
+            log.infof("OpenAI chat model%s targets the %s API: no mode was configured, so it was selected from the base URL"
+                    + " (%s). Set quarkus.langchain4j.openai%schat-model.mode to override.",
+                    modelLabel, mode == ChatModelConfig.Mode.RESPONSES ? "Responses" : "Chat Completions",
+                    openAiConfig.baseUrl(), propertyPrefix);
+            if (mode == ChatModelConfig.Mode.RESPONSES) {
+                List<String> ignored = settingsIgnoredByResponsesApi(openAiConfig);
+                if (!ignored.isEmpty()) {
+                    log.warnf("OpenAI chat model%s: the following settings are not supported by the Responses API and will"
+                            + " be ignored: %s. Set quarkus.langchain4j.openai%schat-model.mode=chat-completion to keep"
+                            + " using them.", modelLabel, String.join(", ", ignored), propertyPrefix);
+                }
+            }
+        }
+        return mode == ChatModelConfig.Mode.RESPONSES
+                ? responsesChatModel(configName)
+                : chatCompletionChatModel(configName);
+    }
+
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+        if (!openAiConfig.enableIntegration()) {
+            return chatCompletionStreamingChatModel(configName);
+        }
+        return resolveMode(openAiConfig) == ChatModelConfig.Mode.RESPONSES
+                ? responsesStreamingChatModel(configName)
+                : chatCompletionStreamingChatModel(configName);
+    }
+
+    /**
+     * An explicit mode always wins. Otherwise the Responses API is selected when talking to OpenAI itself (GPT-6 models
+     * cannot use tools on Chat Completions unless reasoning is disabled), while OpenAI-compatible endpoints reachable
+     * through a custom base URL generally only implement Chat Completions.
+     */
+    private static ChatModelConfig.Mode resolveMode(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
+        ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+        if (chatModelConfig.mode().isPresent()) {
+            return chatModelConfig.mode().get();
+        }
+        boolean openAiBaseUrl = normalizeBaseUrl(openAiConfig.baseUrl()).equals(normalizeBaseUrl(OPENAI_BASE_URL));
+        return openAiBaseUrl ? ChatModelConfig.Mode.RESPONSES : ChatModelConfig.Mode.CHAT_COMPLETION;
+    }
+
+    /**
+     * Settings of the chat-completions path that have no counterpart on the Responses API. The penalties default to 0, so
+     * only a non-zero value counts as explicitly set.
+     */
+    private static List<String> settingsIgnoredByResponsesApi(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig) {
+        ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+        List<String> ignored = new ArrayList<>();
+        if (chatModelConfig.presencePenalty() != 0) {
+            ignored.add("chat-model.presence-penalty");
+        }
+        if (chatModelConfig.frequencyPenalty() != 0) {
+            ignored.add("chat-model.frequency-penalty");
+        }
+        if (chatModelConfig.stop().isPresent()) {
+            ignored.add("chat-model.stop");
+        }
+        if (openAiConfig.logRequestsCurl().orElse(false)) {
+            ignored.add("log-requests-curl");
+        }
+        if (openAiConfig.maxRetries() > 1) {
+            ignored.add("max-retries");
+        }
+        return ignored;
+    }
+
+    /**
+     * The Responses API has a single output limit; when it is not configured, the chat-completions limits are used so
+     * that an existing configuration keeps capping the output after the mode switch.
+     */
+    private static Optional<Integer> resolveMaxOutputTokens(ChatModelConfig chatModelConfig) {
+        return chatModelConfig.responses().maxOutputTokens()
+                .or(chatModelConfig::maxCompletionTokens)
+                .or(chatModelConfig::maxTokens);
+    }
+
+    @SuppressWarnings("deprecation")
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatCompletionChatModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -144,6 +260,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
 
@@ -173,14 +290,13 @@ public class OpenAiRecorder {
     }
 
     @SuppressWarnings("deprecation")
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> chatCompletionStreamingChatModel(
+            String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             var builder = (QuarkusOpenAiStreamingChatModelBuilderFactory.Builder) OpenAiStreamingChatModel.builder();
             builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
@@ -213,6 +329,7 @@ public class OpenAiRecorder {
                 @Override
                 public StreamingChatModel apply(
                         SyntheticCreationalContext<StreamingChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
 
@@ -239,14 +356,277 @@ public class OpenAiRecorder {
         }
     }
 
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> responsesChatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
+            ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
+
+            JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+            Duration timeout = openAiConfig.timeout().orElse(Duration.ofSeconds(10));
+            httpClientBuilder.connectTimeout(timeout);
+            httpClientBuilder.readTimeout(timeout);
+
+            var builder = OpenAiResponsesChatModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
+                    .baseUrl(normalizeBaseUrl(openAiConfig.baseUrl()))
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelName())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()));
+
+            if (openAiConfig.organizationId().isPresent()) {
+                builder.organizationId(openAiConfig.organizationId().get());
+            }
+            if (chatModelConfig.temperature().isPresent()) {
+                builder.temperature(chatModelConfig.temperature().get());
+            }
+            if (chatModelConfig.topP().isPresent()) {
+                builder.topP(chatModelConfig.topP().get());
+            }
+            if (chatModelConfig.serviceTier().isPresent()) {
+                builder.serviceTier(chatModelConfig.serviceTier().get());
+            }
+            if (chatModelConfig.reasoningEffort().isPresent()) {
+                builder.reasoningEffort(chatModelConfig.reasoningEffort().get());
+            }
+            if (chatModelConfig.strictJsonSchema().isPresent()) {
+                builder.strictJsonSchema(chatModelConfig.strictJsonSchema().get());
+            }
+            if (chatModelConfig.responseFormat().isPresent()) {
+                builder.responseFormat(toResponseFormat(chatModelConfig.responseFormat().get()));
+            }
+
+            if (responsesConfig.store().isPresent()) {
+                builder.store(responsesConfig.store().get());
+            }
+            if (responsesConfig.previousResponseId().isPresent()) {
+                builder.previousResponseId(responsesConfig.previousResponseId().get());
+            }
+            if (responsesConfig.reasoningSummary().isPresent()) {
+                builder.reasoningSummary(responsesConfig.reasoningSummary().get());
+            }
+            resolveMaxOutputTokens(chatModelConfig).ifPresent(builder::maxOutputTokens);
+            if (responsesConfig.maxToolCalls().isPresent()) {
+                builder.maxToolCalls(responsesConfig.maxToolCalls().get());
+            }
+            if (responsesConfig.parallelToolCalls().isPresent()) {
+                builder.parallelToolCalls(responsesConfig.parallelToolCalls().get());
+            }
+            if (responsesConfig.include().isPresent()) {
+                builder.include(responsesConfig.include().get());
+            }
+            if (responsesConfig.truncation().isPresent()) {
+                builder.truncation(responsesConfig.truncation().get());
+            }
+            if (responsesConfig.textVerbosity().isPresent()) {
+                builder.textVerbosity(responsesConfig.textVerbosity().get());
+            }
+            if (responsesConfig.promptCacheKey().isPresent()) {
+                builder.promptCacheKey(responsesConfig.promptCacheKey().get());
+            }
+            if (responsesConfig.promptCacheRetention().isPresent()) {
+                builder.promptCacheRetention(responsesConfig.promptCacheRetention().get());
+            }
+            if (responsesConfig.safetyIdentifier().isPresent()) {
+                builder.safetyIdentifier(responsesConfig.safetyIdentifier().get());
+            }
+            if (responsesConfig.topLogprobs().isPresent()) {
+                builder.topLogprobs(responsesConfig.topLogprobs().get());
+            }
+            if (responsesConfig.strictTools().isPresent()) {
+                builder.strictTools(responsesConfig.strictTools().get());
+            }
+
+            return new Function<>() {
+                @Override
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
+                    List<ChatModelListener> listeners = new ArrayList<>();
+                    for (ChatModelListener listener : context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL)) {
+                        listeners.add(listener);
+                    }
+                    builder.listeners(listeners);
+                    resolveTlsConfiguration(openAiConfig, httpClientBuilder);
+                    resolveProxy(openAiConfig, context.getInjectedReference(ProxyConfigurationRegistry.class))
+                            .ifPresent(httpClientBuilder::proxy);
+                    ModelAuthProvider.resolve(configName)
+                            .ifPresent(provider -> httpClientBuilder
+                                    .addClientProvider(new OpenAiRestApi.OpenAIRestAPIFilter(provider)));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    return new DisabledChatModel();
+                }
+            };
+        }
+    }
+
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> responsesStreamingChatModel(
+            String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
+            ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
+
+            JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+            Duration timeout = openAiConfig.timeout().orElse(Duration.ofSeconds(10));
+            httpClientBuilder.connectTimeout(timeout);
+            httpClientBuilder.readTimeout(timeout);
+
+            var builder = OpenAiResponsesStreamingChatModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
+                    .baseUrl(normalizeBaseUrl(openAiConfig.baseUrl()))
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelName())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()));
+
+            if (openAiConfig.organizationId().isPresent()) {
+                builder.organizationId(openAiConfig.organizationId().get());
+            }
+            if (chatModelConfig.temperature().isPresent()) {
+                builder.temperature(chatModelConfig.temperature().get());
+            }
+            if (chatModelConfig.topP().isPresent()) {
+                builder.topP(chatModelConfig.topP().get());
+            }
+            if (chatModelConfig.serviceTier().isPresent()) {
+                builder.serviceTier(chatModelConfig.serviceTier().get());
+            }
+            if (chatModelConfig.reasoningEffort().isPresent()) {
+                builder.reasoningEffort(chatModelConfig.reasoningEffort().get());
+            }
+            if (chatModelConfig.strictJsonSchema().isPresent()) {
+                builder.strictJsonSchema(chatModelConfig.strictJsonSchema().get());
+            }
+            if (chatModelConfig.responseFormat().isPresent()) {
+                builder.responseFormat(toResponseFormat(chatModelConfig.responseFormat().get()));
+            }
+
+            if (responsesConfig.store().isPresent()) {
+                builder.store(responsesConfig.store().get());
+            }
+            if (responsesConfig.previousResponseId().isPresent()) {
+                builder.previousResponseId(responsesConfig.previousResponseId().get());
+            }
+            if (responsesConfig.reasoningSummary().isPresent()) {
+                builder.reasoningSummary(responsesConfig.reasoningSummary().get());
+            }
+            resolveMaxOutputTokens(chatModelConfig).ifPresent(builder::maxOutputTokens);
+            if (responsesConfig.maxToolCalls().isPresent()) {
+                builder.maxToolCalls(responsesConfig.maxToolCalls().get());
+            }
+            if (responsesConfig.parallelToolCalls().isPresent()) {
+                builder.parallelToolCalls(responsesConfig.parallelToolCalls().get());
+            }
+            if (responsesConfig.include().isPresent()) {
+                builder.include(responsesConfig.include().get());
+            }
+            if (responsesConfig.truncation().isPresent()) {
+                builder.truncation(responsesConfig.truncation().get());
+            }
+            if (responsesConfig.textVerbosity().isPresent()) {
+                builder.textVerbosity(responsesConfig.textVerbosity().get());
+            }
+            if (responsesConfig.promptCacheKey().isPresent()) {
+                builder.promptCacheKey(responsesConfig.promptCacheKey().get());
+            }
+            if (responsesConfig.promptCacheRetention().isPresent()) {
+                builder.promptCacheRetention(responsesConfig.promptCacheRetention().get());
+            }
+            if (responsesConfig.safetyIdentifier().isPresent()) {
+                builder.safetyIdentifier(responsesConfig.safetyIdentifier().get());
+            }
+            if (responsesConfig.topLogprobs().isPresent()) {
+                builder.topLogprobs(responsesConfig.topLogprobs().get());
+            }
+            if (responsesConfig.strictTools().isPresent()) {
+                builder.strictTools(responsesConfig.strictTools().get());
+            }
+            if (responsesConfig.streamIncludeObfuscation().isPresent()) {
+                builder.streamIncludeObfuscation(responsesConfig.streamIncludeObfuscation().get());
+            }
+
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
+                    List<ChatModelListener> listeners = new ArrayList<>();
+                    for (ChatModelListener listener : context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL)) {
+                        listeners.add(listener);
+                    }
+                    builder.listeners(listeners);
+                    resolveTlsConfiguration(openAiConfig, httpClientBuilder);
+                    resolveProxy(openAiConfig, context.getInjectedReference(ProxyConfigurationRegistry.class))
+                            .ifPresent(httpClientBuilder::proxy);
+                    ModelAuthProvider.resolve(configName)
+                            .ifPresent(provider -> httpClientBuilder
+                                    .addClientProvider(new OpenAiRestApi.OpenAIRestAPIFilter(provider)));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                    Any.Literal.INSTANCE),
+                            builder, configName);
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    return new DisabledStreamingChatModel();
+                }
+            };
+        }
+    }
+
+    private static String normalizeBaseUrl(String baseUrl) {
+        if (baseUrl == null) {
+            return null;
+        }
+        // The Responses client appends "/responses" to the base URL, so a trailing slash would produce a double slash.
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    }
+
+    private static ResponseFormat toResponseFormat(String responseFormat) {
+        if ("text".equalsIgnoreCase(responseFormat)) {
+            return ResponseFormat.TEXT;
+        }
+        // Everything else (json, json_object, json_schema) maps to JSON structured output
+        return ResponseFormat.JSON;
+    }
+
+    private void resolveTlsConfiguration(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
+            JaxRsHttpClientBuilder httpClientBuilder) {
+        Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current().select(TlsConfigurationRegistry.class);
+        if (tlsConfigurationRegistry.isResolvable()) {
+            Optional<TlsConfiguration> maybeTlsConfiguration = TlsConfiguration.from(tlsConfigurationRegistry.get(),
+                    openAiConfig.tlsConfigurationName());
+            if (maybeTlsConfiguration.isPresent()) {
+                httpClientBuilder.tlsConfiguration(maybeTlsConfiguration.get());
+            }
+        }
+    }
+
     public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -272,6 +652,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
                     Optional<Proxy> embeddingProxy = resolveProxy(openAiConfig, proxyRegistry);
                     if (embeddingProxy.isPresent()) {
@@ -300,9 +681,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -325,6 +704,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ModerationModel apply(SyntheticCreationalContext<ModerationModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(MODERATION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
@@ -351,9 +731,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             ImageModelConfig imageModelConfig = openAiConfig.imageModel();
             var builder = QuarkusOpenAiImageModel.builder()
                     .configName(configName)
@@ -400,6 +778,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(IMAGE_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
@@ -428,9 +807,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
-                throw new ConfigValidationException(createApiKeyConfigProblems(configName));
-            }
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
             if (openAiConfig.maxRetries() < 1) {
                 throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
             }
@@ -454,6 +831,7 @@ public class OpenAiRecorder {
             return new Function<>() {
                 @Override
                 public AudioTranscriptionModel apply(SyntheticCreationalContext<AudioTranscriptionModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(AUDIO_TRANSCRIPTION_MODEL_CUSTOMIZER_TYPE_LITERAL,
                                     Any.Literal.INSTANCE),
@@ -477,6 +855,58 @@ public class OpenAiRecorder {
     }
 
     @SuppressWarnings({ "removal" })
+    public Function<SyntheticCreationalContext<DecisionModel>, DecisionModel> decisionModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), configName);
+            if (openAiConfig.maxRetries() < 1) {
+                throw new ConfigValidationException(createMaxRetriesConfigProblems(configName));
+            }
+            DecisionModelConfig decisionModelConfig = openAiConfig.decisionModel();
+            var builder = (QuarkusOpenAiDecisionModelBuilderFactory.Builder) OpenAiDecisionModel.builder();
+            builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
+            builder
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
+                    .configName(configName)
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .maxRetries(openAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, decisionModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, decisionModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(decisionModelConfig.modelName());
+
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
+
+            return new Function<>() {
+                @Override
+                public DecisionModel apply(SyntheticCreationalContext<DecisionModel> context) {
+                    throwIfApiKeyNotConfigured(apiKey, openAiConfig.baseUrl(), context, configName);
+                    builder.listeners(context.getInjectedReference(DECISION_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
+                    ModelBuilderCustomizer.applyCustomizers(
+                            context.getInjectedReference(DECISION_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                            builder, configName);
+                    ProxyConfigurationRegistry proxyRegistry = context.getInjectedReference(ProxyConfigurationRegistry.class);
+                    Optional<Proxy> decisionProxy = resolveProxy(openAiConfig, proxyRegistry);
+                    if (decisionProxy.isPresent()) {
+                        builder.proxy(decisionProxy.get());
+                    }
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public DecisionModel apply(SyntheticCreationalContext<DecisionModel> context) {
+                    return new DisabledDecisionModel();
+                }
+            };
+        }
+    }
+
     private Optional<Proxy> resolveProxy(LangChain4jOpenAiConfig.OpenAiConfig openAiConfig,
             ProxyConfigurationRegistry proxyRegistry) {
 
@@ -533,24 +963,59 @@ public class OpenAiRecorder {
         return openAiConfig;
     }
 
-    private ConfigValidationException.Problem[] createApiKeyConfigProblems(String configName) {
+    private static ConfigValidationException.Problem[] createApiKeyConfigProblems(String configName) {
         return createConfigProblems("api-key", configName);
     }
 
-    private ConfigValidationException.Problem[] createMaxRetriesConfigProblems(String configName) {
+    private static ConfigValidationException.Problem[] createMaxRetriesConfigProblems(String configName) {
         return new ConfigValidationException.Problem[] { new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.openai%smax-retries must be greater than zero",
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."))) };
     }
 
-    private ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
+    private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
         return new ConfigValidationException.Problem[] { createConfigProblem(key, configName) };
     }
 
-    private ConfigValidationException.Problem createConfigProblem(String key, String configName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.openai%s%s is required but it could not be found in any config source",
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    private static void throwIfApiKeyNotConfigured(String apiKey, String baseUrl, String configName) {
+        ArcContainer container = Arc.container();
+        if (isApiKeyMissing(apiKey, baseUrl) && container != null && container.isRunning()
+                && !isAuthProviderAvailable(container, configName)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+        }
+    }
+
+    private static <T> void throwIfApiKeyNotConfigured(String apiKey, String baseUrl,
+            SyntheticCreationalContext<T> context, String configName) {
+        if (isApiKeyMissing(apiKey, baseUrl) && !isAuthProviderAvailable(context, configName)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(configName));
+        }
+    }
+
+    private static boolean isApiKeyMissing(String apiKey, String baseUrl) {
+        return DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(baseUrl);
+    }
+
+    private static <T> boolean isAuthProviderAvailable(SyntheticCreationalContext<T> context, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)
+                && Arc.container().instance(ModelAuthProvider.class, ModelName.Literal.of(configName)).isAvailable()) {
+            return true;
+        }
+        return context.getInjectedReference(MODEL_AUTH_PROVIDER_TYPE_LITERAL).isResolvable();
+    }
+
+    private static boolean isAuthProviderAvailable(ArcContainer container, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)
+                && container.instance(ModelAuthProvider.class, ModelName.Literal.of(configName)).isAvailable()) {
+            return true;
+        }
+        return container.instance(ModelAuthProvider.class).isAvailable();
     }
 
     public void cleanUp(ShutdownContext shutdown) {

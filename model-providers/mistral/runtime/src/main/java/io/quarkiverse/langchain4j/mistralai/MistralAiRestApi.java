@@ -67,13 +67,16 @@ public interface MistralAiRestApi {
     MistralAiChatCompletionResponse blockingChatCompletion(MistralAiChatCompletionRequest request, @NotBody String token);
 
     /**
-     * Performs a non-blocking request for a streaming completion request
+     * Performs a non-blocking request for a streaming completion request, exposing each response as a raw
+     * {@link SseEvent}. Access to the original Server-Sent Event is required so that frames mapping to no typed
+     * callback can be surfaced via {@code StreamingChatResponseHandler#onUnmappedRawEvent} and attached to
+     * {@code MistralAiChatResponseMetadata#rawServerSentEvents()}, matching langchain4j's own client.
      */
     @Path("chat/completions")
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
     @SseEventFilter(DoneFilter.class)
-    Multi<MistralAiChatCompletionResponse> streamingChatCompletion(MistralAiChatCompletionRequest request,
+    Multi<SseEvent<String>> streamingChatCompletion(MistralAiChatCompletionRequest request,
             @NotBody String token);
 
     @Path("embeddings")

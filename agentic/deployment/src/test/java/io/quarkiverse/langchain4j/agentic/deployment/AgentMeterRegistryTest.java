@@ -36,7 +36,7 @@ import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ManagedContext;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.common.vertx.VertxContext;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -54,7 +54,7 @@ public class AgentMeterRegistryTest extends OpenAiBaseTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(SimpleAgent.class, SimpleAiService.class, TestChatModelSupplier.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")

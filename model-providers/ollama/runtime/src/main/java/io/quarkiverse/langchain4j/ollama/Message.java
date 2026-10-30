@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record Message(Role role, String content, @JsonProperty("tool_calls") List<ToolCall> toolCalls, List<String> images,
-        @JsonIgnore Map<String, Object> additionalFields) {
+public record Message(Role role, String content, String thinking, @JsonProperty("tool_calls") List<ToolCall> toolCalls,
+        List<String> images, @JsonIgnore Map<String, Object> additionalFields) {
 
     @JsonAnyGetter
     public Map<String, Object> getAdditionalFields() {
@@ -23,6 +23,7 @@ public record Message(Role role, String content, @JsonProperty("tool_calls") Lis
     public static class Builder {
         private Role role;
         private String content;
+        private String thinking;
         private List<ToolCall> toolCalls;
         private List<String> images;
         private Map<String, Object> additionalFields;
@@ -34,6 +35,11 @@ public record Message(Role role, String content, @JsonProperty("tool_calls") Lis
 
         public Builder content(String content) {
             this.content = content;
+            return this;
+        }
+
+        public Builder thinking(String thinking) {
+            this.thinking = thinking;
             return this;
         }
 
@@ -54,7 +60,7 @@ public record Message(Role role, String content, @JsonProperty("tool_calls") Lis
         }
 
         public Message build() {
-            return new Message(role, content, toolCalls, images, additionalFields);
+            return new Message(role, content, thinking, toolCalls, images, additionalFields);
         }
     }
 

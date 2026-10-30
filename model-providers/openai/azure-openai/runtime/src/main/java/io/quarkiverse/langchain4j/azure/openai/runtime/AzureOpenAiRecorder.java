@@ -100,6 +100,7 @@ public class AzureOpenAiRecorder {
                     .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
                     .temperature(chatModelConfig.temperature().orElse(null))
                     .topP(chatModelConfig.topP().orElse(null))
+                    .reasoningEffort(chatModelConfig.reasoningEffort().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
@@ -163,6 +164,7 @@ public class AzureOpenAiRecorder {
                     .logCurl(firstOrDefault(false, azureAiConfig.logRequestsCurl()))
                     .temperature(chatModelConfig.temperature().orElse(null))
                     .topP(chatModelConfig.topP().orElse(null))
+                    .reasoningEffort(chatModelConfig.reasoningEffort().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));

@@ -1,7 +1,11 @@
 package io.quarkiverse.langchain4j.redis.deployment;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import jakarta.inject.Inject;
 
@@ -9,11 +13,14 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
@@ -61,7 +68,7 @@ public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
 
     @Override
     protected void clearStore() {
-        embeddingStore.deleteAll();
+        embeddingStore.removeAll();
     }
 
     @Override
@@ -72,5 +79,20 @@ public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
     @Override
     protected EmbeddingModel embeddingModel() {
         return embeddingModel;
+    }
+
+    @Test
+    void should_return_more_than_ten_results() {
+        List<Embedding> embeddings = IntStream.range(0, 15)
+                .mapToObj(i -> embeddingModel.embed("text " + i).content())
+                .toList();
+        embeddingStore.addAll(embeddings);
+
+        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                .queryEmbedding(embeddings.get(0))
+                .maxResults(15)
+                .build();
+
+        assertThat(embeddingStore.search(request).matches()).hasSize(15);
     }
 }

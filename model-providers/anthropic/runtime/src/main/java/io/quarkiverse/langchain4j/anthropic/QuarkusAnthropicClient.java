@@ -4,6 +4,7 @@ import static dev.langchain4j.internal.Utils.isNotNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.REDACTED_THINKING_KEY;
+import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.SERVER_TOOL_RESULTS_KEY;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.THINKING_SIGNATURE_KEY;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.toFinishReason;
 import static java.util.Collections.synchronizedList;
@@ -12,22 +13,40 @@ import static java.util.stream.StreamSupport.stream;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+
+import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.http.client.sse.ServerSentEvent;
+import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
 import dev.langchain4j.internal.ToolCallBuilder;
+import dev.langchain4j.model.anthropic.AnthropicChatResponseMetadata;
+import dev.langchain4j.model.anthropic.AnthropicServerToolResult;
 import dev.langchain4j.model.anthropic.AnthropicTokenUsage;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
@@ -51,8 +70,13 @@ import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.model.chat.response.PartialToolCallContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.chat.response.StreamingHandle;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
+import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -62,22 +86,26 @@ import io.vertx.core.http.HttpClientResponse;
 
 public class QuarkusAnthropicClient extends AnthropicClient {
     public static final String BETA = "tools-2024-04-04";
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(15);
     private final String apiKey;
     private final String anthropicVersion;
     private final String configuredBeta;
     private final Boolean disableBetaHeader;
     private final AnthropicRestApi restApi;
 
+    private final boolean hasModelAuthProvider;
+
     public QuarkusAnthropicClient(Builder builder) {
         this.apiKey = builder.apiKey;
         this.anthropicVersion = builder.version;
         this.configuredBeta = builder.beta;
         this.disableBetaHeader = builder.disableBetaHeader;
+        Duration timeout = timeoutOrDefault(builder.timeout);
 
         try {
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder().baseUri(new URI(builder.baseUrl))
-                    .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
-                    .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
+                    .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                    .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);
 
             if (builder.logRequests || builder.logResponses || builder.logCurl) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE).clientLogger(
@@ -85,10 +113,29 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                                 builder.logCurl));
             }
 
+            var modelAuthProvider = ModelAuthProvider.resolve(builder.configName);
+            this.hasModelAuthProvider = modelAuthProvider.isPresent();
+            modelAuthProvider.ifPresent(provider -> restApiBuilder
+                    .register(new AnthropicRestAPIFilter(provider)));
+
+            if (builder.customHeadersSupplier != null) {
+                restApiBuilder.clientHeadersFactory(new ClientHeadersFactory() {
+                    @Override
+                    public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
+                            MultivaluedMap<String, String> clientOutgoingHeaders) {
+                        return new MultivaluedHashMap<>(builder.customHeadersSupplier.get());
+                    }
+                });
+            }
+
             this.restApi = restApiBuilder.build(AnthropicRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static Duration timeoutOrDefault(Duration timeout) {
+        return timeout != null ? timeout : DEFAULT_TIMEOUT;
     }
 
     @Override
@@ -112,7 +159,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
     private AnthropicRestApi.ApiMetadata createMetadata(AnthropicCreateMessageRequest request) {
         var builder = AnthropicRestApi.ApiMetadata.builder()
-                .apiKey(apiKey)
+                .apiKey(hasModelAuthProvider ? null : apiKey)
                 .anthropicVersion(anthropicVersion);
 
         String betaHeader = buildBetaHeaderForRequest(request);
@@ -162,10 +209,12 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         return false;
     }
 
-    private static class AnthropicStreamingSubscriber implements MultiSubscriber<AnthropicStreamingData> {
+    private static class AnthropicStreamingSubscriber implements MultiSubscriber<SseEvent<String>> {
         private static final Logger log = Logger.getLogger(AnthropicStreamingSubscriber.class);
 
-        private final StreamingChatResponseHandler handler;
+        // Wraps the user handler so that, for each SSE frame, we can tell whether it mapped to a typed callback and,
+        // if not, forward it via onUnmappedRawEvent - mirroring langchain4j's own DefaultAnthropicClient.
+        private final MappingTrackingStreamingChatResponseHandler handler;
         private Subscription subscription;
         private volatile AtomicReference<StringBuffer> contentBuilder = new AtomicReference<>(new StringBuffer());
         private volatile String stopReason;
@@ -174,6 +223,8 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final AtomicInteger outputTokenCount = new AtomicInteger();
         private final AtomicInteger cacheCreationInputTokens = new AtomicInteger();
         private final AtomicInteger cacheReadInputTokens = new AtomicInteger();
+        private volatile String responseId;
+        private volatile String responseModel;
 
         private volatile String currentContentBlockStartType;
         private final ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
@@ -182,12 +233,14 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final StringBuffer thinkingBuilder = new StringBuffer();
         private final List<String> thinkingSignatures = synchronizedList(new ArrayList<>());
         private final List<String> redactedThinkings = synchronizedList(new ArrayList<>());
+        private final List<AnthropicServerToolResult> serverToolResults = synchronizedList(new ArrayList<>());
+        private final Queue<ServerSentEvent> rawServerSentEvents = new ConcurrentLinkedQueue<>();
         private final AnthropicCreateMessageOptions options;
         private volatile boolean completionHandled = false;
         private final AnthropicStreamingHandle streamingHandle = new AnthropicStreamingHandle();
 
         private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler, AnthropicCreateMessageOptions options) {
-            this.handler = handler;
+            this.handler = new MappingTrackingStreamingChatResponseHandler(handler);
             this.options = options;
         }
 
@@ -210,41 +263,91 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         @Override
-        public void onItem(AnthropicStreamingData data) {
-            switch (data.type) {
-                case "message_start":
-                    handleMessageStart(data);
-                    break;
+        public void onItem(SseEvent<String> event) {
+            handler.resetMappingTracking();
 
-                case "content_block_start":
-                    handleContentBlockStart(data);
-                    break;
+            String eventData = event.data();
+            ServerSentEvent rawEvent = new ServerSentEvent(event.name(), eventData);
 
-                case "content_block_delta":
-                    handleContentBlockDelta(data);
-                    break;
+            // Keep-alive or gateway sentinel frames cannot be parsed into AnthropicStreamingData; record them as raw
+            // frames but do not attempt to map them to a typed callback.
+            if (isSkippableSseFrame(eventData)) {
+                rawServerSentEvents.add(rawEvent);
+                return;
+            }
 
-                case "content_block_stop":
-                    handleContentBlockStop();
-                    break;
+            AnthropicStreamingData data;
+            try {
+                data = AnthropicRestApi.ObjectMapperHolder.MAPPER.readValue(eventData, AnthropicStreamingData.class);
+            } catch (JsonProcessingException e) {
+                onFailure(e);
+                return;
+            }
 
-                case "message_delta":
-                    handleMessageDelta(data);
-                    break;
+            if (data.type != null) {
+                switch (data.type) {
+                    case "message_start":
+                        handleMessageStart(data);
+                        break;
 
-                case "message_stop":
-                    handleMessageStop();
-                    break;
+                    case "content_block_start":
+                        handleContentBlockStart(data);
+                        break;
 
-                case "error":
-                    handleError(data);
-                    break;
+                    case "content_block_delta":
+                        handleContentBlockDelta(data);
+                        break;
+
+                    case "content_block_stop":
+                        handleContentBlockStop();
+                        break;
+
+                    case "message_delta":
+                        handleMessageDelta(data);
+                        break;
+
+                    case "message_stop":
+                        handleMessageStop();
+                        break;
+
+                    case "error":
+                        handleError(data);
+                        break;
+                }
+            }
+
+            rawServerSentEvents.add(rawEvent);
+
+            // Any frame that did not map to a typed callback (e.g. ping, message_start, content_block_stop,
+            // server_tool_use, web_search_tool_result) is surfaced as a raw event, matching langchain4j's client.
+            if (!handler.wasMapped()) {
+                handler.onUnmappedRawEvent(rawEvent);
             }
         }
 
+        private static boolean isSkippableSseFrame(String eventData) {
+            if (eventData == null) {
+                return true;
+            }
+            String trimmed = eventData.trim();
+            if (trimmed.isEmpty() || "[DONE]".equals(trimmed)) {
+                return true;
+            }
+            // Anthropic SSE payloads are JSON objects; anything else cannot be deserialized into AnthropicStreamingData.
+            return !trimmed.startsWith("{");
+        }
+
         private void handleMessageStart(AnthropicStreamingData data) {
-            if ((data.message != null) && (data.message.usage != null)) {
-                handleUsage(data.message.usage);
+            if (data.message != null) {
+                if (data.message.usage != null) {
+                    handleUsage(data.message.usage);
+                }
+                if (data.message.id != null) {
+                    responseId = data.message.id;
+                }
+                if (data.message.model != null) {
+                    responseModel = data.message.model;
+                }
             }
         }
 
@@ -303,7 +406,17 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                 toolCallBuilder.updateIndex(toolCallBuilder.index() + 1);
                 toolCallBuilder.updateId(data.contentBlock.id);
                 toolCallBuilder.updateName(data.contentBlock.name);
+            } else if (isServerToolResultType(currentContentBlockStartType) && options.returnServerToolResults()) {
+                serverToolResults.add(AnthropicServerToolResult.builder()
+                        .type(data.contentBlock.type)
+                        .toolUseId(data.contentBlock.toolUseId)
+                        .content(data.contentBlock.content)
+                        .build());
             }
+        }
+
+        private static boolean isServerToolResultType(String type) {
+            return (type != null) && type.endsWith("_tool_result");
         }
 
         private void handleContentBlockDelta(AnthropicStreamingData data) {
@@ -425,6 +538,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
             if (!redactedThinkings.isEmpty()) {
                 attributes.put(REDACTED_THINKING_KEY, redactedThinkings);
             }
+            if (options.returnServerToolResults() && !serverToolResults.isEmpty()) {
+                attributes.put(SERVER_TOOL_RESULTS_KEY, serverToolResults);
+            }
 
             AiMessage aiMessage = AiMessage.builder()
                     .text(isNullOrEmpty(text) ? null : text)
@@ -433,15 +549,27 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                     .attributes(attributes.isEmpty() ? null : attributes)
                     .build();
 
-            return ChatResponse.builder()
-                    .aiMessage(aiMessage)
+            var metadataBuilder = AnthropicChatResponseMetadata.builder()
                     .tokenUsage(AnthropicTokenUsage.builder()
                             .inputTokenCount(inputTokenCount.get())
                             .outputTokenCount(outputTokenCount.get())
                             .cacheCreationInputTokens(cacheCreationInputTokens.get())
                             .cacheReadInputTokens(cacheReadInputTokens.get())
                             .build())
-                    .finishReason(toFinishReason(stopReason))
+                    .finishReason(toFinishReason(stopReason));
+            if (responseId != null) {
+                metadataBuilder.id(responseId);
+            }
+            if (responseModel != null) {
+                metadataBuilder.modelName(responseModel);
+            }
+            if (!rawServerSentEvents.isEmpty()) {
+                metadataBuilder.rawServerSentEvents(new ArrayList<>(rawServerSentEvents));
+            }
+
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(metadataBuilder.build())
                     .build();
         }
 
@@ -495,12 +623,25 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         return value != null && value;
     }
 
+    private static final ThreadLocal<String> CONFIG_NAME_HINT = new ThreadLocal<>();
+
+    public static void setConfigNameHint(String configName) {
+        CONFIG_NAME_HINT.set(configName);
+    }
+
+    static String getAndClearConfigNameHint() {
+        String value = CONFIG_NAME_HINT.get();
+        CONFIG_NAME_HINT.remove();
+        return value;
+    }
+
     public static class QuarkusAnthropicClientBuilderFactory implements AnthropicClientBuilderFactory {
         @Override
         public AnthropicClient.Builder get() {
             Builder builder = new Builder();
             builder.logCurl = getAndClearLogCurlHint();
             builder.disableBetaHeader = getAndClearDisableBetaHint();
+            builder.configName = getAndClearConfigNameHint();
             return builder;
         }
     }
@@ -508,6 +649,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     public static class Builder extends AnthropicClient.Builder<QuarkusAnthropicClient, Builder> {
         public boolean logCurl;
         public boolean disableBetaHeader;
+        public String configName;
 
         @Override
         public QuarkusAnthropicClient build() {
@@ -582,26 +724,58 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                         var headerKey = header.getKey();
                         var headerValue = header.getValue();
 
-                        if (headerKey.equals(AnthropicRestApi.API_KEY_HEADER)) {
-                            headerValue = maskApiKeyHeaderValue(headerValue);
+                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
+                            headerValue = SensitiveHeaderMasker.mask(headerValue);
                         }
 
                         return "[%s: %s]".formatted(headerKey, headerValue);
                     })
                     .collect(joining(", "));
         }
+    }
 
-        private static String maskApiKeyHeaderValue(String apiKeyHeaderValue) {
-            try {
-                if (apiKeyHeaderValue.length() <= 4) {
-                    return apiKeyHeaderValue;
+    static class AnthropicRestAPIFilter implements ResteasyReactiveClientRequestFilter {
+        private final ModelAuthProvider authorizer;
+
+        AnthropicRestAPIFilter(ModelAuthProvider authorizer) {
+            this.authorizer = authorizer;
+        }
+
+        @Override
+        public void filter(ResteasyReactiveClientRequestContext requestContext) {
+            Executor executor = createExecutor();
+            requestContext.suspend();
+            executor.execute(() -> {
+                try {
+                    String authValue = authorizer.getAuthorization(new ModelAuthProvider.Input() {
+                        @Override
+                        public String method() {
+                            return requestContext.getMethod();
+                        }
+
+                        @Override
+                        public URI uri() {
+                            return requestContext.getUri();
+                        }
+
+                        @Override
+                        public Map<String, List<Object>> headers() {
+                            return requestContext.getHeaders();
+                        }
+                    });
+                    if (authValue != null) {
+                        requestContext.getHeaders().putSingle("Authorization", authValue);
+                    }
+                    requestContext.resume();
+                } catch (Exception e) {
+                    requestContext.resume(e);
                 }
-                return apiKeyHeaderValue.substring(0, 2)
-                        + "..."
-                        + apiKeyHeaderValue.substring(apiKeyHeaderValue.length() - 2);
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
+            });
+        }
+
+        private static Executor createExecutor() {
+            InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
+            return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
         }
     }
 }

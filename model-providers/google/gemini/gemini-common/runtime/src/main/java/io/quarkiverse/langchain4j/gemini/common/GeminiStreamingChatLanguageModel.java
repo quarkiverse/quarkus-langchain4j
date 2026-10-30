@@ -10,28 +10,36 @@ import java.util.function.Consumer;
 
 import org.jboss.resteasy.reactive.client.SseEvent;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.internal.ExceptionMapper;
+import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
+import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.smallrye.mutiny.Multi;
 
 public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
 
     public GeminiStreamingChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
-            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, boolean useGoogleSearch) {
-        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, null, false, useGoogleSearch);
+            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
+            boolean includeThoughts, ThinkingLevel thinkingLevel, boolean useGoogleSearch) {
+        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, thinkingBudget,
+                includeThoughts, thinkingLevel, useGoogleSearch);
     }
 
     @Override
@@ -53,7 +61,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         Schema schema = detectSchema(effectiveResponseFormat);
         Map<String, Object> rawSchema = detectRawSchema(effectiveResponseFormat);
 
-        GenerationConfig generationConfig = GenerationConfig.builder()
+        GenerationConfig.Builder generationConfigBuilder = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
                 .responseMimeType(computeMimeType(effectiveResponseFormat, schema, rawSchema))
                 .responseSchema(schema)
@@ -61,9 +69,11 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
                 .stopSequences(requestParameters.stopSequences())
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))
-                .topP(getOrDefault(requestParameters.topP(), this.topP))
-                .build();
+                .topP(getOrDefault(requestParameters.topP(), this.topP));
+        applyThinkingConfig(generationConfigBuilder);
+        GenerationConfig generationConfig = generationConfigBuilder.build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
+                requestParameters.toolChoice(),
                 generationConfig, this.modelId, this.useGoogleSearch);
 
         ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
@@ -80,11 +90,15 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         });
         try {
             GeminiStreamingResponseBuilder responseBuilder = new GeminiStreamingResponseBuilder();
-            Multi<SseEvent<GenerateContentResponse>> event = generateStreamContext(request);
+            // Wraps the user handler so that, for each SSE frame, we can tell whether it mapped to a typed callback
+            // and, if not, forward it via onUnmappedRawEvent - mirroring langchain4j's own client.
+            MappingTrackingStreamingChatResponseHandler trackingHandler = new MappingTrackingStreamingChatResponseHandler(
+                    aHandler);
+            Multi<SseEvent<String>> event = generateStreamContext(request);
             event.subscribe().with(
-                    new OnItemConsumer(responseBuilder, aHandler),
-                    new OnErrorConsumer(aHandler),
-                    new OnCompleteRunnable(responseBuilder, aHandler));
+                    new OnItemConsumer(responseBuilder, trackingHandler),
+                    new OnErrorConsumer(trackingHandler, listeners, modelListenerRequest, attributes),
+                    new OnCompleteRunnable(responseBuilder, trackingHandler, listeners, modelListenerRequest, attributes));
         } catch (RuntimeException e) {
             ChatModelErrorContext errorContext = new ChatModelErrorContext(
                     e,
@@ -104,7 +118,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         }
     }
 
-    protected abstract Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request);
+    protected abstract Multi<SseEvent<String>> generateStreamContext(GenerateContentRequest request);
 
     private ChatRequest createModelListenerRequest(GenerateContentRequest request,
             List<ChatMessage> messages,
@@ -125,15 +139,31 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
 
         private final GeminiStreamingResponseBuilder responseBuilder;
         private final StreamingChatResponseHandler handler;
+        private final List<ChatModelListener> listeners;
+        private final ChatRequest modelListenerRequest;
+        private final Map<Object, Object> attributes;
 
-        public OnCompleteRunnable(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler handler) {
+        public OnCompleteRunnable(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler handler,
+                List<ChatModelListener> listeners, ChatRequest modelListenerRequest, Map<Object, Object> attributes) {
             this.responseBuilder = responseBuilder;
             this.handler = handler;
+            this.listeners = listeners;
+            this.modelListenerRequest = modelListenerRequest;
+            this.attributes = attributes;
         }
 
         @Override
         public void run() {
             ChatResponse chatResponse = responseBuilder.build();
+            ChatModelResponseContext responseContext = new ChatModelResponseContext(chatResponse, modelListenerRequest,
+                    ModelProvider.OTHER, attributes);
+            listeners.forEach(listener -> {
+                try {
+                    listener.onResponse(responseContext);
+                } catch (Exception e) {
+                    log.warn("Exception while calling model listener", e);
+                }
+            });
             try {
                 handler.onCompleteResponse(chatResponse);
             } catch (Exception e) {
@@ -145,31 +175,73 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
     private static class OnErrorConsumer implements Consumer<Throwable> {
 
         private final StreamingChatResponseHandler handler;
+        private final List<ChatModelListener> listeners;
+        private final ChatRequest modelListenerRequest;
+        private final Map<Object, Object> attributes;
 
-        public OnErrorConsumer(StreamingChatResponseHandler handler) {
+        public OnErrorConsumer(StreamingChatResponseHandler handler, List<ChatModelListener> listeners,
+                ChatRequest modelListenerRequest, Map<Object, Object> attributes) {
             this.handler = handler;
+            this.listeners = listeners;
+            this.modelListenerRequest = modelListenerRequest;
+            this.attributes = attributes;
         }
 
         @Override
         public void accept(Throwable x) {
             RuntimeException mappedError = ExceptionMapper.DEFAULT.mapException(x);
+            ChatModelErrorContext errorContext = new ChatModelErrorContext(mappedError, modelListenerRequest,
+                    ModelProvider.OTHER, attributes);
+            listeners.forEach(listener -> {
+                try {
+                    listener.onError(errorContext);
+                } catch (Exception e) {
+                    log.warn("Exception while calling model listener", e);
+                }
+            });
             withLoggingExceptions(() -> handler.onError(mappedError));
         }
     }
 
-    private static class OnItemConsumer implements Consumer<SseEvent<GenerateContentResponse>> {
+    private static class OnItemConsumer implements Consumer<SseEvent<String>> {
 
         private final GeminiStreamingResponseBuilder responseBuilder;
-        private final StreamingChatResponseHandler handler;
+        private final MappingTrackingStreamingChatResponseHandler handler;
 
-        public OnItemConsumer(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler handler) {
+        public OnItemConsumer(GeminiStreamingResponseBuilder responseBuilder,
+                MappingTrackingStreamingChatResponseHandler handler) {
             this.responseBuilder = responseBuilder;
             this.handler = handler;
         }
 
         @Override
-        public void accept(SseEvent<GenerateContentResponse> t) {
-            GenerateContentResponse response = t.data();
+        public void accept(SseEvent<String> t) {
+            try {
+                handle(t);
+            } catch (Exception e) {
+                // Mutiny drops exceptions thrown from the item callback and cancels the stream without notifying the handler
+                try {
+                    handler.onError(e);
+                } catch (Exception e2) {
+                    log.warn("Exception while calling onError of the streaming response handler", e2);
+                }
+            }
+        }
+
+        private void handle(SseEvent<String> t) {
+            handler.resetMappingTracking();
+
+            ServerSentEvent rawEvent = new ServerSentEvent(t.name(), t.data());
+
+            GenerateContentResponse response;
+            try {
+                response = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(t.data(),
+                        GenerateContentResponse.class);
+            } catch (JsonProcessingException e) {
+                withLoggingExceptions(() -> handler.onError(e));
+                return;
+            }
+
             Optional<String> maybeText = responseBuilder.append(response);
             maybeText.ifPresent(text -> {
                 try {
@@ -178,6 +250,11 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
                     withLoggingExceptions(() -> handler.onError(ex));
                 }
             });
+
+            // A frame that did not map to a typed callback is surfaced as a raw event, matching langchain4j.
+            if (!handler.wasMapped()) {
+                handler.onUnmappedRawEvent(rawEvent);
+            }
         }
     }
 }

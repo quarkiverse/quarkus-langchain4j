@@ -10,8 +10,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+import java.util.logging.LogRecord;
+
 import jakarta.inject.Inject;
 
+import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -29,7 +33,9 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.log-responses", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT))
+            .setLogRecordPredicate(record -> true)
+            .assertLogRecords(AnthropicChatLanguageModelSmokeTest::verifyLogRecords);
 
     @Inject
     ChatModel chatModel;
@@ -93,8 +99,7 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                     } ]
                   } ],
                   "max_tokens" : 1024,
-                  "stream" : false,
-                  "top_k" : 40
+                  "stream" : false
                 }""";
 
         assertThat(new String(loggedRequest.getBody()))
@@ -107,5 +112,14 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                         .withHeader("x-api-key", equalTo(API_KEY))
                         .withHeader("anthropic-version", not(absent()))
                         .withRequestBody(equalToJson(requestBody)));
+    }
+
+    private static void verifyLogRecords(List<LogRecord> logRecords) {
+        assertThat(logRecords.stream()
+                .map(record -> ((ExtLogRecord) record).getFormattedMessage())
+                .filter(message -> message.startsWith("Request:")))
+                .isNotEmpty()
+                .allSatisfy(message -> assertThat(message).doesNotContain(API_KEY))
+                .anySatisfy(message -> assertThat(message).contains("[x-api-key: somek...ey]"));
     }
 }

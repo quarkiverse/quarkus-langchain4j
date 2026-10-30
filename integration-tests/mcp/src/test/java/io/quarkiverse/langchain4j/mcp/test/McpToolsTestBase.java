@@ -94,10 +94,10 @@ public abstract class McpToolsTestBase {
         ToolExecutor executor = toolProviderResult.toolExecutorByName("echoString");
         ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder()
                 .name("echoString")
-                .arguments("{\"input\": 1}") // wrong argument type
+                .arguments("{\"input\": {\"a\":\"b\"}}") // wrong argument type
                 .build();
         assertThatThrownBy(() -> executor.execute(toolExecutionRequest, null))
-                .isInstanceOf(ToolArgumentsException.class);
+                .isInstanceOf(ToolExecutionException.class);
     }
 
     @Test

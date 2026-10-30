@@ -15,6 +15,7 @@ import dev.langchain4j.agentic.agent.ErrorContext;
 import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.agent.MissingArgumentException;
 import dev.langchain4j.agentic.declarative.ActivationCondition;
+import dev.langchain4j.agentic.declarative.BeforeCall;
 import dev.langchain4j.agentic.declarative.ConditionalAgent;
 import dev.langchain4j.agentic.declarative.ErrorHandler;
 import dev.langchain4j.agentic.declarative.ExitCondition;
@@ -26,14 +27,15 @@ import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents.*;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class WorkflowTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Agents.class, StoryCreator.class, StoryCreatorWithErrorRecovery.class,
+                            StoryCreatorWithBeforeCall.class,
                             CreativeWriter.class, AudienceEditor.class, StyleEditor.class, FixedResponseChatModel.class,
                             StyleReviewLoopAgent.class, StoryCreatorWithReview.class, StyleScorer.class,
                             MedicalExpert.class, TechnicalExpert.class, LegalExpert.class, CategoryRouter.class,
@@ -90,6 +92,34 @@ public class WorkflowTest extends OpenAiBaseTest {
         String story = storyCreatorWithErrorRecovery.write(null, "fantasy", "young adults");
         System.out.println(story);
         assertThat(story).containsIgnoringCase("dragon").containsIgnoringCase("wizard");
+    }
+
+    public interface StoryCreatorWithBeforeCall {
+
+        @SequenceAgent(outputKey = "story", subAgents = { CreativeWriter.class, StyleEditor.class })
+        ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
+
+        @BeforeCall
+        static void beforeCall(AgenticScope agenticScope) {
+            agenticScope.writeStateIfAbsent("style", "comedy");
+        }
+    }
+
+    @Inject
+    StoryCreatorWithBeforeCall storyCreatorWithBeforeCall;
+
+    @Test
+    void declarative_sequence_with_before_call_uses_default() {
+        ResultWithAgenticScope<String> result = storyCreatorWithBeforeCall.write("dragons", null);
+        assertThat(result.result()).isNotBlank();
+        assertThat(result.agenticScope().readState("style")).isEqualTo("comedy");
+    }
+
+    @Test
+    void declarative_sequence_with_before_call_explicit_value_wins() {
+        ResultWithAgenticScope<String> result = storyCreatorWithBeforeCall.write("dragons", "horror");
+        assertThat(result.result()).isNotBlank();
+        assertThat(result.agenticScope().readState("style")).isEqualTo("horror");
     }
 
     public interface StyleReviewLoopAgent {

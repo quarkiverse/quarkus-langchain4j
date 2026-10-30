@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: workload-identity-federation-kubernetes
+  namespace: workload-identity-k8s
+spec:
+  selector:
+    app.kubernetes.io/name: workload-identity-federation-kubernetes
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP

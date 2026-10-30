@@ -23,7 +23,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that MicroProfile FaultTolerance annotations {@code @Retry} and
@@ -32,7 +32,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class FaultToleranceRetryAndCircuitBreakerTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addClasses(RetryAgent.class, CircuitBreakerAgent.class,

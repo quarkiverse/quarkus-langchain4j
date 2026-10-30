@@ -22,6 +22,10 @@ public interface ChatModelConfig {
      * lower values like 0.2 will make it more focused and deterministic.
      * <p>
      * It is generally recommended to set this or the {@code top-k} property but not both.
+     * <p>
+     * Not supported by {@code claude-opus-4-7}, {@code claude-opus-4-8}, {@code claude-sonnet-5}, {@code claude-fable-5},
+     * and later models. See
+     * <a href="https://platform.claude.com/docs/en/about-claude/models/migration-guide">Anthropic's migration guide</a>.
      */
     @ConfigDocDefault("0.7")
     @WithDefault("${quarkus.langchain4j.temperature}")
@@ -40,15 +44,22 @@ public interface ChatModelConfig {
      * So 0.1 means only the tokens comprising the top 10% probability mass are considered.
      * <p>
      * It is generally recommended to set this or the {@code temperature} property but not both.
+     * <p>
+     * Not supported by {@code claude-opus-4-7}, {@code claude-opus-4-8}, {@code claude-sonnet-5}, {@code claude-fable-5},
+     * and later models. See
+     * <a href="https://platform.claude.com/docs/en/about-claude/models/migration-guide">Anthropic's migration guide</a>.
      */
     @ConfigDocDefault("1.0")
     OptionalDouble topP();
 
     /**
      * Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower
-     * value (e.g. 10) will be more conservative
+     * value (e.g. 10) will be more conservative.
+     * <p>
+     * Not supported by {@code claude-opus-4-7}, {@code claude-opus-4-8}, {@code claude-sonnet-5}, {@code claude-fable-5},
+     * and later models. See
+     * <a href="https://platform.claude.com/docs/en/about-claude/models/migration-guide">Anthropic's migration guide</a>.
      */
-    @ConfigDocDefault("40")
     OptionalInt topK();
 
     /**
@@ -92,6 +103,29 @@ public interface ChatModelConfig {
      */
     @WithDefault("false")
     Boolean cacheTools();
+
+    /**
+     * Cache the conversation automatically, including user messages, by sending a top-level {@code cache_control} with
+     * each request. The cache point moves forward as the conversation grows.
+     * <p>
+     * This pays off when each request starts with everything the previous request sent, for example when an AI service
+     * calls tools in a loop, or in a chat whose memory still holds all previous messages. When the beginning of the
+     * conversation changes on every request, every request pays the cache write price and nothing is read back, so
+     * consider enabling {@code cache-system-messages} and {@code cache-tools} as well.
+     * <p>
+     * Each cached item uses one of the 4 cache breakpoints Anthropic allows per request. Anthropic-compatible gateways
+     * that do not support the top-level {@code cache_control} field may reject or ignore it.
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> cacheAutomatically();
+
+    /**
+     * How long cached prompts are kept: {@code 5m} (5 minutes) or {@code 1h} (1 hour).
+     * When not set, no TTL is sent and Anthropic applies its own default, which is currently 5 minutes.
+     * Applies to every cache breakpoint and has no effect unless something is cached. Writing to the 1-hour cache costs
+     * more than writing to the 5-minute one.
+     */
+    Optional<String> cacheTtl();
 
     /**
      * Specifies the desired format for the model's output.

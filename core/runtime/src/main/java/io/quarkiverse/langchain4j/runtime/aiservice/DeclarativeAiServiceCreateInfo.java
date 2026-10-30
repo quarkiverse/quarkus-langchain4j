@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
+import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.util.AnnotationLiteral;
@@ -36,6 +37,8 @@ public record DeclarativeAiServiceCreateInfo(
         Integer maxToolCallingRoundTrips,
         Integer maxToolCallsPerResponse,
         boolean allowContinuousForcedToolCalling,
+        Boolean executeToolsConcurrently,
         boolean shouldThrowExceptionOnEventError,
-        String defaultMemoryIdProviderClassName) {
+        String defaultMemoryIdProviderClassName,
+        List<String> skillNames) {
 }

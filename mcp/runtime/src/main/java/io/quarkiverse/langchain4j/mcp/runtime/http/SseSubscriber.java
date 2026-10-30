@@ -4,18 +4,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.client.SseEvent;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 
-public class SseSubscriber implements Consumer<SseEvent<String>> {
+public class SseSubscriber implements Consumer<SseEventParser.Event> {
 
     private final McpOperationHandler operationHandler;
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger log = Logger.getLogger(SseSubscriber.class);
     private final boolean logEvents;
     // this will contain the POST url for sending commands to the server
@@ -31,7 +25,7 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
     }
 
     @Override
-    public void accept(SseEvent<String> s) {
+    public void accept(SseEventParser.Event s) {
         // some servers send empty messages as pings
         String data = s.data();
         if (data == null || data.isEmpty() || data.isBlank()) {
@@ -47,12 +41,18 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
         }
         if (name.equals("message")) {
             try {
-                JsonNode jsonNode = OBJECT_MAPPER.readTree(data);
-                operationHandler.handle(jsonNode);
-            } catch (JsonProcessingException e) {
-                log.warn("Failed to parse JSON message: {}", data, e);
+                operationHandler.onMessage(data);
+            } catch (RuntimeException e) {
+                log.warn("Failed to handle MCP message: {}", data, e);
             }
         } else if (name.equals("endpoint")) {
+            if (initializationFinished == null) {
+                // The streamable HTTP transport does not use 'endpoint' events
+                // (they belong to the legacy HTTP+SSE transport), so there is
+                // nothing to complete here.
+                log.debug("Received unexpected 'endpoint' event, ignoring");
+                return;
+            }
             if (initializationFinished.isDone()) {
                 log.warn("Received endpoint event after initialization");
                 return;

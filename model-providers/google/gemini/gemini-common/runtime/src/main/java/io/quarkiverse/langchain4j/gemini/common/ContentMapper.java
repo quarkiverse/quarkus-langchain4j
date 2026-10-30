@@ -1,10 +1,11 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
+import static dev.langchain4j.internal.Utils.isNullOrEmpty;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ import dev.langchain4j.data.message.VideoContent;
 import dev.langchain4j.data.video.Video;
 import dev.langchain4j.internal.CustomMimeTypesFileTypeDetector;
 import dev.langchain4j.internal.JsonSchemaElementUtils;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
@@ -40,16 +42,19 @@ public final class ContentMapper {
     public static GenerateContentRequest map(
             List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications,
+            ToolChoice toolChoice,
             GenerationConfig generationConfig,
             String modelId,
             boolean useGoogleSearch) {
         List<String> systemPrompts = new ArrayList<>();
         List<Content> contents = new ArrayList<>(messages.size());
-
-        Map<String, Content> functionCalls = new HashMap<>();
-        Map<String, Content> functionResponses = new HashMap<>();
+        // consecutive tool results answer one batch of parallel function calls, so they are sent as one content
+        List<Content.Part> functionResponseParts = null;
 
         for (ChatMessage message : messages) {
+            if (!(message instanceof ToolExecutionResultMessage || message instanceof SystemMessage)) {
+                functionResponseParts = null;
+            }
             if (message instanceof SystemMessage sm) {
                 systemPrompts.add(sm.text());
             } else {
@@ -64,7 +69,7 @@ public final class ContentMapper {
                             URI uri = image.url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(image.mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob(image.mimeType(), image.base64Data())));
@@ -73,7 +78,7 @@ public final class ContentMapper {
                             URI uri = fc.pdfFile().url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(fc.pdfFile().mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob("application/pdf", fc.pdfFile().base64Data())));
@@ -83,7 +88,7 @@ public final class ContentMapper {
                             URI uri = video.url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(video.mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob(video.mimeType(), video.base64Data())));
@@ -93,7 +98,7 @@ public final class ContentMapper {
                             URI uri = audio.url();
                             if (uri != null) {
                                 parts.add(Content.Part
-                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                                        .ofFileData(fileData(audio.mimeType(), uri)));
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob(audio.mimeType(), audio.base64Data())));
@@ -106,6 +111,10 @@ public final class ContentMapper {
                 } else if (message instanceof AiMessage am) {
                     try {
                         if (am.hasToolExecutionRequests()) {
+                            List<Content.Part> parts = new ArrayList<>(am.toolExecutionRequests().size() + 1);
+                            if (!isNullOrEmpty(am.text())) {
+                                parts.add(Content.Part.ofText(am.text()));
+                            }
                             for (ToolExecutionRequest toolExecutionRequest : am.toolExecutionRequests()) {
                                 String argumentsStr = toolExecutionRequest.arguments();
                                 String name = toolExecutionRequest.name();
@@ -113,10 +122,9 @@ public final class ContentMapper {
                                         argumentsStr,
                                         Map.class);
                                 FunctionCall functionCall = new FunctionCall(name, arguments);
-                                Content.Part part = Content.Part
-                                        .ofFunctionCall(functionCall, toolExecutionRequest.id());
-                                functionCalls.put(name, new Content(role, List.of(part)));
+                                parts.add(Content.Part.ofFunctionCall(functionCall, toolExecutionRequest.id()));
                             }
+                            contents.add(new Content(role, parts));
                         } else {
                             contents.add(new Content(role,
                                     List.of(Content.Part.ofText(am.text()))));
@@ -130,9 +138,11 @@ public final class ContentMapper {
                     FunctionResponse functionResponse = new FunctionResponse(toolName,
                             new FunctionResponse.Response(toolName, content));
 
-                    Content.Part part = Content.Part
-                            .ofFunctionResponse(functionResponse);
-                    functionResponses.put(toolName, new Content(role, List.of(part)));
+                    if (functionResponseParts == null) {
+                        functionResponseParts = new ArrayList<>();
+                        contents.add(new Content(role, functionResponseParts));
+                    }
+                    functionResponseParts.add(Content.Part.ofFunctionResponse(functionResponse));
                 } else {
                     throw new IllegalArgumentException(
                             "The Gemini integration currently does not support " + message.type() + " messages");
@@ -140,17 +150,27 @@ public final class ContentMapper {
             }
         }
 
-        for (Map.Entry<String, Content> entry : functionCalls.entrySet()) {
-            contents.add(entry.getValue());
-            if (functionResponses.containsKey(entry.getKey())) {
-                contents.add(functionResponses.get(entry.getKey()));
-            }
-        }
-
         return new GenerateContentRequest(contents,
                 !systemPrompts.isEmpty() ? GenerateContentRequest.SystemInstruction.ofContent(systemPrompts) : null,
                 toTools(modelId, toolSpecifications, useGoogleSearch),
+                toToolConfig(toolChoice),
                 generationConfig);
+    }
+
+    private static GenerateContentRequest.ToolConfig toToolConfig(ToolChoice toolChoice) {
+        if (toolChoice == null) {
+            return null;
+        }
+        GenerateContentRequest.ToolConfig.Mode mode = switch (toolChoice) {
+            case AUTO -> GenerateContentRequest.ToolConfig.Mode.AUTO;
+            case REQUIRED -> GenerateContentRequest.ToolConfig.Mode.ANY;
+            case NONE -> GenerateContentRequest.ToolConfig.Mode.NONE;
+        };
+        return new GenerateContentRequest.ToolConfig(new GenerateContentRequest.ToolConfig.FunctionCallingConfig(mode));
+    }
+
+    private static FileData fileData(String mimeType, URI uri) {
+        return new FileData(mimeType != null ? mimeType : mimeTypeDetector.probeContentType(uri), uri.toString());
     }
 
     private static List<GenerateContentRequest.Tool> toTools(

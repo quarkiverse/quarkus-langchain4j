@@ -1,6 +1,8 @@
 package io.quarkiverse.langchain4j.pgvector.deployment;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
@@ -91,6 +93,7 @@ class PgVectorEmbeddingStoreProcessor {
         }
 
         Map<String, PgVectorNamedStoreBuildTimeConfig> namedStores = buildTimeConfig.namedConfig();
+        Set<String> alreadyHandledStoreInterceptors = new HashSet<>();
         for (Map.Entry<String, PgVectorNamedStoreBuildTimeConfig> entry : namedStores.entrySet()) {
             String storeName = entry.getKey();
             PgVectorNamedStoreBuildTimeConfig storeBuildTimeConfig = entry.getValue();
@@ -115,15 +118,18 @@ class PgVectorEmbeddingStoreProcessor {
                             storeDatasourceQualifier)
                     .done());
 
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
-                    .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
-                    .setRuntimeInit()
-                    .unremovable()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.pgVectorAgroalPoolInterceptor(storeName))
-                    .qualifiers(storeDatasourceQualifier)
-                    .done());
+            if (!alreadyHandledStoreInterceptors.contains(storeDatasourceName)) {
+                beanProducer.produce(SyntheticBeanBuildItem
+                        .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
+                        .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
+                        .setRuntimeInit()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.pgVectorAgroalPoolInterceptor(storeName))
+                        .qualifiers(storeDatasourceQualifier)
+                        .done());
+            }
+            alreadyHandledStoreInterceptors.add(storeDatasourceName);
 
             embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
         }

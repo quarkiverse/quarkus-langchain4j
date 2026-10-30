@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <compiler-plugin.version>3.15.0</compiler-plugin.version>
+        <compiler-plugin.version>3.16.0</compiler-plugin.version>
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -20,7 +20,7 @@
         <quarkus.platform.version>3.33.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
-        <quarkus-langchain4j.version>1.11.2</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>1.15.0.CR2</quarkus-langchain4j.version>
     </properties>
 
     <dependencyManagement>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.20.1</version>
+            <version>1.23.1</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

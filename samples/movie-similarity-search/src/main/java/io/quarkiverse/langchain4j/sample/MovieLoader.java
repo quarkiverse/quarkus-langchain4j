@@ -50,7 +50,7 @@ public class MovieLoader {
 
     Log.info("Ingesting movies...");
     ingester.ingest(docs);
-    Log.info("Application initalized!");
+    Log.info("Application initialized!");
   }
 
   @Transactional

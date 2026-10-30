@@ -18,6 +18,7 @@ public class McpTracingStreamableHTTPTransportTest extends McpTracingTestBase {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class, InMemorySpanExporterProducer.class))
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "streamable-http")
+            .overrideConfigKey("quarkus.langchain4j.mcp.client1.protocol-version", "2025-11-25")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.url",
                     "http://localhost:8082/mcp")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.log-requests", "true")

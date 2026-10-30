@@ -13,7 +13,7 @@ You can use system or env properties, see `Running the example` section below.
 
 When the application starts, a registered user, the movie watcher, is allocated a random preferred movie genre .
 
-The setup is defined in the [Setup.java](./src/main/java/io/quarkiverse/langchain4j/samples/chatbot/Setup.java) class.
+The setup is defined in the [Setup.java](./src/main/java/io/quarkiverse/langchain4j/sample/chatbot/Setup.java) class.
 
 The registered movie watchers are stored in a PostgreSQL database. When running the demo in dev mode (recommended), the database is automatically created and populated.
 

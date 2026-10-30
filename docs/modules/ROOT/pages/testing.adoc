@@ -1,7 +1,11 @@
 = Testing AI-Infused Applications
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+
+For deterministic tests of model HTTP requests, or local development without calling a real model, see xref:testing-model-mocking.adoc[Mocking model HTTP calls with WireMock].
+The evaluation framework described below instead measures the quality of model outputs.
 
 The `quarkus-langchain4j-testing-evaluation-junit5` extension provides a pragmatic and extensible testing framework for evaluating AI-infused and agentic applications.
 It integrates with JUnit 5, `@QuarkusTest` and offers tools for automating evaluation processes, scoring outputs, and generating evaluation reports using customizable evaluation strategies.
@@ -18,6 +22,8 @@ The evaluation framework provides:
 **Core Capabilities:**
 
 - **Concurrent Evaluation** - Execute evaluations in parallel with configurable concurrency
+- **Repeated Trials** - Run each sample several times and get a confidence interval instead of a single, noisy score
+- **Advisory Strategies** - Report the verdict of a noisy check such as an AI judge without letting it fail the build
 - **Fluent Builder API** - Readable, chainable evaluation definitions (samples, evaluation strategy, reporting)
 - **Rich Evaluation Results** - Scores, explanations, and metadata for detailed analysis
 - **Multiple Evaluation Strategies** - Semantic similarity, AI judge, and custom strategies
@@ -106,7 +112,6 @@ Or, you can use the `@Evaluate` annotation:
 [source,java]
 ----
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import io.quarkiverse.langchain4j.evaluation.junit5.Evaluate;
 
 @Evaluate
@@ -147,18 +152,8 @@ In the context of Quarkus Langchain4J, an evaluation consists of:
 
 The evaluation process works as follows:
 
-[mermaid]
-----
-flowchart TD
-    A[Sample<br/>input + expected output] --> B[Function Under Test<br/>produces actual output]
-    B --> C[Evaluation Strategy<br/>compares actual vs expected]
-    C --> D[Evaluation Result<br/>passed/failed, score, explanation]
-
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#ffe1f5
-    style D fill:#e1ffe1
-----
+// Generated from diagrams/evaluation-flow.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::evaluation-flow.svg[Evaluation process,align="center"]
 
 For example, testing a customer support chatbot:
 
@@ -203,6 +198,60 @@ void testAiService(
     assertThat(report.score()).isGreaterThanOrEqualTo(70); // Assert the score
 }
 ----
+
+==== Trials and Confidence Intervals
+
+LLM output is not deterministic: the same sample can pass on one run and fail on the next, so a score computed from a single run per sample moves between runs even when nothing changed.
+Two runs of the same evaluation can easily report 62% and 87%, which makes a fixed `minScore` threshold fail or pass for no reason.
+
+To get a trustworthy score, run each sample several times with the `trials` setting.
+Every trial is executed and evaluated by every strategy, and the score becomes the average pass rate over all trials:
+
+[source,java]
+----
+@Test
+void testAiService(
+        @ScorerConfiguration(concurrency = 4, trials = 5) Scorer scorer, // <1>
+        @SampleLocation("src/test/resources/samples.yaml") Samples<String> samples) {
+
+    EvaluationReport<String> report = scorer.evaluate(samples, function, new SemanticSimilarityStrategy(0.8));
+
+    report.trials();                       // 5
+    report.scoreForSample("hard question"); // pass rate of one sample across its trials
+    report.standardError();                // uncertainty of the score, in percentage points
+    report.confidenceInterval();           // 95% interval of the score, e.g. [63.4, 96.6]
+    report.confidenceIntervalForTag("hard");
+}
+----
+<1> Each sample runs 5 times. The same setting is available as `new Scorer(concurrency, trials)` and `withTrials(5)` on the fluent builder.
+
+The report always carries a 95% confidence interval, even with a single trial.
+It is computed over the per-sample pass rates, so it reflects both the variation between samples and the variation between trials of the same sample.
+Treat two scores whose intervals overlap as indistinguishable.
+The interval collapses to the score itself when the report holds fewer than two samples.
+
+With more than one trial, the Markdown report lists how many evaluations (trials times strategies) passed for each sample, which points directly at the unreliable ones:
+
+[source,markdown]
+----
+**Global Score**: 80.00% (95% CI: 63.43% - 96.57%)
+
+**Trials per sample**: 5
+
+## Score per tags
+
+- **easy**: 100.00% (95% CI: 100.00% - 100.00%)
+- **hard**: 60.00% (95% CI: 44.00% - 76.00%)
+
+## Details
+
+- easy question 1: 5/5 evaluations passed (100.00%)
+- hard question 1: 3/5 evaluations passed (60.00%)
+- hard question 2: 2/5 evaluations passed (40.00%)
+----
+
+Going from one trial to two cuts the variance of the score by a third and going to four halves it, with diminishing returns beyond four to six trials.
+Each trial costs one model call per sample, so start with a small number for the suites that run on every change and use more trials for the suites that run nightly.
 
 ==== Fluent Builder API
 
@@ -420,13 +469,55 @@ Strategies return an `EvaluationResult` which can be created using:
         .withMetadata(Map.of("similarityScore", 0.95, "method", "cosine"));
 ----
 
+==== Advisory Strategies
+
+Not every check deserves to fail the build. An exact match or a JSON schema check is deterministic, but an AI judge
+gives a different verdict from one day to the next, and a build that goes red because the judge changed its mind
+teaches people to ignore red builds. The usual practice is to let deterministic checks block and to keep the judge
+advisory: it still runs on every sample and its verdicts are in the report, but they do not count toward the score,
+the confidence interval, the tag scores or the assertions.
+
+Wrap any strategy with `EvaluationStrategy.toAdvisory(...)` to make it advisory:
+
+[source,java]
+----
+EvaluationReport<String> report = scorer.evaluate(samples, function,
+        new ExactMatchStrategy(),                                  // blocks
+        EvaluationStrategy.toAdvisory(new AiJudgeStrategy(model)));  // reported only
+
+assertThat(report).hasScoreGreaterThanOrEqualTo(90.0);  // the judge cannot fail this
+double judgeAgreement = report.advisoryScore();          // but you can still see how it did
+----
+
+The wrapper works with the fluent builder's `using(...)` and with `@Evaluate` tests, since both forward strategies to
+the `Scorer`. A custom strategy can also override `isAdvisory()` directly. The report lists advisory results under their
+own heading, with their own pass rate:
+
+[source,markdown]
+----
+**Global Score**: 100.00% (95% CI: 100.00% - 100.00%)
+
+## Advisory
+
+**Advisory Score**: 62.50% (not counted in the global score)
+
+- greeting: PASSED (100.00%)
+- refund policy: FAILED (0.00%) - The answer omits the 30-day limit
+...
+----
+
+If every strategy is advisory, nothing counts toward the score and it is 0.
+
 === Evaluation Report
 
 The `EvaluationReport` aggregates the results of all evaluations.
 It provides:
 
 * A global score (percentage of passed evaluations, 0.0-100.0)
+* The standard error and 95% confidence interval of the score, overall and per tag
 * Scores per tag (for categorized evaluations)
+* Scores per sample across trials (see <<_trials_and_confidence_intervals>>)
+* The score of the advisory evaluations, kept apart from the global score (see <<_advisory_strategies>>)
 * Access to individual evaluation results with scores, explanations, and metadata
 * Report generation in multiple formats (Markdown, JSON, or custom formats)
 
@@ -565,10 +656,11 @@ public class DeclarativeEvaluationTest {
         samples = "customer-support-samples.yaml",
         strategy = AiJudgeStrategy.class,
         function = "chatbot",
-        minScore = 85.0
+        minScore = 85.0,
+        trials = 3
     )
     void criticalCustomerSupportEvaluation() {
-        // Higher threshold for critical evaluations
+        // Higher threshold for critical evaluations, each sample evaluated 3 times
     }
 }
 ----
@@ -578,7 +670,7 @@ When using `@EvaluationTest`, the framework automatically:
 - Loads samples from the specified location
 - Injects the evaluation function by name
 - Applies the specified evaluation strategy (the instance is created using a no-arg constructor)
-- Evaluates the samples and generates a report
+- Evaluates the samples, `trials` times each, and generates a report
 
 === Test Templates with @StrategyTest
 
@@ -824,8 +916,8 @@ public class SuiteReportingTest {
 
 This generates:
 
-* `target/evaluation-suite-report.md`: Aggregated test suite report
-* `target/evaluation-suite-report.json`: Aggregated test suite JSON report
+* `target/test-suite-report.md`: Aggregated test suite report
+* `target/test-suite-report.json`: Aggregated test suite JSON report
 
 == Built-in Evaluation Strategies
 
@@ -1625,7 +1717,7 @@ public interface LlmJudgeService { ... }
 ----
 
 
-2. **Reuse Vector Stores**
+2. **Reuse Embedding Stores**
 
 
 3. **Filter by Tags**

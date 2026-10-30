@@ -1,0 +1,740 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-default-store-enabled[`+++quarkus.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Weaviate embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-devservices-enabled[`+++quarkus.devservices.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
+When DevServices is enabled Quarkus will attempt to automatically configure and start a database when running in Dev or Test mode and when Docker is running.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-devservices-image-name[`+++quarkus.devservices.image-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.image-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The container image name to use, for container based DevServices providers.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++cr.weaviate.io/semitechnologies/weaviate:1.25.5+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-devservices-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-devservices-port[`+++quarkus.devservices.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the dev service will listen to.
+
+If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-devservices-shared]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-devservices-shared[`+++quarkus.devservices.shared+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.shared+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Indicates if the Weaviate server managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Weaviate starts a new container.
+
+The discovery uses the `quarkus-dev-service-weaviate` label. The value is configured using the `service-name` property.
+
+Container sharing is only used in dev mode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-devservices-service-name[`+++quarkus.devservices.service-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.service-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The value of the `quarkus-dev-service-weaviate` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Weaviate looks for a container with the `quarkus-dev-service-weaviate` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-weaviate` label set to the specified value.
+
+This property is used when you need multiple shared Weaviate servers.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++weaviate+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-devservices-container-env-container-env]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-devservices-container-env-container-env[`+++quarkus.devservices.container-env."container-env"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.container-env."container-env"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Environment variables that are passed to the container.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-api-key]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-api-key[`+++quarkus.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Weaviate API key to authenticate with.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-scheme]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-scheme[`+++quarkus.scheme+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scheme+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The scheme, e.g. "https" of cluster URL. Find it under Details of your Weaviate cluster.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCHEME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCHEME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++http+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-host]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-host[`+++quarkus.host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the Weaviate server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++localhost+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-port[`+++quarkus.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The port of the Weaviate server. Defaults to 8080
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++8080+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-grpc-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-grpc-port[`+++quarkus.grpc.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.grpc.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The gRPC port of the Weaviate server. Defaults to 50051
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_GRPC_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_GRPC_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++50051+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-grpc-secure]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-grpc-secure[`+++quarkus.grpc.secure+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.grpc.secure+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The gRPC connection is secured.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_GRPC_SECURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_GRPC_SECURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-grpc-use-for-inserts]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-grpc-use-for-inserts[`+++quarkus.grpc.use-for-inserts+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.grpc.use-for-inserts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Use gRPC instead of http for batch inserts only. Will still be used for search.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_GRPC_USE_FOR_INSERTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_GRPC_USE_FOR_INSERTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-object-class]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-object-class[`+++quarkus.object-class+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.object-class+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The object class you want to store, e.g. "MyGreatClass". Must start from an uppercase letter.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OBJECT_CLASS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OBJECT_CLASS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++Default+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-text-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-text-field-name[`+++quarkus.text-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.text-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the field that contains the text of a `dev.langchain4j.data.segment.TextSegment`. Default is "text"
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TEXT_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TEXT_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-avoid-dups]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-avoid-dups[`+++quarkus.avoid-dups+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.avoid-dups+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true (default), then `WeaviateEmbeddingStore` will generate a hashed ID based on provided text segment, which avoids duplicated entries in DB. If false, then random ID will be generated.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AVOID_DUPS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AVOID_DUPS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-consistency-level]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-consistency-level[`+++quarkus.consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Consistency level: ONE, QUORUM (default) or ALL.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`one`, `quorum`, `all`
+|`+++quorum+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-metadata-keys]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-metadata-keys[`+++quarkus.metadata.keys+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.metadata.keys+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metadata keys that should be persisted. The default in Weaviate ++[]++, however it is required to specify at least one for the EmbeddingStore to work. Thus, we use "tags" as default
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_METADATA_KEYS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_METADATA_KEYS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|`+++tags+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-metadata-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-metadata-field-name[`+++quarkus.metadata.field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.metadata.field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the field where `dev.langchain4j.data.segment.Metadata` entries are stored
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_METADATA_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_METADATA_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++_metadata+++`
+
+h|[[quarkus-langchain4j-weaviate_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-weaviate_section_quarkus[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-object-class]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-object-class[`+++quarkus."store-name".object-class+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".object-class+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The object class used as the build-time discovery key for this named store. Each named store is identified by its object class within the same Weaviate server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__OBJECT_CLASS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__OBJECT_CLASS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-api-key]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-api-key[`+++quarkus."store-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Weaviate API key to authenticate with.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-scheme]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-scheme[`+++quarkus."store-name".scheme+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".scheme+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The scheme, e.g. "https" of cluster URL. Find it under Details of your Weaviate cluster.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__SCHEME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__SCHEME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++http+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-host]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-host[`+++quarkus."store-name".host+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the Weaviate server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++localhost+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-port[`+++quarkus."store-name".port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The port of the Weaviate server. Defaults to 8080
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++8080+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-grpc-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-grpc-port[`+++quarkus."store-name".grpc.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".grpc.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The gRPC port of the Weaviate server. Defaults to 50051
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__GRPC_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__GRPC_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++50051+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-grpc-secure]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-grpc-secure[`+++quarkus."store-name".grpc.secure+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".grpc.secure+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The gRPC connection is secured.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__GRPC_SECURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__GRPC_SECURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-grpc-use-for-inserts]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-grpc-use-for-inserts[`+++quarkus."store-name".grpc.use-for-inserts+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".grpc.use-for-inserts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Use gRPC instead of http for batch inserts only. Will still be used for search.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__GRPC_USE_FOR_INSERTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__GRPC_USE_FOR_INSERTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-object-class]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-object-class[`+++quarkus."store-name".object-class+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".object-class+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The object class you want to store, e.g. "MyGreatClass". Must start from an uppercase letter.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__OBJECT_CLASS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__OBJECT_CLASS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++Default+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-text-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-text-field-name[`+++quarkus."store-name".text-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".text-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the field that contains the text of a `dev.langchain4j.data.segment.TextSegment`. Default is "text"
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__TEXT_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__TEXT_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++text+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-avoid-dups]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-avoid-dups[`+++quarkus."store-name".avoid-dups+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".avoid-dups+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If true (default), then `WeaviateEmbeddingStore` will generate a hashed ID based on provided text segment, which avoids duplicated entries in DB. If false, then random ID will be generated.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__AVOID_DUPS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__AVOID_DUPS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-consistency-level]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-consistency-level[`+++quarkus."store-name".consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Consistency level: ONE, QUORUM (default) or ALL.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`one`, `quorum`, `all`
+|`+++quorum+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-metadata-keys]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-metadata-keys[`+++quarkus."store-name".metadata.keys+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".metadata.keys+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metadata keys that should be persisted. The default in Weaviate ++[]++, however it is required to specify at least one for the EmbeddingStore to work. Thus, we use "tags" as default
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__METADATA_KEYS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__METADATA_KEYS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|`+++tags+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-store-name-metadata-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-store-name-metadata-field-name[`+++quarkus."store-name".metadata.field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".metadata.field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the field where `dev.langchain4j.data.segment.Metadata` entries are stored
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__METADATA_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__METADATA_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++_metadata+++`
+
+
+|===
+

@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse</groupId>
     <artifactId>quarkiverse-parent</artifactId>
-    <version>21</version>
+    <version>26</version>
   </parent>
   <groupId>io.quarkiverse.langchain4j</groupId>
   <artifactId>quarkus-langchain4j-parent</artifactId>
@@ -16,10 +16,12 @@
     <module>core</module>
     <module>embedding-stores</module>
     <module>mcp</module>
+    <module>mcp-apicurio-registry</module>
     <module>memory-stores</module>
     <module>model-auth-providers</module>
     <module>model-providers</module>
     <module>mcp-auth-providers</module>
+    <module>a2a-apicurio-registry</module>
     <module>quarkus-integrations</module>
     <module>rag</module>
     <module>chat-scopes</module>
@@ -29,6 +31,7 @@
     <module>testing-internal</module>
     <module>testing</module>
     <module>integration-tests</module>
+    <module>docs-rag</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
@@ -37,21 +40,25 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <quarkus.version>3.33.2</quarkus.version>
+	<maven.compiler.release>17</maven.compiler.release>  
+    <quarkus.version>3.40.0</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
-    <langchain4j.version>1.17.0</langchain4j.version>
+    <langchain4j.version>1.23.0</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
-    <quarkus-antora.version>3.25.0</quarkus-antora.version>
+    <quarkus-antora.version>3.33.2</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
     <assertj.version>3.27.7</assertj.version>
     <sundrio.version>0.200.4</sundrio.version>
     <quarkus-wiremock.version>1.5.1</quarkus-wiremock.version>
     <wiremock.version>3.13.1</wiremock.version>
     <quarkus-neo4j.version>5.7.0</quarkus-neo4j.version>
-    <jlama.version>0.8.4</jlama.version>
+    <quarkus-qdrant.version>0.2.0</quarkus-qdrant.version>
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
-    <gpu-llama3.version>0.4.0</gpu-llama3.version>
+    <jinfer.version>0.3.1</jinfer.version>
+    <jitllm.version>1.0.2-jdk21</jitllm.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
+    <apicurio-registry-sdk.version>3.3.0</apicurio-registry-sdk.version>
+    <quarkus.config.doc.skip>false</quarkus.config.doc.skip>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -66,6 +73,13 @@
         <groupId>dev.langchain4j</groupId>
         <artifactId>langchain4j-bom</artifactId>
         <version>${langchain4j.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.qxotic</groupId>
+        <artifactId>jinfer-bom</artifactId>
+        <version>${jinfer.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -136,6 +150,7 @@
                       <exclude>*:quarkus-langchain4j-integration-test*</exclude>
                       <exclude>*:quarkus-langchain4j-docs</exclude>
                       <exclude>*:quarkus-langchain4j-sample-*</exclude>
+                      <exclude>*:quarkus-langchain4j-docs-rag</exclude>
                     </excludes>
                   </modules>
                   <extraDependencies>
@@ -330,12 +345,6 @@
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
-                        <artifactId>quarkus-langchain4j-jlama</artifactId>
-                        <version>${project.version}</version>
-                        <classifier>codestarts</classifier>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-easy-rag</artifactId>
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
@@ -369,6 +378,27 @@
   </build>
   <profiles>
     <profile>
+      <!-- Fast local build: skips tests, formatting, enforcer and docs generation.
+           Activate with -Dquickly (mirrors the Quarkus core 'quickly' flag). -->
+      <id>quick-build</id>
+      <activation>
+        <property>
+          <name>quickly</name>
+        </property>
+      </activation>
+      <properties>
+        <skipTests>true</skipTests>
+        <skipITs>true</skipITs>
+        <enforcer.skip>true</enforcer.skip>
+        <format.skip>true</format.skip>
+        <quarkus.build.skip>true</quarkus.build.skip>
+        <quarkus.config.doc.skip>true</quarkus.config.doc.skip>
+      </properties>
+      <build>
+        <defaultGoal>clean install</defaultGoal>
+      </build>
+    </profile>
+    <profile>
       <id>docs</id>
       <activation>
         <property>
@@ -392,12 +422,12 @@
         </modules>
     </profile>
     <profile>
-        <id>jdk25</id>
+        <id>jdk22plus</id>
         <activation>
-            <jdk>[25,)</jdk>
+            <jdk>[22,)</jdk>
         </activation>
         <properties>
-            <gpu-llama3.version>0.4.0-jdk25</gpu-llama3.version>
+            <jitllm.version>1.0.2-jdk22plus</jitllm.version>
         </properties>
     </profile>
   </profiles>

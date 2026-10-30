@@ -63,7 +63,7 @@ public class VertexAiGeminiEmbeddingModel implements EmbeddingModel {
                 restApiBuilder.clientLogger(new VertxAiGeminiRestApi.VertxAiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
-            restApiBuilder.register(new ModelAuthProviderFilter(builder.modelId));
+            restApiBuilder.register(new ModelAuthProviderFilter(builder.configName));
             restApi = restApiBuilder.build(VertxAiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -98,6 +98,7 @@ public class VertexAiGeminiEmbeddingModel implements EmbeddingModel {
         private Optional<String> baseUrl = Optional.empty();
         private String projectId;
         private String location;
+        private String configName;
         private String modelId;
         private String publisher;
         private String taskType;
@@ -119,6 +120,11 @@ public class VertexAiGeminiEmbeddingModel implements EmbeddingModel {
 
         public Builder location(String location) {
             this.location = location;
+            return this;
+        }
+
+        public Builder configName(String configName) {
+            this.configName = configName;
             return this;
         }
 

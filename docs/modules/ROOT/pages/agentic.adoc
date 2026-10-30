@@ -1,4 +1,5 @@
 = Agentic AI
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-agentic
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -16,7 +17,7 @@ The module distinguishes between two categories of agentic systems:
 * **Workflows**: deterministic orchestration patterns where the execution order is defined at design time (sequence, loop, parallel, conditional).
 * **Pure Agents**: LLM-driven orchestration where the model dynamically decides which agents to invoke (supervisor, planner).
 
-IMPORTANT: You do **not** need to implement agent interfaces. Quarkus LangChain4j automatically detects agent interfaces at build time, validates their configuration, and registers them as CDI beans.
+IMPORTANT: You do **NOT** need to implement agent interfaces. Quarkus LangChain4j automatically detects agent interfaces at build time, validates their configuration, and registers them as CDI beans.
 
 == Getting started
 
@@ -127,6 +128,8 @@ public class PlainProcessListAgent {
     }
 }
 ----
+
+The `static` method can also use CDI beans, see <<_using_cdi_beans_in_agent_methods>>.
 
 == Workflow Patterns
 
@@ -474,6 +477,22 @@ public interface MyPlannerAgent {
             outputKey = "result",
             subAgents = { AgentA.class, AgentB.class, AgentC.class })
     String plan(String input);
+
+    @PlannerSupplier
+    static Planner planner() {
+        return new MyPlanner();
+    }
+}
+----
+
+A planner agent doesn't use a chat model itself, so an agentic system made of planners and agents that don't use one, like non-AI agents or <<_decision_agents,decision agents>>, needs no chat model.
+A `Planner` that uses a model receives it as a parameter of the `@PlannerSupplier` method, see <<_using_cdi_beans_in_agent_methods>>:
+
+[source,java]
+----
+@PlannerSupplier
+static Planner planner(@ModelName("planning") ChatModel chatModel) {
+    return new MyLlmPlanner(chatModel);
 }
 ----
 
@@ -603,6 +622,7 @@ public interface AudienceRetriever {
 
 The optional `async = true` flag, used in this example, allows running this in a separate thread so the workflow engine is not blocked while waiting for the human response. Another agent or external trigger completes the `CompletableFuture` to resume execution.
 
+A human-in-the-loop agent doesn't use a chat model.
 This agent can be composed in a sequential workflow with other agents:
 
 [source,java]
@@ -622,6 +642,9 @@ public interface StoryCreatorWithHumanInTheLoop {
 === Default Model
 
 By default, agents use the CDI `ChatModel` bean configured via application properties (e.g., `quarkus.langchain4j.openai.api-key`).
+
+Only the AI agents and the supervisor agents use a chat model.
+Workflows, planner, human-in-the-loop, decision, non-AI and remote agents don't, so an application without AI or supervisor agents needs no chat model.
 
 === Per-Agent Model with @ChatModelSupplier
 
@@ -688,96 +711,444 @@ public interface DynamicModelAgent {
 ----
 
 Here the `threshold` parameter is resolved from the `AgenticScope` and the `ChatModel` to be used for the current invocation is selected based on its value.
+The method can also receive CDI beans, for instance a `@ModelName` qualified `ChatModel`, see <<_using_cdi_beans_in_agent_methods>>.
 
 This is particularly useful when:
 
 * Different inputs require models with different capabilities or cost profiles (e.g., using a cheaper model for simple requests and a more powerful one for complex ones).
 * The model selection depends on the outcome of a prior classification or routing step.
 
+== Decision Agents
+
+A decision agent answers questions about its arguments with a xref:openai-decision-model.adoc[decision model] instead of a chat model.
+Its implementation is a single call to a `DecisionModel`, which returns typed answers and their probabilities rather than generated text.
+That makes it cheaper and faster than an AI agent, and a natural fit for the routing, gating and classification steps of an agentic system.
+
+WARNING: Decision agents and the `DecisionModel` API are experimental in LangChain4j and may change in future releases.
+
+=== Declaring a Decision Agent
+
+A decision agent is an interface whose `@Agent` method is annotated with `@Decide`, which contains the question:
+
+[source,java]
+----
+public interface SpamGate {
+
+    @Decide("Is this message spam?")
+    @Agent(description = "Detects spam", outputKey = "spam")
+    boolean isSpam(@V("message") String message);
+}
+----
+
+Like the arguments of any agent, the arguments of the method are read from the `AgenticScope` by name.
+They are sent to the decision model as the input of the decision, objects being converted to maps.
+The answer is written as it is to the output key, so that the activation and exit conditions and the agents that follow can read it:
+
+[source,java]
+----
+public enum Team {
+    @Description("Payments, payouts, invoices and refunds")
+    BILLING,
+    @Description("Problems using the product")
+    SUPPORT
+}
+
+public interface TeamRouter {
+
+    @Decide("Which team should handle this request?")
+    @Agent(description = "Routes a request to a team", outputKey = "team")
+    Team route(@V("request") String request);
+}
+
+public interface HelpDesk {
+
+    @SequenceAgent(outputKey = "answer", subAgents = { TeamRouter.class, Desks.class })
+    String handle(@V("request") String request);
+}
+
+public interface Desks {
+
+    @ConditionalAgent(outputKey = "answer", subAgents = { BillingExpert.class, SupportExpert.class })
+    String answer(@V("request") String request);
+
+    @ActivationCondition(BillingExpert.class)
+    static boolean billing(@V("team") Team team) {
+        return team == Team.BILLING;
+    }
+
+    @ActivationCondition(SupportExpert.class)
+    static boolean support(@V("team") Team team) {
+        return team == Team.SUPPORT;
+    }
+}
+----
+
+The return type of the method determines the questions asked:
+
+* `boolean`: a yes/no question, answered `true` when the probability of "yes" reaches the threshold, see <<_thresholds>>
+* `YesNoAnswer`: a yes/no question, answered with the probability of "yes"
+* an enum: a choice among its constants, described to the model by their `@Description`, if any
+* `Choice<E>`: a choice among the constants of the enum `E`, answered with the probability of each of them
+* `Scale<E>`: a scale whose levels are the constants of the enum `E`, in declaration order
+* a record or a class whose fields are annotated with `@Decide` and of the types above: one question per field, all asked in a single call
+* any of the above wrapped in `DecisionResult`, to also get the response of the model
+
+[source,java]
+----
+public record Triage(
+        @Decide("Which team should handle this ticket?") Team team,
+        @Decide("Does this ticket need attention today?") boolean urgent) {
+}
+
+public interface TicketTriage {
+
+    @Agent(description = "Triages a ticket", outputKey = "triage")
+    Triage triage(@V("ticket") String ticket);
+}
+----
+
+When it returns such an object, the `@Agent` method is not annotated with `@Decide`, and the questions are the ones of its fields.
+
+Decision agents are `@ApplicationScoped` beans that can be injected and used as sub-agents of any workflow, like AI agents.
+A `CompletableFuture` return type is not supported: use `@Agent(async = true)` to run a decision agent asynchronously inside a workflow.
+
+A decision agent has no prompt, chat memory, tools, retrieval augmentor or guardrails, so the build fails if it uses `@UserMessage`, `@SystemMessage`, `@ChatModelSupplier`, `@ToolBox`, `@McpToolBox` or `@Skills`.
+An application whose only agents are decision agents doesn't need a chat model.
+
+NOTE: An injected decision agent can be invoked directly, outside of an agentic system, but each such invocation logs a warning.
+To ask a decision model a question from application code, use a xref:decision-services.adoc[Decision Service] instead.
+
+=== Configuring the Decision Model
+
+By default, a decision agent uses the default `DecisionModel` bean, configured through the decision model provider, for instance xref:openai-decision-model.adoc[OpenAI] or xref:typesafe-decision-model.adoc[TypeSafe].
+
+Use `@ModelName` on the `@Agent` method to select a named decision model:
+
+[source,java]
+----
+public interface FraudGate {
+
+    @Decide("Does this transaction look fraudulent?")
+    @Agent(description = "Checks a transaction for fraud", outputKey = "fraud")
+    @ModelName("fraud")
+    boolean check(@V("transaction") Transaction transaction);
+}
+----
+
+[source,properties]
+----
+quarkus.langchain4j.openai.fraud.api-key=sk-...
+quarkus.langchain4j.openai.fraud.decision-model.model-name=gpt-6-luna
+----
+
+A `static` method annotated with `@DecisionModelSupplier` provides the model programmatically.
+Its parameters can be CDI beans, see <<_using_cdi_beans_in_agent_methods>>, and values read from the `AgenticScope`, in which case the method is invoked at each invocation of the agent to select the model:
+
+[source,java]
+----
+public interface FraudGate {
+
+    @Decide("Does this transaction look fraudulent?")
+    @Agent(description = "Checks a transaction for fraud", outputKey = "fraud")
+    boolean check(@V("transaction") Transaction transaction);
+
+    @DecisionModelSupplier
+    static DecisionModel decisionModel(@V("amount") double amount, @CdiBean FraudModels models) {
+        return amount > 10_000 ? models.accurate() : models.fast();
+    }
+}
+----
+
+`@ModelName` and `@DecisionModelSupplier` can't be used on the same agent.
+
+=== Thresholds
+
+A `boolean` answer is `true` when the probability of "yes" is at least the threshold, which is 0.5 by default.
+Thresholds are specific to a decision model and to its version, so they can be configured for each agent, and for each model answering it:
+
+[source,properties]
+----
+quarkus.langchain4j.agentic.decision-agent."spamGate".threshold=0.7
+quarkus.langchain4j.agentic.decision-agent."spamGate".threshold-by-model."gpt-6-luna"=0.6
+----
+
+The key is the name of the agent: the `name` of `@Agent`, or the name of the method.
+The threshold of the model that answered takes precedence over the one of the agent.
+
+The configuration is read once at startup.
+For a threshold that changes at runtime, declare a `static` method annotated with `@DecisionThresholdSupplier` instead, which is invoked at each invocation and takes precedence over the configuration:
+
+[source,java]
+----
+public interface SpamGate {
+
+    @Decide("Is this message spam?")
+    @Agent(description = "Detects spam", outputKey = "spam")
+    boolean isSpam(@V("message") String message);
+
+    @DecisionThresholdSupplier
+    static double threshold(ThresholdContext context, @CdiBean SpamSettings settings) {
+        return settings.threshold(context.modelName());
+    }
+}
+----
+
+The application fails to start when a threshold is not between 0 and 1, or when it is configured for an agent that has no `boolean` answer or that declares a `@DecisionThresholdSupplier` method, since it would have no effect.
+A key that matches no decision agent logs a warning.
+
+=== Listeners, Monitoring and Dev UI
+
+The `AgentListener` beans receive the response of the decision model with `AgentResponse.decisionResponse()`, which carries the probabilities of the answers, the name of the model that answered and the token usage.
+The `AgentMonitor` of a `MonitoredAgent` records it as well.
+
+In the Dev UI, decision agents are listed with the `DecisionAgent` type, the Topology page marks them as decisions, and the Executions page shows the model, the token usage and the answers of each decision.
+
+Interceptor bindings, like `@Retry` from SmallRye Fault Tolerance, can be applied to the `@Agent` method of a decision agent, and they are honored inside workflows too.
+
+=== Routing and Cascading with a Decision Model
+
+The `langchain4j-agentic-patterns` library provides planners based on a decision model:
+
+* `DecisionRouterPlanner` lets the decision model choose the sub-agents that handle a request
+* `ConfidenceCascadePlanner` tries its sub-agents from the cheapest to the most capable, until the decision model accepts an answer
+
+They get the `DecisionModel` bean through a `@CdiBean` parameter of the `@PlannerSupplier` method:
+
+[source,xml]
+----
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-agentic-patterns</artifactId>
+</dependency>
+----
+
+[source,java]
+----
+public interface ExpertRouter {
+
+    @PlannerAgent(outputKey = "answer", subAgents = { BillingExpert.class, SupportExpert.class })
+    String route(@V("request") String request);
+
+    @PlannerSupplier
+    static Planner planner(@CdiBean DecisionModel decisionModel) {
+        return new DecisionRouterPlanner(decisionModel);
+    }
+}
+
+public interface AnswerCascade {
+
+    @PlannerAgent(outputKey = "answer", subAgents = { SmallModelExpert.class, LargeModelExpert.class })
+    String answer(@V("request") String request);
+
+    @PlannerSupplier
+    static Planner planner(@CdiBean DecisionModel decisionModel) {
+        return new ConfidenceCascadePlanner(decisionModel, 0.6);
+    }
+}
+----
+
+== Using CDI Beans in Agent Methods
+
+Agents are interfaces, so they can't have injected fields.
+Their `static` methods, however, can declare parameters resolved from CDI, by annotating them with `@CdiBean` or with a CDI qualifier, such as `@ModelName`.
+These parameters can be mixed with the ones read from the `AgenticScope` and with the ones provided by the agentic framework, like the `AgenticScope` itself or the `ErrorContext`:
+
+[source,java]
+----
+public interface StyleReviewLoop {
+
+    @LoopAgent(outputKey = "story", maxIterations = 5, subAgents = { StyleScorer.class, StyleEditor.class })
+    String review(@V("story") String story);
+
+    @ExitCondition
+    static boolean exit(@V("score") double score, @CdiBean ReviewPolicy policy) {
+        return score >= policy.minimumScore();
+    }
+
+    @Output
+    static String output(@V("story") String story, @CdiBean StoryRepository repository) {
+        repository.save(story);
+        return story;
+    }
+}
+----
+
+The same works on the `static` method of a non-AI agent and on a `@HumanInTheLoop` method:
+
+[source,java]
+----
+public class OrderLookup {
+
+    @Agent(description = "Find the status of an order", outputKey = "orderStatus")
+    public static String status(@V("orderId") String orderId, @CdiBean OrderService orders) {
+        return orders.statusOf(orderId);
+    }
+}
+
+public interface RefundApprover {
+
+    @HumanInTheLoop(description = "Ask a manager to approve the refund", outputKey = "approved")
+    static boolean approve(@V("orderId") String orderId, @CdiBean ApprovalService approvals) {
+        return approvals.waitForApproval(orderId);
+    }
+}
+----
+
+CDI parameters can be declared on the methods annotated with:
+
+* any supplier annotation: `@ChatModelSupplier`, `@StreamingChatModelSupplier`, `@ChatMemorySupplier`, `@ChatMemoryProviderSupplier`, `@ToolsSupplier`, `@ToolProviderSupplier`, `@ContentRetrieverSupplier`, `@RetrievalAugmentorSupplier`, `@AgentListenerSupplier`, `@SystemMessageProviderSupplier`, `@UserMessageProviderSupplier`, `@McpClientSupplier`, `@PlannerSupplier`, `@A2AServerUrlSupplier`, `@ParallelExecutor`, `@DecisionModelSupplier` and `@DecisionThresholdSupplier`
+* `@ExitCondition`, `@ActivationCondition`, `@Output`, `@BeforeCall`, `@ErrorHandler`, `@SupervisorRequest` and `@A2AClientCustomizer`
+* `@Agent`, on the `static` method of a non-AI agent, and `@HumanInTheLoop`
+
+The methods can be declared on the agent type or on one of its parent interfaces.
+
+A CDI parameter:
+
+* is looked up at each invocation of the method, so a `@RequestScoped` bean is the one of the current request
+* of type `ChatModel`, `DecisionModel`, `ModerationModel` or `ImageModel`, without qualifier or with `@ModelName`, gets the bean of the configured model provider, even if nothing else injects it
+* is not an argument of the agent: it is not read from the `AgenticScope`, not reported to listeners, and not described to a supervisor
+* must resolve to exactly one bean, otherwise the build fails
+
+[NOTE]
+====
+The bean is looked up on the thread invoking the method.
+A `@RequestScoped` bean can't be used by a method invoked on another thread, like the subagents of a parallel workflow or an `async` agent, because the request context is not propagated there.
+A `@Dependent` bean is created at each invocation and never destroyed: prefer a normal scope, like `@ApplicationScoped`.
+====
+
+The methods stay `static`: agents can't have injected fields, constructor injection or `@PostConstruct` callbacks, and interceptor bindings like `@Transactional` have no effect on these methods.
+To use them, call a method of a bean.
+
 == Build-Time Validation
 
 Quarkus validates agent configurations at build time, catching errors before the application starts:
 
-* All supplier methods (`@ToolsSupplier`, etc.), except the `@ChatModelSupplier` one, must be `static` with correct return types and no parameters
+* All supplier methods (`@ToolsSupplier`, etc.) must be `static` with correct return types
 * `@ChatModelSupplier` methods must be `static` and return `ChatModel` (parameters are allowed for dynamic model selection)
 * `@ExitCondition` and `@ActivationCondition` methods must return `boolean`
 * `@ErrorHandler` methods must take `ErrorContext` and return `ErrorRecoveryResult`
-* `@ParallelExecutor` methods must return `Executor`
+* `@BeforeCall` methods must take `AgenticScope` and `@ChatMemoryProviderSupplier` methods must take the memory id as an `Object`
+* `@ParallelExecutor` methods must return `Executor`, and neither they nor `@A2AServerUrlSupplier` methods can have parameters
+* In all the rules above, the parameters annotated with `@CdiBean` or with a CDI qualifier are not counted, and each of them must resolve to exactly one bean
 * `@ModelName` and `@ChatModelSupplier` cannot be used on the same agent
+* `@DecisionModelSupplier` and `@DecisionThresholdSupplier` methods can only be declared on decision agents, must be `static`, and return `DecisionModel`, and `double` or `Double`, respectively
+* `@DecisionThresholdSupplier` methods must take a `ThresholdContext`, and can't be declared on a decision agent that has no `boolean` answer
+* A decision agent can't use `@UserMessage`, `@SystemMessage`, `@ChatModelSupplier`, `@StreamingChatModelSupplier`, `@ToolBox`, `@McpToolBox` or `@Skills`, nor both `@ModelName` and `@DecisionModelSupplier`
 
 == Annotations Reference
 
 |===
-|Annotation |Target |Purpose
+|Annotation |Target |Purpose |Parameters
 
 |`@Agent`
 |method
-|Declares a basic AI agent method.
+|Declares a basic AI agent method, or the `static` method of a non-AI agent.
+|Agent arguments. On a non-AI agent, also CDI beans.
 
 |`@SequenceAgent`
 |method
 |Sequential workflow of sub-agents.
+|Agent arguments.
 
 |`@LoopAgent`
 |method
 |Iterative workflow with exit condition.
+|Agent arguments.
 
 |`@ParallelAgent`
 |method
 |Parallel execution of sub-agents.
+|Agent arguments.
 
 |`@ParallelMapperAgent`
 |method
 |Maps one sub-agent over a collection.
+|Agent arguments.
 
 |`@ConditionalAgent`
 |method
 |Conditional routing to sub-agents.
+|Agent arguments.
 
 |`@SupervisorAgent`
 |method
 |LLM-driven dynamic orchestration.
+|Agent arguments.
 
 |`@PlannerAgent`
 |method
 |Custom planner-driven orchestration.
+|Agent arguments.
 
 |`@HumanInTheLoop`
-|method
+|static method
 |Pauses for human input.
+|Values from the `AgenticScope`, and CDI beans.
 
 |`@ExitCondition`
 |static method
 |Loop exit predicate (returns `boolean`).
+|Values from the `AgenticScope`, the loop counter, and CDI beans.
 
 |`@ActivationCondition`
 |static method
 |Conditional routing predicate (returns `boolean`).
+|Values from the `AgenticScope`, and CDI beans.
 
 |`@ErrorHandler`
 |static method
 |Error recovery (takes `ErrorContext`, returns `ErrorRecoveryResult`).
+|The `ErrorContext`, and CDI beans.
 
 |`@Output`
 |static method
 |Custom output combiner for parallel workflows.
+|Values from the `AgenticScope`, and CDI beans.
 
 |`@ChatModelSupplier`
 |static method
 |Provides per-agent `ChatModel`.
+|Values from the `AgenticScope`, and CDI beans.
 
 |`@SupervisorRequest`
 |static method
 |Custom prompt builder for supervisor.
+|Values from the `AgenticScope`, and CDI beans.
 
 |`@ParallelExecutor`
 |static method
 |Provides `Executor` for parallel workflows.
+|CDI beans only.
+
+|`@Decide`
+|method, field
+|The question of a decision agent, on its `@Agent` method, or on the fields of the object it returns.
+|-
+
+|`@DecisionModelSupplier`
+|static method
+|Provides the `DecisionModel` of a decision agent.
+|Values from the `AgenticScope`, and CDI beans.
+
+|`@DecisionThresholdSupplier`
+|static method
+|Provides the threshold of the `boolean` answers of a decision agent.
+|The `ThresholdContext`, and CDI beans.
+
+|`@CdiBean`
+|parameter
+|Resolves the parameter of a `static` agent method from CDI, see <<_using_cdi_beans_in_agent_methods>>.
+|-
 |===
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-agentic.adoc[leveloffset=+1,opts=optional]
 
 == Related Guides
 
 [.lead]
 * xref:ai-services.adoc[AI Services]
+* xref:decision-services.adoc[Decision Services]
 * xref:function-calling.adoc[Function Calling and Tool Integration]
 * xref:observability.adoc[Observability]

@@ -1,0 +1,8 @@
+%% Source for modules/ROOT/assets/images/rag-ingestion-flow.svg.
+%% Regenerate with: npm run diagrams (see "Regenerating diagrams" in docs/README.adoc).
+flowchart TD
+    A[Document] --> B[Splitter]
+    B --> C[Segments]
+    C --> D[Embedding Model]
+    D --> E[Vector Embedding]
+    E --> F[Vector Store]

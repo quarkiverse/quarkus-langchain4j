@@ -7,7 +7,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.quarkiverse.langchain4j.evaluation.junit5.EvaluationExtension;
 import io.quarkiverse.langchain4j.evaluation.junit5.SampleLocation;
+import io.quarkiverse.langchain4j.testing.evaluation.SampleLoader;
 import io.quarkiverse.langchain4j.testing.evaluation.Samples;
+import io.quarkus.arc.Arc;
 import io.quarkus.test.junit.QuarkusTest;
 
 /**
@@ -85,6 +87,17 @@ class QuarkusCustomCdiLoaderIT {
         assertThat(greetings.get(0).name()).isEqualTo("Greeting1");
         assertThat(mathSamples.get(0).name()).isEqualTo("Math1");
         assertThat(yamlSamples.get(0).name()).isEqualTo("QuarkusSample1");
+    }
+
+    @Test
+    void shouldDirectlyVerifyGenericSampleLoaderInCdiContainer() {
+        var beanManager = Arc.container().beanManager();
+        var beans = beanManager.getBeans(SampleLoader.class);
+
+        assertThat(beans)
+                .as("CustomCdiSampleLoader (SampleLoader<String>) should be discoverable as SampleLoader in CDI")
+                .extracting("beanClass")
+                .contains(CustomCdiSampleLoader.class);
     }
 
     @Test

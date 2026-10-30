@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.watsonx.runtime.client.impl;
 
+import static io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils.cancelStreamOn;
 import static io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils.retryOn;
 import static java.util.Objects.nonNull;
 
@@ -14,9 +15,11 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import com.ibm.watsonx.ai.chat.ChatClientContext;
 import com.ibm.watsonx.ai.chat.ChatHandler;
+import com.ibm.watsonx.ai.chat.ChatRequest;
 import com.ibm.watsonx.ai.chat.ChatResponse;
 import com.ibm.watsonx.ai.chat.ChatRestClient;
 import com.ibm.watsonx.ai.chat.SseEventProcessor;
+import com.ibm.watsonx.ai.chat.TextChatResponse;
 import com.ibm.watsonx.ai.chat.model.TextChatRequest;
 
 import io.quarkiverse.langchain4j.watsonx.runtime.QuarkusChatSubscriber;
@@ -55,12 +58,12 @@ public final class QuarkusChatRestClient extends ChatRestClient {
     }
 
     @Override
-    public ChatResponse chat(String transactionId, TextChatRequest textChatRequest) {
+    public TextChatResponse chat(String transactionId, TextChatRequest textChatRequest) {
         var requestId = UUID.randomUUID().toString();
-        return retryOn(requestId, new Callable<ChatResponse>() {
+        return retryOn(requestId, new Callable<TextChatResponse>() {
             @Override
-            public ChatResponse call() throws Exception {
-                return client.chat(UUID.randomUUID().toString(), transactionId, version, textChatRequest);
+            public TextChatResponse call() throws Exception {
+                return client.chat(requestId, transactionId, version, textChatRequest);
             }
         });
     }
@@ -69,16 +72,17 @@ public final class QuarkusChatRestClient extends ChatRestClient {
     public CompletableFuture<ChatResponse> chatStreaming(
             String transactionId,
             TextChatRequest textChatRequest,
-            ChatClientContext context,
+            ChatClientContext<ChatRequest> context,
             ChatHandler handler) {
 
         var requestId = UUID.randomUUID().toString();
         var subscriber = new QuarkusChatSubscriber(
-                new SseEventProcessor(textChatRequest.tools(), context.extractionTags()), handler);
+                new SseEventProcessor(textChatRequest.tools(), context.extractionTags(), TextChatResponse::builder),
+                handler);
 
         CompletableFuture<ChatResponse> future = new CompletableFuture<>();
 
-        client.chatStreaming(requestId, transactionId, version, textChatRequest)
+        var streamFuture = client.chatStreaming(requestId, transactionId, version, textChatRequest)
                 .onItem().invoke(new Consumer<String>() {
                     @Override
                     public void accept(String message) {
@@ -101,6 +105,7 @@ public final class QuarkusChatRestClient extends ChatRestClient {
                 .collect().asList().replaceWithVoid()
                 .subscribeAsCompletionStage();
 
+        cancelStreamOn(future, subscriber, streamFuture);
         return future;
     }
 

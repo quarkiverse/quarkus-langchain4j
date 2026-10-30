@@ -31,13 +31,22 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.context.ThreadContext;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
@@ -114,6 +123,7 @@ import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
+import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
@@ -121,6 +131,7 @@ import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.runtime.BlockingOperationControl;
+import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
@@ -134,6 +145,7 @@ public class AiServiceMethodImplementationSupport {
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
     private static final int DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final int DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE = 0;
+    private static final boolean DEFAULT_EXECUTE_TOOLS_CONCURRENTLY = false;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this
@@ -215,7 +227,8 @@ public class AiServiceMethodImplementationSupport {
 
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, InvocationContext invocationContext,
             QuarkusAiServiceContext context) {
-        if (TypeUtil.isMulti(methodCreateInfo.getReturnType()) && !BlockingOperationControl.isBlockingAllowed()) {
+        if (TypeUtil.isMultiOrFlowPublisher(methodCreateInfo.getReturnType())
+                && !BlockingOperationControl.isBlockingAllowed()) {
             // this a special case where we can't block, so we need to delegate the to a worker pool
             // as so many of the things done in LangChain4j are blocking
             return Multi.createFrom().deferred(
@@ -245,7 +258,7 @@ public class AiServiceMethodImplementationSupport {
         Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
 
         Type returnType = methodCreateInfo.getReturnType();
-        boolean isMulti = TypeUtil.isMulti(returnType);
+        boolean isMulti = TypeUtil.isMultiOrFlowPublisher(returnType);
 
         final boolean isStringMulti = (isMulti && returnType instanceof ParameterizedType
                 && TypeUtil.isTypeOf(((ParameterizedType) returnType).getActualTypeArguments()[0], String.class));
@@ -277,6 +290,10 @@ public class AiServiceMethodImplementationSupport {
         toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
         toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
         for (ToolProvider toolProvider : context.toolService.toolProviders()) {
+            if (toolProvider.isDynamic()) {
+                // evaluated before each LLM call instead, see DynamicToolProviders
+                continue;
+            }
             ToolProviderRequest request = new QuarkusToolProviderRequest(invocationContext, userMessage,
                     methodCreateInfo.getMcpClientNames());
             ToolProviderResult result = toolProvider.provideTools(request);
@@ -285,6 +302,31 @@ public class AiServiceMethodImplementationSupport {
                 toolSpecifications.add(specification);
                 toolExecutors.put(specification.name(), result.tools().get(specification));
             }
+        }
+        List<ToolProvider> dynamicProviders = context.toolService.toolProviders().stream()
+                .filter(ToolProvider::isDynamic)
+                .toList();
+        DynamicToolProviders dynamicToolProviders = dynamicProviders.isEmpty() ? null
+                : new DynamicToolProviders(dynamicProviders, invocationContext, userMessage,
+                        methodCreateInfo.getMcpClientNames());
+
+        // @Skills annotation support — resolve per-method or class-level skills
+        List<String> effectiveSkillNames = methodCreateInfo.getSkillNames();
+        if (effectiveSkillNames == null && context instanceof QuarkusAiServiceContext) {
+            effectiveSkillNames = ((QuarkusAiServiceContext) context).classLevelSkillNames;
+        }
+        String skillsSystemMessage = null;
+        if (effectiveSkillNames != null) {
+            SkillsConfigurator configurator = Arc.container().select(SkillsConfigurator.class).get();
+            ToolProviderRequest skillsRequest = new QuarkusToolProviderRequest(invocationContext, userMessage,
+                    methodCreateInfo.getMcpClientNames());
+            ToolProviderResult skillsResult = configurator.createToolProvider(effectiveSkillNames)
+                    .provideTools(skillsRequest);
+            for (ToolSpecification spec : skillsResult.tools().keySet()) {
+                toolSpecifications.add(spec);
+                toolExecutors.put(spec.name(), skillsResult.tools().get(spec));
+            }
+            skillsSystemMessage = configurator.buildSkillsSystemMessage(effectiveSkillNames);
         }
 
         AugmentationResult augmentationResult = null;
@@ -322,6 +364,25 @@ public class AiServiceMethodImplementationSupport {
         } else {
             messagesToSend = createMessagesToSendForNoMemory(systemMessage, userMessage, needsMemorySeed, context,
                     methodCreateInfo);
+            // Seed the local memory so the tool-execution loop can read back the conversation history
+            for (ChatMessage msg : messagesToSend) {
+                committableChatMemory.add(msg);
+            }
+        }
+
+        if (skillsSystemMessage != null) {
+            boolean appended = false;
+            for (int i = 0; i < messagesToSend.size(); i++) {
+                if (messagesToSend.get(i) instanceof dev.langchain4j.data.message.SystemMessage existing) {
+                    messagesToSend.set(i,
+                            dev.langchain4j.data.message.SystemMessage.from(existing.text() + "\n\n" + skillsSystemMessage));
+                    appended = true;
+                    break;
+                }
+            }
+            if (!appended) {
+                messagesToSend.add(0, dev.langchain4j.data.message.SystemMessage.from(skillsSystemMessage));
+            }
         }
 
         if (TypeUtil.isTokenStream(returnType)) {
@@ -330,13 +391,23 @@ public class AiServiceMethodImplementationSupport {
             // Upstream supports it
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
+            if (dynamicToolProviders != null) {
+                // the upstream streaming handler re-evaluates the dynamic providers before the subsequent LLM calls
+                dynamicToolProviders.refresh(messagesToSend, toolSpecifications, toolExecutors, toolReturnBehaviors,
+                        null);
+            }
             var aiServiceTokenStreamParams = AiServiceTokenStreamParameters.builder()
                     .messages(messagesToSend)
-                    .toolSpecifications(toolSpecifications)
-                    .toolExecutors(toolExecutors)
+                    .toolServiceContext(ToolServiceContext.builder()
+                            .effectiveTools(toolSpecifications)
+                            .availableTools(toolSpecifications)
+                            .toolExecutors(toolExecutors)
+                            .returnBehaviors(toolReturnBehaviors)
+                            .dynamicToolProviders(dynamicToolProviders != null ? dynamicToolProviders.providers() : null)
+                            .build())
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
-                    .invocationContext(InvocationContext.builder().chatMemoryId(memoryId).build())
+                    .invocationContext(invocationContext)
                     .methodKey(methodCreateInfo)
                     .toolArgumentsErrorHandler((e, c) -> {
                         throw new RuntimeException(e);
@@ -362,9 +433,12 @@ public class AiServiceMethodImplementationSupport {
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives
                                             // are worse
             var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
-            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
+            Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors, toolReturnBehaviors,
+                    dynamicToolProviders,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, invocationContext, memoryId,
-                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread,
+                    // the dynamic tool providers are re-evaluated where the tools are executed, and may block
+                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution() || dynamicToolProviders != null,
+                    isRunningOnWorkerThread,
                     methodCreateInfo, methodArgs);
 
             if (hasUpstreamGuardrails) {
@@ -419,6 +493,10 @@ public class AiServiceMethodImplementationSupport {
                     messagesToSend, invocationContext);
             toolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
             toolExecutors = new HashMap<>(toolSearchContext.toolExecutors());
+        }
+        if (dynamicToolProviders != null) {
+            toolSearchContext = dynamicToolProviders.refresh(messagesToSend, toolSpecifications, toolExecutors,
+                    toolReturnBehaviors, toolSearchContext);
         }
 
         log.debug("Attempting to obtain AI response");
@@ -482,6 +560,19 @@ public class AiServiceMethodImplementationSupport {
             if (maxToolCallsPerResponse > 0) {
                 log.debugv("maxToolCallsPerResponse limit set to {0}", maxToolCallsPerResponse);
             }
+            // When the tools are executed concurrently, all of them are executed before the loop below processes
+            // their results in request order. Otherwise, the loop below executes each tool in turn and processes
+            // its result before moving on to the next tool.
+            List<ToolExecutionResult> concurrentToolExecutionResults = null;
+            if (context.executeToolsConcurrently && toolExecutionRequests.size() > 1) {
+                // Only the tools within the limit are executed; the loop below throws ToolCallsLimitExceededException
+                // once it reaches the limit
+                int toolsToExecute = maxToolCallsPerResponse > 0
+                        ? Math.min(toolExecutionRequests.size(), maxToolCallsPerResponse)
+                        : toolExecutionRequests.size();
+                concurrentToolExecutionResults = executeToolsConcurrently(context, invocationContext, toolExecutors,
+                        toolExecutionRequests.subList(0, toolsToExecute));
+            }
             int toolCallsCount = 0;
             List<ReturnBehavior> returnBehaviors = new ArrayList<>(toolExecutionRequests.size());
             boolean anyToolErrored = false;
@@ -489,18 +580,23 @@ public class AiServiceMethodImplementationSupport {
                 if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
                     throw new ToolCallsLimitExceededException(maxToolCallsPerResponse, toolExecutionRequests.size());
                 }
-                toolCallsCount++;
-                log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-                ToolExecutionResult toolExecutionResult = context.toolService.executeTool(
-                        invocationContext, toolExecutors, toolExecutionRequest, null, null);
+                ToolExecutionResult toolExecutionResult;
+                if (concurrentToolExecutionResults != null) {
+                    toolExecutionResult = concurrentToolExecutionResults.get(toolCallsCount);
+                } else {
+                    log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
+                    toolExecutionResult = context.toolService.executeTool(
+                            invocationContext, toolExecutors, toolExecutionRequest, null, null);
+                }
+                toolCallsCount++;
 
                 // New firing
                 context.eventListenerRegistrar.fireEvent(
                         dev.langchain4j.observability.api.event.ToolExecutedEvent.builder()
                                 .invocationContext(invocationContext)
                                 .request(toolExecutionRequest)
-                                .resultText(toolExecutionResult.resultText())
+                                .resultContents(toolExecutionResult.resultContents())
                                 .build());
 
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil
@@ -588,6 +684,10 @@ public class AiServiceMethodImplementationSupport {
             if (toolSearchService != null) {
                 toolSearchContext = ToolSearchService.addFoundTools(toolSearchContext, rawToolResults);
                 toolSpecifications = new ArrayList<>(toolSearchContext.effectiveTools());
+            }
+            if (dynamicToolProviders != null) {
+                toolSearchContext = dynamicToolProviders.refresh(committableChatMemory.messages(), toolSpecifications,
+                        toolExecutors, toolReturnBehaviors, toolSearchContext);
             }
 
             log.debug("Attempting to obtain AI response");
@@ -1087,6 +1187,14 @@ public class AiServiceMethodImplementationSupport {
             handleSpecialContentTypes(createInfo, methodArgs, finalContents);
             return toUserMessage(userName, finalContents);
         } else {
+            // There is no user message text, but there may still be multimodal arguments
+            // (Content, Image, Audio, Video, PdfFile, ...) that have to reach the model.
+            List<Content> finalContents = new ArrayList<>();
+            handleSpecialContentTypes(createInfo, methodArgs, finalContents);
+            if (!finalContents.isEmpty()) {
+                return toUserMessage(userName, finalContents);
+            }
+
             // create a user message that instructs the model to ignore it's content
             return EmptyUserMessage.INSTANCE;
         }
@@ -1106,7 +1214,8 @@ public class AiServiceMethodImplementationSupport {
             Object methodArg = methodArgs[i];
             AiServiceMethodCreateInfo.ParameterInfo parameterInfo = createInfo.getParameterInfo().get(i);
             if (methodArg instanceof Content content) {
-                handleContent(content, parameterInfo, finalContents);
+                // no @UserMessage annotation is required, same as for Image/Audio/Video/PdfFile arguments below
+                finalContents.add(content);
             } else if (methodArg instanceof List<?> list) {
                 Type javaType = TypeSignatureParser.parse(parameterInfo.typeDescriptor());
                 if (javaType instanceof ParameterizedType pt) {
@@ -1114,7 +1223,7 @@ public class AiServiceMethodImplementationSupport {
                     Class<?> typeArg = loadClass(actualTypeArgument);
                     if (Content.class.isAssignableFrom(typeArg)) {
                         for (Object o : list) {
-                            handleContent((Content) o, parameterInfo, finalContents);
+                            finalContents.add((Content) o);
                         }
                     } else if (Image.class.isAssignableFrom(typeArg)) {
                         for (Object o : list) {
@@ -1227,13 +1336,6 @@ public class AiServiceMethodImplementationSupport {
         }
     }
 
-    private static void handleContent(Content content, AiServiceMethodCreateInfo.ParameterInfo parameterInfo,
-            List<Content> finalContents) {
-        if (parameterInfo.annotationTypes().contains(dev.langchain4j.service.UserMessage.class.getName())) {
-            finalContents.add(content);
-        }
-    }
-
     private static Map<String, Object> getTemplateVariables(Object[] methodArgs,
             AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo) {
         Map<String, Object> variables = new HashMap<>();
@@ -1272,16 +1374,18 @@ public class AiServiceMethodImplementationSupport {
         }
 
         if (hasChatMemoryProvider) {
+            String perServiceSuffix = createInfo.getSharedMemoryName().isPresent()
+                    ? sharedMemoryIdSuffix(createInfo.getSharedMemoryName().get())
+                    : memoryIdSuffix(createInfo.getInterfaceName(), createInfo.getMethodName());
             if (defaultMemoryIdProvider != null) {
                 Object memoryId = defaultMemoryIdProvider.getMemoryId();
                 if (memoryId != null) {
-                    return memoryId;
+                    return memoryId + perServiceSuffix;
                 }
             }
             for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
                 Object memoryId = provider.getMemoryId();
                 if (memoryId != null) {
-                    String perServiceSuffix = "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
                     return memoryId + perServiceSuffix;
                 }
             }
@@ -1289,6 +1393,14 @@ public class AiServiceMethodImplementationSupport {
 
         // fallback to the default since there is nothing else we can really use here
         return "default";
+    }
+
+    public static String memoryIdSuffix(String interfaceName, String methodName) {
+        return "#" + interfaceName + "." + methodName;
+    }
+
+    public static String sharedMemoryIdSuffix(String sharedMemoryName) {
+        return "#" + sharedMemoryName;
     }
 
     // TODO: share these methods with LangChain4j
@@ -1328,9 +1440,116 @@ public class AiServiceMethodImplementationSupport {
                 .orElse(DEFAULT_MAX_TOOL_CALLS_PER_RESPONSE);
     }
 
+    public static boolean isExecuteToolsConcurrentlyGloballyEnabled() {
+        return ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.ai-service.execute-tools-concurrently", Boolean.class)
+                .orElse(DEFAULT_EXECUTE_TOOLS_CONCURRENTLY);
+    }
+
+    /**
+     * Executes the requested tools concurrently. The results are returned in request order.
+     */
+    private static List<ToolExecutionResult> executeToolsConcurrently(QuarkusAiServiceContext context,
+            InvocationContext invocationContext, Map<String, ToolExecutor> toolExecutors,
+            List<ToolExecutionRequest> toolExecutionRequests) {
+        Executor executor = context.toolService.effectiveToolExecutor();
+        List<CompletableFuture<ToolExecutionResult>> futures = new ArrayList<>(toolExecutionRequests.size());
+        for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+            log.debugv("Attempting to execute tool {0} concurrently", toolExecutionRequest);
+            futures.add(CompletableFuture.supplyAsync(new Supplier<>() {
+                @Override
+                public ToolExecutionResult get() {
+                    return context.toolService.executeTool(invocationContext, toolExecutors, toolExecutionRequest, null,
+                            null);
+                }
+            }, executor));
+        }
+        // The results are awaited in request order and the first failure is rethrown.
+        // All the tools are awaited before the failure is rethrown (like ToolService#combineToolResultsCollectingErrors
+        // of LangChain4j, not its blocking loop), because the tools share the request context of the caller,
+        // which is destroyed once the call returns
+        // TODO: replace with structured concurrency (StructuredTaskScope) once the minimum JDK supports it
+        List<ToolExecutionResult> results = new ArrayList<>(futures.size());
+        Throwable failure = null;
+        for (CompletableFuture<ToolExecutionResult> future : futures) {
+            try {
+                results.add(future.join());
+            } catch (CompletionException e) {
+                if (failure == null) {
+                    failure = e.getCause();
+                }
+            }
+        }
+        if (failure != null) {
+            // rethrown as is, so that callers see the same exception as when the tools are executed sequentially
+            sneakyThrow(failure);
+        }
+        return results;
+    }
+
+    private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+        throw (E) e;
+    }
+
     private static Executor createExecutor() {
         InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
         return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
+    }
+
+    /**
+     * Creates the executor on which the tools are executed concurrently.
+     * The tools are executed on virtual threads rather than on the worker pool: the caller may occupy a worker
+     * thread while waiting for the tools, and once the pool is exhausted by such callers the tools would never run.
+     * When virtual threads are not available, a dedicated unbounded pool of platform threads is used, because
+     * Quarkus would otherwise fall back to the worker pool.
+     * The CDI request context of the caller is propagated to the tools.
+     */
+    public static Executor createToolExecutor() {
+        Executor executor = areVirtualThreadsAvailable() ? VirtualThreadsRecorder.getCurrent()
+                : PlatformThreadToolExecutorHolder.EXECUTOR;
+        InstanceHandle<ThreadContext> threadContext = Arc.container().instance(ThreadContext.class);
+        if (!threadContext.isAvailable()) {
+            return executor;
+        }
+        return new ContextPropagatingExecutor(executor, threadContext.get());
+    }
+
+    private static boolean areVirtualThreadsAvailable() {
+        return Runtime.version().feature() >= 21
+                && ConfigProvider.getConfig().getOptionalValue("quarkus.virtual-threads.enabled", Boolean.class)
+                        .orElse(true);
+    }
+
+    private static class PlatformThreadToolExecutorHolder {
+
+        // like the default executor of LangChain4j: no limit on the number of threads, which are released when idle
+        static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), new ThreadFactory() {
+                    private final AtomicInteger counter = new AtomicInteger();
+
+                    @Override
+                    public Thread newThread(Runnable runnable) {
+                        Thread thread = new Thread(runnable, "quarkus-langchain4j-tool-" + counter.incrementAndGet());
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                });
+    }
+
+    private static class ContextPropagatingExecutor implements Executor {
+
+        private final Executor delegate;
+        private final ThreadContext threadContext;
+
+        private ContextPropagatingExecutor(Executor delegate, ThreadContext threadContext) {
+            this.delegate = delegate;
+            this.threadContext = threadContext;
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            delegate.execute(threadContext.contextualRunnable(command));
+        }
     }
 
     private static boolean isImmediateReturnTool(String toolName, ToolExecutor toolExecutor,
@@ -1350,7 +1569,7 @@ public class AiServiceMethodImplementationSupport {
             ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
         CommittableChatMemory committableChatMemory;
         if (chatMemory == null) {
-            committableChatMemory = new NoopChatMemory();
+            committableChatMemory = new LocalCommittableChatMemory();
         } else {
             if (chatMemoryFlushStrategy == ChatMemoryFlushStrategy.IMMEDIATE) {
                 committableChatMemory = new ImmediateFlushChatMemory(chatMemory);

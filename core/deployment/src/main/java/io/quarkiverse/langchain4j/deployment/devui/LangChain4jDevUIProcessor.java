@@ -1,9 +1,19 @@
 package io.quarkiverse.langchain4j.deployment.devui;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
@@ -18,6 +28,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.runtime.devui.ChatJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.devui.EmbeddingStoreJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolGuardrailAnnotationLiteral;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -39,6 +50,7 @@ public class LangChain4jDevUIProcessor {
             List<AdditionalDevUiCardBuildItem> additionalDevUiCardBuildItems) {
         CardPageBuildItem card = new CardPageBuildItem();
         addAiServicesPage(card, aiServices);
+        addGuardrailsPage(card, aiServices, toolsMetadataBuildItem);
         if (toolsMetadataBuildItem != null) {
             addToolsPage(card, toolsMetadataBuildItem);
         }
@@ -87,6 +99,133 @@ public class LangChain4jDevUIProcessor {
                 .componentLink("qwc-aiservices.js")
                 .staticLabel(String.valueOf(aiServices.size()))
                 .icon("font-awesome-solid:robot"));
+    }
+
+    private void addGuardrailsPage(CardPageBuildItem card, List<DeclarativeAiServiceBuildItem> aiServices,
+            ToolsMetadataBuildItem toolsMetadataBuildItem) {
+        List<RawGuardrail> raw = new ArrayList<>();
+        for (DeclarativeAiServiceBuildItem aiService : aiServices) {
+            ClassInfo serviceClassInfo = aiService.getServiceClassInfo();
+            String serviceName = serviceClassInfo.name().toString();
+            List<MethodInfo> methods = serviceClassInfo.methods();
+
+            // A method-level annotation overrides the class-level one of the same kind, so a class-level guardrail does
+            // not run on methods that declare their own guardrails of that kind.
+            List<String> inputOverrides = overridingMethods(methods, LangChain4jDotNames.INPUT_GUARDRAILS);
+            List<String> outputOverrides = overridingMethods(methods, LangChain4jDotNames.OUTPUT_GUARDRAILS);
+
+            collectGuardrails(raw, serviceName, null, serviceClassInfo.declaredAnnotation(LangChain4jDotNames.INPUT_GUARDRAILS),
+                    "Input", inputOverrides);
+            collectGuardrails(raw, serviceName, null,
+                    serviceClassInfo.declaredAnnotation(LangChain4jDotNames.OUTPUT_GUARDRAILS),
+                    "Output", outputOverrides);
+
+            for (MethodInfo method : methods) {
+                collectGuardrails(raw, serviceName, method.name(), method.annotation(LangChain4jDotNames.INPUT_GUARDRAILS),
+                        "Input", List.of());
+                collectGuardrails(raw, serviceName, method.name(), method.annotation(LangChain4jDotNames.OUTPUT_GUARDRAILS),
+                        "Output", List.of());
+            }
+        }
+
+        if (toolsMetadataBuildItem != null) {
+            for (Map.Entry<String, List<ToolMethodCreateInfo>> toolClassEntry : toolsMetadataBuildItem.getMetadata()
+                    .entrySet()) {
+                String toolClassName = toolClassEntry.getKey();
+                for (ToolMethodCreateInfo tool : toolClassEntry.getValue()) {
+                    collectToolGuardrails(raw, toolClassName, tool.methodName(), tool.getInputGuardrails(), "Tool input");
+                    collectToolGuardrails(raw, toolClassName, tool.methodName(), tool.getOutputGuardrails(), "Tool output");
+                }
+            }
+        }
+
+        List<GuardrailInfo> infos = buildGuardrailInfos(raw);
+        if (infos.isEmpty()) {
+            return;
+        }
+
+        card.addBuildTimeData("guardrails", infos);
+        card.addPage(Page.webComponentPageBuilder().title("Guardrails")
+                .componentLink("qwc-guardrails.js")
+                .staticLabel(String.valueOf(infos.size()))
+                .icon("font-awesome-solid:shield-halved"));
+    }
+
+    private static List<String> overridingMethods(List<MethodInfo> methods, DotName kind) {
+        return methods.stream()
+                .filter(method -> method.annotation(kind) != null)
+                .map(MethodInfo::name)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    private static void collectGuardrails(List<RawGuardrail> raw, String owner, String method,
+            AnnotationInstance annotation, String kind, List<String> excludedMethods) {
+        if (annotation == null) {
+            return;
+        }
+        Type[] guardrailClasses = annotation.value().asClassArray();
+        Integer maxRetries = null;
+        if ("Output".equals(kind)) {
+            AnnotationValue maxRetriesValue = annotation.value("maxRetries");
+            maxRetries = maxRetriesValue == null ? null : maxRetriesValue.asInt();
+        }
+        for (int i = 0; i < guardrailClasses.length; i++) {
+            raw.add(new RawGuardrail(guardrailClasses[i].name().toString(), kind, owner, method, i + 1, maxRetries,
+                    excludedMethods));
+        }
+    }
+
+    private static void collectToolGuardrails(List<RawGuardrail> raw, String toolClass, String method,
+            ToolGuardrailAnnotationLiteral<?, ?> guardrails, String kind) {
+        if (guardrails == null) {
+            return;
+        }
+        List<String> classNames = guardrails.getClassNames();
+        for (int i = 0; i < classNames.size(); i++) {
+            raw.add(new RawGuardrail(classNames.get(i), kind, toolClass, method, i + 1, null, List.of()));
+        }
+    }
+
+    /**
+     * Inverts the per-owner guardrail declarations into a list keyed by guardrail class, so the Dev UI can show, for
+     * each guardrail, its kind and every AI service or tool method using it, with its position in the chain. Kept
+     * package-private and free of build items/Jandex so it can be unit tested.
+     */
+    static List<GuardrailInfo> buildGuardrailInfos(List<RawGuardrail> raw) {
+        // className -> kind -> usages
+        Map<String, Map<String, List<GuardrailUsage>>> acc = new TreeMap<>();
+        for (RawGuardrail guardrail : raw) {
+            acc.computeIfAbsent(guardrail.guardrailClassName(), k -> new HashMap<>())
+                    .computeIfAbsent(guardrail.kind(), k -> new ArrayList<>())
+                    .add(new GuardrailUsage(guardrail.owner(), guardrail.method(), guardrail.position(),
+                            guardrail.maxRetries(), guardrail.excludedMethods()));
+        }
+
+        Comparator<GuardrailUsage> byOwnerMethodPosition = Comparator.comparing(GuardrailUsage::owner)
+                .thenComparing(usage -> usage.method() == null ? "" : usage.method())
+                .thenComparingInt(GuardrailUsage::position);
+        List<GuardrailInfo> result = new ArrayList<>();
+        for (Map.Entry<String, Map<String, List<GuardrailUsage>>> classEntry : acc.entrySet()) {
+            // Stable, readable order when a guardrail class is used in more than one role.
+            for (String kind : List.of("Input", "Output", "Tool input", "Tool output")) {
+                List<GuardrailUsage> usages = classEntry.getValue().get(kind);
+                if (usages != null) {
+                    usages.sort(byOwnerMethodPosition);
+                    result.add(new GuardrailInfo(classEntry.getKey(), kind, usages));
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * A single guardrail declaration flattened out of the AI service or tool metadata, decoupled from Jandex to keep
+     * {@link #buildGuardrailInfos} testable.
+     */
+    record RawGuardrail(String guardrailClassName, String kind, String owner, String method, int position,
+            Integer maxRetries, List<String> excludedMethods) {
     }
 
     private void addToolsPage(CardPageBuildItem card, ToolsMetadataBuildItem metadataBuildItem) {

@@ -1,0 +1,37 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: workload-identity-federation-kubernetes
+  namespace: workload-identity-k8s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: workload-identity-federation-kubernetes
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: workload-identity-federation-kubernetes
+    spec:
+      restartPolicy: Always
+      serviceAccountName: workload-identity-federation-kubernetes
+      containers:
+        - name: app
+          image: quarkus-langchain4j-sample-workload-identity-k8s:1.0.0-SNAPSHOT
+          envFrom:
+            - secretRef:
+                name: anthropic-wif
+          volumeMounts:
+            - name: anthropic-token
+              readOnly: true
+              mountPath: /var/run/secrets/tokens
+      volumes:
+        - name: anthropic-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: https://api.anthropic.com
+                  expirationSeconds: 3600
+                  path: kubernetes-service-token
+  strategy:
+    type: Recreate

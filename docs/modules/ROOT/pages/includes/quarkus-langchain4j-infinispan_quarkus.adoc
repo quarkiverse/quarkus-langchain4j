@@ -1,0 +1,158 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-client-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-client-name[`+++quarkus.client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Infinispan client to use. These clients are configured by means of the `infinispan-client` extension. If unspecified, it will use the default Infinispan client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-dimension]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-dimension[`+++quarkus.dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384. OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|long
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-cache-name]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-cache-name[`+++quarkus.cache-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.cache-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the cache that will be used in Infinispan when searching for related embeddings. If this cache doesn't exist, it will be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CACHE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CACHE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings-cache+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-distance]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-distance[`+++quarkus.distance+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.distance+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum distance. The most distance between vectors is how close or far apart two embeddings are.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DISTANCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DISTANCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++3+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-similarity]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-similarity[`+++quarkus.similarity+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.similarity+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The similarity metric to use for vector search. Supported values: COSINE, L2, INNER_PRODUCT, MAX_INNER_PRODUCT.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SIMILARITY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SIMILARITY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++COSINE+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-create-cache]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-create-cache[`+++quarkus.create-cache+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.create-cache+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to create the cache on startup if it does not exist. Set to false if the cache is pre-configured on the Infinispan server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CREATE_CACHE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CREATE_CACHE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-cache-config]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-cache-config[`+++quarkus.cache-config+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.cache-config+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional full XML or JSON cache configuration. When provided, this overrides the default cache configuration generated by the extension.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CACHE_CONFIG+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CACHE_CONFIG+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+|===
+

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.redis.deployment;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +63,7 @@ public class RedisMetadataFilteringTest {
 
     @AfterEach
     public void clearStore() {
-        embeddingStore.deleteAll();
+        embeddingStore.removeAll();
     }
 
     @Test
@@ -98,6 +100,35 @@ public class RedisMetadataFilteringTest {
                 .collect(Collectors.toSet());
         Assertions.assertTrue(retrievedTextSegments.contains("Hello22"));
         Assertions.assertTrue(retrievedTextSegments.contains("Hello22x"));
+    }
+
+    @Test
+    public void testNumericMetadataTypes() {
+        ingest("Hello", Map.of("num1", 3, "num2", 1.5));
+
+        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                .queryEmbedding(embeddingModel.embed("Hello").content())
+                .build();
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(request).matches();
+        assertThat(matches).hasSize(1);
+        assertThat(matches.get(0).embedded().metadata().toMap())
+                .containsEntry("num1", 3)
+                .containsEntry("num2", 1.5);
+    }
+
+    @Test
+    public void testKeyCannotInjectQuerySyntax() {
+        ingest("Hello0", Map.of("num1", 0, "num2", 0));
+        ingest("Hello1", Map.of("num1", 1, "num2", 1));
+        ingest("Hello2", Map.of("num1", 2, "num2", 2));
+
+        // unescaped, this key would turn the filter into "num1 >= 0 OR num2 == 0" and match every document
+        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                .queryEmbedding(embeddingModel.embed("Hello").content())
+                .filter(new IsEqualTo("num1:[0 inf] | @num2", 0))
+                .build();
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(request).matches();
+        Assertions.assertTrue(matches.isEmpty());
     }
 
 }

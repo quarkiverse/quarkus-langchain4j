@@ -1,4 +1,5 @@
 = Messages and Memory in Quarkus LangChain4j
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -258,6 +259,11 @@ This is useful for:
 * distributed services (e.g., multiple Quarkus pods/replicas)
 * external control over retention or eviction
 
+Instead of writing your own, you can use a ready-made store:
+
+* xref:memory-store-mongodb.adoc[MongoDB Chat Memory Store]
+* xref:memory-store-redis.adoc[Redis Chat Memory Store]
+
 [#_chat_memory_flush_strategy]
 == Chat Memory Flush Strategy
 
@@ -330,6 +336,38 @@ When using `@MemoryId`, the memory ID must be stable across calls to ensure prop
 
 When using websocket-next, the `@MemoryId` will be automatically set to the session ID, allowing each user to have their own memory instance.
 See xref:websockets.adoc[Websockets] for more details.
+
+== `@SharedMemory`: Sharing Memory Across AI Services
+
+When no parameter is annotated with `@MemoryId`, a default memory ID is generated with the form `<default-id>#<AI service FQN>.<method name>`,
+where `<default-id>` comes from the current context (the request scope, the websocket connection, the chat scope, etc.).
+As a result, each AI service method gets its own memory.
+
+To let several methods, potentially of different AI services, share the same memory while still relying on the default memory ID generation,
+annotate them with `@SharedMemory`:
+
+[source,java]
+----
+@RegisterAiService
+public interface AgentOne {
+
+    @SharedMemory("get-smart")
+    String chat(@UserMessage String msg);
+}
+
+@RegisterAiService
+public interface Agent99 {
+
+    @SharedMemory("get-smart")
+    String chat(@UserMessage String msg);
+}
+----
+
+The generated memory ID then has the form `<default-id>#get-smart`, so both methods read and write the same memory.
+If no value is set, `$default` is used.
+
+`@SharedMemory` can also be placed on the AI service interface, in which case it applies to all its methods; a method level annotation takes precedence over the interface level one.
+It has no effect on methods having a parameter annotated with `@MemoryId`.
 
 == Summary
 

@@ -7,7 +7,7 @@ public record ChatResponse(String model, String createdAt, Message message, Bool
 
     public static ChatResponse emptyNotDone() {
         return new ChatResponse(null, null,
-                new Message(Role.ASSISTANT, "", Collections.emptyList(), Collections.emptyList(), null),
+                new Message(Role.ASSISTANT, "", null, Collections.emptyList(), Collections.emptyList(), null),
                 true, null, null);
     }
 }

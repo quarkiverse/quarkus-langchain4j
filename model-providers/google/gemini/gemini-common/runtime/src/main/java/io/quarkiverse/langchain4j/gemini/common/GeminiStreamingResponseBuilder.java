@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
@@ -17,7 +14,6 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.Candidate;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.Candidate.Part;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.UsageMetadata;
@@ -56,12 +52,20 @@ class GeminiStreamingResponseBuilder {
             return Optional.empty();
         }
 
-        Candidate firstCandidate = partialResponse.candidates().get(0);
-
         updateId(partialResponse);
         updateModelName(partialResponse);
-        updateFinishReason(firstCandidate);
         updateTokenUsage(partialResponse.usageMetadata());
+
+        if (partialResponse.candidates() == null || partialResponse.candidates().isEmpty()) {
+            // Gemini returns no candidates when the prompt is blocked; the reason is in promptFeedback instead
+            if (partialResponse.promptFeedback() != null && partialResponse.promptFeedback().blockReason() != null) {
+                finishReason.set(FinishReason.CONTENT_FILTER);
+            }
+            return Optional.empty();
+        }
+
+        Candidate firstCandidate = partialResponse.candidates().get(0);
+        updateFinishReason(firstCandidate);
 
         Candidate.Content content = firstCandidate.content();
         if (content == null || content.parts() == null) {
@@ -113,11 +117,7 @@ class GeminiStreamingResponseBuilder {
 
     private void updateTokenUsage(UsageMetadata usageMetadata) {
         if (usageMetadata != null) {
-            TokenUsage tokenUsage = new TokenUsage(
-                    usageMetadata.promptTokenCount(),
-                    usageMetadata.candidatesTokenCount(),
-                    usageMetadata.totalTokenCount());
-            this.tokenUsage.set(tokenUsage);
+            this.tokenUsage.set(GenerateContentResponseHandler.getTokenUsage(usageMetadata));
         }
     }
 
@@ -144,7 +144,7 @@ class GeminiStreamingResponseBuilder {
 
     static AiMessage fromGPartsToAiMessage(List<Part> parts) {
         StringBuilder fullText = new StringBuilder();
-        List<FunctionCall> functionCalls = new ArrayList<>();
+        List<Part> functionCallParts = new ArrayList<>();
 
         for (Part part : parts) {
             String text = part.text();
@@ -156,31 +156,21 @@ class GeminiStreamingResponseBuilder {
             }
 
             if (part.functionCall() != null) {
-                functionCalls.add(part.functionCall());
+                functionCallParts.add(part);
             }
         }
 
-        if (functionCalls.isEmpty()) {
+        if (functionCallParts.isEmpty()) {
             return AiMessage.from(fullText.toString());
-        } else {
-            return AiMessage.from(fromToolExecReqToGFunCall(functionCalls));
         }
-    }
-
-    static List<ToolExecutionRequest> fromToolExecReqToGFunCall(List<FunctionCall> functionCalls) {
-        return functionCalls.stream()
-                .map(functionCall -> {
-                    try {
-                        return ToolExecutionRequest.builder()
-                                .name(functionCall.name())
-                                .arguments(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
-                                        .writeValueAsString(functionCall.args()))
-                                .build();
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .collect(Collectors.toList());
+        List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>(functionCallParts.size());
+        for (Part functionCallPart : functionCallParts) {
+            toolExecutionRequests.add(GenerateContentResponseHandler.toToolExecutionRequest(functionCallPart));
+        }
+        return AiMessage.builder()
+                .text(fullText.isEmpty() ? null : fullText.toString())
+                .toolExecutionRequests(toolExecutionRequests)
+                .build();
     }
 
     static FinishReason fromGFinishReasonToFinishReason(

@@ -16,7 +16,7 @@ import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ibm.watsonx.ai.chat.ChatResponse;
+import com.ibm.watsonx.ai.chat.TextChatResponse;
 import com.ibm.watsonx.ai.chat.model.TextChatRequest;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 
@@ -32,7 +32,7 @@ public interface ChatRestApi {
     @Path("text/chat")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    ChatResponse chat(
+    TextChatResponse chat(
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
             @QueryParam("version") String version,

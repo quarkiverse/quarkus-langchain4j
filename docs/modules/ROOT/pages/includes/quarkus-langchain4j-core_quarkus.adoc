@@ -1,0 +1,717 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-type]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-type[`+++quarkus.type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configure the type of `ChatMemory` that will be used by default by the default `ChatMemoryProvider` bean.
+
+The extension provides a default bean that configures `ChatMemoryProvider` for use with AI services registered with `RegisterAiService`. This bean depends uses the `quarkus.langchain4j.chat-memory` configuration to set things up while also depending on the presence of a bean of type `ChatMemoryStore` (for which the extension also provides a default in the form of `InMemoryChatMemoryStore`).
+
+If `token-window` is used, then the application must also provide a bean of type `TokenCountEstimator`.
+
+Users can choose to provide their own `ChatMemoryStore` bean or even their own `ChatMemoryProvider` bean if full control over the details is needed.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`message-window`, `token-window`
+|`+++message-window+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-devservices-enabled[`+++quarkus.devservices.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
+When DevServices is enabled Quarkus will attempt to automatically serve a model if there are any matching ones.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-devservices-port]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-devservices-port[`+++quarkus.devservices.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default port where the inference server listens for requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++11434+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-devservices-preload]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-devservices-preload[`+++quarkus.devservices.preload+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.preload+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Instructs Ollama to preload a model in order to get faster response times
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_PRELOAD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_PRELOAD+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-response-schema]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-response-schema[`+++quarkus.response-schema+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.response-schema+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configuration property to enable or disable the use of the ++{++response schema++}++ placeholder in the @SystemMessage/@UserMessage.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_RESPONSE_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_RESPONSE_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-memory-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-memory-window-max-messages[`+++quarkus.memory-window.max-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.memory-window.max-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of messages the configured `MessageWindowChatMemory` will hold
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MEMORY_WINDOW_MAX_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MEMORY_WINDOW_MAX_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++10+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-token-window-max-tokens]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-token-window-max-tokens[`+++quarkus.token-window.max-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.token-window.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens the configured `TokenWindowChatMemory` will hold
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TOKEN_WINDOW_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TOKEN_WINDOW_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1000+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-log-requests]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-log-requests[`+++quarkus.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether clients should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-log-responses]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-log-responses[`+++quarkus.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether clients should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-log-requests-curl[`+++quarkus.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether clients should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-timeout]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-timeout[`+++quarkus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Global timeout for requests to LLM APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-core_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-temperature]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-temperature[`+++quarkus.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Global temperature for LLM APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-guardrails-max-retries]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-guardrails-max-retries[`+++quarkus.guardrails.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.guardrails.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Configures the maximum number of retries for the guardrail. Sets it to 0 to disable retries.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_GUARDRAILS_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_GUARDRAILS_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++3+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-tracing-include-prompt]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-tracing-include-prompt[`+++quarkus.tracing.include-prompt+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.tracing.include-prompt+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, the prompt is included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TRACING_INCLUDE_PROMPT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TRACING_INCLUDE_PROMPT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-tracing-include-completion]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-tracing-include-completion[`+++quarkus.tracing.include-completion+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.tracing.include-completion+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, the completion is included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TRACING_INCLUDE_COMPLETION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TRACING_INCLUDE_COMPLETION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-tracing-include-tool-arguments]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-tracing-include-tool-arguments[`+++quarkus.tracing.include-tool-arguments+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.tracing.include-tool-arguments+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, tool call arguments are included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TRACING_INCLUDE_TOOL_ARGUMENTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TRACING_INCLUDE_TOOL_ARGUMENTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-tracing-include-tool-result]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-tracing-include-tool-result[`+++quarkus.tracing.include-tool-result+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.tracing.include-tool-result+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, tool call results are included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TRACING_INCLUDE_TOOL_RESULT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TRACING_INCLUDE_TOOL_RESULT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-ai-service-max-tool-calls-per-response]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-ai-service-max-tool-calls-per-response[`+++quarkus.ai-service.max-tool-calls-per-response+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.ai-service.max-tool-calls-per-response+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of tool calls allowed per single LLM response. When an LLM response contains more tool calls than this limit, a ToolCallsLimitExceededException is thrown. The default value is 0, which means unlimited.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AI_SERVICE_MAX_TOOL_CALLS_PER_RESPONSE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AI_SERVICE_MAX_TOOL_CALLS_PER_RESPONSE+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++0+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-ai-service-max-tool-calling-round-trips]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-ai-service-max-tool-calling-round-trips[`+++quarkus.ai-service.max-tool-calling-round-trips+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.ai-service.max-tool-calling-round-trips+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of LLM request/response round trips while handling a single chat request. If this number is exceeded, the chat request will fail.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AI_SERVICE_MAX_TOOL_CALLING_ROUND_TRIPS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AI_SERVICE_MAX_TOOL_CALLING_ROUND_TRIPS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++10+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-ai-service-max-tool-executions]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-ai-service-max-tool-executions[[.line-through]#`+++quarkus.ai-service.max-tool-executions+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.ai-service.max-tool-executions+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: Use `max-tool-calling-round-trips()` instead._
+
+Maximum number of tool executions while handling a single chat request. If this number is exceeded, the chat request will fail.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AI_SERVICE_MAX_TOOL_EXECUTIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AI_SERVICE_MAX_TOOL_EXECUTIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++10+++`
+
+h|[[quarkus-langchain4j-core_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-core_section_quarkus[Default model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-chat-model-provider[`+++quarkus.chat-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-scoring-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-scoring-model-provider[`+++quarkus.scoring-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scoring-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCORING_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCORING_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-embedding-model-provider[`+++quarkus.embedding-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-moderation-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-moderation-model-provider[`+++quarkus.moderation-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.moderation-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MODERATION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MODERATION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-image-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-image-model-provider[`+++quarkus.image-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.image-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_IMAGE_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_IMAGE_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-audio-transcription-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-audio-transcription-model-provider[`+++quarkus.audio-transcription-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.audio-transcription-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-model-name-chat-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-model-name-chat-model-provider[`+++quarkus."model-name".chat-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-model-name-scoring-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-model-name-scoring-model-provider[`+++quarkus."model-name".scoring-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".scoring-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__SCORING_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__SCORING_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-model-name-embedding-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-model-name-embedding-model-provider[`+++quarkus."model-name".embedding-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-model-name-moderation-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-model-name-moderation-model-provider[`+++quarkus."model-name".moderation-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".moderation-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__MODERATION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__MODERATION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-model-name-image-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-model-name-image-model-provider[`+++quarkus."model-name".image-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".image-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__IMAGE_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__IMAGE_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-model-name-audio-transcription-model-provider]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-model-name-audio-transcription-model-provider[`+++quarkus."model-name".audio-transcription-model.provider+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".audio-transcription-model.provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The model provider to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__AUDIO_TRANSCRIPTION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-core_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

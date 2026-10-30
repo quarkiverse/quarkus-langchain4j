@@ -28,7 +28,6 @@ import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.*;
-import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
@@ -95,20 +94,6 @@ public class McpRecorder {
                                 .executorService(context.getInjectedReference(ExecutorService.class))
                                 .build();
                     }
-                    case HTTP -> {
-                        QuarkusHttpMcpTransport.Builder httpBuilder = new QuarkusHttpMcpTransport.Builder()
-                                .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
-                                        "MCP client configuration named " + key + " is missing the 'url' property")))
-                                .logRequests(runtimeConfig.logRequests().orElse(false))
-                                .logResponses(runtimeConfig.logResponses().orElse(false))
-                                .tlsConfiguration(tlsConfiguration.orElse(null))
-                                .mcpClientName(key)
-                                .timeout(runtimeConfig.toolExecutionTimeout());
-                        if (!runtimeConfig.header().isEmpty()) {
-                            httpBuilder.headers(runtimeConfig.header());
-                        }
-                        yield httpBuilder.build();
-                    }
                     case STREAMABLE_HTTP -> {
                         HttpClientOptions httpClientOptions = new HttpClientOptions();
                         tlsConfiguration.ifPresent(tls -> {
@@ -156,12 +141,17 @@ public class McpRecorder {
                         openTelemetryEnabled != null &&
                                 openTelemetryEnabled.getValue() &&
                                 mcpRuntimeConfiguration.getValue().tracingEnabled());
+                runtimeConfig.protocolVersion().ifPresent(builder::protocolVersion);
+                builder.subscribeToToolListChanges(runtimeConfig.subscribeToToolListChanges());
+                builder.subscribeToPromptListChanges(runtimeConfig.subscribeToPromptListChanges());
+                builder.subscribeToResourceListChanges(runtimeConfig.subscribeToResourceListChanges());
                 DefaultMcpClient client = builder
                         .key(key)
                         .transport(transport)
                         .toolExecutionTimeout(runtimeConfig.toolExecutionTimeout())
                         .resourcesTimeout(runtimeConfig.resourcesTimeout())
                         .pingTimeout(runtimeConfig.pingTimeout())
+                        .initializationTimeout(runtimeConfig.initializationTimeout())
                         // TODO: it should be possible to choose a log handler class via configuration
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
                         .roots(initialRoots)
@@ -178,21 +168,12 @@ public class McpRecorder {
     }
 
     private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing) {
-        List<McpClientListener> listeners = new ArrayList<>();
         if (addMetrics) {
-            listeners.add(createMetricsListener(key));
+            builder.addListener(createMetricsListener(key));
         }
         if (addTracing) {
-            listeners.add(createTracingListener());
+            builder.addListener(createTracingListener());
             builder.metaSupplier(createTracingMetaSupplier());
-        }
-        // FIXME: this CompositeMcpClientListener thing is a temporary solution until we have a langchain4j version
-        // that supports multiple listeners directly (https://github.com/langchain4j/langchain4j/issues/4904).
-        // After that, just call builder.addListener multiple times
-        if (listeners.size() == 1) {
-            builder.listener(listeners.get(0));
-        } else if (listeners.size() > 1) {
-            builder.listener(new CompositeMcpClientListener(listeners));
         }
     }
 

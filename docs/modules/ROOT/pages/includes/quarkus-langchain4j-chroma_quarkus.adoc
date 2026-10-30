@@ -1,0 +1,465 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-default-store-enabled[`+++quarkus.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Chroma embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-devservices-enabled[`+++quarkus.devservices.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
+When DevServices is enabled Quarkus will attempt to automatically configure and start a database when running in Dev or Test mode and when Docker is running.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-devservices-image-name[`+++quarkus.devservices.image-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.image-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The container image name to use, for container based DevServices providers.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++ghcr.io/chroma-core/chroma:1.3.0+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-devservices-port]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-devservices-port[`+++quarkus.devservices.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the dev service will listen to.
+
+If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-devservices-shared]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-devservices-shared[`+++quarkus.devservices.shared+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.shared+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Indicates if the Chroma server managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Chroma starts a new container.
+
+The discovery uses the `quarkus-dev-service-chroma` label. The value is configured using the `service-name` property.
+
+Container sharing is only used in dev mode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-devservices-service-name[`+++quarkus.devservices.service-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.service-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The value of the `quarkus-dev-service-chroma` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Chroma looks for a container with the `quarkus-dev-service-chroma` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-chroma` label set to the specified value.
+
+This property is used when you need multiple shared Chroma servers.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++chroma+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-devservices-container-env-container-env]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-devservices-container-env-container-env[`+++quarkus.devservices.container-env."container-env"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.devservices.container-env."container-env"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Environment variables that are passed to the container.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-url]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-url[`+++quarkus.url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+URL where the Chroma database is listening for requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-collection-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-collection-name[`+++quarkus.collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The collection name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-timeout]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-timeout[`+++quarkus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The timeout duration for the Chroma client. If not specified, 5 seconds will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-chroma_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-log-requests]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-log-requests[`+++quarkus.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether requests to Chroma should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-log-responses]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-log-responses[`+++quarkus.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether responses from Chroma should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-api-version]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-api-version[`+++quarkus.api-version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.api-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Chroma API version to use. V1 is deprecated (Chroma 0.x) and its support will be removed in the future. Please use Chroma 1.x which uses the V2 API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`v1`, `v2`
+|`+++v2+++`
+
+h|[[quarkus-langchain4j-chroma_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-chroma_section_quarkus[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-store-name-collection-name[`+++quarkus."store-name".collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The collection name for this named store. This property serves as the build-time key that enables named store discovery. If not set, the collection name from the runtime configuration will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-store-name-url]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-store-name-url[`+++quarkus."store-name".url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+URL where the Chroma database is listening for requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-store-name-collection-name[`+++quarkus."store-name".collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The collection name.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++default+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-store-name-timeout]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-store-name-timeout[`+++quarkus."store-name".timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The timeout duration for the Chroma client. If not specified, 5 seconds will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-chroma_quarkus[icon:question-circle[title=More information about the Duration format]]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-store-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-store-name-log-requests[`+++quarkus."store-name".log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether requests to Chroma should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-store-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-store-name-log-responses[`+++quarkus."store-name".log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether responses from Chroma should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-store-name-api-version]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-store-name-api-version[`+++quarkus."store-name".api-version+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".api-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Chroma API version to use. V1 is deprecated (Chroma 0.x) and its support will be removed in the future. Please use Chroma 1.x which uses the V2 API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`v1`, `v2`
+|`+++v2+++`
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-chroma_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

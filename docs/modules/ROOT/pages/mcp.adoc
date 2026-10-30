@@ -1,4 +1,5 @@
 = Model Context Protocol (MCP) Integration
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-mcp
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
@@ -15,8 +16,11 @@ Quarkus LangChain4j provides comprehensive MCP client support, enabling your AI 
 
 [IMPORTANT]
 ====
-This MCP client implements the specification https://modelcontextprotocol.io/specification/2025-11-25[MCP Specification v2025-11-25].
-Make sure your MCP servers are compatible with this version of the specification for optimal interoperability.
+This MCP client implements two versions of the MCP specification: https://modelcontextprotocol.io/specification/2026-07-28[2026-07-28] and https://modelcontextprotocol.io/specification/2025-11-25[2025-11-25].
+By default, the client tries 2026-07-28 first, and falls back to 2025-11-25 when the MCP server does not implement 2026-07-28.
+Make sure that your MCP servers implement one of these versions.
+To skip this detection and always use one version, set the `quarkus.langchain4j.mcp."client-name".protocol-version` property.
+Resource subscriptions and roots work differently in the two versions.
 ====
 
 [TIP]
@@ -192,9 +196,9 @@ You can pass environment variables to the subprocess using the `environment` map
 === HTTP Transports
 
 HTTP-based transports connect to remote MCP servers via HTTP.
-Quarkus supports both streamable HTTP and the SSE (legacy) HTTP transports:
+Quarkus supports the Streamable HTTP transport.
+The legacy HTTP/SSE transport (`transport-type=http`) is no longer supported, because the MCP specification deprecated it in version 2025-03-26.
 
-**Streamable HTTP (Recommended):**
 [source,properties]
 ----
 quarkus.langchain4j.mcp.remote-server.transport-type=streamable-http
@@ -213,13 +217,6 @@ quarkus.langchain4j.mcp.remote-server.subsidiary-channel=true
 NOTE: If the server does not support the subsidiary channel, the transport logs a warning
 and continues without it. If the stream disconnects after being successfully established,
 the transport automatically attempts to reconnect.
-
-**HTTP/SSE (Legacy):**
-[source,properties]
-----
-quarkus.langchain4j.mcp.remote-server.transport-type=http
-quarkus.langchain4j.mcp.remote-server.url=https://mcp-server.example.com/mcp/sse
-----
 
 === WebSocket Transport
 
@@ -371,6 +368,136 @@ The registry client supports:
 - Verify registry availability
 - View server descriptions, repositories, packages, and transport information
 
+== Apicurio Registry MCP Server Discovery
+
+https://www.apicur.io/registry/[Apicurio Registry] can be used as a centralized catalog of MCP server definitions, enabling dynamic discovery
+and connection of MCP servers at runtime. Instead of manually configuring each MCP server in `application.properties`, your AI
+service can search a registry for available servers and connect to them on demand.
+
+The registry stores MCP tool definitions as versioned `MCP_TOOL` artifacts, validated against the official
+https://modelcontextprotocol.io/specification/2025-11-25/server/tools[MCP specification]. Tool definitions follow the spec
+(`name`, `inputSchema`, optional `description`, `title`, `annotations`, `outputSchema`), while connection metadata
+(server URL, transport type) is stored as **artifact labels** -- keeping the artifact content spec-compliant.
+The Quarkus integration provides `@Tool`-annotated methods that allow the LLM itself to search the registry and connect to
+discovered servers -- no redeployment or config changes needed when new MCP servers become available.
+
+IMPORTANT: This feature is experimental and may change in future releases.
+
+NOTE: MCP clients added through the registry integration are currently global — because the tool provider is application-scoped, the tools from dynamically connected servers will be visible to all users. Per-session scoping is planned for a future release.
+
+=== Dependencies
+
+Add the Apicurio Registry MCP extension alongside the MCP extension:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mcp</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mcp-apicurio-registry</artifactId>
+</dependency>
+----
+
+=== Configuration
+
+Point the integration at your Apicurio Registry instance:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.apicurio-registry.url=http://localhost:8080/apis/registry/v3
+----
+
+If your registry requires authentication, you can provide a bearer token:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.apicurio-registry.auth-token=my-token
+----
+
+=== How It Works
+
+When the `quarkus-langchain4j-mcp-apicurio-registry` extension is on the classpath and the configuration above is present, Quarkus automatically registers
+an `ApicurioRegistryMcpTools` CDI bean with three `@Tool` methods:
+
+- **`searchMcpServers`** -- searches the registry for MCP server definitions matching a query
+- **`connectMcpServer`** -- connects to an MCP server by its registry group/artifact ID, making its tools available
+- **`disconnectMcpServer`** -- disconnects a previously connected MCP server
+
+These tools are designed to be used by the LLM as part of an AI service. The LLM can autonomously discover and connect to
+MCP servers based on the user's request.
+
+=== Usage with an AI Service
+
+Register `ApicurioRegistryMcpTools` as a tool in your AI service:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpTools;
+
+@RegisterAiService(tools = ApicurioRegistryMcpTools.class)
+public interface DynamicToolAgent {
+
+    String chat(@UserMessage String message);
+}
+----
+
+With this setup, the LLM can:
+
+1. Search the registry for relevant MCP servers (e.g., "find servers for filesystem operations")
+2. Connect to a discovered server, which dynamically adds its tools to the available tool set
+3. Use the newly connected server's tools to fulfill the user's request
+4. Disconnect from servers when they are no longer needed
+
+=== Registering MCP Tool Definitions
+
+MCP tool definitions are stored in Apicurio Registry as `MCP_TOOL` artifacts. The artifact **content** follows the
+official MCP specification:
+
+[source,json]
+----
+{
+    "name": "list-files",
+    "description": "List files in a directory",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "Directory path to list"
+            }
+        },
+        "required": ["path"]
+    }
+}
+----
+
+Connection metadata is stored as **artifact labels** (key-value metadata on the artifact):
+
+- `mcp-server-url` -- the URL of the MCP server hosting this tool (e.g., `http://filesystem-server:8080/mcp`)
+- `mcp-transport-type` -- the transport type (e.g., `streamable-http`)
+
+The registry validates tool definitions against the MCP spec using its content validation rules. You can register
+these artifacts through the Apicurio Registry UI, REST API, or CLI.
+
+=== Programmatic Usage
+
+For cases where CDI injection is not available, use the builder API:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpToolsBuilder;
+
+ApicurioRegistryMcpTools tools = ApicurioRegistryMcpToolsBuilder.create()
+    .registryUrl("http://localhost:8080/apis/registry/v3")
+    .basicAuth("admin", "password")  // optional
+    .toolProvider(myMcpToolProvider)
+    .vertx(vertx)
+    .build();
+----
+
 == Exposing MCP Resources as Tools
 
 Some MCP servers provide **resources** (files, database records, API responses, etc.) that can be accessed programmatically.
@@ -381,8 +508,8 @@ Quarkus can automatically expose these resources as callable tools, making them 
 # Enable resources-as-tools feature
 quarkus.langchain4j.mcp.expose-resources-as-tools=true
 
-quarkus.langchain4j.mcp.myserver.transport-type=http
-quarkus.langchain4j.mcp.myserver.url=https://mcp-server.example.com/mcp/sse
+quarkus.langchain4j.mcp.myserver.transport-type=streamable-http
+quarkus.langchain4j.mcp.myserver.url=https://mcp-server.example.com/mcp
 ----
 
 When enabled, two synthetic tools are automatically created:
@@ -488,7 +615,7 @@ When such bean exists, all Streamable HTTP-based MCP clients will be wired up to
 
 == Authorization
 
-If your MCP server uses the *Streamable HTTP* or *HTTP/SSE* transport, it may require client authorization using bearer tokens or API keys.
+If your MCP server uses the *Streamable HTTP* transport, it may require client authorization using bearer tokens or API keys.
 
 To support this, implement the `McpClientAuthProvider` interface to inject credentials dynamically:
 
@@ -584,13 +711,13 @@ import jakarta.enterprise.event.Observes;
 public class McpLogObserver {
 
     public void onGitHubLog(@Observes @McpClientName("github") McpLogMessage logMessage) {
-        System.out.println("GitHub MCP: [" + logMessage.level() + "] " + logMessage.data());
+        System.out.println("GitHub MCP: [" + logMessage.level() + "] " + logMessage.dataAsObject());
         // Custom handling: store in database, trigger alerts, etc.
     }
 
     public void onAnyMcpLog(@Observes McpLogMessage logMessage) {
         // Observe logs from all MCP clients (no @McpClientName qualifier)
-        System.out.println("MCP Log: [" + logMessage.level() + "] " + logMessage.data());
+        System.out.println("MCP Log: [" + logMessage.level() + "] " + logMessage.dataAsObject());
         // Custom handling: store in database, trigger alerts, etc.
     }
 }
@@ -598,9 +725,16 @@ public class McpLogObserver {
 
 The `McpLogMessage` includes:
 
-- `data()`: The log message as a `JsonNode`
 - `level()`: Log level as `McpLogLevel` enum (DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY)
 - `logger()`: Logger name from the MCP server
+- `dataAsObject()`: The log payload as an `Object`
+- `dataAsMap()`: The log payload as a `Map<String, Object>`, or `null` if it is not a JSON object
+- `dataAsJson()`: The log payload as JSON text
+
+MCP allows the payload to be any JSON value, so a server may send a plain string just as well as an
+object. `dataAsObject()` therefore returns whatever arrived - most often a `String` or a `Map`. Use
+`dataAsMap()` when you read named fields out of the payload, and `dataAsJson()` when you pass it on
+as JSON.
 
 === Observing MCP Resource Updates
 
@@ -631,7 +765,10 @@ The `McpResourceUpdatedEvent` includes:
 - `uri()`: The URI of the updated resource
 - `mcpClientKey()`: The name of the MCP client that received the notification
 
-To receive notifications, you must first subscribe to a specific resource using the `McpClient` API:
+To receive notifications, you must first subscribe to the resources that you want to observe by using the `McpClient` API.
+The methods to call depend on the MCP protocol version that the client uses with the server.
+
+With protocol version 2026-07-28, subscribe to a list of resources in one call:
 
 [source,java]
 ----
@@ -639,12 +776,27 @@ To receive notifications, you must first subscribe to a specific resource using 
 @McpClientName("myserver")
 McpClient mcpClient;
 
+// Subscribe to updates for one or more resources
+long subscriptionId = mcpClient.subscribeToResources(List.of("file:///path/to/resource"));
+
+// Later, unsubscribe when no longer interested
+mcpClient.unsubscribeFromResources(subscriptionId);
+----
+
+With protocol version 2025-11-25, subscribe to one resource at a time.
+These two methods are deprecated:
+
+[source,java]
+----
 // Subscribe to updates for a specific resource
 mcpClient.subscribeToResource("file:///path/to/resource");
 
 // Later, unsubscribe when no longer interested
 mcpClient.unsubscribeFromResource("file:///path/to/resource");
 ----
+
+Each pair of methods throws an `UnsupportedOperationException` when the client uses the other protocol version.
+To make sure that the client uses the version that your code expects, set the `quarkus.langchain4j.mcp."client-name".protocol-version` property.
 
 [NOTE]
 ====
@@ -678,6 +830,7 @@ Quarkus automatically registers a readiness health check for all configured MCP 
 ----
 
 The health check verifies that all MCP servers are responsive by sending an MCP protocol **ping** message and waiting for a **pong** response.
+With protocol version 2026-07-28, which has no `ping` message, the client sends a `server/discover` request instead, and the `ping-timeout` setting applies to it in the same way.
 This works for all transport types (STDIO, HTTP, WebSocket).
 
 For HTTP-based MCP servers, you can optionally use a MicroProfile Health endpoint instead (see below).
@@ -828,6 +981,13 @@ You can configure initial roots in your application properties:
 quarkus.langchain4j.mcp.myserver.roots=workspace1=/path/to/workspace1,workspace2=/path/to/workspace2
 ----
 
+[IMPORTANT]
+====
+The client provides roots to an MCP server only when it uses MCP protocol version 2025-11-25.
+Protocol version 2026-07-28 deprecates roots, and with that version, `McpClient.setRoots` throws an `UnsupportedOperationException`.
+To use roots, set `quarkus.langchain4j.mcp.myserver.protocol-version=2025-11-25`.
+====
+
 [TIP]
 ====
 Roots are particularly useful for:
@@ -836,7 +996,7 @@ Roots are particularly useful for:
 - Multi-project environments where different servers operate on different codebases
 - Security boundaries to prevent servers from accessing unauthorized locations
 
-The root list can be updated programmatically at runtime using the `McpClient` API if the server needs to adapt to changing workspace configurations.
+With protocol version 2025-11-25, the root list can be updated programmatically at runtime using the `McpClient` API if the server needs to adapt to changing workspace configurations.
 ====
 
 === TLS Configuration

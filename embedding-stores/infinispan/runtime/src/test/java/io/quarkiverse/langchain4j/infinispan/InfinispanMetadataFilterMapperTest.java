@@ -216,4 +216,103 @@ class InfinispanMetadataFilterMapperTest {
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("Unsupported filter type:");
     }
+
+    @Test
+    void testIckleInjectionInKeySingleQuoteIsEscaped() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsEqualTo("foo' OR 1=1 OR name='", "bar"));
+        assertThat(result.query)
+                .isEqualTo("m0.name='foo'' OR 1=1 OR name=''' and m0.value = 'bar'");
+    }
+
+    @Test
+    void testIckleInjectionInValueSingleQuoteIsEscaped() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsEqualTo("name", "x' OR 1=1 --"));
+        assertThat(result.query)
+                .isEqualTo("m0.name='name' and m0.value = 'x'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInKeyNotEqual() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsNotEqualTo("a' OR 1=1 --", "val"));
+        assertThat(result.query)
+                .contains("m0.name='a'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInKeyIsIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("k' OR 1=1 --", Arrays.asList("a", "b")));
+        assertThat(result.query)
+                .contains("m0.name='k'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInValuesIsIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("key", Arrays.asList("x' OR 1=1 --", "normal")));
+        assertThat(result.query)
+                .contains("'x'' OR 1=1 --'");
+    }
+
+    @Test
+    void testIckleInjectionInKeyNotIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsNotIn("k' OR 1=1 --", Arrays.asList("a")));
+        assertThat(result.query)
+                .contains("m0.name='k'' OR 1=1 --'")
+                .contains("m0.name!='k'' OR 1=1 --'");
+    }
+
+    @Test
+    void testRejectMixedNumericAndStringInFilter() {
+        assertThatThrownBy(() -> new InfinispanMetadataFilterMapper()
+                .map(new IsIn("key", Arrays.asList(1, "x' OR 1=1 --"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("cannot mix numeric and non-numeric values");
+    }
+
+    @Test
+    void testRejectMixedNumericAndStringNotInFilter() {
+        assertThatThrownBy(() -> new InfinispanMetadataFilterMapper()
+                .map(new IsNotIn("key", Arrays.asList(42, "<ickle fragment>"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("cannot mix numeric and non-numeric values");
+    }
+
+    @Test
+    void testMixedNumericSubtypesInFilter() {
+        // HashSet iteration order is non-deterministic, so just verify key parts
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("mixed", Arrays.asList(1, 2L, 3.0f, 4.0)));
+        assertThat(result.query).startsWith("m0.name='mixed' and m0.value_");
+        assertThat(result.query).contains("IN (");
+    }
+
+    @Test
+    void testFloatWidenedToDoubleInIsIn() {
+        // 1.1f is not exactly representable — Float.toString gives "1.1" but doubleValue gives "1.100000023841858"
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsIn("score", Arrays.asList(1.1f)));
+        assertThat(result.query)
+                .isEqualTo("m0.name='score' and m0.value_float IN (1.100000023841858)");
+    }
+
+    @Test
+    void testFloatWidenedToDoubleInIsNotIn() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsNotIn("score", Arrays.asList(1.1f)));
+        assertThat(result.query)
+                .isEqualTo(
+                        "(m0.value_float NOT IN (1.100000023841858) and m0.name='score') OR (m0.value_float IN (1.100000023841858) and m0.name!='score') OR (i.metadata is null) ");
+    }
+
+    @Test
+    void testBackslashInValueIsEscaped() {
+        InfinispanMetadataFilterMapper.FilterResult result = new InfinispanMetadataFilterMapper()
+                .map(new IsEqualTo("path", "C:\\Users\\test"));
+        assertThat(result.query).isEqualTo("m0.name='path' and m0.value = 'C:\\\\Users\\\\test'");
+    }
 }

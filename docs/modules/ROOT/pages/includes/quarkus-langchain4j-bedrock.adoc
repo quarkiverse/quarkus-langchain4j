@@ -292,10 +292,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -960,10 +960,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1335,6 +1335,29 @@ endif::add-copy-button-to-env-var[]
 a|`after-system`, `after-user-message`, `after-last-user-message`, `after-tools`
 |
 
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching-ttl[`+++quarkus.langchain4j.bedrock.chat-model.prompt-caching-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.prompt-caching-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long the prompt cache entries live. Only applies when `prompt-caching` is set.
+
+*Allowable values:* `++[++5m, 1h++]++` (the SDK constant names `VALUE_5_M` and `VALUE_1_H` are accepted as well)
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_PROMPT_CACHING_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_PROMPT_CACHING_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`VALUE_5_M`, `VALUE_1_H`, `UNKNOWN_TO_SDK_VERSION`
+|`+++5m+++`
+
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning[`+++quarkus.langchain4j.bedrock.chat-model.reasoning+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.reasoning+++[]
@@ -1345,6 +1368,8 @@ endif::add-copy-button-to-config-props[]
 --
 Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
 
+This uses the legacy budget-based reasoning configuration (`reasoning_config.type=enabled` with `budget_tokens`), which is not accepted by newer models such as Claude Opus 4.7{plus}. For those models use `reasoning-effort` instead.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING+++[]
@@ -1354,6 +1379,27 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning-effort[`+++quarkus.langchain4j.bedrock.chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables adaptive reasoning with the given effort level (`reasoning_config.type=adaptive` with `output_config.effort`). This is the only reasoning configuration accepted by newer models such as Claude Opus 4.7{plus}, which reject the legacy budget-based `reasoning` configuration. When set, it takes precedence over the `reasoning` token budget.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-requests[`+++quarkus.langchain4j.bedrock.embedding-model.log-requests+++`]##
@@ -1683,10 +1729,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2497,10 +2543,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -3165,10 +3211,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -3540,6 +3586,29 @@ endif::add-copy-button-to-env-var[]
 a|`after-system`, `after-user-message`, `after-last-user-message`, `after-tools`
 |
 
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching-ttl[`+++quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching-ttl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching-ttl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long the prompt cache entries live. Only applies when `prompt-caching` is set.
+
+*Allowable values:* `++[++5m, 1h++]++` (the SDK constant names `VALUE_5_M` and `VALUE_1_H` are accepted as well)
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING_TTL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING_TTL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`VALUE_5_M`, `VALUE_1_H`, `UNKNOWN_TO_SDK_VERSION`
+|`+++5m+++`
+
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning[`+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning+++[]
@@ -3550,6 +3619,8 @@ endif::add-copy-button-to-config-props[]
 --
 Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
 
+This uses the legacy budget-based reasoning configuration (`reasoning_config.type=enabled` with `budget_tokens`), which is not accepted by newer models such as Claude Opus 4.7{plus}. For those models use `reasoning-effort` instead.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING+++[]
@@ -3559,6 +3630,27 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_RE
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning-effort[`+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables adaptive reasoning with the given effort level (`reasoning_config.type=adaptive` with `output_config.effort`). This is the only reasoning configuration accepted by newer models such as Claude Opus 4.7{plus}, which reject the legacy budget-based `reasoning` configuration. When set, it takes precedence over the `reasoning` token budget.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`low`, `medium`, `high`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-requests[`+++quarkus.langchain4j.bedrock."model-name".embedding-model.log-requests+++`]##
@@ -3888,10 +3980,10 @@ The name of the proxy configuration to use, as registered in the Quarkus Proxy R
 
 Precedence rules:
 
- - If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
- - If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
- - If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
- - If set but no proxy configuration is found with that name, an error is thrown at runtime.
+ * If set, it takes precedence over the deprecated `proxy-address`, `proxy-user`, `proxy-password` and `non-proxy-hosts` properties, which are ignored.
+ * If not set and a default proxy configuration is configured (`quarkus.proxy.++*++`), then that one is used.
+ * If set, the configuration from `quarkus.proxy.<name>.++*++` is used.
+ * If set but no proxy configuration is found with that name, an error is thrown at runtime.
 
 
 ifdef::add-copy-button-to-env-var[]

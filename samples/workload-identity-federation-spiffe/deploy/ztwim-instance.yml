@@ -1,0 +1,51 @@
+apiVersion: operator.openshift.io/v1alpha1
+kind: ZeroTrustWorkloadIdentityManager
+metadata:
+  name: cluster
+spec:
+  clusterName: cluster
+  trustDomain: ${OPENSHIFT_APPS_DOMAIN}
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: SpireOIDCDiscoveryProvider
+metadata:
+  name: cluster
+  namespace: zero-trust-workload-identity-manager
+spec:
+  jwtIssuer: https://spire-spiffe-oidc-discovery-provider.${OPENSHIFT_APPS_DOMAIN}
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: SpireServer
+metadata:
+  name: cluster
+  namespace: zero-trust-workload-identity-manager
+spec:
+  jwtIssuer: https://spire-spiffe-oidc-discovery-provider.${OPENSHIFT_APPS_DOMAIN}
+  caSubject:
+    commonName: SPIRE CA
+    country: US
+    organization: SPIRE
+  datastore:
+    databaseType: sqlite3
+    connectionString: /run/spire/data/datastore.sqlite3
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 1Gi
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: SpireAgent
+metadata:
+  name: cluster
+  namespace: zero-trust-workload-identity-manager
+spec:
+  nodeAttestor:
+    k8sPSATEnabled: "true"
+  workloadAttestors:
+    k8sEnabled: "true"
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: SpiffeCSIDriver
+metadata:
+  name: cluster
+  namespace: zero-trust-workload-identity-manager
+spec: {}

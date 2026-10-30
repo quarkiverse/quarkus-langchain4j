@@ -1,0 +1,870 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-enabled[`+++quarkus.chat-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-embedding-model-enabled[`+++quarkus.embedding-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-moderation-model-enabled[`+++quarkus.moderation-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.moderation-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MODERATION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MODERATION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-api-key]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-api-key[`+++quarkus.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+HuggingFace API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-timeout]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-timeout[`+++quarkus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for HuggingFace calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-hugging-face_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-inference-endpoint-url]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-inference-endpoint-url[`+++quarkus.chat-model.inference-endpoint-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.inference-endpoint-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the inference endpoint for the chat model.
+
+When using Hugging Face with the inference API, the URL is `https://api-inference.huggingface.co/models/<model-id>`, for example `https://api-inference.huggingface.co/models/google/flan-t5-small`.
+
+When using a deployed inference endpoint, the URL is the URL of the endpoint. When using a local hugging face model, the URL is the URL of the local model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_INFERENCE_ENDPOINT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_INFERENCE_ENDPOINT_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
+|`+++https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-temperature[`+++quarkus.chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Float (0.0-100.0). The temperature of the sampling operation. 1 means regular sampling, 0 means always take the highest score, 100.0 is getting closer to uniform probability
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-max-new-tokens[`+++quarkus.chat-model.max-new-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.max-new-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Int (0-250). The amount of new tokens to be generated, this does not include the input length it is a estimate of the size of generated text you want. Each new tokens slows down the request, so look for balance between response times and length of text generated
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_MAX_NEW_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_MAX_NEW_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-return-full-text]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-return-full-text[`+++quarkus.chat-model.return-full-text+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.return-full-text+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to `false`, the return results will not contain the original query making it easier for prompting
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_RETURN_FULL_TEXT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_RETURN_FULL_TEXT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-wait-for-model]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-wait-for-model[`+++quarkus.chat-model.wait-for-model+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.wait-for-model+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your inference done. It is advised to only set this flag to true after receiving a 503 error as it will limit hanging in your application to known places
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_WAIT_FOR_MODEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_WAIT_FOR_MODEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-do-sample]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-do-sample[`+++quarkus.chat-model.do-sample+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.do-sample+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether or not to use sampling ; use greedy decoding otherwise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_DO_SAMPLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_DO_SAMPLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-top-k[`+++quarkus.chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of highest probability vocabulary tokens to keep for top-k-filtering.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-top-p[`+++quarkus.chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to less than `1`, only the most probable tokens with probabilities that add up to `top_p` or higher are kept for generation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-repetition-penalty[`+++quarkus.chat-model.repetition-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.repetition-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The parameter for repetition penalty. 1.0 means no penalty. See link:https://arxiv.org/pdf/1909.05858.pdf[this paper] for more details.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_REPETITION_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_REPETITION_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-log-requests[`+++quarkus.chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-chat-model-log-responses[`+++quarkus.chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-embedding-model-inference-endpoint-url]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-embedding-model-inference-endpoint-url[`+++quarkus.embedding-model.inference-endpoint-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.inference-endpoint-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the inference endpoint for the embedding.
+
+When using Hugging Face with the inference API, the URL is `https://api-inference.huggingface.co/pipeline/feature-extraction/<model-id>`, for example `https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-mpnet-base-v2`.
+
+When using a deployed inference endpoint, the URL is the URL of the endpoint. When using a local hugging face model, the URL is the URL of the local model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_INFERENCE_ENDPOINT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_INFERENCE_ENDPOINT_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
+|`+++https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-embedding-model-wait-for-model]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-embedding-model-wait-for-model[`+++quarkus.embedding-model.wait-for-model+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.wait-for-model+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your inference done. It is advised to only set this flag to true after receiving a 503 error as it will limit hanging in your application to known places
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_WAIT_FOR_MODEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_WAIT_FOR_MODEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-log-requests]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-log-requests[`+++quarkus.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the HuggingFace client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-log-responses]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-log-responses[`+++quarkus.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the HuggingFace client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-enable-integration]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-enable-integration[`+++quarkus.enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+h|[[quarkus-langchain4j-hugging-face_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-hugging-face_section_quarkus[Named model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-api-key[`+++quarkus."model-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+HuggingFace API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-timeout[`+++quarkus."model-name".timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for HuggingFace calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-hugging-face_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-inference-endpoint-url]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-inference-endpoint-url[`+++quarkus."model-name".chat-model.inference-endpoint-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.inference-endpoint-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the inference endpoint for the chat model.
+
+When using Hugging Face with the inference API, the URL is `https://api-inference.huggingface.co/models/<model-id>`, for example `https://api-inference.huggingface.co/models/google/flan-t5-small`.
+
+When using a deployed inference endpoint, the URL is the URL of the endpoint. When using a local hugging face model, the URL is the URL of the local model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_INFERENCE_ENDPOINT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_INFERENCE_ENDPOINT_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
+|`+++https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-temperature[`+++quarkus."model-name".chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Float (0.0-100.0). The temperature of the sampling operation. 1 means regular sampling, 0 means always take the highest score, 100.0 is getting closer to uniform probability
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature:1.0}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-max-new-tokens[`+++quarkus."model-name".chat-model.max-new-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.max-new-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Int (0-250). The amount of new tokens to be generated, this does not include the input length it is a estimate of the size of generated text you want. Each new tokens slows down the request, so look for balance between response times and length of text generated
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_NEW_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_NEW_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-return-full-text]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-return-full-text[`+++quarkus."model-name".chat-model.return-full-text+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.return-full-text+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to `false`, the return results will not contain the original query making it easier for prompting
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_RETURN_FULL_TEXT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_RETURN_FULL_TEXT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-wait-for-model]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-wait-for-model[`+++quarkus."model-name".chat-model.wait-for-model+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.wait-for-model+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your inference done. It is advised to only set this flag to true after receiving a 503 error as it will limit hanging in your application to known places
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_WAIT_FOR_MODEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_WAIT_FOR_MODEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-do-sample]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-do-sample[`+++quarkus."model-name".chat-model.do-sample+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.do-sample+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether or not to use sampling ; use greedy decoding otherwise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_DO_SAMPLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_DO_SAMPLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-top-k[`+++quarkus."model-name".chat-model.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The number of highest probability vocabulary tokens to keep for top-k-filtering.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-top-p[`+++quarkus."model-name".chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to less than `1`, only the most probable tokens with probabilities that add up to `top_p` or higher are kept for generation.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-repetition-penalty[`+++quarkus."model-name".chat-model.repetition-penalty+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.repetition-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The parameter for repetition penalty. 1.0 means no penalty. See link:https://arxiv.org/pdf/1909.05858.pdf[this paper] for more details.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_REPETITION_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_REPETITION_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-log-requests[`+++quarkus."model-name".chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-chat-model-log-responses[`+++quarkus."model-name".chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-embedding-model-inference-endpoint-url]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-embedding-model-inference-endpoint-url[`+++quarkus."model-name".embedding-model.inference-endpoint-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.inference-endpoint-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The URL of the inference endpoint for the embedding.
+
+When using Hugging Face with the inference API, the URL is `https://api-inference.huggingface.co/pipeline/feature-extraction/<model-id>`, for example `https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-mpnet-base-v2`.
+
+When using a deployed inference endpoint, the URL is the URL of the endpoint. When using a local hugging face model, the URL is the URL of the local model.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_INFERENCE_ENDPOINT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_INFERENCE_ENDPOINT_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
+|`+++https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-embedding-model-wait-for-model]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-embedding-model-wait-for-model[`+++quarkus."model-name".embedding-model.wait-for-model+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.wait-for-model+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your inference done. It is advised to only set this flag to true after receiving a 503 error as it will limit hanging in your application to known places
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_WAIT_FOR_MODEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_WAIT_FOR_MODEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-log-requests[`+++quarkus."model-name".log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the HuggingFace client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-log-responses[`+++quarkus."model-name".log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the HuggingFace client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hugging-face_quarkus-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-model-name-enable-integration[`+++quarkus."model-name".enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-hugging-face_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

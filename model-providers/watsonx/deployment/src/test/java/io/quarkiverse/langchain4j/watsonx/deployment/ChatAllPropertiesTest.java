@@ -29,7 +29,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.ibm.watsonx.ai.chat.model.ChatParameters.ResponseFormat;
+import com.ibm.watsonx.ai.chat.model.BaseChatParameters.ResponseFormat;
 import com.ibm.watsonx.ai.chat.model.ThinkingEffort;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -167,15 +167,15 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         assertEquals(true, runtimeConfig.chatModel().logRequestsCurl().orElse(false));
         assertEquals("2015-02-13", runtimeConfig.version().orElse(null));
         assertEquals("my_super_model", runtimeConfig.chatModel().modelName());
-        assertEquals(2.0, runtimeConfig.chatModel().frequencyPenalty());
-        assertEquals(true, runtimeConfig.chatModel().logprobs());
+        assertEquals(2.0, runtimeConfig.chatModel().frequencyPenalty().orElse(null));
+        assertEquals(true, runtimeConfig.chatModel().logprobs().orElse(null));
         assertEquals(2, runtimeConfig.chatModel().topLogprobs().orElse(null));
         assertEquals(200, runtimeConfig.chatModel().maxOutputTokens());
-        assertEquals(2.0, runtimeConfig.chatModel().presencePenalty());
+        assertEquals(2.0, runtimeConfig.chatModel().presencePenalty().orElse(null));
         assertEquals(41, runtimeConfig.chatModel().seed().orElse(null));
         assertEquals(List.of("word1", "word2"), runtimeConfig.chatModel().stop().orElse(null));
         assertEquals(1.5, runtimeConfig.chatModel().temperature());
-        assertEquals(0.5, runtimeConfig.chatModel().topP());
+        assertEquals(0.5, runtimeConfig.chatModel().topP().orElse(null));
         assertEquals(ResponseFormat.JSON, runtimeConfig.chatModel().responseFormat().orElse(null));
         assertEquals(ToolChoice.REQUIRED, runtimeConfig.chatModel().toolChoice().orElse(null));
         assertEquals("my_function", runtimeConfig.chatModel().toolChoiceName().orElse(null));

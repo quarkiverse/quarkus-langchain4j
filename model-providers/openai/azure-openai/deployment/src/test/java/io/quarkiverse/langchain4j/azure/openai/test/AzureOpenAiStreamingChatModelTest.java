@@ -89,5 +89,8 @@ public class AzureOpenAiStreamingChatModelTest extends WiremockAware {
                 .isNotNull()
                 .isEqualTo("Hallo Welt!");
 
+        assertThat(new String(requestBodyOfSingleRequest()))
+                .doesNotContain("\"temperature\"")
+                .doesNotContain("\"top_p\"");
     }
 }

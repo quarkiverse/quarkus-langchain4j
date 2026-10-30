@@ -12,6 +12,7 @@
 
     <modules>
         <module>chroma</module>
+        <module>hibernate</module>
         <module>infinispan</module>
         <module>milvus</module>
         <module>neo4j</module>

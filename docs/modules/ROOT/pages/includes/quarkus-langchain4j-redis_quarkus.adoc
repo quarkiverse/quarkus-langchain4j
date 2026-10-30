@@ -1,0 +1,461 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-default-store-enabled[`+++quarkus.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Redis embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-client-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-client-name[`+++quarkus.client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Redis client to use. These clients are configured by means of the `redis-client` extension. If unspecified, it will use the default Redis client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-dimension]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-dimension[`+++quarkus.dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384. OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|long
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-index-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-index-name[`+++quarkus.index-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.index-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the index that will be used in Redis when searching for related embeddings. If this index doesn't exist, it will be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_INDEX_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_INDEX_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embedding-index+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-textual-metadata-fields]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-textual-metadata-fields[`+++quarkus.textual-metadata-fields+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.textual-metadata-fields+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Names of fields that will store textual metadata associated with embeddings. NOTE: Filtering based on textual metadata fields is not supported at the moment.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TEXTUAL_METADATA_FIELDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TEXTUAL_METADATA_FIELDS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-numeric-metadata-fields]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-numeric-metadata-fields[`+++quarkus.numeric-metadata-fields+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.numeric-metadata-fields+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Names of fields that will store numeric metadata associated with embeddings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_NUMERIC_METADATA_FIELDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_NUMERIC_METADATA_FIELDS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-distance-metric]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-distance-metric[`+++quarkus.distance-metric+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.distance-metric+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metric used to compute the distance between two vectors.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_DISTANCE_METRIC+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_DISTANCE_METRIC+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`cosine`, `ip`, `l2`
+|`+++cosine+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-vector-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-vector-field-name[`+++quarkus.vector-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.vector-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the key that will be used to store the embedding vector.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VECTOR_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VECTOR_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++vector+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-scalar-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-scalar-field-name[`+++quarkus.scalar-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scalar-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the key that will be used to store the embedded text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCALAR_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCALAR_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++scalar+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-prefix]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-prefix[`+++quarkus.prefix+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.prefix+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Prefix to be applied to all keys by the embedding store. Embeddings are stored in Redis under a key that is the concatenation of this prefix and the embedding ID.
+
+If the configured prefix does not ends with `:`, it will be added automatically to follow the Redis convention.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_PREFIX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_PREFIX+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embedding:+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-vector-algorithm]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-vector-algorithm[`+++quarkus.vector-algorithm+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.vector-algorithm+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Algorithm used to index the embedding vectors.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_VECTOR_ALGORITHM+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_VECTOR_ALGORITHM+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`flat`, `hnsw`
+|`+++hnsw+++`
+
+h|[[quarkus-langchain4j-redis_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-redis_section_quarkus[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-client-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-client-name[`+++quarkus."store-name".client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Redis client to use. These clients are configured by means of the `redis-client` extension. If not set, the default Redis client will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++<default>+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-dimension]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-dimension[`+++quarkus."store-name".dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384. OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|long
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-index-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-index-name[`+++quarkus."store-name".index-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".index-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the index that will be used in Redis when searching for related embeddings. If this index doesn't exist, it will be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__INDEX_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__INDEX_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embedding-index+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-textual-metadata-fields]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-textual-metadata-fields[`+++quarkus."store-name".textual-metadata-fields+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".textual-metadata-fields+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Names of fields that will store textual metadata associated with embeddings. NOTE: Filtering based on textual metadata fields is not supported at the moment.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__TEXTUAL_METADATA_FIELDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__TEXTUAL_METADATA_FIELDS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-numeric-metadata-fields]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-numeric-metadata-fields[`+++quarkus."store-name".numeric-metadata-fields+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".numeric-metadata-fields+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Names of fields that will store numeric metadata associated with embeddings.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__NUMERIC_METADATA_FIELDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__NUMERIC_METADATA_FIELDS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-distance-metric]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-distance-metric[`+++quarkus."store-name".distance-metric+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".distance-metric+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Metric used to compute the distance between two vectors.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__DISTANCE_METRIC+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__DISTANCE_METRIC+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`cosine`, `ip`, `l2`
+|`+++cosine+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-vector-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-vector-field-name[`+++quarkus."store-name".vector-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".vector-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the key that will be used to store the embedding vector.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__VECTOR_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__VECTOR_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++vector+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-scalar-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-scalar-field-name[`+++quarkus."store-name".scalar-field-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".scalar-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the key that will be used to store the embedded text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__SCALAR_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__SCALAR_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++scalar+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-prefix]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-prefix[`+++quarkus."store-name".prefix+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".prefix+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Prefix to be applied to all keys by the embedding store. Embeddings are stored in Redis under a key that is the concatenation of this prefix and the embedding ID.
+
+If the configured prefix does not ends with `:`, it will be added automatically to follow the Redis convention.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__PREFIX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__PREFIX+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embedding:+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-store-name-vector-algorithm]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-store-name-vector-algorithm[`+++quarkus."store-name".vector-algorithm+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."store-name".vector-algorithm+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Algorithm used to index the embedding vectors.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__STORE_NAME__VECTOR_ALGORITHM+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__STORE_NAME__VECTOR_ALGORITHM+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`flat`, `hnsw`
+|`+++hnsw+++`
+
+
+|===
+

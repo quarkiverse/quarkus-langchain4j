@@ -41,8 +41,6 @@ public class ChatModelITTest {
     static final String API_KEY = System.getenv("WATSONX_API_KEY");
     static final String PROJECT_ID = System.getenv("WATSONX_PROJECT_ID");
     static final String URL = System.getenv("WATSONX_URL");
-    static final String DEPLOYMENT_ID = System.getenv("WATSONX_DEPLOYMENT_ID");
-    static final String GRANITE_3_3_DEPLOYMENT_ID = System.getenv("WATSONX_GRANITE_3_3_DEPLOYMENT_ID");
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -51,17 +49,6 @@ public class ChatModelITTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.timeout", "30s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"wrong-key\".api-key", "wrong-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.deployment-id",
-                    GRANITE_3_3_DEPLOYMENT_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.think.opening",
-                    "<think>")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.think.closing",
-                    "</think>")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.response.opening",
-                    "<response>")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"think-model\".chat-model.thinking.tags.response.closing",
-                    "</response>")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.\"deployment\".chat-model.deployment-id", DEPLOYMENT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
@@ -70,14 +57,6 @@ public class ChatModelITTest {
     @Inject
     @ModelName("wrong-key")
     ChatModel wrongKeyChatModel;
-
-    @Inject
-    @ModelName("think-model")
-    ChatModel thinkingChatModel;
-
-    @Inject
-    @ModelName("deployment")
-    ChatModel deploymentChatModel;
 
     @Test
     void test_chat() {
@@ -166,27 +145,6 @@ public class ChatModelITTest {
     }
 
     @Test
-    void test_chat_thinking() {
-
-        ChatRequest request = ChatRequest.builder()
-                .messages(UserMessage.from("Why the sky is blue?"))
-                .build();
-
-        var chatResponse = assertDoesNotThrow(() -> thinkingChatModel.chat(request));
-        var text = chatResponse.aiMessage().text();
-
-        assertNotNull(chatResponse);
-        assertNotNull(text);
-        assertFalse(text.isBlank());
-        assertFalse(text.contains("<think>") && text.contains("</think>"));
-        assertFalse(text.contains("<response>") && text.contains("</response>"));
-
-        var thinkingMessage = chatResponse.aiMessage().thinking();
-        assertNotNull(thinkingMessage);
-        assertFalse(thinkingMessage.isBlank());
-    }
-
-    @Test
     void test_chat_tool_without_params() {
 
         ChatRequest request = ChatRequest.builder()
@@ -248,18 +206,5 @@ public class ChatModelITTest {
 
         var ex = assertThrows(LangChain4jException.class, () -> wrongKeyChatModel.chat(request));
         assertTrue(ex.getMessage().contains("Provided API key could not be found."));
-    }
-
-    @Test
-    @EnabledIfEnvironmentVariable(named = "WATSONX_DEPLOYMENT_ID", matches = ".+")
-    void test_chat_with_deployment_id() {
-
-        ChatRequest request = ChatRequest.builder()
-                .messages(UserMessage.from("Hello!"))
-                .build();
-
-        var chatResponse = assertDoesNotThrow(() -> deploymentChatModel.chat(request));
-        var assistantMessage = chatResponse.aiMessage();
-        assertTrue(!assistantMessage.text().isBlank());
     }
 }

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.testing.evaluation;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A strategy to evaluate the output of a model.
  * <p>
@@ -44,5 +46,49 @@ public interface EvaluationStrategy<T> {
      * @return the evaluation result
      */
     EvaluationResult evaluate(EvaluationSample<T> sample, T output);
+
+    /**
+     * Whether this strategy is advisory.
+     * <p>
+     * An advisory strategy is run on every sample and its results are part of the report, but they do not count
+     * toward the score, the confidence interval or the assertions. Use it for checks whose verdict is informative
+     * but too noisy to fail a build on its own, typically an AI judge.
+     * </p>
+     *
+     * @return {@code true} if the results of this strategy must not affect the score, {@code false} by default
+     */
+    default boolean isAdvisory() {
+        return false;
+    }
+
+    /**
+     * Wrap a strategy so that its results are reported but do not affect the score, see {@link #isAdvisory()}.
+     *
+     * @param strategy the strategy to wrap, must not be {@code null}
+     * @param <T> the type of the output
+     * @return an advisory strategy delegating to the given one, or the strategy itself if it is already advisory
+     */
+    static <T> EvaluationStrategy<T> toAdvisory(EvaluationStrategy<T> strategy) {
+        requireNonNull(strategy, "strategy must not be null");
+        if (strategy.isAdvisory()) {
+            return strategy;
+        }
+        return new EvaluationStrategy<>() {
+            @Override
+            public EvaluationResult evaluate(EvaluationSample<T> sample, T output) {
+                return strategy.evaluate(sample, output);
+            }
+
+            @Override
+            public boolean isAdvisory() {
+                return true;
+            }
+
+            @Override
+            public String toString() {
+                return "advisory(" + strategy + ")";
+            }
+        };
+    }
 
 }

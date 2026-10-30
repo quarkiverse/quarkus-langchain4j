@@ -24,7 +24,22 @@ public class WireMockUtil {
     public static final String URL_WATSONX_TEXT_EXTRACTION_START_API = "/ml/v1/text/extractions";
     public static final String URL_WATSONX_TEXT_EXTRACTION_RESULT_API = "/ml/v1/text/extractions/%s";
     public static final String URL_WATSONX_TEXT_CLASSIFICATION_START_API = "/ml/v1/text/classifications";
+    public static final String URL_WATSONX_CREATE_SCHEMA_API = "/ml/v1/text/schemas/create";
+    public static final String URL_WATSONX_CREATE_SCHEMA_RESULT_API = "/ml/v1/text/schemas/create/%s";
+    public static final String URL_WATSONX_IMPROVE_SCHEMA_API = "/ml/v1/text/schemas/improve";
+    public static final String URL_WATSONX_IMPROVE_SCHEMA_RESULT_API = "/ml/v1/text/schemas/improve/%s";
+    public static final String URL_WATSONX_MERGE_SCHEMA_API = "/ml/v1/text/schemas/merge";
+    public static final String URL_WATSONX_MERGE_SCHEMA_RESULT_API = "/ml/v1/text/schemas/merge/%s";
+    public static final String URL_WATSONX_CLUSTER_SCHEMA_API = "/ml/v1/text/schemas/cluster";
+    public static final String URL_WATSONX_CLUSTER_SCHEMA_RESULT_API = "/ml/v1/text/schemas/cluster/%s";
     public static final String URL_WATSONX_MODERATION_API = "/ml/v1/text/detection";
+    public static final String URL_WATSONX_GATEWAY_CHAT_API = "/ml/gateway/v1/chat/completions";
+    public static final String URL_WATSONX_GATEWAY_MODELS_API = "/ml/gateway/v1/models";
+    public static final String URL_WATSONX_GATEWAY_MODEL_API = "/ml/gateway/v1/models/%s";
+    public static final String URL_WATSONX_GATEWAY_EMBEDDING_API = "/ml/gateway/v1/embeddings";
+    public static final String URL_WATSONX_GATEWAY_IMAGE_API = "/ml/gateway/v1/images/generations";
+    public static final String URL_WATSONX_DEPLOYMENT_CHAT_API = "/ml/v1/deployments/%s/text/chat";
+    public static final String URL_WATSONX_DEPLOYMENT_CHAT_STREAMING_API = "/ml/v1/deployments/%s/text/chat_stream";
 
     public static final int PORT_IAM_SERVER = 8090;
     public static final String URL_IAM_SERVER = "http://localhost:8090";
@@ -43,7 +58,11 @@ public class WireMockUtil {
     public static final String GRANT_TYPE = "urn:ibm:params:oauth:grant-type:apikey";
     public static final String VERSION = "2026-03-18";
     public static final String DEFAULT_CHAT_MODEL = "ibm/granite-4-h-small";
+    public static final String DEFAULT_GATEWAY_CHAT_MODEL = "openai/gpt-4o-mini";
+    public static final String DEFAULT_DEPLOYMENT_ID = "my-deployment-id";
     public static final String DEFAULT_EMBEDDING_MODEL = "ibm/granite-embedding-278m-multilingual";
+    public static final String DEFAULT_GATEWAY_EMBEDDING_MODEL = "openai/text-embedding-3-small";
+    public static final String DEFAULT_GATEWAY_IMAGE_MODEL = "openai/gpt-image-1";
     public static final String DEFAULT_SCORING_MODEL = "cross-encoder/ms-marco-minilm-l-12-v2";
     public static final String IAM_200_RESPONSE = """
             {
@@ -144,6 +163,124 @@ public class WireMockUtil {
             event: message
             data: {"id":"chatcmpl-5d8c131decbb6978cba5df10267aa3ff","object":"chat.completion.chunk","model_id":"meta-llama/llama-4-maverick-17b-128e-instruct-fp8","model":"meta-llama/llama-4-maverick-17b-128e-instruct-fp8","choices":[],"created":1749736055,"model_version":"4.0.0","created_at":"2025-06-12T13:47:35.564Z","usage":{"completion_tokens":3,"prompt_tokens":38,"total_tokens":41}}
 
+            """;
+    public static String RESPONSE_WATSONX_GATEWAY_CHAT_API = """
+            {
+                "id": "chatcmpl-8f9b1a2c3d4e5f60718293a4b5c6d7e8",
+                "object": "chat.completion",
+                "model": "openai/gpt-4o-mini",
+                "created": 1689958352,
+                "service_tier": "default",
+                "system_fingerprint": "fp_44709d6fcb",
+                "cached": false,
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "AI Response"
+                    },
+                    "finish_reason": "stop"
+                }],
+                "usage": {
+                    "completion_tokens": 47,
+                    "prompt_tokens": 59,
+                    "total_tokens": 106
+                }
+            }""";
+    public static String RESPONSE_WATSONX_GATEWAY_CHAT_STREAMING_API = """
+            id: 1
+            event: message
+            data: {"id":"chatcmpl-8f9b1a2c3d4e5f60718293a4b5c6d7e8","object":"chat.completion.chunk","model":"openai/gpt-4o-mini","created":1689958352,"choices":[{"index":0,"finish_reason":null,"delta":{"role":"assistant","content":""}}]}
+
+            id: 2
+            event: message
+            data: {"id":"chatcmpl-8f9b1a2c3d4e5f60718293a4b5c6d7e8","object":"chat.completion.chunk","model":"openai/gpt-4o-mini","created":1689958352,"choices":[{"index":0,"finish_reason":null,"delta":{"content":"He"}}]}
+
+            id: 3
+            event: message
+            data: {"id":"chatcmpl-8f9b1a2c3d4e5f60718293a4b5c6d7e8","object":"chat.completion.chunk","model":"openai/gpt-4o-mini","created":1689958352,"choices":[{"index":0,"finish_reason":null,"delta":{"content":"llo"}}]}
+
+            id: 4
+            event: message
+            data: {"id":"chatcmpl-8f9b1a2c3d4e5f60718293a4b5c6d7e8","object":"chat.completion.chunk","model":"openai/gpt-4o-mini","created":1689958352,"choices":[{"index":0,"finish_reason":"stop","delta":{"content":""}}]}
+
+            id: 5
+            event: message
+            data: {"id":"chatcmpl-8f9b1a2c3d4e5f60718293a4b5c6d7e8","object":"chat.completion.chunk","model":"openai/gpt-4o-mini","created":1689958352,"choices":[],"usage":{"completion_tokens":3,"prompt_tokens":38,"total_tokens":41}}
+
+            id: 6
+            event: message
+            data: [DONE]
+
+            """;
+    public static String RESPONSE_WATSONX_GATEWAY_EMBEDDING_API = """
+            {
+                "object": "list",
+                "model": "openai/text-embedding-3-small",
+                "data": [
+                  {
+                    "object": "embedding",
+                    "index": 0,
+                    "embedding": [
+                      -0.006929283,
+                      -0.005336422,
+                      -0.024047505
+                    ]
+                  }
+                ],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "total_tokens": 10
+                }
+            }
+            """;
+    public static String RESPONSE_WATSONX_GATEWAY_IMAGE_API = """
+            {
+                "created": 1689958352,
+                "background": "opaque",
+                "output_format": "png",
+                "quality": "high",
+                "size": "1024x1024",
+                "data": [
+                  {
+                    "b64_json": "aGVsbG8gd29ybGQ=",
+                    "revised_prompt": "A futuristic city at sunset, revised"
+                  }
+                ],
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 20,
+                    "total_tokens": 30,
+                    "input_tokens_details": {
+                        "image_tokens": 0,
+                        "text_tokens": 10
+                    }
+                }
+            }
+            """;
+    public static String RESPONSE_WATSONX_GATEWAY_IMAGE_API_URL = """
+            {
+                "created": 1689958352,
+                "background": "opaque",
+                "output_format": "png",
+                "quality": "high",
+                "size": "1024x1024",
+                "data": [
+                  {
+                    "url": "https://example.com/image.png",
+                    "revised_prompt": "A futuristic city at sunset, revised"
+                  }
+                ],
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 20,
+                    "total_tokens": 30,
+                    "input_tokens_details": {
+                        "image_tokens": 0,
+                        "text_tokens": 10
+                    }
+                }
+            }
             """;
     public static final String RESPONSE_WATSONX_TOKENIZER_API = """
               {

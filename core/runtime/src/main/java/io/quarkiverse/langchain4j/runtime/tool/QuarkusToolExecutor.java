@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -126,8 +127,10 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 invocationResult = ((Uni<?>) invocationResult).await().indefinitely();
             }
             if (invocationResult instanceof ToolExecutionResult ter) {
-                log.debugv("Tool execution result passed through. result: {0} | resultText: {1}", ter.result(),
-                        ter.resultText());
+                // resultContents(), not resultText(): the latter throws when the tool returned image or
+                // multiple content elements, and debugv evaluates its arguments eagerly
+                log.debugv("Tool execution result passed through. result: {0} | resultContents: {1}", ter.result(),
+                        ter.resultContents());
                 return ter;
             }
             String result = handleResult(invokerInstance, invocationResult);
@@ -144,11 +147,25 @@ public class QuarkusToolExecutor implements ToolExecutor {
         throw (E) e;
     }
 
+    /**
+     * Converts a tool invocation result into the text sent back to the model, mirroring
+     * {@code DefaultToolExecutor}: {@code void} becomes {@code "Success"}, a {@link String} is passed through
+     * unchanged, anything else is JSON-encoded. A {@code Uni<String>} is passed through as well, since it has
+     * already been resolved to its item by the time this is called.
+     */
     private static String handleResult(ToolInvoker invokerInstance, Object invocationResult) {
         if (invokerInstance.methodMetadata().isReturnsVoid()) {
             return "Success";
         }
-        return Json.toJson(invocationResult);
+        if (invocationResult instanceof String string) {
+            return string;
+        }
+        try {
+            // Keep tool results compact without changing the general JSON codec's formatting.
+            return QuarkusJsonCodecFactory.ObjectMapperHolder.COMPACT_WRITER.writeValueAsString(invocationResult);
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     // TODO: cache
@@ -229,6 +246,9 @@ public class QuarkusToolExecutor implements ToolExecutor {
         Object invocationParams = invocationContext.invocationParameters();
         if (invocationParams != null && methodMetadata.getInvocationParamsParamPosition() != null) {
             finalArgs[methodMetadata.getInvocationParamsParamPosition()] = invocationParams;
+        }
+        if (methodMetadata.getInvocationContextParamPosition() != null) {
+            finalArgs[methodMetadata.getInvocationContextParamPosition()] = invocationContext;
         }
         return finalArgs;
     }

@@ -28,6 +28,7 @@
         <module>openai/openai-vanilla</module>
         <module>openai/testing-internal</module>
         <module>openshift-ai</module>
+        <module>typesafe</module>
         <module>watsonx</module>
     </modules>
 
@@ -38,17 +39,16 @@
                 <jdk>[21,)</jdk>
             </activation>
             <modules>
-                <module>jlama</module>
-                <module>gpu-llama3</module>
+                <module>jitllm</module>
             </modules>
         </profile>
         <profile>
-            <id>jdk22-plus</id>
+            <id>jdk25-plus</id>
             <activation>
-                <jdk>[22,)</jdk>
+                <jdk>[25,)</jdk>
             </activation>
             <modules>
-                <module>llama3-java</module>
+                <module>jinfer</module>
             </modules>
         </profile>
     </profiles>

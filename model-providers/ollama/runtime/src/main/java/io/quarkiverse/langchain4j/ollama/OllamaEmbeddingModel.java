@@ -8,6 +8,7 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.output.TokenUsage;
 
 public class OllamaEmbeddingModel implements EmbeddingModel {
 
@@ -27,8 +28,9 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
         List<Embedding> embeddings = new ArrayList<>();
+        TokenUsage tokenUsage = null;
 
-        textSegments.forEach(textSegment -> {
+        for (TextSegment textSegment : textSegments) {
             EmbeddingRequest request = EmbeddingRequest.builder()
                     .model(model)
                     .input(textSegment.text())
@@ -39,9 +41,13 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
             for (float[] embedding : response.getEmbeddings()) {
                 embeddings.add(Embedding.from(embedding));
             }
-        });
 
-        return Response.from(embeddings);
+            if (response.getPromptEvalCount() != null) {
+                tokenUsage = TokenUsage.sum(tokenUsage, new TokenUsage(response.getPromptEvalCount()));
+            }
+        }
+
+        return Response.from(embeddings, tokenUsage);
     }
 
     public static final class Builder {

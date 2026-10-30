@@ -276,6 +276,11 @@ class AzureOpenAiRecorderEndpointTests {
                 }
 
                 @Override
+                public Optional<String> reasoningEffort() {
+                    return Optional.empty();
+                }
+
+                @Override
                 public Double presencePenalty() {
                     return null;
                 }

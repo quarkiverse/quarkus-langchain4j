@@ -1,0 +1,392 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-scoring-model-enabled]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-scoring-model-enabled[`+++quarkus.scoring-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scoring-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the scoring model should be enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCORING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCORING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-base-url]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-base-url[`+++quarkus.base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the Cohere API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.cohere.com/+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-api-key[`+++quarkus.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cohere API key.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-timeout[`+++quarkus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Cohere calls.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-scoring-model-model-name[`+++quarkus.scoring-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scoring-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reranking model to use. The current list of supported models can be found in the link:https://docs.cohere.com/docs/models[Cohere docs]
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCORING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCORING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++rerank-multilingual-v2.0+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-scoring-model-timeout[`+++quarkus.scoring-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scoring-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Cohere calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCORING_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCORING_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++30S+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-scoring-model-log-requests[`+++quarkus.scoring-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scoring-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCORING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCORING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-scoring-model-log-responses[`+++quarkus.scoring-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scoring-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCORING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCORING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-scoring-model-max-retries[`+++quarkus.scoring-model.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.scoring-model.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of times to retry. 1 means exactly one attempt, with retrying disabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_SCORING_MODEL_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_SCORING_MODEL_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1+++`
+
+h|[[quarkus-langchain4j-cohere_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-cohere_section_quarkus[Named model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-base-url[`+++quarkus."model-name".base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the Cohere API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.cohere.com/+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-api-key[`+++quarkus."model-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cohere API key.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-timeout[`+++quarkus."model-name".timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Cohere calls.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-model-name[`+++quarkus."model-name".scoring-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".scoring-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Reranking model to use. The current list of supported models can be found in the link:https://docs.cohere.com/docs/models[Cohere docs]
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__SCORING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__SCORING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++rerank-multilingual-v2.0+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-timeout[`+++quarkus."model-name".scoring-model.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".scoring-model.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Cohere calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__SCORING_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__SCORING_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++30S+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-log-requests[`+++quarkus."model-name".scoring-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".scoring-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__SCORING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__SCORING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-log-responses[`+++quarkus."model-name".scoring-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".scoring-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__SCORING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__SCORING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-model-name-scoring-model-max-retries[`+++quarkus."model-name".scoring-model.max-retries+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".scoring-model.max-retries+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of times to retry. 1 means exactly one attempt, with retrying disabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__SCORING_MODEL_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__SCORING_MODEL_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1+++`
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-cohere_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

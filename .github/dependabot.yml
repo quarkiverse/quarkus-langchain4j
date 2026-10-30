@@ -9,14 +9,32 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+      time: "20:00"
     ignore:
       # don't update Quarkus as we want the extension to depend on the minimum working version, thus allowing for inclusion of the extension in tooling for older Quarkus versions
       - dependency-name: io.quarkus:*
       # don't update LangChain4j as we need to do that manually
       - dependency-name: dev.langchain4j:*
+  # for the 1.13 branch which is used in Quarkus 3.40 LTS
+  - package-ecosystem: "maven" 
+    directory: "/" 
+    target-branch: "1.13"
+    allow:
+      - dependency-name: "*"
+        update-types: 
+          - "version-update:semver-patch"
+    commit-message:
+      prefix: "[1.13] "
+    schedule:
+      interval: "daily"
+      time: "20:00"
+    ignore:
+      - dependency-name: io.quarkus:*
+      - dependency-name: dev.langchain4j:*
   - package-ecosystem: "maven"
     directory: "/samples"
     schedule:
       interval: daily
+      time: "20:00"
     allow:
       - dependency-name: io.quarkiverse.*:*

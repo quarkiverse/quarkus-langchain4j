@@ -1,0 +1,992 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-enabled[`+++quarkus.chat-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-embedding-model-enabled[`+++quarkus.embedding-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-moderation-model-enabled[`+++quarkus.moderation-model.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.moderation-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MODERATION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MODERATION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-base-url[`+++quarkus.base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of Mistral API
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.mistral.ai/v1/+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-api-key[`+++quarkus.api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Mistral API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-timeout[`+++quarkus.timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Mistral calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mistral-ai_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-model-name[`+++quarkus.chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-tiny+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-temperature[`+++quarkus.chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-max-tokens[`+++quarkus.chat-model.max-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-top-p[`+++quarkus.chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-safe-prompt[`+++quarkus.chat-model.safe-prompt+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.safe-prompt+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to inject a safety prompt before all conversations
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_SAFE_PROMPT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_SAFE_PROMPT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-random-seed[`+++quarkus.chat-model.random-seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.random-seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The seed to use for random sampling. If set, different calls will generate deterministic results.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_RANDOM_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_RANDOM_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-log-requests[`+++quarkus.chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-chat-model-log-responses[`+++quarkus.chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-embedding-model-model-name[`+++quarkus.embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-embed+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-embedding-model-log-requests[`+++quarkus.embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-embedding-model-log-responses[`+++quarkus.embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-moderation-model-model-name[`+++quarkus.moderation-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.moderation-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MODERATION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MODERATION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-moderation-latest+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-moderation-model-log-requests[`+++quarkus.moderation-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.moderation-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-moderation-model-log-responses[`+++quarkus.moderation-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.moderation-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_MODERATION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-log-requests[`+++quarkus.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-log-responses[`+++quarkus.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-log-requests-curl[`+++quarkus.log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests-curl}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-enable-integration[`+++quarkus.enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+h|[[quarkus-langchain4j-mistral-ai_section_quarkus]] [.section-name.section-level0]##link:#quarkus-langchain4j-mistral-ai_section_quarkus[Named model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-base-url[`+++quarkus."model-name".base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of Mistral API
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++https://api.mistral.ai/v1/+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-api-key[`+++quarkus."model-name".api-key+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Mistral API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++dummy+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-timeout[`+++quarkus."model-name".timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Mistral calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mistral-ai_quarkus[icon:question-circle[title=More information about the Duration format]]
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-model-name[`+++quarkus."model-name".chat-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-tiny+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-temperature[`+++quarkus."model-name".chat-model.temperature+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++${quarkus.langchain4j.temperature}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-max-tokens[`+++quarkus."model-name".chat-model.max-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-top-p[`+++quarkus."model-name".chat-model.top-p+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-safe-prompt]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-safe-prompt[`+++quarkus."model-name".chat-model.safe-prompt+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.safe-prompt+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to inject a safety prompt before all conversations
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_SAFE_PROMPT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_SAFE_PROMPT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-random-seed[`+++quarkus."model-name".chat-model.random-seed+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.random-seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The seed to use for random sampling. If set, different calls will generate deterministic results.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_RANDOM_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_RANDOM_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-log-requests[`+++quarkus."model-name".chat-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-chat-model-log-responses[`+++quarkus."model-name".chat-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-embedding-model-model-name[`+++quarkus."model-name".embedding-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-embed+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-embedding-model-log-requests[`+++quarkus."model-name".embedding-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-embedding-model-log-responses[`+++quarkus."model-name".embedding-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.mistralai.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-moderation-model-model-name[`+++quarkus."model-name".moderation-model.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".moderation-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__MODERATION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__MODERATION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++mistral-moderation-latest+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-moderation-model-log-requests[`+++quarkus."model-name".moderation-model.log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".moderation-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-moderation-model-log-responses[`+++quarkus."model-name".moderation-model.log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".moderation-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether moderation model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-log-requests[`+++quarkus."model-name".log-requests+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-log-responses[`+++quarkus."model-name".log-responses+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-responses}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-log-requests-curl[`+++quarkus."model-name".log-requests-curl+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Mistral client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++${quarkus.langchain4j.log-requests-curl}+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-model-name-enable-integration[`+++quarkus."model-name".enable-integration+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-mistral-ai_quarkus]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

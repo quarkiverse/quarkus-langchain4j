@@ -13,20 +13,20 @@ You can use system or env properties, see `Running the Demo` section below.
 When the application starts, 5 transactions with random amounts between 1 and 1000 are generated for the registered user.
 A random city is also assigned to each transaction.
 
-The setup is defined in the [Setup.java](./src/main/java/io/quarkiverse/langchain4j/samples/Setup.java) class.
+The setup is defined in the [Setup.java](./src/main/java/io/quarkiverse/langchain4j/sample/Setup.java) class.
 
 The registered user and transactions are stored in a PostgreSQL database. When running the demo in dev mode (recommended), the database is automatically created and populated.
 
 ### Content Retrieval
 
-To enable fraud detection, we provide the LLM with access to the custom [FraudDetectionContentRetriever](./src/main/java/io/quarkiverse/langchain4j/samples/FraudDetectionContentRetriever.java) content retriever.
+To enable fraud detection, we provide the LLM with access to the custom [FraudDetectionContentRetriever](./src/main/java/io/quarkiverse/langchain4j/sample/FraudDetectionContentRetriever.java) content retriever.
 
-`FraudDetectionContentRetriever` is registered by [FraudDetectionRetrievalAugmentor](./src/main/java/io/quarkiverse/langchain4j/samples/FraudDetectionRetrievalAugmentor.java).
+`FraudDetectionContentRetriever` is registered by [FraudDetectionRetrievalAugmentor](./src/main/java/io/quarkiverse/langchain4j/sample/FraudDetectionRetrievalAugmentor.java).
 
 It can only be accessed securely, and it retrieves transaction data for the currently authenticated user through two Panache repositories:
 
-- [CustomerRepository.java](./src/main/java/io/quarkiverse/langchain4j/samples/CustomerRepository.java)
-- [TransactionRepository.java](./src/main/java/io/quarkiverse/langchain4j/samples/TransactionRepository.java)
+- [CustomerRepository.java](./src/main/java/io/quarkiverse/langchain4j/sample/CustomerRepository.java)
+- [TransactionRepository.java](./src/main/java/io/quarkiverse/langchain4j/sample/TransactionRepository.java)
 
 It extracts the authenticated user's name and email from an injected `JsonWebToken` ID token.
 

@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.testing.evaluation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -18,6 +20,66 @@ class ScorerTest {
         if (scorer != null) {
             scorer.close();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void throwingAdvisoryStrategyShouldNotBlock() {
+        scorer = new Scorer(1);
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> judge = (s, actual) -> {
+            throw new IllegalStateException("judge timed out");
+        };
+        EvaluationStrategy<String> exact = (s, actual) -> EvaluationResult.fromBoolean(true);
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> "expected",
+                EvaluationStrategy.toAdvisory(judge), exact);
+
+        assertThat(report.evaluations()).hasSize(2);
+        Scorer.EvaluationResult<String> judgeResult = report.evaluations().get(0);
+        assertThat(judgeResult.advisory()).isTrue();
+        assertThat(judgeResult.passed()).isFalse();
+        assertThat(judgeResult.result()).isEqualTo("expected");
+        assertThat(judgeResult.thrown()).isInstanceOf(IllegalStateException.class);
+        assertThat(report.evaluations().get(1).passed()).isTrue();
+        assertThat(report.score()).isEqualTo(100.0);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void throwingFunctionShouldBlockEvenWithAdvisoryStrategies() {
+        scorer = new Scorer(1);
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> judge = (s, actual) -> EvaluationResult.fromBoolean(true);
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> {
+            throw new IllegalStateException("boom");
+        }, EvaluationStrategy.toAdvisory(judge));
+
+        assertThat(report.evaluations()).hasSize(1);
+        assertThat(report.evaluations().get(0).advisory()).isFalse();
+        assertThat(report.evaluations().get(0).thrown()).isNotNull();
+        assertThat(report.score()).isEqualTo(0.0);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void advisoryStrategyShouldBeReportedButNotScored() {
+        scorer = new Scorer(1);
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> blocking = (s, actual) -> EvaluationResult.fromBoolean(true);
+        EvaluationStrategy<String> judge = (s, actual) -> EvaluationResult.failed("judge disagrees");
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> "expected",
+                blocking, EvaluationStrategy.toAdvisory(judge));
+
+        assertThat(report.evaluations()).hasSize(2);
+        assertThat(report.evaluations().get(0).advisory()).isFalse();
+        assertThat(report.evaluations().get(1).advisory()).isTrue();
+        assertThat(report.evaluations().get(1).passed()).isFalse();
+        assertThat(report.evaluations().get(1).explanation()).isEqualTo("judge disagrees");
+        assertThat(report.score()).isEqualTo(100.0);
+        assertThat(report.advisoryScore()).isEqualTo(0.0);
     }
 
     @SuppressWarnings("unchecked")
@@ -139,5 +201,40 @@ class ScorerTest {
         assertThat(report.score()).isEqualTo(100.0); // Both strategies should pass for the sample.
         assertThat(report.evaluations()).hasSize(2); // One result per strategy.
         report.evaluations().forEach(e -> assertThat(e.passed()).isTrue());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void evaluateShouldRunEachSampleForTheConfiguredNumberOfTrials() {
+        scorer = new Scorer(2, 3);
+
+        EvaluationSample<String> flaky = new EvaluationSample<>(
+                "Flaky", new Parameters().add(new Parameter.UnnamedParameter("flaky")), "ok", List.of("flaky"));
+        EvaluationSample<String> stable = new EvaluationSample<>(
+                "Stable", new Parameters().add(new Parameter.UnnamedParameter("stable")), "ok", List.of("stable"));
+
+        // The flaky sample answers wrongly on every second call, the stable one always answers correctly.
+        AtomicInteger flakyCalls = new AtomicInteger();
+        Function<Parameters, String> function = params -> "flaky".equals(params.get(0))
+                && flakyCalls.incrementAndGet() % 2 == 0 ? "ko" : "ok";
+        EvaluationStrategy<String> strategy = (sample, actual) -> EvaluationResult
+                .fromBoolean(actual.equals(sample.expectedOutput()));
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(flaky, stable), function, strategy);
+
+        assertThat(report.trials()).isEqualTo(3);
+        assertThat(report.evaluations()).hasSize(6);
+        assertThat(report.evaluations().stream().map(e -> e.sample().name()).toList())
+                .containsExactly("Flaky", "Flaky", "Flaky", "Stable", "Stable", "Stable");
+        assertThat(report.scoreForSample("Flaky")).isCloseTo(66.67, within(0.01));
+        assertThat(report.scoreForSample("Stable")).isEqualTo(100.0);
+        assertThat(report.score()).isCloseTo(83.33, within(0.01));
+        assertThat(report.scoreForTag("flaky")).isCloseTo(66.67, within(0.01));
+    }
+
+    @Test
+    void trialsMustBeAtLeastOne() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new Scorer(1, 0))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
