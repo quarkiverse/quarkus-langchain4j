@@ -29,13 +29,13 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Uni;
 
 public class ToolReturningToolExecutionResultTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class,
                             MyChatModelSupplier.class, MyChatModel.class, Lists.class));

@@ -31,9 +31,6 @@ import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.SseEventFilter;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingRequest;
@@ -44,6 +41,8 @@ import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectReader;
 
 /**
  * This Microprofile REST client is used as the building block of all the API calls to MistralAI.

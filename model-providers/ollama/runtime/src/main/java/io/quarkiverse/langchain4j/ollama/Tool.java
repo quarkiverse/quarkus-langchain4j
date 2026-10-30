@@ -4,11 +4,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import io.quarkiverse.langchain4j.ollama.runtime.jackson.ToolTypeDeserializer;
 import io.quarkiverse.langchain4j.ollama.runtime.jackson.ToolTypeSerializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 public record Tool(Type type, Function function) {
 

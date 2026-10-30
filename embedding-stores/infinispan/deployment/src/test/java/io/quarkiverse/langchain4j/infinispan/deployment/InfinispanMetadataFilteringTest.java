@@ -36,14 +36,14 @@ import dev.langchain4j.store.embedding.filter.logical.And;
 import dev.langchain4j.store.embedding.filter.logical.Not;
 import dev.langchain4j.store.embedding.filter.logical.Or;
 import io.quarkiverse.langchain4j.infinispan.InfinispanEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 // Cannot extend EmbeddingStoreWithFilteringIT because it contains tests parametrized through
 // @MethodSource, which is not supported by the quarkus-junit-internal testing framework.
 public class InfinispanMetadataFilteringTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.infinispan.dimension=384"),
                             "application.properties"));

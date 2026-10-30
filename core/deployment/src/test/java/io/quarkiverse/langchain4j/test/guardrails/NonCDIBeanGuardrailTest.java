@@ -10,7 +10,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailRequest;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Test that should FAIL at build time because the guardrail is NOT a CDI bean.
@@ -18,7 +18,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class NonCDIBeanGuardrailTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyTools.class, NotACDIBeanGuardrail.class))
             .assertException(t -> {

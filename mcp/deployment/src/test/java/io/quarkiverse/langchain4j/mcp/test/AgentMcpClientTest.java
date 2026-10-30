@@ -30,7 +30,7 @@ import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
 import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that an agent declaring {@link McpToolBox} receives the tools of the MCP server.
@@ -40,7 +40,7 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
     private static final String MCP_PATH = "/mcp/agent";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Sequence.class, AgentWithMcpTools.class)
                     .addPackage(McpMockServer.class.getPackage())

@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.config.ConfigValidationException;
 
 public class PgVectorNamedStoreMissingDimensionTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.datasource.db-kind", "postgresql")
             .overrideConfigKey("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16")

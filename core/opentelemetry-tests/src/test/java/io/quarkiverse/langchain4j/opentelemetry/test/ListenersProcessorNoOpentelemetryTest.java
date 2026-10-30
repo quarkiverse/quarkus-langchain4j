@@ -14,11 +14,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
 import io.quarkiverse.langchain4j.runtime.listeners.SpanChatModelListener;
 import io.quarkus.arc.All;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class ListenersProcessorNoOpentelemetryTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class));
 

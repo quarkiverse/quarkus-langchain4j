@@ -1,15 +1,13 @@
 package io.quarkiverse.langchain4j.ollama;
 
-import java.io.IOException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-
-public class FormatJsonSerializer extends JsonSerializer<String> {
+public class FormatJsonSerializer extends ValueSerializer<String> {
 
     @Override
-    public void serialize(String value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+    public void serialize(String value, JsonGenerator gen, SerializationContext serializers) {
         if (value == null)
             return;
         else if (value.startsWith("{") && value.endsWith("}"))

@@ -10,8 +10,6 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.model.huggingface.client.EmbeddingRequest;
 import dev.langchain4j.model.huggingface.client.TextGenerationRequest;
 import dev.langchain4j.model.huggingface.client.TextGenerationResponse;
@@ -37,7 +35,7 @@ public interface HuggingFaceRestApi {
     List<float[]> embed(EmbeddingRequest request, @NotBody String token);
 
     @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
+    static tools.jackson.databind.ObjectMapper objectMapper(tools.jackson.databind.ObjectMapper defaultObjectMapper) {
         return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
     }
 }

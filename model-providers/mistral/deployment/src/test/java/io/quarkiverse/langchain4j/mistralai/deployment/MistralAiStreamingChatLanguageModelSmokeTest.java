@@ -37,7 +37,7 @@ import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
@@ -46,7 +46,7 @@ class MistralAiStreamingChatLanguageModelSmokeTest extends WiremockAware {
     private static final String CHAT_MODEL_ID = "mistral-tiny";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(WeatherAssistant.class, WeatherTools.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.api-key", API_KEY)

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verify that when some MCP clients are configured, but
@@ -24,7 +24,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class NoAutomaticToolProviderTest {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever

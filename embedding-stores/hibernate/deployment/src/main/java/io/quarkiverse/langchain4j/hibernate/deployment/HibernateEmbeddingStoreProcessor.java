@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.hibernate.deployment;
 
 import static io.quarkiverse.langchain4j.hibernate.runtime.DynamicEmbeddingStoreAdditionalMappingContributor.DEFAULT_DYNAMIC_PU_NAME;
-import static io.quarkus.hibernate.orm.deployment.util.HibernateProcessorUtil.setDialectAndStorageEngine;
+import static io.quarkus.hibernate.orm.deployment.util.HibernateProcessorSupport.setDialectAndStorageEngine;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -53,6 +53,9 @@ import io.quarkus.agroal.DataSource;
 import io.quarkus.agroal.spi.JdbcDataSourceBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.processor.DotNames;
+import io.quarkus.datasource.runtime.DataSourcesBuildTimeConfig;
+import io.quarkus.deployment.Capabilities;
+import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -65,20 +68,16 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveMethodBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.hibernate.orm.PersistenceUnit;
 import io.quarkus.hibernate.orm.deployment.HibernateOrmConfig;
-import io.quarkus.hibernate.orm.deployment.ImpliedBlockingPersistenceUnitTypeBuildItem;
-import io.quarkus.hibernate.orm.deployment.JpaModelIndexBuildItem;
-import io.quarkus.hibernate.orm.deployment.JpaModelPersistenceUnitContributionBuildItem;
-import io.quarkus.hibernate.orm.deployment.JpaModelPersistenceUnitMappingBuildItem;
 import io.quarkus.hibernate.orm.deployment.PersistenceUnitDescriptorBuildItem;
 import io.quarkus.hibernate.orm.deployment.PersistenceXmlDescriptorBuildItem;
+import io.quarkus.hibernate.orm.deployment.model.JpaModelIndexBuildItem;
+import io.quarkus.hibernate.orm.deployment.model.JpaModelPersistenceUnitContributionBuildItem;
 import io.quarkus.hibernate.orm.deployment.spi.DatabaseKindDialectBuildItem;
+import io.quarkus.hibernate.orm.deployment.spi.JpaModelPersistenceUnitMappingBuildItem;
 import io.quarkus.hibernate.orm.runtime.HibernateOrmPersistenceUnitProviderHelper;
 import io.quarkus.hibernate.orm.runtime.boot.QuarkusPersistenceUnitDescriptor;
 import io.quarkus.hibernate.orm.runtime.boot.xml.RecordableXmlMapping;
 import io.quarkus.hibernate.orm.runtime.config.DatabaseOrmCompatibilityVersion;
-import io.quarkus.hibernate.orm.runtime.customized.BuiltinFormatMapperBehaviour;
-import io.quarkus.hibernate.orm.runtime.customized.FormatMapperKind;
-import io.quarkus.hibernate.orm.runtime.customized.JsonFormatterCustomizationCheck;
 import io.quarkus.hibernate.orm.runtime.migration.MultiTenancyStrategy;
 import io.quarkus.hibernate.orm.runtime.recording.RecordedConfig;
 import io.quarkus.runtime.configuration.ConfigurationException;
@@ -113,12 +112,57 @@ class HibernateEmbeddingStoreProcessor {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-hibernate"));
     }
 
+    /**
+     * Contributes the dynamic persistence unit to the JPA model. This step must not depend on
+     * {@link JdbcDataSourceBuildItem}: on Quarkus 4 datasources are defined after persistence units are requested,
+     * and the JPA model feeds those requests, so consuming datasource items here would form a build cycle. The
+     * decision is therefore taken from build-time configuration only, and repeated identically in
+     * {@link #produceDynamicMappingBuildItem}.
+     */
+    @BuildStep
+    public void contributeDynamicPersistenceUnitModel(
+            HibernateGenericEmbeddingStoreBuildTimeConfig dynamicBuildTimeConfig,
+            Capabilities capabilities,
+            DataSourcesBuildTimeConfig dataSourcesBuildTimeConfig,
+            List<PersistenceXmlDescriptorBuildItem> persistenceXmlDescriptors,
+            BuildProducer<JpaModelPersistenceUnitContributionBuildItem> puContributionBuildItemBuildProducer,
+            BuildProducer<HibernateEmbeddingStoreMappingBuildItem> mappingBuildItemProducer) {
+        if (shouldCreateDynamicPersistenceUnit(dynamicBuildTimeConfig, capabilities, dataSourcesBuildTimeConfig,
+                persistenceXmlDescriptors)) {
+            puContributionBuildItemBuildProducer.produce(new JpaModelPersistenceUnitContributionBuildItem(
+                    DEFAULT_DYNAMIC_PU_NAME,
+                    null,
+                    Collections.emptyList(),
+                    List.of(MAPPINGS_FILE)));
+            mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
+                    DEFAULT_DYNAMIC_PU_NAME,
+                    EMBEDDING_ENTITY.toString(),
+                    dynamicBuildTimeConfig.distanceFunction()));
+        } else {
+            mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
+                    null, null, null));
+        }
+    }
+
+    private boolean shouldCreateDynamicPersistenceUnit(
+            HibernateGenericEmbeddingStoreBuildTimeConfig dynamicBuildTimeConfig,
+            Capabilities capabilities, DataSourcesBuildTimeConfig dataSourcesBuildTimeConfig,
+            List<PersistenceXmlDescriptorBuildItem> persistenceXmlDescriptors) {
+        // Same rule Hibernate ORM used for its implied blocking persistence unit before the request model:
+        // no blocking unit is implied when only Hibernate Reactive is present without any JDBC datasource
+        boolean anyJdbcDataSource = dataSourcesBuildTimeConfig.dataSources().values().stream()
+                .anyMatch(ds -> ds.dbKind().isPresent());
+        boolean impliedBlockingPersistenceUnit = !(capabilities.isPresent(Capability.HIBERNATE_REACTIVE)
+                && !anyJdbcDataSource);
+        return !impliedBlockingPersistenceUnit && persistenceXmlDescriptors.isEmpty()
+                || !isEmpty(dynamicBuildTimeConfig);
+    }
+
     @BuildStep
     public void produceDynamicMappingBuildItem(
             HibernateGenericEmbeddingStoreBuildTimeConfig dynamicBuildTimeConfig,
             BuildProducer<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptors,
-            BuildProducer<HibernateEmbeddingStoreMappingBuildItem> mappingBuildItemProducer,
-            BuildProducer<JpaModelPersistenceUnitContributionBuildItem> puContributionBuildItemBuildProducer,
+            DataSourcesBuildTimeConfig dataSourcesBuildTimeConfig,
             BuildProducer<ServiceProviderBuildItem> serviceProviderBuildItem,
             BuildProducer<ReflectiveMethodBuildItem> reflectiveMethods,
             BuildProducer<SystemPropertyBuildItem> systemProperties,
@@ -126,10 +170,10 @@ class HibernateEmbeddingStoreProcessor {
             HibernateOrmConfig hibernateOrmConfig,
             List<DatabaseKindDialectBuildItem> dbKindMetadataBuildItems,
             List<PersistenceXmlDescriptorBuildItem> persistenceXmlDescriptors,
-            ImpliedBlockingPersistenceUnitTypeBuildItem impliedPU,
+            Capabilities capabilities,
             List<JdbcDataSourceBuildItem> jdbcDataSources) {
-        if (!impliedPU.shouldGenerateImpliedBlockingPersistenceUnit() && persistenceXmlDescriptors.isEmpty()
-                || !isEmpty(dynamicBuildTimeConfig)) {
+        if (shouldCreateDynamicPersistenceUnit(dynamicBuildTimeConfig, capabilities, dataSourcesBuildTimeConfig,
+                persistenceXmlDescriptors)) {
             // Create a dynamic embedding store mapping build item
             JdbcDataSourceBuildItem jdbcDataSource = dynamicBuildTimeConfig.datasource()
                     .map(dn -> jdbcDataSources.stream().filter(ds -> dn.equals(ds.getName()))
@@ -202,12 +246,6 @@ class HibernateEmbeddingStoreProcessor {
                             Set.of("quarkus.langchain4j.generic.dimension"))));
             properties.put(DynamicEmbeddingStoreAdditionalMappingContributor.TABLE_CONFIGURATION,
                     dynamicBuildTimeConfig.table());
-            puContributionBuildItemBuildProducer.produce(new JpaModelPersistenceUnitContributionBuildItem(
-                    DEFAULT_DYNAMIC_PU_NAME,
-                    null,
-                    Collections.emptyList(),
-                    List.of(MAPPINGS_FILE)));
-
             // Borrowed from HibernateOrmProcessor#collectDialectConfig
             Optional<io.quarkus.datasource.common.runtime.DatabaseKind.SupportedDatabaseKind> supportedDatabaseKind = setDialectAndStorageEngine(
                     DEFAULT_DYNAMIC_PU_NAME,
@@ -216,14 +254,13 @@ class HibernateEmbeddingStoreProcessor {
                     Optional.empty(),
                     hibernateOrmConfig.defaultPersistenceUnit().dialect(),
                     dbKindMetadataBuildItems,
-                    systemProperties,
                     properties::setProperty);
 
             if (io.quarkus.datasource.common.runtime.DatabaseKind.isPostgreSQL(jdbcDataSource.getDbKind())) {
                 // Workaround for https://hibernate.atlassian.net/browse/HHH-19063
                 reflectiveMethods.produce(new ReflectiveMethodBuildItem(
                         "Accessed in org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver.determineAppropriateResolverDelegate",
-                        true, "org.postgresql.jdbc.PgConnection", "getSchema"));
+                        "org.postgresql.jdbc.PgConnection", "getSchema"));
             }
 
             serviceProviderBuildItem.produce(new ServiceProviderBuildItem(AdditionalMappingContributor.class.getName(),
@@ -235,6 +272,7 @@ class HibernateEmbeddingStoreProcessor {
                                     new HibernateOrmPersistenceUnitProviderHelper(),
                                     PersistenceUnitTransactionType.JTA,
                                     Collections.emptyList(),
+                                    Collections.emptyList(),
                                     properties,
                                     false),
                             new RecordedConfig(
@@ -242,23 +280,14 @@ class HibernateEmbeddingStoreProcessor {
                                     Optional.of(jdbcDataSource.getDbKind()),
                                     supportedDatabaseKind.map(Enum::name),
                                     jdbcDataSource.getDbVersion(),
+                                    jdbcDataSource.isDbVersionUserSpecified(),
                                     Optional.empty(),
                                     Set.of(),
                                     MultiTenancyStrategy.NONE,
                                     DatabaseOrmCompatibilityVersion.LATEST,
-                                    BuiltinFormatMapperBehaviour.FAIL,
-                                    JsonFormatterCustomizationCheck.jsonFormatterCustomizationCheckSupplier(true, true),
                                     Collections.emptyMap()),
-                            null,
                             List.of(xmlMapping),
-                            false, false, Optional.of(FormatMapperKind.JACKSON), Optional.empty()));
-            mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
-                    DEFAULT_DYNAMIC_PU_NAME,
-                    EMBEDDING_ENTITY.toString(),
-                    dynamicBuildTimeConfig.distanceFunction()));
-        } else {
-            mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
-                    null, null, null));
+                            false, false));
         }
     }
 

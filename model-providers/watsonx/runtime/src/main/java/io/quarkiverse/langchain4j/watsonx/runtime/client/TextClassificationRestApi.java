@@ -19,18 +19,18 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ibm.watsonx.ai.WatsonxJacksonModule;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationRequest;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationResponse;
 
-import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Uni;
 
 @Path("")
+@RegisterProvider(WatsonxJacksonProviders.Reader.class)
+@RegisterProvider(WatsonxJacksonProviders.Writer.class)
 public interface TextClassificationRestApi {
 
     @POST
@@ -86,11 +86,6 @@ public interface TextClassificationRestApi {
             @PathParam("file_name") String fileName,
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             InputStream is);
-
-    @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER.copy().registerModule(new WatsonxJacksonModule());
-    }
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

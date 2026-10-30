@@ -24,7 +24,7 @@ import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * A gateway in front of Anthropic authenticates on its own header, so {@code customHeaders} passed
@@ -38,7 +38,7 @@ class AnthropicCustomHeadersSmokeTest extends AnthropicSmokeTest {
     private static final String GATEWAY_VALUE = "gateway-secret";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url",

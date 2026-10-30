@@ -1,22 +1,16 @@
 package io.quarkiverse.langchain4j.ollama.runtime.jackson;
 
-import java.io.IOException;
 import java.util.Locale;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import io.quarkiverse.langchain4j.ollama.Tool;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-public class ToolTypeSerializer extends StdSerializer<Tool.Type> {
-    public ToolTypeSerializer() {
-        super(Tool.Type.class);
-    }
+public class ToolTypeSerializer extends ValueSerializer<Tool.Type> {
 
     @Override
-    public void serialize(Tool.Type toolType, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-            throws IOException {
+    public void serialize(Tool.Type toolType, JsonGenerator jsonGenerator, SerializationContext serializerProvider) {
         jsonGenerator.writeString(toolType.toString().toLowerCase(Locale.ROOT));
     }
 }

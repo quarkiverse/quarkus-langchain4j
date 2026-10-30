@@ -9,12 +9,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpTracingStreamableHTTPTransportTest extends McpTracingTestBase {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class, InMemorySpanExporterProducer.class))
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "streamable-http")
@@ -27,6 +27,7 @@ public class McpTracingStreamableHTTPTransportTest extends McpTracingTestBase {
             .overrideConfigKey("quarkus.otel.bsp.schedule.delay", "PT0.001S")
             .overrideConfigKey("quarkus.otel.bsp.max.queue.size", "1")
             .overrideConfigKey("quarkus.otel.bsp.max.export.batch.size", "1")
+            .overrideConfigKey("quarkus.otel.traces.sampler", "always_on")
             .overrideConfigKey("quarkus.log.category.\"io.quarkiverse\".level", "DEBUG");
 
     private static Process process;

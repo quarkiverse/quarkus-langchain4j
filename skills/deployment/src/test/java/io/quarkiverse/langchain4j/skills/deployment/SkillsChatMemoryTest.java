@@ -27,7 +27,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.skills.Skills;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that invoking two AI service methods with different @Skills
@@ -39,7 +39,7 @@ public class SkillsChatMemoryTest {
     private static final Path SKILLS_DIR = Path.of("src/test/resources/skills").toAbsolutePath();
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             MethodLevelSkillsWithMemoryService.class,

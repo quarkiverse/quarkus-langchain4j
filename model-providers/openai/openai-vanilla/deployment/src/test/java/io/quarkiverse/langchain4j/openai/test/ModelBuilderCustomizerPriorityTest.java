@@ -17,7 +17,7 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Tests that customizer priority ordering works correctly.
@@ -52,7 +52,7 @@ public class ModelBuilderCustomizerPriorityTest extends OpenAiBaseTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(LowPriorityCustomizer.class, HighPriorityCustomizer.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",

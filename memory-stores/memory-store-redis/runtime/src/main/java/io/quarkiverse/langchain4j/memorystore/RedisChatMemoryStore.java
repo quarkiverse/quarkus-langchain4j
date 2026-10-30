@@ -1,12 +1,7 @@
 package io.quarkiverse.langchain4j.memorystore;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
@@ -14,6 +9,8 @@ import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.keys.KeyCommands;
 import io.quarkus.redis.datasource.value.ValueCommands;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
 
 public class RedisChatMemoryStore implements ChatMemoryStore {
 
@@ -24,7 +21,7 @@ public class RedisChatMemoryStore implements ChatMemoryStore {
     private final KeyCommands<String> keyCommands;
 
     public RedisChatMemoryStore(RedisDataSource redisDataSource) {
-        this.valueCommands = redisDataSource.value(new TypeReference<>() {
+        this.valueCommands = redisDataSource.value(new tools.jackson.core.type.TypeReference<byte[]>() {
         });
         this.keyCommands = redisDataSource.key(String.class);
     }
@@ -43,8 +40,8 @@ public class RedisChatMemoryStore implements ChatMemoryStore {
         try {
             return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
                     bytes, MESSAGE_LIST_TYPE);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        } catch (JacksonException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -53,8 +50,8 @@ public class RedisChatMemoryStore implements ChatMemoryStore {
         try {
             valueCommands.set(memoryId.toString(),
                     QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsBytes(messages));
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
+        } catch (JacksonException e) {
+            throw new RuntimeException(e);
         }
     }
 }

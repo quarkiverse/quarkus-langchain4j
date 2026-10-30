@@ -24,7 +24,7 @@ import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verify functionality of {@link RegisterAiService#maxToolCallsPerResponse()}
@@ -32,7 +32,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class MaxToolCallsPerResponseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Tools.class, ModelSupplier.class));
 

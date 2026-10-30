@@ -29,14 +29,14 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.filter.comparison.IsEqualTo;
 import dev.langchain4j.store.embedding.filter.logical.And;
 import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 // This is probably temporary until we support all kinds of filters for Redis,
 // then we can use EmbeddingStoreWithFilteringIT
 public class RedisMetadataFilteringTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.redis.dimension=384\n" +
                             "quarkus.langchain4j.redis.numeric-metadata-fields=num1,num2"),

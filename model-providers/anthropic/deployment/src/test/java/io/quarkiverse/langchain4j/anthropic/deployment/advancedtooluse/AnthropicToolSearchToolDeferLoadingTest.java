@@ -13,15 +13,13 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.anthropic.deployment.AnthropicSmokeTest;
+import tools.jackson.databind.JsonNode;
 
 abstract class AnthropicToolSearchToolDeferLoadingTest extends AnthropicSmokeTest {
     abstract String expectedToolName();
@@ -38,8 +36,6 @@ abstract class AnthropicToolSearchToolDeferLoadingTest extends AnthropicSmokeTes
               "usage": { "input_tokens": 1, "output_tokens": 1 }
             }
             """;
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Inject
     TestAiService aiService;

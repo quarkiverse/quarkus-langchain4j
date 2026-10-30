@@ -43,7 +43,7 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.watsonx.WatsonxChatResponseMetadata;
 import dev.langchain4j.model.watsonx.WatsonxGatewayChatRequestParameters;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @EnabledIfEnvironmentVariable(named = "WATSONX_API_KEY", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_URL", matches = ".+")
@@ -55,7 +55,7 @@ public class GatewayChatModelITTest {
     static final String MODEL = System.getenv("WATSONX_GATEWAY_MODEL");
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.timeout", "30s")

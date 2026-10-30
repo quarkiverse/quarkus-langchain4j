@@ -32,7 +32,7 @@ import io.quarkiverse.langchain4j.mcp.test.mock.LegacyMcpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * The client's response to a server-initiated request expects no reply, so it must not be registered
@@ -50,7 +50,7 @@ public class McpResponseToServerRequestLegacyTest extends WiremockAware {
     private static final String MCP_PATH = "/mcp/response-to-server-request-legacy";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addPackage(McpMockServer.class.getPackage())
                     .addAsResource(new StringAsset("""

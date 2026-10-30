@@ -29,7 +29,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.quarkiverse.langchain4j.runtime.listeners.MetricsChatModelListener;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that {@link MetricsChatModelListener} records per-request token usage as a single declared
@@ -42,7 +42,7 @@ import io.quarkus.test.QuarkusUnitTest;
 class TokenUsageDistributionMetricsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject

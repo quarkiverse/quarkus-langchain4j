@@ -14,7 +14,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.cost.CacheTokenUsage;
 import io.quarkiverse.langchain4j.cost.CacheTokenUsageExtractor;
 import io.quarkiverse.langchain4j.cost.CacheTokenUsageResolver;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Validates that a {@link CacheTokenUsageExtractor} contributed as a CDI bean is discovered at build time and
@@ -23,7 +23,7 @@ import io.quarkus.test.QuarkusUnitTest;
 class CacheTokenUsageResolverCdiTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(TestProviderTokenUsage.class, TestProviderCacheTokenUsageExtractor.class));
 

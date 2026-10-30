@@ -33,12 +33,12 @@ import com.ibm.watsonx.ai.chat.model.UserMessage;
 import dev.langchain4j.exception.ContentFilteredException;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.watsonx.WatsonxChatResponseMetadata;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ChatModerationTest extends WireMockAbstract {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

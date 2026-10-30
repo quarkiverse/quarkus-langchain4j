@@ -27,7 +27,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Tests for the {@code systemMessageProviderSupplier} attribute on {@link RegisterAiService}.
@@ -35,7 +35,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class DeclarativeSystemMessageProviderTest {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             AssistantWithSystemMessageProvider.class,

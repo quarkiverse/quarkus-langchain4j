@@ -26,7 +26,7 @@ import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaDeleteParam
 import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaParameters;
 import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @EnabledIfEnvironmentVariable(named = "WATSONX_API_KEY", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "WATSONX_PROJECT_ID", matches = ".+")
@@ -48,7 +48,7 @@ public class ImproveSchemaITTest {
             .build();
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)

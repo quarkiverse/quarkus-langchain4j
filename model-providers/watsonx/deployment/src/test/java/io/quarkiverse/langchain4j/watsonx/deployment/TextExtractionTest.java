@@ -61,7 +61,7 @@ import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionRequest;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionResponse;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class TextExtractionTest extends WireMockAbstract {
 
@@ -71,7 +71,7 @@ public class TextExtractionTest extends WireMockAbstract {
     static String PROCESS_EXTRACTION_ID = "my-id";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

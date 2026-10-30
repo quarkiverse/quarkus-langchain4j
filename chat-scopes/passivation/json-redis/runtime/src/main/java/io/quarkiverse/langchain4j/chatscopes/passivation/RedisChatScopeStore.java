@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.chatscopes.passivation;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
@@ -17,7 +16,7 @@ public class RedisChatScopeStore extends AbstractJsonChatScopeStore implements C
     private final KeyCommands<String> keyCommands;
 
     public RedisChatScopeStore(RedisDataSource redisDataSource) {
-        this.valueCommands = redisDataSource.value(new TypeReference<>() {
+        this.valueCommands = redisDataSource.value(new tools.jackson.core.type.TypeReference<byte[]>() {
         });
         this.keyCommands = redisDataSource.key(String.class);
     }

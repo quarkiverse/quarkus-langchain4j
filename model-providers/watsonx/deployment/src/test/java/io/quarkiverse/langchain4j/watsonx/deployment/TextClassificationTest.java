@@ -41,7 +41,7 @@ import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationDe
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationFetchParameters;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class TextClassificationTest extends WireMockAbstract {
 
@@ -51,7 +51,7 @@ public class TextClassificationTest extends WireMockAbstract {
     static String PROCESS_CLASSIFICATION_ID = "my-id";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

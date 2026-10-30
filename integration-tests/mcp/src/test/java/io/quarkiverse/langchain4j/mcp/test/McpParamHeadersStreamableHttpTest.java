@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.McpClient;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that x-mcp-header annotations on tool parameters cause the client
@@ -29,7 +29,7 @@ public class McpParamHeadersStreamableHttpTest {
     private static Process process;
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class))
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "streamable-http")

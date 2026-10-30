@@ -29,12 +29,12 @@ import dev.langchain4j.store.embedding.EmbeddingStoreWithRemovalIT;
 import dev.langchain4j.store.embedding.filter.Filter;
 import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
 import io.quarkus.redis.datasource.RedisDataSource;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class RedisEmbeddingStoreRemovalTest extends EmbeddingStoreWithRemovalIT {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.redis.dimension=384\n" +
                             "quarkus.langchain4j.redis.numeric-metadata-fields=num\n"),

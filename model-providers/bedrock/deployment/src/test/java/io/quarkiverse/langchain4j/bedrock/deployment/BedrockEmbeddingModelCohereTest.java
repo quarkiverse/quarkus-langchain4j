@@ -24,13 +24,13 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class BedrockEmbeddingModelCohereTest extends BedrockTestBase {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(TestCredentialsProvider.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.model-id", "cohere.embed-english-v3")

@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.ollama;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonPOJOBuilder;
 
 @JsonDeserialize(builder = EmbeddingResponse.Builder.class)
 public class EmbeddingResponse {

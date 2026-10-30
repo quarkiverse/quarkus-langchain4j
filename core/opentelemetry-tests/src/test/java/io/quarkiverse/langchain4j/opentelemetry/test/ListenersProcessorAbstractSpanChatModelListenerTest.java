@@ -46,6 +46,8 @@ abstract class ListenersProcessorAbstractSpanChatModelListenerTest {
                 quarkus.otel.bsp.schedule.delay=PT0.001S
                 quarkus.otel.bsp.max.queue.size=1
                 quarkus.otel.bsp.max.export.batch.size=1
+                # Quarkus 4 changed the default trace sampler; force 100% so the (parentless) test spans are recorded
+                quarkus.otel.traces.sampler=always_on
                 """;
         return ShrinkWrap.create(JavaArchive.class)
                 .addAsResource(new StringAsset(applicationProperties), "application.properties")

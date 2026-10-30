@@ -26,12 +26,12 @@ import io.quarkiverse.langchain4j.huggingface.HuggingFaceRestApi;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceClientFactory;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class QuarkusHuggingFaceClientTest extends WiremockAware {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
     private static final String CHAT_MODEL_ID = HuggingFaceModelName.TII_UAE_FALCON_7B_INSTRUCT;
     private static final String EMBED_MODEL_ID = HuggingFaceModelName.SENTENCE_TRANSFORMERS_ALL_MINI_LM_L6_V2;

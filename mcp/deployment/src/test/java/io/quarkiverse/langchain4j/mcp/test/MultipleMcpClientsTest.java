@@ -36,7 +36,7 @@ import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies how tools of multiple MCP clients are combined and selected. Each client connects
@@ -49,7 +49,7 @@ public class MultipleMcpClientsTest extends WiremockAware {
     private static final String CLIENT3_PATH = "/mcp/multiple-clients/client3";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AllToolsService.class, SelectedToolsService.class, SingleToolService.class)
                     .addPackage(McpMockServer.class.getPackage())

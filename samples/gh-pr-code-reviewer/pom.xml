@@ -17,12 +17,12 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <!-- quarkus-aesh needs Quarkus 3.38 or newer -->
-        <quarkus.platform.version>3.40.0</quarkus.platform.version>
+        <quarkus.platform.version>4.0.0.Beta1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.1</surefire-plugin.version>
         <!-- 999-SNAPSHOT until a quarkus-langchain4j release contains the jitllm provider; the release
              then replaces it, as for the other samples -->
-        <quarkus-langchain4j.version>1.15.0.CR2</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>2.0.0.Beta2</quarkus-langchain4j.version>
         <quarkus-github-api.version>1.330.0</quarkus-github-api.version>
     </properties>
 

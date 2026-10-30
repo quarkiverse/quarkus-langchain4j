@@ -2,7 +2,7 @@ package io.quarkiverse.langchain4j.ollama;
 
 import java.util.List;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 public record ChatRequest(
         String model,

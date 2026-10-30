@@ -21,14 +21,14 @@ import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
 import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class MultipleMcpClientsOneDisabledTest extends WiremockAware {
 
     private static final String CLIENT1_PATH = "/mcp/multiple-clients-one-disabled/client1";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addPackage(McpMockServer.class.getPackage())
                     .addAsResource(new StringAsset("""

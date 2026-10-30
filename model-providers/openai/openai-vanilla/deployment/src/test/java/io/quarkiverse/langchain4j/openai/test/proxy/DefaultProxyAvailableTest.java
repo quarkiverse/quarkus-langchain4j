@@ -13,12 +13,12 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class DefaultProxyAvailableTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     "http://localhost:8282/v1") // nothing listens here — proxy must be used

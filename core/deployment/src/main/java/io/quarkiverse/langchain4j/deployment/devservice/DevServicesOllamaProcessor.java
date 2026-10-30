@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.deployment.devservice;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -68,6 +69,10 @@ public class DevServicesOllamaProcessor {
         if (allOllamaModels.isEmpty()) {
             return;
         }
+        if (ollamaDevServicesConfig.map(DevServicesOllamaConfigBuildItem::isContainerManaged).orElse(false)) {
+            // the Ollama Dev Service container pulls the models once it has started
+            return;
+        }
 
         var devServiceHost = ollamaDevServicesConfig
                 .map(c -> c.getConfig().get("langchain4j-ollama-dev-service.ollama.host"))
@@ -80,110 +85,13 @@ public class DevServicesOllamaProcessor {
 
         OllamaClient client = OllamaClient.create(new OllamaClient.Options(devServiceHost, devServicePort));
         try {
-            Set<ModelName> localModels = client.localModels().stream().map(mi -> ModelName.of(mi.name()))
-                    .collect(Collectors.toSet());
-            List<String> modelsToPull = new ArrayList<>(allOllamaModels.size());
-            for (var requiredModel : allOllamaModels) {
-                if (localModels.contains(ModelName.of(requiredModel.getModelName()))) {
-                    LOGGER.debug("Ollama already has model " + requiredModel.getModelName() + " pulled locally");
-                } else {
-                    modelsToPull.add(requiredModel.getModelName());
-                }
-            }
-            LOGGER.debug("Need to pull the following models into Ollama server: " + String.join(", ", modelsToPull));
-
-            AtomicReference<String> clientThreadName = new AtomicReference<>();
-            StartupLogCompressor compressor = new StartupLogCompressor(
-                    (launchMode.isTest() ? "(test) " : "") + "Ollama model pull:", consoleInstalledBuildItem,
-                    loggingSetupBuildItem,
-                    // ensure that the progress logging done on the async thread is also caught by the compressor
-                    thread -> {
-                        String t = clientThreadName.get();
-                        if (t == null) {
-                            return false;
-                        }
-                        return thread.getName().equals(t);
-                    });
-            for (String model : modelsToPull) {
-                // we pull one model at a time and provide progress updates to the user via logging
-                LOGGER.infof("Pulling model %s", model);
-                AtomicReference<Long> LAST_UPDATE_REF = new AtomicReference<>();
-
-                CompletableFuture<Void> cf = new CompletableFuture<>();
-                client.pullAsync(model).subscribe(new Flow.Subscriber<>() {
-
-                    private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
-
-                    @Override
-                    public void onSubscribe(Flow.Subscription subscription) {
-                        subscription.request(Long.MAX_VALUE);
-                    }
-
-                    @Override
-                    public void onNext(OllamaClient.PullAsyncLine line) {
-                        clientThreadName.compareAndSet(null, Thread.currentThread().getName());
-                        if ((line.total() != null) && (line.completed() != null) && (line.status() != null)
-                                && line.status().contains("pulling")) {
-                            if (!logUpdate(LAST_UPDATE_REF.get())) {
-                                return;
-                            }
-
-                            LAST_UPDATE_REF.set(System.nanoTime());
-                            BigDecimal percentage = new BigDecimal(line.completed()).divide(new BigDecimal(line.total()), 4,
-                                    RoundingMode.HALF_DOWN).multiply(ONE_HUNDRED);
-                            BigDecimal progress = percentage.setScale(2, RoundingMode.HALF_DOWN);
-                            if (progress.compareTo(ONE_HUNDRED) >= 0) {
-                                // avoid showing 100% for too long
-                                LOGGER.info("Verifying and cleaning up\n");
-                            } else {
-                                LOGGER.infof("Downloading %s - Progress: %s%%\n", model, progress);
-                            }
-                        }
-                    }
-
-                    /**
-                     * @param lastUpdate The last update time in nanoseconds
-                     *        Determines whether we should log an update.
-                     *        This is done in order to not overwhelm the console with updates which might make
-                     *        canceling the download difficult. See
-                     *        <a href="https://github.com/quarkiverse/quarkus-langchain4j/issues/1044">this</a>
-                     */
-                    private boolean logUpdate(Long lastUpdate) {
-                        if (lastUpdate == null) {
-                            return true;
-                        } else {
-                            return TimeUnit.NANOSECONDS.toMillis(System.nanoTime())
-                                    - TimeUnit.NANOSECONDS.toMillis(lastUpdate) > 1_000;
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        cf.completeExceptionally(throwable);
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        cf.complete(null);
-                    }
-                });
-
-                try {
-                    cf.get(5, TimeUnit.MINUTES);
-                } catch (InterruptedException | TimeoutException | ExecutionException e) {
-                    compressor.closeAndDumpCaptured();
-                    throw new RuntimeException(e.getCause());
-                }
-            }
-
+            pullMissingModels(client, allOllamaModels, launchMode, consoleInstalledBuildItem, loggingSetupBuildItem);
             // preload model - it only makes sense to load a single model
             if ((ollamaChatModels.size() == 1) && (config.devservices().preload())) {
                 String modelName = ollamaChatModels.get(0).getModelName();
                 LOGGER.infof("Preloading model %s", modelName);
                 client.preloadChatModel(modelName);
             }
-
-            compressor.close();
 
             String ollamaBaseUrl = String.format("http://%s:%d", devServiceHost, devServicePort);
 
@@ -204,12 +112,110 @@ public class DevServicesOllamaProcessor {
                 }
             }
 
-            producer.produce(new DevServicesResultBuildItem("ollama", null, modelBaseUrls));
+            producer.produce(DevServicesResultBuildItem.discovered().name("ollama").config(modelBaseUrls).build());
 
         } catch (OllamaClient.ServerUnavailableException e) {
             LOGGER.warn(e.getMessage()
                     + " therefore no dev service will be started. Ollama can be installed via https://ollama.com/download");
             return;
+        }
+    }
+
+    /**
+     * Pulls every model of {@code models} that the Ollama server behind {@code client} does not have yet, logging
+     * progress. Shared by the local-server path and the Dev Service container's post-start hook.
+     */
+    public static void pullMissingModels(OllamaClient client, Collection<? extends DevServicesModelRequired> models,
+            LaunchModeBuildItem launchMode, Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
+            LoggingSetupBuildItem loggingSetupBuildItem) {
+        Set<ModelName> localModels = client.localModels().stream().map(mi -> ModelName.of(mi.name()))
+                .collect(Collectors.toSet());
+        List<String> modelsToPull = new ArrayList<>(models.size());
+        for (var requiredModel : models) {
+            if (localModels.contains(ModelName.of(requiredModel.getModelName()))) {
+                LOGGER.debug("Ollama already has model " + requiredModel.getModelName() + " pulled locally");
+            } else {
+                modelsToPull.add(requiredModel.getModelName());
+            }
+        }
+        LOGGER.debug("Need to pull the following models into Ollama server: " + String.join(", ", modelsToPull));
+        AtomicReference<String> clientThreadName = new AtomicReference<>();
+        StartupLogCompressor compressor = new StartupLogCompressor(
+                (launchMode.isTest() ? "(test) " : "") + "Ollama model pull:", consoleInstalledBuildItem,
+                loggingSetupBuildItem,
+                // ensure that the progress logging done on the async thread is also caught by the compressor
+                thread -> {
+                    String t = clientThreadName.get();
+                    if (t == null) {
+                        return false;
+                    }
+                    return thread.getName().equals(t);
+                });
+        for (String model : modelsToPull) {
+            pullOne(client, model, clientThreadName, compressor);
+        }
+        compressor.close();
+    }
+
+    private static void pullOne(OllamaClient client, String model, AtomicReference<String> clientThreadName,
+            StartupLogCompressor compressor) {
+        // we pull one model at a time and provide progress updates to the user via logging
+        LOGGER.infof("Pulling model %s", model);
+        AtomicReference<Long> LAST_UPDATE_REF = new AtomicReference<>();
+        CompletableFuture<Void> cf = new CompletableFuture<>();
+        client.pullAsync(model).subscribe(new Flow.Subscriber<>() {
+            private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
+
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                subscription.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(OllamaClient.PullAsyncLine line) {
+                clientThreadName.compareAndSet(null, Thread.currentThread().getName());
+                if ((line.total() != null) && (line.completed() != null) && (line.status() != null)
+                        && line.status().contains("pulling")) {
+                    if (!logUpdate(LAST_UPDATE_REF.get())) {
+                        return;
+                    }
+                    LAST_UPDATE_REF.set(System.nanoTime());
+                    BigDecimal percentage = new BigDecimal(line.completed()).divide(new BigDecimal(line.total()), 4,
+                            RoundingMode.HALF_DOWN).multiply(ONE_HUNDRED);
+                    BigDecimal progress = percentage.setScale(2, RoundingMode.HALF_DOWN);
+                    if (progress.compareTo(ONE_HUNDRED) >= 0) {
+                        // avoid showing 100% for too long
+                        LOGGER.info("Verifying and cleaning up\n");
+                    } else {
+                        LOGGER.infof("Downloading %s - Progress: %s%%\n", model, progress);
+                    }
+                }
+            }
+
+            private boolean logUpdate(Long lastUpdate) {
+                if (lastUpdate == null) {
+                    return true;
+                } else {
+                    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime())
+                            - TimeUnit.NANOSECONDS.toMillis(lastUpdate) > 1_000;
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                cf.completeExceptionally(throwable);
+            }
+
+            @Override
+            public void onComplete() {
+                cf.complete(null);
+            }
+        });
+        try {
+            cf.get(5, TimeUnit.MINUTES);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            compressor.closeAndDumpCaptured();
+            throw new RuntimeException(e.getCause());
         }
     }
 

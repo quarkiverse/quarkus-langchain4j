@@ -18,20 +18,20 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.resteasy.reactive.RestForm;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.file.FileData;
 import com.ibm.watsonx.ai.file.FileDeleteResponse;
 import com.ibm.watsonx.ai.file.FileListResponse;
 
-import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Uni;
 
 @Path("/ml/v1/files")
+@RegisterProvider(WatsonxJacksonProviders.Reader.class)
+@RegisterProvider(WatsonxJacksonProviders.Writer.class)
 public interface FileRestApi {
 
     @POST
@@ -90,11 +90,6 @@ public interface FileRestApi {
             @HeaderParam("X-IBM-Project-ID") String projectId,
             @HeaderParam("X-IBM-Space-ID") String spaceId,
             @PathParam("fileId") String fileId);
-
-    @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
-    }
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

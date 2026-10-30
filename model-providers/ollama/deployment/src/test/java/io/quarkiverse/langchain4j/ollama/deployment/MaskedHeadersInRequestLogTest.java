@@ -23,7 +23,7 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 public class MaskedHeadersInRequestLogTest extends WiremockAware {
@@ -31,7 +31,7 @@ public class MaskedHeadersInRequestLogTest extends WiremockAware {
     private static final String AUTHORIZATION_HEADER_VALUE = "Bearer test";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(Assistant.class))
             .overrideConfigKey("quarkus.langchain4j.ollama.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideConfigKey("quarkus.langchain4j.devservices.enabled", "false")

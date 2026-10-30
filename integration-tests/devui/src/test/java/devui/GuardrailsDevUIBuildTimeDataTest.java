@@ -13,8 +13,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.guardrail.InputGuardrail;
@@ -37,6 +35,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.devui.tests.DevUIBuildTimeDataTest;
 import io.quarkus.test.QuarkusDevModeTest;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Verifies the "guardrails" build-time data that backs the Dev UI Guardrails page: guardrails are grouped by class,

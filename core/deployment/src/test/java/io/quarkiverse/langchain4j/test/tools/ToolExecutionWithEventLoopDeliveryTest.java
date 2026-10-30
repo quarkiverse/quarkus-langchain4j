@@ -43,7 +43,7 @@ import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ManagedContext;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.common.vertx.VertxContext;
@@ -63,7 +63,7 @@ public class ToolExecutionWithEventLoopDeliveryTest {
     private static final String CALLER_LOCAL = "caller";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyAiService.class,
                     ClassLevelToolsAiService.class, ToolProviderAiService.class, EventLoopDeliveringChatModel.class));
 

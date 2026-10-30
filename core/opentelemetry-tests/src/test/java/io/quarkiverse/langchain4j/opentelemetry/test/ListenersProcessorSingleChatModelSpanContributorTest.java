@@ -14,12 +14,12 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class ListenersProcessorSingleChatModelSpanContributorTest
         extends ListenersProcessorAbstractSpanChatModelListenerTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> appWithInMemorySpanExporter().addClasses(TestChatModelSpanContributor.class));
 

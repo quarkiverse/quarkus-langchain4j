@@ -28,7 +28,7 @@ import io.quarkiverse.langchain4j.runtime.tool.ToolExecutionResponseContext;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanContributor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanWrapper;
 import io.quarkus.arc.All;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class ListenersProcessorToolSpanWrapperTest {
     @Inject
@@ -42,15 +42,20 @@ class ListenersProcessorToolSpanWrapperTest {
     InMemorySpanExporter exporter;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset("""
-                            # Since using a InMemorySpanExporter inside our tests,
-                            # these properties reduce the export timeout and schedule delay from the BatchSpanProcessor
-                            quarkus.otel.bsp.schedule.delay=PT0.001S
-                            quarkus.otel.bsp.max.queue.size=1
-                            quarkus.otel.bsp.max.export.batch.size=1
-                            """), "application.properties")
+                    .addAsResource(
+                            new StringAsset(
+                                    """
+                                            # Since using a InMemorySpanExporter inside our tests,
+                                            # these properties reduce the export timeout and schedule delay from the BatchSpanProcessor
+                                            quarkus.otel.bsp.schedule.delay=PT0.001S
+                                            quarkus.otel.bsp.max.queue.size=1
+                                            quarkus.otel.bsp.max.export.batch.size=1
+                                            # Quarkus 4 changed the default trace sampler; force 100% so the (parentless) test spans are recorded
+                                            quarkus.otel.traces.sampler=always_on
+                                            """),
+                            "application.properties")
                     .addClasses(InMemorySpanExporterProducer.class));
 
     @BeforeEach

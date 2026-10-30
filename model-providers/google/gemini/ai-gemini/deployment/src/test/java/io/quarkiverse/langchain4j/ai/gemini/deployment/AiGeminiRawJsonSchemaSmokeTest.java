@@ -15,8 +15,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatModel;
@@ -27,7 +25,8 @@ import dev.langchain4j.model.chat.request.json.JsonRawSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
+import tools.jackson.databind.ObjectMapper;
 
 public class AiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
 
@@ -35,7 +34,7 @@ public class AiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
     private static final String CHAT_MODEL_ID = "gemini-2.5-flash";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)
@@ -45,7 +44,7 @@ public class AiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
     ChatModel chatModel;
 
     @Test
-    void should_support_raw_json_schema() throws JsonProcessingException {
+    void should_support_raw_json_schema() {
         String rawSchema = """
                 {
                   "type": "object",

@@ -21,7 +21,7 @@ import dev.langchain4j.mcp.registryclient.model.McpRegistryPong;
 import dev.langchain4j.mcp.registryclient.model.McpServerList;
 import dev.langchain4j.mcp.registryclient.model.McpServerListRequest;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRegistryClientName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * TODO: this test runs against the official MCP registry at https://registry.modelcontextprotocol.io/
@@ -33,7 +33,7 @@ public class McpRegistryClientTest {
     private static final Logger log = LoggerFactory.getLogger(McpRegistryClientTest.class);
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever

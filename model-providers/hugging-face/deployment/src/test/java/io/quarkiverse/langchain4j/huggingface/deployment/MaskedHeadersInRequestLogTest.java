@@ -22,7 +22,7 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.huggingface.HuggingFaceModelName;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class MaskedHeadersInRequestLogTest extends WiremockAware {
 
@@ -30,7 +30,7 @@ public class MaskedHeadersInRequestLogTest extends WiremockAware {
     private static final String CHAT_MODEL_ID = HuggingFaceModelName.TII_UAE_FALCON_7B_INSTRUCT;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.huggingface.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.huggingface.log-requests", "true")

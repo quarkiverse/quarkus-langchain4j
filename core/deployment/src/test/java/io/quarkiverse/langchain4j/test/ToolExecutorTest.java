@@ -19,10 +19,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -35,25 +31,27 @@ import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
-import io.quarkus.jackson.ObjectMapperCustomizer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.jackson.JsonMapperBuilderCustomizer;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Uni;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 class ToolExecutorTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(PrettyPrintCustomizer.class));
 
     TestTool testTool = new TestTool();
     DefaultValueTool defaultValueTool = new DefaultValueTool();
 
     @Singleton
-    public static class PrettyPrintCustomizer implements ObjectMapperCustomizer {
+    public static class PrettyPrintCustomizer implements JsonMapperBuilderCustomizer {
 
         @Override
-        public void customize(ObjectMapper objectMapper) {
-            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        public void customize(JsonMapper.Builder builder) {
+            builder.enable(SerializationFeature.INDENT_OUTPUT);
         }
     }
 
@@ -520,7 +518,7 @@ class ToolExecutorTest {
     }
 
     @Test
-    void should_keep_general_json_serialization_pretty_printed() throws JsonProcessingException {
+    void should_keep_general_json_serialization_pretty_printed() {
         executeAndAssert("{}", "objectResult", "{\"name\":\"ABC\",\"sortBy\":\"DATE\"}");
 
         ArgObject result = new ArgObject("ABC", SortBy.DATE);

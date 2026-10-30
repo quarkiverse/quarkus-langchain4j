@@ -19,8 +19,6 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-
 import dev.langchain4j.model.openai.OpenAiAudioTranscriptionModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiDecisionModel;
@@ -68,6 +66,7 @@ import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.proxy.ProxyConfigurationRegistry;
+import tools.jackson.databind.PropertyNamingStrategies;
 
 public class OpenAiProcessor {
 

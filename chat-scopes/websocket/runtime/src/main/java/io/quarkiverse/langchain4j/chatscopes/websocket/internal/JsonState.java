@@ -4,9 +4,9 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class JsonState {
 
@@ -36,7 +36,7 @@ public class JsonState {
                 Object unmarshalled = objectMapper.treeToValue((JsonNode) value, objectMapper.constructType(type));
                 data.put(key, unmarshalled);
                 return (T) unmarshalled;
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         } else {

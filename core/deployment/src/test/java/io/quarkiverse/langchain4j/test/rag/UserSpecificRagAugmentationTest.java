@@ -28,7 +28,7 @@ import io.quarkiverse.langchain4j.test.rag.UserSpecificRagSupport.EchoStreamingM
 import io.quarkiverse.langchain4j.test.rag.UserSpecificRagSupport.UserAugmentorSupplier;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
@@ -43,7 +43,7 @@ public class UserSpecificRagAugmentationTest {
     private static final String SUMMARY_QUESTION = "Summarize my documents.";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(UserSpecificRagAugmentationTest::createArchive)
             .overrideConfigKey("quarkus.http.auth.basic", "true")
             .overrideConfigKey("quarkus.security.users.embedded.enabled", "true")

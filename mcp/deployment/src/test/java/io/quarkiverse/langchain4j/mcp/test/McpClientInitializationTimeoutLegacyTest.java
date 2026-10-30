@@ -6,14 +6,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.mcp.test.mock.LegacyMcpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpClientInitializationTimeoutLegacyTest extends AbstractMcpClientInitializationTimeoutTest {
 
     private static final String MCP_PATH = "/mcp/initialization-timeout-legacy";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMcpClientInitializationTimeoutTest.class)
                     .addPackage(McpMockServer.class.getPackage()))

@@ -23,12 +23,12 @@ import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class ListenersProcessorTwoChatModelSpanContributorsTest
         extends ListenersProcessorAbstractSpanChatModelListenerTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> appWithInMemorySpanExporter()
                             .addClasses(

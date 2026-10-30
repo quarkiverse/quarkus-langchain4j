@@ -27,7 +27,7 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.filter.comparison.IsEqualTo;
 import dev.langchain4j.store.embedding.filter.logical.And;
 import dev.langchain4j.store.embedding.milvus.MilvusEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 // temporary solution until we figure out how to extend EmbeddingStoreWithFilteringIT
 // (which contains tests parametrized through @MethodSource, which is not supported
@@ -37,7 +37,7 @@ public class MilvusMetadataFilteringTest {
     public static final String COLLECTION_NAME = "test_embeddings";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset(
                             "quarkus.langchain4j.milvus.collection-name=" + COLLECTION_NAME + "\n" +

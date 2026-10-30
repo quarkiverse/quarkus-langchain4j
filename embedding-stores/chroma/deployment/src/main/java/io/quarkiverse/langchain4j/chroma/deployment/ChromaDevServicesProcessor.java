@@ -1,20 +1,17 @@
 package io.quarkiverse.langchain4j.chroma.deployment;
 
-import java.io.Closeable;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.jboss.logging.Logger;
+import org.testcontainers.chromadb.ChromaDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.BuildSteps;
@@ -22,15 +19,13 @@ import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.DevServicesSharedNetworkBuildItem;
 import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
-import io.quarkus.deployment.console.StartupLogCompressor;
 import io.quarkus.deployment.dev.devservices.DevServicesConfig;
-import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.devservices.common.ConfigureUtil;
+import io.quarkus.devservices.common.ContainerAddress;
 import io.quarkus.devservices.common.ContainerLocator;
+import io.quarkus.devservices.common.StartableContainer;
 import io.quarkus.runtime.LaunchMode;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @BuildSteps(onlyIfNot = IsNormal.class, onlyIf = DevServicesConfig.Enabled.class)
 public class ChromaDevServicesProcessor {
 
@@ -42,199 +37,69 @@ public class ChromaDevServicesProcessor {
      */
     private static final String DEV_SERVICE_LABEL = "quarkus-dev-service-chroma";
     private static final String IMAGE_NAME = "ghcr.io/chroma-core/chroma";
-
     private static final int CHROMA_PORT = 8000;
 
     private static final ContainerLocator containerLocator = new ContainerLocator(DEV_SERVICE_LABEL, CHROMA_PORT);
-    static volatile DevServicesResultBuildItem.RunningDevService devService;
-    static volatile ChromaDevServiceCfg cfg;
-    static volatile boolean first = true;
 
     @BuildStep
     public DevServicesResultBuildItem startChromaDevService(
             DockerStatusBuildItem dockerStatusBuildItem,
             LaunchModeBuildItem launchMode,
             ChromaEmbeddingStoreBuildTimeConfig chromaBuildConfig,
-            Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
-            LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
-
+        ChromaEmbeddingStoreBuildTimeConfig.ChromaDevServicesBuildTimeConfig config = chromaBuildConfig.devservices();
         Set<String> namedStoreNames = chromaBuildConfig.namedConfig().keySet();
-
-        ChromaDevServiceCfg configuration = getConfiguration(chromaBuildConfig);
-
-        if (devService != null) {
-            boolean shouldShutdownTheBroker = !configuration.equals(cfg);
-            if (!shouldShutdownTheBroker) {
-                return devService.toBuildItem();
-            }
-            shutdownContainer();
-            cfg = null;
-        }
-
-        StartupLogCompressor compressor = new StartupLogCompressor(
-                (launchMode.isTest() ? "(test) " : "") + "Chroma Dev Services Starting:", consoleInstalledBuildItem,
-                loggingSetupBuildItem);
-        try {
-            DevServicesResultBuildItem.RunningDevService newDevService = startContainer(dockerStatusBuildItem, configuration,
-                    launchMode,
-                    !devServicesSharedNetworkBuildItem.isEmpty(), devServicesConfig.timeout(), namedStoreNames);
-            if (newDevService != null) {
-                devService = newDevService;
-
-                Map<String, String> config = devService.getConfig();
-                if (devService.isOwner()) {
-                    log.info("Dev Services for Chroma started.");
-                }
-            }
-            if (devService == null) {
-                compressor.closeAndDumpCaptured();
-            } else {
-                compressor.close();
-            }
-        } catch (Throwable t) {
-            compressor.closeAndDumpCaptured();
-            throw new RuntimeException(t);
-        }
-
-        if (devService == null) {
-            return null;
-        }
-
-        // Configure the watch dog
-        if (first) {
-            first = false;
-            Runnable closeTask = () -> {
-                if (devService != null) {
-                    shutdownContainer();
-
-                    log.info("Dev Services for Chroma shut down.");
-                }
-                first = true;
-                devService = null;
-                cfg = null;
-            };
-            QuarkusClassLoader cl = (QuarkusClassLoader) Thread.currentThread().getContextClassLoader();
-            ((QuarkusClassLoader) cl.parent()).addCloseTask(closeTask);
-        }
-        cfg = configuration;
-        return devService.toBuildItem();
-    }
-
-    private void shutdownContainer() {
-        if (devService != null) {
-            try {
-                devService.close();
-            } catch (Throwable e) {
-                log.error("Failed to stop the Chroma server", e);
-            } finally {
-                devService = null;
-            }
-        }
-    }
-
-    private DevServicesResultBuildItem.RunningDevService startContainer(DockerStatusBuildItem dockerStatusBuildItem,
-            ChromaDevServiceCfg config, LaunchModeBuildItem launchMode,
-            boolean useSharedNetwork, Optional<Duration> timeout, Set<String> namedStoreNames) {
-        if (!config.devServicesEnabled) {
-            // explicitly disabled
+        if (!config.enabled()) {
             log.debug("Not starting Dev Services for Chroma, as it has been disabled in the config.");
             return null;
         }
-
-        if (!dockerStatusBuildItem.isDockerAvailable()) {
+        if (!dockerStatusBuildItem.isContainerRuntimeAvailable()) {
             log.warn("Docker isn't working, please configure the Chroma server location.");
             return null;
         }
+        boolean useSharedNetwork = !devServicesSharedNetworkBuildItem.isEmpty();
 
-        ConfiguredChromaContainer container = new ConfiguredChromaContainer(
-                DockerImageName.parse(config.imageName).asCompatibleSubstituteFor(IMAGE_NAME),
-                config.fixedExposedPort,
-                launchMode.getLaunchMode() == LaunchMode.DEVELOPMENT ? config.serviceName : null,
-                useSharedNetwork);
+        Optional<ContainerAddress> located = containerLocator.locateContainer(config.serviceName(), config.shared(),
+                launchMode.getLaunchMode());
+        if (located.isPresent()) {
+            ContainerAddress address = located.get();
+            return DevServicesResultBuildItem.discovered()
+                    .feature(ChromaProcessor.FEATURE)
+                    .containerId(address.getId())
+                    .config(configMap("http://" + address.getHost() + ":" + address.getPort(), namedStoreNames))
+                    .build();
+        }
 
-        final Supplier<DevServicesResultBuildItem.RunningDevService> defaultChromaSupplier = () -> {
-
-            // Starting the broker
-            timeout.ifPresent(container::withStartupTimeout);
-            container.withEnv(config.containerEnv);
-            container.start();
-            return getRunningDevService(
-                    container.getContainerId(),
-                    container::close,
-                    container.getHost(),
-                    container.getPort(),
-                    namedStoreNames);
-        };
-
-        return containerLocator
-                .locateContainer(
-                        config.serviceName,
-                        config.shared,
-                        launchMode.getLaunchMode())
-                .map(containerAddress -> getRunningDevService(
-                        containerAddress.getId(),
-                        null,
-                        containerAddress.getHost(),
-                        containerAddress.getPort(),
-                        namedStoreNames))
-                .orElseGet(defaultChromaSupplier);
+        Map<String, Function<StartableContainer<ConfiguredChromaContainer>, String>> configProvider = new HashMap<>();
+        for (String key : configMap("", namedStoreNames).keySet()) {
+            configProvider.put(key, StartableContainer::getConnectionInfo);
+        }
+        return DevServicesResultBuildItem.owned()
+                .feature(ChromaProcessor.FEATURE)
+                .serviceName(config.serviceName())
+                .serviceConfig(config)
+                .startable(() -> {
+                    ConfiguredChromaContainer container = new ConfiguredChromaContainer(
+                            DockerImageName.parse(config.imageName()).asCompatibleSubstituteFor(IMAGE_NAME),
+                            config.port(),
+                            launchMode.getLaunchMode() == LaunchMode.DEVELOPMENT ? config.serviceName() : null,
+                            useSharedNetwork);
+                    devServicesConfig.timeout().ifPresent(container::withStartupTimeout);
+                    container.withEnv(config.containerEnv());
+                    return new StartableContainer<>(container, c -> "http://" + c.getHost() + ":" + c.getPort());
+                })
+                .configProvider(configProvider)
+                .build();
     }
 
-    private DevServicesResultBuildItem.RunningDevService getRunningDevService(
-            String containerId, Closeable closeable, String host, int port, Set<String> namedStoreNames) {
-        String chromaUrl = "http://" + host + ":" + port;
+    private static Map<String, String> configMap(String chromaUrl, Set<String> namedStoreNames) {
         Map<String, String> configMap = new HashMap<>();
         configMap.put("quarkus.langchain4j.chroma.url", chromaUrl);
         for (String namedStore : namedStoreNames) {
             configMap.put("quarkus.langchain4j.chroma." + namedStore + ".url", chromaUrl);
         }
-        return new DevServicesResultBuildItem.RunningDevService(ChromaProcessor.FEATURE,
-                containerId, closeable, configMap);
-    }
-
-    private ChromaDevServiceCfg getConfiguration(ChromaEmbeddingStoreBuildTimeConfig cfg) {
-        return new ChromaDevServiceCfg(cfg.devservices());
-    }
-
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private static final class ChromaDevServiceCfg {
-
-        private final boolean devServicesEnabled;
-        private final String imageName;
-        private final OptionalInt fixedExposedPort;
-        private final boolean shared;
-        private final String serviceName;
-        private final Map<String, String> containerEnv;
-
-        public ChromaDevServiceCfg(ChromaEmbeddingStoreBuildTimeConfig.ChromaDevServicesBuildTimeConfig devServicesConfig) {
-            this.devServicesEnabled = devServicesConfig.enabled();
-            this.imageName = devServicesConfig.imageName();
-            this.fixedExposedPort = devServicesConfig.port();
-            this.shared = devServicesConfig.shared();
-            this.serviceName = devServicesConfig.serviceName();
-            this.containerEnv = devServicesConfig.containerEnv();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            ChromaDevServiceCfg that = (ChromaDevServiceCfg) o;
-            return devServicesEnabled == that.devServicesEnabled && Objects.equals(imageName, that.imageName)
-                    && Objects.equals(fixedExposedPort, that.fixedExposedPort)
-                    && Objects.equals(containerEnv, that.containerEnv);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(devServicesEnabled, imageName, fixedExposedPort, containerEnv);
-        }
+        return configMap;
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
 import io.quarkiverse.langchain4j.chatscopes.InvocationScoped;
 import io.quarkus.arc.runtime.BeanContainer;
-import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
@@ -54,9 +53,8 @@ public class ChatRouteRecorder {
 
     private static final String LOCAL_KEY_PREFIX = "io.quarkus.vertx.cdi-current-context";
 
-    public RuntimeValue<List<String>> getIgnoredArcContextKeysSupplier() {
-        return new RuntimeValue<>(
-                List.of(LOCAL_KEY_PREFIX + ChatScoped.class.getName(), LOCAL_KEY_PREFIX + InvocationScoped.class.getName()));
+    public static List<String> ignoredArcContextKeys() {
+        return List.of(LOCAL_KEY_PREFIX + ChatScoped.class.getName(), LOCAL_KEY_PREFIX + InvocationScoped.class.getName());
     }
 
     protected Method resolveMethod(Class<?> targetClass, String methodName) {

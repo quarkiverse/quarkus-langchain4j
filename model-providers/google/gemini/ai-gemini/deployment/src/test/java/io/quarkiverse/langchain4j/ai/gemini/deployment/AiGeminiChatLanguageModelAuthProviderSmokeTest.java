@@ -21,7 +21,7 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class AiGeminiChatLanguageModelAuthProviderSmokeTest extends WiremockAware {
 
@@ -29,7 +29,7 @@ public class AiGeminiChatLanguageModelAuthProviderSmokeTest extends WiremockAwar
     private static final String CHAT_MODEL_ID = "gemini-2.5-flash";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true");

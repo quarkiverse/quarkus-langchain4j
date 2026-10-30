@@ -1,9 +1,8 @@
 package io.quarkiverse.langchain4j.runtime.jackson;
 
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-
 import dev.langchain4j.data.audio.Audio;
 import io.quarkus.jackson.JacksonMixin;
+import tools.jackson.databind.annotation.JsonPOJOBuilder;
 
 @JacksonMixin(Audio.Builder.class)
 @JsonPOJOBuilder(withPrefix = "")

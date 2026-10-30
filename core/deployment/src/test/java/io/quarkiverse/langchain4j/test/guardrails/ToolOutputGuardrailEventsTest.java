@@ -44,7 +44,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.runtime.observability.ToolGuardrailOutcome;
 import io.quarkiverse.langchain4j.runtime.observability.ToolOutputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Tests that ToolOutputGuardrailExecutedEvent is fired with correct metadata.
@@ -52,7 +52,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolOutputGuardrailEventsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             MyAiService.class,

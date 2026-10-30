@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
-import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,9 +9,6 @@ import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
 
 import org.jboss.logging.Logger;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -26,6 +22,8 @@ import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.mutiny.Uni;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
 
 public class QuarkusToolExecutor implements ToolExecutor {
 
@@ -160,12 +158,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
         if (invocationResult instanceof String string) {
             return string;
         }
-        try {
-            // Keep tool results compact without changing the general JSON codec's formatting.
-            return QuarkusJsonCodecFactory.ObjectMapperHolder.COMPACT_WRITER.writeValueAsString(invocationResult);
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
+        // Keep tool results compact without changing the general JSON codec's formatting.
+        return QuarkusJsonCodecFactory.ObjectMapperHolder.COMPACT_WRITER.writeValueAsString(invocationResult);
     }
 
     // TODO: cache
@@ -197,7 +191,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
             argumentsFromRequest = convertJsonToArguments(argumentsJsonStr);
             presentKeys = parseRawJsonKeys(argumentsJsonStr);
             log.debugv("Converted {0} JSON string into args map {1}", argumentsJsonStr, argumentsFromRequest);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error(e);
             invalidMethodParams(argumentsJsonStr);
             return null; //keep the compiler happy
@@ -253,7 +247,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
         return finalArgs;
     }
 
-    private Set<String> parseRawJsonKeys(String argumentsJsonStr) throws JsonProcessingException {
+    private Set<String> parseRawJsonKeys(String argumentsJsonStr) {
         if (argumentsJsonStr == null || argumentsJsonStr.isEmpty()) {
             return Collections.emptySet();
         }
@@ -299,7 +293,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
         return Json.fromJson(defaultValue, parameterClass);
     }
 
-    private Map<String, Object> convertJsonToArguments(String argumentsJsonStr) throws JsonProcessingException {
+    private Map<String, Object> convertJsonToArguments(String argumentsJsonStr) {
         if (argumentsJsonStr == null || argumentsJsonStr.isEmpty()) {
             return Collections.emptyMap();
         }
