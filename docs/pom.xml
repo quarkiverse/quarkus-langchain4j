@@ -112,6 +112,10 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-security</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.quarkiverse.antora</groupId>
             <artifactId>quarkus-antora</artifactId>
             <version>${quarkus-antora.version}</version>
