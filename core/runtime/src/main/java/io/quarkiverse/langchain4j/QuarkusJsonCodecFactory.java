@@ -18,23 +18,38 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.audio.Audio;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ContentType;
 import dev.langchain4j.data.message.CustomMessage;
 import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.VideoContent;
+import dev.langchain4j.data.pdf.PdfFile;
+import dev.langchain4j.data.video.Video;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.spi.json.JsonCodecFactory;
+import io.quarkiverse.langchain4j.runtime.jackson.AudioBuilderMixin;
+import io.quarkiverse.langchain4j.runtime.jackson.AudioContentMixin;
+import io.quarkiverse.langchain4j.runtime.jackson.AudioMixin;
 import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalDateDeserializer;
 import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalDateTimeDeserializer;
 import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalTimeDeserializer;
+import io.quarkiverse.langchain4j.runtime.jackson.PdfFileBuilderMixin;
+import io.quarkiverse.langchain4j.runtime.jackson.PdfFileContentMixin;
+import io.quarkiverse.langchain4j.runtime.jackson.PdfFileMixin;
+import io.quarkiverse.langchain4j.runtime.jackson.VideoBuilderMixin;
+import io.quarkiverse.langchain4j.runtime.jackson.VideoContentMixin;
+import io.quarkiverse.langchain4j.runtime.jackson.VideoMixin;
 import io.quarkus.arc.Arc;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.json.JsonReadFeature;
@@ -149,6 +164,15 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                     .addMixIn(TextContent.class, TextContentMixin.class)
                     .addMixIn(ImageContent.class, ImageContentMixin.class)
                     .addMixIn(Image.class, ImageMixin.class)
+                    .addMixIn(AudioContent.class, AudioContentMixin.class)
+                    .addMixIn(Audio.class, AudioMixin.class)
+                    .addMixIn(Audio.Builder.class, AudioBuilderMixin.class)
+                    .addMixIn(VideoContent.class, VideoContentMixin.class)
+                    .addMixIn(Video.class, VideoMixin.class)
+                    .addMixIn(Video.Builder.class, VideoBuilderMixin.class)
+                    .addMixIn(PdfFileContent.class, PdfFileContentMixin.class)
+                    .addMixIn(PdfFile.class, PdfFileMixin.class)
+                    .addMixIn(PdfFile.Builder.class, PdfFileBuilderMixin.class)
                     // Register Quarkus-specific module
                     .addModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE)
                     .build();
@@ -218,6 +242,9 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
     @JsonSubTypes({
             @JsonSubTypes.Type(value = TextContent.class, name = "TEXT"),
             @JsonSubTypes.Type(value = ImageContent.class, name = "IMAGE"),
+            @JsonSubTypes.Type(value = AudioContent.class, name = "AUDIO"),
+            @JsonSubTypes.Type(value = VideoContent.class, name = "VIDEO"),
+            @JsonSubTypes.Type(value = PdfFileContent.class, name = "PDF"),
     })
     private abstract static class ContentMixin {
         @JsonProperty
