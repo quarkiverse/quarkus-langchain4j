@@ -50,7 +50,6 @@ import io.quarkus.arc.deployment.CustomScopeBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
@@ -102,12 +101,11 @@ public class ChatScopeProcessor {
     }
 
     @BuildStep
-    @Record(ExecutionTime.RUNTIME_INIT)
     void dontPropagateCdiContext(BuildProducer<IgnoredContextLocalDataKeysBuildItem> ignoredContextKeysProducer,
-            ChatRouteRecorder recorder, VertxBuildConfig buildConfig) {
+            VertxBuildConfig buildConfig) {
         if (buildConfig.customizeArcContext()) {
             ignoredContextKeysProducer
-                    .produce(new IgnoredContextLocalDataKeysBuildItem(recorder.getIgnoredArcContextKeysSupplier()));
+                    .produce(new IgnoredContextLocalDataKeysBuildItem(ChatRouteRecorder.ignoredArcContextKeys()));
         }
     }
 

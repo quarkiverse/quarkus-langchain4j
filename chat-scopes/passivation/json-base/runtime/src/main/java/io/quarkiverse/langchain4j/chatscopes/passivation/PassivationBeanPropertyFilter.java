@@ -54,9 +54,10 @@ public class PassivationBeanPropertyFilter implements PropertyFilter {
                 Field field = (Field) annotatedElement;
                 if (field.getDeclaringClass().equals(pojo.getClass())) {
                     // decorator fields follow no naming convention so
-                    // we check if property is arc$constructed so
-                    // we can trigger writing the decorators only once.
-                    if (field.getName().equals("arc$constructed")) {
+                    // we key off a stable Arc-generated marker field to
+                    // trigger writing the decorators only once.
+                    // (Quarkus 3 used "arc$constructed"; Quarkus 4 uses "arc$alive".)
+                    if (field.getName().equals("arc$alive")) {
                         Map<String, String> decorators = AbstractJsonChatScopeStore.serializeDecorators(pojo);
                         if (decorators.isEmpty()) {
                             return true;
