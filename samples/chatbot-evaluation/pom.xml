@@ -69,6 +69,7 @@
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
+                <extensions>true</extensions>
             </plugin>
         </plugins>
     </build>
