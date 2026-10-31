@@ -81,6 +81,7 @@
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus.platform.version}</version>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
                         <goals>
@@ -123,6 +124,7 @@
                         <groupId>${quarkus.platform.group-id}</groupId>
                         <artifactId>quarkus-maven-plugin</artifactId>
                         <version>${quarkus.platform.version}</version>
+                        <extensions>true</extensions>
                         <configuration>
                             <jvmArgs>@${env.TORNADOVM_HOME}/tornado-argfile --add-modules jdk.incubator.vector</jvmArgs>
                         </configuration>
