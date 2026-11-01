@@ -40,8 +40,8 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-	<maven.compiler.release>17</maven.compiler.release>  
-    <quarkus.version>3.40.0</quarkus.version>
+	<maven.compiler.release>17</maven.compiler.release>
+    <quarkus.version>3.40.1.1</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.23.0</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
