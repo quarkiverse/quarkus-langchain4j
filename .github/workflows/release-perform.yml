@@ -27,5 +27,5 @@ jobs:
     secrets: inherit
     with:
       version: ${{github.event.inputs.tag || github.ref_name}}
-      java_version: 23
-      maven_args: -Drag -Dplatform-deps
+      java_version: 25
+      maven_args: -Drag
