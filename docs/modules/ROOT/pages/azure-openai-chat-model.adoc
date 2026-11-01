@@ -92,6 +92,23 @@ import jakarta.inject.Inject;
 @Inject @ModelName("some-name") ChatModel chatModel;
 ----
 
+== Using the v1 endpoints
+
+Azure OpenAI also exposes unversioned `v1` endpoints (`https://<resource-name>.openai.azure.com/openai/v1/...`), which do not require an `api-version`.
+To use them for chat and embedding models, set the endpoint style to `v1`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.azure-openai.endpoint-style=v1
+quarkus.langchain4j.azure-openai.resource-name=
+quarkus.langchain4j.azure-openai.deployment-name=
+----
+
+In this mode, no `api-version` is sent, and the deployment name is passed as the `model` of each request instead of being part of the URL, so `deployment-name` is required.
+If you set `quarkus.langchain4j.azure-openai.endpoint` explicitly, it must point to the `v1` base URL, for example `https://<resource-name>.openai.azure.com/openai/v1`.
+
+Image and audio transcription models keep using the deployment-based endpoints.
+
 == Advanced usage
 
 Please refer to https://docs.quarkiverse.io/quarkus-langchain4j/dev/openai-chat-model.html#_advanced_usage[Open AI].

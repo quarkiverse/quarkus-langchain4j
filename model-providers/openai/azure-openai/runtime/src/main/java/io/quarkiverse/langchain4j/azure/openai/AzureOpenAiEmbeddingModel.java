@@ -47,6 +47,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
     private final OpenAiClient client;
     private final Integer maxRetries;
     private final TokenCountEstimator tokenizer;
+    private final String requestModel;
 
     public AzureOpenAiEmbeddingModel(String endpoint,
             String apiVersion,
@@ -59,7 +60,25 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
             Boolean logRequests,
             Boolean logResponses,
             String configName) {
+        this(endpoint, apiVersion, apiKey, adToken, tokenizer, timeout, maxRetries, proxy, logRequests, logResponses,
+                configName, null);
+    }
 
+    public AzureOpenAiEmbeddingModel(String endpoint,
+            String apiVersion,
+            String apiKey,
+            String adToken,
+            TokenCountEstimator tokenizer,
+            Duration timeout,
+            Integer maxRetries,
+            Proxy proxy,
+            Boolean logRequests,
+            Boolean logResponses,
+            String configName,
+            String modelName) {
+
+        // v1 endpoints are not versioned and have no deployment in the URL, so the deployment is selected through the model
+        this.requestModel = apiVersion == null ? modelName : null;
         timeout = getOrDefault(timeout, ofSeconds(60));
         if (maxRetries < 1) {
             throw new IllegalArgumentException("max-retries must be at least 1");
@@ -112,6 +131,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
             List<String> batch = texts.subList(i, Math.min(i + BATCH_SIZE, texts.size()));
 
             EmbeddingRequest request = EmbeddingRequest.builder()
+                    .model(requestModel)
                     .input(batch)
                     .build();
 
@@ -146,6 +166,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
         private Boolean logResponses;
         private String adToken;
         private String configName;
+        private String modelName;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -221,6 +242,18 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
             return this;
         }
 
+        /**
+         * Sets the deployment name. It is only sent, as the request's model, when no API version is set,
+         * which targets the v1 endpoints.
+         *
+         * @param modelName The name of the model deployment.
+         * @return builder
+         */
+        public Builder modelName(String modelName) {
+            this.modelName = modelName;
+            return this;
+        }
+
         public AzureOpenAiEmbeddingModel build() {
             return new AzureOpenAiEmbeddingModel(endpoint,
                     apiVersion,
@@ -232,7 +265,8 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
                     proxy,
                     logRequests,
                     logResponses,
-                    configName);
+                    configName,
+                    modelName);
         }
     }
 }
