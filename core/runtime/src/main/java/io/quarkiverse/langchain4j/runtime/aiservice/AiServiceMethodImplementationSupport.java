@@ -95,6 +95,7 @@ import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
+import dev.langchain4j.observability.api.event.RetrievalAugmentedEvent;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.query.Metadata;
@@ -339,6 +340,15 @@ public class AiServiceMethodImplementationSupport {
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
 
             augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
+
+            // New firing
+            context.eventListenerRegistrar.fireEvent(
+                    RetrievalAugmentedEvent.builder()
+                            .invocationContext(invocationContext)
+                            .chatMessage(userMessage)
+                            .contents(augmentationResult.contents())
+                            .build());
+
             userMessage = (UserMessage) augmentationResult.chatMessage();
         }
 
