@@ -64,8 +64,7 @@ public class QuarkusRestApiResource {
     @Path("chat/sync")
     public String chatSync() {
         return restApi.blockingChatCompletion(
-                createChatCompletionRequest(
-                        "Which one of these languages is more susceptible to segmentation fault: Java, Go, C++ or Rust?"),
+                createChatCompletionRequest("Which one of these is a programming language: English, Hindi, C++ or Mandarin?"),
                 OpenAiRestApi.ApiMetadata.builder()
                         .openAiApiKey(token)
                         .organizationId(organizationId)
