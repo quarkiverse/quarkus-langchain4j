@@ -13,15 +13,14 @@
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
     <module>agentic</module>
+    <module>apicurio-registry</module>
     <module>core</module>
     <module>embedding-stores</module>
     <module>mcp</module>
-    <module>mcp-apicurio-registry</module>
     <module>memory-stores</module>
     <module>model-auth-providers</module>
     <module>model-providers</module>
     <module>mcp-auth-providers</module>
-    <module>a2a-apicurio-registry</module>
     <module>quarkus-integrations</module>
     <module>rag</module>
     <module>chat-scopes</module>
