@@ -18,9 +18,10 @@ import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 
 /**
- * Verifies that when the server rejects a request with a non-2xx status and a body that is not
- * a JSON-RPC error, the failure carries the HTTP status code, so that callers can tell the cases apart
- * without parsing the message. Subclasses choose the protocol version spoken by the client and the server.
+ * Verifies that when the server rejects a request with a non-2xx status, the failure carries the HTTP status
+ * code, so that callers can tell the cases apart without parsing the message. This holds even when the body
+ * is a JSON-RPC error, because the transport does not read the body of an error response.
+ * Subclasses choose the protocol version spoken by the client and the server.
  * The client is configured not to cache the tool list, so that each test reaches the server.
  */
 public abstract class AbstractMcpHttpErrorStatusTest extends WiremockAware {
@@ -56,6 +57,17 @@ public abstract class AbstractMcpHttpErrorStatusTest extends WiremockAware {
         Throwable failure = rootCauseOf(() -> mcpClient.listTools());
         assertThat(failure).isInstanceOf(HttpException.class);
         assertThat(((HttpException) failure).statusCode()).isEqualTo(500);
+    }
+
+    @Test
+    public void jsonRpcErrorWithAnErrorStatusCarriesTheStatusCode() {
+        // e.g. a request whose headers do not match its body (2026-07-28)
+        mcpServer().stubJsonRpcError("tools/list", 400, -32001, "Header mismatch");
+
+        // the transport does not read the body of an error response, so the JSON-RPC error in it is not reported
+        Throwable failure = rootCauseOf(() -> mcpClient.listTools());
+        assertThat(failure).isInstanceOf(HttpException.class);
+        assertThat(((HttpException) failure).statusCode()).isEqualTo(400);
     }
 
     @Test

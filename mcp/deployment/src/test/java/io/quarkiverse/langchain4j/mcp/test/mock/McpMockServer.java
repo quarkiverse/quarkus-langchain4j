@@ -190,6 +190,22 @@ public abstract class McpMockServer<S extends McpMockServer<S>> {
         return self();
     }
 
+    /**
+     * Makes requests with the given method fail with the given HTTP status and a JSON-RPC error from now on,
+     * overriding any stub registered for that method before.
+     */
+    public S stubJsonRpcError(String method, int httpStatus, int errorCode, String errorMessage) {
+        ObjectNode message = MAPPER.createObjectNode();
+        message.put("jsonrpc", "2.0");
+        message.put("id", REQUEST_ID);
+        message.putObject("error").put("code", errorCode).put("message", errorMessage);
+        register(request(method).atPriority(1).willReturn(aResponse()
+                .withStatus(httpStatus)
+                .withHeader("Content-Type", "application/json")
+                .withBody(toTemplatedJson(message))));
+        return self();
+    }
+
     @SuppressWarnings("unchecked")
     protected S self() {
         return (S) this;
