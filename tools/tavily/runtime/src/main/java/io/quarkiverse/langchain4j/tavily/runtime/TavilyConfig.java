@@ -86,4 +86,17 @@ public interface TavilyConfig {
     @ConfigDocDefault("empty list")
     Optional<List<String>> excludeDomains();
 
+    /**
+     * If set, the named TLS configuration with the configured name will be applied to the HTTP client used to call Tavily
+     */
+    Optional<String> tlsConfigurationName();
+
+    /**
+     * The name of the Quarkus Proxy Registry configuration to use.
+     * <p>
+     * If not set and the default proxy configuration is configured ({@code quarkus.proxy.*}) then that will be used.
+     * If a name is configured, it uses the configuration from {@code quarkus.proxy.<name>.*}.
+     */
+    Optional<String> proxyConfigurationName();
+
 }
