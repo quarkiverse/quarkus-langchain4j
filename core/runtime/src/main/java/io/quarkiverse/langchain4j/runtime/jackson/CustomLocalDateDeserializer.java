@@ -24,6 +24,12 @@ public class CustomLocalDateDeserializer extends JsonDeserializer<LocalDate> {
     public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         if (p.currentToken() == JsonToken.START_OBJECT) {
             JsonNode node = p.getCodec().readTree(p);
+            if (!node.hasNonNull("year") || !node.hasNonNull("month") || !node.hasNonNull("day")) {
+                // the LLM truncated its answer, so there is no date to build. Filling the missing parts with zeroes
+                // would silently produce a wrong date, which is worse than admitting we have none
+                log.debug("Failed to deserialize LocalDate: missing constituents in " + node);
+                return null;
+            }
             int year = node.get("year").asInt();
             int month = node.get("month").asInt();
             int day = node.get("day").asInt();

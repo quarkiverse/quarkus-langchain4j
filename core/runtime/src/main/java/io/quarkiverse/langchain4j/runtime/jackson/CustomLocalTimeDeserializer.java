@@ -23,10 +23,17 @@ public class CustomLocalTimeDeserializer extends JsonDeserializer<LocalTime> {
     public LocalTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         if (p.currentToken() == JsonToken.START_OBJECT) {
             JsonNode node = p.getCodec().readTree(p);
+            if (!node.hasNonNull("hour") || !node.hasNonNull("minute")) {
+                // the LLM truncated its answer, so there is no time to build. Filling the missing parts with zeroes
+                // would silently produce a wrong time, which is worse than admitting we have none
+                log.debug("Failed to deserialize LocalTime: missing constituents in " + node);
+                return null;
+            }
             int hour = node.get("hour").asInt();
             int minute = node.get("minute").asInt();
-            int second = node.get("second").asInt();
-            int nano = node.get("nano").asInt();
+            // the seconds are optional, an LLM that answers to the minute leaves them out
+            int second = node.hasNonNull("second") ? node.get("second").asInt() : 0;
+            int nano = node.hasNonNull("nano") ? node.get("nano").asInt() : 0;
             try {
                 return LocalTime.of(hour, minute, second, nano);
             } catch (Exception e) {

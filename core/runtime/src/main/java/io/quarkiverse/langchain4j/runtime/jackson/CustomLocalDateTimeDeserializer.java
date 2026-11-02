@@ -25,22 +25,22 @@ public class CustomLocalDateTimeDeserializer extends JsonDeserializer<LocalDateT
         if (p.currentToken() == JsonToken.START_OBJECT) {
             JsonNode node = p.getCodec().readTree(p);
             JsonNode date = node.get("date");
+            JsonNode time = node.get("time");
+            if (date == null || !date.hasNonNull("year") || !date.hasNonNull("month") || !date.hasNonNull("day")
+                    || time == null || !time.hasNonNull("hour") || !time.hasNonNull("minute")) {
+                // the LLM truncated its answer, so there is no datetime to build. Filling the missing parts with
+                // zeroes would silently produce a wrong datetime, which is worse than admitting we have none
+                log.debug("Failed to deserialize LocalDateTime: missing constituents in " + node);
+                return null;
+            }
             int year = date.get("year").asInt();
             int month = date.get("month").asInt();
             int day = date.get("day").asInt();
-            JsonNode time = node.get("time");
             int hour = time.get("hour").asInt();
             int minute = time.get("minute").asInt();
-            JsonNode secondNode = time.get("second");
-            int second = 0;
-            if (secondNode != null) {
-                second = secondNode.asInt();
-            }
-            JsonNode nanoNode = time.get("nano");
-            int nano = 0;
-            if (nanoNode != null) {
-                nano = nanoNode.asInt();
-            }
+            // the seconds are optional, an LLM that answers to the minute leaves them out
+            int second = time.hasNonNull("second") ? time.get("second").asInt() : 0;
+            int nano = time.hasNonNull("nano") ? time.get("nano").asInt() : 0;
             try {
                 return LocalDateTime.of(year, month, day, hour, minute, second, nano);
             } catch (DateTimeException e) {
