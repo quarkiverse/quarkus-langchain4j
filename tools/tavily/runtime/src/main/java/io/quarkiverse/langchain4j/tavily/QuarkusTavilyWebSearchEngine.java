@@ -9,7 +9,11 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriBuilderException;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
@@ -32,6 +36,8 @@ import io.vertx.core.http.HttpClientResponse;
 
 // TODO: use the upstream implementation once it doesn't depend on OkHttp etc.
 public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
+
+    private static final Logger log = Logger.getLogger(QuarkusTavilyWebSearchEngine.class);
 
     private final TavilyClient tavilyClient;
     private final String apiKey;
@@ -91,6 +97,7 @@ public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
 
         final List<WebSearchOrganicResult> results = tavilyResponse.getResults().stream()
                 .map(QuarkusTavilyWebSearchEngine::toWebSearchOrganicResult)
+                .flatMap(Optional::stream)
                 .collect(toList());
 
         if (tavilyResponse.getAnswer() != null) {
@@ -105,12 +112,30 @@ public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
         return WebSearchResults.from(WebSearchInformationResult.from((long) results.size()), results);
     }
 
-    private static WebSearchOrganicResult toWebSearchOrganicResult(TavilySearchResult tavilySearchResult) {
-        return WebSearchOrganicResult.from(tavilySearchResult.getTitle(),
-                URI.create(tavilySearchResult.getUrl().replaceAll(" ", "%20")),
+    private static Optional<WebSearchOrganicResult> toWebSearchOrganicResult(TavilySearchResult tavilySearchResult) {
+        URI url;
+        try {
+            url = toUri(tavilySearchResult.getUrl());
+        } catch (IllegalArgumentException | UriBuilderException e) {
+            log.warnf(e, "Skipping Tavily search result with invalid URL: %s", tavilySearchResult.getUrl());
+            return Optional.empty();
+        }
+
+        return Optional.of(WebSearchOrganicResult.from(tavilySearchResult.getTitle(),
+                url,
                 tavilySearchResult.getContent(),
                 tavilySearchResult.getRawContent(),
-                Collections.singletonMap("score", String.valueOf(tavilySearchResult.getScore())));
+                Collections.singletonMap("score", String.valueOf(tavilySearchResult.getScore()))));
+    }
+
+    private static URI toUri(String url) {
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException e) {
+            uri = UriBuilder.newInstance().uri(url).build();
+        }
+        return URI.create(uri.toASCIIString());
     }
 
     static class TavilyClientLogger implements ClientLogger {
