@@ -83,6 +83,19 @@
           </annotationProcessorPaths>
         </configuration>
       </plugin>
+      <plugin>
+        <!-- this is to avoid
+                java.util.ServiceConfigurationError: ai.djl.engine.EngineProvider:
+                ai.djl.engine.rpc.RpcEngineProvider not a subtype
+             because DJL classes get loaded by different Quarkus class loaders
+             when tests reuse the same fork
+        -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <reuseForks>false</reuseForks>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
