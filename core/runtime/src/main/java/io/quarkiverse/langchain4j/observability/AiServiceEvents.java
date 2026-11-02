@@ -8,6 +8,7 @@ import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.observability.api.event.InputGuardrailExecutedEvent;
 import dev.langchain4j.observability.api.event.OutputGuardrailExecutedEvent;
+import dev.langchain4j.observability.api.event.RetrievalAugmentedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import io.quarkiverse.langchain4j.observability.listener.AiServiceListenerAdapter;
 
@@ -22,6 +23,7 @@ public enum AiServiceEvents {
     OUTPUT_GUARDRAIL_EXECUTED(OutputGuardrailExecutedEvent.class),
     REQUEST_ISSUED(AiServiceRequestIssuedEvent.class),
     RESPONSE_RECEIVED(AiServiceResponseReceivedEvent.class),
+    RETRIEVAL_AUGMENTED(RetrievalAugmentedEvent.class),
     STARTED(AiServiceStartedEvent.class),
     TOOL_EXECUTED(ToolExecutedEvent.class);
 
