@@ -47,7 +47,7 @@ public class McpApicurioRegistryRecorder {
                 RegistryClientOptions options = RegistryClientOptions.create(config.url(), vertx.get());
                 RegistryClient registryClient = RegistryClientFactory.create(options);
 
-                return new ApicurioRegistryMcpTools(registryClient, mcpToolProvider, vertx.get());
+                return new ApicurioRegistryMcpTools(registryClient, mcpToolProvider);
             }
         };
     }

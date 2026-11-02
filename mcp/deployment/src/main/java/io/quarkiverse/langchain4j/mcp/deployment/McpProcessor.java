@@ -59,7 +59,6 @@ import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildI
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.runtime.metrics.MetricsFactory;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
-import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class McpProcessor {
@@ -142,7 +141,6 @@ public class McpProcessor {
             ShutdownContextBuildItem shutdown,
             Capabilities capabilities,
             Optional<MetricsCapabilityBuildItem> metricsCapability,
-            CoreVertxBuildItem vertxBuildItem,
             BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
             CombinedIndexBuildItem combinedIndex,
             McpRecorder recorder,
@@ -206,7 +204,7 @@ public class McpProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ClassType.create(DotName.createSimple(ExecutorService.class)))
                         .createWith(
-                                recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
+                                recorder.mcpClientSupplier(client, transportType, shutdown,
                                         micrometerPresent && configuredClients.containsKey(client)
                                                 && configuredClients.get(client).metricsEnabled(),
                                         hasResourceUpdatedObserver,

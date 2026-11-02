@@ -10,13 +10,12 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import io.apicurio.registry.rest.client.RegistryClient;
 import io.apicurio.registry.rest.client.models.ArtifactMetaData;
 import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.SearchedArtifact;
-import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientOptions;
+import io.quarkiverse.langchain4j.mcp.runtime.http.McpHttpClients;
 
 /**
  * Provides tools for discovering and connecting to MCP servers registered in Apicurio Registry.
@@ -31,13 +30,11 @@ public class ApicurioRegistryMcpTools {
 
     private final RegistryClient registryClient;
     private final McpToolProvider mcpToolProvider;
-    private final Vertx vertx;
     private final Map<String, McpClient> connectedServers = new ConcurrentHashMap<>();
 
-    public ApicurioRegistryMcpTools(RegistryClient registryClient, McpToolProvider mcpToolProvider, Vertx vertx) {
+    public ApicurioRegistryMcpTools(RegistryClient registryClient, McpToolProvider mcpToolProvider) {
         this.registryClient = registryClient;
         this.mcpToolProvider = mcpToolProvider;
-        this.vertx = vertx;
     }
 
     @Tool("Search Apicurio Registry for available MCP servers. "
@@ -174,10 +171,9 @@ public class ApicurioRegistryMcpTools {
     // Server authentication is not yet supported — a future enhancement could read
     // auth hints from artifact labels and wire them into the transport.
     private McpClient createMcpClient(String key, McpServerDefinition serverDef) {
-        QuarkusStreamableHttpMcpTransport transport = new QuarkusStreamableHttpMcpTransport.Builder()
+        StreamableHttpMcpTransport transport = StreamableHttpMcpTransport.builder()
                 .url(serverDef.url())
-                .httpClient(vertx.createHttpClient(new HttpClientOptions()))
-                .mcpClientName(key)
+                .httpClientBuilder(McpHttpClients.builder(key))
                 .build();
 
         return new DefaultMcpClient.Builder()

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpException;
 import io.quarkiverse.langchain4j.mcp.auth.McpAuthenticationException;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
@@ -20,7 +21,8 @@ import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 /**
  * Verifies that when the server rejects a request with a non-2xx status and a body that is not
  * a JSON-RPC error, the failure carries the HTTP status code, so that callers can tell the cases apart
- * without parsing the message. Subclasses choose the protocol version spoken by the client and the server.
+ * without parsing the message, while a JSON-RPC error in the body is reported like one sent with a successful
+ * status. Subclasses choose the protocol version spoken by the client and the server.
  * The client is configured not to cache the tool list, so that each test reaches the server.
  */
 public abstract class AbstractMcpHttpErrorStatusTest extends WiremockAware {
@@ -56,6 +58,17 @@ public abstract class AbstractMcpHttpErrorStatusTest extends WiremockAware {
         Throwable failure = rootCauseOf(() -> mcpClient.listTools());
         assertThat(failure).isInstanceOf(HttpException.class);
         assertThat(((HttpException) failure).statusCode()).isEqualTo(500);
+    }
+
+    @Test
+    public void jsonRpcErrorWithAnErrorStatusIsReportedAsSuch() {
+        // e.g. a request whose headers do not match its body (2026-07-28)
+        mcpServer().stubJsonRpcError("tools/list", 400, -32001, "Header mismatch");
+
+        Throwable failure = catchThrowable(() -> mcpClient.listTools());
+        assertThat(failure).isInstanceOf(McpException.class);
+        assertThat(((McpException) failure).errorCode()).isEqualTo(-32001);
+        assertThat(failure).hasMessageContaining("Header mismatch");
     }
 
     @Test

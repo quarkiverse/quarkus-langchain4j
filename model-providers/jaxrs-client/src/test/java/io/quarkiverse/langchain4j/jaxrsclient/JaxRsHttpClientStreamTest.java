@@ -3,13 +3,16 @@ package io.quarkiverse.langchain4j.jaxrsclient;
 import static dev.langchain4j.http.client.HttpMethod.GET;
 import static dev.langchain4j.http.client.HttpMethod.POST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -145,6 +148,22 @@ class JaxRsHttpClientStreamTest {
         assertEquals(400, exception.statusCode());
         assertEquals("bad-request", exception.getMessage());
         assertEquals(Optional.of("7"), exception.header("retry-after"));
+    }
+
+    @Test
+    void connectionFailureFailsWithoutAResponse() throws IOException, InterruptedException {
+        int closedPort;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            closedPort = socket.getLocalPort();
+        }
+        Recorder recorder = new Recorder();
+        client.stream(HttpRequest.builder().method(GET).url("http://localhost:" + closedPort + "/").build(),
+                new ChunkParser()).subscribe(recorder);
+        assertTrue(recorder.done.await(5, TimeUnit.SECONDS), "the stream should terminate");
+
+        assertEquals(List.of(), recorder.events);
+        assertNotNull(recorder.error.get());
+        assertFalse(recorder.error.get() instanceof QuarkusHttpException, "there is no status code to report");
     }
 
     @Test
