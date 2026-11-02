@@ -1,0 +1,114 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>quarkiverse/renovate-config"
+  ],
+  "baseBranchPatterns": [
+    "$default",
+    "1.13"
+  ],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/target/**"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Keep samples on the same Quarkus LTS as the extension",
+      "managerFilePatterns": [
+        "/^samples/.+/pom\\.xml$/"
+      ],
+      "matchStrings": [
+        "<quarkus\\.platform\\.version>(?<currentValue>[^<]+)</quarkus\\.platform\\.version>"
+      ],
+      "depNameTemplate": "quarkus-lts",
+      "datasourceTemplate": "custom.quarkus-lts",
+      "versioningTemplate": "maven"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "org.a2aproject.sdk:**"
+      ],
+      "groupName": "A2A SDK"
+    },
+    {
+      "matchPackageNames": [
+        "io.apicurio:**"
+      ],
+      "groupName": "Apicurio Registry"
+    },
+    {
+      "matchPackageNames": [
+        "com.google.auth:**"
+      ],
+      "groupName": "Google Auth Library"
+    },
+    {
+      "description": "Samples dependencies in a single PR",
+      "matchFileNames": [
+        "samples/**"
+      ],
+      "groupName": "samples"
+    },
+    {
+      "description": "Extension and samples move to a new Quarkus LTS together",
+      "matchDepNames": [
+        "quarkus-lts"
+      ],
+      "groupName": "Quarkus LTS"
+    },
+    {
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "documentation tooling"
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "LangChain4j is upgraded manually: list new releases on the dashboard and open a PR only on demand, to run CI early",
+      "matchPackageNames": [
+        "dev.langchain4j:**"
+      ],
+      "groupName": "LangChain4j",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Maintenance branch shipped in Quarkus Platform 3.40 LTS: patch updates only",
+      "matchBaseBranches": [
+        "1.13"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Maintenance branch keeps the minimum Quarkus version it was released with",
+      "matchBaseBranches": [
+        "1.13"
+      ],
+      "matchDepNames": [
+        "quarkus-lts"
+      ],
+      "enabled": false
+    },
+    {
+      "matchBaseBranches": [
+        "1.13"
+      ],
+      "commitMessagePrefix": "[1.13]"
+    }
+  ]
+}

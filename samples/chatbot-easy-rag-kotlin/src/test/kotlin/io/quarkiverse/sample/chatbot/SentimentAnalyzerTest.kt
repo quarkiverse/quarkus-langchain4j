@@ -7,13 +7,42 @@ import io.quarkus.test.junit.QuarkusTest
 import io.quarkus.test.junit.QuarkusTestProfile
 import io.quarkus.test.junit.TestProfile
 import jakarta.inject.Inject
+import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.test.runTest
 import me.kpavlov.aimocks.openai.MockOpenai
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import kotlin.coroutines.CoroutineContext
 
 private val mockOpenai = MockOpenai(verbose = true)
+
+/**
+ * Keeps the test's context class loader on every thread the coroutine runs on.
+ *
+ * `chatModel.chat {}` switches to `Dispatchers.IO`, whose threads carry the base runtime class
+ * loader in `@QuarkusTest`. The `ChatModel` bean is created lazily on that thread, and
+ * SmallRye Config cannot find the application's configuration from there.
+ */
+private class TestClassLoaderElement(
+    private val classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
+) : ThreadContextElement<ClassLoader> {
+
+    companion object Key : CoroutineContext.Key<TestClassLoaderElement>
+
+    override val key: CoroutineContext.Key<TestClassLoaderElement> = Key
+
+    override fun updateThreadContext(context: CoroutineContext): ClassLoader {
+        val thread = Thread.currentThread()
+        val previous = thread.contextClassLoader
+        thread.contextClassLoader = classLoader
+        return previous
+    }
+
+    override fun restoreThreadContext(context: CoroutineContext, oldState: ClassLoader) {
+        Thread.currentThread().contextClassLoader = oldState
+    }
+}
 
 @QuarkusTest
 @TestProfile(SentimentAnalyzerTest.TestProfile::class)
@@ -45,7 +74,7 @@ class SentimentAnalyzerTest {
     fun `LLM should analyzeSentiment`(
         reply: String,
         expectedSentiment: Sentiment
-    ) = runTest {
+    ) = runTest(TestClassLoaderElement()) {
         mockOpenai.completion {
             model = "mega-cool-gpt-1000"
             systemMessageContains("Analyze sentiment of given user message.")
