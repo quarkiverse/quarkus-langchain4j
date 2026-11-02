@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonObject;
 public class GeminiResource {
 
     @POST
-    @Path("models/gemini-2.5-flash:generateContent")
+    @Path("models/gemini-3.5-flash:generateContent")
     @Produces("application/json")
     @Consumes("application/json")
     public String generateResponse(String generateRequest, @RestQuery String key) {

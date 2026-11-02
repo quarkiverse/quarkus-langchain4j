@@ -288,7 +288,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_MODEL_ID++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature[`+++quarkus.langchain4j.google.genai.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -820,7 +820,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature[`+++quarkus.langchain4j.google.genai."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
