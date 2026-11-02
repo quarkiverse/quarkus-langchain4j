@@ -32,7 +32,7 @@ public class MessageUtil {
         return ChatCompletionRequest.builder()
                 .model(model)
                 .logitBias(Collections.emptyMap())
-                .maxTokens(100)
+                .maxCompletionTokens(100)
                 .user("testing")
                 .presencePenalty(0d)
                 .frequencyPenalty(0d)
