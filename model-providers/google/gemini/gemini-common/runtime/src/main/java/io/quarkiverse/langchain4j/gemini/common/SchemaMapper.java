@@ -14,6 +14,40 @@ import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 
 public class SchemaMapper {
+
+    /**
+     * Returns whether the given element and everything nested in it can be mapped to a {@link Schema}.
+     * {@code $ref} ({@code JsonReferenceSchema}) and {@code anyOf} ({@code JsonAnyOfSchema}), which LangChain4j
+     * generates for recursive and polymorphic types, cannot, and neither can {@code JsonNullSchema}.
+     */
+    public static boolean isSupported(JsonSchemaElement jsonSchema) {
+        if (jsonSchema == null
+                || jsonSchema instanceof JsonStringSchema
+                || jsonSchema instanceof JsonBooleanSchema
+                || jsonSchema instanceof JsonNumberSchema
+                || jsonSchema instanceof JsonIntegerSchema
+                || jsonSchema instanceof JsonEnumSchema) {
+            return true;
+        }
+        if (jsonSchema instanceof JsonObjectSchema jsonObjectSchema) {
+            if (jsonObjectSchema.definitions() != null && !jsonObjectSchema.definitions().isEmpty()) {
+                return false;
+            }
+            if (jsonObjectSchema.properties() != null) {
+                for (JsonSchemaElement property : jsonObjectSchema.properties().values()) {
+                    if (!isSupported(property)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        if (jsonSchema instanceof JsonArraySchema jsonArraySchema) {
+            return isSupported(jsonArraySchema.items());
+        }
+        return false;
+    }
+
     public static Schema fromJsonSchemaToSchema(JsonSchema jsonSchema) {
         if (jsonSchema == null || jsonSchema.rootElement() == null) {
             return null;

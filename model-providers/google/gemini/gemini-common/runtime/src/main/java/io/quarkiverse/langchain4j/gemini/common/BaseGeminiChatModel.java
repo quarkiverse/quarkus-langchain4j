@@ -8,11 +8,13 @@ import org.jboss.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.request.json.JsonRawSchema;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class BaseGeminiChatModel {
@@ -62,7 +64,8 @@ public class BaseGeminiChatModel {
     /**
      * Detects and returns the schema based on the given response format.
      * If the response format type is JSON or if a JSON schema is provided,
-     * a corresponding {@code Schema} object is created and returned. Otherwise, returns {@code null}.
+     * a corresponding {@code Schema} object is created and returned. Otherwise, or if the JSON schema
+     * cannot be mapped to a {@code Schema} (see {@link #detectRawSchema(ResponseFormat)}), returns {@code null}.
      *
      * @param effectiveResponseFormat nullable detected {@code ResponseFormat}
      * @return the detected {@code Schema} object; otherwise, {@code null}
@@ -72,7 +75,7 @@ public class BaseGeminiChatModel {
                 (effectiveResponseFormat.type().equals(ResponseFormatType.JSON)
                         || effectiveResponseFormat.jsonSchema() != null)) {
             if (effectiveResponseFormat.jsonSchema() != null
-                    && effectiveResponseFormat.jsonSchema().rootElement() instanceof JsonRawSchema) {
+                    && !SchemaMapper.isSupported(effectiveResponseFormat.jsonSchema().rootElement())) {
                 return null;
             }
             return SchemaMapper.fromJsonSchemaToSchema(effectiveResponseFormat.jsonSchema());
@@ -81,15 +84,20 @@ public class BaseGeminiChatModel {
     }
 
     /**
-     * Detects and returns the raw JSON schema as a map if the response format uses {@link JsonRawSchema}.
+     * Detects and returns the raw JSON schema as a map, to be sent as {@code responseJsonSchema}.
+     * This is the case if the response format uses {@link JsonRawSchema}, or a JSON schema that cannot be
+     * mapped to a {@code Schema}, such as one with {@code $ref} or {@code anyOf} for a recursive or
+     * polymorphic type.
      *
      * @param effectiveResponseFormat nullable detected {@code ResponseFormat}
-     * @return the raw schema as a {@code Map}, or {@code null} if not a raw schema
+     * @return the raw schema as a {@code Map}, or {@code null} if the schema is mapped to a {@code Schema}
      */
     protected Map<String, Object> detectRawSchema(ResponseFormat effectiveResponseFormat) {
-        if (effectiveResponseFormat != null
-                && effectiveResponseFormat.jsonSchema() != null
-                && effectiveResponseFormat.jsonSchema().rootElement() instanceof JsonRawSchema jsonRawSchema) {
+        if (effectiveResponseFormat == null || effectiveResponseFormat.jsonSchema() == null) {
+            return null;
+        }
+        JsonSchemaElement rootElement = effectiveResponseFormat.jsonSchema().rootElement();
+        if (rootElement instanceof JsonRawSchema jsonRawSchema) {
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
                         jsonRawSchema.schema(), new TypeReference<>() {
@@ -97,6 +105,9 @@ public class BaseGeminiChatModel {
             } catch (JsonProcessingException e) {
                 throw new IllegalArgumentException("Unable to parse raw JSON schema", e);
             }
+        }
+        if (!SchemaMapper.isSupported(rootElement)) {
+            return JsonSchemaElementUtils.toMap(rootElement);
         }
         return null;
     }
