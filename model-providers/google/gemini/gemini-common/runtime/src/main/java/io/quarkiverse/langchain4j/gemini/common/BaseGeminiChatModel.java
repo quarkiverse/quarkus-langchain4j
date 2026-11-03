@@ -117,15 +117,12 @@ public class BaseGeminiChatModel {
      * If the response format is null or of type TEXT, returns "text/plain".
      * If the response format is of type JSON and contains a JSON schema with a root element
      * that is an instance of JsonEnumSchema, returns "text/x.enum".
-     * If detected schema and raw schema are both null, logs a warning and defaults to "text/plain".
-     * Otherwise, returns "application/json".
+     * Otherwise, returns "application/json", also when no JSON schema is given.
      *
      * @param responseFormat nullable {@code ResponseFormat}
-     * @param schema nullable {@code Schema}
-     * @param rawSchema nullable raw JSON schema {@code Map}
      * @return the computed MIME type as a string
      */
-    protected String computeMimeType(ResponseFormat responseFormat, Schema schema, Map<String, Object> rawSchema) {
+    protected String computeMimeType(ResponseFormat responseFormat) {
         if (responseFormat == null || ResponseFormatType.TEXT.equals(responseFormat.type())) {
             return "text/plain";
         }
@@ -135,11 +132,6 @@ public class BaseGeminiChatModel {
                 responseFormat.jsonSchema().rootElement() != null &&
                 responseFormat.jsonSchema().rootElement() instanceof JsonEnumSchema) {
             return "text/x.enum";
-        }
-
-        if (schema == null && rawSchema == null) {
-            log.warn("Schema is null while computing MIME type suggesting 'application/json'. Defaulting to 'text/plain'.");
-            return "text/plain";
         }
 
         return "application/json";
