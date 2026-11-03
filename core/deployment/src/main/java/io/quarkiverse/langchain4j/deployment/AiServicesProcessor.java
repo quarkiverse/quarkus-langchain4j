@@ -230,6 +230,12 @@ public class AiServicesProcessor {
 
     public static final String AGENTIC_PACKAGE_PREFIX = "dev.langchain4j.agentic.";
 
+    /**
+     * SmallRye Fault Tolerance annotations that are not interceptor bindings. The interceptor reads them from the
+     * intercepted method, so they have to be copied onto the generated implementation.
+     */
+    private static final String SMALLRYE_FAULT_TOLERANCE_API = "io.smallrye.faulttolerance.api.";
+
     private static final Set<DotName> GUARDRAIL_ANNOTATIONS = Set.of(
             TOOL_INPUT_GUARDRAIL, TOOL_INPUT_GUARDRAILS, TOOL_OUTPUT_GUARDRAIL, TOOL_OUTPUT_GUARDRAILS);
 
@@ -2045,7 +2051,8 @@ public class AiServicesProcessor {
     }
 
     private boolean shouldCopyAnnotation(AnnotationInstance annotationInstance, IndexView index) {
-        return hasInterceptorBinding(annotationInstance, index);
+        return hasInterceptorBinding(annotationInstance, index)
+                || annotationInstance.name().toString().startsWith(SMALLRYE_FAULT_TOLERANCE_API);
     }
 
     private boolean hasInterceptorBinding(AnnotationInstance annotationInstance, IndexView index) {
