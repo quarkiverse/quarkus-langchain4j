@@ -544,17 +544,24 @@ public class AiServiceMethodImplementationSupport {
         List<ToolExecution> allToolExecutions = new ArrayList<>();
         List<ChatResponse> intermediateResponses = new ArrayList<>();
         while (true) {
+            AiMessage aiMessage = response.aiMessage();
+
+            if (!aiMessage.hasToolExecutionRequests()) {
+                // The limit caps the number of responses that request tools, so the answer that ends the loop
+                // is always returned. Checking the limit before looking at the response counted the answer as
+                // one more round trip, and after the last allowed round trip it was discarded and the call
+                // failed instead. The streaming and TokenStream paths already check it only for responses
+                // that request tools.
+                committableChatMemory.add(aiMessage);
+                break;
+            }
+
             if (executionsLeft-- == 0) {
                 throw runtime("Something is wrong, exceeded %s sequential tool executions",
                         maxSequentialToolExecutions);
             }
 
-            AiMessage aiMessage = response.aiMessage();
             committableChatMemory.add(aiMessage);
-
-            if (!aiMessage.hasToolExecutionRequests()) {
-                break;
-            }
             intermediateResponses.add(response);
 
             List<ToolExecution> toolExecutions = new ArrayList<>();
