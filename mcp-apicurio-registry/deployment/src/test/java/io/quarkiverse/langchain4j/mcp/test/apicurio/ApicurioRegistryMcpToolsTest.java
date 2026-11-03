@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 
 import jakarta.inject.Inject;
 
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import dev.langchain4j.mcp.McpToolProvider;
 import io.apicurio.registry.client.RegistryClientFactory;
 import io.apicurio.registry.client.common.RegistryClientOptions;
 import io.apicurio.registry.rest.client.RegistryClient;
@@ -28,6 +30,7 @@ import io.apicurio.registry.rest.client.models.CreateVersion;
 import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.VersionContent;
 import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpTools;
+import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpToolsBuilder;
 import io.quarkus.test.QuarkusUnitTest;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -179,5 +182,21 @@ public class ApicurioRegistryMcpToolsTest {
     void disconnectNonexistent() {
         String result = apicurioRegistryMcpTools.disconnectMcpServer("nonexistent", "test-group");
         assertThat(result).contains("No active connection");
+    }
+
+    @Test
+    @Order(8)
+    void builderNeedsNoVertx() {
+        // the builder is meant for code that creates tool providers itself, outside CDI
+        McpToolProvider toolProvider = McpToolProvider.builder().mcpClients(List.of()).build();
+        ApicurioRegistryMcpTools tools = ApicurioRegistryMcpToolsBuilder.create()
+                .registryUrl(registryUrl())
+                .toolProvider(toolProvider)
+                .build();
+
+        assertThat(tools.searchMcpServers("integration testing")).contains("test-group/test-mcp-server");
+        assertThat(tools.connectMcpServer("test-mcp-server", "test-group")).contains("Connected to MCP server");
+        assertThat(toolProvider.provideTools(null).tools()).isNotEmpty();
+        assertThat(tools.disconnectMcpServer("test-mcp-server", "test-group")).contains("Disconnected from MCP server");
     }
 }

@@ -494,7 +494,6 @@ ApicurioRegistryMcpTools tools = ApicurioRegistryMcpToolsBuilder.create()
     .registryUrl("http://localhost:8080/apis/registry/v3")
     .basicAuth("admin", "password")  // optional
     .toolProvider(myMcpToolProvider)
-    .vertx(vertx)
     .build();
 ----
 

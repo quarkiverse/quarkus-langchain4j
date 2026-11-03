@@ -21,7 +21,6 @@ public class ApicurioRegistryMcpToolsBuilder {
     private String clientId;
     private String clientSecret;
     private McpToolProvider toolProvider;
-    private Vertx vertx;
 
     public static ApicurioRegistryMcpToolsBuilder create() {
         return new ApicurioRegistryMcpToolsBuilder();
@@ -50,15 +49,17 @@ public class ApicurioRegistryMcpToolsBuilder {
         return this;
     }
 
+    /**
+     * @deprecated The MCP clients no longer run on a Vert.x instance supplied here, so it is ignored.
+     */
+    @Deprecated(forRemoval = true)
     public ApicurioRegistryMcpToolsBuilder vertx(Vertx vertx) {
-        this.vertx = vertx;
         return this;
     }
 
     public ApicurioRegistryMcpTools build() {
         Objects.requireNonNull(registryUrl, "registryUrl is required");
         Objects.requireNonNull(toolProvider, "toolProvider is required");
-        Objects.requireNonNull(vertx, "vertx is required");
 
         RegistryClientOptions options = RegistryClientOptions.create(registryUrl);
         if (username != null && password != null) {
@@ -68,6 +69,6 @@ public class ApicurioRegistryMcpToolsBuilder {
         }
         RegistryClient client = RegistryClientFactory.create(options);
 
-        return new ApicurioRegistryMcpTools(client, toolProvider, vertx);
+        return new ApicurioRegistryMcpTools(client, toolProvider);
     }
 }
