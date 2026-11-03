@@ -3,7 +3,9 @@ package io.quarkiverse.langchain4j.runtime.tool;
 import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
@@ -16,6 +18,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.invocation.InvocationContext;
@@ -133,6 +138,11 @@ public class QuarkusToolExecutor implements ToolExecutor {
                         ter.resultContents());
                 return ter;
             }
+            List<Content> resultContents = toContents(invocationResult);
+            if (resultContents != null) {
+                log.debugv("Tool execution result contents: {0}", resultContents);
+                return ToolExecutionResult.builder().result(invocationResult).resultContents(resultContents).build();
+            }
             String result = handleResult(invokerInstance, invocationResult);
             log.debugv("Tool execution result: {0}", result);
             return ToolExecutionResult.builder().result(invocationResult).resultText(result).build();
@@ -145,6 +155,33 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
     private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
         throw (E) e;
+    }
+
+    /**
+     * Converts a tool invocation result that already is, or is made of, {@link Content} elements into the
+     * contents sent back to the model, mirroring {@code DefaultToolExecutor#toContents}. Returns {@code null}
+     * when the result is not content-shaped, in which case it is rendered as text by
+     * {@link #handleResult(ToolInvoker, Object)} instead.
+     * <p>
+     * Without this, an {@code Image}- or {@code Content}-returning {@code @Tool} method would be
+     * JSON-serialized into the tool result text, so the model would never actually receive the image.
+     */
+    private static List<Content> toContents(Object invocationResult) {
+        if (invocationResult == null) {
+            return null;
+        }
+        if (invocationResult instanceof Image image) {
+            return List.of(ImageContent.from(image));
+        } else if (invocationResult instanceof Content content) {
+            return List.of(content);
+        } else if (invocationResult instanceof Collection<?> collection
+                && !collection.isEmpty()
+                && collection.iterator().next() instanceof Content) {
+            return collection.stream().map(Content.class::cast).toList();
+        } else if (invocationResult instanceof Content[] array) {
+            return List.of(array);
+        }
+        return null;
     }
 
     /**
