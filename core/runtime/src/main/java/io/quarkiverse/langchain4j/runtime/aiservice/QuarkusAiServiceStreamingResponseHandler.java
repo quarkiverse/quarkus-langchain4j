@@ -25,6 +25,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.invocation.InvocationEnd;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -211,7 +212,16 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.toolCallingRoundTripsLeft = toolCallingRoundTripsLeft;
     }
 
+    /**
+     * Fires the {@link AiServiceCompletedEvent} that ends this invocation, unless the invocation already reported its
+     * end, which is the case when the subscription was cancelled first. Upstream
+     * {@code dev.langchain4j.service.TerminalEvents} does the same, and {@link InvocationEnd} asks integrations that
+     * fire these events themselves to follow it, so that exactly one of completed/error/cancelled is ever observed.
+     */
     private <T> void fireInvocationComplete(T result) {
+        if (!InvocationEnd.markEnded(invocationContext)) {
+            return;
+        }
         context.eventListenerRegistrar.fireEvent(AiServiceCompletedEvent.builder()
                 .invocationContext(invocationContext)
                 .result(result)
@@ -242,7 +252,15 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                 .build());
     }
 
+    /**
+     * Fires the {@link AiServiceErrorEvent} that ends this invocation, unless the invocation already reported its end.
+     * Cancelling a stream usually makes the model provider report the aborted exchange as an error, which must not be
+     * surfaced as a second terminal event after the {@code AiServiceCancelledEvent}.
+     */
     private void fireErrorReceived(Throwable error) {
+        if (!InvocationEnd.markEnded(invocationContext)) {
+            return;
+        }
         context.eventListenerRegistrar.fireEvent(AiServiceErrorEvent.builder()
                 .invocationContext(invocationContext)
                 .error(error)
