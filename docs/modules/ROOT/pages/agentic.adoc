@@ -947,6 +947,97 @@ public interface AnswerCascade {
 }
 ----
 
+== Discovering A2A Agents with Apicurio Registry
+
+https://www.apicur.io/registry/[Apicurio Registry] can act as a catalog of https://a2a-protocol.org/[A2A] agents. With the
+Apicurio Registry A2A extension, an application can publish its own agent card to the registry at startup, and discover
+the agents other applications have published there.
+
+IMPORTANT: This feature is experimental and may change in future releases.
+
+=== Dependencies
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-a2a-apicurio-registry</artifactId>
+</dependency>
+----
+
+=== Configuration
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.apicurio-registry.url=http://localhost:8080/apis/registry/v3
+# Optional: a bearer token for the registry
+quarkus.langchain4j.a2a.apicurio-registry.auth-token=my-token
+----
+
+=== Discovering Agents
+
+The extension provides an `ApicurioAgentsRegistry` bean, a LangChain4j `AgentsRegistry` backed by the registry's
+`AGENT_CARD` artifacts:
+
+[source,java]
+----
+@Inject
+ApicurioAgentsRegistry agents;
+
+public String describe(String name) {
+    AgentInstance agent = agents.getAgent(name);
+    return agent.description();
+}
+----
+
+Each call to `allAgents()` or `getAgent(...)` queries the registry again, so newly published agents are found without a
+restart. Discovery works as follows:
+
+* It reads every `AGENT_CARD` artifact in every group, paging through the full result set.
+* An agent is registered under the name in its card. When two artifacts declare the same name, neither is registered
+under that name. Each is registered under `<groupId>/<artifactId>` instead, and `getAgent` with the shared name fails
+with an error that lists both qualified names.
+* The agent's URL comes from the artifact's `a2a-agent-url` label. Without that label, the first `JSONRPC` entry in the
+card's `supportedInterfaces` is used. An agent with neither is skipped, with a warning in the log.
+* Building an agent fetches its card from the agent itself. An agent that cannot be reached is skipped, with a warning
+in the log.
+* The inputs an agent expects are read from the comma-separated `a2a-input-keys` label, or default to
+`quarkus.langchain4j.a2a.apicurio-registry.default-input-keys` (`input`).
+
+=== Publishing an Agent Card
+
+Annotate a class with `@PublishToAgentRegistry` to publish this application's agent card to the registry at startup:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.a2a.runtime.apicurio.PublishToAgentRegistry;
+
+@PublishToAgentRegistry(
+        name = "Translator",
+        description = "Translates text between languages",
+        version = "1.0.0",
+        skills = {
+                @PublishToAgentRegistry.Skill(id = "translate", name = "Translate", description = "Translates text")
+        })
+public class TranslatorCard {
+}
+----
+
+The card is published as an `AGENT_CARD` artifact:
+
+* It is published in the group set by `quarkus.langchain4j.a2a.apicurio-registry.group-id` (`default`). Its artifact ID
+is the agent name in lower case, with characters other than letters, digits and `-` replaced by `-`.
+* The agent's URL is `quarkus.langchain4j.a2a.apicurio-registry.agent-url`, which defaults to `http://localhost:8080`.
+Set it to the URL other applications should use to reach this agent.
+* Restarting with an unchanged card adds no version. A changed card adds a new version, even when `version` is unchanged.
+* The artifact's labels are updated with the agent URL (`a2a-agent-url`) and skill names (`a2a-agent-skills`).
+
+Publishing is best-effort. If it fails, for example because the registry cannot be reached or a registry rule rejects
+the new card, the failure is logged at `ERROR` level and the application starts anyway. A card that a rule rejects is
+not stored, so the previously published version stays the latest one. Configure rules in the registry, such as a
+`COMPATIBILITY` rule on the group, to reject card changes that would break the agent's callers, for example removing a
+skill.
+
 == Using CDI Beans in Agent Methods
 
 Agents are interfaces, so they can't have injected fields.
@@ -1144,6 +1235,10 @@ Quarkus validates agent configurations at build time, catching errors before the
 == Configuration Reference
 
 include::includes/quarkus-langchain4j-agentic.adoc[leveloffset=+1,opts=optional]
+
+=== Apicurio Registry A2A Integration
+
+include::includes/quarkus-langchain4j-a2a-apicurio-registry.adoc[leveloffset=+1,opts=optional]
 
 == Related Guides
 
