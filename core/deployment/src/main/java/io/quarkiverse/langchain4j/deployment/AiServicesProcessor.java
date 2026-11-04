@@ -17,8 +17,7 @@ import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVar
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
 import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
 import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMultiOrFlowPublisher;
-import static io.quarkus.arc.processor.DotNames.NAMED;
-import static io.quarkus.arc.processor.DotNames.SINGLETON;
+import static io.quarkus.arc.processor.DotNames.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -1828,6 +1827,7 @@ public class AiServicesProcessor {
                 }
                 try (ClassCreator classCreator = classCreatorBuilder.build()) {
                     DeclarativeAiServiceBuildItem matchingBI = null;
+                    boolean shouldClearMemoryOnDestroy = true;
                     if (isRegisteredService) {
                         // we need to make this a bean, so we need to add the proper scope annotation
                         matchingBI = declarativeAiServiceItems.stream()
@@ -1835,6 +1835,7 @@ public class AiServicesProcessor {
                                 .findFirst().orElseThrow(() -> new IllegalStateException(
                                         "Unable to determine the CDI scope of " + iface));
                         DotName scopeInfo = matchingBI.getCdiScope();
+                        shouldClearMemoryOnDestroy = shouldClearMemoryOnDestroy(scopeInfo);
                         classCreator.addAnnotation(scopeInfo.toString());
                         // copy class level interceptor binding annotations
                         for (AnnotationInstance annotationInstance : iface.declaredAnnotations()) {
@@ -1959,7 +1960,7 @@ public class AiServicesProcessor {
                         }
                     }
 
-                    if (isRegisteredService) {
+                    if (isRegisteredService && shouldClearMemoryOnDestroy) {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "close", void.class));
                         mc.addAnnotation(PreDestroy.class);
@@ -2048,6 +2049,13 @@ public class AiServicesProcessor {
 
         registerJsonSchema(recorderContext);
         recorder.setMetadata(perClassMetadata);
+    }
+
+    private boolean shouldClearMemoryOnDestroy(DotName cdiScope) {
+        if (APPLICATION_SCOPED.equals(cdiScope)) {
+            return false;
+        }
+        return true;
     }
 
     private boolean shouldCopyAnnotation(AnnotationInstance annotationInstance, IndexView index) {
