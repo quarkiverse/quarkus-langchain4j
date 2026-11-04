@@ -6,9 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
@@ -30,6 +32,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.service.decision.ThresholdProvider;
 import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.spi.ExecutorProvider;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
 import io.quarkiverse.langchain4j.runtime.decision.ConfiguredThresholds;
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
@@ -54,6 +57,9 @@ public class AgenticRecorder {
     private static volatile boolean devModeMonitoringEnabled = false;
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
     private static volatile Map<String, DecisionAgentInfo> decisionAgents = Map.of();
+    private static volatile Map<String, AiAgentCreateInfo> classBasedAgents = Map.of();
+    private static volatile Set<String> instanceAgentBeanClassNames = Collections.emptySet();
+    private static volatile AgenticRuntimeConfig classBasedAgentsRuntimeConfig;
 
     private static final Function<InternalAgent, Object> AGENT_INSTANCE_FACTORY = internalAgent -> {
         AgentClassCreateInfo info = agentClassMetadata.get(internalAgent.type().getName());
@@ -68,6 +74,18 @@ public class AgenticRecorder {
         } catch (Exception e) {
             throw new RuntimeException("Unable to create agent class '" + info.implClassName() + "'", e);
         }
+    };
+
+    /**
+     * The helper objects of an agent type: the bean of a class-based agent, or of a bean with an instance agent
+     * method, whose instance helper methods are invoked through its client proxy.
+     */
+    private static final Function<Class<?>, List<Object>> HELPER_OBJECTS_RESOLVER = agentType -> {
+        String name = agentType.getName();
+        if (classBasedAgents.containsKey(name) || instanceAgentBeanClassNames.contains(name)) {
+            return List.of(Arc.container().instance(agentType).get());
+        }
+        return List.of();
     };
 
     private final RuntimeValue<AgenticRuntimeConfig> runtimeConfig;
@@ -176,6 +194,34 @@ public class AgenticRecorder {
                 new CdiSupplierParameterResolver(Collections.unmodifiableSet(qualifierNames)));
     }
 
+    /**
+     * Initializes the class-based agents, the beans whose agentic method is {@code native}, and the beans with an
+     * instance agent method; called at every start, so that the agents created before a restart in dev mode are
+     * forgotten.
+     *
+     * @param agents the class-based agents, keyed by class name
+     * @param instanceAgentBeanClassNames the names of the beans with an instance {@code @Agent} or
+     *        {@code @HumanInTheLoop} method
+     * @param perInstanceScopeClassNames the names of the class-based agents whose scope is not the application scope
+     */
+    @RuntimeInit
+    public void initClassBasedAgents(Map<String, AiAgentCreateInfo> agents, Set<String> instanceAgentBeanClassNames,
+            Set<String> perInstanceScopeClassNames) {
+        AgenticRecorder.classBasedAgents = Map.copyOf(agents);
+        AgenticRecorder.instanceAgentBeanClassNames = Set.copyOf(instanceAgentBeanClassNames);
+        AgenticRecorder.classBasedAgentsRuntimeConfig = runtimeConfig.getValue();
+        AgentClassSupport.init(AgenticRecorder::createClassBasedAgent, agents.keySet(), perInstanceScopeClassNames);
+    }
+
+    /**
+     * Makes langchain4j-agentic run the parallel and asynchronous agents on the executor of the core extension, which
+     * propagates the request context.
+     */
+    @RuntimeInit
+    public void registerExecutorProvider() {
+        ExecutorProvider.set(new QuarkusExecutorProvider());
+    }
+
     @RuntimeInit
     public void setDevUIAllowedAgentClassNames(Set<String> classNames) {
         DevAgentMonitorHolder.allowedAgentClassNames = Collections.unmodifiableSet(classNames);
@@ -188,7 +234,11 @@ public class AgenticRecorder {
         for (String className : rootAgentClassNames) {
             try {
                 Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
-                ClientProxy.unwrap(Arc.container().select(clazz).get());
+                if (classBasedAgents.containsKey(className)) {
+                    AgentClassSupport.rootAgent(clazz);
+                } else {
+                    ClientProxy.unwrap(Arc.container().select(clazz).get());
+                }
             } catch (Exception e) {
                 log.warn("Failed to eagerly initialize root agent for dev mode topology: " + className, e);
             }
@@ -211,14 +261,25 @@ public class AgenticRecorder {
             @Override
             public Object apply(SyntheticCreationalContext<Object> cdiContext) {
                 Class<?> agentClass = loadClassSafe(info);
+                // an instance of an agent with a scope other than the application scope has its own memory id
+                String instanceMemoryId = info.perInstanceScope() ? UUID.randomUUID().toString() : null;
+                Supplier<Object> defaultMemoryIdSupplier = instanceMemoryId == null ? null : () -> instanceMemoryId;
+                QuarkusAgenticContextConsumer contextConsumer = new QuarkusAgenticContextConsumer(
+                        cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE),
+                        cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE), info, null, runtimeConfig.getValue());
                 Object agent;
                 if (info.isDecisionAgent()) {
-                    agent = createDecisionAgent(agentClass, info, cdiContext);
+                    agent = createDecisionAgent(agentClass, info, info.decisionModelInfo().resolve(cdiContext),
+                            cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE),
+                            cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE), defaultMemoryIdSupplier);
                 } else {
                     ChatModel chatModel = info.chatModelInfo().resolve(cdiContext);
                     agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
-                            new AgentConfigurator(new QuarkusAgenticContextConsumer(cdiContext, info, null,
-                                    runtimeConfig.getValue()), QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY));
+                            new AgentConfigurator(contextConsumer, QuarkusSubAgentResolver.INSTANCE,
+                                    AGENT_INSTANCE_FACTORY, defaultMemoryIdSupplier, HELPER_OBJECTS_RESOLVER));
+                }
+                if (instanceMemoryId != null && agent instanceof AbstractQuarkusAgent quarkusAgent) {
+                    quarkusAgent.setInstanceMemoryId(instanceMemoryId);
                 }
 
                 if (info.hasInterceptorBindings()) {
@@ -249,15 +310,54 @@ public class AgenticRecorder {
      * recognizes the decision agents whose {@code @Agent} method is annotated with {@code @Decide} or that declare a
      * {@code @DecisionModelSupplier} method, and not those returning an object with {@code @Decide} fields.
      */
-    private Object createDecisionAgent(Class<?> agentClass, AiAgentCreateInfo info,
-            SyntheticCreationalContext<Object> cdiContext) {
-        DecisionModel decisionModel = info.decisionModelInfo().resolve(cdiContext);
+    private static Object createDecisionAgent(Class<?> agentClass, AiAgentCreateInfo info, DecisionModel decisionModel,
+            Instance<ToolProvider> toolProviders, Instance<AgentListener> listeners,
+            Supplier<Object> defaultMemoryIdSupplier) {
         DecisionAgentBuilder<?> builder = DecisionAgentBuilder.withoutDeclarativeConfiguration(agentClass);
         DeclarativeUtil.configureDecisionAgent(agentClass, builder,
                 new AgentConfigurator(
-                        new QuarkusAgenticContextConsumer(cdiContext, info, decisionModel, runtimeConfig.getValue()),
-                        QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY));
+                        new QuarkusAgenticContextConsumer(toolProviders, listeners, info, decisionModel,
+                                classBasedAgentsRuntimeConfig),
+                        QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY, defaultMemoryIdSupplier,
+                        HELPER_OBJECTS_RESOLVER));
         return builder.build();
+    }
+
+    /**
+     * Creates the LangChain4j agent object of a class-based agent, an instance of its generated subclass, on its
+     * first use: the bean of the class is its helper object, and its sub-agents are resolved like the ones of an
+     * agent interface. The chat model and the decision model are looked up in the container.
+     */
+    private static Object createClassBasedAgent(Class<?> agentClass) {
+        AiAgentCreateInfo info = classBasedAgents.get(agentClass.getName());
+        if (info == null) {
+            throw new IllegalStateException("The class " + agentClass.getName() + " is not a class-based agent");
+        }
+        Instance<ToolProvider> toolProviders = Arc.container().select(ToolProvider.class);
+        Instance<AgentListener> listeners = Arc.container().select(AgentListener.class);
+        Supplier<Object> defaultMemoryIdSupplier = info.perInstanceScope() ? AgentClassSupport::currentInstanceMemoryId
+                : null;
+        Object agent;
+        if (info.isDecisionAgent()) {
+            agent = createDecisionAgent(agentClass, info, info.decisionModelInfo().resolve(), toolProviders, listeners,
+                    defaultMemoryIdSupplier);
+        } else {
+            ChatModel chatModel = info.chatModelInfo().resolve();
+            agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
+                    new AgentConfigurator(
+                            new QuarkusAgenticContextConsumer(toolProviders, listeners, info, null,
+                                    classBasedAgentsRuntimeConfig),
+                            QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY, defaultMemoryIdSupplier,
+                            HELPER_OBJECTS_RESOLVER));
+        }
+        if (devModeMonitoringEnabled && agent instanceof MonitoredAgent monitoredAgent) {
+            AgentMonitor monitor = monitoredAgent.agentMonitor();
+            if (monitor != null) {
+                DevAgentMonitorHolder.register(monitor);
+                DevAgentMonitorHolder.registerRootAgent(agent);
+            }
+        }
+        return agent;
     }
 
     private static final class QuarkusSubAgentResolver implements Function<Class<?>, Object> {
@@ -268,6 +368,19 @@ public class AgenticRecorder {
         public Object apply(Class<?> subAgentClass) {
             if (subAgentClass == null) {
                 return null;
+            }
+
+            // the LangChain4j agent object of a class-based leaf agent, shared with the bean of the class; a
+            // class-based workflow is built by langchain4j-agentic for each parent, like an interface workflow
+            if (classBasedAgents.containsKey(subAgentClass.getName())) {
+                return leafAgentClassNames.contains(subAgentClass.getName()) ? AgentClassSupport.rootAgent(subAgentClass)
+                        : null;
+            }
+
+            // a bean with an instance agent method is invoked through its client proxy, so that its interceptors
+            // apply, and is its own helper object
+            if (instanceAgentBeanClassNames.contains(subAgentClass.getName())) {
+                return Arc.container().select(subAgentClass).get();
             }
 
             if (!leafAgentClassNames.contains(subAgentClass.getName())) {
@@ -301,19 +414,21 @@ public class AgenticRecorder {
         }
     }
 
+    private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_INSTANCE = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<AgentListener>> AGENT_LISTENER_INSTANCE = new TypeLiteral<>() {
+    };
+
     /**
+     * @param toolProviders the {@code ToolProvider} beans, for the agents with an MCP tool box
+     * @param listeners the {@code AgentListener} beans, registered on every agent
      * @param decisionModel the decision model of the decision agent whose bean is being created, {@code null} when
      *        it is provided by its {@code @DecisionModelSupplier} method or when the bean is not a decision agent
      */
-    private record QuarkusAgenticContextConsumer(SyntheticCreationalContext<Object> cdiContext,
+    private record QuarkusAgenticContextConsumer(Instance<ToolProvider> toolProviders, Instance<AgentListener> listeners,
             AiAgentCreateInfo aiAgentCreateInfo, DecisionModel decisionModel, AgenticRuntimeConfig runtimeConfig)
             implements
                 Consumer<AgenticServices.DeclarativeAgentCreationContext<?>> {
-
-        private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_INSTANCE = new TypeLiteral<>() {
-        };
-        private static final TypeLiteral<Instance<AgentListener>> AGENT_LISTENER_INSTANCE = new TypeLiteral<>() {
-        };
 
         @Override
         public void accept(AgenticServices.DeclarativeAgentCreationContext agenticContext) {
@@ -326,9 +441,8 @@ public class AgenticRecorder {
 
             // MCP ToolProvider support
             if (AgenticRecorder.agentsWithMcpToolBox.contains(agentClassName)) {
-                Instance<ToolProvider> toolProviderInstance = cdiContext.getInjectedReference(TOOL_PROVIDER_INSTANCE);
-                if (toolProviderInstance.isResolvable()) {
-                    agentBuilder.toolProvider(toolProviderInstance.get());
+                if (toolProviders.isResolvable()) {
+                    agentBuilder.toolProvider(toolProviders.get());
                 }
             }
 
@@ -360,7 +474,6 @@ public class AgenticRecorder {
             }
 
             // AgentListener support (unconditional — build-time always adds the injection point)
-            Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
             for (AgentListener listener : listeners) {
                 agentBuilder.listener(listener);
             }
@@ -388,7 +501,6 @@ public class AgenticRecorder {
                 }
             }
 
-            Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
             for (AgentListener listener : listeners) {
                 builder.listener(listener);
             }

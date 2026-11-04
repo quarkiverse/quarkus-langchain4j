@@ -23,12 +23,22 @@ class ValidationUtil {
 
     private static final DotName CDI_QUALIFIER = DotName.createSimple(jakarta.inject.Qualifier.class);
 
-    static void validateStaticMethod(MethodInfo method, DotName annotationName) {
-        if (!Modifier.isStatic(method.flags())) {
-            throw new IllegalConfigurationException(
-                    String.format("Methods annotated with '%s' must be static. Offending method is '%s' of class '%s'",
-                            annotationName, method.name(), method.declaringClass().name().toString()));
+    /**
+     * Validates that the given helper method of the given agent type can be invoked: it is a static method, or an
+     * instance method with a body of an agent class, invoked on the bean of the class.
+     */
+    static void validateHelperMethod(ClassInfo agentType, MethodInfo method, DotName annotationName) {
+        if (Modifier.isStatic(method.flags())) {
+            return;
         }
+        if (!agentType.isInterface() && !method.declaringClass().isInterface()
+                && !Modifier.isAbstract(method.flags()) && !Modifier.isNative(method.flags())) {
+            return;
+        }
+        throw new IllegalConfigurationException(
+                String.format("Methods annotated with '%s' must be static, or instance methods of an agent class. "
+                        + "Offending method is '%s' of class '%s'",
+                        annotationName, method.name(), method.declaringClass().name().toString()));
     }
 
     static void validateAllowedReturnTypes(MethodInfo method, Set<DotName> allowedReturnTypes, DotName annotationName) {

@@ -17,7 +17,7 @@ The module distinguishes between two categories of agentic systems:
 * **Workflows**: deterministic orchestration patterns where the execution order is defined at design time (sequence, loop, parallel, conditional).
 * **Pure Agents**: LLM-driven orchestration where the model dynamically decides which agents to invoke (supervisor, planner).
 
-IMPORTANT: You do **NOT** need to implement agent interfaces. Quarkus LangChain4j automatically detects agent interfaces at build time, validates their configuration, and registers them as CDI beans.
+IMPORTANT: You do **NOT** implement the agentic methods yourself. An agent is a CDI bean class whose agentic method is `native`, or an interface. Quarkus LangChain4j detects the agents at build time, validates their configuration, implements their agentic methods and registers them as CDI beans.
 
 == Getting started
 
@@ -35,12 +35,13 @@ Add the following dependency to your project:
 
 === Agents
 
-An agent is a Java interface with a method annotated with `@Agent`.
+An agent is a CDI bean class with a method annotated with `@Agent`, declared `native` because the extension implements it.
 The method defines the agent's task, typically via an LLM prompt using `@UserMessage`.
 
 [source,java]
 ----
-public interface CreativeWriter {
+@ApplicationScoped
+public class CreativeWriter {
 
     @UserMessage("""
             You are a creative writer.
@@ -48,6 +49,19 @@ public interface CreativeWriter {
             Return only the story and nothing else.
             The topic is {{topic}}.
             """)
+    @Agent(description = "Generate a story based on the given topic", outputKey = "story")
+    public native String generateStory(String topic);
+}
+----
+
+The agent is an ordinary bean: it can inject other beans, declare a scope and bind interceptors, see <<_agents_as_cdi_beans>>.
+An agent can also be declared as an interface with the same annotations, the form shared with plain LangChain4j, see <<_agent_interfaces_and_static_helpers>>:
+
+[source,java]
+----
+public interface CreativeWriter {
+
+    @UserMessage("...")
     @Agent(description = "Generate a story based on the given topic", outputKey = "story")
     String generateStory(String topic);
 }
@@ -81,7 +95,7 @@ A subsequent `AudienceEditor` agent can then read that value by declaring a para
 
 === Inject and Use
 
-Agent interfaces are automatically registered as `@ApplicationScoped` CDI beans. Simply inject them:
+Agent classes without a scope annotation, and agent interfaces, are registered as `@ApplicationScoped` CDI beans. Simply inject them:
 
 [source,java]
 ----
@@ -95,12 +109,13 @@ String story = writer.generateStory("dragons and wizards");
 
 === AI Agents
 
-AI Agents are interfaces whose methods are backed by an LLM.
+AI Agents are classes or interfaces whose agentic method is backed by an LLM.
 They combine `@Agent` with prompt annotations like `@UserMessage` and `@SystemMessage`.
 
 [source,java]
 ----
-public interface MedicalExpert {
+@ApplicationScoped
+public class MedicalExpert {
 
     @UserMessage("""
             You are a medical expert.
@@ -109,14 +124,32 @@ public interface MedicalExpert {
             The user request is {{request}}.
             """)
     @Agent(description = "A medical expert", outputKey = "response")
-    String medical(String request);
+    public native String medical(String request);
 }
 ----
 
 === Non-AI Agents
 
-Plain Java classes (not backed by an LLM) can participate in agent workflows.
-They are concrete classes with a `static` method annotated with `@Agent`:
+Plain Java code (not backed by an LLM) can participate in agent workflows.
+A non-AI agent is a bean with an instance method annotated with `@Agent`, with a body:
+
+[source,java]
+----
+@ApplicationScoped
+public class OrderLookup {
+
+    @Inject
+    OrderService orders;
+
+    @Agent(description = "Find the status of an order", outputKey = "orderStatus")
+    public String status(@V("orderId") String orderId) {
+        return orders.statusOf(orderId);
+    }
+}
+----
+
+The method is invoked on the bean, through its client proxy, so its interceptor bindings apply.
+A non-AI agent can also be a plain class with a `static` method annotated with `@Agent`, as in plain LangChain4j:
 
 [source,java]
 ----
@@ -131,6 +164,122 @@ public class PlainProcessListAgent {
 
 The `static` method can also use CDI beans, see <<_using_cdi_beans_in_agent_methods>>.
 
+== Agents as CDI Beans
+
+An agent class is a CDI bean, and the kind of agent is decided by its agentic method:
+
+|===
+|Agentic method |Agent |Bean
+
+|`native`, annotated with `@Agent`, a workflow annotation, `@SupervisorAgent`, `@PlannerAgent` or `@Decide`
+|AI, decision, workflow, supervisor or planner agent, implemented by the extension
+|Yes
+
+|Instance method with a body, annotated with `@Agent` or `@HumanInTheLoop`
+|Non-AI or human-in-the-loop agent, invoked on the bean
+|Yes
+
+|`static` method with a body, annotated with `@Agent` or `@HumanInTheLoop`
+|Non-AI or human-in-the-loop agent, invoked statically
+|No, a plain class
+
+|Abstract method of an interface
+|Any agent, implemented by the extension
+|Yes, a synthetic bean
+|===
+
+A class declares exactly one agentic method.
+The other `native` methods of an AI agent class are AI service methods, like the other abstract methods of an agent interface.
+
+=== Bean Rules
+
+* A scope annotation is optional: without one, the class is an `@ApplicationScoped` bean. Any normal scope is accepted, like `@RequestScoped` or a custom scope. `@Dependent` is rejected, because the helper methods are invoked on the bean instance of the current context.
+* The class must be concrete and non-final, with a no-arg constructor, and the agentic method must be neither `private`, `static` nor `final`: the bean is invoked through a client proxy. An abstract class fails the build: make it concrete and declare the agentic method `native`.
+* The no-arg constructor runs for the bean and for the subclasses the extension generates to implement the agent, so it must be cheap and free of side effects. Keep the state in injected fields or initialize it in a `@PostConstruct` method.
+* Interceptor bindings on the class, on the agentic method and on the helper methods apply, because every method is invoked through the client proxy, also when a workflow invokes the agent as a sub-agent.
+
+=== Helper Methods
+
+Every helper annotation of the declarative API is accepted on an instance method of the agent class, which can be package-private: the suppliers like `@ChatModelSupplier`, `@ToolsSupplier` or `@ChatMemoryProviderSupplier`, and `@ExitCondition`, `@ActivationCondition`, `@Output`, `@BeforeCall`, `@ErrorHandler`, `@SupervisorRequest`, `@ParallelExecutor`, `@DecisionModelSupplier` and `@DecisionThresholdSupplier`.
+The method takes the same parameters as the `static` form: values from the `AgenticScope`, the parameters provided by the framework, like the `AgenticScope` or the `ErrorContext`, and CDI beans annotated with `@CdiBean` or a qualifier, which remain allowed but are unnecessary, since the bean injects them.
+
+[source,java]
+----
+@RequestScoped
+public class StoryReview {
+
+    @Inject
+    ReviewSettings settings;
+
+    @Inject
+    StoryRepository repository;
+
+    @LoopAgent(outputKey = "story", maxIterations = 5, subAgents = { StyleScorer.class, StyleEditor.class })
+    public native String review(@V("story") String story);
+
+    @ExitCondition
+    boolean done(@V("score") double score) {
+        return score >= settings.minimumScore();
+    }
+
+    @Output
+    @Transactional
+    String save(@V("story") String story) {
+        repository.save(story);
+        return story;
+    }
+}
+----
+
+The helper methods are found on the class and on its superclasses.
+A `static` and an instance method annotated with the same helper annotation on one agent fail the build.
+
+The model of an agent is chosen with `@ModelName` on the agentic method or with a `@ChatModelSupplier` method: an injected `ChatModel` field is an ordinary injection that never selects the model of the agent.
+
+=== Scoped Agents
+
+For an agent with a scope other than the application scope, like `@RequestScoped`, each bean instance has its own `AgenticScope`, created on the first invocation of the instance.
+The chat memories that the agents of the system create during the invocations of the instance, like the ones of the AI sub-agents with a `@ChatMemoryProviderSupplier` and no `@MemoryId` parameter, default to the memory id of the instance.
+When the instance is destroyed, at the end of the request for a `@RequestScoped` agent, its `AgenticScope` and those chat memories are evicted.
+A `@MemoryId` parameter keeps its explicit meaning.
+
+The same applies to an agent interface annotated with a scope.
+The `@ApplicationScoped` agents, the default, keep an ephemeral `AgenticScope` per invocation unless a `@MemoryId` is given.
+
+[NOTE]
+====
+The agentic scope of a bean instance is bound to the thread invoking it.
+The parallel and asynchronous agents run on the executor of the extension, which propagates the request context, so a `@RequestScoped` bean is available to them too.
+The executors created by LangChain4j itself, like the one of an `async` human-in-the-loop agent, don't propagate it.
+====
+
+=== Composing Agents with AI Service Annotations
+
+An AI agent class or interface can be annotated with `@RegisterAiService`, and its attributes, like `tools`, `chatMemoryProviderSupplier` or `retrievalAugmentor`, configure the AI service implementing the agent, together with `@ToolBox`, `@McpToolBox`, `@Skills`, the guardrails and `@ModelName`:
+
+[source,java]
+----
+@RegisterAiService(tools = StyleTools.class)
+public class StyleScorer {
+
+    @Inject
+    ScoringRules rules;
+
+    @UserMessage("Score the style of {{story}}")
+    @Agent(outputKey = "score")
+    @ModelName("scoring")
+    public native double score(@V("story") String story);
+
+    @ActivationCondition
+    boolean enabled(@V("story") String story) {
+        return rules.applies(story);
+    }
+}
+----
+
+A `@RegisterAiService` attribute configuring the same feature as an agentic supplier method on the same type fails the build: for instance `tools` together with `@ToolsSupplier`, `chatMemoryProviderSupplier` together with `@ChatMemoryProviderSupplier`, or `modelName` together with `@ChatModelSupplier`.
+The default scope of an agent stays `@ApplicationScoped`, also with `@RegisterAiService`.
+
 == Workflow Patterns
 
 === Sequential Workflow
@@ -140,12 +289,13 @@ Each agent receives the outputs of all prior agents via the `AgenticScope`.
 
 [source,java]
 ----
-public interface StoryCreator {
+@ApplicationScoped
+public class StoryCreator {
 
     @SequenceAgent(
             outputKey = "story",
             subAgents = { CreativeWriter.class, AudienceEditor.class, StyleEditor.class })
-    String write(String topic, String style, String audience);
+    public native String write(String topic, String style, String audience);
 }
 ----
 
@@ -169,29 +319,33 @@ The `@LoopAgent` annotation repeatedly invokes sub-agents until an exit conditio
 
 [source,java]
 ----
-public interface StyleReviewLoopAgent {
+@ApplicationScoped
+public class StyleReviewLoopAgent {
+
+    @Inject
+    ReviewSettings settings;
 
     @LoopAgent(
             description = "Review the given story to ensure it aligns with the specified style",
             outputKey = "story",
             maxIterations = 5,
             subAgents = { StyleScorer.class, StyleEditor.class })
-    String write(String story);
+    public native String write(String story);
 
     @ExitCondition
-    static boolean exit(double score) {
-        return score >= 0.8;
+    boolean exit(double score) {
+        return score >= settings.minimumScore();
     }
 }
 ----
 
 At each iteration, `StyleScorer` scores the story and stores the result under `"score"`.
 Then `StyleEditor` rewrites the story.
-The loop exits when the `@ExitCondition` method returns `true` (score >= 0.8) or after 5 iterations.
+The loop exits when the `@ExitCondition` method returns `true` or after 5 iterations.
 
 **`@ExitCondition` rules:**
 
-* Must be a `static` method
+* An instance method of the agent class, or a `static` method of the agent interface
 * Must return `boolean`
 * Parameters are resolved from the `AgenticScope`
 
@@ -201,12 +355,13 @@ Workflows can be composed by nesting them. For example, a sequence that first ge
 
 [source,java]
 ----
-public interface StoryCreatorWithReview {
+@ApplicationScoped
+public class StoryCreatorWithReview {
 
     @SequenceAgent(
             outputKey = "story",
             subAgents = { CreativeWriter.class, StyleReviewLoopAgent.class })
-    String write(String topic, String style);
+    public native String write(String topic, String style);
 }
 ----
 
@@ -310,25 +465,26 @@ The `@ConditionalAgent` annotation routes execution to different sub-agents base
 
 [source,java]
 ----
-public interface ExpertsAgent {
+@ApplicationScoped
+public class ExpertsAgent {
 
     @ConditionalAgent(
             outputKey = "response",
             subAgents = { MedicalExpert.class, TechnicalExpert.class, LegalExpert.class })
-    String askExpert(String request);
+    public native String askExpert(String request);
 
     @ActivationCondition(MedicalExpert.class)
-    static boolean activateMedical(RequestCategory category) {
+    boolean activateMedical(RequestCategory category) {
         return category == RequestCategory.MEDICAL;
     }
 
     @ActivationCondition(TechnicalExpert.class)
-    static boolean activateTechnical(RequestCategory category) {
+    boolean activateTechnical(RequestCategory category) {
         return category == RequestCategory.TECHNICAL;
     }
 
     @ActivationCondition(LegalExpert.class)
-    static boolean activateLegal(RequestCategory category) {
+    boolean activateLegal(RequestCategory category) {
         return category == RequestCategory.LEGAL;
     }
 }
@@ -338,7 +494,7 @@ Each sub-agent is guarded by an `@ActivationCondition` method. Only the agent wh
 
 **`@ActivationCondition` rules:**
 
-* Must be a `static` method
+* An instance method of the agent class, or a `static` method of the agent interface
 * Must return `boolean`
 * Takes the `Class` of the sub-agent it guards as the annotation value
 * Parameters are resolved from the `AgenticScope`
@@ -349,7 +505,8 @@ A common pattern is to compose a classifier agent with a conditional agent in a 
 
 [source,java]
 ----
-public interface CategoryRouter {
+@ApplicationScoped
+public class CategoryRouter {
 
     @UserMessage("""
             Analyze the following user request and categorize it as 'legal', 'medical' or 'technical'.
@@ -358,15 +515,16 @@ public interface CategoryRouter {
             The user request is: '{{request}}'.
             """)
     @Agent(description = "Categorize a user request", outputKey = "category")
-    RequestCategory classify(String request);
+    public native RequestCategory classify(String request);
 }
 
-public interface ExpertRouterAgent {
+@ApplicationScoped
+public class ExpertRouterAgent {
 
     @SequenceAgent(
             outputKey = "response",
             subAgents = { CategoryRouter.class, ExpertsAgent.class })
-    ResultWithAgenticScope<String> ask(String request);
+    public native ResultWithAgenticScope<String> ask(String request);
 }
 ----
 
@@ -449,17 +607,21 @@ Use `@SupervisorRequest` to customize the prompt sent to the supervisor LLM:
 
 [source,java]
 ----
-public interface SupervisorStoryCreator {
+@ApplicationScoped
+public class SupervisorStoryCreator {
+
+    @Inject
+    PromptCatalog prompts;
 
     @SupervisorAgent(
             outputKey = "story",
             responseStrategy = SupervisorResponseStrategy.LAST,
             subAgents = { CreativeWriter.class, StyleReviewLoopAgent.class })
-    ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
+    public native ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
 
     @SupervisorRequest
-    static String request(String topic, String style) {
-        return "Write a story about " + topic + " in " + style + " style";
+    String request(String topic, String style) {
+        return prompts.supervisorRequest(topic, style);
     }
 }
 ----
@@ -577,7 +739,7 @@ public interface StoryCreatorWithErrorRecovery extends StoryCreator {
 
 **`@ErrorHandler` rules:**
 
-* Must be a `static` method
+* An instance method of the agent class, or a `static` method of the agent interface
 * Must take `ErrorContext` as parameter
 * Must return `ErrorRecoveryResult`
 
@@ -598,19 +760,24 @@ public interface StoryCreatorWithErrorRecovery extends StoryCreator {
 
 == Human-in-the-Loop
 
-The `@HumanInTheLoop` annotation pauses workflow execution to wait for human input:
+The `@HumanInTheLoop` annotation pauses workflow execution to wait for human input.
+The method is an instance method of a bean, invoked on the bean, or a `static` method of an interface or class:
 
 [source,java]
 ----
-public interface AudienceRetriever {
+@ApplicationScoped
+public class AudienceRetriever {
+
+    @Inject
+    PendingResponses pendingResponses;
 
     @HumanInTheLoop(
             description = "Ask for audience preference",
             outputKey = "audience",
             async = true)
-    static String humanResponse(AgenticScope scope, String topic) {
+    public String humanResponse(AgenticScope scope, String topic) {
         CompletableFuture<String> futureResult = new CompletableFuture<>();
-        PendingResponses.register(scope.memoryId(), futureResult);
+        pendingResponses.register(scope.memoryId(), futureResult);
         try {
             return futureResult.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -627,13 +794,14 @@ This agent can be composed in a sequential workflow with other agents:
 
 [source,java]
 ----
-public interface StoryCreatorWithHumanInTheLoop {
+@ApplicationScoped
+public class StoryCreatorWithHumanInTheLoop {
 
     @SequenceAgent(outputKey = "story", subAgents = {
             AudienceRetriever.class,
             CreativeWriter.class,
             AudienceEditor.class })
-    String write(String topic);
+    public native String write(String topic);
 }
 ----
 
@@ -648,7 +816,7 @@ Workflows, planner, human-in-the-loop, decision, non-AI and remote agents don't,
 
 === Per-Agent Model with @ChatModelSupplier
 
-Use `@ChatModelSupplier` on a `static` method to provide a specific `ChatModel` for an agent:
+Use `@ChatModelSupplier` on a helper method, an instance method of the agent class or a `static` method of the agent interface, to provide a specific `ChatModel` for an agent:
 
 [source,java]
 ----
@@ -947,9 +1115,31 @@ public interface AnswerCascade {
 }
 ----
 
-== Using CDI Beans in Agent Methods
+== Agent Interfaces and Static Helpers
 
-Agents are interfaces, so they can't have injected fields.
+An agent can be declared as an interface, the form shared with plain LangChain4j: an interface with the agentic method and, as `static` methods, the helpers.
+The extension implements the interface with a synthetic bean, `@ApplicationScoped` unless the interface declares a scope, see <<_scoped_agents>>.
+
+[source,java]
+----
+public interface StyleReviewLoop {
+
+    @LoopAgent(outputKey = "story", maxIterations = 5, subAgents = { StyleScorer.class, StyleEditor.class })
+    String review(@V("story") String story);
+
+    @ExitCondition
+    static boolean exit(@V("score") double score) {
+        return score >= 0.8;
+    }
+}
+----
+
+Every example of this guide written as a class can be written as an interface, with `static` helper methods instead of instance ones.
+
+[[_using_cdi_beans_in_agent_methods]]
+=== Using CDI Beans in Static Agent Methods
+
+Agent interfaces can't have injected fields.
 Their `static` methods, however, can declare parameters resolved from CDI, by annotating them with `@CdiBean` or with a CDI qualifier, such as `@ModelName`.
 These parameters can be mixed with the ones read from the `AgenticScope` and with the ones provided by the agentic framework, like the `AgenticScope` itself or the `ErrorContext`:
 
@@ -1016,22 +1206,25 @@ A `@RequestScoped` bean can't be used by a method invoked on another thread, lik
 A `@Dependent` bean is created at each invocation and never destroyed: prefer a normal scope, like `@ApplicationScoped`.
 ====
 
-The methods stay `static`: agents can't have injected fields, constructor injection or `@PostConstruct` callbacks, and interceptor bindings like `@Transactional` have no effect on these methods.
-To use them, call a method of a bean.
+The methods stay `static`: an agent interface can't have injected fields, constructor injection or `@PostConstruct` callbacks, and interceptor bindings like `@Transactional` have no effect on these methods.
+To use them, declare the agent as a class, see <<_agents_as_cdi_beans>>.
 
 == Build-Time Validation
 
 Quarkus validates agent configurations at build time, catching errors before the application starts:
 
-* All supplier methods (`@ToolsSupplier`, etc.) must be `static` with correct return types
-* `@ChatModelSupplier` methods must be `static` and return `ChatModel` (parameters are allowed for dynamic model selection)
+* All helper methods, the suppliers like `@ToolsSupplier`, the conditions, `@Output`, `@BeforeCall`, `@ErrorHandler` and `@SupervisorRequest`, must be `static` methods of the agent type or instance methods of an agent class, with correct return types
+* `@ChatModelSupplier` methods must return `ChatModel` (parameters are allowed for dynamic model selection)
+* An agent class must be concrete and non-final, with a no-arg constructor, a normal scope and exactly one agentic method, neither `private`, `static` nor `final`; a workflow, supervisor, planner or decision method of a class must be `native`
+* An agent class can't declare both a `static` and an instance method with the same helper annotation
+* A `@RegisterAiService` attribute can't configure the same feature as an agentic supplier method, like `tools` with `@ToolsSupplier`
 * `@ExitCondition` and `@ActivationCondition` methods must return `boolean`
 * `@ErrorHandler` methods must take `ErrorContext` and return `ErrorRecoveryResult`
 * `@BeforeCall` methods must take `AgenticScope` and `@ChatMemoryProviderSupplier` methods must take the memory id as an `Object`
 * `@ParallelExecutor` methods must return `Executor`, and neither they nor `@A2AServerUrlSupplier` methods can have parameters
 * In all the rules above, the parameters annotated with `@CdiBean` or with a CDI qualifier are not counted, and each of them must resolve to exactly one bean
 * `@ModelName` and `@ChatModelSupplier` cannot be used on the same agent
-* `@DecisionModelSupplier` and `@DecisionThresholdSupplier` methods can only be declared on decision agents, must be `static`, and return `DecisionModel`, and `double` or `Double`, respectively
+* `@DecisionModelSupplier` and `@DecisionThresholdSupplier` methods can only be declared on decision agents, and return `DecisionModel`, and `double` or `Double`, respectively
 * `@DecisionThresholdSupplier` methods must take a `ThresholdContext`, and can't be declared on a decision agent that has no `boolean` answer
 * A decision agent can't use `@UserMessage`, `@SystemMessage`, `@ChatModelSupplier`, `@StreamingChatModelSupplier`, `@ToolBox`, `@McpToolBox` or `@Skills`, nor both `@ModelName` and `@DecisionModelSupplier`
 
@@ -1042,7 +1235,7 @@ Quarkus validates agent configurations at build time, catching errors before the
 
 |`@Agent`
 |method
-|Declares a basic AI agent method, or the `static` method of a non-AI agent.
+|Declares a basic AI agent method, `native` on a class, or the method of a non-AI agent, an instance method of a bean or a `static` method.
 |Agent arguments. On a non-AI agent, also CDI beans.
 
 |`@SequenceAgent`
@@ -1081,42 +1274,42 @@ Quarkus validates agent configurations at build time, catching errors before the
 |Agent arguments.
 
 |`@HumanInTheLoop`
-|static method
+|method of a bean, or static method
 |Pauses for human input.
 |Values from the `AgenticScope`, and CDI beans.
 
 |`@ExitCondition`
-|static method
+|helper method
 |Loop exit predicate (returns `boolean`).
 |Values from the `AgenticScope`, the loop counter, and CDI beans.
 
 |`@ActivationCondition`
-|static method
+|helper method
 |Conditional routing predicate (returns `boolean`).
 |Values from the `AgenticScope`, and CDI beans.
 
 |`@ErrorHandler`
-|static method
+|helper method
 |Error recovery (takes `ErrorContext`, returns `ErrorRecoveryResult`).
 |The `ErrorContext`, and CDI beans.
 
 |`@Output`
-|static method
+|helper method
 |Custom output combiner for parallel workflows.
 |Values from the `AgenticScope`, and CDI beans.
 
 |`@ChatModelSupplier`
-|static method
+|helper method
 |Provides per-agent `ChatModel`.
 |Values from the `AgenticScope`, and CDI beans.
 
 |`@SupervisorRequest`
-|static method
+|helper method
 |Custom prompt builder for supervisor.
 |Values from the `AgenticScope`, and CDI beans.
 
 |`@ParallelExecutor`
-|static method
+|helper method
 |Provides `Executor` for parallel workflows.
 |CDI beans only.
 
@@ -1126,12 +1319,12 @@ Quarkus validates agent configurations at build time, catching errors before the
 |-
 
 |`@DecisionModelSupplier`
-|static method
+|helper method
 |Provides the `DecisionModel` of a decision agent.
 |Values from the `AgenticScope`, and CDI beans.
 
 |`@DecisionThresholdSupplier`
-|static method
+|helper method
 |Provides the threshold of the `boolean` answers of a decision agent.
 |The `ThresholdContext`, and CDI beans.
 
@@ -1140,6 +1333,8 @@ Quarkus validates agent configurations at build time, catching errors before the
 |Resolves the parameter of a `static` agent method from CDI, see <<_using_cdi_beans_in_agent_methods>>.
 |-
 |===
+
+A helper method is an instance method of an agent class, invoked on the bean, or a `static` method of an agent interface.
 
 == Configuration Reference
 
