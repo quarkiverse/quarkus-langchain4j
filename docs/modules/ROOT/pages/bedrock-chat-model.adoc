@@ -164,7 +164,12 @@ quarkus.langchain4j.bedrock.chat-model.guardrail.guardrail-version=<guardrail-ve
 
 # Optional for StreamingChatModel: sync or async
 quarkus.langchain4j.bedrock.chat-model.guardrail.stream-processing-mode=sync
+
+# Optional: apply guardContent to the last user message or to all user messages
+quarkus.langchain4j.bedrock.chat-model.guardrail.guard-content-placement=last-user-message
 ----
+
+Use `last-user-message` to selectively evaluate only the final user message, or `all-user-messages` to evaluate every user message. This setting requires a configured guardrail and is supported by the selected model and Bedrock API.
 
 For more information about creating and configuring guardrails, see the https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html[Amazon Bedrock Guardrails documentation].
 

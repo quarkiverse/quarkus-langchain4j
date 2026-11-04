@@ -376,6 +376,7 @@ public class BedrockRecorder {
 
         guardrailConfig.guardrailVersion().ifPresent(builder::guardrailVersion);
         guardrailConfig.streamProcessingMode().ifPresent(builder::streamProcessingMode);
+        guardrailConfig.guardContentPlacement().ifPresent(builder::guardContentPlacement);
 
         return builder.build();
     }
