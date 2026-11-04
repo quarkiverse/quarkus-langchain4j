@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonObject;
 public class GeminiResource {
 
     @POST
-    @Path("v1/projects/my_google_project_id/locations/west-europe/publishers/google/models/gemini-2.5-flash:generateContent")
+    @Path("v1/projects/my_google_project_id/locations/west-europe/publishers/google/models/gemini-3.5-flash:generateContent")
     @Produces("application/json")
     @Consumes("application/json")
     public String generateResponse(String generateRequest) {
