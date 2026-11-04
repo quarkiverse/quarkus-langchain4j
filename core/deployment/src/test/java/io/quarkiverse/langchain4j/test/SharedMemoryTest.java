@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -34,8 +35,8 @@ public class SharedMemoryTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(AgentOne.class, Agent99.class, TypeLevelAgent.class, MyChatModelSupplier.class,
-                            RecordingChatMemoryProvider.class));
+                    .addClasses(AgentOne.class, Agent99.class, TypeLevelAgent.class, AppScopedAgent.class,
+                            MyChatModelSupplier.class, RecordingChatMemoryProvider.class));
 
     @Inject
     AgentOne agentOne;
@@ -45,6 +46,9 @@ public class SharedMemoryTest {
 
     @Inject
     TypeLevelAgent typeLevelAgent;
+
+    @Inject
+    AppScopedAgent appScopedAgent;
 
     @Inject
     RecordingChatMemoryProvider chatMemoryProvider;
@@ -96,6 +100,31 @@ public class SharedMemoryTest {
         assertThat(chatMemoryProvider.memories.keySet()).containsExactly("my-id");
     }
 
+    /**
+     * An application scoped AI service can be invoked outside a request context, from a scheduled task or during
+     * application startup for instance. No provider reports an ambient id in that case, so the two kinds of method have
+     * to be told apart: a method without {@code @SharedMemory} keeps the plain "default" id that vanilla LC4J uses,
+     * while a {@code @SharedMemory} one still gets the suffix that groups it with its siblings.
+     *
+     * <p>
+     * Both halves live in one test because the memory ids here carry no ambient prefix, so every method invoked
+     * without a request context would otherwise compete for the same state in the provider.
+     */
+    @Test
+    void memoryIdsOutsideRequestScope() {
+        // Plain methods fall back to "default", so the second call sees the messages of the first...
+        assertThat(appScopedAgent.unshared("hello")).isEqualTo("1");
+        assertThat(appScopedAgent.anotherUnshared("hello")).isEqualTo("3");
+
+        // ...while the @SharedMemory ones are grouped under their own suffix and start with an empty memory.
+        assertThat(appScopedAgent.chat("hello")).isEqualTo("1");
+        assertThat(appScopedAgent.chatAgain("hello")).isEqualTo("3");
+
+        assertThat(chatMemoryProvider.memories.keySet()).hasSize(2)
+                .anySatisfy(id -> assertThat(id).asString().isEqualTo("default"))
+                .anySatisfy(id -> assertThat(id).asString().endsWith("#outside-request-scope"));
+    }
+
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class)
     public interface AgentOne {
 
@@ -125,6 +154,25 @@ public class SharedMemoryTest {
 
         @SharedMemory("get-smart")
         String overridden(@UserMessage String msg);
+    }
+
+    /**
+     * Application scoped since #3077, so it is usable without an active request context - which is what the two tests
+     * above this interface exercise.
+     */
+    @ApplicationScoped
+    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class)
+    public interface AppScopedAgent {
+
+        @SharedMemory("outside-request-scope")
+        String chat(@UserMessage String msg);
+
+        @SharedMemory("outside-request-scope")
+        String chatAgain(@UserMessage String msg);
+
+        String unshared(@UserMessage String msg);
+
+        String anotherUnshared(@UserMessage String msg);
     }
 
     public static class MyChatModelSupplier implements Supplier<ChatModel> {
