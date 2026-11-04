@@ -459,6 +459,7 @@ public class AiServicesProcessor {
             CustomScopeAnnotationsBuildItem customScopes,
             List<AnnotationsImpliesAiServiceBuildItem> annotationsImpliesAiServiceItems,
             List<ExcludeFromImpliedAiServiceBuildItem> excludedFromImpliedItems,
+            List<ClassBasedAiServiceBuildItem> classBasedAiServiceItems,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
             BuildProducer<RequestImageModelBeanBuildItem> requestImageModelBeanProducer,
@@ -488,7 +489,7 @@ public class AiServicesProcessor {
                 .collect(Collectors.toSet());
 
         Set<AnnotationInstance> impliedRegisterAiServiceInstance = determinedImpliedRegisterAiService(
-                annotationsThatImplyAiService, index, excludedFromImplied);
+                annotationsThatImplyAiService, index, excludedFromImplied, classBasedNames(classBasedAiServiceItems));
         Set<DotName> impliedRegisterAiServiceTarget = impliedRegisterAiServiceInstance.stream()
                 .map(ai -> ai.target().asClass().name()).collect(Collectors.toSet());
         registerAiServicesInstances.addAll(impliedRegisterAiServiceInstance);
@@ -731,8 +732,12 @@ public class AiServicesProcessor {
         }
     }
 
+    private static Set<DotName> classBasedNames(List<ClassBasedAiServiceBuildItem> classBasedAiServiceItems) {
+        return classBasedAiServiceItems.stream().map(ClassBasedAiServiceBuildItem::getClassName).collect(Collectors.toSet());
+    }
+
     private static Set<AnnotationInstance> determinedImpliedRegisterAiService(Set<DotName> annotationsThatImplyAiService,
-            IndexView index, Set<DotName> excludedClasses) {
+            IndexView index, Set<DotName> excludedClasses, Set<DotName> classBasedAiServices) {
         Set<AnnotationInstance> impliedDefaultRegisterAiService = new HashSet<>();
         for (DotName ann : annotationsThatImplyAiService) {
             index.getAnnotations(ann).forEach(instance -> {
@@ -757,7 +762,7 @@ public class AiServicesProcessor {
                 if (ci == null) {
                     return;
                 }
-                if (!ci.isInterface()) {
+                if (!ci.isInterface() && !classBasedAiServices.contains(ci.name())) {
                     return;
                 }
                 if (excludedClasses.contains(ci.name())) {
@@ -798,7 +803,10 @@ public class AiServicesProcessor {
         return beanName;
     }
 
-    private static DotName cdiScope(CustomScopeAnnotationsBuildItem customScopes, ClassInfo declarativeAiServiceClassInfo,
+    /**
+     * The CDI scope declared on the given class, a built-in or a custom one, or the given default.
+     */
+    public static DotName cdiScope(CustomScopeAnnotationsBuildItem customScopes, ClassInfo declarativeAiServiceClassInfo,
             DotName defaultScope) {
         BuiltinScope builtinScope = BuiltinScope.from(declarativeAiServiceClassInfo);
         if (builtinScope != null) {
@@ -1778,10 +1786,12 @@ public class AiServicesProcessor {
             List<SkipOutputFormatInstructionsBuildItem> skipOutputFormatInstructionsItems,
             List<FallbackToDummyUserMessageBuildItem> fallbackToDummyUserMessageItems,
             List<SkipToolBoxProcessingBuildItem> skipToolBoxProcessingItems,
-            List<BlockingChatMemoryBuildItem> blockingChatMemoryItems) {
+            List<BlockingChatMemoryBuildItem> blockingChatMemoryItems,
+            List<ClassBasedAiServiceBuildItem> classBasedAiServiceItems) {
 
         IndexView index = indexBuildItem.getIndex();
         boolean chatMemoryMayBlock = !blockingChatMemoryItems.isEmpty();
+        Set<DotName> classBasedAiServices = classBasedNames(classBasedAiServiceItems);
 
         List<AiServicesUseAnalyzer.Result.Entry> aiServicesAnalysisResults = new ArrayList<>();
         for (ClassInfo classInfo : index.getKnownUsers(LangChain4jDotNames.AI_SERVICES)) {
@@ -1839,7 +1849,7 @@ public class AiServicesProcessor {
                         + "an AiService using this class will fail");
                 continue;
             }
-            if (!classInfo.isInterface()) {
+            if (!classInfo.isInterface() && !classBasedAiServices.contains(classInfo.name())) {
                 log.warn("'" + className
                         + "' used for creating an AiService is not an interface. Attempting to create an AiService "
                         + "using this class will fail");
@@ -1869,16 +1879,26 @@ public class AiServicesProcessor {
             ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
             ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
+                // a class-based AI service is implemented by a subclass of the class, which implements the native
+                // and abstract methods of the class and of its superclasses, and nothing else
+                boolean classBased = classBasedAiServices.contains(iface.name());
                 List<MethodInfo> allMethods = new ArrayList<>(iface.methods());
-                JandexUtil.getAllSuperinterfaces(iface, index).stream().filter(ci -> !ci.name().equals(
-                        CHAT_MEMORY_ACCESS)).forEach(ci -> allMethods.addAll(ci.methods()));
+                if (classBased) {
+                    allMethods.addAll(superclassMethods(iface, index));
+                } else {
+                    JandexUtil.getAllSuperinterfaces(iface, index).stream().filter(ci -> !ci.name().equals(
+                            CHAT_MEMORY_ACCESS)).forEach(ci -> allMethods.addAll(ci.methods()));
+                }
 
                 List<MethodInfo> methodsToImplement = new ArrayList<>();
                 Map<String, AiServiceMethodCreateInfo> perMethodMetadata = new HashMap<>();
                 for (MethodInfo method : allMethods) {
                     short modifiers = method.flags();
-                    if (Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers) || JandexUtil.isDefault(
-                            modifiers)) {
+                    if (Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers)) {
+                        continue;
+                    }
+                    if (classBased ? !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers)
+                            : JandexUtil.isDefault(modifiers)) {
                         continue;
                     }
 
@@ -1890,12 +1910,21 @@ public class AiServicesProcessor {
 
                 String ifaceName = iface.name().toString();
                 String implClassName = ifaceName + "$$QuarkusImpl";
-                boolean isRegisteredService = registeredAiServiceClassNames.contains(ifaceName);
+                // the class of a class-based AI service is the bean, its generated subclass is not
+                boolean isRegisteredService = !classBased && registeredAiServiceClassNames.contains(ifaceName);
+                MethodDescriptor superConstructor = classBased ? MethodDescriptor.ofConstructor(ifaceName)
+                        : OBJECT_CONSTRUCTOR;
 
                 ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
                         .classOutput(isRegisteredService ? generatedBeanOutput : generatedClassOutput)
-                        .className(implClassName)
-                        .interfaces(ifaceName, ChatMemoryRemovable.class.getName(), ChatMemoryAccess.class.getName());
+                        .className(implClassName);
+                if (classBased) {
+                    classCreatorBuilder.superClass(ifaceName)
+                            .interfaces(ChatMemoryRemovable.class.getName(), ChatMemoryAccess.class.getName());
+                } else {
+                    classCreatorBuilder.interfaces(ifaceName, ChatMemoryRemovable.class.getName(),
+                            ChatMemoryAccess.class.getName());
+                }
                 if (isRegisteredService) {
                     classCreatorBuilder.interfaces(AutoCloseable.class);
                 }
@@ -1932,11 +1961,13 @@ public class AiServicesProcessor {
                         MethodCreator ctor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
                                 QuarkusAiServiceContext.class);
                         ctor.setModifiers(Modifier.PUBLIC);
-                        ctor.addAnnotation(Inject.class);
-                        ctor.getParameterAnnotations(0)
-                                .addAnnotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
-                                .add("value", ifaceName);
-                        ctor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, ctor.getThis());
+                        if (!classBased) {
+                            ctor.addAnnotation(Inject.class);
+                            ctor.getParameterAnnotations(0)
+                                    .addAnnotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
+                                    .add("value", ifaceName);
+                        }
+                        ctor.invokeSpecialMethod(superConstructor, ctor.getThis());
                         ctor.writeInstanceField(contextField, ctor.getThis(),
                                 ctor.getMethodParam(0));
                         ctor.returnValue(null);
@@ -1945,7 +1976,7 @@ public class AiServicesProcessor {
                     {
                         MethodCreator noArgsCtor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V");
                         noArgsCtor.setModifiers(Modifier.PUBLIC);
-                        noArgsCtor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, noArgsCtor.getThis());
+                        noArgsCtor.invokeSpecialMethod(superConstructor, noArgsCtor.getThis());
                         noArgsCtor.writeInstanceField(contextField, noArgsCtor.getThis(), noArgsCtor.loadNull());
                         noArgsCtor.returnValue(null);
                     }
@@ -1998,10 +2029,12 @@ public class AiServicesProcessor {
                             MethodCreator mc = classCreator.getMethodCreator(MethodDescriptor.of(methodInfo));
 
                             // copy annotations
-                            for (AnnotationInstance annotationInstance : methodInfo.declaredAnnotations()) {
-                                // TODO: we need to review this
-                                if (shouldCopyAnnotation(annotationInstance, index)) {
-                                    mc.addAnnotation(annotationInstance);
+                            if (!classBased) {
+                                for (AnnotationInstance annotationInstance : methodInfo.declaredAnnotations()) {
+                                    // TODO: we need to review this
+                                    if (shouldCopyAnnotation(annotationInstance, index)) {
+                                        mc.addAnnotation(annotationInstance);
+                                    }
                                 }
                             }
 
@@ -2189,6 +2222,23 @@ public class AiServicesProcessor {
 
             }
         }
+    }
+
+    /**
+     * The methods declared by the superclasses of the given class, as far as they are in the index.
+     */
+    private static List<MethodInfo> superclassMethods(ClassInfo classInfo, IndexView index) {
+        List<MethodInfo> methods = new ArrayList<>();
+        DotName superName = classInfo.superName();
+        while (superName != null && !DotNames.OBJECT.equals(superName)) {
+            ClassInfo superClass = index.getClassByName(superName);
+            if (superClass == null) {
+                break;
+            }
+            methods.addAll(superClass.methods());
+            superName = superClass.superName();
+        }
+        return methods;
     }
 
     private static void addCreatedAware(IndexView index, Set<String> detectedForCreate) {
