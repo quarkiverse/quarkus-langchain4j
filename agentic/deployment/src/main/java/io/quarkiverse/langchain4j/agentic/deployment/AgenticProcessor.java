@@ -1,16 +1,16 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateAllowedReturnTypes;
+import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateHelperMethod;
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateNoMethodParameters;
 import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateRequiredParameterTypes;
-import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.validateStaticMethod;
 import static io.quarkiverse.langchain4j.deployment.AiServicesProcessor.AGENTIC_PACKAGE_PREFIX;
 import static io.quarkiverse.langchain4j.deployment.AiServicesProcessor.TOOLBOX;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,12 +22,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Default;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationTransformation;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
@@ -41,19 +43,29 @@ import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
+import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.observability.api.listener.AiServiceResponseReceivedListener;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.AbstractQuarkusDecisionAgent;
+import io.quarkiverse.langchain4j.agentic.runtime.AgentBeanDestroyer;
 import io.quarkiverse.langchain4j.agentic.runtime.AgentClassCreateInfo;
+import io.quarkiverse.langchain4j.agentic.runtime.AgentClassSupport;
+import io.quarkiverse.langchain4j.agentic.runtime.AgentLifecycle;
+import io.quarkiverse.langchain4j.agentic.runtime.AgentLifecycleInterceptor;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
+import io.quarkiverse.langchain4j.agentic.runtime.ClassAgentDelegate;
+import io.quarkiverse.langchain4j.agentic.runtime.ClassBasedAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.DecisionAgentInfo;
+import io.quarkiverse.langchain4j.deployment.AiServicesProcessor;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
+import io.quarkiverse.langchain4j.deployment.ClassBasedAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.DecisionTypes;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.ExcludeFromImpliedAiServiceBuildItem;
@@ -67,8 +79,11 @@ import io.quarkiverse.langchain4j.deployment.RequestModerationModelBeanBuildItem
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipToolBoxProcessingBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.InterceptorResolverBuildItem;
@@ -80,13 +95,17 @@ import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildIt
 import io.quarkus.arc.processor.BeanInfo;
 import io.quarkus.arc.processor.BeanResolver;
 import io.quarkus.arc.processor.BuiltinScope;
+import io.quarkus.arc.processor.ScopeInfo;
+import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
+import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
@@ -102,9 +121,6 @@ import io.quarkus.gizmo.TryBlock;
 public class AgenticProcessor {
 
     private static final Logger log = Logger.getLogger(AgenticProcessor.class);
-
-    private static final MethodDescriptor HANDLER_INVOKE = MethodDescriptor.ofMethod(
-            InvocationHandler.class, "invoke", Object.class, Object.class, Method.class, Object[].class);
 
     /**
      * The annotations of the agents that langchain4j-agentic implements with an AI service built from their interface:
@@ -135,33 +151,73 @@ public class AgenticProcessor {
     }
 
     private static final DotName INTERCEPTOR_BINDING = DotName.createSimple(jakarta.interceptor.InterceptorBinding.class);
+    private static final DotName DEPENDENT = DotName.createSimple(Dependent.class);
+
+    private static final MethodDescriptor SUPPORT_INVOKE_AGENT_METHOD = MethodDescriptor.ofMethod(AgentClassSupport.class,
+            "invokeAgentMethod", Object.class, Object.class, ClassAgentDelegate.class, Method.class, Object[].class);
 
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-agentic"));
     }
 
+    /**
+     * Detects the agents by the annotations of their agentic methods. An annotated method of an interface declares an
+     * agent implemented by a synthetic bean; an annotated method of a class declares, when it is static, a non-AI
+     * agent on a plain class, when it has a body, a non-AI or human-in-the-loop agent on a bean instance, and when
+     * it is {@code native}, a class-based agent: a bean whose agentic method is implemented at build time.
+     */
     @BuildStep
     void detectAgents(CombinedIndexBuildItem indexBuildItem,
             BuildProducer<DetectedAiAgentAsMapBuildItem> aiMapProducer,
             BuildProducer<DetectedNonAiAgentAsMapBuildItem> nonAiMapProducer,
+            BuildProducer<AgentBeanClassesBuildItem> agentBeansProducer,
             BuildProducer<DetectedAiAgentBuildItem> producer) {
         IndexView index = indexBuildItem.getIndex();
 
         Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap = new HashMap<>();
         Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap = new HashMap<>();
+        Set<DotName> instanceAgentBeans = new HashSet<>();
         for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
-            collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap);
+            collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap,
+                    instanceAgentBeans);
         }
         aiMapProducer.produce(DetectedAiAgentAsMapBuildItem.from(ifaceToAgentMethodsMap));
         nonAiMapProducer.produce(DetectedNonAiAgentAsMapBuildItem.from(classToNonAiAgentMethodsMap));
+
+        for (List<MethodInfo> staticAgentMethods : classToNonAiAgentMethodsMap.values()) {
+            for (MethodInfo method : staticAgentMethods) {
+                if (Modifier.isStatic(method.flags()) && Modifier.isNative(method.flags())) {
+                    throw new IllegalConfigurationException(("The agent method '%s' of class '%s' is static and native: "
+                            + "the native agent method of a class-based agent is an instance method, implemented by "
+                            + "the extension, and a static agent method is a non-AI agent with a body")
+                            .formatted(method.name(), method.declaringClass().name()));
+                }
+            }
+        }
+
+        Set<DotName> classBasedAgents = new HashSet<>();
+        for (ClassInfo classInfo : ifaceToAgentMethodsMap.keySet()) {
+            if (!classInfo.isInterface() && !classInfo.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                classBasedAgents.add(classInfo.name());
+            }
+        }
+        for (DotName instanceAgentBean : instanceAgentBeans) {
+            validateInstanceAgentBean(index.getClassByName(instanceAgentBean),
+                    classToNonAiAgentMethodsMap.get(index.getClassByName(instanceAgentBean)), index);
+        }
+        agentBeansProducer.produce(new AgentBeanClassesBuildItem(classBasedAgents, instanceAgentBeans));
 
         ifaceToAgentMethodsMap.forEach((classInfo, methods) -> {
             if (classInfo.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
                 return;
             }
+            if (!classInfo.isInterface()) {
+                validateClassBasedAgent(classInfo, methods, index);
+            }
+            // the helpers of a class-based agent can be instance methods of the class
             Optional<MethodInfo> chatModelSupplier = classInfo.methods().stream()
-                    .filter(m -> Modifier.isStatic(m.flags()) && m.hasAnnotation(
+                    .filter(m -> (Modifier.isStatic(m.flags()) || !classInfo.isInterface()) && m.hasAnnotation(
                             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER))
                     .findFirst();
 
@@ -224,6 +280,7 @@ public class AgenticProcessor {
 
     private void validate(DetectedAiAgentBuildItem item, IndexView index) {
         ClassInfo iface = item.getIface();
+        validateRegisterAiService(iface);
         validateDecisionAgent(item, index);
         validateA2AServerUrlSupplier(iface, index);
         validateActivationCondition(iface);
@@ -289,14 +346,14 @@ public class AgenticProcessor {
 
         MethodInfo modelSupplier = decisionAgent.decisionModelSupplier();
         if (modelSupplier != null) {
-            validateStaticMethod(modelSupplier, AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER);
+            validateHelperMethod(iface, modelSupplier, AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER);
             validateAllowedReturnTypes(modelSupplier, Set.of(LangChain4jDotNames.DECISION_MODEL),
                     AgenticLangChain4jDotNames.DECISION_MODEL_SUPPLIER);
         }
         MethodInfo thresholdSupplier = decisionAgent.decisionThresholdSupplier();
         if (thresholdSupplier != null) {
             DotName annotation = AgenticLangChain4jDotNames.DECISION_THRESHOLD_SUPPLIER;
-            validateStaticMethod(thresholdSupplier, annotation);
+            validateHelperMethod(iface, thresholdSupplier, annotation);
             validateAllowedReturnTypes(thresholdSupplier,
                     Set.of(DotNames.PRIMITIVE_DOUBLE, DotNames.DOUBLE), annotation);
             validateRequiredParameterTypes(thresholdSupplier, List.of(AgenticLangChain4jDotNames.THRESHOLD_CONTEXT),
@@ -328,7 +385,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateNoMethodParameters(method, annotationToValidate, index);
             validateAllowedReturnTypes(method, Set.of(DotNames.STRING), annotationToValidate);
         }
@@ -343,7 +400,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.PRIMITIVE_BOOLEAN),
                     annotationToValidate);
         }
@@ -358,7 +415,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.AGENT_LISTENER), annotationToValidate);
         }
     }
@@ -372,7 +429,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
             validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE), annotationToValidate,
                     index);
@@ -389,7 +446,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateRequiredParameterTypes(method, List.of(DotNames.OBJECT), annotationToValidate, index);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.CHAT_MEMORY), annotationToValidate);
         }
@@ -405,7 +462,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.CHAT_MEMORY), annotationToValidate);
         }
     }
@@ -420,7 +477,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.CHAT_MODEL), annotationToValidate);
         }
     }
@@ -435,7 +492,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.RETRIEVER), annotationToValidate);
         }
     }
@@ -450,7 +507,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.ERROR_CONTEXT), annotationToValidate,
                     index);
             validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.ERROR_RECOVERY_RESULT), annotationToValidate);
@@ -467,7 +524,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.PRIMITIVE_BOOLEAN), annotationToValidate);
         }
     }
@@ -486,7 +543,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
         }
     }
 
@@ -499,7 +556,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
         }
     }
 
@@ -523,7 +580,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
         }
     }
 
@@ -537,7 +594,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateNoMethodParameters(method, annotationToValidate, index);
             validateAllowedReturnTypes(method, Set.of(DotNames.EXECUTOR), annotationToValidate);
         }
@@ -553,7 +610,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.RETRIEVAL_AUGMENTOR), annotationToValidate);
         }
     }
@@ -568,7 +625,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.TOOL_PROVIDER), annotationToValidate);
         }
     }
@@ -583,7 +640,7 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
+            validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.OBJECT, DotNames.OBJECT_ARRAY), annotationToValidate);
         }
     }
@@ -862,8 +919,9 @@ public class AgenticProcessor {
                 continue;
             }
             for (MethodInfo method : agentType.methods()) {
-                if (!Modifier.isStatic(method.flags())
-                        || CDI_RESOLVABLE_METHOD_ANNOTATIONS.stream().noneMatch(method::hasDeclaredAnnotation)) {
+                // the instance helpers and agent methods of an agent class are invoked on its bean
+                boolean invoked = Modifier.isStatic(method.flags()) || (!agentType.isInterface() && hasBody(method));
+                if (!invoked || CDI_RESOLVABLE_METHOD_ANNOTATIONS.stream().noneMatch(method::hasDeclaredAnnotation)) {
                     continue;
                 }
                 for (MethodParameterInfo param : method.parameters()) {
@@ -1015,6 +1073,8 @@ public class AgenticProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
+            AgentBeanClassesBuildItem agentBeans,
+            CustomScopeAnnotationsBuildItem customScopes,
             InterceptorResolverBuildItem interceptorResolverBuildItem,
             BeanDiscoveryFinishedBuildItem beanDiscovery,
             CombinedIndexBuildItem indexBuildItem,
@@ -1027,6 +1087,8 @@ public class AgenticProcessor {
         IndexView index = indexBuildItem.getIndex();
         Set<String> requestedChatModelNames = new HashSet<>();
         Set<String> requestedDecisionModelNames = new HashSet<>();
+        Map<String, AiAgentCreateInfo> classBasedAgents = new HashMap<>();
+        Set<String> perInstanceScopeClassNames = new HashSet<>();
         for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
             AiAgentCreateInfo.ChatModelInfo chatModelInfo;
             if (detectedAiAgentBuildItem.getChatModelSupplier() != null) {
@@ -1054,10 +1116,27 @@ public class AgenticProcessor {
                 }
             }
 
+            boolean hasMcpToolBox = !detectedAiAgentBuildItem.getMcpToolBoxMethods().isEmpty();
+            // an agent bean with a scope other than the application scope has an agentic scope per bean instance
+            DotName scope = agentScope(detectedAiAgentBuildItem.getIface(), customScopes);
+            boolean perInstanceScope = !BuiltinScope.APPLICATION.getName().equals(scope);
+            String agentClassName = detectedAiAgentBuildItem.getIface().toString();
+
+            if (detectedAiAgentBuildItem.isClassBased()) {
+                // the class is the bean: its LangChain4j agent is created on first use by the recorder
+                classBasedAgents.put(agentClassName, new AiAgentCreateInfo(agentClassName, chatModelInfo, false,
+                        hasMcpToolBox, decisionModelInfo, perInstanceScope));
+                if (perInstanceScope) {
+                    perInstanceScopeClassNames.add(agentClassName);
+                }
+                if (hasMcpToolBox) {
+                    unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.TOOL_PROVIDER));
+                }
+                continue;
+            }
+
             boolean hasInterceptorBindings = hasAnyInterceptorBindings(detectedAiAgentBuildItem, interceptorBindings, index);
             String implClassName = implClassName(detectedAiAgentBuildItem);
-
-            boolean hasMcpToolBox = !detectedAiAgentBuildItem.getMcpToolBoxMethods().isEmpty();
 
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator;
             if (hasInterceptorBindings) {
@@ -1073,10 +1152,13 @@ public class AgenticProcessor {
                     .unremovable()
                     .createWith(recorder
                             .createAiAgent(
-                                    new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo,
-                                            hasInterceptorBindings, hasMcpToolBox, decisionModelInfo)))
+                                    new AiAgentCreateInfo(agentClassName, chatModelInfo,
+                                            hasInterceptorBindings, hasMcpToolBox, decisionModelInfo, perInstanceScope)))
                     .setRuntimeInit()
-                    .scope(ApplicationScoped.class);
+                    .scope(scopeInfo(scope));
+            if (perInstanceScope) {
+                beanConfigurator.destroyer(AgentBeanDestroyer.class);
+            }
             if (hasInterceptorBindings) {
                 beanConfigurator.injectInterceptionProxy();
             }
@@ -1128,6 +1210,109 @@ public class AgenticProcessor {
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));
         requestedDecisionModelNames
                 .forEach(name -> requestDecisionModelBeanProducer.produce(new RequestDecisionModelBeanBuildItem(name)));
+
+        recorder.initClassBasedAgents(classBasedAgents,
+                agentBeans.getInstanceAgentBeans().stream().map(DotName::toString).collect(Collectors.toSet()),
+                perInstanceScopeClassNames);
+        recorder.registerExecutorProvider();
+    }
+
+    /**
+     * The scope of an agent bean: the scope declared on the agent type, or the application scope.
+     */
+    static DotName agentScope(ClassInfo agentType, CustomScopeAnnotationsBuildItem customScopes) {
+        return AiServicesProcessor.cdiScope(customScopes, agentType, BuiltinScope.APPLICATION.getName());
+    }
+
+    private static ScopeInfo scopeInfo(DotName scope) {
+        BuiltinScope builtinScope = BuiltinScope.from(scope);
+        return builtinScope != null ? builtinScope.getInfo() : new ScopeInfo(scope, true);
+    }
+
+    /**
+     * Registers the agent classes as beans: the class-based agents and the classes with an instance agent method,
+     * with the application scope unless they declare one, and the interceptor evicting the agentic scope of the
+     * instances of a class-based agent with another scope. The {@code native} methods of the class-based agents are
+     * implemented by a bytecode transformation, and their leaf AI agents are declared to the core extension, which
+     * generates the AI service implementing them as a subclass of the agent class.
+     */
+    @BuildStep
+    void registerAgentBeans(AgentBeanClassesBuildItem agentBeans, List<DetectedAiAgentBuildItem> agents,
+            CombinedIndexBuildItem indexBuildItem, CustomScopeAnnotationsBuildItem customScopes,
+            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
+            BuildProducer<AnnotationsTransformerBuildItem> annotationsTransformerProducer,
+            BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerProducer,
+            BuildProducer<ClassBasedAiServiceBuildItem> classBasedAiServiceProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+        IndexView index = indexBuildItem.getIndex();
+        Set<String> beanClassNames = new LinkedHashSet<>();
+        for (DotName name : agentBeans.getClassBasedAgents()) {
+            beanClassNames.add(name.toString());
+        }
+        for (DotName name : agentBeans.getInstanceAgentBeans()) {
+            beanClassNames.add(name.toString());
+        }
+        if (beanClassNames.isEmpty()) {
+            return;
+        }
+        additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
+                .addBeanClasses(beanClassNames)
+                .setDefaultScope(BuiltinScope.APPLICATION.getName())
+                .setUnremovable()
+                .build());
+        // the agent and helper methods of the beans are looked up by reflection, by the extension and by
+        // langchain4j-agentic
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(beanClassNames.toArray(new String[0]))
+                .methods().reason(AgenticProcessor.class.getName()).build());
+        if (agentBeans.getClassBasedAgents().isEmpty()) {
+            return;
+        }
+
+        additionalBeanProducer.produce(AdditionalBeanBuildItem.unremovableOf(AgentLifecycleInterceptor.class));
+        Set<DotName> scopedAgents = new HashSet<>();
+        Set<DotName> transformedClasses = new HashSet<>();
+        for (DetectedAiAgentBuildItem agent : agents) {
+            if (!agent.isClassBased()) {
+                continue;
+            }
+            ClassInfo agentClass = agent.getIface();
+            if (!BuiltinScope.APPLICATION.getName().equals(agentScope(agentClass, customScopes))) {
+                scopedAgents.add(agentClass.name());
+            }
+            boolean leafAiAgent = !agent.isDecisionAgent() && agent.getAgenticMethods().stream()
+                    .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.AGENT));
+            if (leafAiAgent) {
+                classBasedAiServiceProducer.produce(new ClassBasedAiServiceBuildItem(agentClass.name()));
+            }
+            for (ClassInfo type : classHierarchy(agentClass, index)) {
+                List<MethodInfo> nativeMethods = type.methods().stream()
+                        .filter(m -> Modifier.isNative(m.flags()) && !Modifier.isStatic(m.flags())).toList();
+                if (!nativeMethods.isEmpty() && transformedClasses.add(type.name())) {
+                    bytecodeTransformerProducer.produce(new BytecodeTransformerBuildItem(type.name().toString(),
+                            new NativeAgentMethodEnhancer(nativeMethods)));
+                }
+            }
+        }
+        if (!scopedAgents.isEmpty()) {
+            annotationsTransformerProducer.produce(new AnnotationsTransformerBuildItem(AnnotationTransformation
+                    .forClasses()
+                    .whenClass(c -> scopedAgents.contains(c.name()))
+                    .transform(ctx -> ctx.add(AgentLifecycle.class))));
+        }
+    }
+
+    /**
+     * The given class and its superclasses, as far as they are in the index, the class first.
+     */
+    private static List<ClassInfo> classHierarchy(ClassInfo classInfo, IndexView index) {
+        List<ClassInfo> hierarchy = new ArrayList<>();
+        ClassInfo current = classInfo;
+        while (current != null) {
+            hierarchy.add(current);
+            DotName superName = current.superName();
+            current = superName == null || DotName.OBJECT_NAME.equals(superName) ? null : index.getClassByName(superName);
+        }
+        return hierarchy;
     }
 
     private static AnnotationInstance modelQualifier(String modelName) {
@@ -1208,9 +1393,12 @@ public class AgenticProcessor {
             CombinedIndexBuildItem indexBuildItem,
             AgenticRecorder recorder,
             BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
+            BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
 
         ClassOutput classOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
+        // the generated subclass of a class-based agent is not a bean, the agent class is
+        ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
         IndexView index = indexBuildItem.getIndex();
         Map<String, AgentClassCreateInfo> metadata = new HashMap<>();
 
@@ -1222,7 +1410,12 @@ public class AgenticProcessor {
             boolean isLeaf = bi.getAgenticMethods().stream()
                     .anyMatch(m -> m.hasAnnotation(AgenticLangChain4jDotNames.AGENT));
 
-            generateAgentClass(classOutput, bi.getIface(), implClassName, isLeaf, bi.isDecisionAgent(), index);
+            if (bi.isClassBased()) {
+                generateClassAgentSubclass(generatedClassOutput, bi.getIface(), implClassName, isLeaf, bi.isDecisionAgent(),
+                        index);
+            } else {
+                generateAgentClass(classOutput, bi.getIface(), implClassName, isLeaf, bi.isDecisionAgent(), index);
+            }
 
             metadata.put(ifaceName, new AgentClassCreateInfo(implClassName));
             reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(implClassName).build());
@@ -1358,9 +1551,6 @@ public class AgenticProcessor {
                 ctor.returnVoid();
             }
 
-            FieldDescriptor handlerField = FieldDescriptor.of(implClassName, "agent",
-                    InternalAgent.class.getName());
-
             // Stamp class-level interceptor binding annotations from parent interfaces onto the
             // generated class so Arc sees them when resolving the interception proxy.
             // Method-level bindings are handled per-method in generateHandlerDelegation.
@@ -1393,7 +1583,7 @@ public class AgenticProcessor {
             generateStaticInitializer(cc, methodsToDelegate, methodFields);
 
             for (MethodToDelegate m : methodsToDelegate) {
-                generateHandlerDelegation(cc, handlerField, methodFields.get(m.fieldName), m);
+                generateHandlerDelegation(cc, superClass, methodFields.get(m.fieldName), m);
             }
         }
     }
@@ -1426,30 +1616,10 @@ public class AgenticProcessor {
                 continue;
             }
             String fieldName = "METHOD_agent_" + mi.name() + "_" + seen.size();
-            String returnTypeName = mi.returnType().name().toString();
-            String returnWrapperTypeName = null;
-            if (mi.returnType().kind() == Type.Kind.VOID) {
-                returnTypeName = void.class.getName();
-            } else if (mi.returnType().kind() == Type.Kind.PRIMITIVE) {
-                returnTypeName = mi.returnType().asPrimitiveType().primitive().name().toLowerCase();
-                returnWrapperTypeName = PrimitiveType.box(mi.returnType().asPrimitiveType()).name().toString();
-            }
-
-            String[] paramTypeNames = new String[mi.parametersCount()];
-            for (int i = 0; i < mi.parametersCount(); i++) {
-                Type pt = mi.parameterType(i);
-                if (pt.kind() == Type.Kind.PRIMITIVE) {
-                    paramTypeNames[i] = pt.asPrimitiveType().primitive().name().toLowerCase();
-                } else {
-                    paramTypeNames[i] = pt.name().toString();
-                }
-            }
-
             List<AnnotationInstance> interceptorBindingAnnotations = mi.declaredAnnotations().stream()
                     .filter(ann -> isInterceptorBindingAnnotation(ann, index))
                     .toList();
-            methods.add(new MethodToDelegate(fieldName, declaringClassName, mi.name(), returnTypeName,
-                    returnWrapperTypeName, paramTypeNames, interceptorBindingAnnotations));
+            methods.add(methodToDelegate(mi, declaringClassName, fieldName, interceptorBindingAnnotations));
         }
 
         for (DotName superIface : iface.interfaceNames()) {
@@ -1458,6 +1628,63 @@ public class AgenticProcessor {
                 collectInterfaceMethods(superIfaceInfo, methods, index, seen);
             }
         }
+    }
+
+    private static MethodToDelegate methodToDelegate(MethodInfo mi, String declaringClassName, String fieldName,
+            List<AnnotationInstance> annotations) {
+        String returnTypeName = mi.returnType().name().toString();
+        String returnWrapperTypeName = null;
+        if (mi.returnType().kind() == Type.Kind.VOID) {
+            returnTypeName = void.class.getName();
+        } else if (mi.returnType().kind() == Type.Kind.PRIMITIVE) {
+            returnTypeName = mi.returnType().asPrimitiveType().primitive().name().toLowerCase();
+            returnWrapperTypeName = PrimitiveType.box(mi.returnType().asPrimitiveType()).name().toString();
+        }
+
+        String[] paramTypeNames = new String[mi.parametersCount()];
+        for (int i = 0; i < mi.parametersCount(); i++) {
+            Type pt = mi.parameterType(i);
+            if (pt.kind() == Type.Kind.PRIMITIVE) {
+                paramTypeNames[i] = pt.asPrimitiveType().primitive().name().toLowerCase();
+            } else {
+                paramTypeNames[i] = pt.name().toString();
+            }
+        }
+        return new MethodToDelegate(fieldName, declaringClassName, mi.name(), returnTypeName, returnWrapperTypeName,
+                paramTypeNames, annotations);
+    }
+
+    /**
+     * The native instance methods of the given agent class and of its superclasses: the agentic method, and the
+     * other methods implemented by the extension, like the AI service methods of a leaf agent. A native method
+     * implementing a method of an interface of the class is looked up on the interface, so that the invocation
+     * handler of langchain4j-agentic recognizes it, as it recognizes the methods of {@code AgenticScopeAccess}.
+     */
+    private static List<MethodToDelegate> collectNativeMethods(ClassInfo agentClass, IndexView index) {
+        List<MethodToDelegate> methods = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        List<ClassInfo> interfaces = ValidationUtil.typeHierarchy(agentClass, index).stream()
+                .filter(ClassInfo::isInterface).toList();
+        for (ClassInfo type : classHierarchy(agentClass, index)) {
+            for (MethodInfo mi : type.methods()) {
+                if (!Modifier.isNative(mi.flags()) || Modifier.isStatic(mi.flags())) {
+                    continue;
+                }
+                if (!seen.add(mi.name() + mi.descriptor())) {
+                    continue;
+                }
+                String declaringClassName = type.name().toString();
+                for (ClassInfo iface : interfaces) {
+                    if (iface.method(mi.name(), mi.parameterTypes().toArray(new Type[0])) != null) {
+                        declaringClassName = iface.name().toString();
+                        break;
+                    }
+                }
+                String fieldName = "METHOD_agent_" + mi.name() + "_" + seen.size();
+                methods.add(methodToDelegate(mi, declaringClassName, fieldName, List.of()));
+            }
+        }
+        return methods;
     }
 
     private static void generateStaticInitializer(ClassCreator cc, List<MethodToDelegate> methods,
@@ -1480,8 +1707,12 @@ public class AgenticProcessor {
                     tryBlock.writeArrayValue(paramTypesArray, i, tryBlock.loadClass(m.paramTypeNames[i]));
                 }
                 ResultHandle method = tryBlock.invokeVirtualMethod(
-                        MethodDescriptor.ofMethod(Class.class, "getMethod", Method.class, String.class, Class[].class),
+                        MethodDescriptor.ofMethod(Class.class, "getDeclaredMethod", Method.class, String.class,
+                                Class[].class),
                         declaringClass, tryBlock.load(m.methodName), paramTypesArray);
+                // the native agent method of a class-based agent can be package-private
+                tryBlock.invokeVirtualMethod(MethodDescriptor.ofMethod(Method.class, "setAccessible", void.class,
+                        boolean.class), method, tryBlock.load(true));
                 tryBlock.writeStaticField(fd, method);
             }
 
@@ -1495,41 +1726,320 @@ public class AgenticProcessor {
         }
     }
 
-    private static void generateHandlerDelegation(ClassCreator cc, FieldDescriptor handlerField,
+    private static void generateHandlerDelegation(ClassCreator cc, Class<?> superClass,
             FieldDescriptor methodField, MethodToDelegate m) {
-        String[] paramTypes = m.paramTypeNames;
-        try (MethodCreator mc = cc.getMethodCreator(m.methodName, m.returnTypeName, paramTypes)) {
+        try (MethodCreator mc = cc.getMethodCreator(m.methodName, m.returnTypeName, m.paramTypeNames)) {
             mc.setModifiers(Modifier.PUBLIC);
 
             for (AnnotationInstance ann : m.annotations) {
                 mc.addAnnotation(ann);
             }
 
-            ResultHandle handler = mc.readInstanceField(handlerField, mc.getThis());
-            ResultHandle invocationHandler = mc.checkCast(handler, InvocationHandler.class);
             ResultHandle methodHandle = mc.readStaticField(methodField);
+            ResultHandle argsArray = argumentsArray(mc, m);
+            ResultHandle result = mc.invokeVirtualMethod(MethodDescriptor.ofMethod(superClass, "invokeAgentMethod",
+                    Object.class, Method.class, Object[].class), mc.getThis(), methodHandle, argsArray);
+            returnResult(mc, m, result);
+        }
+    }
 
-            ResultHandle argsArray;
-            if (paramTypes.length == 0) {
-                argsArray = mc.loadNull();
-            } else {
-                argsArray = mc.newArray(Object.class, paramTypes.length);
-                for (int i = 0; i < paramTypes.length; i++) {
-                    mc.writeArrayValue(argsArray, i, mc.checkCast(mc.getMethodParam(i), Object.class));
+    /**
+     * Generates a native method of a class-based agent in its generated subclass: the call is routed by
+     * {@code AgentClassSupport} to the LangChain4j agent, or through the bean of the class when a workflow invokes
+     * the agent, so that the CDI interceptors of the bean apply.
+     */
+    private static void generateClassAgentDelegation(ClassCreator cc, FieldDescriptor delegateField,
+            FieldDescriptor methodField, MethodToDelegate m) {
+        try (MethodCreator mc = cc.getMethodCreator(m.methodName, m.returnTypeName, m.paramTypeNames)) {
+            mc.setModifiers(Modifier.PUBLIC);
+            ResultHandle delegate = mc.readInstanceField(delegateField, mc.getThis());
+            ResultHandle methodHandle = mc.readStaticField(methodField);
+            ResultHandle argsArray = argumentsArray(mc, m);
+            ResultHandle result = mc.invokeStaticMethod(SUPPORT_INVOKE_AGENT_METHOD, mc.getThis(), delegate, methodHandle,
+                    argsArray);
+            returnResult(mc, m, result);
+        }
+    }
+
+    private static ResultHandle argumentsArray(MethodCreator mc, MethodToDelegate m) {
+        String[] paramTypes = m.paramTypeNames;
+        if (paramTypes.length == 0) {
+            return mc.loadNull();
+        }
+        ResultHandle argsArray = mc.newArray(Object.class, paramTypes.length);
+        for (int i = 0; i < paramTypes.length; i++) {
+            mc.writeArrayValue(argsArray, i, mc.checkCast(mc.getMethodParam(i), Object.class));
+        }
+        return argsArray;
+    }
+
+    private static void returnResult(MethodCreator mc, MethodToDelegate m, ResultHandle result) {
+        if ("void".equals(m.returnTypeName)) {
+            mc.returnVoid();
+        } else if (m.returnWrapperTypeName != null) {
+            mc.returnValue(mc.smartCast(mc.checkCast(result, m.returnWrapperTypeName), m.returnTypeName));
+        } else {
+            mc.returnValue(mc.checkCast(result, m.returnTypeName));
+        }
+    }
+
+    /**
+     * Generates the subclass of a class-based agent that langchain4j-agentic handles as the agent object: it extends
+     * the agent class, implements the agent interfaces by forwarding them to a {@link ClassAgentDelegate} holding the
+     * LangChain4j agent, and implements the native methods of the class with the delegation of
+     * {@link #generateClassAgentDelegation}. It is created by the agent instance factory of the recorder with its
+     * constructor taking the LangChain4j agent, which runs the no-arg constructor of the agent class.
+     */
+    private void generateClassAgentSubclass(ClassOutput classOutput, ClassInfo agentClass, String implClassName,
+            boolean isLeaf, boolean isDecisionAgent, IndexView index) {
+        String className = agentClass.name().toString();
+        List<Class<?>> agentInterfaces = new ArrayList<>(List.of(InternalAgent.class, AgenticScopeOwner.class));
+        if (!isDecisionAgent && isLeaf) {
+            agentInterfaces.add(ChatMemoryAccess.class);
+            agentInterfaces.add(AiServiceResponseReceivedListener.class);
+        } else if (!isDecisionAgent) {
+            agentInterfaces.add(AgenticScopeAccess.class);
+        }
+        List<String> interfaceNames = new ArrayList<>();
+        for (Class<?> agentInterface : agentInterfaces) {
+            interfaceNames.add(agentInterface.getName());
+        }
+        interfaceNames.add(ClassBasedAgent.class.getName());
+
+        try (ClassCreator cc = ClassCreator.builder()
+                .classOutput(classOutput)
+                .className(implClassName)
+                .superClass(className)
+                .interfaces(interfaceNames.toArray(new String[0]))
+                .build()) {
+
+            FieldDescriptor delegateField = cc.getFieldCreator("agentDelegate", ClassAgentDelegate.class)
+                    .setModifiers(Modifier.PRIVATE | Modifier.FINAL)
+                    .getFieldDescriptor();
+
+            try (MethodCreator ctor = cc.getMethodCreator(MethodDescriptor.INIT, "V", InternalAgent.class.getName())) {
+                ctor.setModifiers(Modifier.PUBLIC);
+                ctor.invokeSpecialMethod(MethodDescriptor.ofConstructor(className), ctor.getThis());
+                ResultHandle delegate = ctor.newInstance(
+                        MethodDescriptor.ofConstructor(ClassAgentDelegate.class, InternalAgent.class, Object.class,
+                                boolean.class),
+                        ctor.getMethodParam(0), ctor.getThis(), ctor.load(isDecisionAgent));
+                ctor.writeInstanceField(delegateField, ctor.getThis(), delegate);
+                ctor.returnVoid();
+            }
+
+            try (MethodCreator mc = cc.getMethodCreator("agentDelegate", ClassAgentDelegate.class)) {
+                mc.setModifiers(Modifier.PUBLIC);
+                mc.returnValue(mc.readInstanceField(delegateField, mc.getThis()));
+            }
+
+            // the methods of the agent interfaces, toString and hashCode are forwarded to the delegate
+            List<Method> forwardedMethods = new ArrayList<>();
+            Set<String> forwarded = new HashSet<>();
+            for (Class<?> agentInterface : agentInterfaces) {
+                for (Method method : agentInterface.getMethods()) {
+                    if (!Modifier.isStatic(method.getModifiers())
+                            && forwarded.add(method.getName() + Arrays.toString(method.getParameterTypes()))) {
+                        forwardedMethods.add(method);
+                    }
+                }
+            }
+            try {
+                forwardedMethods.add(Object.class.getMethod("toString"));
+                forwardedMethods.add(Object.class.getMethod("hashCode"));
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException(e);
+            }
+            for (Method method : forwardedMethods) {
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                try (MethodCreator mc = cc.getMethodCreator(method.getName(), method.getReturnType(), parameterTypes)) {
+                    mc.setModifiers(Modifier.PUBLIC);
+                    ResultHandle delegate = mc.readInstanceField(delegateField, mc.getThis());
+                    ResultHandle[] args = new ResultHandle[parameterTypes.length];
+                    for (int i = 0; i < parameterTypes.length; i++) {
+                        args[i] = mc.getMethodParam(i);
+                    }
+                    ResultHandle result = mc.invokeVirtualMethod(MethodDescriptor.ofMethod(ClassAgentDelegate.class,
+                            method.getName(), method.getReturnType(), (Object[]) parameterTypes), delegate, args);
+                    if (method.getReturnType() == void.class) {
+                        mc.returnVoid();
+                    } else {
+                        mc.returnValue(result);
+                    }
                 }
             }
 
-            ResultHandle result = mc.invokeInterfaceMethod(HANDLER_INVOKE,
-                    invocationHandler, mc.getThis(), methodHandle, argsArray);
-
-            if ("void".equals(m.returnTypeName)) {
-                mc.returnVoid();
-            } else if (m.returnWrapperTypeName != null) {
-                mc.returnValue(mc.smartCast(mc.checkCast(result, m.returnWrapperTypeName), m.returnTypeName));
-            } else {
-                mc.returnValue(mc.checkCast(result, m.returnTypeName));
+            List<MethodToDelegate> nativeMethods = collectNativeMethods(agentClass, index);
+            Map<String, FieldDescriptor> methodFields = new HashMap<>();
+            for (MethodToDelegate m : nativeMethods) {
+                methodFields.put(m.fieldName, cc.getFieldCreator(m.fieldName, Method.class)
+                        .setModifiers(Modifier.PRIVATE | Modifier.STATIC)
+                        .getFieldDescriptor());
+            }
+            generateStaticInitializer(cc, nativeMethods, methodFields);
+            for (MethodToDelegate m : nativeMethods) {
+                generateClassAgentDelegation(cc, delegateField, methodFields.get(m.fieldName), m);
             }
         }
+    }
+
+    /**
+     * Validates a class-based agent: a concrete, non-final class with a no-arg constructor and a normal scope,
+     * declaring one native agent method, that is neither private nor final, and at most one helper method per
+     * helper annotation, static or instance.
+     */
+    private static void validateClassBasedAgent(ClassInfo agentClass, List<MethodInfo> agentMethods, IndexView index) {
+        String name = agentClass.name().toString();
+        if (Modifier.isAbstract(agentClass.flags())) {
+            throw new IllegalConfigurationException(("Agent class '%s' is abstract, so it cannot be a CDI bean: make it "
+                    + "a concrete class and declare its agent method 'native', the extension implements it").formatted(name));
+        }
+        if (Modifier.isFinal(agentClass.flags())) {
+            throw new IllegalConfigurationException(("Agent class '%s' must not be final: a class-based agent is a "
+                    + "normal scoped CDI bean, invoked through a client proxy").formatted(name));
+        }
+        if (agentMethods.size() != 1) {
+            throw new IllegalConfigurationException(("Agent class '%s' declares %d agent methods, but a class-based "
+                    + "agent declares exactly one").formatted(name, agentMethods.size()));
+        }
+        MethodInfo agentMethod = agentMethods.get(0);
+        if (Modifier.isPrivate(agentMethod.flags()) || Modifier.isFinal(agentMethod.flags())) {
+            throw new IllegalConfigurationException(("The native agent method '%s' of class '%s' must be neither "
+                    + "private nor final: it is invoked through the client proxy of the bean").formatted(
+                            agentMethod.name(), name));
+        }
+        validateAgentBeanClass(agentClass);
+        if (agentClass.hasDeclaredAnnotation(DEPENDENT)) {
+            throw new IllegalConfigurationException(("Agent class '%s' must not be @Dependent: its helper methods are "
+                    + "invoked on the bean instance of the current context, so the class needs a normal scope, like "
+                    + "@ApplicationScoped or @RequestScoped").formatted(name));
+        }
+        for (DotName helperAnnotation : AgenticLangChain4jDotNames.ALL_HELPER_ANNOTATIONS) {
+            if (helperAnnotation.equals(AgenticLangChain4jDotNames.ACTIVATION_CONDITION)) {
+                continue;
+            }
+            MethodInfo staticHelper = null;
+            MethodInfo instanceHelper = null;
+            for (ClassInfo type : ValidationUtil.typeHierarchy(agentClass, index)) {
+                for (AnnotationInstance instance : type.annotations(helperAnnotation)) {
+                    if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                        continue;
+                    }
+                    MethodInfo method = instance.target().asMethod();
+                    if (Modifier.isStatic(method.flags())) {
+                        staticHelper = method;
+                    } else {
+                        instanceHelper = method;
+                    }
+                }
+            }
+            if (staticHelper != null && instanceHelper != null) {
+                throw new IllegalConfigurationException(("Agent class '%s' declares both the static method '%s' and the "
+                        + "instance method '%s' annotated with @%s: declare only one of them").formatted(name,
+                                staticHelper.name(), instanceHelper.name(), helperAnnotation.withoutPackagePrefix()));
+            }
+        }
+    }
+
+    /**
+     * Validates a bean with an instance agent method with a body: a non-AI or a human-in-the-loop agent invoked on a
+     * bean instance, which declares one such method and can be a bean.
+     */
+    private static void validateInstanceAgentBean(ClassInfo agentClass, List<MethodInfo> agentMethods, IndexView index) {
+        String name = agentClass.name().toString();
+        List<MethodInfo> instanceMethods = agentMethods.stream().filter(m -> !Modifier.isStatic(m.flags())).toList();
+        for (MethodInfo method : instanceMethods) {
+            if (!method.hasAnnotation(AgenticLangChain4jDotNames.AGENT)
+                    && !method.hasAnnotation(AgenticLangChain4jDotNames.HUMAN_IN_THE_LOOP)) {
+                DotName annotation = AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
+                        .filter(method::hasAnnotation).findFirst().orElseThrow();
+                throw new IllegalConfigurationException(("The method '%s' of class '%s' is annotated with @%s and has a "
+                        + "body, but a workflow, supervisor, planner or remote agent is implemented by the extension: "
+                        + "declare the method 'native'").formatted(method.name(), name,
+                                annotation.withoutPackagePrefix()));
+            }
+        }
+        if (instanceMethods.size() != 1) {
+            throw new IllegalConfigurationException(("Agent class '%s' declares %d instance agent methods, but an "
+                    + "agent bean declares exactly one").formatted(name, instanceMethods.size()));
+        }
+        validateAgentBeanClass(agentClass);
+    }
+
+    private static void validateAgentBeanClass(ClassInfo agentClass) {
+        String name = agentClass.name().toString();
+        if (Modifier.isAbstract(agentClass.flags())) {
+            throw new IllegalConfigurationException(("Agent class '%s' is abstract, so it cannot be a CDI bean: make it "
+                    + "a concrete class").formatted(name));
+        }
+        if (Modifier.isFinal(agentClass.flags())) {
+            throw new IllegalConfigurationException(("Agent class '%s' must not be final: an agent bean is invoked "
+                    + "through a client proxy").formatted(name));
+        }
+        if (!agentClass.hasNoArgsConstructor()) {
+            throw new IllegalConfigurationException(("Agent class '%s' must declare a no-arg constructor: an agent "
+                    + "bean is a normal scoped CDI bean, and its generated subclasses call it").formatted(name));
+        }
+    }
+
+    /**
+     * Validates that an agent type does not configure the same feature with an attribute of {@code @RegisterAiService}
+     * and with an agentic supplier method.
+     */
+    private static void validateRegisterAiService(ClassInfo agentType) {
+        AnnotationInstance registerAiService = agentType.declaredAnnotation(LangChain4jDotNames.REGISTER_AI_SERVICES);
+        if (registerAiService == null) {
+            return;
+        }
+        checkRegisterAiServiceConflict(agentType, registerAiService, "chatLanguageModelSupplier",
+                AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER);
+        checkRegisterAiServiceConflict(agentType, registerAiService, "streamingChatLanguageModelSupplier",
+                AgenticLangChain4jDotNames.STREAMING_CHAT_MODEL_SUPPLIER);
+        checkRegisterAiServiceConflict(agentType, registerAiService, "modelName",
+                AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER, AgenticLangChain4jDotNames.STREAMING_CHAT_MODEL_SUPPLIER);
+        checkRegisterAiServiceConflict(agentType, registerAiService, "tools", AgenticLangChain4jDotNames.TOOL_SUPPLIER);
+        checkRegisterAiServiceConflict(agentType, registerAiService, "toolProviderSupplier",
+                AgenticLangChain4jDotNames.TOOL_PROVIDER_SUPPLIER);
+        checkRegisterAiServiceConflict(agentType, registerAiService, "chatMemoryProviderSupplier",
+                AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER, AgenticLangChain4jDotNames.CHAT_MEMORY_SUPPLIER);
+        checkRegisterAiServiceConflict(agentType, registerAiService, "retrievalAugmentor",
+                AgenticLangChain4jDotNames.RETRIEVAL_AUGMENTER_SUPPLIER,
+                AgenticLangChain4jDotNames.CONTENT_RETRIEVER_SUPPLIER);
+        checkRegisterAiServiceConflict(agentType, registerAiService, "systemMessageProviderSupplier",
+                AgenticLangChain4jDotNames.SYSTEM_MESSAGE_PROVIDER_SUPPLIER);
+    }
+
+    private static void checkRegisterAiServiceConflict(ClassInfo agentType, AnnotationInstance registerAiService,
+            String attribute, DotName... supplierAnnotations) {
+        if (!isSetToNonDefault(registerAiService, attribute)) {
+            return;
+        }
+        for (DotName supplierAnnotation : supplierAnnotations) {
+            if (!agentType.annotations(supplierAnnotation).isEmpty()) {
+                throw new IllegalConfigurationException(("Agent type '%s' sets the '%s' attribute of @RegisterAiService "
+                        + "and declares a method annotated with @%s: use one of them").formatted(agentType.name(),
+                                attribute, supplierAnnotation.withoutPackagePrefix()));
+            }
+        }
+    }
+
+    private static boolean isSetToNonDefault(AnnotationInstance instance, String attribute) {
+        AnnotationValue value = instance.value(attribute);
+        if (value == null) {
+            return false;
+        }
+        Object defaultValue;
+        try {
+            defaultValue = RegisterAiService.class.getMethod(attribute).getDefaultValue();
+        } catch (NoSuchMethodException e) {
+            return true;
+        }
+        return switch (value.kind()) {
+            case CLASS -> !value.asClass().name().toString().equals(((Class<?>) defaultValue).getName());
+            case STRING -> !value.asString().equals(defaultValue);
+            case ARRAY -> value.asArrayList().size() > 0;
+            default -> true;
+        };
     }
 
     private static String extractModelName(List<MethodInfo> agenticMethods) {
@@ -1550,22 +2060,35 @@ public class AgenticProcessor {
 
     private static void collectAgentsWithMethodAnnotations(IndexView index, DotName annotation,
             Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap,
-            Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap) {
+            Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap, Set<DotName> instanceAgentBeans) {
         Collection<AnnotationInstance> annotations = index.getAnnotations(annotation);
         for (AnnotationInstance ai : annotations) {
             if (ai.target().kind() != AnnotationTarget.Kind.METHOD) {
                 continue;
             }
             MethodInfo methodInfo = ai.target().asMethod();
-            if (methodInfo.declaringClass().isInterface()) {
-                ClassInfo iface = methodInfo.declaringClass();
-                addMethodToMap(methodInfo, iface, ifaceToAgentMethodsMap);
-                index.getAllKnownSubinterfaces(iface.name())
+            ClassInfo declaringClass = methodInfo.declaringClass();
+            if (declaringClass.isInterface()) {
+                addMethodToMap(methodInfo, declaringClass, ifaceToAgentMethodsMap);
+                index.getAllKnownSubinterfaces(declaringClass.name())
                         .forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
+            } else if (Modifier.isStatic(methodInfo.flags())
+                    || declaringClass.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                // a non-AI agent on a plain class, invoked statically, or an agent of langchain4j-agentic itself
+                addMethodToMap(methodInfo, declaringClass, classToNonAiAgentMethodsMap);
+            } else if (hasBody(methodInfo)) {
+                // a non-AI or human-in-the-loop agent on a bean instance
+                addMethodToMap(methodInfo, declaringClass, classToNonAiAgentMethodsMap);
+                instanceAgentBeans.add(declaringClass.name());
             } else {
-                addMethodToMap(methodInfo, methodInfo.declaringClass(), classToNonAiAgentMethodsMap);
+                // a class-based agent: a bean whose native agentic method is implemented at build time
+                addMethodToMap(methodInfo, declaringClass, ifaceToAgentMethodsMap);
             }
         }
+    }
+
+    private static boolean hasBody(MethodInfo method) {
+        return !Modifier.isAbstract(method.flags()) && !Modifier.isNative(method.flags());
     }
 
     private static void addMethodToMap(MethodInfo methodInfo, ClassInfo iface, Map<ClassInfo, List<MethodInfo>> map) {

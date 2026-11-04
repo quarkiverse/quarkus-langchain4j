@@ -23,6 +23,7 @@ public final class DetectedAiAgentBuildItem extends MultiBuildItem {
     private final List<MethodInfo> toolBoxMethods;
     private final List<MethodInfo> skillsMethods;
     private final DecisionAgent decisionAgent;
+    private final boolean classBased;
 
     public DetectedAiAgentBuildItem(ClassInfo iface, List<MethodInfo> agenticMethods,
             MethodInfo chatModelSupplier, String modelName, List<MethodInfo> mcpToolBoxMethods,
@@ -35,10 +36,22 @@ public final class DetectedAiAgentBuildItem extends MultiBuildItem {
         this.toolBoxMethods = toolBoxMethods;
         this.skillsMethods = skillsMethods;
         this.decisionAgent = decisionAgent;
+        this.classBased = !iface.isInterface();
     }
 
+    /**
+     * The type of the agent: an interface, or the class of a class-based agent.
+     */
     public ClassInfo getIface() {
         return iface;
+    }
+
+    /**
+     * Whether the agent is a class-based agent: a CDI bean class whose agentic method is {@code native}, rather than
+     * an interface implemented by a synthetic bean.
+     */
+    public boolean isClassBased() {
+        return classBased;
     }
 
     public List<MethodInfo> getAgenticMethods() {
