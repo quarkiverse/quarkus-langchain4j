@@ -1400,6 +1400,12 @@ public class AiServiceMethodImplementationSupport {
                     return memoryId + perServiceSuffix;
                 }
             }
+            if (createInfo.getSharedMemoryName().isPresent()) {
+                // No provider had an ambient id to offer, which happens when an application scoped AI service is
+                // invoked outside a request context. Keep the suffix: @SharedMemory promises that its methods share
+                // one memory, and without it they would all fall back into the plain "default" one.
+                return "default" + perServiceSuffix;
+            }
         }
 
         // fallback to the default since there is nothing else we can really use here
