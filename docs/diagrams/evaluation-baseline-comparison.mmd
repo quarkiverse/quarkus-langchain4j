@@ -1,0 +1,17 @@
+%% Source for modules/ROOT/assets/images/evaluation-baseline-comparison.svg.
+%% Regenerate with: npm run diagrams (see "Regenerating diagrams" in docs/README.adoc).
+%%{init: {"flowchart": {"rankSpacing": 30, "wrappingWidth": 300}}}%%
+flowchart TD
+    baseline["Baseline scores"] --> pair["Match sample names<br/>Present in both runs"]
+    current["Current scores"] --> pair
+    pair --> delta["For each pair<br/>current − baseline (points)"]
+    delta --> mean["Average the differences"]
+    mean --> decision{"Mean < −tolerance?"}
+    decision -->|Yes| fail["Comparison fails"]
+    decision -->|No| pass["Comparison passes"]
+
+    style baseline fill:#e1f5ff
+    style current fill:#fff4e1
+    style pair fill:#ffe1f5
+    style fail fill:#ffe1e1
+    style pass fill:#e1ffe1

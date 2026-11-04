@@ -73,22 +73,7 @@ public interface EvaluationStrategy<T> {
         if (strategy.isAdvisory()) {
             return strategy;
         }
-        return new EvaluationStrategy<>() {
-            @Override
-            public EvaluationResult evaluate(EvaluationSample<T> sample, T output) {
-                return strategy.evaluate(sample, output);
-            }
-
-            @Override
-            public boolean isAdvisory() {
-                return true;
-            }
-
-            @Override
-            public String toString() {
-                return "advisory(" + strategy + ")";
-            }
-        };
+        return new AdvisoryStrategy<>(strategy);
     }
 
 }

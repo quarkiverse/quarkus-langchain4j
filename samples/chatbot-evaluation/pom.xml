@@ -15,6 +15,11 @@
     <name>Quarkus LangChain4j - Samples - Chatbot Evaluation Testing</name>
     <description>Sample demonstrating comprehensive evaluation testing with semantic similarity and AI judge strategies</description>
 
+    <properties>
+        <!-- The tests call OpenAI, which CI has no key for. Run with -DskipTests=false -->
+        <skipTests>true</skipTests>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

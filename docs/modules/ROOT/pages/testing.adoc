@@ -24,6 +24,7 @@ The evaluation framework provides:
 - **Concurrent Evaluation** - Execute evaluations in parallel with configurable concurrency
 - **Repeated Trials** - Run each sample several times and get a confidence interval instead of a single, noisy score
 - **Advisory Strategies** - Report the verdict of a noisy check such as an AI judge without letting it fail the build
+- **Baseline Comparison** - Commit approved scores, review new results with `quarkus langchain4j-eval`, and detect score drops beyond a chosen tolerance
 - **Fluent Builder API** - Readable, chainable evaluation definitions (samples, evaluation strategy, reporting)
 - **Rich Evaluation Results** - Scores, explanations, and metadata for detailed analysis
 - **Multiple Evaluation Strategies** - Semantic similarity, AI judge, and custom strategies
@@ -508,6 +509,345 @@ own heading, with their own pass rate:
 
 If every strategy is advisory, nothing counts toward the score and it is 0.
 
+==== Baseline Comparison
+
+An absolute threshold such as `minScore = 85` checks a minimum level of quality. A baseline checks whether scores
+dropped after changing a prompt, switching models or editing a tool. Commit the scores of an approved run next to
+the tests, then compare later runs with them sample by sample. You can keep absolute assertions alongside the
+baseline assertion to enforce a minimum score as well.
+
+[source,java]
+----
+@Test
+void customerSupportIsNotWorseThanBaseline() {
+    EvaluationReport<String> report = scorer.evaluate(samples, function, strategies);
+    assertThat(report).isNotWorseThanBaseline();
+}
+----
+
+The assertion identifies the evaluation as `<fully qualified test class>/<test method name>`, so there is nothing
+to name. Every run, whether the assertion passes or fails, writes its result to `target/evaluation-baselines/<id>.json`
+(`build/evaluation-baselines` when the working directory has a `build.gradle` or `build.gradle.kts`) as a
+_pending result_. A test run never changes a committed file. You accept a result with `quarkus langchain4j-eval`
+or by <<reviewing-results-manually,reviewing the files manually>>, then commit the baseline.
+Each new run replaces the pending result for that id, so review it before running the test again if you want to
+keep that result. Maven or Gradle's `clean` task removes pending results along with the build directory.
+
+// Generated from diagrams/evaluation-baseline-workflow.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::evaluation-baseline-workflow.svg[Baseline workflow,align="center"]
+
+===== A walkthrough
+
+This walkthrough uses the optional <<evaluation-review-command,review command>>. Install it before starting, and
+run it from the project or module directory containing the test. If you prefer to work directly with files, follow
+<<reviewing-results-manually>> instead. A complete example is in the
+https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/chatbot-evaluation[chatbot-evaluation sample].
+
+There is no baseline yet, so the first run fails and says what to do. The values in `<...>` depend on your test:
+
+[source]
+----
+No baseline yet for <test class>/<test method>, <n> samples pending review.
+
+Pending result: target/evaluation-baselines/<test class>/<test method>.json
+Baseline: src/test/resources/evaluation-baselines/<test class>/<test method>.json
+Run `quarkus langchain4j-eval review` to accept or reject it.
+Manual review (no CLI): https://docs.quarkiverse.io/quarkus-langchain4j/dev/testing.html#reviewing-results-manually
+----
+
+Run `quarkus langchain4j-eval review` to list the pending results. For each one it shows the test id and a table with
+one row per sample, with the score in the baseline and the received score; on a first run there is no baseline, so
+the samples are shown as `new`.
+Then it asks what to do:
+
+[source]
+----
+[a] accept  [r] reject  [d] show responses  [s] skip  [q] quit
+----
+
+`d` prints the expected output and each trial's response, which is how you check that the numbers are earned. `a`
+prints `Accepted <id>` and writes the baseline to
+`src/test/resources/evaluation-baselines/<test class>/<test method>.json`. Commit that file with the test. Later
+runs pass if the mean per-sample score drop stays within the tolerance (5 percentage points by default).
+Model output can vary even when the application has not changed.
+
+Later, a change may lower the scores, for instance a prompt edit that drops facts the bot used to state. If the mean
+drop exceeds the tolerance, the test fails, naming the samples that regressed, and the pending result is still written:
+
+[source]
+----
+Expected the score not to drop by more than 5.00 points against the baseline, but the mean per-sample difference is <n> points (95% CI: <low> to <high>) over <k> paired samples
+
+Regressed samples:
+  - <sample name>: <baseline>% -> <received>%
+
+Pending result: target/evaluation-baselines/<test class>/<test method>.json
+Baseline: src/test/resources/evaluation-baselines/<test class>/<test method>.json
+Run `quarkus langchain4j-eval review` to accept or reject it.
+Manual review (no CLI): https://docs.quarkiverse.io/quarkus-langchain4j/dev/testing.html#reviewing-results-manually
+----
+
+Run `review` to see every sample's baseline and received score, and press `r` to reject: it prints `Rejected <id>`
+and deletes the pending result. The baseline is untouched. Fix the cause and run the test again.
+
+A change that is deliberate, for instance switching `quarkus.langchain4j.openai.chat-model.model-name` to another
+model, gets the same treatment, with the old model's scores as the baseline. If the mean score drop stays within the
+tolerance, the test passes. When scores changed, `review` shows which samples moved (the status is `changed`);
+accept it if the new scores should be the reference from now on. If you accept a run that regressed, the pull request shows the lower scores in the diff of the
+baseline file, which is the review you want.
+
+===== Accepting and rejecting
+
+The command is `langchain4j-eval`, with three subcommands:
+
+* `review [--json [--output <file>]] [<id>...]` shows the pending results, interactively when there is a terminal. For each result it
+  shows how many samples were compared, new and removed, a table of the blocking scores, and of the advisory ones when
+  there are advisory strategies, with regressed samples marked, and the mean differences. It warns when no sample was
+  compared, because the tolerance then checked nothing. `d` shows the responses: each trial's output once, with the
+  verdict of every strategy beneath it and the strategy's explanation, or what was thrown when the sample or the
+  strategy failed. When evaluations ended in an error rather than a verdict, for instance because the model provider
+  refused the call, it groups equivalent errors and shows their counts before asking for a decision. For JSON provider
+  errors it extracts the message and code when available; otherwise it uses the first nonempty message line.
+  These errors do not measure answer quality. Results whose status is `unchanged` need no decision, so `review`,
+  `accept` and `reject` leave them out.
+* `accept (--all | <id>...) [--yes]` writes pending results as baselines.
+* `reject (--all | <id>...) [--yes]` deletes pending results and leaves the baselines as they are.
+
+`accept` and `reject` list the results they would change and ask for confirmation, with the count per status, such as
+`Accept 3 evaluations (1 new, 1 failed, 1 incompatible)? [y/N]`, unless `--yes` is given. It looks for pending results in the directory it
+is run from and in any module below it, so from the root of a multi-module project it finds all of them. When two
+modules have an evaluation with the same id, the commands name each as `<module>:<id>`, with the module relative to
+that directory, and refuse the bare id.
+
+Accepting replaces the evaluation's whole baseline with that run: new samples are added, and existing samples take
+the scores of that run, including the ones that went down. Removed samples are removed from the baseline.
+Rejecting deletes only the pending result; it does not undo application changes or make the next test run pass.
+
+The pending file also carries the comparison and the responses, so copying the whole file into the baseline
+directory does not work. The command writes a compact baseline summary; the manual workflow below extracts a
+full report that the baseline reader also accepts.
+
+[[reviewing-results-manually]]
+===== Reviewing results manually
+
+You can review, accept and reject results without the Quarkus CLI plugin or JBang. Every baseline assertion
+failure prints the pending result's path and the baseline's path. Work from the test module's directory, using
+those paths: Maven normally uses `target/evaluation-baselines`, Gradle uses `build/evaluation-baselines`, and a
+custom store can use other directories.
+
+. Open the pending JSON in your editor. Its `comparison` object contains the status, score differences, added and
+  removed samples, or the reason a baseline is incompatible. Its `report.evaluations` array contains the expected
+  outputs, responses and verdicts. Check any `error` fields before accepting: a failed provider call does not
+  measure answer quality.
+. To *accept*, copy the value of the top-level `report` field, including its surrounding braces, into the baseline
+  file. Create the parent directories if needed. Do not copy the `report` field name or the outer pending-file
+  wrapper. After saving the baseline, delete the pending file.
+. To *reject*, delete only the pending file. Keep the baseline, fix the cause of the regression and rerun the test.
+
+For example, the following shell commands use `jq` to accept a result after you have reviewed it. Replace the two
+paths with those printed by your test:
+
+[source,bash]
+----
+pending='target/evaluation-baselines/com.example.BotTest/answers.json'
+baseline='src/test/resources/evaluation-baselines/com.example.BotTest/answers.json'
+
+mkdir -p "$(dirname "$baseline")" &&
+jq -e '.report' "$pending" > "$baseline.tmp" &&
+mv "$baseline.tmp" "$baseline" &&
+rm "$pending"
+----
+
+The temporary file keeps the previous baseline intact if extraction fails. To reject instead, run only
+`rm "$pending"` after setting `pending` to the file you reviewed.
+
+Manual acceptance replaces the whole baseline, just like CLI acceptance. The extracted full report includes
+expected outputs, responses and evaluation details; the CLI's compact summary contains only scores and
+sample metadata. Review what you are committing, inspect the baseline diff, then commit it with the relevant test
+or application changes. Run the test again to compare against the accepted baseline.
+
+[[evaluation-review-command]]
+===== Installing the review command
+
+There are three ways to get the command:
+
+* After a release, the Quarkus CLI picks it up from the extension's metadata when the project uses
+  `quarkus-langchain4j-core`: `quarkus langchain4j-eval review`.
+* Before a release, and with snapshots, register it once with the Quarkus CLI. Use the version of the extension you
+  depend on:
++
+[source,bash]
+----
+quarkus plugin add io.quarkiverse.langchain4j:quarkus-langchain4j-eval-cli:runner:jar:<version>
+----
+* Without the Quarkus CLI, run the same jar with JBang. The Quarkus CLI runs the plugin through JBang too, and
+  installs JBang when it is missing:
++
+[source,bash]
+----
+jbang io.quarkiverse.langchain4j:quarkus-langchain4j-eval-cli:<version>:runner review
+----
+
+===== In CI
+
+Tests never write committed files, so a CI build cannot change its own baseline. If a baseline is missing the test
+fails with the message above, and a build that regressed fails with the regression message. Accept results on a
+developer machine and commit them.
+
+===== The baseline file
+
+The CLI writes a compact summary so that the baseline is stable and its diff is readable:
+
+[source,json]
+----
+{
+  "formatVersion" : 1,
+  "trials" : 3,
+  "strategies" : [ "<strategy name>" ],
+  "samples" : [ {
+    "name" : "<sample name>",
+    "tags" : [ ],
+    "blocking" : { "passed" : 3, "total" : 3 },
+    "advisory" : { "passed" : 2, "total" : 3 }
+  } ]
+}
+----
+
+For each sample it records how many of the blocking and the advisory evaluations passed, out of how many. A pull request
+diff therefore shows which samples moved and by how much, without the model's responses. The score of a sample is
+the percentage of its blocking evaluations that passed.
+The baseline reader also accepts a full JSON report written by the `json` report formatter.
+
+===== New and removed samples, strategy changes
+
+Samples that are new have nothing to pair with, and that includes samples with advisory evaluations only. They are
+logged (`<n> new samples pending review: <names>`),
+ignored by the comparison and still covered by the absolute assertions you keep. Samples that were removed are
+logged the same way and ignored. In both cases the test can pass, and `review` shows them (`new` or `removed`) so
+that accepting brings the baseline up to date.
+
+A baseline comparison requires the same number of trials and the same strategy names in both runs.
+If either changes, the test fails with `Cannot compare <id> with its baseline: <reason>. Accept this run to
+make it the new baseline.` and `review` shows the status `incompatible`. The reason is
+`the baseline was produced with <n> trials per sample and this run with <m>`, or
+`the baseline was produced with strategies [<names>] and this run with [<names>]`. A baseline file that cannot be
+read, for instance after a merge conflict, is treated the same way, with the reason
+`the baseline file cannot be read: <message>`, so accepting the run replaces it.
+
+When evaluations end in an error rather than a verdict, for instance because the model provider refused the call,
+the failure message says how many, with the distinct errors, and a passing assertion logs the same as a warning.
+
+When no sample has blocking evaluations both in the run and in the baseline, for instance after every sample was
+renamed, the comparison checks nothing, and the assertion logs a warning.
+
+Advisory evaluations are compared too but never fail the assertion. When their mean per-sample score drops by more than
+the tolerance, the assertion logs a warning, so a judge noticing something is visible even on a green run.
+
+===== Working with AI agents
+
+An agent should read the pending results with `review --json`, which prints the results as JSON instead of prompting.
+The same flag works without a terminal. With `--output <file>` the JSON goes to that file instead, which is safer to
+parse: when the Quarkus CLI starts the plugin for the first time, JBang can print to standard output too. Without a terminal, plain `review` prints one line per result, with the id, or
+`<module>:<id>` when two modules share it, and its status.
+
+The JSON has an `evaluations` array with one object per pending result:
+
+* `id`, `module` and `baselineFile` (relative to the directory where the command ran) and `status`, one of `new`,
+  `incompatible`, `failed` or `changed`.
+* `errors`, the number of evaluations that ended in an error rather than a verdict.
+* `comparison` with the `tolerance`, the `meanDifference`, `standardError`, `confidenceLow`, `confidenceHigh` and
+  `advisoryDifference` when there is a baseline to compare with, the `incompatibility` reason if there is one, and
+  the `samples`, `added` and `removed` lists.
+* `samples`, one object per sample, with its `name`, its blocking `baseline` and `received` scores and its
+  `advisoryBaseline` and `advisoryReceived` scores (a new sample has no baseline scores, a removed one no received
+  ones, and a sample without evaluations of a kind has no scores of that kind), the `expected` output and
+  `responses`. The samples of an `incompatible` result are the ones it received. Each response has its `output`
+  (`null` when the sample could not be executed), its `trial`, the `strategy` that judged it, `passed`, `advisory`,
+  and the strategy's `explanation` or the `error` that was thrown, when there is one.
+
+Accepting a baseline is a decision about what the application is supposed to do, so it belongs to a person. Without a
+terminal, `accept` and `reject` refuse:
+
+[source]
+----
+Not accepting: no terminal to confirm with. Run this yourself, or pass --yes if a person asked for it.
+----
+
+(`Not rejecting: ...` for `reject`.) The exit code is 1. `--yes` is there for the case that a person told the agent to
+accept.
+
+`quarkus-langchain4j-core-deployment` ships a skill that tells agents this, as `META-INF/quarkus-skill.md`.
+Quarkus currently collects extension skills only from its own repository, so the file is not served to agents from here
+yet. Until that changes, paste the same text into the instructions your agent reads, such as `AGENTS.md` or
+`CLAUDE.md`:
+
+[source,markdown]
+----
+## Evaluation baselines
+
+A failing `isNotWorseThanBaseline()` has one of three causes, named in
+its message: the application got worse than the committed baseline,
+there is no baseline yet, or the baseline can no longer be compared,
+for instance after the trials or strategies changed. Fix a regression
+or report it to the user; a missing or incompatible baseline waits for
+the user's review. Never accept a baseline, delete a baseline file, or
+raise a tolerance to make a test pass unless the user asked for it in
+this conversation.
+
+Run `quarkus langchain4j-eval review --json --output target/evaluation-review.json`
+and read that file to see which samples moved and why. Standard output can also
+carry the launcher's own messages. When `errors` is above 0, the evaluations
+failed to run, for instance because a model provider refused the call; report
+that instead of judging the scores.
+Only pass `--yes` to `quarkus langchain4j-eval accept` or `reject` when the user told you to.
+----
+
+===== Tolerance, explicit ids and custom stores
+
+The default tolerance is 5 percentage points of mean per-sample score. Pass another one with
+`isNotWorseThanBaseline(2.0)`. For each sample with blocking evaluations in both runs, the comparison subtracts its
+baseline score from its current score, then averages those differences. Each paired sample has equal weight.
+The assertion fails when that mean is below the negative tolerance: with the default tolerance, -5.00 passes and
+-5.01 fails. Improvements in some samples can offset regressions in others, so inspect the per-sample results too.
+
+The reported 95% confidence interval uses a normal approximation based on the variation between the paired
+sample differences. It is diagnostic information and does not control pass/fail. A run can fail even when the
+interval includes zero. With fewer than two paired samples, the reported standard error is zero; this does not
+establish certainty about future model outputs.
+
+// Generated from diagrams/evaluation-baseline-comparison.mmd. See "Regenerating diagrams" in docs/README.adoc.
+image::evaluation-baseline-comparison.svg[Baseline comparison,align="center"]
+
+The id is taken from the test method found on the call stack, so each test method can have one baseline per run:
+
+* A `@Test` method inherited from a base class gets the name of the base class. Two subclasses running it would
+  share one id, and the second fails with `<id> was already compared with its baseline in this run.`
+* Parameterized and repeated tests run the method several times, so the second assertion for the same id fails with
+  `<id> was already compared with its baseline in this run.`
+* An assertion outside a test method, for instance in a helper running on another thread, cannot be resolved and
+  fails with `Cannot tell which test is running`.
+
+In these cases give each evaluation its own id with `isNotWorseThanBaseline(String id)` or
+`isNotWorseThanBaseline(String id, double tolerance)`:
+
+[source,java]
+----
+assertThat(report).isNotWorseThanBaseline(getClass().getSimpleName() + "/faq");
+----
+
+For parameterized or repeated tests, also include a stable identifier for the case or repetition in the id.
+
+One id per run means one per execution of the tests: with `quarkus-langchain4j-testing-evaluation-junit5` on the
+test classpath, each execution in the same JVM, such as Quarkus continuous testing or a Surefire rerun of failed
+tests, is a new run, while without that module a rerun in the same JVM counts as the same run.
+
+Baselines can also come from somewhere else than a committed file. `BaselineStore` is an interface with `load`, `save`
+and `receive`, and `isNotWorseThan(BaselineStore store, String id, double tolerance)` takes any implementation.
+`FileBaselineStore` is the one provided; `new FileBaselineStore(baselineDirectory, pendingDirectory)` changes where it
+reads and writes. `quarkus langchain4j-eval` only looks for pending results in `target/evaluation-baselines` and
+`build/evaluation-baselines`, so it does not find the ones written to another pending directory. The comparison
+itself is available as `report.compareWith(snapshot)` for custom assertions or reporting.
+
 === Evaluation Report
 
 The `EvaluationReport` aggregates the results of all evaluations.
@@ -518,6 +858,7 @@ It provides:
 * Scores per tag (for categorized evaluations)
 * Scores per sample across trials (see <<_trials_and_confidence_intervals>>)
 * The score of the advisory evaluations, kept apart from the global score (see <<_advisory_strategies>>)
+* A paired comparison with the report of a previous run (see <<_baseline_comparison>>)
 * Access to individual evaluation results with scores, explanations, and metadata
 * Report generation in multiple formats (Markdown, JSON, or custom formats)
 
@@ -538,6 +879,9 @@ assertThat(report)
     .hasFailedCount(2)                  // Exact failed count
     .hasAtMostFailedEvaluations(3)      // Maximum failed
     .hasEvaluationCount(10);             // Total count
+
+assertThat(report)
+    .isNotWorseThan(baselines, "faq", 2.0);  // Paired comparison with a committed baseline
 ----
 
 == Writing Evaluation Test

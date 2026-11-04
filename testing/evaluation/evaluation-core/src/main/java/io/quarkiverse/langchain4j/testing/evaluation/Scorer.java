@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.testing.evaluation;
 
 import java.io.Closeable;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -69,25 +70,27 @@ public class Scorer implements Closeable {
                                         LOG.infof(
                                                 "Evaluation of sample `%s` with strategy `%s`: %s (score: %.2f)",
                                                 sample.name(),
-                                                strategy.getClass().getSimpleName(),
+                                                nameOf(strategy),
                                                 evaluation.passed() ? "OK" : "KO",
                                                 evaluation.score());
                                     } catch (Throwable e) {
                                         // The strategy itself failed, not the function under test: record it against
                                         // that strategy so an advisory strategy failing cannot block.
                                         LOG.errorf(e, "Strategy `%s` failed to evaluate sample `%s`",
-                                                strategy.getClass().getSimpleName(), sample.name());
+                                                nameOf(strategy), sample.name());
                                         evaluation = EvaluationResult.fromEvaluationThrowable(
                                                 sample, response, e, strategy.isAdvisory());
                                     }
-                                    evaluations.add(new OrderedEvaluationResult(currentIndex, currentTrial, evaluation));
+                                    evaluations.add(new OrderedEvaluationResult(currentIndex, currentTrial,
+                                            evaluation.from(currentTrial + 1, nameOf(strategy))));
                                 }
                             } catch (Throwable e) {
                                 LOG.errorf(e, "Failed to evaluate sample `%s`", sample.name());
                                 evaluations.add(
                                         new OrderedEvaluationResult(
                                                 currentIndex, currentTrial,
-                                                EvaluationResult.fromEvaluationThrowable(sample, e)));
+                                                EvaluationResult.fromEvaluationThrowable(sample, e)
+                                                        .from(currentTrial + 1, null)));
                             } finally {
                                 latch.countDown();
                             }
@@ -104,7 +107,8 @@ public class Scorer implements Closeable {
                         .thenComparing(OrderedEvaluationResult::trial))
                 .map(OrderedEvaluationResult::evaluation)
                 .toList();
-        return new EvaluationReport<>(orderedEvalutions, trials);
+        return new EvaluationReport<>(orderedEvalutions, trials,
+                Arrays.stream(strategies).map(Scorer::nameOf).toList());
     }
 
     public void close() {
@@ -116,6 +120,9 @@ public class Scorer implements Closeable {
      *
      * @param advisory whether the result comes from an advisory strategy and therefore does not affect the score,
      *        see {@link EvaluationStrategy#isAdvisory()}
+     * @param trial the execution of the sample this result evaluates, from 1, or 0 when unknown
+     * @param strategy the name of the strategy that produced this result, or {@code null} when the sample could not be
+     *        executed or the result was not produced by a {@link Scorer}
      */
     public record EvaluationResult<T>(
             EvaluationSample<T> sample,
@@ -125,7 +132,33 @@ public class Scorer implements Closeable {
             double score,
             String explanation,
             java.util.Map<String, Object> metadata,
-            boolean advisory) {
+            boolean advisory,
+            int trial,
+            String strategy) {
+
+        public EvaluationResult(
+                EvaluationSample<T> sample,
+                T result,
+                Throwable thrown,
+                boolean passed,
+                double score,
+                String explanation,
+                java.util.Map<String, Object> metadata,
+                boolean advisory) {
+            this(sample, result, thrown, passed, score, explanation, metadata, advisory, 0, null);
+        }
+
+        /**
+         * This result, recorded as produced by the given trial and strategy.
+         *
+         * @param trial the execution of the sample, from 1
+         * @param strategy the name of the strategy, or {@code null} when the sample could not be executed
+         * @return a copy of this result with the trial and strategy set
+         */
+        public EvaluationResult<T> from(int trial, String strategy) {
+            return new EvaluationResult<>(sample, result, thrown, passed, score, explanation, metadata, advisory, trial,
+                    strategy);
+        }
 
         public EvaluationResult(
                 EvaluationSample<T> sample,
@@ -193,6 +226,24 @@ public class Scorer implements Closeable {
         } catch (Exception e) {
             throw new AssertionError("Failed to execute sample " + sample, e);
         }
+    }
+
+    private static String nameOf(EvaluationStrategy<?> strategy) {
+        if (strategy instanceof AdvisoryStrategy<?> advisory) {
+            return nameOf(advisory.delegate()) + " (advisory)";
+        }
+        Class<?> type = strategy.getClass();
+        if (type.isHidden()) {
+            // Lambdas are hidden classes whose names change on every run.
+            return "lambda";
+        }
+        String simpleName = type.getSimpleName();
+        if (simpleName.isEmpty()) {
+            // Anonymous class: use the binary name without the package, e.g. `ScorerTest$1`.
+            String packageName = type.getPackageName();
+            return packageName.isEmpty() ? type.getName() : type.getName().substring(packageName.length() + 1);
+        }
+        return simpleName;
     }
 
     private record OrderedEvaluationResult<T>(int index, int trial, EvaluationResult<T> evaluation) {
