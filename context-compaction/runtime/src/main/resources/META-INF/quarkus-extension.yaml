@@ -1,0 +1,11 @@
+name: "LangChain4j - Context Compaction"
+metadata:
+  keywords:
+    - "ai"
+    - "langchain4j"
+    - "compaction"
+    - "memory"
+  categories:
+    - "ai"
+  status: "experimental"
+  description: "Curated context compaction strategies for LangChain4j chat memory"

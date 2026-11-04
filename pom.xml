@@ -32,6 +32,7 @@
     <module>testing</module>
     <module>integration-tests</module>
     <module>docs-rag</module>
+    <module>context-compaction</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
