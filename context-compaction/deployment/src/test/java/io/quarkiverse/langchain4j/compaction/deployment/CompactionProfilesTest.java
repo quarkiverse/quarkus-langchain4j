@@ -47,10 +47,10 @@ class CompactionProfilesTest {
             .overrideConfigKey("quarkus.langchain4j.compaction.budget.reserved-completion-tokens", "100")
             .overrideConfigKey("quarkus.langchain4j.compaction.summary.keep-last-turns", "2")
             // triage profile: keep the last messages only, and compact much earlier
-            .overrideConfigKey("quarkus.langchain4j.compaction.triage.strategy", "message-window")
-            .overrideConfigKey("quarkus.langchain4j.compaction.triage.message-window.max-messages", "4")
-            .overrideConfigKey("quarkus.langchain4j.compaction.triage.budget.context-window", "300")
-            .overrideConfigKey("quarkus.langchain4j.compaction.triage.budget.reserved-completion-tokens", "50");
+            .overrideConfigKey("quarkus.langchain4j.compaction.profiles.triage.strategy", "message-window")
+            .overrideConfigKey("quarkus.langchain4j.compaction.profiles.triage.message-window.max-messages", "4")
+            .overrideConfigKey("quarkus.langchain4j.compaction.profiles.triage.budget.context-window", "300")
+            .overrideConfigKey("quarkus.langchain4j.compaction.profiles.triage.budget.reserved-completion-tokens", "50");
 
     @RegisterAiService(chatLanguageModelSupplier = FakeModelSupplier.class)
     interface Assistant {

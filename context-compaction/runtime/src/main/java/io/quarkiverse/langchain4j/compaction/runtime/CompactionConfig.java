@@ -12,9 +12,7 @@ import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
-import io.smallrye.config.WithDefaults;
 import io.smallrye.config.WithParentName;
-import io.smallrye.config.WithUnnamedKey;
 
 /**
  * Context compaction configuration.
@@ -24,34 +22,38 @@ import io.smallrye.config.WithUnnamedKey;
 public interface CompactionConfig {
 
     /**
-     * Name of the profile configured directly under {@code quarkus.langchain4j.compaction}, used by AI services without
-     * {@link CompactionProfile}.
+     * Identifies the default profile (see {@link #defaultProfile()}) in {@code CompactionProfiles#provider(String)}.
      */
     String DEFAULT_PROFILE = "<default>";
 
     /**
-     * Compaction profiles. The default profile is configured directly under {@code quarkus.langchain4j.compaction}, named
-     * profiles under {@code quarkus.langchain4j.compaction."<name>"}. A named profile does not inherit from the default
-     * one: unset properties take their built-in default.
+     * The default profile, configured directly under {@code quarkus.langchain4j.compaction}, used by AI services without
+     * {@link CompactionProfile}.
      */
-    @ConfigDocMapKey("profile-name")
     @WithParentName
-    @WithUnnamedKey(DEFAULT_PROFILE)
-    @WithDefaults
-    Map<String, Profile> profiles();
+    Profile defaultProfile();
 
     /**
-     * @return the default profile
+     * Named profiles, configured under {@code quarkus.langchain4j.compaction.profiles."<name>"} and selected with
+     * {@link CompactionProfile}. A named profile does not inherit from the default one: unset properties take their
+     * built-in default.
      */
-    default Profile defaultProfile() {
-        return profiles().get(DEFAULT_PROFILE);
-    }
+    @ConfigDocMapKey("profile-name")
+    Map<String, Profile> profiles();
 
     /**
      * @return {@code true} if the profile is the default one or has at least one property set
      */
     default boolean hasProfile(String name) {
         return DEFAULT_PROFILE.equals(name) || profiles().containsKey(name);
+    }
+
+    /**
+     * @param name a profile name, or {@link #DEFAULT_PROFILE}
+     * @return the profile, or {@code null} if it is not configured
+     */
+    default Profile profile(String name) {
+        return DEFAULT_PROFILE.equals(name) ? defaultProfile() : profiles().get(name);
     }
 
     interface Profile {
