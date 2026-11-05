@@ -31,6 +31,19 @@ class MessageWindowStrategyTest {
     }
 
     @Test
+    void startsTheWindowWithAUserMessage() {
+        List<ChatMessage> history = new ArrayList<>();
+        history.add(Fixtures.SYSTEM);
+        for (int i = 0; i < 10; i++) {
+            history.add(UserMessage.from("question " + i));
+            history.add(AiMessage.from("answer " + i));
+        }
+        // the last 3 messages are "answer 8", "question 9" and "answer 9": the leading answer is dropped
+        List<ChatMessage> view = new MessageWindowStrategy(3).compact(history, Fixtures.context(10_000));
+        assertThat(view).containsExactly(Fixtures.SYSTEM, history.get(19), history.get(20));
+    }
+
+    @Test
     void neverSplitsAToolExchange() {
         List<ChatMessage> history = Fixtures.conversation(4);
         // 4 messages from the end lands in the middle of the tool exchange of turn 2

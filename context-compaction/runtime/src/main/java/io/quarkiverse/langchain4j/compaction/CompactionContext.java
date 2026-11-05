@@ -53,6 +53,15 @@ public interface CompactionContext {
     void note(String owner, String note);
 
     /**
+     * Records that a step could not do its job (for example the summarizer failed) and kept the messages it should have
+     * compacted. The report is marked {@link CompactionReport#degraded() degraded}, and the view is cut down with
+     * {@code token-window} if it does not fit the budget.
+     */
+    default void degraded(String owner, String reason) {
+        note(owner, reason);
+    }
+
+    /**
      * @return the number of tokens of the given messages, as measured by {@link #tokenCounter()}
      */
     default int tokens(java.util.List<ChatMessage> messages) {

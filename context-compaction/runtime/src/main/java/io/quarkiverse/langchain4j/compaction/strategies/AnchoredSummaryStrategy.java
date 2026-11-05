@@ -60,13 +60,15 @@ public class AnchoredSummaryStrategy implements CompactionStrategy {
         List<Conversation.Turn> recent = turns.subList(split, turns.size());
 
         Optional<String> summary = engine.summarize(Strategies.ANCHORED_SUMMARY, middle, context);
+        if (summary.isEmpty()) {
+            context.degraded(Strategies.ANCHORED_SUMMARY,
+                    "kept " + middle.size() + " turns that could not be summarized");
+            return conversation.toMessages();
+        }
         List<ChatMessage> result = new ArrayList<>(conversation.system());
         anchor.forEach(t -> result.addAll(t.messages()));
-        summary.ifPresent(s -> result.add(CompactionMessages.summary(s)));
+        result.add(CompactionMessages.summary(summary.get()));
         recent.forEach(t -> result.addAll(t.messages()));
-        if (summary.isEmpty()) {
-            context.note(Strategies.ANCHORED_SUMMARY, "dropped " + middle.size() + " turns without summary");
-        }
         return result;
     }
 

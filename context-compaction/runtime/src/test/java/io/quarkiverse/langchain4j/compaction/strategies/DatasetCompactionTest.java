@@ -57,11 +57,11 @@ class DatasetCompactionTest {
             // id, messages and tokens without the system message
             "tool-output-pruning, 127, 4092",
             "duplicate-collapse,  111, 13389",
-            "token-window,         38, 3958",
+            "token-window,         37, 3920",
             "relevance,            35, 1548",
             "anchored-summary,     20, 1348",
             "rolling-summary,      18, 1257",
-            "message-window,       20, 1743",
+            "message-window,       17, 1223",
             // pruning alone fits the 4200-token target: the pipeline stops there
             "pipeline,            127, 4092",
             // no timestamps in the recording: time decay keeps everything
@@ -77,6 +77,8 @@ class DatasetCompactionTest {
         List<ChatMessage> view = defaults().get(id).compact(history, context);
 
         assertThat(CompactionInvariants.violations(history, view)).isEmpty();
+        // several providers reject a conversation whose first non-system message is not a user message
+        assertThat(view.get(1)).as("first message").isInstanceOf(dev.langchain4j.data.message.UserMessage.class);
         assertThat(view.size() - 1).as("messages").isEqualTo(messages);
         assertThat(context.tokens(view) - system).as("tokens").isEqualTo(tokens);
     }

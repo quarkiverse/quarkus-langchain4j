@@ -83,7 +83,7 @@ class RollingSummaryStrategyTest {
     }
 
     @Test
-    void dropsOldTurnsWhenSummarizationFails() {
+    void keepsOldTurnsWhenSummarizationFails() {
         RollingSummaryStrategy strategy = new RollingSummaryStrategy(new RollingSummaryStrategy.Options(2, 100),
                 (previous, messages, maxWords) -> {
                     throw new IllegalStateException("model unavailable");
@@ -91,9 +91,10 @@ class RollingSummaryStrategyTest {
         Fixtures.TestContext context = Fixtures.context(10_000);
         List<ChatMessage> history = Fixtures.conversation(6);
         List<ChatMessage> view = strategy.compact(history, context);
-        assertThat(view.stream().filter(CompactionMessages::isSummary)).isEmpty();
+        assertThat(view).isEqualTo(history);
+        assertThat(context.degraded).isTrue();
         assertThat(context.notes).anyMatch(n -> n.contains("summarization failed"))
-                .anyMatch(n -> n.contains("dropped 4 turns without summary"));
+                .anyMatch(n -> n.contains("kept 4 turns that could not be summarized"));
         assertThat(CompactionInvariants.violations(history, view)).isEmpty();
     }
 }

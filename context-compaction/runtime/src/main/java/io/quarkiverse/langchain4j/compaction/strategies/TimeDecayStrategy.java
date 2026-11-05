@@ -87,10 +87,18 @@ public class TimeDecayStrategy implements CompactionStrategy {
 
         List<ChatMessage> result = new ArrayList<>(conversation.system());
         if (!stale.isEmpty()) {
-            Optional<String> summary = engine == null ? Optional.empty()
-                    : engine.summarize(Strategies.TIME_DECAY, stale, context);
-            summary.ifPresentOrElse(s -> result.add(CompactionMessages.summary(s)),
-                    () -> context.note(Strategies.TIME_DECAY, "dropped " + stale.size() + " stale turns"));
+            if (engine == null) {
+                context.note(Strategies.TIME_DECAY, "dropped " + stale.size() + " stale turns");
+            } else {
+                Optional<String> summary = engine.summarize(Strategies.TIME_DECAY, stale, context);
+                if (summary.isPresent()) {
+                    result.add(CompactionMessages.summary(summary.get()));
+                } else {
+                    context.degraded(Strategies.TIME_DECAY,
+                            "kept " + stale.size() + " stale turns that could not be summarized");
+                    stale.forEach(t -> result.addAll(t.messages()));
+                }
+            }
         }
         result.addAll(tail);
         if (truncated > 0) {
