@@ -141,6 +141,11 @@ class CompactionProfilesTest {
         // the default profile summarizes
         List<ChatMessage> assistantView = model.lastRequestStartingWith("You are a helpful assistant.");
         assertThat(assistantView).anyMatch(CompactionMessages::isSummary);
+        // the summary is folded into the next user message: never two user messages in a row
+        for (int i = 1; i < assistantView.size(); i++) {
+            assertThat(assistantView.get(i - 1) instanceof dev.langchain4j.data.message.UserMessage
+                    && assistantView.get(i) instanceof dev.langchain4j.data.message.UserMessage).isFalse();
+        }
 
         // the triage profile keeps the system message and the last 4 messages, plus the new question
         List<ChatMessage> triageView = model.lastRequestStartingWith("You route support requests.");

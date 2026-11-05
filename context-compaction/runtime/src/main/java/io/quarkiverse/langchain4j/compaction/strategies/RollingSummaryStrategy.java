@@ -65,6 +65,9 @@ public class RollingSummaryStrategy implements CompactionStrategy {
             context.degraded(Strategies.ROLLING_SUMMARY, "kept " + old.size() + " turns that could not be summarized");
             return conversation.toMessages();
         }
+        if (!SummaryEngine.shorter(Strategies.ROLLING_SUMMARY, summary.get(), old, context)) {
+            return conversation.toMessages();
+        }
         List<ChatMessage> result = new ArrayList<>(conversation.system());
         result.add(CompactionMessages.summary(summary.get()));
         recent.forEach(t -> result.addAll(t.messages()));

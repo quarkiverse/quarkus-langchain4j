@@ -15,6 +15,7 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
+import io.quarkiverse.langchain4j.compaction.ArchivedToolOutputs;
 import io.quarkiverse.langchain4j.compaction.CompactionException;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
@@ -80,6 +81,26 @@ public class DefaultCompactionProfiles implements CompactionProfiles {
             }
         });
         logOwnership(usage);
+        warnAboutMissingRetrievalTool(usage);
+    }
+
+    private void warnAboutMissingRetrievalTool(CompactionProfileUsage usage) {
+        Set<String> withTool = new TreeSet<>();
+        for (String service : usage.retrievalToolServices()) {
+            withTool.add(usage.profiles().getOrDefault(service, CompactionConfig.DEFAULT_PROFILE));
+        }
+        Set<String> all = new TreeSet<>(config.profiles().keySet());
+        all.add(CompactionConfig.DEFAULT_PROFILE);
+        for (String profile : all) {
+            if (config.profile(profile).toolOutputPruning()
+                    .retrieval() == CompactionConfig.Profile.ToolOutputPruning.Retrieval.TOOL
+                    && !withTool.contains(profile)) {
+                String name = CompactionConfig.DEFAULT_PROFILE.equals(profile) ? DEFAULT : profile;
+                LOG.warnf("Compaction profile %s sets tool-output-pruning.retrieval=tool, but none of its AI services"
+                        + " lists %s in its tools: the model will be told to call a tool it does not have",
+                        name, ArchivedToolOutputs.class.getSimpleName());
+            }
+        }
     }
 
     private void logOwnership(CompactionProfileUsage usage) {

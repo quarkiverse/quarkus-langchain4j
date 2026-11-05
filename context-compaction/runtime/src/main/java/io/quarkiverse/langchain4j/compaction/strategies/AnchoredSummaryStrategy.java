@@ -65,6 +65,9 @@ public class AnchoredSummaryStrategy implements CompactionStrategy {
                     "kept " + middle.size() + " turns that could not be summarized");
             return conversation.toMessages();
         }
+        if (!SummaryEngine.shorter(Strategies.ANCHORED_SUMMARY, summary.get(), middle, context)) {
+            return conversation.toMessages();
+        }
         List<ChatMessage> result = new ArrayList<>(conversation.system());
         anchor.forEach(t -> result.addAll(t.messages()));
         result.add(CompactionMessages.summary(summary.get()));
