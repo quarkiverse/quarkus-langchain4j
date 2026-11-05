@@ -4383,7 +4383,7 @@ endif::add-copy-button-to-config-props[]
 --
 The endpoint for the Azure OpenAI resource.
 
-If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++
+If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++ or, when `quarkus.langchain4j.azure-openai.endpoint-style` is `v1`, to `https://$++{++quarkus.langchain4j.azure-openai.resource-name++}++.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/v1`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -4395,6 +4395,33 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-endpoint-style]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-endpoint-style[`+++quarkus.langchain4j.azure-openai.endpoint-style+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.endpoint-style+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The style of Azure OpenAI endpoint used by the chat and embedding models.
+
+`deployment` uses the classic deployment-based endpoints (`.../openai/deployments/++{++deployment-name++}++`) together with the `api-version` query parameter.
+
+`v1` uses the `.../openai/v1` endpoints: no `api-version` is sent, and the deployment name is passed as the `model` of each request, so `deployment-name` is required. If `endpoint` is set explicitly, it must point to the `v1` base URL (ending in `/openai/v1`).
+
+Image and audio transcription models always use the deployment-based endpoints.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_ENDPOINT_STYLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_ENDPOINT_STYLE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`deployment`, `v1`
+|`+++deployment+++`
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-ad-token[`+++quarkus.langchain4j.azure-openai.ad-token+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -5839,7 +5866,7 @@ endif::add-copy-button-to-config-props[]
 --
 The endpoint for the Azure OpenAI resource.
 
-If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++
+If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++ or, when `quarkus.langchain4j.azure-openai.endpoint-style` is `v1`, to `https://$++{++quarkus.langchain4j.azure-openai.resource-name++}++.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/v1`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -5851,6 +5878,33 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-endpoint-style]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-endpoint-style[`+++quarkus.langchain4j.azure-openai."model-name".endpoint-style+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".endpoint-style+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The style of Azure OpenAI endpoint used by the chat and embedding models.
+
+`deployment` uses the classic deployment-based endpoints (`.../openai/deployments/++{++deployment-name++}++`) together with the `api-version` query parameter.
+
+`v1` uses the `.../openai/v1` endpoints: no `api-version` is sent, and the deployment name is passed as the `model` of each request, so `deployment-name` is required. If `endpoint` is set explicitly, it must point to the `v1` base URL (ending in `/openai/v1`).
+
+Image and audio transcription models always use the deployment-based endpoints.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__ENDPOINT_STYLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__ENDPOINT_STYLE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`deployment`, `v1`
+|`+++deployment+++`
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-ad-token[`+++quarkus.langchain4j.azure-openai."model-name".ad-token+++`]##
 ifdef::add-copy-button-to-config-props[]

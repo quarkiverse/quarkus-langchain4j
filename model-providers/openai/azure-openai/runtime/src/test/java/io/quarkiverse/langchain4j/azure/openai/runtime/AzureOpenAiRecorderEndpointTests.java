@@ -116,6 +116,83 @@ class AzureOpenAiRecorderEndpointTests {
                         "domainName", "deploymentName"));
     }
 
+    @Test
+    void v1EndpointStyleConstructsV1Endpoint() {
+        useV1EndpointStyle();
+        doReturn(Optional.of("resourceName"))
+                .when(this.config)
+                .resourceName();
+        doReturn(Optional.of("deploymentName"))
+                .when(this.config)
+                .deploymentName();
+
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
+                LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT))
+                .isEqualTo("https://resourceName.domainName/openai/v1");
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
+                LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.EMBEDDING))
+                .isEqualTo("https://resourceName.domainName/openai/v1");
+    }
+
+    @Test
+    void v1EndpointStyleKeepsDeploymentEndpointsForImageAndAudio() {
+        useV1EndpointStyle();
+        doReturn(Optional.of("resourceName"))
+                .when(this.config)
+                .resourceName();
+        doReturn(Optional.of("deploymentName"))
+                .when(this.config)
+                .deploymentName();
+
+        String deploymentEndpoint = String.format(AzureOpenAiRecorder.AZURE_ENDPOINT_URL_PATTERN, "resourceName",
+                "domainName", "deploymentName");
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
+                LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.IMAGE))
+                .isEqualTo(deploymentEndpoint);
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
+                LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.AUDIO_TRANSCRIPTION))
+                .isEqualTo(deploymentEndpoint);
+    }
+
+    @Test
+    void v1EndpointStyleWithExplicitEndpoint() {
+        useV1EndpointStyle();
+        doReturn(Optional.of("https://somewhere.com/openai/v1"))
+                .when(this.config)
+                .endpoint();
+        doReturn(Optional.of("deploymentName"))
+                .when(this.config)
+                .deploymentName();
+
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
+                LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT))
+                .isEqualTo("https://somewhere.com/openai/v1");
+    }
+
+    @Test
+    void v1EndpointStyleWithExplicitEndpointRequiresDeploymentName() {
+        useV1EndpointStyle();
+        doReturn(Optional.of("https://somewhere.com/openai/v1"))
+                .when(this.config)
+                .endpoint();
+
+        var configValidationException = catchThrowableOfType(ConfigValidationException.class,
+                () -> AzureOpenAiRecorder.getEndpoint(this.config,
+                        NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT));
+
+        assertThat(configValidationException.getProblemCount())
+                .isEqualTo(1);
+        assertThat(configValidationException.getProblem(0))
+                .extracting(Problem::getMessage)
+                .isEqualTo(String.format(CONFIG_ERROR_MESSAGE_TEMPLATE, "deployment-name"));
+    }
+
+    private void useV1EndpointStyle() {
+        doReturn(LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointStyle.V1)
+                .when(this.config)
+                .endpointStyle();
+    }
+
     static class CustomLangchain4JAzureOpenAiConfig implements LangChain4jAzureOpenAiConfig {
 
         private final AzureAiConfig azureAiConfig;
@@ -155,6 +232,11 @@ class AzureOpenAiRecorderEndpointTests {
         @Override
         public Optional<String> endpoint() {
             return Optional.empty();
+        }
+
+        @Override
+        public EndpointStyle endpointStyle() {
+            return EndpointStyle.DEPLOYMENT;
         }
 
         @Override

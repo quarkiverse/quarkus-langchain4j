@@ -54,6 +54,7 @@ import io.smallrye.config.ConfigValidationException.Problem;
 public class AzureOpenAiRecorder {
 
     static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.%s/openai/deployments/%s";
+    static final String AZURE_V1_ENDPOINT_URL_PATTERN = "https://%s.%s/openai/v1";
     public static final Problem[] EMPTY_PROBLEMS = new Problem[0];
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
@@ -92,7 +93,8 @@ public class AzureOpenAiRecorder {
                     .adToken(adToken)
                     .modelName(azureAiConfig.deploymentNameFor(EndpointType.CHAT).orElse(null))
                     // .tokenizer(new OpenAiTokenizer("<modelName>")) TODO: Set the tokenizer, it is always null!!
-                    .apiVersion(chatModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
+                    .apiVersion(usesV1Endpoint(azureAiConfig, EndpointType.CHAT) ? null
+                            : chatModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
@@ -157,7 +159,7 @@ public class AzureOpenAiRecorder {
                     .adToken(adToken)
                     .modelName(azureAiConfig.deploymentNameFor(EndpointType.CHAT).orElse(null))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
-                    .apiVersion(azureAiConfig.apiVersion())
+                    .apiVersion(usesV1Endpoint(azureAiConfig, EndpointType.CHAT) ? null : azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
@@ -216,7 +218,9 @@ public class AzureOpenAiRecorder {
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
-                    .apiVersion(embeddingModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
+                    .modelName(azureAiConfig.deploymentNameFor(EndpointType.EMBEDDING).orElse(null))
+                    .apiVersion(usesV1Endpoint(azureAiConfig, EndpointType.EMBEDDING) ? null
+                            : embeddingModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
@@ -363,8 +367,19 @@ public class AzureOpenAiRecorder {
     static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName, EndpointType type) {
         var endpoint = azureAiConfig.endPointFor(type);
 
-        return (endpoint.isPresent() && !endpoint.get().trim().isBlank()) ? endpoint.get()
-                : constructEndpointFromConfig(azureAiConfig, configName, type);
+        if (endpoint.isPresent() && !endpoint.get().trim().isBlank()) {
+            if (usesV1Endpoint(azureAiConfig, type) && azureAiConfig.deploymentNameFor(type).isEmpty()) {
+                // the v1 endpoint has no deployment in its path, so the deployment name is sent as the request's model
+                throw new ConfigValidationException(new Problem[] { createConfigProblem("deployment-name", configName) });
+            }
+            return endpoint.get();
+        }
+        return constructEndpointFromConfig(azureAiConfig, configName, type);
+    }
+
+    static boolean usesV1Endpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, EndpointType type) {
+        return azureAiConfig.endpointStyle() == LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointStyle.V1
+                && (type == EndpointType.CHAT || type == EndpointType.EMBEDDING);
     }
 
     private static String constructEndpointFromConfig(
@@ -393,6 +408,9 @@ public class AzureOpenAiRecorder {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
         }
 
+        if (usesV1Endpoint(azureAiConfig, type)) {
+            return String.format(AZURE_V1_ENDPOINT_URL_PATTERN, resourceName.get(), domainName.get());
+        }
         return String.format(AZURE_ENDPOINT_URL_PATTERN, resourceName.get(), domainName.get(), deploymentName.get());
     }
 
