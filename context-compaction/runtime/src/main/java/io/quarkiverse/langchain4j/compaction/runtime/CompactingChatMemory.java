@@ -8,6 +8,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
@@ -31,8 +32,9 @@ import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
 /**
  * A {@link ChatMemory} that stores the full history and hands out a compacted view.
  * <p>
- * The {@link ChatMemoryStore} always holds the complete, original history; compaction only shapes what
- * {@link #messages()} returns, so it is auditable and can be changed without losing data. Compaction runs when the
+ * The {@link ChatMemoryStore} holds the complete, original history; compaction only shapes what
+ * {@link #messages()} returns, so it is auditable and can be changed without losing data. The only messages ever
+ * deleted from the store are the oldest turns, when a {@link Retention} is configured. Compaction runs when the
  * history exceeds the trigger of the {@link io.quarkiverse.langchain4j.compaction.TokenBudget}.
  * <p>
  * Quarkus LangChain4j AI services use it as a {@link HistoryViewChatMemory}: they buffer the full {@link #history()}
@@ -41,7 +43,7 @@ import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
  * {@link #setHistory(List)}.
  * <p>
  * Other callers only see the {@link ChatMemory} contract: {@link #messages()} returns the compacted view, and
- * {@link #set(Iterable)} reconciles what it receives with the stored history (see {@link #reconcile(List, List)}), so a
+ * {@link #set(Iterable)} reconciles what it receives with the stored history (see {@link #reconcile(List, List, Set)}), so a
  * compacted view written back never replaces the full history.
  */
 public class CompactingChatMemory implements HistoryViewChatMemory {
@@ -65,7 +67,19 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
             boolean snapshots,
             ToolOutputArchive archive,
             Consumer<CompactionReport> events,
-            Clock clock) {
+            Clock clock,
+            Retention retention) {
+
+        /**
+         * Components keeping the full history forever.
+         */
+        public Components(String profile, ChatMemoryStore store, String strategyId, CompactionStrategy strategy,
+                TokenBudget budget, TokenCounter tokenCounter, boolean enabled, boolean verifyInvariants,
+                ConversationStates states, CompactionInspector inspector, boolean snapshots, ToolOutputArchive archive,
+                Consumer<CompactionReport> events, Clock clock) {
+            this(profile, store, strategyId, strategy, budget, tokenCounter, enabled, verifyInvariants, states,
+                    inspector, snapshots, archive, events, clock, Retention.NONE);
+        }
     }
 
     private static final CompactionStrategy FALLBACK = new TokenWindowStrategy();
@@ -105,7 +119,7 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
                 state.timestamps.add(now());
             }
             state.lastView = null;
-            c.store().updateMessages(id, history);
+            persist(history, state);
         });
     }
 
@@ -135,13 +149,13 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
                     history.add(message);
                     state.timestamps.add(now());
                 }
-                c.store().updateMessages(id, history);
+                persist(history, state);
                 return;
             }
 
             // Not an extension of the last view handed out (another call wrote in between, or the caller edited the
             // view): reconcile with the stored history instead of storing the view
-            write(reconcile(history, incoming), state);
+            write(reconcile(history, incoming, state.deleted), state);
         });
     }
 
@@ -154,11 +168,12 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
      * <li>the caller can rewrite the end of the last turn it saw (for example replace the last answer): stored messages
      * after the last one found in the list are replaced, unless they start a new turn, written by another call, in
      * which case they are kept and the new messages are appended after them;</li>
-     * <li>the system message of the list, if any, replaces the stored one.</li>
+     * <li>the system message of the list, if any, replaces the stored one;</li>
+     * <li>messages the {@link Retention} deleted since the caller read the list stay deleted.</li>
      * </ul>
      * A list without any original message nor derived message (for example an empty list) replaces the history.
      */
-    List<ChatMessage> reconcile(List<ChatMessage> history, List<ChatMessage> incoming) {
+    List<ChatMessage> reconcile(List<ChatMessage> history, List<ChatMessage> incoming, Set<ChatMessage> deleted) {
         Optional<ChatMessage> system = incoming.stream().filter(m -> m instanceof SystemMessage).findFirst();
         List<ChatMessage> in = incoming.stream()
                 .filter(m -> !(m instanceof SystemMessage) && !CompactionMessages.isDerived(m)).toList();
@@ -169,6 +184,13 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
             system = history.stream().filter(m -> m instanceof SystemMessage).findFirst();
         }
         List<ChatMessage> stored = history.stream().filter(m -> !(m instanceof SystemMessage)).toList();
+
+        // the list may start with messages the retention deleted since the caller read it: they stay deleted
+        int first = 0;
+        while (first < in.size() && deleted.contains(in.get(first))) {
+            first++;
+        }
+        in = in.subList(first, in.size());
 
         // the longest prefix of the incoming messages found, in order, in the stored history
         int lastMatched = -1;
@@ -234,7 +256,21 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
     @Override
     public void setHistory(List<ChatMessage> history) {
         c.states().run(id, state -> {
-            write(history, state);
+            // the buffer was read at the beginning of the invocation: the retention may have deleted some of its first
+            // messages since (another invocation wrote in between)
+            List<ChatMessage> messages = new ArrayList<>(history);
+            int i = 0;
+            while (i < messages.size()) {
+                ChatMessage message = messages.get(i);
+                if (message instanceof SystemMessage) {
+                    i++;
+                } else if (state.deleted.contains(message)) {
+                    messages.remove(i);
+                } else {
+                    break;
+                }
+            }
+            write(messages, state);
         });
     }
 
@@ -250,7 +286,29 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
         }
         state.pending.clear();
         state.lastView = null;
-        c.store().updateMessages(id, messages);
+        persist(new ArrayList<>(messages), state);
+    }
+
+    /**
+     * Applies the retention and stores the history. {@code state.timestamps} must be aligned with {@code history}. Must
+     * be called with the state lock.
+     */
+    private void persist(List<ChatMessage> history, ConversationStates.State state) {
+        int toDelete = c.retention().toDelete(history, state.timestamps, now());
+        if (toDelete > 0) {
+            int deleted = 0;
+            for (int i = 0; i < history.size() && deleted < toDelete;) {
+                if (history.get(i) instanceof SystemMessage) {
+                    i++;
+                } else {
+                    state.deleted(history.remove(i));
+                    state.timestamps.remove(i);
+                    deleted++;
+                }
+            }
+            LOG.debugf("Conversation %s: %d messages deleted by the retention of profile %s", id, deleted, c.profile());
+        }
+        c.store().updateMessages(id, history);
     }
 
     /**

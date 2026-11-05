@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
@@ -94,6 +95,13 @@ public interface CompactionConfig {
         Optional<Boolean> inspectorSnapshots();
 
         /**
+         * Retention of the stored history. By default the full history is kept forever: compaction only shapes what the
+         * model receives. When a limit is set, the oldest turns are deleted from the {@code ChatMemoryStore} when the
+         * history is written. Turns are deleted whole, the system message and the last turn are never deleted.
+         */
+        Retention retention();
+
+        /**
          * Message window strategy ({@code message-window}).
          */
         MessageWindow messageWindow();
@@ -163,6 +171,22 @@ public interface CompactionConfig {
              */
             @WithDefault("4h")
             Duration idleTimeout();
+        }
+
+        interface Retention {
+            /**
+             * Maximum number of messages (system message excluded) kept in the store. When the history exceeds it, the
+             * oldest turns are deleted until it is back to about 80% of the limit, so the store is not rewritten on each
+             * message.
+             */
+            OptionalInt maxMessages();
+
+            /**
+             * Maximum age of the stored turns. A turn whose messages are all older is deleted when the history is
+             * written. Turns whose age is unknown (stored before the application started, or after the state of the
+             * conversation was evicted) are kept.
+             */
+            Optional<Duration> maxAge();
         }
 
         interface MessageWindow {
