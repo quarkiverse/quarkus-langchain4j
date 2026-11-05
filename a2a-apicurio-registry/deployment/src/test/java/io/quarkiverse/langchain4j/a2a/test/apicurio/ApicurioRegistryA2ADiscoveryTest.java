@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.a2a.test.apicurio;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import io.apicurio.registry.rest.client.models.CreateArtifact;
 import io.apicurio.registry.rest.client.models.CreateRule;
 import io.apicurio.registry.rest.client.models.CreateVersion;
 import io.apicurio.registry.rest.client.models.Labels;
+import io.apicurio.registry.rest.client.models.ProblemDetails;
 import io.apicurio.registry.rest.client.models.RuleType;
 import io.apicurio.registry.rest.client.models.VersionContent;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.A2AAgentCardPublisher;
@@ -213,6 +215,47 @@ public class ApicurioRegistryA2ADiscoveryTest {
         CreateVersion version = new CreateVersion();
         version.setContent(content);
         artifact.setFirstVersion(version);
-        client.groups().byGroupId(groupId).artifacts().post(artifact);
+        postWithRetry(client, groupId, artifact);
+    }
+
+    /**
+     * The registry SDK runs on the JDK HttpClient, which reuses keep-alive connections. Under the
+     * volume of registrations this test performs, the server occasionally closes an idle connection
+     * that the client then reuses, so the next POST fails mid-read with an {@link IOException}
+     * wrapped in a {@code RuntimeException} ("could not close the reader"). Retry a few times; if a
+     * retried create finds the artifact already there (the dropped request had in fact reached the
+     * server), treat that {@code 409} as success.
+     */
+    private static void postWithRetry(RegistryClient client, String groupId, CreateArtifact artifact) {
+        for (int attempt = 1;; attempt++) {
+            try {
+                client.groups().byGroupId(groupId).artifacts().post(artifact);
+                return;
+            } catch (ProblemDetails e) {
+                if (Integer.valueOf(409).equals(e.getStatus())) {
+                    return;
+                }
+                throw e;
+            } catch (RuntimeException e) {
+                if (attempt >= 3 || !hasIOCause(e)) {
+                    throw e;
+                }
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private static boolean hasIOCause(Throwable t) {
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (cause instanceof IOException) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.a2a.runtime.apicurio;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
@@ -37,6 +39,14 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
     // never catches up with the offset (for example a server bug that ignores the offset
     // parameter). 1000 pages is far beyond any realistic agent inventory.
     private static final int MAX_PAGES = 1000;
+
+    // The JDK HttpClient the registry SDK uses keeps connections alive and reuses them. When the
+    // server closes an idle keep-alive connection that the client then reuses, the next request
+    // fails mid-read with an IOException ("fixed content-length: N, bytes received: 0" / EOF). The
+    // searches below are idempotent GETs, so a dropped connection is retried a few times with a
+    // short backoff instead of blanking out discovery on a single transient failure.
+    private static final int MAX_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MS = 200;
 
     // The spec's canonical transport identifier (org.a2aproject.sdk.spec.TransportProtocol#JSONRPC).
     // Matched case-insensitively since this extension's own publisher (and some other card
@@ -96,11 +106,11 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
             int offset = 0;
             for (int page = 0; page < MAX_PAGES; page++) {
                 final int currentOffset = offset;
-                var results = registryClient.search().artifacts().get(config -> {
+                var results = withRetry(() -> registryClient.search().artifacts().get(config -> {
                     config.queryParameters.artifactType = AGENT_CARD_TYPE;
                     config.queryParameters.limit = PAGE_SIZE;
                     config.queryParameters.offset = currentOffset;
-                });
+                }));
 
                 if (results == null || results.getArtifacts() == null || results.getArtifacts().isEmpty()) {
                     break;
@@ -148,6 +158,40 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
         }
 
         return resolve(byQualifiedKey, qualifiedKeysByName);
+    }
+
+    /**
+     * Invokes {@code call}, retrying a few times when it fails because of a transient
+     * {@link IOException} (such as a server-closed keep-alive connection being reused by the JDK
+     * HttpClient). Any other failure, and exhausting the attempts, propagates to the caller.
+     */
+    static <T> T withRetry(Supplier<T> call) {
+        for (int attempt = 1;; attempt++) {
+            try {
+                return call.get();
+            } catch (RuntimeException e) {
+                if (attempt >= MAX_ATTEMPTS || !hasIOCause(e)) {
+                    throw e;
+                }
+                log.debugf(e, "Transient failure talking to the Apicurio Registry (attempt %d/%d), retrying",
+                        attempt, MAX_ATTEMPTS);
+                try {
+                    Thread.sleep(RETRY_DELAY_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private static boolean hasIOCause(Throwable t) {
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (cause instanceof IOException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Discovery resolve(Map<String, Candidate> byQualifiedKey, Map<String, List<String>> qualifiedKeysByName) {
