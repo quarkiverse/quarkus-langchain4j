@@ -9,15 +9,27 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.ChatMemory;
+import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
 
 class DefaultCommittableChatMemory implements CommittableChatMemory {
 
     private final ChatMemory delegate;
+    /**
+     * Not {@code null} when the delegate sends a view of its history to the model: the buffer then holds the full
+     * history, and the view is computed from it.
+     */
+    private final HistoryViewChatMemory historyView;
     private final List<ChatMessage> newMessages;
+    /**
+     * The view of {@link #newMessages}, computed lazily and reset whenever the buffer changes.
+     */
+    private List<ChatMessage> view;
 
     public DefaultCommittableChatMemory(ChatMemory delegate) {
         this.delegate = delegate;
-        this.newMessages = new ArrayList<>(delegate.messages());
+        this.historyView = delegate instanceof HistoryViewChatMemory h ? h : null;
+        this.newMessages = historyView != null ? new ArrayList<>(historyView.history())
+                : new ArrayList<>(delegate.messages());
     }
 
     @Override
@@ -27,6 +39,7 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
 
     @Override
     public void add(ChatMessage message) {
+        view = null;
         if (message instanceof SystemMessage) {
             Optional<SystemMessage> systemMessage = findSystemMessage(newMessages);
             if (systemMessage.isPresent()) {
@@ -51,19 +64,27 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
 
     @Override
     public List<ChatMessage> messages() {
-        return new ArrayList<>(newMessages);
+        if (historyView == null) {
+            return new ArrayList<>(newMessages);
+        }
+        if (view == null) {
+            view = List.copyOf(historyView.view(List.copyOf(newMessages)));
+        }
+        return new ArrayList<>(view);
     }
 
     // the following operations are terminal
 
     @Override
     public void clear() {
+        view = null;
         newMessages.clear();
         delegate.clear();
     }
 
     @Override
     public void replaceLastAiMessage(AiMessage newAiMessage) {
+        view = null;
         ListIterator<ChatMessage> it = newMessages.listIterator(newMessages.size());
         while (it.hasPrevious()) {
             if (it.previous() instanceof AiMessage) {
@@ -78,6 +99,10 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
      */
     @Override
     public void commit() {
-        delegate.set(newMessages);
+        if (historyView != null) {
+            historyView.setHistory(newMessages);
+        } else {
+            delegate.set(newMessages);
+        }
     }
 }

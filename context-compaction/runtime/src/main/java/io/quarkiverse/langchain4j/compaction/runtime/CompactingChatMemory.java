@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -23,6 +24,7 @@ import io.quarkiverse.langchain4j.compaction.TokenBudget;
 import io.quarkiverse.langchain4j.compaction.TokenCounter;
 import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
 import io.quarkiverse.langchain4j.compaction.strategies.TokenWindowStrategy;
+import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
 
 /**
  * A {@link ChatMemory} that stores the full history and hands out a compacted view.
@@ -31,11 +33,16 @@ import io.quarkiverse.langchain4j.compaction.strategies.TokenWindowStrategy;
  * {@link #messages()} returns, so it is auditable and can be changed without losing data. Compaction runs when the
  * history exceeds the trigger of the {@link io.quarkiverse.langchain4j.compaction.TokenBudget}.
  * <p>
- * Quarkus LangChain4j reads the memory once per AI service call, appends the new messages to that list and writes the
- * whole list back with {@link #set(Iterable)}. Since the list it read is the compacted view, {@code set} reconciles:
- * if the incoming list extends the last view handed out, only the new tail is appended to the stored history.
+ * Quarkus LangChain4j AI services use it as a {@link HistoryViewChatMemory}: they buffer the full {@link #history()}
+ * during an invocation, ask for the compacted {@link #view(List)} of that buffer before each request to the model (so
+ * the tool calls and results of a long invocation are compacted too), and write the buffer back with
+ * {@link #setHistory(List)}.
+ * <p>
+ * Other callers only see the {@link ChatMemory} contract: {@link #messages()} returns the compacted view, and
+ * {@link #set(Iterable)} reconciles: if the incoming list extends the last view handed out, only the new tail is
+ * appended to the stored history.
  */
-public class CompactingChatMemory implements ChatMemory {
+public class CompactingChatMemory implements HistoryViewChatMemory {
 
     private static final Logger LOG = Logger.getLogger(CompactingChatMemory.class);
 
@@ -151,29 +158,88 @@ public class CompactingChatMemory implements ChatMemory {
         ConversationStates.State state = c.states().get(id);
         synchronized (state) {
             List<ChatMessage> history = c.store().getMessages(id);
-            state.alignTimestamps(history.size());
-            int tokens = c.tokenCounter().count(history);
-            List<ChatMessage> view;
-            if (!c.enabled() || !c.budget().exceeded(tokens)) {
-                view = history;
-                c.inspector().record(id, history, view, null);
-            } else {
-                view = compact(history, tokens, state);
-            }
+            List<ChatMessage> view = computeView(history, state);
             state.lastView = List.copyOf(view);
             return new ArrayList<>(view);
         }
     }
 
-    private List<ChatMessage> compact(List<ChatMessage> history, int tokensBefore, ConversationStates.State state) {
-        Instant start = c.clock().instant();
-        IdentityHashMap<ChatMessage, Instant> timestamps = new IdentityHashMap<>();
-        for (int i = 0; i < history.size(); i++) {
-            Instant t = state.timestamps.get(i);
-            if (t != null) {
-                timestamps.put(history.get(i), t);
+    @Override
+    public List<ChatMessage> history() {
+        ConversationStates.State state = c.states().get(id);
+        synchronized (state) {
+            return new ArrayList<>(c.store().getMessages(id));
+        }
+    }
+
+    @Override
+    public List<ChatMessage> view(List<ChatMessage> history) {
+        ConversationStates.State state = c.states().get(id);
+        synchronized (state) {
+            return new ArrayList<>(computeView(List.copyOf(history), state));
+        }
+    }
+
+    @Override
+    public void setHistory(List<ChatMessage> history) {
+        List<ChatMessage> messages = List.copyOf(history);
+        ConversationStates.State state = c.states().get(id);
+        synchronized (state) {
+            IdentityHashMap<ChatMessage, Instant> known = timestamps(messages, state);
+            state.timestamps.clear();
+            for (ChatMessage message : messages) {
+                state.timestamps.add(known.get(message));
+            }
+            state.pending.clear();
+            state.lastView = null;
+            c.store().updateMessages(id, messages);
+        }
+    }
+
+    /**
+     * @param history the full history: the stored one, or the buffer of an AI service invocation (stored messages
+     *        followed by messages not stored yet)
+     */
+    private List<ChatMessage> computeView(List<ChatMessage> history, ConversationStates.State state) {
+        int tokens = c.tokenCounter().count(history);
+        if (!c.enabled() || !c.budget().exceeded(tokens)) {
+            c.inspector().record(id, history, history, null);
+            return history;
+        }
+        return compact(history, tokens, timestamps(history, state), state);
+    }
+
+    /**
+     * Timestamps of the given messages, keyed by identity. Stored messages get the time they were stored (or
+     * {@code null} if unknown); messages not stored yet get the time they were first seen by {@link #view(List)}.
+     */
+    private IdentityHashMap<ChatMessage, Instant> timestamps(List<ChatMessage> messages,
+            ConversationStates.State state) {
+        List<ChatMessage> stored = c.store().getMessages(id);
+        state.alignTimestamps(stored.size());
+        IdentityHashMap<ChatMessage, Instant> known = new IdentityHashMap<>();
+        for (int i = 0; i < stored.size(); i++) {
+            known.put(stored.get(i), state.timestamps.get(i));
+        }
+        IdentityHashMap<ChatMessage, Instant> result = new IdentityHashMap<>();
+        for (int i = 0; i < messages.size(); i++) {
+            ChatMessage message = messages.get(i);
+            if (known.containsKey(message)) {
+                result.put(message, known.get(message));
+            } else if (i < stored.size() && stored.get(i).equals(message)) {
+                // stores that deserialize on each read return equal, but not identical, messages
+                result.put(message, state.timestamps.get(i));
+            } else {
+                result.put(message, state.pending.computeIfAbsent(message, m -> now()));
             }
         }
+        return result;
+    }
+
+    private List<ChatMessage> compact(List<ChatMessage> history, int tokensBefore,
+            IdentityHashMap<ChatMessage, Instant> timestamps, ConversationStates.State state) {
+        Instant start = c.clock().instant();
+        timestamps.values().removeIf(Objects::isNull);
         DefaultCompactionContext context = new DefaultCompactionContext(id, c.budget(), c.tokenCounter(), timestamps,
                 state::state, c.clock());
         String strategyId = c.strategyId();

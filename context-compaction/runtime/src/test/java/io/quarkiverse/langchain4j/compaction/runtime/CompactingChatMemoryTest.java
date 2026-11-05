@@ -3,10 +3,14 @@ package io.quarkiverse.langchain4j.compaction.runtime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
@@ -24,6 +29,7 @@ import io.quarkiverse.langchain4j.compaction.Fixtures;
 import io.quarkiverse.langchain4j.compaction.TokenBudget;
 import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
 import io.quarkiverse.langchain4j.compaction.strategies.RollingSummaryStrategy;
+import io.quarkiverse.langchain4j.compaction.strategies.TokenWindowStrategy;
 
 class CompactingChatMemoryTest {
 
@@ -39,10 +45,13 @@ class CompactingChatMemoryTest {
     }
 
     private CompactingChatMemory memory(CompactionStrategy strategy, int contextWindow) {
+        return memory(strategy, contextWindow, Clock.fixed(Instant.parse("2026-10-20T12:00:00Z"), ZoneOffset.UTC));
+    }
+
+    private CompactingChatMemory memory(CompactionStrategy strategy, int contextWindow, Clock clock) {
         CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "test", strategy,
                 new TokenBudget(contextWindow, 0, 0.8, 0.6), new TokenCounterProducer.HeuristicTokenCounter(), true,
-                true, new ConversationStates(), inspector, new ToolOutputArchive(), reports::add,
-                Clock.fixed(Instant.parse("2026-10-20T12:00:00Z"), ZoneOffset.UTC));
+                true, new ConversationStates(), inspector, new ToolOutputArchive(), reports::add, clock);
         return new CompactingChatMemory("c1", components);
     }
 
@@ -130,5 +139,93 @@ class CompactingChatMemoryTest {
         memory.clear();
         assertThat(store.getMessages("c1")).isEmpty();
         assertThat(inspector.snapshot("c1")).isEmpty();
+    }
+
+    /**
+     * Mimics a long tool loop within one AI service invocation: Quarkus LangChain4j buffers the full history plus the new
+     * messages, asks for the view of that buffer before each model request, and writes the buffer back at the end.
+     */
+    @Test
+    void compactsMessagesThatAreNotStoredYet() {
+        CompactingChatMemory memory = memory(new TokenWindowStrategy(), 600);
+        memory.add(Fixtures.SYSTEM);
+        memory.add(UserMessage.from("Why is the payment service down?"));
+
+        List<ChatMessage> buffer = memory.history();
+        for (int i = 0; i < 10; i++) {
+            buffer.add(AiMessage.from(Fixtures.request("call-" + i, "logs", "{}")));
+            buffer.add(ToolExecutionResultMessage.from("call-" + i, "logs", "line " + i + " ".repeat(400)));
+            List<ChatMessage> view = memory.view(buffer);
+            assertThat(new TokenCounterProducer.HeuristicTokenCounter().count(view)).isLessThanOrEqualTo(480);
+            assertThat(view.get(0)).isEqualTo(Fixtures.SYSTEM);
+            assertThat(view).contains(UserMessage.from("Why is the payment service down?"));
+            assertThat(view.get(view.size() - 1)).isSameAs(buffer.get(buffer.size() - 1));
+        }
+        assertThat(reports).isNotEmpty();
+        // the view does not write anything
+        assertThat(store.getMessages("c1")).hasSize(2);
+
+        buffer.add(AiMessage.from("The disk is full."));
+        memory.setHistory(buffer);
+        assertThat(store.getMessages("c1")).hasSize(23).noneMatch(CompactionMessages::isDerived);
+    }
+
+    @Test
+    void keepsTheTimestampsOfStoredAndBufferedMessages() {
+        MutableClock clock = new MutableClock(Instant.parse("2026-10-20T12:00:00Z"));
+        Map<String, Instant> seen = new HashMap<>();
+        CompactionStrategy recording = (conv, context) -> {
+            for (ChatMessage message : conv.toMessages()) {
+                context.timestamp(message).ifPresent(t -> seen.put(CompactionMessages.text(message), t));
+            }
+            return conv.toMessages();
+        };
+        // a tiny window so that every view is a compaction
+        CompactingChatMemory memory = memory(recording, 10, clock);
+        UserMessage question = UserMessage.from("question");
+        memory.add(question);
+
+        clock.advance(Duration.ofMinutes(1));
+        List<ChatMessage> buffer = memory.history();
+        buffer.add(AiMessage.from("answer"));
+        memory.view(buffer);
+
+        clock.advance(Duration.ofMinutes(1));
+        memory.view(buffer);
+        memory.setHistory(buffer);
+
+        clock.advance(Duration.ofMinutes(1));
+        seen.clear();
+        memory.messages();
+        assertThat(seen).containsEntry("question", Instant.parse("2026-10-20T12:00:00Z"));
+        // the time the answer was first seen, not the time it was written
+        assertThat(seen).containsEntry("answer", Instant.parse("2026-10-20T12:01:00Z"));
+    }
+
+    static final class MutableClock extends Clock {
+        private Instant now;
+
+        MutableClock(Instant now) {
+            this.now = now;
+        }
+
+        void advance(Duration duration) {
+            now = now.plus(duration);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return now;
+        }
     }
 }

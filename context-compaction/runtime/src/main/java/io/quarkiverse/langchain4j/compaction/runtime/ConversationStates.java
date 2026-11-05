@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.compaction.runtime;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +31,12 @@ public class ConversationStates {
         final Map<String, Map<String, Object>> strategyState = new HashMap<>();
 
         List<ChatMessage> lastView;
+
+        /**
+         * When messages not stored yet (buffered by an AI service invocation) were first seen, keyed by identity.
+         * Cleared when the history is written.
+         */
+        final Map<ChatMessage, Instant> pending = new IdentityHashMap<>();
 
         void alignTimestamps(int size) {
             while (timestamps.size() < size) {
