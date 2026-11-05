@@ -91,8 +91,10 @@ public class TimeDecayStrategy implements CompactionStrategy {
                 context.note(Strategies.TIME_DECAY, "dropped " + stale.size() + " stale turns");
             } else {
                 Optional<String> summary = engine.summarize(Strategies.TIME_DECAY, stale, context);
-                if (summary.isPresent()) {
+                if (summary.isPresent() && SummaryEngine.shorter(Strategies.TIME_DECAY, summary.get(), stale, context)) {
                     result.add(CompactionMessages.summary(summary.get()));
+                } else if (summary.isPresent()) {
+                    stale.forEach(t -> result.addAll(t.messages()));
                 } else {
                     context.degraded(Strategies.TIME_DECAY,
                             "kept " + stale.size() + " stale turns that could not be summarized");

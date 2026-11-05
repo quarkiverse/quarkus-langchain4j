@@ -56,15 +56,15 @@ class DatasetCompactionTest {
     @ParameterizedTest
     @CsvSource({
             // id, messages and tokens without the system message
-            "tool-output-pruning, 127, 4092",
+            "tool-output-pruning, 127, 3894",
             "duplicate-collapse,  111, 13389",
             "token-window,         37, 3920",
             "relevance,            35, 1548",
-            "anchored-summary,     20, 1348",
-            "rolling-summary,      18, 1257",
+            "anchored-summary,     20, 1368",
+            "rolling-summary,      18, 1277",
             "message-window,       17, 1223",
             // pruning alone fits the 4200-token target: the pipeline stops there
-            "pipeline,            127, 4092",
+            "pipeline,            127, 3894",
             // no timestamps in the recording: time decay keeps everything
             "time-decay,          127, 13616",
     })

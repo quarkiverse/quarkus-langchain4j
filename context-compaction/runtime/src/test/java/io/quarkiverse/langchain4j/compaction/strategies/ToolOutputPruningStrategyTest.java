@@ -41,7 +41,9 @@ class ToolOutputPruningStrategyTest {
         // turns 0, 2, 4 have tool calls; turn 4 is within the last 2 turns
         assertThat(results).hasSize(3);
         assertThat(CompactionMessages.kind(results.get(0))).isEqualTo(CompactionMessages.KIND_PRUNED);
-        assertThat(results.get(0).text()).contains("Archived as 'call-0'").contains("Preview: order 1000 shipped");
+        assertThat(results.get(0).text()).contains("Preview: order 1000 shipped")
+                // no retrieval tool configured: the stub promises nothing
+                .doesNotContain("reference").doesNotContain("retrieve");
         assertThat(results.get(0).id()).isEqualTo("call-0");
         assertThat(CompactionMessages.kind(results.get(2))).isNull();
         assertThat(archive.get("test", "call-0")).hasValueSatisfying(v -> assertThat(v).startsWith("order 1000"));
@@ -97,7 +99,29 @@ class ToolOutputPruningStrategyTest {
     }
 
     @Test
-    void archivesOutputsWithoutIdUnderTheToolName() {
+    void givesTheReferenceToTheRetrievalToolWhenEnabled() {
+        List<ChatMessage> view = new ToolOutputPruningStrategy(new ToolOutputPruningStrategy.Options(2, 200, 30, true),
+                archive).compact(Fixtures.conversation(6), Fixtures.context(10_000));
+        assertThat(toolResults(view).get(0).text()).contains("Read it with retrieveToolOutput reference=\"call-0\"");
+    }
+
+    @Test
+    void reusedToolCallIdsGetDistinctReferences() {
+        String first = archive.put("test", "call_0", "first output");
+        String second = archive.put("test", "call_0", "second output");
+        String empty = archive.put("test", "", "third output");
+        assertThat(first).isEqualTo("call_0");
+        assertThat(second).startsWith("call_0#").isNotEqualTo(first);
+        assertThat(empty).startsWith("tool#");
+        // archiving again (the conversation is compacted on each request) returns the same reference
+        assertThat(archive.put("test", "call_0", "second output")).isEqualTo(second);
+        assertThat(archive.get("test", first)).contains("first output");
+        assertThat(archive.get("test", second)).contains("second output");
+        assertThat(archive.get("test", empty)).contains("third output");
+    }
+
+    @Test
+    void archivesOutputsWithoutIdUnderAHashReference() {
         List<ChatMessage> history = new ArrayList<>();
         history.add(Fixtures.SYSTEM);
         history.add(UserMessage.from("search the knowledge base"));
@@ -108,10 +132,11 @@ class ToolOutputPruningStrategyTest {
         history.add(UserMessage.from("thanks"));
         history.add(AiMessage.from("You're welcome."));
 
-        List<ChatMessage> view = strategy(1, 200, 30).compact(history, Fixtures.context(10_000));
+        List<ChatMessage> view = new ToolOutputPruningStrategy(new ToolOutputPruningStrategy.Options(1, 200, 30, true),
+                archive).compact(history, Fixtures.context(10_000));
         String stub = toolResults(view).get(0).text();
-        String key = stub.substring(stub.indexOf("Archived as '") + 13, stub.lastIndexOf('\''));
-        assertThat(key).startsWith("search#");
+        String key = stub.substring(stub.indexOf("reference=\"") + 11, stub.lastIndexOf('"'));
+        assertThat(key).startsWith("tool#");
         assertThat(archive.get("test", key)).contains(output);
     }
 }

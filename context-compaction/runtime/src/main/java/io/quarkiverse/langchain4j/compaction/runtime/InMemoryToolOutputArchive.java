@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.compaction.runtime;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,14 +21,20 @@ public class InMemoryToolOutputArchive implements ToolOutputArchive {
     private final Map<Object, Map<String, String>> archive = new ConcurrentHashMap<>();
 
     @Override
-    public void put(Object memoryId, String toolCallId, String output) {
-        archive.computeIfAbsent(memoryId, k -> new ConcurrentHashMap<>()).putIfAbsent(toolCallId, output);
+    public String put(Object memoryId, String toolCallId, String output) {
+        Map<String, String> outputs = archive.computeIfAbsent(memoryId, k -> new ConcurrentHashMap<>());
+        synchronized (outputs) {
+            String reference = ToolOutputArchive.reference(toolCallId, output,
+                    ref -> outputs.containsKey(ref) && !Objects.equals(outputs.get(ref), output));
+            outputs.putIfAbsent(reference, output);
+            return reference;
+        }
     }
 
     @Override
-    public Optional<String> get(Object memoryId, String toolCallId) {
+    public Optional<String> get(Object memoryId, String reference) {
         Map<String, String> outputs = archive.get(memoryId);
-        return outputs == null ? Optional.empty() : Optional.ofNullable(outputs.get(toolCallId));
+        return outputs == null ? Optional.empty() : Optional.ofNullable(outputs.get(reference));
     }
 
     @Override

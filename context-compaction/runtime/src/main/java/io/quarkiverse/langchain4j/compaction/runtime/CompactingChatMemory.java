@@ -384,6 +384,8 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
             view = FALLBACK.compact(List.copyOf(history), context);
             fallback = true;
         }
+        // summaries become part of the next user message: no consecutive user messages, no message name
+        view = CompactionMessages.foldSummaries(view);
         CompactionReport report = new CompactionReport(id, c.profile(), strategyId, start, history.size(), view.size(),
                 tokensBefore, c.tokenCounter().count(view), c.budget(),
                 Duration.between(start, c.clock().instant()), context.notes(), fallback,

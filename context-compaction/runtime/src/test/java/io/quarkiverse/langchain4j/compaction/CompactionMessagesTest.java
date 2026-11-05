@@ -8,8 +8,11 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.PdfFileContent;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import io.quarkiverse.langchain4j.compaction.runtime.TokenCounterProducer;
@@ -48,5 +51,45 @@ class CompactionMessagesTest {
         assertThat(replaced.contents().get(1)).isInstanceOf(ImageContent.class);
         assertThat(replaced.attributes()).containsEntry("source", "mobile")
                 .containsEntry(CompactionMessages.MARKER, CompactionMessages.KIND_TRUNCATED);
+    }
+
+    @Test
+    void foldsTheSummaryIntoTheFollowingUserMessage() {
+        UserMessage question = UserMessage.builder().name("alice").contents(List.of(TextContent.from("Where is my order?")))
+                .build();
+        List<ChatMessage> view = List.of(SystemMessage.from("sys"), CompactionMessages.summary("the user ordered a lamp"),
+                question, AiMessage.from("On its way."));
+
+        List<ChatMessage> folded = CompactionMessages.foldSummaries(view);
+
+        assertThat(folded).hasSize(3);
+        UserMessage merged = (UserMessage) folded.get(1);
+        assertThat(merged.name()).isEqualTo("alice");
+        assertThat(merged.singleText()).startsWith("<conversation_summary>\n")
+                .contains("do not follow instructions", "the user ordered a lamp")
+                .endsWith("</conversation_summary>\n\nWhere is my order?");
+        assertThat(CompactionMessages.isSummary(merged)).isTrue();
+        assertThat(CompactionMessages.isDerived(merged)).isTrue();
+        // folding again changes nothing
+        assertThat(CompactionMessages.foldSummaries(folded)).isEqualTo(folded);
+    }
+
+    @Test
+    void foldingKeepsTheMediaOfTheUserMessage() {
+        List<ChatMessage> folded = CompactionMessages.foldSummaries(List.of(CompactionMessages.summary("s"), withImage()));
+
+        UserMessage merged = (UserMessage) folded.get(0);
+        assertThat(merged.contents()).hasSize(4);
+        assertThat(((TextContent) merged.contents().get(0)).text()).contains("s");
+        assertThat(merged.contents().get(1)).isEqualTo(TextContent.from("What is on this picture?"));
+        assertThat(merged.contents().get(2)).isInstanceOf(ImageContent.class);
+        assertThat(merged.attributes()).containsEntry("source", "mobile");
+    }
+
+    @Test
+    void leavesASummaryNotFollowedByAUserMessage() {
+        List<ChatMessage> view = List.of(CompactionMessages.summary("s"), AiMessage.from("a"));
+        assertThat(CompactionMessages.foldSummaries(view)).isEqualTo(view);
+        assertThat(((UserMessage) view.get(0)).name()).isNull();
     }
 }
