@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import io.smallrye.common.annotation.Experimental;
+
 /**
  * What a compaction did. Fired as a CDI event each time a conversation is compacted, so applications can export
  * metrics or audit records.
@@ -21,6 +23,7 @@ import java.util.List;
  * @param notes human-readable notes from the strategies
  * @param fallback {@code true} if the strategy failed or broke an invariant and the fallback was used
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public record CompactionReport(
         Object memoryId,
         String profile,

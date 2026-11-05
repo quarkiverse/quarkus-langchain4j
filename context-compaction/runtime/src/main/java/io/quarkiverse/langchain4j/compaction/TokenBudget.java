@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.compaction;
 
+import io.smallrye.common.annotation.Experimental;
+
 /**
  * The token budget of a conversation.
  * <p>
@@ -12,6 +14,7 @@ package io.quarkiverse.langchain4j.compaction;
  * @param triggerRatio fraction of the usable window above which compaction runs
  * @param targetRatio fraction of the usable window strategies aim for
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public record TokenBudget(int contextWindow, int reservedForCompletion, double triggerRatio, double targetRatio) {
 
     public TokenBudget {

@@ -12,6 +12,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * A structured view of a conversation history: system messages, atomic {@link Segment segments} and
@@ -20,6 +21,7 @@ import dev.langchain4j.data.message.UserMessage;
  * Strategies should drop or keep whole segments: a segment groups an assistant message requesting tools with the
  * results of those tools, so working at the segment level preserves tool call pairing by construction.
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public final class Conversation {
 
     public enum Kind {

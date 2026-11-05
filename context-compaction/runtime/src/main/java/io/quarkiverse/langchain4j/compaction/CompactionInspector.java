@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.inject.Singleton;
 
 import dev.langchain4j.data.message.ChatMessage;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * Keeps, for each conversation, the last full history and the last view sent to the model, plus the most recent
@@ -18,6 +19,7 @@ import dev.langchain4j.data.message.ChatMessage;
  * keeps at most {@value #MAX_REPORTS} reports.
  */
 @Singleton
+@Experimental("This feature is experimental and the API is subject to change")
 public class CompactionInspector {
 
     static final int MAX_REPORTS = 200;

@@ -19,6 +19,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactingChatMemory;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfiles;
 import io.quarkiverse.langchain4j.compaction.runtime.DefaultCompactionContext;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.common.annotation.Identifier;
 
 /**
@@ -27,6 +28,7 @@ import io.smallrye.common.annotation.Identifier;
  * is cached between calls.
  */
 @Singleton
+@Experimental("This feature is experimental and the API is subject to change")
 public class Compactor {
 
     /**

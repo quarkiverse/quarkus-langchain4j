@@ -5,10 +5,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import dev.langchain4j.data.message.ChatMessage;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * Everything a {@link CompactionStrategy} needs besides the messages themselves.
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public interface CompactionContext {
 
     /**
