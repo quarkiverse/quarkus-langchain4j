@@ -17,6 +17,7 @@ import jakarta.inject.Singleton;
 
 import dev.langchain4j.data.message.ChatMessage;
 import io.quarkiverse.langchain4j.compaction.CompactionException;
+import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.CompactionReport;
 import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.Compactor;
@@ -70,7 +71,8 @@ public class DefaultCompactor implements Compactor {
         DefaultCompactionContext context = new DefaultCompactionContext("compactor", budget, counter,
                 new IdentityHashMap<>(), owner -> state.computeIfAbsent(owner, k -> new ConcurrentHashMap<>()), clock);
         Instant start = clock.instant();
-        List<ChatMessage> view = selected.get().compact(List.copyOf(messages), context);
+        List<ChatMessage> view = CompactionMessages.foldSummaries(
+                selected.get().compact(List.copyOf(messages), context));
         CompactionReport report = new CompactionReport("compactor", DefaultCompactionProfiles.DEFAULT, strategyId, start,
                 messages.size(), view.size(),
                 counter.count(messages), counter.count(view), budget, Duration.between(start, clock.instant()),

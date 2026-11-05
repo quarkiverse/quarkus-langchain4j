@@ -3,8 +3,10 @@ package io.quarkiverse.langchain4j.compaction.deployment;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
@@ -24,6 +26,7 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.compaction.ArchivedToolOutputs;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
 import io.quarkiverse.langchain4j.compaction.runtime.ChatMemoryProviderProducer;
@@ -46,6 +49,7 @@ import io.quarkiverse.langchain4j.compaction.strategies.TimeDecayStrategy;
 import io.quarkiverse.langchain4j.compaction.strategies.TokenWindowStrategy;
 import io.quarkiverse.langchain4j.compaction.strategies.ToolOutputPruningStrategy;
 import io.quarkiverse.langchain4j.deployment.BlockingChatMemoryBuildItem;
+import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -54,6 +58,7 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.AdditionalIndexedClassesBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 
@@ -97,6 +102,17 @@ class CompactionProcessor {
         if (ownership.managesChatMemory()) {
             items.produce(new BlockingChatMemoryBuildItem("context compaction may call a model when reading the memory"));
         }
+    }
+
+    /**
+     * The retrieval tool is in the extension: index it so the tool processor finds its {@code @Tool} method when an AI
+     * service lists it in its tools.
+     */
+    @BuildStep
+    void retrievalTool(BuildProducer<AdditionalIndexedClassesBuildItem> indexed,
+            BuildProducer<AdditionalBeanBuildItem> beans) {
+        indexed.produce(new AdditionalIndexedClassesBuildItem(ArchivedToolOutputs.class.getName()));
+        beans.produce(AdditionalBeanBuildItem.builder().addBeanClass(ArchivedToolOutputs.class).build());
     }
 
     @BuildStep
@@ -197,7 +213,7 @@ class CompactionProcessor {
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     SyntheticBeanBuildItem profileUsage(CombinedIndexBuildItem index, ChatMemoryOwnershipBuildItem ownership,
-            CompactionRecorder recorder) {
+            List<DeclarativeAiServiceBuildItem> aiServices, CompactionRecorder recorder) {
         Map<String, String> profiles = new HashMap<>();
         for (AnnotationInstance annotation : index.getIndex().getAnnotations(COMPACTION_PROFILE)) {
             ClassInfo target = annotation.target().asClass();
@@ -219,9 +235,16 @@ class CompactionProcessor {
             }
             profiles.put(target.name().toString(), annotation.value().asString());
         }
+        Set<String> retrievalToolServices = new HashSet<>();
+        DotName retrievalTool = DotName.createSimple(ArchivedToolOutputs.class);
+        for (DeclarativeAiServiceBuildItem aiService : aiServices) {
+            if (aiService.getToolClassInfos().stream().anyMatch(tool -> tool.name().equals(retrievalTool))) {
+                retrievalToolServices.add(aiService.getServiceClassInfo().name().toString());
+            }
+        }
         return SyntheticBeanBuildItem.configure(CompactionProfileUsage.class)
                 .scope(Singleton.class)
-                .supplier(recorder.usage(profiles, ownership.managesChatMemory()))
+                .supplier(recorder.usage(profiles, ownership.managesChatMemory(), retrievalToolServices))
                 .unremovable()
                 .done();
     }

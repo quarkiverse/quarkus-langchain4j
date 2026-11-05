@@ -217,6 +217,20 @@ public interface CompactionConfig {
              */
             @WithDefault("120")
             int previewChars();
+
+            /**
+             * How the model can read a pruned output again. {@code none}: the stub only says that the output was
+             * pruned, and the model calls the tool again if it needs it. {@code tool}: the stub gives a reference to
+             * pass to the {@code retrieveToolOutput} tool; add {@code ArchivedToolOutputs} to the tools of the AI
+             * services.
+             */
+            @WithDefault("none")
+            Retrieval retrieval();
+
+            enum Retrieval {
+                NONE,
+                TOOL
+            }
         }
 
         interface Summary {

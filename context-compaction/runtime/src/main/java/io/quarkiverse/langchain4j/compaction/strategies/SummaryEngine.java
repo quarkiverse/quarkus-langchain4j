@@ -79,6 +79,20 @@ final class SummaryEngine {
         }
     }
 
+    /**
+     * @return {@code true} if the summary message is shorter than the turns it replaces; noted otherwise
+     */
+    static boolean shorter(String owner, String summary, List<Conversation.Turn> turns, CompactionContext context) {
+        List<ChatMessage> replaced = new ArrayList<>();
+        turns.forEach(t -> replaced.addAll(t.messages()));
+        int summaryTokens = context.tokens(List.of(CompactionMessages.summary(summary)));
+        if (summaryTokens < context.tokens(replaced)) {
+            return true;
+        }
+        context.note(owner, "kept " + turns.size() + " turns: their summary would not be shorter");
+        return false;
+    }
+
     private static int fingerprint(List<Conversation.Turn> turns) {
         return turns.stream()
                 .flatMap(t -> t.messages().stream())

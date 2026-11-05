@@ -8,6 +8,7 @@ import jakarta.inject.Singleton;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import io.quarkiverse.langchain4j.compaction.ArchivedToolOutputs;
 import io.quarkiverse.langchain4j.compaction.CompactionContext;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
@@ -19,7 +20,8 @@ import io.smallrye.common.annotation.Identifier;
 
 /**
  * Replaces large tool outputs of older turns with a short stub. The full output is stored in the
- * {@link ToolOutputArchive} under the tool call id, so it can be retrieved on demand.
+ * {@link ToolOutputArchive}, so the application can show it, and the model can read it again with
+ * {@link ArchivedToolOutputs} when {@code tool-output-pruning.retrieval=tool}.
  * <p>
  * This is usually the cheapest and most effective first step: tool outputs (search results, database rows, API
  * payloads) dominate the context of agentic conversations, and the model rarely needs them verbatim after it has
@@ -30,7 +32,14 @@ import io.smallrye.common.annotation.Identifier;
 @Experimental("This feature is experimental and the API is subject to change")
 public class ToolOutputPruningStrategy implements CompactionStrategy {
 
-    public record Options(int keepLastTurns, int minChars, int previewChars) {
+    /**
+     * @param retrievalTool whether stubs tell the model to call {@link ArchivedToolOutputs#TOOL_NAME}
+     */
+    public record Options(int keepLastTurns, int minChars, int previewChars, boolean retrievalTool) {
+
+        public Options(int keepLastTurns, int minChars, int previewChars) {
+            this(keepLastTurns, minChars, previewChars, false);
+        }
     }
 
     private final Options options;
@@ -43,7 +52,9 @@ public class ToolOutputPruningStrategy implements CompactionStrategy {
 
     public ToolOutputPruningStrategy(CompactionConfig.Profile profile, ToolOutputArchive archive) {
         this(new Options(profile.toolOutputPruning().keepLastTurns(), profile.toolOutputPruning().minChars(),
-                profile.toolOutputPruning().previewChars()), archive);
+                profile.toolOutputPruning().previewChars(),
+                profile.toolOutputPruning().retrieval() == CompactionConfig.Profile.ToolOutputPruning.Retrieval.TOOL),
+                archive);
     }
 
     public ToolOutputPruningStrategy(Options options, ToolOutputArchive archive) {
@@ -89,14 +100,16 @@ public class ToolOutputPruningStrategy implements CompactionStrategy {
 
     private ToolExecutionResultMessage prune(ToolExecutionResultMessage result, CompactionContext context) {
         String text = result.text();
-        String key = result.id() != null ? result.id() : result.toolName() + "#" + Integer.toHexString(text.hashCode());
-        if (archive != null) {
-            archive.put(context.memoryId(), key, text);
-        }
+        String reference = archive == null ? null : archive.put(context.memoryId(), result.id(), text);
         String preview = text.substring(0, Math.min(options.previewChars(), text.length())).replace('\n', ' ');
-        String stub = "[Output of " + result.toolName() + " pruned from context (" + text.length()
-                + " chars). Preview: " + preview + "... Archived as '" + key + "'.]";
-        return CompactionMessages.replaceToolResult(result, stub, CompactionMessages.KIND_PRUNED);
+        StringBuilder stub = new StringBuilder("[Output of ").append(result.toolName()).append(" pruned (")
+                .append(text.length()).append(" chars). Preview: ").append(preview).append("...");
+        if (options.retrievalTool() && reference != null) {
+            stub.append(" Read it with ").append(ArchivedToolOutputs.TOOL_NAME).append(" reference=\"")
+                    .append(reference).append('"');
+        }
+        stub.append(']');
+        return CompactionMessages.replaceToolResult(result, stub.toString(), CompactionMessages.KIND_PRUNED);
     }
 
     @Override
