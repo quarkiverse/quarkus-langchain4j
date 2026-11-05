@@ -9,6 +9,9 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
+import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
 @Path("/poem")
 @Authenticated
@@ -24,18 +27,9 @@ public class PoemResource {
         @UserMessage(USER_MESSAGE)
         String writePoem();
     }
-    
-    @RegisterAiService(modelName= "openai", tools = PoemTools.class)
-    public interface AzureOpenAiPoemService {
-        @UserMessage(USER_MESSAGE)
-        String writePoem();
-    }
-    
-    @Inject
-    VertexAiGeminiPoemService vertexAiGemini;
 
     @Inject
-    AzureOpenAiPoemService azureOpenAI;
+    VertexAiGeminiPoemService vertexAiGemini;
 
     @GET
     @Path("vertex-gemini")
@@ -43,10 +37,13 @@ public class PoemResource {
         return vertexAiGemini.writePoem();
     }
 
-    @GET
-    @Path("azure-openai")
-    public String getPoemAzureOpenAI() {
-        return azureOpenAI.writePoem();
+    /**
+     * Passes the model provider's HTTP status through, for example 403 when the user has not approved the required scope,
+     * instead of reporting it as a server error.
+     */
+    @ServerExceptionMapper
+    public Response modelProviderFailure(ClientWebApplicationException e) {
+        return Response.status(e.getResponse().getStatus()).build();
     }
 
     @Singleton
@@ -54,13 +51,13 @@ public class PoemResource {
 
         @Inject
         SecurityIdentity identity;
-    
+
         @Authenticated
         @Tool("Returns the name of the logged-in user")
         public String getLoggedInUserName() {
             return identity.getPrincipal().getName();
         }
-        
+
         @Tool("Returns the Java programming language feature preferred by the user")
         public String getPreferredJavaFeature() {
             return "record";

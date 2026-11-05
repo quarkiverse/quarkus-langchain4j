@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="css/app.css">
+    <title>Secure Poem</title>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="brand"><img src="images/quarkus-logo.png" alt="Quarkus" width="30" height="30"><span>Secure Poem<small>OIDC model access demo</small></span></div>
+    </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <section class="intro">
+            <figure class="art"><img src="images/quarkus-langchain4j.jpg" alt="Quarkus LangChain4j: a parrot, an atom and a chain" width="960" height="549"></figure>
+            <h1>Sign in.<br><em>Approve the model.</em></h1>
+            <p>Your access token travels to the model provider. The provider, not this application, decides whether that token may call the model.</p>
+        </section>
+
+        <section class="providers">
+            <article class="provider">
+                <img src="images/google.png" alt="" width="32" height="32">
+                <h2>Google<br>Vertex AI Gemini</h2>
+                <p>Google asks you to approve this application, including the scope <code>cloud-platform</code> before it can call Gemini for you.</p>
+                <a class="button" href="/model/vertex-gemini">Sign in with Google</a>
+            </article>
+        </section>
+
+        <section class="how">
+            <h2>Who enforces the scope</h2>
+            <ol>
+                <li>You approve the scope on the provider's own consent screen.</li>
+                <li>This application forwards your access token on every model call.</li>
+                <li>The provider rejects the call when the token lacks the scope. This application only reports the result.</li>
+            </ol>
+        </section>
+    </div>
+</main>
+</body>
+</html>
