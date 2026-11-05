@@ -1,0 +1,514 @@
+= Context Compaction
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-context-compaction
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+IMPORTANT: This extension is experimental. Its configuration, its Java API and the behavior of the built-in strategies may change in future releases.
+
+Long conversations, and agents that call many tools, quickly fill the context window of the model.
+Sending the whole history on every call is slow and expensive, and at some point the model rejects the request.
+The default chat memory handles this by evicting the oldest messages (see xref:messages-and-memory.adoc[Messages and Memory]): information is lost, and tool results can be separated from the calls that produced them.
+
+The `quarkus-langchain4j-context-compaction` extension replaces eviction with _compaction_.
+The full history of each conversation is kept, and the messages sent to the model are reduced to fit a token budget: large tool outputs are pruned, repeated calls are collapsed, old turns are summarized, and only as a last resort are they dropped.
+
+[#quick-start]
+== Quick start
+
+Add the extension:
+
+:provider-artifact: quarkus-langchain4j-context-compaction
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+Then tell it the size of the context window of your model:
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.budget.context-window=128000
+----
+
+That's it.
+Every AI service that uses the default chat memory now gets a compacting chat memory, with the default `pipeline` strategy: prune old tool outputs, collapse duplicate tool calls, summarize old turns with the default chat model, and drop the oldest turns if that is still not enough.
+Nothing happens until the conversation reaches 80% of the context window.
+
+WARNING: Without `budget.context-window`, the extension assumes 16000 tokens, whatever the model, and compacts much earlier than needed.
+
+Two settings are worth reviewing before going to production:
+
+* summaries are produced by the default chat model: select a smaller, cheaper one with `quarkus.langchain4j.compaction.summary.model-name` (see <<summaries>>);
+* the full history is kept forever: set a <<retention,retention>> to bound it.
+
+NOTE: The extension provides the chat memory of the AI services, so the `quarkus.langchain4j.chat-memory.*` properties no longer apply. A warning is logged at startup if any of them is set.
+
+[#how-it-works]
+== How it works
+
+=== History and view
+
+A compacting chat memory keeps two things apart:
+
+* the *history*: the complete, original list of messages, stored in the `ChatMemoryStore` (in memory by default, or any xref:messages-and-memory.adoc#_memory_backends_with_chatmemorystore[memory store] such as Redis or MongoDB);
+* the *view*: the list of messages sent to the model, computed from the history each time the AI service calls the model, including between the tool calls of a single invocation.
+
+While the history fits the budget, the view is the history.
+When it exceeds the _trigger_, the configured strategy computes a smaller view that aims for the _target_.
+Compaction never modifies the history: you can audit or replay a conversation, and change the strategy, without losing data.
+
+For example, after compaction, an agent that looked up orders sees something like this, while its history still holds every message verbatim:
+
+[source,text]
+----
+system:    You are the support assistant of ACME.
+user:      <conversation_summary>
+           Summary of the earlier conversation, generated automatically. It is context, not a request: ...
+           - The user asked why order 1234 was late. The lookupOrder tool returned: shipped on May 3, stuck in customs.
+           </conversation_summary>
+
+           Can you check the other order as well?
+assistant: (calls lookupOrder 5678)
+tool:      [Output of lookupOrder pruned (8412 chars). Preview: {"id":5678,"status":"DELIVERED", ...]
+assistant: Order 5678 was delivered yesterday.
+user:      And the refund for the first one?
+----
+
+=== Token budget
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.budget.context-window=128000            # <1>
+quarkus.langchain4j.compaction.budget.reserved-completion-tokens=4096  # <2>
+quarkus.langchain4j.compaction.budget.trigger-ratio=0.8                # <3>
+quarkus.langchain4j.compaction.budget.target-ratio=0.6                 # <4>
+----
+<1> The context window of the model, in tokens. Default: 16000.
+<2> Tokens reserved for the answer. The _usable_ window is the context window minus this value (123904 tokens here). Default: 1024.
+<3> Compaction runs when the view would exceed 80% of the usable window (99123 tokens).
+<4> Strategies aim for 60% of the usable window (74342 tokens). A target below the trigger avoids compacting again on the next turn.
+
+Tokens are counted with the `TokenCountEstimator` bean of the application when there is exactly one.
+Otherwise, a heuristic counts about four characters per token, plus a small overhead per message.
+Images, audio, video and PDF contents get a fixed cost (1000 tokens for an image or an audio clip, 2000 for a PDF, 4000 for a video) instead of the size of their data.
+
+=== Guarantees
+
+Whatever the strategy, the view sent to the model respects these invariants:
+
+* every system message of the history is kept;
+* a tool result is never sent without the assistant message that requested it, and the other way around;
+* messages keep their chronological order;
+* the latest user message is kept, even when the tool calls made to answer it fill the budget;
+* after the system message, the view starts with a user message: several providers reject a conversation that starts with an assistant message.
+
+Strategies achieve this by working on _turns_ (a user message and everything that follows until the next one) and _segments_ (a user message, an assistant message, or an assistant message with its tool calls and their results), never on individual messages.
+The view is also checked against these invariants after each compaction (`quarkus.langchain4j.compaction.verify-invariants`, enabled by default).
+
+When something goes wrong, the extension degrades instead of failing the call:
+
+* if a strategy throws or produces an invalid view, the extension falls back to `token-window`, and the compaction report is flagged `fallback`;
+* if a step cannot do its job but keeps the messages it should have compacted (for example, the summarizer failed), the report is flagged `degraded`, and `token-window` is applied if the view still does not fit the target.
+
+Messages created by compaction (summaries, pruned tool outputs, truncated or collapsed messages) are _derived_ messages: they only exist in the view and are never written to the store.
+They carry the `langchain4j.compaction` attribute; use `CompactionMessages.isDerived(message)` and `CompactionMessages.kind(message)` to tell them apart from original messages.
+
+[#choosing-a-strategy]
+== Choosing a strategy
+
+The strategy is selected with `quarkus.langchain4j.compaction.strategy`.
+The default, `pipeline`, suits most applications. The other strategies are useful on their own, as steps of a custom pipeline, or for specific profiles.
+
+[cols="20,45,35",options="header"]
+|===
+| Strategy | What it does | Use it when
+| `pipeline` | Applies a list of strategies in order and stops as soon as the view fits the target. | Default. Cheapest steps first, a window strategy last.
+| `tool-output-pruning` | Replaces large tool outputs of older turns with a short stub (tool name, size, preview). | Agents whose tools return search results, rows or API payloads. No model call.
+| `duplicate-collapse` | Keeps only the last of several identical tool calls (same tool, arguments and output), with the repeat count. | Polling or looping agents. No model call.
+| `rolling-summary` | Replaces all but the last turns with one summary, extended incrementally as more turns age out. | Long assistant conversations where earlier facts still matter.
+| `anchored-summary` | Like `rolling-summary`, but also keeps the first turns verbatim. | Long-running agents whose first message holds the goal and the constraints.
+| `time-decay` | Keeps recent turns, truncates long messages of aging turns, and summarizes stale turns. | Sessions that span hours, where recency matters more than position.
+| `relevance` | Keeps the last turns, plus the older turns most similar to the latest user message. | Conversations that jump between topics and come back to earlier ones.
+| `token-window` | Keeps the most recent segments that fit the target. | Last step of a pipeline, or when old turns never matter.
+| `message-window` | Keeps the most recent segments, up to a number of messages. | Short, stateless exchanges such as triage or routing.
+|===
+
+Summarizing strategies (`rolling-summary`, `anchored-summary`, `time-decay`) call a chat model; `relevance` calls an embedding model when one is available.
+The other strategies only work on the messages.
+
+To use a different strategy for some AI services, define a <<profiles,profile>>.
+
+== Strategy reference
+
+=== Pipeline
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.pipeline.steps=tool-output-pruning,duplicate-collapse,rolling-summary,token-window
+----
+
+In agentic conversations, tool outputs usually dominate the context, so pruning them is often enough.
+Summarization only happens when pruning and collapsing do not reach the target, and `token-window`, as the last step, guarantees that the view fits.
+Keep a window strategy at the end of your own pipelines for the same reason.
+
+[#tool-output-pruning]
+=== Tool output pruning
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.tool-output-pruning.keep-last-turns=2  # outputs of the last 2 turns are never pruned
+quarkus.langchain4j.compaction.tool-output-pruning.min-chars=200      # shorter outputs are kept
+quarkus.langchain4j.compaction.tool-output-pruning.preview-chars=120  # length of the preview in the stub
+quarkus.langchain4j.compaction.tool-output-pruning.retrieval=none     # or tool
+----
+
+A pruned output is replaced in the view by a stub, such as `[Output of lookupOrder pruned (8412 chars). Preview: ...]`, and stored in the `ToolOutputArchive`.
+
+By default (`retrieval=none`), the stub promises nothing: if the model needs the output again, it calls the original tool again.
+With `retrieval=tool`, the stub also gives a reference, and the model can read the output again, page by page, with the `retrieveToolOutput` tool.
+Add the `ArchivedToolOutputs` bean to the tools of the AI services:
+
+[source,java]
+----
+@RegisterAiService(tools = { OrderTools.class, ArchivedToolOutputs.class })
+public interface Assistant {
+    String chat(@MemoryId String conversation, @UserMessage String question);
+}
+----
+
+A warning is logged at startup when a profile sets `retrieval=tool` and none of its AI services lists `ArchivedToolOutputs`.
+
+The application can also read the archive: `ToolOutputArchive.get(memoryId, reference)` returns a pruned output, for example to display it.
+The reference is the tool call id when it is unique; for providers that reuse ids or send none, it is derived from the id and a hash of the output.
+The default archive is in memory, and is cleared with the chat memory or when the state of the conversation is evicted (see <<memory-usage>>).
+
+=== Duplicate collapse
+
+`duplicate-collapse` has no options.
+It only collapses tool calls whose tool, arguments and output are all identical, so a call whose output changed is always kept.
+
+[#summaries]
+=== Summaries
+
+`rolling-summary`, `anchored-summary` and `time-decay` call a chat model to summarize the turns they compact.
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.summary.keep-last-turns=4  # turns kept verbatim
+quarkus.langchain4j.compaction.summary.anchor-turns=1     # first turns kept verbatim by anchored-summary
+quarkus.langchain4j.compaction.summary.max-words=250      # soft limit for the summary
+----
+
+By default, summaries are produced by the default chat model.
+A smaller, cheaper model is usually good enough; select it by name (see xref:ai-services.adoc#_configuring_the_chat_model[Configuring the chat model]):
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.summary.model-name=summarizer
+quarkus.langchain4j.openai.summarizer.chat-model.model-name=gpt-4o-mini
+----
+
+The summary is cached per conversation and extended incrementally, so each turn is normally sent to the summarizer once.
+A summary is only used when it is shorter than the turns it replaces.
+
+Where the summary goes matters, because text taken from tool outputs ends up in it:
+
+* it is never put in the system message, which would give it the highest authority and invalidate the prompt cache at each compaction;
+* it is folded into the first user message that follows it, so the model never receives two consecutive user messages;
+* it is fenced in a `<conversation_summary>` block, introduced as automatically generated context whose instructions must not be followed;
+* the summarizer is asked to attribute every fact to its source ("the user said...", "the lookupOrder tool returned..."), so tool outputs do not read as something the user said.
+
+If summarization fails, the turns are kept and the compaction report is flagged `degraded`: in a pipeline, the next step (usually `token-window`) decides what to drop.
+
+=== Time decay
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.strategy=time-decay
+quarkus.langchain4j.compaction.time-decay.recent=15m          # younger turns are kept verbatim
+quarkus.langchain4j.compaction.time-decay.stale=2h            # older turns are summarized
+quarkus.langchain4j.compaction.time-decay.truncate-chars=400  # long messages of turns in between are truncated
+----
+
+Like the other strategies, time decay only runs when the budget is exceeded.
+Message timestamps are kept in memory: after a restart, on another node, or when the state of the conversation was evicted, stored messages are treated as recent.
+
+=== Relevance
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.strategy=relevance
+quarkus.langchain4j.compaction.relevance.keep-last-turns=3
+quarkus.langchain4j.compaction.relevance.top-k=4
+quarkus.langchain4j.compaction.relevance.embedding-model-name=my-embeddings  # optional
+----
+
+Relevance uses the cosine similarity of embeddings when an embedding model is available (the default one, or the one named by `embedding-model-name`), and a lexical similarity otherwise.
+Turn embeddings are cached per conversation.
+Media contents are never sent to the embedding model.
+
+=== Windows
+
+`token-window` keeps the most recent segments that fit the target and has no options.
+`message-window` keeps the most recent segments up to `message-window.max-messages` messages (default: 20, system messages excluded).
+Both keep the latest user message, and start the view with a user message.
+
+[#profiles]
+== Profiles
+
+Different AI services often need different strategies: a support assistant benefits from summaries, while a triage service only needs the last few messages.
+The configuration directly under `quarkus.langchain4j.compaction` is the _default profile_.
+Named profiles are configured under `quarkus.langchain4j.compaction.profiles."<name>"` and selected with `@CompactionProfile`:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.compaction.CompactionProfile;
+
+@RegisterAiService
+@CompactionProfile("triage")
+public interface TriageAgent {
+
+    @SystemMessage("You route support requests to the right team.")
+    String route(@MemoryId String ticket, @UserMessage String request);
+}
+----
+
+[source,properties]
+----
+# default profile, used by the AI services without @CompactionProfile
+quarkus.langchain4j.compaction.budget.context-window=128000
+
+# the triage profile
+quarkus.langchain4j.compaction.profiles.triage.budget.context-window=128000
+quarkus.langchain4j.compaction.profiles.triage.budget.trigger-ratio=0.2
+quarkus.langchain4j.compaction.profiles.triage.strategy=message-window
+quarkus.langchain4j.compaction.profiles.triage.message-window.max-messages=6
+----
+
+* A named profile does not inherit from the default profile: the properties it does not set take their built-in default.
+* The application fails to start if an AI service references a profile that has no property configured.
+* Each profile has its own strategy instances and conversation state; all profiles share the chat memory store.
+
+To disable compaction for a profile while keeping the full history, set `quarkus.langchain4j.compaction.enabled=false` (default profile) or `quarkus.langchain4j.compaction.profiles."<name>".enabled=false`.
+
+`@CompactionProfile` only applies to AI services that use the chat memory provided by the extension; see <<own-chat-memory-provider>> otherwise.
+
+== Running in production
+
+[#retention]
+=== Retention
+
+By default, the `ChatMemoryStore` keeps the full history of each conversation forever.
+Set a retention, per profile, to delete the oldest turns from the store when the history is written:
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.retention.max-messages=500 # <1>
+quarkus.langchain4j.compaction.retention.max-age=30d      # <2>
+----
+<1> When the history has more messages (system messages excluded), the oldest turns are deleted until it is back to about 80% of the limit, so the store is not rewritten on every message.
+<2> Turns whose messages are all older are deleted. A turn whose age is unknown (stored before the application started, or after the state of the conversation was evicted) is kept, together with the turns that follow it.
+
+Turns are deleted whole, so tool calls are never separated from their results.
+The system message and the last turn are never deleted.
+Unlike compaction, retention deletes data: deleted turns are no longer available for audit, nor to the strategies.
+
+[#memory-usage]
+=== Memory usage
+
+Besides the history, which lives in the `ChatMemoryStore`, compaction keeps some state in memory for each conversation: message timestamps, cached summaries and embeddings, the last view, and the archived tool outputs.
+This state is a cache: when it is lost (restart, another node, eviction), summaries are recomputed on the next compaction and the age of stored messages is unknown.
+
+The state of a conversation is evicted when it has not been used for a while, and the least recently used conversations are evicted when there are too many, per profile:
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.state.max-conversations=10000
+quarkus.langchain4j.compaction.state.idle-timeout=4h
+----
+
+The state of a conversation is never evicted while a call is using it.
+Eviction also releases the inspector snapshot of the conversation and, with the default in-memory `ToolOutputArchive`, its archived outputs.
+
+=== Threading
+
+Reading a compacting chat memory may call a model (summaries, embeddings), so the extension marks the chat memory as blocking: streaming AI services read it on a worker thread, even when all their tools are non-blocking.
+Expect extra latency on the call that triggers a summary.
+
+[#observability]
+== Observability
+
+=== Compaction reports
+
+Each compaction fires a `CompactionReport` CDI event with the memory id, the profile, the strategy, the number of messages and tokens before and after, the budget, the duration (including model calls), the notes written by the strategies, and the `fallback` and `degraded` flags.
+Observe it to export metrics or audit records:
+
+[source,java]
+----
+import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkiverse.langchain4j.compaction.CompactionReport;
+
+@ApplicationScoped
+public class CompactionMetrics {
+
+    @Inject
+    MeterRegistry registry;
+
+    void onCompaction(@Observes CompactionReport report) {
+        registry.counter("llm.compaction.runs",
+                "profile", report.profile(),
+                "strategy", report.strategy(),
+                "fallback", String.valueOf(report.fallback()),
+                "degraded", String.valueOf(report.degraded())).increment();
+        registry.summary("llm.compaction.tokens.saved", "profile", report.profile())
+                .record(report.tokensSaved());
+    }
+}
+----
+
+NOTE: The event is delivered synchronously, while the conversation is being compacted. Keep observers fast, or hand the report over to an asynchronous process.
+
+A `degraded` report usually means the summarizer is failing; a `fallback` report means a strategy is buggy or misconfigured.
+Both are worth an alert.
+
+=== Inspecting conversations
+
+The `CompactionInspector` bean keeps the 200 most recent reports (`reports()`) and, for the 100 most recently compacted conversations, a snapshot of the history and of the view sent to the model (`snapshot(memoryId)`).
+Use it to build an inspection endpoint that shows side by side what the user said and what the model saw.
+
+Snapshots copy messages, so they are only enabled in dev and test mode by default.
+Enable them in production with `quarkus.langchain4j.compaction.inspector-snapshots=true` if you expose such an endpoint.
+
+In dev mode, the Dev UI shows a _Context Compaction_ card that lists the available strategies, built-in and application-provided.
+
+== Extending
+
+=== Writing a strategy
+
+A strategy is a CDI bean implementing `CompactionStrategy`, qualified with `@Identifier`.
+It receives the parsed `Conversation` and returns the view.
+Work on turns or segments, so tool calls stay paired with their results, and rebuild the message list with `assemble(...)` or `assembleTurns(...)`, which put the system messages first:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.compaction.CompactionContext;
+import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
+import io.quarkiverse.langchain4j.compaction.Conversation;
+import io.smallrye.common.annotation.Identifier;
+
+@ApplicationScoped
+@Identifier("drop-small-talk")
+public class DropSmallTalkStrategy implements CompactionStrategy {
+
+    @Override
+    public List<ChatMessage> compact(Conversation conversation, CompactionContext context) {
+        List<Conversation.Turn> turns = conversation.turns();
+        List<Conversation.Turn> kept = new ArrayList<>();
+        for (Conversation.Turn turn : turns) {
+            boolean last = turn.index() == turns.size() - 1;
+            boolean usedTools = turn.segments().stream()
+                    .anyMatch(s -> s.kind() == Conversation.Kind.TOOL_EXCHANGE);
+            if (last || usedTools || turn.text().length() > 80) {
+                kept.add(turn);
+            }
+        }
+        context.note("drop-small-talk", "dropped " + (turns.size() - kept.size()) + " short turns");
+        return conversation.assembleTurns(kept);
+    }
+
+    @Override
+    public String description() {
+        return "Drops short turns that did not use tools";
+    }
+}
+----
+
+Use the identifier as the strategy of a profile, or as a step of a pipeline:
+
+[source,properties]
+----
+quarkus.langchain4j.compaction.pipeline.steps=tool-output-pruning,drop-small-talk,rolling-summary,token-window
+----
+
+The `CompactionContext` gives access to the budget (`context.fits(messages)`, `context.tokens(messages)`), the message timestamps, the current time, and a per-conversation `state(owner)` map to cache expensive results between compactions.
+Create new messages with `CompactionMessages` (for example `CompactionMessages.summary(text)`), so they are marked as derived and never stored.
+Application strategies are shared by all profiles.
+
+=== Replacing the building blocks
+
+The following beans are default beans: declare your own bean of the same type to replace them.
+
+[cols="30,70",options="header"]
+|===
+| Bean | Default behavior
+| `Summarizer` | Calls the chat model selected by `summary.model-name`, with instructions to keep goals, decisions, exact facts from tools and open questions, attributed to their source.
+| `TokenCounter` | Uses the application `TokenCountEstimator`, or a character-based heuristic.
+| `ToolOutputArchive` | Keeps pruned tool outputs in memory and gives each one a unique reference. Implement it to store them in a database or an object store.
+|===
+
+=== Compacting on demand
+
+The `Compactor` bean runs a strategy outside of chat memory: to compare strategies on a recorded conversation, to preview what a strategy would do, or to compact a transcript before handing it over to a sub-agent.
+
+[source,java]
+----
+@Inject
+Compactor compactor;
+
+void preview(List<ChatMessage> transcript) {
+    Compactor.Result result = compactor.compact("rolling-summary", transcript, new TokenBudget(32000, 2000, 0.8, 0.5));
+    Log.infof("%d -> %d tokens: %s", result.report().tokensBefore(), result.report().tokensAfter(),
+            result.report().notes());
+}
+----
+
+`compactor.strategies()` lists the identifiers and descriptions of the available strategies.
+Each call starts from an empty state, so nothing is cached between calls.
+
+[#own-chat-memory-provider]
+=== Using your own chat memory provider
+
+If the application declares its own `ChatMemoryProvider` bean, the extension does not replace it, and says so in the build log.
+The compaction profiles remain available to that bean, for example to compact only some conversations:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyMemoryProvider implements ChatMemoryProvider {
+
+    @Inject
+    CompactionProfiles profiles;
+
+    @Override
+    public ChatMemory get(Object memoryId) {
+        return profiles.defaultProvider().get(memoryId);
+    }
+}
+----
+
+`@CompactionProfile` then has no effect, so it fails the build.
+It also fails the build when combined with a custom `chatMemoryProviderSupplier`.
+In both cases, obtain the provider of the profile yourself:
+
+[source,java]
+----
+public class ClaimsMemorySupplier implements Supplier<ChatMemoryProvider> {
+
+    @Override
+    public ChatMemoryProvider get() {
+        return Arc.container().instance(CompactionProfiles.class).get().provider("claims");
+    }
+}
+----
+
+== Current limitations
+
+* *Message ages are kept in memory.* After a restart, or when the state of a conversation is evicted, the age of its stored messages is unknown: `time-decay` and `retention.max-age` treat them as recent.
+* *Concurrent calls on the same conversation* are merged when they write through `set()`, but with the default (`DEFERRED`) xref:messages-and-memory.adoc#_chat_memory_flush_strategy[flush strategy] the last call to complete wins, as with the default chat memory. Avoid concurrent calls with the same memory id.
+* *Media costs are estimates.* Without a `TokenCountEstimator` that understands images, audio, video and PDF, their tokens are approximated by a fixed cost per content, whatever their size or resolution.
+* *Summaries reach the model in a user message.* They are fenced, introduced as data and attributed to their sources, but text from tool outputs still arrives with the role of the user. Do not rely on the fence alone against prompt injection in tool outputs.
+* *Summaries are computed synchronously,* while the conversation is read, which adds latency to the call that triggers them.
+
+[#configuration-reference]
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-context-compaction.adoc[leveloffset=+1,opts=optional]
