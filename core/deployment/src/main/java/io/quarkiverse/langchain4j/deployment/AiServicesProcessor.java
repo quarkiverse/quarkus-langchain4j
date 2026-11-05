@@ -1699,9 +1699,11 @@ public class AiServicesProcessor {
             List<AnnotationsImpliesAiServiceBuildItem> annotationsImpliesAiServiceItems,
             List<SkipOutputFormatInstructionsBuildItem> skipOutputFormatInstructionsItems,
             List<FallbackToDummyUserMessageBuildItem> fallbackToDummyUserMessageItems,
-            List<SkipToolBoxProcessingBuildItem> skipToolBoxProcessingItems) {
+            List<SkipToolBoxProcessingBuildItem> skipToolBoxProcessingItems,
+            List<BlockingChatMemoryBuildItem> blockingChatMemoryItems) {
 
         IndexView index = indexBuildItem.getIndex();
+        boolean chatMemoryMayBlock = !blockingChatMemoryItems.isEmpty();
 
         List<AiServicesUseAnalyzer.Result.Entry> aiServicesAnalysisResults = new ArrayList<>();
         for (ClassInfo classInfo : index.getKnownUsers(LangChain4jDotNames.AI_SERVICES)) {
@@ -1896,7 +1898,7 @@ public class AiServicesProcessor {
                                 fallbackToDummyUserMessageItems.stream().map(
                                         FallbackToDummyUserMessageBuildItem::getPredicate)
                                         .reduce(mi -> false, Predicate::or),
-                                skipToolBoxPredicate);
+                                skipToolBoxPredicate, chatMemoryMayBlock);
                         if (!methodCreateInfo.getToolClassInfo().isEmpty()) {
                             if ((matchingBI != null)
                                     && matchingBI.getChatMemoryProviderSupplierClassDotName() == null) {
@@ -2129,7 +2131,8 @@ public class AiServicesProcessor {
             List<ToolQualifierProvider.BuildItem> toolQualifierProviders,
             Predicate<MethodInfo> skipOutputFormatInstructionsPredicate,
             Predicate<MethodInfo> fallbackToDummyUserMessagePredicate,
-            Predicate<MethodInfo> skipToolBoxPredicate) {
+            Predicate<MethodInfo> skipToolBoxPredicate,
+            boolean chatMemoryMayBlock) {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
@@ -2201,9 +2204,12 @@ public class AiServicesProcessor {
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
         String responseAugmenterClassName = AiServicesMethodBuildItem.gatherResponseAugmenter(method);
 
-        //  Detect if tools execution may block the caller thread.
-        boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
-                methodToolClassInfo.keySet(), methodMcpClientNames, index);
+        //  Detect if tools execution may block the caller thread. After executing tools, the streaming handler writes
+        //  the results to the chat memory and reads it to build the next request: a blocking chat memory requires a
+        //  worker thread too.
+        boolean switchToWorkerThreadForToolExecution = chatMemoryMayBlock
+                || detectIfToolExecutionRequiresAWorkerThread(method, tools,
+                        methodToolClassInfo.keySet(), methodMcpClientNames, index);
 
         TypeArgMapper typeArgMapper = new TypeArgMapper(method.declaringClass(), index);
         var methodReturnTypeSignature = typeSignature(method.returnType(), typeArgMapper);
