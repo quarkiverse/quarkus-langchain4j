@@ -19,6 +19,7 @@ import io.quarkiverse.langchain4j.compaction.TokenBudget;
 import io.quarkiverse.langchain4j.compaction.TokenCounter;
 import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
 import io.quarkiverse.langchain4j.compaction.strategies.StrategyFactory;
+import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.Startup;
 import io.smallrye.common.annotation.Experimental;
 
@@ -101,6 +102,19 @@ public class CompactionProfiles {
         return provider(CompactionConfig.DEFAULT_PROFILE);
     }
 
+    private ConversationStates states(CompactionConfig.Profile p) {
+        return new ConversationStates(p.state().maxConversations(), p.state().idleTimeout(), Clock.systemUTC(),
+                memoryId -> {
+                    // the conversation is no longer active: release what is attached to it
+                    inspector.remove(memoryId);
+                    archive.clear(memoryId);
+                });
+    }
+
+    private static boolean snapshots(CompactionConfig.Profile p) {
+        return p.inspectorSnapshots().orElse(LaunchMode.current().isDevOrTest());
+    }
+
     private CompactingChatMemoryProvider create(String profile) {
         CompactionConfig.Profile p = config.profiles().get(profile);
         String name = CompactionConfig.DEFAULT_PROFILE.equals(profile) ? DEFAULT : profile;
@@ -112,7 +126,7 @@ public class CompactionProfiles {
         try {
             CompactingChatMemory.Components components = new CompactingChatMemory.Components(name, store,
                     p.strategy(), factory.create(p.strategy(), p), budget, tokenCounter, p.enabled(),
-                    p.verifyInvariants(), new ConversationStates(), inspector, archive, events::fire,
+                    p.verifyInvariants(), states(p), inspector, snapshots(p), archive, events::fire,
                     Clock.systemUTC());
             return new CompactingChatMemoryProvider(components);
         } catch (CompactionException e) {

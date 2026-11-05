@@ -51,7 +51,7 @@ class CompactingChatMemoryTest {
     private CompactingChatMemory memory(CompactionStrategy strategy, int contextWindow, Clock clock) {
         CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "test", strategy,
                 new TokenBudget(contextWindow, 0, 0.8, 0.6), new TokenCounterProducer.HeuristicTokenCounter(), true,
-                true, new ConversationStates(), inspector, new ToolOutputArchive(), reports::add, clock);
+                true, new ConversationStates(), inspector, true, new ToolOutputArchive(), reports::add, clock);
         return new CompactingChatMemory("c1", components);
     }
 
@@ -261,6 +261,49 @@ class CompactingChatMemoryTest {
         exchange(memory, "hi", "hello");
         memory.set(List.of());
         assertThat(store.getMessages("c1")).isEmpty();
+    }
+
+    @Test
+    void evictingTheStateOfAConversationReleasesItsSnapshotAndArchive() {
+        ToolOutputArchive archive = new ToolOutputArchive();
+        ConversationStates states = new ConversationStates(1, Duration.ofHours(1), Clock.systemUTC(), id -> {
+            inspector.remove(id);
+            archive.clear(id);
+        });
+        CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "test",
+                (conv, c) -> conv.toMessages(), new TokenBudget(100_000, 0, 0.8, 0.6),
+                new TokenCounterProducer.HeuristicTokenCounter(), true, true, states, inspector, true, archive,
+                reports::add, Clock.systemUTC());
+        CompactingChatMemory first = new CompactingChatMemory("first", components);
+        first.add(UserMessage.from("hello"));
+        first.messages();
+        archive.put("first", "call-1", "output");
+        assertThat(inspector.snapshot("first")).isPresent();
+
+        CompactingChatMemory second = new CompactingChatMemory("second", components);
+        second.add(UserMessage.from("hi"));
+
+        assertThat(states.size()).isEqualTo(1);
+        assertThat(inspector.snapshot("first")).isEmpty();
+        assertThat(archive.get("first", "call-1")).isEmpty();
+        // the history itself is untouched
+        assertThat(store.getMessages("first")).hasSize(1);
+        assertThat(first.messages()).hasSize(1);
+    }
+
+    @Test
+    void recordsReportsButNoSnapshotWhenSnapshotsAreDisabled() {
+        CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "test",
+                new TokenWindowStrategy(), new TokenBudget(200, 0, 0.8, 0.6),
+                new TokenCounterProducer.HeuristicTokenCounter(), true, true, new ConversationStates(), inspector,
+                false, new ToolOutputArchive(), reports::add, Clock.systemUTC());
+        CompactingChatMemory memory = new CompactingChatMemory("c1", components);
+        for (int i = 0; i < 10; i++) {
+            exchange(memory, "question " + "x".repeat(100), "answer " + "y".repeat(100));
+        }
+        memory.messages();
+        assertThat(inspector.snapshot("c1")).isEmpty();
+        assertThat(inspector.reports()).isNotEmpty();
     }
 
     static final class MutableClock extends Clock {

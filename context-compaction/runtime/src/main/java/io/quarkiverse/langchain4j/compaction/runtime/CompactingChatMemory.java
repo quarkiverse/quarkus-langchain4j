@@ -62,6 +62,7 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
             boolean verifyInvariants,
             ConversationStates states,
             CompactionInspector inspector,
+            boolean snapshots,
             ToolOutputArchive archive,
             Consumer<CompactionReport> events,
             Clock clock) {
@@ -84,8 +85,7 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
 
     @Override
     public void add(ChatMessage message) {
-        ConversationStates.State state = c.states().get(id);
-        synchronized (state) {
+        c.states().run(id, state -> {
             List<ChatMessage> history = new ArrayList<>(c.store().getMessages(id));
             state.alignTimestamps(history.size());
             if (message instanceof SystemMessage) {
@@ -106,15 +106,14 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
             }
             state.lastView = null;
             c.store().updateMessages(id, history);
-        }
+        });
     }
 
     @Override
     public void set(Iterable<ChatMessage> messages) {
         List<ChatMessage> incoming = new ArrayList<>();
         messages.forEach(incoming::add);
-        ConversationStates.State state = c.states().get(id);
-        synchronized (state) {
+        c.states().run(id, state -> {
             List<ChatMessage> history = new ArrayList<>(c.store().getMessages(id));
             state.alignTimestamps(history.size());
             List<ChatMessage> lastView = state.lastView;
@@ -143,7 +142,7 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
             // Not an extension of the last view handed out (another call wrote in between, or the caller edited the
             // view): reconcile with the stored history instead of storing the view
             write(reconcile(history, incoming), state);
-        }
+        });
     }
 
     /**
@@ -210,37 +209,33 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
 
     @Override
     public List<ChatMessage> messages() {
-        ConversationStates.State state = c.states().get(id);
-        synchronized (state) {
+        return c.states().with(id, state -> {
             List<ChatMessage> history = c.store().getMessages(id);
             List<ChatMessage> view = computeView(history, state);
             state.lastView = List.copyOf(view);
             return new ArrayList<>(view);
-        }
+        });
     }
 
     @Override
     public List<ChatMessage> history() {
-        ConversationStates.State state = c.states().get(id);
-        synchronized (state) {
+        return c.states().with(id, state -> {
             return new ArrayList<>(c.store().getMessages(id));
-        }
+        });
     }
 
     @Override
     public List<ChatMessage> view(List<ChatMessage> history) {
-        ConversationStates.State state = c.states().get(id);
-        synchronized (state) {
+        return c.states().with(id, state -> {
             return new ArrayList<>(computeView(List.copyOf(history), state));
-        }
+        });
     }
 
     @Override
     public void setHistory(List<ChatMessage> history) {
-        ConversationStates.State state = c.states().get(id);
-        synchronized (state) {
+        c.states().run(id, state -> {
             write(history, state);
-        }
+        });
     }
 
     /**
@@ -265,7 +260,9 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
     private List<ChatMessage> computeView(List<ChatMessage> history, ConversationStates.State state) {
         int tokens = c.tokenCounter().count(history);
         if (!c.enabled() || !c.budget().exceeded(tokens)) {
-            c.inspector().record(id, history, history, null);
+            if (c.snapshots()) {
+                c.inspector().record(id, history, history, null);
+            }
             return history;
         }
         return compact(history, tokens, timestamps(history, state), state);
@@ -327,7 +324,11 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
         CompactionReport report = new CompactionReport(id, c.profile(), strategyId, start, history.size(), view.size(),
                 tokensBefore, c.tokenCounter().count(view), c.budget(),
                 Duration.between(start, c.clock().instant()), context.notes(), fallback);
-        c.inspector().record(id, history, view, report);
+        if (c.snapshots()) {
+            c.inspector().record(id, history, view, report);
+        } else {
+            c.inspector().record(report);
+        }
         if (c.events() != null) {
             c.events().accept(report);
         }
@@ -336,15 +337,14 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
 
     @Override
     public void clear() {
-        ConversationStates.State state = c.states().get(id);
-        synchronized (state) {
+        c.states().run(id, state -> {
             c.store().deleteMessages(id);
-            c.states().remove(id);
+            state.reset();
             c.inspector().remove(id);
             if (c.archive() != null) {
                 c.archive().clear(id);
             }
-        }
+        });
     }
 
     /**

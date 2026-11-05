@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.compaction.runtime;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
@@ -79,6 +80,20 @@ public interface CompactionConfig {
         Budget budget();
 
         /**
+         * Limits of the compaction state kept in memory for each conversation (message timestamps, summary and
+         * embedding caches). Evicting the state of a conversation never touches its history: summaries are recomputed
+         * and message ages become unknown.
+         */
+        StateLimits state();
+
+        /**
+         * Whether the {@code CompactionInspector} keeps, for each conversation, a snapshot of the last history and view.
+         * Snapshots copy the history on every call; compaction reports are always kept. Defaults to {@code true} in dev
+         * and test mode, {@code false} otherwise.
+         */
+        Optional<Boolean> inspectorSnapshots();
+
+        /**
          * Message window strategy ({@code message-window}).
          */
         MessageWindow messageWindow();
@@ -132,6 +147,22 @@ public interface CompactionConfig {
              */
             @WithDefault("0.6")
             double targetRatio();
+        }
+
+        interface StateLimits {
+            /**
+             * Maximum number of conversations whose compaction state is kept in memory. The least recently used are
+             * evicted first.
+             */
+            @WithDefault("10000")
+            int maxConversations();
+
+            /**
+             * Idle time after which the compaction state of a conversation is evicted, together with its inspector
+             * snapshot and its archived tool outputs (default in-memory archive).
+             */
+            @WithDefault("4h")
+            Duration idleTimeout();
         }
 
         interface MessageWindow {
