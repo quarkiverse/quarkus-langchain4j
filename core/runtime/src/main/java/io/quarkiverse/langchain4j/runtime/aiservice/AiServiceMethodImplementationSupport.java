@@ -750,6 +750,12 @@ public class AiServiceMethodImplementationSupport {
             tokenUsageAccumulator = sum(tokenUsageAccumulator, response.tokenUsage());
         }
 
+        // The last response the model produced, i.e. the first one without tool execution requests.
+        // Captured before the output guardrails run, because Result#finalResponse() is documented as the
+        // response returned by the ChatModel, which is what upstream's ToolServiceResult#finalResponse()
+        // holds as well.
+        ChatResponse finalModelResponse = response;
+
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
         var guardrailResult = GuardrailsSupport.executeOutputGuardrails(guardrailService, methodCreateInfo, response,
                 chatExecutor,
@@ -801,6 +807,8 @@ public class AiServiceMethodImplementationSupport {
                     .sources(augmentationResult == null ? null : augmentationResult.contents())
                     .finishReason(response.finishReason())
                     .toolExecutions(allToolExecutions)
+                    .intermediateResponses(intermediateResponses)
+                    .finalResponse(finalModelResponse)
                     .build();
 
             context.eventListenerRegistrar.fireEvent(
