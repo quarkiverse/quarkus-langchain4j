@@ -45,6 +45,7 @@ import io.quarkiverse.langchain4j.compaction.strategies.StrategyFactory;
 import io.quarkiverse.langchain4j.compaction.strategies.TimeDecayStrategy;
 import io.quarkiverse.langchain4j.compaction.strategies.TokenWindowStrategy;
 import io.quarkiverse.langchain4j.compaction.strategies.ToolOutputPruningStrategy;
+import io.quarkiverse.langchain4j.deployment.BlockingChatMemoryBuildItem;
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -85,6 +86,17 @@ class CompactionProcessor {
     @BuildStep
     RequestChatModelBeanBuildItem requestSummaryModel(CompactionModelsConfig config) {
         return new RequestChatModelBeanBuildItem(config.summary().modelName().orElse(NamedConfigUtil.DEFAULT_NAME));
+    }
+
+    /**
+     * Compacting chat memories may call a model (summaries, embeddings) when they are read: streaming AI services must
+     * not access them on the event loop, even when their tools are non-blocking.
+     */
+    @BuildStep
+    void blockingChatMemory(ChatMemoryOwnershipBuildItem ownership, BuildProducer<BlockingChatMemoryBuildItem> items) {
+        if (ownership.managesChatMemory()) {
+            items.produce(new BlockingChatMemoryBuildItem("context compaction may call a model when reading the memory"));
+        }
     }
 
     @BuildStep
