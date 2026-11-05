@@ -158,12 +158,11 @@ class CompactingChatMemoryReplayTest {
     }
 
     /**
-     * Two AI service calls on the same conversation at the same time (two browser tabs, a retry) both read the same
-     * compacted view. The first write appends its messages; the second no longer matches the last view handed out,
-     * takes the "caller rewrote the memory" path, and replaces the stored history with its compacted view.
+     * Two callers using the plain ChatMemory contract on the same conversation at the same time (two browser tabs, a
+     * retry) both read the same compacted view. The first write appends its messages; the second no longer matches the
+     * last view handed out and is reconciled with the stored history: nothing is lost, and the summary is not stored.
      */
     @Test
-    @Disabled("Known issue: concurrent calls replace the full history with a compacted view, see CompactingChatMemory#set")
     void concurrentCallsDoNotLoseTheHistory() {
         CompactingChatMemory memory = memory(
                 new RollingSummaryStrategy(new RollingSummaryStrategy.Options(2, 100), summarizer),
@@ -187,6 +186,9 @@ class CompactingChatMemoryReplayTest {
         memory.set(first);
         memory.set(second);
 
-        assertThat(store.getMessages("replay")).hasSizeGreaterThanOrEqualTo(43).noneMatch(CompactionMessages::isDerived);
+        List<ChatMessage> history = store.getMessages("replay");
+        assertThat(history).hasSize(45).noneMatch(CompactionMessages::isDerived);
+        assertThat(history.subList(41, 45)).containsExactly(UserMessage.from("first tab"),
+                AiMessage.from("first answer"), UserMessage.from("second tab"), AiMessage.from("second answer"));
     }
 }
