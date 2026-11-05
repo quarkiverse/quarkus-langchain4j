@@ -14,6 +14,7 @@ import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.Conversation;
 import io.quarkiverse.langchain4j.compaction.Summarizer;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionConfig;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.common.annotation.Identifier;
 
 /**
@@ -25,6 +26,7 @@ import io.smallrye.common.annotation.Identifier;
  */
 @Singleton
 @Identifier(Strategies.ROLLING_SUMMARY)
+@Experimental("This feature is experimental and the API is subject to change")
 public class RollingSummaryStrategy implements CompactionStrategy {
 
     public record Options(int keepLastTurns, int maxWords) {

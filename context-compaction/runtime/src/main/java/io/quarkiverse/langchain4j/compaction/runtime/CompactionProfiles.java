@@ -20,6 +20,7 @@ import io.quarkiverse.langchain4j.compaction.TokenCounter;
 import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
 import io.quarkiverse.langchain4j.compaction.strategies.StrategyFactory;
 import io.quarkus.runtime.Startup;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * The compaction profiles of the application (see {@link CompactionProfile}): each
@@ -31,6 +32,7 @@ import io.quarkus.runtime.Startup;
  */
 @Startup
 @Singleton
+@Experimental("This feature is experimental and the API is subject to change")
 public class CompactionProfiles {
 
     /**

@@ -1,9 +1,12 @@
 package io.quarkiverse.langchain4j.compaction.strategies;
 
+import io.smallrye.common.annotation.Experimental;
+
 /**
  * Identifiers of the built-in strategies, as used in configuration and with
  * {@link io.smallrye.common.annotation.Identifier}.
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public final class Strategies {
 
     public static final String MESSAGE_WINDOW = "message-window";

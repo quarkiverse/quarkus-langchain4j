@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkus.arc.DefaultBean;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * Keeps the full text of tool outputs pruned from the context, so they can be retrieved on demand (for example by a
@@ -16,6 +17,7 @@ import io.quarkus.arc.DefaultBean;
  */
 @ApplicationScoped
 @DefaultBean
+@Experimental("This feature is experimental and the API is subject to change")
 public class ToolOutputArchive {
 
     private final Map<Object, Map<String, String>> archive = new ConcurrentHashMap<>();

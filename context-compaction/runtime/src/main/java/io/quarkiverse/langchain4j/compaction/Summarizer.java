@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.compaction;
 import java.util.List;
 
 import dev.langchain4j.data.message.ChatMessage;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * Produces a summary of a span of conversation, used by the summarizing strategies.
@@ -10,6 +11,7 @@ import dev.langchain4j.data.message.ChatMessage;
  * The default implementation calls a chat model (a cheaper model can be selected with
  * {@code quarkus.langchain4j.compaction.summary.model-name}). Applications can replace it by declaring their own bean.
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public interface Summarizer {
 
     /**

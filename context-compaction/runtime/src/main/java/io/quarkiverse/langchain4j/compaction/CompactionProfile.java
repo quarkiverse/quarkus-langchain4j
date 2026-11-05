@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import io.smallrye.common.annotation.Experimental;
+
 /**
  * Selects the compaction profile of an AI service, so services of the same application can use different strategies,
  * budgets and options:
@@ -26,6 +28,7 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
+@Experimental("This feature is experimental and the API is subject to change")
 public @interface CompactionProfile {
 
     /**

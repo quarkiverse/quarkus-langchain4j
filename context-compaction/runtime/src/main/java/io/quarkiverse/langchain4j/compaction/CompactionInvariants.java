@@ -10,6 +10,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * Checks the invariants every compaction strategy must respect.
@@ -20,6 +21,7 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
  * <li>The view is not larger than the original history (in messages), except for summaries replacing spans.</li>
  * </ol>
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public final class CompactionInvariants {
 
     private CompactionInvariants() {

@@ -11,6 +11,7 @@ import io.quarkiverse.langchain4j.compaction.CompactionContext;
 import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.Conversation;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionConfig;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.common.annotation.Identifier;
 
 /**
@@ -19,6 +20,7 @@ import io.smallrye.common.annotation.Identifier;
  */
 @Singleton
 @Identifier(Strategies.MESSAGE_WINDOW)
+@Experimental("This feature is experimental and the API is subject to change")
 public class MessageWindowStrategy implements CompactionStrategy {
 
     private final int maxMessages;
