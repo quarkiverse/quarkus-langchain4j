@@ -18,7 +18,7 @@ import io.smallrye.common.annotation.Experimental;
  * interface ClaimsAgent { ... }
  * </pre>
  *
- * configured with {@code quarkus.langchain4j.compaction.claims.*}. AI services without this annotation use the default
+ * configured with {@code quarkus.langchain4j.compaction.profiles.claims.*}. AI services without this annotation use the default
  * profile, configured directly under {@code quarkus.langchain4j.compaction}.
  * <p>
  * The annotation only applies to AI services using the application chat memory provider (the default). A service with
