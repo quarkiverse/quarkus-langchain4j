@@ -16,7 +16,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * The recorded support conversation of {@code datasets/compaction}: 126
+ * The recorded support conversation of {@code src/test/resources/datasets}: 126
  * messages, about 13.6k tokens, with large tool outputs and repeated polling calls.
  */
 public final class Dataset {

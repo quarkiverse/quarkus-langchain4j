@@ -51,7 +51,7 @@ class CompactingChatMemoryTest {
     private CompactingChatMemory memory(CompactionStrategy strategy, int contextWindow, Clock clock) {
         CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "test", strategy,
                 new TokenBudget(contextWindow, 0, 0.8, 0.6), new TokenCounterProducer.HeuristicTokenCounter(), true,
-                true, new ConversationStates(), inspector, true, new ToolOutputArchive(), reports::add, clock);
+                true, new ConversationStates(), inspector, true, new InMemoryToolOutputArchive(), reports::add, clock);
         return new CompactingChatMemory("c1", components);
     }
 
@@ -265,7 +265,7 @@ class CompactingChatMemoryTest {
 
     @Test
     void evictingTheStateOfAConversationReleasesItsSnapshotAndArchive() {
-        ToolOutputArchive archive = new ToolOutputArchive();
+        ToolOutputArchive archive = new InMemoryToolOutputArchive();
         ConversationStates states = new ConversationStates(1, Duration.ofHours(1), Clock.systemUTC(), id -> {
             inspector.remove(id);
             archive.clear(id);
@@ -296,7 +296,7 @@ class CompactingChatMemoryTest {
         CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "test",
                 new TokenWindowStrategy(), new TokenBudget(200, 0, 0.8, 0.6),
                 new TokenCounterProducer.HeuristicTokenCounter(), true, true, new ConversationStates(), inspector,
-                false, new ToolOutputArchive(), reports::add, Clock.systemUTC());
+                false, new InMemoryToolOutputArchive(), reports::add, Clock.systemUTC());
         CompactingChatMemory memory = new CompactingChatMemory("c1", components);
         for (int i = 0; i < 10; i++) {
             exchange(memory, "question " + "x".repeat(100), "answer " + "y".repeat(100));

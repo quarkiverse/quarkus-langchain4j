@@ -24,7 +24,7 @@ import io.quarkiverse.langchain4j.compaction.Conversation;
 import io.quarkiverse.langchain4j.compaction.Fixtures;
 import io.quarkiverse.langchain4j.compaction.RandomConversations;
 import io.quarkiverse.langchain4j.compaction.TokenBudget;
-import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
+import io.quarkiverse.langchain4j.compaction.runtime.InMemoryToolOutputArchive;
 
 /**
  * Properties every strategy must have, checked on {@value #SEEDS} generated conversations (see
@@ -44,7 +44,7 @@ class StrategyPropertiesTest {
         strategies.put(Strategies.MESSAGE_WINDOW, () -> new MessageWindowStrategy(7));
         strategies.put(Strategies.TOKEN_WINDOW, TokenWindowStrategy::new);
         strategies.put(Strategies.TOOL_OUTPUT_PRUNING, () -> new ToolOutputPruningStrategy(
-                new ToolOutputPruningStrategy.Options(2, 200, 50), new ToolOutputArchive()));
+                new ToolOutputPruningStrategy.Options(2, 200, 50), new InMemoryToolOutputArchive()));
         strategies.put(Strategies.DUPLICATE_COLLAPSE, DuplicateCollapseStrategy::new);
         strategies.put(Strategies.ROLLING_SUMMARY, () -> new RollingSummaryStrategy(
                 new RollingSummaryStrategy.Options(3, 100), new Fixtures.RecordingSummarizer()));
@@ -60,7 +60,7 @@ class StrategyPropertiesTest {
     static PipelineStrategy defaultPipeline() {
         Map<String, CompactionStrategy> steps = new LinkedHashMap<>();
         steps.put(Strategies.TOOL_OUTPUT_PRUNING, new ToolOutputPruningStrategy(
-                new ToolOutputPruningStrategy.Options(2, 200, 50), new ToolOutputArchive()));
+                new ToolOutputPruningStrategy.Options(2, 200, 50), new InMemoryToolOutputArchive()));
         steps.put(Strategies.DUPLICATE_COLLAPSE, new DuplicateCollapseStrategy());
         steps.put(Strategies.ROLLING_SUMMARY, new RollingSummaryStrategy(new RollingSummaryStrategy.Options(3, 100),
                 new Fixtures.RecordingSummarizer()));

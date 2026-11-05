@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-context-compaction-deployment</artifactId>
-    <name>Quarkus Langchain4J - Compaction - Deployment</name>
+    <name>Quarkus LangChain4j - Context Compaction - Deployment</name>
     <description>Curated context compaction strategies for LangChain4j chat memory</description>
 
     <dependencies>

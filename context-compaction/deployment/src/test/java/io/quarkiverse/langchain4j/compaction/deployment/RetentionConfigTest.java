@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfiles;
+import io.quarkiverse.langchain4j.compaction.runtime.DefaultCompactionProfiles;
 import io.quarkiverse.langchain4j.compaction.runtime.Retention;
 import io.quarkus.test.QuarkusExtensionTest;
 
@@ -28,7 +28,7 @@ class RetentionConfigTest {
             .overrideConfigKey("quarkus.langchain4j.compaction.profiles.retention.strategy", "token-window")
             .overrideConfigKey("quarkus.langchain4j.compaction.profiles.retention.retention.max-age", "30d")
             .overrideConfigKey("quarkus.langchain4j.chat-memory.memory-window.max-messages", "5")
-            .setLogRecordPredicate(r -> r.getLoggerName().equals(CompactionProfiles.class.getName()))
+            .setLogRecordPredicate(r -> r.getLoggerName().equals(DefaultCompactionProfiles.class.getName()))
             .assertLogRecords(records -> {
                 assertThat(records).anySatisfy(r -> {
                     assertThat(r.getLevel()).isEqualTo(Level.INFO);
@@ -42,7 +42,7 @@ class RetentionConfigTest {
             });
 
     @Inject
-    CompactionProfiles profiles;
+    DefaultCompactionProfiles profiles;
 
     @Test
     void configuresTheRetentionOfEachProfile() {

@@ -23,7 +23,7 @@ import io.smallrye.common.annotation.Experimental;
  * <p>
  * The annotation only applies to AI services using the application chat memory provider (the default). A service with
  * its own {@code chatMemoryProviderSupplier} can call
- * {@link io.quarkiverse.langchain4j.compaction.runtime.CompactionProfiles#provider(String)} instead.
+ * {@link CompactionProfiles#provider(String)} instead.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

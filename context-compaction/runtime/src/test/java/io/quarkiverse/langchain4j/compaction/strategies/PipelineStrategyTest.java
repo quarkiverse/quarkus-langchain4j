@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.data.message.ChatMessage;
 import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.Fixtures;
-import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
+import io.quarkiverse.langchain4j.compaction.runtime.InMemoryToolOutputArchive;
 
 class PipelineStrategyTest {
 
@@ -30,7 +30,7 @@ class PipelineStrategyTest {
     private PipelineStrategy pipeline() {
         Map<String, CompactionStrategy> steps = new LinkedHashMap<>();
         steps.put("tool-output-pruning", recorded("tool-output-pruning", new ToolOutputPruningStrategy(
-                new ToolOutputPruningStrategy.Options(1, 200, 30), new ToolOutputArchive())));
+                new ToolOutputPruningStrategy.Options(1, 200, 30), new InMemoryToolOutputArchive())));
         steps.put("rolling-summary", recorded("rolling-summary",
                 new RollingSummaryStrategy(new RollingSummaryStrategy.Options(2, 100), summarizer)));
         steps.put("token-window", recorded("token-window", new TokenWindowStrategy()));

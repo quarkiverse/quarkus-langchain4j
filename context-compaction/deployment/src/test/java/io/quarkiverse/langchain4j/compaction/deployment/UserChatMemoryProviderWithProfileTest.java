@@ -21,7 +21,7 @@ class UserChatMemoryProviderWithProfileTest {
     static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .withApplicationRoot(jar -> jar.addClasses(Claims.class, UserChatMemoryProviderTest.FakeModel.class,
                     UserChatMemoryProviderTest.FakeModelSupplier.class, UserChatMemoryProviderTest.MyMemoryProvider.class))
-            .overrideConfigKey("quarkus.langchain4j.compaction.claims.strategy", "token-window")
+            .overrideConfigKey("quarkus.langchain4j.compaction.profiles.claims.strategy", "token-window")
             .assertException(e -> assertThat(e).hasStackTraceContaining("@CompactionProfile on")
                     .hasStackTraceContaining("declares its own ChatMemoryProvider"));
 

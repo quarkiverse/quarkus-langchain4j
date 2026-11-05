@@ -21,7 +21,7 @@ public class ChatMemoryProviderProducer {
 
     @Produces
     @Dependent
-    ChatMemoryProvider provider(InjectionPoint injectionPoint, CompactionProfiles profiles,
+    ChatMemoryProvider provider(InjectionPoint injectionPoint, DefaultCompactionProfiles profiles,
             CompactionProfileUsage usage) {
         Bean<?> bean = injectionPoint == null ? null : injectionPoint.getBean();
         if (bean != null) {

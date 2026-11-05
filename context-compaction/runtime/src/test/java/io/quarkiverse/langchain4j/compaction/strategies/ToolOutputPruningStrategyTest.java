@@ -15,10 +15,11 @@ import io.quarkiverse.langchain4j.compaction.CompactionInvariants;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.Fixtures;
 import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
+import io.quarkiverse.langchain4j.compaction.runtime.InMemoryToolOutputArchive;
 
 class ToolOutputPruningStrategyTest {
 
-    private final ToolOutputArchive archive = new ToolOutputArchive();
+    private final ToolOutputArchive archive = new InMemoryToolOutputArchive();
 
     private ToolOutputPruningStrategy strategy(int keepLastTurns, int minChars, int previewChars) {
         return new ToolOutputPruningStrategy(new ToolOutputPruningStrategy.Options(keepLastTurns, minChars,

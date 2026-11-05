@@ -18,6 +18,7 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.compaction.CompactionException;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
+import io.quarkiverse.langchain4j.compaction.CompactionProfiles;
 import io.quarkiverse.langchain4j.compaction.CompactionReport;
 import io.quarkiverse.langchain4j.compaction.TokenBudget;
 import io.quarkiverse.langchain4j.compaction.TokenCounter;
@@ -38,14 +39,14 @@ import io.smallrye.common.annotation.Experimental;
 @Startup
 @Singleton
 @Experimental("This feature is experimental and the API is subject to change")
-public class CompactionProfiles {
+public class DefaultCompactionProfiles implements CompactionProfiles {
 
     /**
      * Name of the default profile in reports and logs.
      */
     public static final String DEFAULT = "default";
 
-    private static final Logger LOG = Logger.getLogger(CompactionProfiles.class);
+    private static final Logger LOG = Logger.getLogger(DefaultCompactionProfiles.class);
 
     private final CompactionConfig config;
     private final StrategyFactory factory;
@@ -57,7 +58,7 @@ public class CompactionProfiles {
     private final Map<String, CompactingChatMemoryProvider> providers = new ConcurrentHashMap<>();
 
     @Inject
-    public CompactionProfiles(CompactionConfig config, StrategyFactory factory, ChatMemoryStore store,
+    public DefaultCompactionProfiles(CompactionConfig config, StrategyFactory factory, ChatMemoryStore store,
             TokenCounter tokenCounter, CompactionInspector inspector, ToolOutputArchive archive,
             Event<CompactionReport> events, CompactionProfileUsage usage) {
         this.config = config;
@@ -75,7 +76,7 @@ public class CompactionProfiles {
             if (!config.hasProfile(profile)) {
                 throw new CompactionException("AI service " + service + " uses the compaction profile '" + profile
                         + "', which is not configured (quarkus.langchain4j.compaction.profiles." + profile
-                        + ".*); configured profiles: " + named());
+                        + ".*); configured profiles: " + names());
             }
         });
         logOwnership(usage);
@@ -107,7 +108,7 @@ public class CompactionProfiles {
     }
 
     private String profileList() {
-        Set<String> names = new TreeSet<>(named());
+        Set<String> names = new TreeSet<>(names());
         names.add(DEFAULT);
         return String.join(", ", names);
     }
@@ -115,7 +116,8 @@ public class CompactionProfiles {
     /**
      * @return the names of the configured profiles, without the default one
      */
-    public Set<String> named() {
+    @Override
+    public Set<String> names() {
         return new TreeSet<>(config.profiles().keySet());
     }
 
@@ -124,6 +126,7 @@ public class CompactionProfiles {
      * @return the chat memory provider of the profile
      * @throws CompactionException if the profile is not configured or its strategy is unknown
      */
+    @Override
     public CompactingChatMemoryProvider provider(String profile) {
         if (!config.hasProfile(profile)) {
             throw new CompactionException("Unknown compaction profile '" + profile + "'");
@@ -134,6 +137,7 @@ public class CompactionProfiles {
     /**
      * @return the chat memory provider of the default profile
      */
+    @Override
     public CompactingChatMemoryProvider defaultProvider() {
         return provider(CompactionConfig.DEFAULT_PROFILE);
     }

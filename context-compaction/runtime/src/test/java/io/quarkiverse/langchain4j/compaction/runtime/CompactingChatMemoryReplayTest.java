@@ -26,7 +26,6 @@ import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.Dataset;
 import io.quarkiverse.langchain4j.compaction.Fixtures;
 import io.quarkiverse.langchain4j.compaction.TokenBudget;
-import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
 import io.quarkiverse.langchain4j.compaction.strategies.DuplicateCollapseStrategy;
 import io.quarkiverse.langchain4j.compaction.strategies.PipelineStrategy;
 import io.quarkiverse.langchain4j.compaction.strategies.RollingSummaryStrategy;
@@ -59,7 +58,7 @@ class CompactingChatMemoryReplayTest {
     private CompactingChatMemory memory(CompactionStrategy strategy, TokenBudget budget) {
         CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "replay", strategy,
                 budget, new TokenCounterProducer.HeuristicTokenCounter(), true, true, new ConversationStates(),
-                inspector, true, new ToolOutputArchive(), reports::add,
+                inspector, true, new InMemoryToolOutputArchive(), reports::add,
                 Clock.fixed(Instant.parse("2026-10-20T12:00:00Z"), ZoneOffset.UTC));
         return new CompactingChatMemory("replay", components);
     }
@@ -71,7 +70,7 @@ class CompactingChatMemoryReplayTest {
     private PipelineStrategy pipeline(boolean collapseDuplicates) {
         Map<String, CompactionStrategy> steps = new LinkedHashMap<>();
         steps.put(Strategies.TOOL_OUTPUT_PRUNING, new ToolOutputPruningStrategy(
-                new ToolOutputPruningStrategy.Options(2, 200, 120), new ToolOutputArchive()));
+                new ToolOutputPruningStrategy.Options(2, 200, 120), new InMemoryToolOutputArchive()));
         if (collapseDuplicates) {
             steps.put(Strategies.DUPLICATE_COLLAPSE, new DuplicateCollapseStrategy());
         }

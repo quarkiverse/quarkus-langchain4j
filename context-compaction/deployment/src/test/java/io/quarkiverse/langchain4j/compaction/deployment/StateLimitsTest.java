@@ -20,7 +20,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
-import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfiles;
+import io.quarkiverse.langchain4j.compaction.runtime.DefaultCompactionProfiles;
 import io.quarkus.test.QuarkusExtensionTest;
 
 /**
@@ -58,7 +58,7 @@ class StateLimitsTest {
     Assistant assistant;
 
     @Inject
-    CompactionProfiles profiles;
+    DefaultCompactionProfiles profiles;
 
     @Inject
     CompactionInspector inspector;

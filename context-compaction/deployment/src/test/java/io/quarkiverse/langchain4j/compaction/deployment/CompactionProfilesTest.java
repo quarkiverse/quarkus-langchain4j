@@ -28,7 +28,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
 import io.quarkiverse.langchain4j.compaction.CompactionReport;
-import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfiles;
+import io.quarkiverse.langchain4j.compaction.runtime.DefaultCompactionProfiles;
 import io.quarkus.test.QuarkusExtensionTest;
 
 /**
@@ -125,7 +125,7 @@ class CompactionProfilesTest {
     ReportCollector collector;
 
     @Inject
-    CompactionProfiles profiles;
+    DefaultCompactionProfiles profiles;
 
     @Test
     @ActivateRequestContext
