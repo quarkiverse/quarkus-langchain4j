@@ -14,10 +14,12 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionInvariants;
+import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.CompactionReport;
 import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.TokenBudget;
@@ -39,8 +41,8 @@ import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
  * {@link #setHistory(List)}.
  * <p>
  * Other callers only see the {@link ChatMemory} contract: {@link #messages()} returns the compacted view, and
- * {@link #set(Iterable)} reconciles: if the incoming list extends the last view handed out, only the new tail is
- * appended to the stored history.
+ * {@link #set(Iterable)} reconciles what it receives with the stored history (see {@link #reconcile(List, List)}), so a
+ * compacted view written back never replaces the full history.
  */
 public class CompactingChatMemory implements HistoryViewChatMemory {
 
@@ -138,19 +140,72 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
                 return;
             }
 
-            // Not an extension of the last view: the caller rewrote the history, store it as is.
-            if (lastView != null && !lastView.equals(history)) {
-                LOG.debugf("Conversation %s: history rewritten by the caller, compacted view replaced the history", id);
-            }
-            List<Instant> timestamps = new ArrayList<>();
-            for (ChatMessage message : incoming) {
-                int index = history.indexOf(message);
-                timestamps.add(index >= 0 ? state.timestamps.get(index) : now());
-            }
-            state.timestamps.clear();
-            state.timestamps.addAll(timestamps);
-            c.store().updateMessages(id, incoming);
+            // Not an extension of the last view handed out (another call wrote in between, or the caller edited the
+            // view): reconcile with the stored history instead of storing the view
+            write(reconcile(history, incoming), state);
         }
+    }
+
+    /**
+     * Rebuilds the full history from a list written through {@link #set(Iterable)}, which is a (possibly compacted and
+     * edited) view of the history followed by new messages:
+     * <ul>
+     * <li>messages created by compaction (summaries, pruned or truncated messages) are never stored;</li>
+     * <li>stored messages missing from the list are kept: they were compacted away, not deleted;</li>
+     * <li>the caller can rewrite the end of the last turn it saw (for example replace the last answer): stored messages
+     * after the last one found in the list are replaced, unless they start a new turn, written by another call, in
+     * which case they are kept and the new messages are appended after them;</li>
+     * <li>the system message of the list, if any, replaces the stored one.</li>
+     * </ul>
+     * A list without any original message nor derived message (for example an empty list) replaces the history.
+     */
+    List<ChatMessage> reconcile(List<ChatMessage> history, List<ChatMessage> incoming) {
+        Optional<ChatMessage> system = incoming.stream().filter(m -> m instanceof SystemMessage).findFirst();
+        List<ChatMessage> in = incoming.stream()
+                .filter(m -> !(m instanceof SystemMessage) && !CompactionMessages.isDerived(m)).toList();
+        if (in.isEmpty() && incoming.stream().noneMatch(CompactionMessages::isDerived)) {
+            return incoming;
+        }
+        if (system.isEmpty()) {
+            system = history.stream().filter(m -> m instanceof SystemMessage).findFirst();
+        }
+        List<ChatMessage> stored = history.stream().filter(m -> !(m instanceof SystemMessage)).toList();
+
+        // the longest prefix of the incoming messages found, in order, in the stored history
+        int lastMatched = -1;
+        int k = 0;
+        for (; k < in.size(); k++) {
+            int index = indexOf(stored, in.get(k), lastMatched + 1);
+            if (index < 0) {
+                break;
+            }
+            lastMatched = index;
+        }
+        List<ChatMessage> tail = new ArrayList<>(in.subList(k, in.size()));
+        List<ChatMessage> trailing = stored.subList(lastMatched + 1, stored.size());
+
+        List<ChatMessage> result = new ArrayList<>();
+        system.ifPresent(result::add);
+        result.addAll(stored.subList(0, lastMatched + 1));
+        if (!trailing.isEmpty() && trailing.get(0) instanceof UserMessage) {
+            LOG.debugf("Conversation %s: %d messages written by another call kept, %d new messages appended", id,
+                    trailing.size(), tail.size());
+            result.addAll(trailing);
+            tail.removeIf(trailing::contains);
+        } else if (!trailing.isEmpty()) {
+            LOG.debugf("Conversation %s: the caller rewrote the last %d messages", id, trailing.size());
+        }
+        result.addAll(tail);
+        return result;
+    }
+
+    private static int indexOf(List<ChatMessage> messages, ChatMessage message, int from) {
+        for (int i = from; i < messages.size(); i++) {
+            if (messages.get(i).equals(message)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override
@@ -182,18 +237,25 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
 
     @Override
     public void setHistory(List<ChatMessage> history) {
-        List<ChatMessage> messages = List.copyOf(history);
         ConversationStates.State state = c.states().get(id);
         synchronized (state) {
-            IdentityHashMap<ChatMessage, Instant> known = timestamps(messages, state);
-            state.timestamps.clear();
-            for (ChatMessage message : messages) {
-                state.timestamps.add(known.get(message));
-            }
-            state.pending.clear();
-            state.lastView = null;
-            c.store().updateMessages(id, messages);
+            write(history, state);
         }
+    }
+
+    /**
+     * Stores a full history, keeping the timestamps of the messages already known. Must be called with the state lock.
+     */
+    private void write(List<ChatMessage> history, ConversationStates.State state) {
+        List<ChatMessage> messages = List.copyOf(history);
+        IdentityHashMap<ChatMessage, Instant> known = timestamps(messages, state);
+        state.timestamps.clear();
+        for (ChatMessage message : messages) {
+            state.timestamps.add(known.get(message));
+        }
+        state.pending.clear();
+        state.lastView = null;
+        c.store().updateMessages(id, messages);
     }
 
     /**

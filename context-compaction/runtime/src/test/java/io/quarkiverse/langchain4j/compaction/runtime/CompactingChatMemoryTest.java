@@ -202,6 +202,67 @@ class CompactingChatMemoryTest {
         assertThat(seen).containsEntry("answer", Instant.parse("2026-10-20T12:01:00Z"));
     }
 
+    /**
+     * A caller using the plain ChatMemory contract writes back a compacted view that is not the last one handed out
+     * (here because it was already written once): the summary is not stored and the compacted turns are kept.
+     */
+    @Test
+    void writingBackACompactedViewKeepsTheHistory() {
+        CompactingChatMemory memory = memory(
+                new RollingSummaryStrategy(new RollingSummaryStrategy.Options(2, 100), new Fixtures.RecordingSummarizer()),
+                300);
+        memory.add(Fixtures.SYSTEM);
+        for (int i = 0; i < 20; i++) {
+            exchange(memory, "Question number " + i + " " + "about the order status ".repeat(3),
+                    "Answer number " + i + " " + "the order has shipped ".repeat(3));
+        }
+        List<ChatMessage> view = memory.messages();
+        assertThat(view).anyMatch(CompactionMessages::isSummary);
+        memory.set(view);
+        view.add(UserMessage.from("one more question"));
+        memory.set(view);
+
+        List<ChatMessage> history = store.getMessages("c1");
+        assertThat(history).hasSize(42).noneMatch(CompactionMessages::isDerived);
+        assertThat(history.get(0)).isEqualTo(Fixtures.SYSTEM);
+        assertThat(history.get(41)).isEqualTo(UserMessage.from("one more question"));
+    }
+
+    /**
+     * Like an output guardrail rewriting the answer: the caller replaces the last message of the view it read.
+     */
+    @Test
+    void rewritingTheLastAnswerOfACompactedView() {
+        CompactingChatMemory memory = memory(
+                new RollingSummaryStrategy(new RollingSummaryStrategy.Options(2, 100), new Fixtures.RecordingSummarizer()),
+                300);
+        memory.add(Fixtures.SYSTEM);
+        for (int i = 0; i < 20; i++) {
+            exchange(memory, "Question number " + i + " " + "about the order status ".repeat(3),
+                    "Answer number " + i + " " + "the order has shipped ".repeat(3));
+        }
+        List<ChatMessage> view = memory.messages();
+        memory.add(UserMessage.from("ignored"));
+        memory.set(store.getMessages("c1").subList(0, 41));
+        // the memory no longer matches the view: set reconciles
+        view.set(view.size() - 1, AiMessage.from("A better answer"));
+        memory.set(view);
+
+        List<ChatMessage> history = store.getMessages("c1");
+        assertThat(history).hasSize(41).noneMatch(CompactionMessages::isDerived);
+        assertThat(history.get(1)).isEqualTo(UserMessage.from("Question number 0 " + "about the order status ".repeat(3)));
+        assertThat(history.get(40)).isEqualTo(AiMessage.from("A better answer"));
+    }
+
+    @Test
+    void writingAnEmptyListClearsTheHistory() {
+        CompactingChatMemory memory = memory((conv, c) -> conv.toMessages(), 100_000);
+        memory.add(Fixtures.SYSTEM);
+        exchange(memory, "hi", "hello");
+        memory.set(List.of());
+        assertThat(store.getMessages("c1")).isEmpty();
+    }
+
     static final class MutableClock extends Clock {
         private Instant now;
 
