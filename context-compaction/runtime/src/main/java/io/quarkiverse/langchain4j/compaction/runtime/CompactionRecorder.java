@@ -8,7 +8,7 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class CompactionRecorder {
 
-    public Supplier<CompactionProfileUsage> usage(Map<String, String> profiles) {
-        return () -> new CompactionProfileUsage(Map.copyOf(profiles));
+    public Supplier<CompactionProfileUsage> usage(Map<String, String> profiles, boolean managesChatMemory) {
+        return () -> new CompactionProfileUsage(Map.copyOf(profiles), managesChatMemory);
     }
 }
