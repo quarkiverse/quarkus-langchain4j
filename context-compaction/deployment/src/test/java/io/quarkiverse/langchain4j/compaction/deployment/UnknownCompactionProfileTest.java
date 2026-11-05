@@ -20,7 +20,7 @@ class UnknownCompactionProfileTest {
     static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .withApplicationRoot(jar -> jar.addClasses(Claims.class, CompactionProfilesTest.FakeModel.class,
                     CompactionProfilesTest.FakeModelSupplier.class))
-            .overrideConfigKey("quarkus.langchain4j.compaction.claims.strategy", "token-window")
+            .overrideConfigKey("quarkus.langchain4j.compaction.profiles.claims.strategy", "token-window")
             .assertException(e -> assertThat(e).hasStackTraceContaining("compaction profile 'claim'")
                     .hasStackTraceContaining("configured profiles: [claims]"));
 

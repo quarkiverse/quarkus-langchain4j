@@ -17,6 +17,7 @@ import io.quarkiverse.langchain4j.compaction.Dataset;
 import io.quarkiverse.langchain4j.compaction.Fixtures;
 import io.quarkiverse.langchain4j.compaction.TokenBudget;
 import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
+import io.quarkiverse.langchain4j.compaction.runtime.InMemoryToolOutputArchive;
 
 /**
  * Runs every strategy, with the default configuration, on the recorded 127-message support conversation and pins
@@ -29,7 +30,7 @@ class DatasetCompactionTest {
 
     static Map<String, CompactionStrategy> defaults() {
         Fixtures.RecordingSummarizer summarizer = new Fixtures.RecordingSummarizer();
-        ToolOutputArchive archive = new ToolOutputArchive();
+        ToolOutputArchive archive = new InMemoryToolOutputArchive();
         Map<String, CompactionStrategy> strategies = new LinkedHashMap<>();
         strategies.put(Strategies.MESSAGE_WINDOW, new MessageWindowStrategy(20));
         strategies.put(Strategies.TOKEN_WINDOW, new TokenWindowStrategy());

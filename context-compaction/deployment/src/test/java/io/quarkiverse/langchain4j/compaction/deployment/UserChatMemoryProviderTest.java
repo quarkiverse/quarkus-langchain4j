@@ -22,8 +22,8 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.compaction.CompactionProfiles;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactingChatMemoryProvider;
-import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfiles;
 import io.quarkus.test.QuarkusExtensionTest;
 
 /**

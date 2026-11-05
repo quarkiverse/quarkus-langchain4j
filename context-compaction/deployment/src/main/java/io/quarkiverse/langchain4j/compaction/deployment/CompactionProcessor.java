@@ -26,14 +26,14 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
-import io.quarkiverse.langchain4j.compaction.Compactor;
-import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
 import io.quarkiverse.langchain4j.compaction.runtime.ChatMemoryProviderProducer;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionModelsConfig;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfileUsage;
-import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfiles;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionRecorder;
+import io.quarkiverse.langchain4j.compaction.runtime.DefaultCompactionProfiles;
+import io.quarkiverse.langchain4j.compaction.runtime.DefaultCompactor;
 import io.quarkiverse.langchain4j.compaction.runtime.DefaultSummarizer;
+import io.quarkiverse.langchain4j.compaction.runtime.InMemoryToolOutputArchive;
 import io.quarkiverse.langchain4j.compaction.runtime.TokenCounterProducer;
 import io.quarkiverse.langchain4j.compaction.strategies.AnchoredSummaryStrategy;
 import io.quarkiverse.langchain4j.compaction.strategies.DuplicateCollapseStrategy;
@@ -71,7 +71,7 @@ class CompactionProcessor {
 
     private static final Logger LOG = Logger.getLogger(CompactionProcessor.class);
 
-    static final String FEATURE = "langchain4j-compaction";
+    static final String FEATURE = "langchain4j-context-compaction";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -92,11 +92,11 @@ class CompactionProcessor {
         return AdditionalBeanBuildItem.builder()
                 .addBeanClasses(
                         // infrastructure
-                        CompactionProfiles.class,
+                        DefaultCompactionProfiles.class,
                         StrategyFactory.class,
                         CompactionInspector.class,
-                        Compactor.class,
-                        ToolOutputArchive.class,
+                        DefaultCompactor.class,
+                        InMemoryToolOutputArchive.class,
                         DefaultSummarizer.class,
                         TokenCounterProducer.class,
                         // built-in strategies
@@ -116,7 +116,7 @@ class CompactionProcessor {
     /**
      * Replaces the default chat memory provider of Quarkus LangChain4j, unless the application declares its own
      * {@link ChatMemoryProvider} bean: that bean then wins, and compaction is only available programmatically (see
-     * {@link CompactionProfiles#provider(String)}).
+     * {@code CompactionProfiles#provider(String)}).
      */
     @BuildStep
     ChatMemoryOwnershipBuildItem chatMemoryOwnership(CombinedIndexBuildItem index,
@@ -180,7 +180,7 @@ class CompactionProcessor {
 
     /**
      * Collects the AI services annotated with {@code @CompactionProfile}, so the chat memory provider producer knows
-     * the profile of each service and {@link CompactionProfiles} can check at startup that every profile is configured.
+     * the profile of each service and {@link DefaultCompactionProfiles} can check at startup that every profile is configured.
      */
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)

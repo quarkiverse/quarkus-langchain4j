@@ -24,7 +24,6 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.TokenBudget;
-import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
 
 class RetentionTest {
 
@@ -44,7 +43,7 @@ class RetentionTest {
                 (conversation, context) -> conversation.toMessages(), new TokenBudget(1_000_000, 0, 0.8, 0.6),
                 new TokenCounterProducer.HeuristicTokenCounter(), true, true,
                 new ConversationStates(100, Duration.ofHours(1), Clock.systemUTC(), id -> {
-                }), new CompactionInspector(), false, new ToolOutputArchive(), r -> {
+                }), new CompactionInspector(), false, new InMemoryToolOutputArchive(), r -> {
                 }, clock, retention);
         return new CompactingChatMemory("c1", components);
     }
