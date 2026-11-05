@@ -8,8 +8,10 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,6 +42,8 @@ public class ConversationStates {
      */
     public static final Duration DEFAULT_IDLE_TIMEOUT = Duration.ofHours(4);
 
+    static final int MAX_DELETED = 1_000;
+
     static final class State {
         /**
          * Timestamps aligned with the stored history; {@code null} entries are unknown.
@@ -56,6 +60,12 @@ public class ConversationStates {
          */
         final Map<ChatMessage, Instant> pending = new IdentityHashMap<>();
 
+        /**
+         * The last messages deleted by the retention, so that a caller writing back a view read before the deletion
+         * does not restore them. Bounded to {@link #MAX_DELETED}.
+         */
+        final Set<ChatMessage> deleted = new LinkedHashSet<>();
+
         // guarded by the ConversationStates instance
         private int users;
         private Instant lastAccess;
@@ -69,6 +79,16 @@ public class ConversationStates {
             }
         }
 
+        void deleted(ChatMessage message) {
+            deleted.remove(message);
+            deleted.add(message);
+            if (deleted.size() > MAX_DELETED) {
+                Iterator<ChatMessage> it = deleted.iterator();
+                it.next();
+                it.remove();
+            }
+        }
+
         Map<String, Object> state(String owner) {
             return strategyState.computeIfAbsent(owner, k -> new ConcurrentHashMap<>());
         }
@@ -78,6 +98,7 @@ public class ConversationStates {
          */
         void reset() {
             timestamps.clear();
+            deleted.clear();
             strategyState.clear();
             pending.clear();
             lastView = null;
