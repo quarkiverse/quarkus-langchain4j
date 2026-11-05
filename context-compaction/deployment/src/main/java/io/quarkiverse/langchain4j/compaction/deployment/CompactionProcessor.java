@@ -1,15 +1,28 @@
 package io.quarkiverse.langchain4j.compaction.deployment;
 
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Type;
+import org.jboss.logging.Logger;
 
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
@@ -36,6 +49,7 @@ import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
@@ -48,6 +62,14 @@ class CompactionProcessor {
     static final DotName REGISTER_AI_SERVICE = DotName.createSimple(RegisterAiService.class);
     static final DotName BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName
             .createSimple(RegisterAiService.BeanChatMemoryProviderSupplier.class);
+
+    static final DotName CHAT_MEMORY_PROVIDER = DotName.createSimple(ChatMemoryProvider.class);
+    static final DotName PRODUCES = DotName.createSimple(Produces.class);
+    static final List<DotName> BEAN_DEFINING = List.of(DotName.createSimple(ApplicationScoped.class),
+            DotName.createSimple(Singleton.class), DotName.createSimple(Dependent.class),
+            DotName.createSimple(RequestScoped.class), DotName.createSimple(SessionScoped.class));
+
+    private static final Logger LOG = Logger.getLogger(CompactionProcessor.class);
 
     static final String FEATURE = "langchain4j-compaction";
 
@@ -70,7 +92,6 @@ class CompactionProcessor {
         return AdditionalBeanBuildItem.builder()
                 .addBeanClasses(
                         // infrastructure
-                        ChatMemoryProviderProducer.class,
                         CompactionProfiles.class,
                         StrategyFactory.class,
                         CompactionInspector.class,
@@ -93,12 +114,78 @@ class CompactionProcessor {
     }
 
     /**
+     * Replaces the default chat memory provider of Quarkus LangChain4j, unless the application declares its own
+     * {@link ChatMemoryProvider} bean: that bean then wins, and compaction is only available programmatically (see
+     * {@link CompactionProfiles#provider(String)}).
+     */
+    @BuildStep
+    ChatMemoryOwnershipBuildItem chatMemoryOwnership(CombinedIndexBuildItem index,
+            BuildProducer<AdditionalBeanBuildItem> beans) {
+        List<String> applicationProviders = applicationChatMemoryProviders(index.getIndex());
+        if (applicationProviders.isEmpty()) {
+            beans.produce(AdditionalBeanBuildItem.unremovableOf(ChatMemoryProviderProducer.class));
+            return new ChatMemoryOwnershipBuildItem(true);
+        }
+        LOG.infof("The application declares its own ChatMemoryProvider (%s): context compaction does not replace it."
+                + " Use CompactionProfiles#provider(String) to compact the conversations of specific AI services.",
+                String.join(", ", applicationProviders));
+        return new ChatMemoryOwnershipBuildItem(false);
+    }
+
+    /**
+     * @return the beans and producers of {@link ChatMemoryProvider} declared outside this extension and LangChain4j
+     */
+    static List<String> applicationChatMemoryProviders(IndexView index) {
+        List<String> result = new ArrayList<>();
+        for (ClassInfo implementor : index.getAllKnownImplementors(CHAT_MEMORY_PROVIDER)) {
+            if (!isLibraryClass(implementor.name()) && !Modifier.isAbstract(implementor.flags())
+                    && !implementor.isInterface() && isBeanClass(implementor)) {
+                result.add(implementor.name().toString());
+            }
+        }
+        for (AnnotationInstance produces : index.getAnnotations(PRODUCES)) {
+            AnnotationTarget target = produces.target();
+            Type type = switch (target.kind()) {
+                case METHOD -> target.asMethod().returnType();
+                case FIELD -> target.asField().type();
+                default -> null;
+            };
+            if (type != null && type.name().equals(CHAT_MEMORY_PROVIDER)) {
+                ClassInfo declaring = target.kind() == AnnotationTarget.Kind.METHOD ? target.asMethod().declaringClass()
+                        : target.asField().declaringClass();
+                if (!isLibraryClass(declaring.name())) {
+                    result.add(declaring.name() + "#" + (target.kind() == AnnotationTarget.Kind.METHOD
+                            ? target.asMethod().name()
+                            : target.asField().name()));
+                }
+            }
+        }
+        return result;
+    }
+
+    private static boolean isLibraryClass(DotName name) {
+        String n = name.toString();
+        // only this extension declares ChatMemoryProvider beans in Quarkus LangChain4j (core uses a synthetic default bean)
+        return n.startsWith("io.quarkiverse.langchain4j.compaction.runtime.") || n.startsWith("dev.langchain4j.");
+    }
+
+    private static boolean isBeanClass(ClassInfo clazz) {
+        for (DotName annotation : BEAN_DEFINING) {
+            if (clazz.hasDeclaredAnnotation(annotation)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Collects the AI services annotated with {@code @CompactionProfile}, so the chat memory provider producer knows
      * the profile of each service and {@link CompactionProfiles} can check at startup that every profile is configured.
      */
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
-    SyntheticBeanBuildItem profileUsage(CombinedIndexBuildItem index, CompactionRecorder recorder) {
+    SyntheticBeanBuildItem profileUsage(CombinedIndexBuildItem index, ChatMemoryOwnershipBuildItem ownership,
+            CompactionRecorder recorder) {
         Map<String, String> profiles = new HashMap<>();
         for (AnnotationInstance annotation : index.getIndex().getAnnotations(COMPACTION_PROFILE)) {
             ClassInfo target = annotation.target().asClass();
@@ -106,6 +193,11 @@ class CompactionProcessor {
             if (aiService == null) {
                 throw new IllegalStateException("@CompactionProfile is only supported on @RegisterAiService interfaces: "
                         + target.name());
+            }
+            if (!ownership.managesChatMemory()) {
+                throw new IllegalStateException("@CompactionProfile on " + target.name()
+                        + " has no effect because the application declares its own ChatMemoryProvider bean; use"
+                        + " CompactionProfiles#provider(String) in that bean instead");
             }
             AnnotationValue supplier = aiService.value("chatMemoryProviderSupplier");
             if (supplier != null && !supplier.asClass().name().equals(BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
@@ -117,7 +209,7 @@ class CompactionProcessor {
         }
         return SyntheticBeanBuildItem.configure(CompactionProfileUsage.class)
                 .scope(Singleton.class)
-                .supplier(recorder.usage(profiles))
+                .supplier(recorder.usage(profiles, ownership.managesChatMemory()))
                 .unremovable()
                 .done();
     }
