@@ -74,7 +74,7 @@ public class CompactionProfiles {
         usage.profiles().forEach((service, profile) -> {
             if (!config.hasProfile(profile)) {
                 throw new CompactionException("AI service " + service + " uses the compaction profile '" + profile
-                        + "', which is not configured (quarkus.langchain4j.compaction." + profile
+                        + "', which is not configured (quarkus.langchain4j.compaction.profiles." + profile
                         + ".*); configured profiles: " + named());
             }
         });
@@ -116,9 +116,7 @@ public class CompactionProfiles {
      * @return the names of the configured profiles, without the default one
      */
     public Set<String> named() {
-        Set<String> names = new TreeSet<>(config.profiles().keySet());
-        names.remove(CompactionConfig.DEFAULT_PROFILE);
-        return names;
+        return new TreeSet<>(config.profiles().keySet());
     }
 
     /**
@@ -154,10 +152,10 @@ public class CompactionProfiles {
     }
 
     private CompactingChatMemoryProvider create(String profile) {
-        CompactionConfig.Profile p = config.profiles().get(profile);
+        CompactionConfig.Profile p = config.profile(profile);
         String name = CompactionConfig.DEFAULT_PROFILE.equals(profile) ? DEFAULT : profile;
         String prefix = CompactionConfig.DEFAULT_PROFILE.equals(profile) ? "quarkus.langchain4j.compaction"
-                : "quarkus.langchain4j.compaction." + profile;
+                : "quarkus.langchain4j.compaction.profiles." + profile;
         CompactionConfig.Profile.Budget b = p.budget();
         TokenBudget budget = new TokenBudget(b.contextWindow(), b.reservedCompletionTokens(), b.triggerRatio(),
                 b.targetRatio());
