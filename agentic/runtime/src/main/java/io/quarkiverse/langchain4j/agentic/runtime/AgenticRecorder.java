@@ -26,6 +26,8 @@ import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.MonitoredAgent;
 import dev.langchain4j.agentic.scope.AgenticScopeSerializer;
 import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.service.decision.ThresholdProvider;
@@ -50,6 +52,7 @@ public class AgenticRecorder {
     private static volatile Set<String> agentsWithMcpToolBox = Collections.emptySet();
     private static volatile Map<String, List<String>> agentsWithToolBox = Map.of();
     private static volatile Map<String, List<String>> agentsWithSkills = Map.of();
+    private static volatile Set<String> agentsWithAgentScopedMemory = Collections.emptySet();
     private static volatile Set<String> leafAgentClassNames = Collections.emptySet();
     private static volatile boolean devModeMonitoringEnabled = false;
     private static volatile Map<String, AgentClassCreateInfo> agentClassMetadata = Map.of();
@@ -89,6 +92,11 @@ public class AgenticRecorder {
     @StaticInit
     public void setAgentsWithSkills(Map<String, List<String>> agentsWithSkills) {
         AgenticRecorder.agentsWithSkills = Map.copyOf(agentsWithSkills);
+    }
+
+    @StaticInit
+    public void setAgentsWithAgentScopedMemory(Set<String> agentsWithAgentScopedMemory) {
+        AgenticRecorder.agentsWithAgentScopedMemory = Collections.unmodifiableSet(agentsWithAgentScopedMemory);
     }
 
     @StaticInit
@@ -359,6 +367,12 @@ public class AgenticRecorder {
                 agentBuilder.systemMessageTransformer(transformer);
             }
 
+            // @MemoryId support: each agent keeps its own conversation in the default chat memory store
+            if (AgenticRecorder.agentsWithAgentScopedMemory.contains(agentClassName)) {
+                ChatMemoryProvider defaultProvider = Arc.container().select(ChatMemoryProvider.class).get();
+                agentBuilder.chatMemoryProvider(new AgentScopedChatMemoryProvider(defaultProvider, agentClassName));
+            }
+
             // AgentListener support (unconditional — build-time always adds the injection point)
             Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
             for (AgentListener listener : listeners) {
@@ -392,6 +406,20 @@ public class AgenticRecorder {
             for (AgentListener listener : listeners) {
                 builder.listener(listener);
             }
+        }
+    }
+
+    /**
+     * Keys the conversations of an agent in the default chat memory store by memory id and agent, so agents invoked
+     * with the same memory id keep separate conversations.
+     */
+    private record AgentScopedChatMemoryProvider(ChatMemoryProvider delegate, String agentClassName)
+            implements
+                ChatMemoryProvider {
+
+        @Override
+        public ChatMemory get(Object memoryId) {
+            return delegate.get(memoryId + "#" + agentClassName);
         }
     }
 }
