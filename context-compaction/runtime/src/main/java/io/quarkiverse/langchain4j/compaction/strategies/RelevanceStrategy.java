@@ -91,6 +91,13 @@ public class RelevanceStrategy implements CompactionStrategy {
         for (Conversation.Turn turn : candidates) {
             scores.put(turn, scorer.score(turn));
         }
+        if (embeddingModel != null) {
+            // forget the embeddings of turns that are no longer candidates (kept as recent turns, or edited away), so the
+            // cache does not outgrow the conversation
+            Set<String> texts = new HashSet<>();
+            candidates.forEach(t -> texts.add(t.text()));
+            context.state(Strategies.RELEVANCE).keySet().retainAll(texts);
+        }
         ranked.sort(Comparator.comparingDouble((Conversation.Turn t) -> scores.get(t)).reversed());
         Set<Integer> selected = new HashSet<>();
         ranked.stream().limit(options.topK()).forEach(t -> selected.add(t.index()));

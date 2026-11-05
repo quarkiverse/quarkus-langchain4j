@@ -59,7 +59,7 @@ class CompactingChatMemoryReplayTest {
     private CompactingChatMemory memory(CompactionStrategy strategy, TokenBudget budget) {
         CompactingChatMemory.Components components = new CompactingChatMemory.Components("test", store, "replay", strategy,
                 budget, new TokenCounterProducer.HeuristicTokenCounter(), true, true, new ConversationStates(),
-                inspector, new ToolOutputArchive(), reports::add,
+                inspector, true, new ToolOutputArchive(), reports::add,
                 Clock.fixed(Instant.parse("2026-10-20T12:00:00Z"), ZoneOffset.UTC));
         return new CompactingChatMemory("replay", components);
     }

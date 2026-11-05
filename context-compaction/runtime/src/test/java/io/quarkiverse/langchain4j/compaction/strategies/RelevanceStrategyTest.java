@@ -80,6 +80,20 @@ class RelevanceStrategyTest {
     }
 
     @Test
+    void forgetsTheEmbeddingsOfTurnsThatAreNoLongerCandidates() {
+        KeywordEmbeddings embeddings = new KeywordEmbeddings();
+        Fixtures.TestContext context = Fixtures.context(10_000);
+        List<ChatMessage> history = history("My teapot reimbursement?");
+
+        new RelevanceStrategy(new RelevanceStrategy.Options(1, 2), embeddings).compact(history, context);
+        assertThat(context.state(Strategies.RELEVANCE)).hasSize(TOPICS.length);
+
+        // with more recent turns kept, fewer turns are candidates: the cache shrinks accordingly
+        new RelevanceStrategy(new RelevanceStrategy.Options(3, 1), embeddings).compact(history, context);
+        assertThat(context.state(Strategies.RELEVANCE)).hasSize(TOPICS.length - 2);
+    }
+
+    @Test
     void fallsBackToLexicalSimilarityWhenEmbeddingFails() {
         EmbeddingModel failing = new EmbeddingModel() {
             @Override
