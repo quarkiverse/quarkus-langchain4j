@@ -17,6 +17,7 @@ import io.quarkiverse.langchain4j.compaction.CompactionContext;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.Conversation;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.common.annotation.Identifier;
 
 /**
@@ -28,6 +29,7 @@ import io.smallrye.common.annotation.Identifier;
  */
 @Singleton
 @Identifier(Strategies.DUPLICATE_COLLAPSE)
+@Experimental("This feature is experimental and the API is subject to change")
 public class DuplicateCollapseStrategy implements CompactionStrategy {
 
     @Override

@@ -7,6 +7,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * Helpers to create and recognize messages produced by compaction (summaries, pruned tool outputs, truncated
@@ -15,6 +16,7 @@ import dev.langchain4j.data.message.UserMessage;
  * Derived messages carry the {@value #MARKER} attribute so they can be told apart from original messages, for
  * example when verifying invariants or rendering an inspection view.
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public final class CompactionMessages {
 
     /**

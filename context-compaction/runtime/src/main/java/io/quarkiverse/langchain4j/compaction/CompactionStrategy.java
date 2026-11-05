@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.compaction;
 import java.util.List;
 
 import dev.langchain4j.data.message.ChatMessage;
+import io.smallrye.common.annotation.Experimental;
 
 /**
  * A context compaction strategy.
@@ -16,6 +17,7 @@ import dev.langchain4j.data.message.ChatMessage;
  * name used in configuration ({@code quarkus.langchain4j.compaction.strategy}) and in pipelines. Applications contribute
  * their own strategy by declaring a bean implementing this interface.
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public interface CompactionStrategy {
 
     /**

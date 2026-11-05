@@ -9,6 +9,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import io.quarkiverse.langchain4j.compaction.CompactionContext;
 import io.quarkiverse.langchain4j.compaction.CompactionStrategy;
 import io.quarkiverse.langchain4j.compaction.Conversation;
+import io.smallrye.common.annotation.Experimental;
 import io.smallrye.common.annotation.Identifier;
 
 /**
@@ -17,6 +18,7 @@ import io.smallrye.common.annotation.Identifier;
  */
 @Singleton
 @Identifier(Strategies.TOKEN_WINDOW)
+@Experimental("This feature is experimental and the API is subject to change")
 public class TokenWindowStrategy implements CompactionStrategy {
 
     @Override
