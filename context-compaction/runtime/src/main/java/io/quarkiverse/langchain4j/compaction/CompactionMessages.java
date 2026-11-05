@@ -1,9 +1,15 @@
 package io.quarkiverse.langchain4j.compaction;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ContentType;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -55,7 +61,7 @@ public final class CompactionMessages {
                 .toolName(original.toolName())
                 .text(text)
                 .isError(original.isError())
-                .attributes(marker(kind))
+                .attributes(marker(original.attributes(), kind))
                 .build();
     }
 
@@ -64,15 +70,21 @@ public final class CompactionMessages {
                 .text(text)
                 .thinking(original.thinking())
                 .toolExecutionRequests(original.toolExecutionRequests())
-                .attributes(marker(kind))
+                .attributes(marker(original.attributes(), kind))
                 .build();
     }
 
+    /**
+     * Replaces the text of a user message, keeping its images, audio, video and PDF contents.
+     */
     public static UserMessage replaceText(UserMessage original, String text, String kind) {
+        List<Content> contents = new ArrayList<>();
+        contents.add(TextContent.from(text));
+        contents.addAll(media(original));
         return UserMessage.builder()
                 .name(original.name())
-                .contents(java.util.List.of(dev.langchain4j.data.message.TextContent.from(text)))
-                .attributes(marker(kind))
+                .contents(contents)
+                .attributes(marker(original.attributes(), kind))
                 .build();
     }
 
@@ -102,11 +114,12 @@ public final class CompactionMessages {
     }
 
     /**
-     * @return the text of the message, or an empty string for messages without text
+     * @return the text of the message, or an empty string for messages without text. Images, audio, video and PDF
+     *         contents are rendered as a placeholder such as {@code [image]}, never as their data.
      */
     public static String text(ChatMessage message) {
         if (message instanceof UserMessage m) {
-            return m.hasSingleText() ? m.singleText() : m.contents().toString();
+            return m.hasSingleText() ? m.singleText() : render(m.contents());
         } else if (message instanceof AiMessage m) {
             StringBuilder sb = new StringBuilder();
             if (m.text() != null) {
@@ -118,6 +131,9 @@ public final class CompactionMessages {
             }
             return sb.toString();
         } else if (message instanceof ToolExecutionResultMessage m) {
+            if (m.contents() != null && !m.contents().isEmpty() && !m.hasSingleText()) {
+                return render(m.contents());
+            }
             return m.text() == null ? "" : m.text();
         } else if (message instanceof dev.langchain4j.data.message.SystemMessage m) {
             return m.text();
@@ -126,7 +142,46 @@ public final class CompactionMessages {
         }
     }
 
+    /**
+     * @return the contents of the message that are not text (images, audio, video, PDF), in order
+     */
+    public static List<Content> media(ChatMessage message) {
+        List<Content> contents;
+        if (message instanceof UserMessage m) {
+            contents = m.contents();
+        } else if (message instanceof ToolExecutionResultMessage m) {
+            contents = m.contents();
+        } else {
+            contents = null;
+        }
+        if (contents == null) {
+            return List.of();
+        }
+        return contents.stream().filter(c -> c.type() != ContentType.TEXT).toList();
+    }
+
+    private static String render(List<Content> contents) {
+        StringBuilder sb = new StringBuilder();
+        for (Content content : contents) {
+            if (!sb.isEmpty()) {
+                sb.append('\n');
+            }
+            if (content instanceof TextContent t) {
+                sb.append(t.text());
+            } else {
+                sb.append('[').append(content.type().name().toLowerCase(Locale.ROOT)).append(']');
+            }
+        }
+        return sb.toString();
+    }
+
     private static Map<String, Object> marker(String kind) {
         return Map.of(MARKER, kind);
+    }
+
+    private static Map<String, Object> marker(Map<String, Object> attributes, String kind) {
+        Map<String, Object> result = new HashMap<>(attributes == null ? Map.of() : attributes);
+        result.put(MARKER, kind);
+        return result;
     }
 }

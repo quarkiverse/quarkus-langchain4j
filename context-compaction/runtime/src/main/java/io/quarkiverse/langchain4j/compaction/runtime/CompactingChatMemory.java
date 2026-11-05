@@ -372,6 +372,11 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
                     fallback = true;
                 }
             }
+            if (!fallback && context.degraded() && !context.fits(view)) {
+                // a step kept messages it could not compact (for example the summarizer failed): the view may not fit
+                context.note(strategyId, "degraded view over the target, applying token-window");
+                view = FALLBACK.compact(view, context);
+            }
         } catch (RuntimeException e) {
             LOG.warnf(e, "Compaction strategy '%s' (profile %s) failed for conversation %s, using token-window",
                     strategyId, c.profile(), id);
@@ -381,7 +386,8 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
         }
         CompactionReport report = new CompactionReport(id, c.profile(), strategyId, start, history.size(), view.size(),
                 tokensBefore, c.tokenCounter().count(view), c.budget(),
-                Duration.between(start, c.clock().instant()), context.notes(), fallback);
+                Duration.between(start, c.clock().instant()), context.notes(), fallback,
+                context.degraded());
         if (c.snapshots()) {
             c.inspector().record(id, history, view, report);
         } else {

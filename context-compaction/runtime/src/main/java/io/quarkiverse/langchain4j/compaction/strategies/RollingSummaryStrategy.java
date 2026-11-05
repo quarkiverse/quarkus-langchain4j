@@ -22,7 +22,8 @@ import io.smallrye.common.annotation.Identifier;
  * incrementally: when more turns age out, they are folded into the existing summary instead of re-summarizing the
  * whole history.
  * <p>
- * If summarization fails, the old turns are dropped and the failure is noted in the report.
+ * If summarization fails, the old turns are kept and the report is marked degraded: the next step of a pipeline, or
+ * {@code token-window} when the view does not fit, decides what to drop.
  */
 @Singleton
 @Identifier(Strategies.ROLLING_SUMMARY)
@@ -60,12 +61,13 @@ public class RollingSummaryStrategy implements CompactionStrategy {
         List<Conversation.Turn> recent = turns.subList(split, turns.size());
 
         Optional<String> summary = engine.summarize(Strategies.ROLLING_SUMMARY, old, context);
-        List<ChatMessage> result = new ArrayList<>(conversation.system());
-        summary.ifPresent(s -> result.add(CompactionMessages.summary(s)));
-        recent.forEach(t -> result.addAll(t.messages()));
         if (summary.isEmpty()) {
-            context.note(Strategies.ROLLING_SUMMARY, "dropped " + old.size() + " turns without summary");
+            context.degraded(Strategies.ROLLING_SUMMARY, "kept " + old.size() + " turns that could not be summarized");
+            return conversation.toMessages();
         }
+        List<ChatMessage> result = new ArrayList<>(conversation.system());
+        result.add(CompactionMessages.summary(summary.get()));
+        recent.forEach(t -> result.addAll(t.messages()));
         return result;
     }
 

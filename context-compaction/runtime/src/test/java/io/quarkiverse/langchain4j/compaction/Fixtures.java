@@ -102,6 +102,14 @@ public final class Fixtures {
         public void note(String owner, String note) {
             notes.add(owner + ": " + note);
         }
+
+        public boolean degraded;
+
+        @Override
+        public void degraded(String owner, String reason) {
+            note(owner, reason);
+            degraded = true;
+        }
     }
 
     /**

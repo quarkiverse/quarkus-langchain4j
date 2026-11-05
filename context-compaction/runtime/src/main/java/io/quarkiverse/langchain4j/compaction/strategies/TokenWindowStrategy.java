@@ -42,6 +42,10 @@ public class TokenWindowStrategy implements CompactionStrategy {
         if (conversation.keepLatestQuestion(kept)) {
             context.note(Strategies.TOKEN_WINDOW, "kept the latest user message ahead of its tool calls");
         }
+        int leading = conversation.startWithUserMessage(kept);
+        if (leading > 0) {
+            context.note(Strategies.TOKEN_WINDOW, "dropped " + leading + " segments preceding the first kept user message");
+        }
         int dropped = segments.size() - kept.size();
         if (dropped > 0) {
             context.note(Strategies.TOKEN_WINDOW, "dropped " + dropped + " oldest segments to fit " + target + " tokens");

@@ -85,6 +85,19 @@ class TimeDecayStrategyTest {
     }
 
     @Test
+    void keepsStaleTurnsWhenSummarizationFails() {
+        turn("stale", Duration.ofHours(3));
+        turn("last", Duration.ofMinutes(1));
+
+        List<ChatMessage> view = strategy((previous, messages, maxWords) -> {
+            throw new IllegalStateException("model unavailable");
+        }).compact(history, context);
+        assertThat(view).isEqualTo(history);
+        assertThat(context.degraded).isTrue();
+        assertThat(context.notes).anyMatch(n -> n.contains("kept 1 stale turns that could not be summarized"));
+    }
+
+    @Test
     void dropsStaleTurnsWithoutSummarizer() {
         turn("stale", Duration.ofHours(3));
         turn("last", Duration.ofMinutes(1));

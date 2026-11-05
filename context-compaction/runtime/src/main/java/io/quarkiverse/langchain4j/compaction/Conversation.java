@@ -197,6 +197,27 @@ public final class Conversation {
     }
 
     /**
+     * Drops the segments at the beginning of {@code kept} that precede its first user message or summary (assistant
+     * answers, tool exchanges), so the view starts the way providers expect: several of them reject a conversation
+     * whose first non-system message is not a user message. Nothing is dropped if {@code kept} has no user message nor
+     * summary.
+     *
+     * @param kept the segments a strategy keeps, in order; modified in place
+     * @return the number of segments dropped
+     */
+    public int startWithUserMessage(List<Segment> kept) {
+        int first = 0;
+        while (first < kept.size() && kept.get(first).kind() != Kind.USER && kept.get(first).kind() != Kind.SUMMARY) {
+            first++;
+        }
+        if (first == kept.size()) {
+            return 0;
+        }
+        kept.subList(0, first).clear();
+        return first;
+    }
+
+    /**
      * Groups segments into turns. A new turn starts at each user message or summary; segments before the first user
      * message form turn 0.
      */

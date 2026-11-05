@@ -84,7 +84,7 @@ public class Compactor {
         List<ChatMessage> view = selected.get().compact(List.copyOf(messages), context);
         CompactionReport report = new CompactionReport("compactor", null, strategyId, start, messages.size(), view.size(),
                 counter.count(messages), counter.count(view), budget, Duration.between(start, clock.instant()),
-                context.notes(), false);
+                context.notes(), false, context.degraded());
         return new Result(view, report);
     }
 }

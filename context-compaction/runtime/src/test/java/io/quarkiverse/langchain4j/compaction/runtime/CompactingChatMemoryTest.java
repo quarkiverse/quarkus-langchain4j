@@ -306,6 +306,27 @@ class CompactingChatMemoryTest {
         assertThat(inspector.reports()).isNotEmpty();
     }
 
+    @Test
+    void cutsADegradedViewThatDoesNotFit() {
+        CompactingChatMemory memory = memory(new RollingSummaryStrategy(new RollingSummaryStrategy.Options(2, 100),
+                (previous, messages, maxWords) -> {
+                    throw new IllegalStateException("model unavailable");
+                }), 300);
+        for (int i = 0; i < 10; i++) {
+            exchange(memory, "question " + i + " " + "x".repeat(100), "answer " + i + " " + "y".repeat(100));
+        }
+        List<ChatMessage> view = memory.messages();
+
+        CompactionReport report = reports.get(reports.size() - 1);
+        assertThat(report.degraded()).isTrue();
+        assertThat(report.fallback()).isFalse();
+        assertThat(report.notes()).anyMatch(n -> n.contains("applying token-window"));
+        assertThat(report.tokensAfter()).isLessThanOrEqualTo(new TokenBudget(300, 0, 0.8, 0.6).target());
+        assertThat(view.get(0)).isInstanceOf(UserMessage.class);
+        // the full history is still stored
+        assertThat(store.getMessages("c1")).hasSize(20);
+    }
+
     static final class MutableClock extends Clock {
         private Instant now;
 

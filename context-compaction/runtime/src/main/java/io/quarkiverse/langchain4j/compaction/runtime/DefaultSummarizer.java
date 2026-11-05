@@ -79,7 +79,7 @@ public class DefaultSummarizer implements Summarizer {
             } else if (message instanceof AiMessage ai) {
                 line = "Assistant: " + CompactionMessages.text(ai);
             } else if (message instanceof ToolExecutionResultMessage r) {
-                line = "Tool " + r.toolName() + " returned: " + r.text();
+                line = "Tool " + r.toolName() + " returned: " + CompactionMessages.text(r);
             } else {
                 line = null;
             }

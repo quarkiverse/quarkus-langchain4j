@@ -26,6 +26,7 @@ public class DefaultCompactionContext implements CompactionContext {
     private final Function<String, Map<String, Object>> state;
     private final Clock clock;
     private final List<String> notes = new ArrayList<>();
+    private boolean degraded;
 
     /**
      * @param timestamps message timestamps, keyed by identity
@@ -74,6 +75,19 @@ public class DefaultCompactionContext implements CompactionContext {
     @Override
     public void note(String owner, String note) {
         notes.add(owner + ": " + note);
+    }
+
+    @Override
+    public void degraded(String owner, String reason) {
+        note(owner, reason);
+        degraded = true;
+    }
+
+    /**
+     * @return {@code true} if a step reported that it could not do its job
+     */
+    public boolean degraded() {
+        return degraded;
     }
 
     public List<String> notes() {

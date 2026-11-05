@@ -22,6 +22,8 @@ import io.smallrye.common.annotation.Experimental;
  * @param duration time spent compacting (including model calls made by summarizing strategies)
  * @param notes human-readable notes from the strategies
  * @param fallback {@code true} if the strategy failed or broke an invariant and the fallback was used
+ * @param degraded {@code true} if a step could not do its job (for example the summarizer failed) and kept the
+ *        messages it should have compacted
  */
 @Experimental("This feature is experimental and the API is subject to change")
 public record CompactionReport(
@@ -36,7 +38,8 @@ public record CompactionReport(
         TokenBudget budget,
         Duration duration,
         List<String> notes,
-        boolean fallback) {
+        boolean fallback,
+        boolean degraded) {
 
     public int tokensSaved() {
         return tokensBefore - tokensAfter;

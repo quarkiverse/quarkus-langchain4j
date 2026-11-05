@@ -46,10 +46,11 @@ class AnchoredSummaryStrategyTest {
                     throw new IllegalStateException("model unavailable");
                 }).compact(history, context);
 
-        assertThat(view.get(1)).isEqualTo(history.get(1));
-        assertThat(view.get(view.size() - 1)).isEqualTo(history.get(history.size() - 1));
+        // nothing is dropped silently: the turns are kept and the next step (or token-window) decides
+        assertThat(view).isEqualTo(history);
         assertThat(view.stream().filter(CompactionMessages::isSummary)).isEmpty();
-        assertThat(context.notes).anyMatch(n -> n.contains("dropped 5 turns without summary"));
+        assertThat(context.degraded).isTrue();
+        assertThat(context.notes).anyMatch(n -> n.contains("kept 5 turns that could not be summarized"));
         assertThat(CompactionInvariants.violations(history, view)).isEmpty();
     }
 
