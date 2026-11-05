@@ -1,37 +1,31 @@
 package io.quarkiverse.langchain4j.compaction;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
-import io.quarkus.arc.DefaultBean;
 import io.smallrye.common.annotation.Experimental;
 
 /**
- * Keeps the full text of tool outputs pruned from the context, so they can be retrieved on demand (for example by a
- * tool the agent calls with the archived id) and shown in inspection views.
+ * Keeps the full text of tool outputs pruned from the context, so they can be retrieved on demand and shown in
+ * inspection views.
  * <p>
- * This default implementation is in-memory. Replace it with a persistent store for horizontally scaled applications.
+ * The default implementation is in-memory. Declare a bean implementing this interface to store the outputs elsewhere,
+ * for example in a database or an object store for horizontally scaled applications.
  */
-@ApplicationScoped
-@DefaultBean
 @Experimental("This feature is experimental and the API is subject to change")
-public class ToolOutputArchive {
+public interface ToolOutputArchive {
 
-    private final Map<Object, Map<String, String>> archive = new ConcurrentHashMap<>();
+    /**
+     * Archives a tool output. The first output archived for a given tool call is kept.
+     */
+    void put(Object memoryId, String toolCallId, String output);
 
-    public void put(Object memoryId, String toolCallId, String output) {
-        archive.computeIfAbsent(memoryId, k -> new ConcurrentHashMap<>()).putIfAbsent(toolCallId, output);
-    }
+    /**
+     * @return the archived output of the tool call, if any
+     */
+    Optional<String> get(Object memoryId, String toolCallId);
 
-    public Optional<String> get(Object memoryId, String toolCallId) {
-        Map<String, String> outputs = archive.get(memoryId);
-        return outputs == null ? Optional.empty() : Optional.ofNullable(outputs.get(toolCallId));
-    }
-
-    public void clear(Object memoryId) {
-        archive.remove(memoryId);
-    }
+    /**
+     * Forgets the archived outputs of a conversation, when it is cleared or no longer active.
+     */
+    void clear(Object memoryId);
 }

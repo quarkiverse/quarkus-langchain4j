@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-context-compaction</artifactId>
-    <name>Quarkus Langchain4J - Compaction - Runtime</name>
+    <name>Quarkus LangChain4j - Context Compaction - Runtime</name>
     <description>Curated context compaction strategies for LangChain4j chat memory</description>
 
     <dependencies>
@@ -27,7 +27,6 @@
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>3.2.1</version>
             <scope>test</scope>
         </dependency>
 
@@ -44,20 +43,6 @@
     </dependencies>
 
     <build>
-        <testResources>
-            <testResource>
-                <directory>src/test/resources</directory>
-            </testResource>
-            <!-- the recorded conversation, used by the dataset and replay tests -->
-            <testResource>
-                <directory>../../../../datasets/compaction</directory>
-                <targetPath>datasets</targetPath>
-                <includes>
-                    <include>*.jsonl</include>
-                    <include>*.json</include>
-                </includes>
-            </testResource>
-        </testResources>
         <plugins>
             <plugin>
                 <groupId>io.quarkus</groupId>
