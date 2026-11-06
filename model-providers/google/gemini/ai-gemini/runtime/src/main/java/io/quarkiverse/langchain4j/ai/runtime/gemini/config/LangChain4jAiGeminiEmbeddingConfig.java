@@ -16,7 +16,7 @@ public interface LangChain4jAiGeminiEmbeddingConfig {
      * @see <a href=
      *      "https://ai.google.dev/gemini-api/docs/models/gemini">https://ai.google.dev/gemini-api/docs/models/gemini</a>
      */
-    @WithDefault("text-embedding-004")
+    @WithDefault("gemini-embedding-2")
     String modelId();
 
     /**
@@ -26,7 +26,7 @@ public interface LangChain4jAiGeminiEmbeddingConfig {
 
     /**
      * Optional task type for which the embeddings will be used.
-     * Can only be set for models/embedding-001
+     * Ignored by gemini-embedding-2.
      *
      * Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT,
      * SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING,

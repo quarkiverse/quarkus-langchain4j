@@ -2085,7 +2085,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_MODEL_ID
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-output-dimension[`+++quarkus.langchain4j.ai.gemini.embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2116,7 +2116,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2. Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2621,7 +2621,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_M
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-output-dimension[`+++quarkus.langchain4j.ai.gemini."model-name".embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2652,7 +2652,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2. Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -13616,7 +13616,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai.embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -13647,7 +13647,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used.
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2.
 
 Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
 
@@ -14148,7 +14148,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDIN
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -14179,7 +14179,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used.
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2.
 
 Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
 
