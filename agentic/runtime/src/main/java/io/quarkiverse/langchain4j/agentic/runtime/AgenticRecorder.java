@@ -80,13 +80,28 @@ public class AgenticRecorder {
      * The helper objects of an agent type: the bean of a class-based agent, or of a bean with an instance agent
      * method, whose instance helper methods are invoked through its client proxy.
      */
-    private static final Function<Class<?>, List<Object>> HELPER_OBJECTS_RESOLVER = agentType -> {
+    private static final Function<Class<?>, List<?>> HELPER_OBJECTS_RESOLVER = agentType -> {
         String name = agentType.getName();
         if (classBasedAgents.containsKey(name) || instanceAgentBeanClassNames.contains(name)) {
             return List.of(Arc.container().instance(agentType).get());
         }
         return List.of();
     };
+
+    /**
+     * The configurator of an agent of the extension: the given consumer tweaks each agent of the system, and the
+     * other hooks bring the beans, the generated agent classes and the memory id of a scoped instance.
+     */
+    private static AgentConfigurator agentConfigurator(QuarkusAgenticContextConsumer contextConsumer,
+            Supplier<Object> defaultMemoryIdSupplier) {
+        return AgentConfigurator.builder()
+                .configurator(contextConsumer)
+                .subAgentResolver(QuarkusSubAgentResolver.INSTANCE)
+                .agentInstanceFactory(AGENT_INSTANCE_FACTORY)
+                .defaultMemoryIdSupplier(defaultMemoryIdSupplier)
+                .helperObjectsResolver(HELPER_OBJECTS_RESOLVER)
+                .build();
+    }
 
     private final RuntimeValue<AgenticRuntimeConfig> runtimeConfig;
 
@@ -275,8 +290,7 @@ public class AgenticRecorder {
                 } else {
                     ChatModel chatModel = info.chatModelInfo().resolve(cdiContext);
                     agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
-                            new AgentConfigurator(contextConsumer, QuarkusSubAgentResolver.INSTANCE,
-                                    AGENT_INSTANCE_FACTORY, defaultMemoryIdSupplier, HELPER_OBJECTS_RESOLVER));
+                            agentConfigurator(contextConsumer, defaultMemoryIdSupplier));
                 }
                 if (instanceMemoryId != null && agent instanceof AbstractQuarkusAgent quarkusAgent) {
                     quarkusAgent.setInstanceMemoryId(instanceMemoryId);
@@ -315,11 +329,10 @@ public class AgenticRecorder {
             Supplier<Object> defaultMemoryIdSupplier) {
         DecisionAgentBuilder<?> builder = DecisionAgentBuilder.withoutDeclarativeConfiguration(agentClass);
         DeclarativeUtil.configureDecisionAgent(agentClass, builder,
-                new AgentConfigurator(
+                agentConfigurator(
                         new QuarkusAgenticContextConsumer(toolProviders, listeners, info, decisionModel,
                                 classBasedAgentsRuntimeConfig),
-                        QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY, defaultMemoryIdSupplier,
-                        HELPER_OBJECTS_RESOLVER));
+                        defaultMemoryIdSupplier));
         return builder.build();
     }
 
@@ -344,11 +357,10 @@ public class AgenticRecorder {
         } else {
             ChatModel chatModel = info.chatModelInfo().resolve();
             agent = AgenticServices.createAgenticSystem(agentClass, chatModel,
-                    new AgentConfigurator(
+                    agentConfigurator(
                             new QuarkusAgenticContextConsumer(toolProviders, listeners, info, null,
                                     classBasedAgentsRuntimeConfig),
-                            QuarkusSubAgentResolver.INSTANCE, AGENT_INSTANCE_FACTORY, defaultMemoryIdSupplier,
-                            HELPER_OBJECTS_RESOLVER));
+                            defaultMemoryIdSupplier));
         }
         if (devModeMonitoringEnabled && agent instanceof MonitoredAgent monitoredAgent) {
             AgentMonitor monitor = monitoredAgent.agentMonitor();
