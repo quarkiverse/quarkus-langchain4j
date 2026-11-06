@@ -20,6 +20,7 @@ import dev.langchain4j.agentic.planner.AgentInstance;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
 import io.quarkus.arc.Arc;
@@ -191,17 +192,18 @@ public final class AgentClassSupport {
         Class<?> agentClass = agentClass(bean.getClass());
         Object root = agentClass == null ? null : ROOT_AGENTS.get(agentClass);
         if (root != null) {
-            evict(root, memoryId);
+            delete(root, memoryId);
         }
     }
 
     /**
-     * Evicts from the given root agent the agentic scope with the given memory id, or the chat memory of an AI agent,
+     * Deletes from the given root agent the agentic scope with the given memory id, or the chat memory of an AI agent,
      * together with the chat memories that the AI agents of the system created for that memory id: the ones keyed by
-     * the memory id itself, evicted by langchain4j-agentic, and the ones that defaulted to it with a per-service
-     * suffix, as the Quarkus AI services do.
+     * the memory id itself, deleted by langchain4j-agentic, and the ones that defaulted to it with a per-service
+     * suffix, as the Quarkus AI services do. The memory id is the one of a destroyed bean instance, never used again,
+     * so the messages stored by those chat memories are deleted, not only the chat memory objects.
      */
-    public static void evict(Object rootAgent, Object memoryId) {
+    public static void delete(Object rootAgent, Object memoryId) {
         if (rootAgent instanceof AgenticScopeAccess scopeAccess) {
             AgenticScope scope = scopeAccess.getAgenticScope(memoryId);
             if (scope instanceof DefaultAgenticScope defaultScope) {
@@ -212,9 +214,13 @@ public final class AgentClassSupport {
             if (rootAgent instanceof AgentInstance instance) {
                 removeDefaultedChatMemories(instance, memoryId);
             }
-            scopeAccess.evictAgenticScope(memoryId);
+            scopeAccess.deleteAgenticScope(memoryId);
         } else if (rootAgent instanceof ChatMemoryAccess chatMemoryAccess) {
             removeDefaultedChatMemories(rootAgent, memoryId);
+            ChatMemory chatMemory = chatMemoryAccess.getChatMemory(memoryId);
+            if (chatMemory != null) {
+                chatMemory.clear();
+            }
             chatMemoryAccess.evictChatMemory(memoryId);
         }
     }

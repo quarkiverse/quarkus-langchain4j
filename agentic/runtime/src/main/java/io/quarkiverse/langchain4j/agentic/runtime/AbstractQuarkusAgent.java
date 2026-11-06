@@ -40,6 +40,7 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
     private static final Method METHOD_onEvent;
     private static final Method METHOD_getAgenticScope;
     private static final Method METHOD_evictAgenticScope;
+    private static final Method METHOD_deleteAgenticScope;
 
     static {
         try {
@@ -54,6 +55,7 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
             METHOD_onEvent = AiServiceListener.class.getMethod("onEvent", AiServiceEvent.class);
             METHOD_getAgenticScope = AgenticScopeAccess.class.getMethod("getAgenticScope", Object.class);
             METHOD_evictAgenticScope = AgenticScopeAccess.class.getMethod("evictAgenticScope", Object.class);
+            METHOD_deleteAgenticScope = AgenticScopeAccess.class.getMethod("deleteAgenticScope", Object.class);
         } catch (NoSuchMethodException e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -335,6 +337,16 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
     public boolean evictAgenticScope(Object memoryId) {
         try {
             return (boolean) invokeOnAgent(METHOD_evictAgenticScope, new Object[] { memoryId });
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean deleteAgenticScope(Object memoryId) {
+        try {
+            return (boolean) invokeOnAgent(METHOD_deleteAgenticScope, new Object[] { memoryId });
         } catch (RuntimeException | Error e) {
             throw e;
         } catch (Throwable e) {

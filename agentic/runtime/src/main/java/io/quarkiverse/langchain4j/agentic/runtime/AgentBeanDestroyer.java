@@ -15,7 +15,7 @@ public class AgentBeanDestroyer implements BeanDestroyer<Object> {
     @Override
     public void destroy(Object instance, CreationalContext<Object> creationalContext, Map<String, Object> params) {
         if (instance instanceof AbstractQuarkusAgent agent && agent.instanceMemoryId() != null) {
-            AgentClassSupport.evict(agent, agent.instanceMemoryId());
+            AgentClassSupport.delete(agent, agent.instanceMemoryId());
         }
     }
 }

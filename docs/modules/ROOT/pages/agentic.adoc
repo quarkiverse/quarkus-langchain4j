@@ -240,7 +240,7 @@ The model of an agent is chosen with `@ModelName` on the agentic method or with 
 
 For an agent with a scope other than the application scope, like `@RequestScoped`, each bean instance has its own `AgenticScope`, created on the first invocation of the instance.
 The chat memories that the agents of the system create during the invocations of the instance, like the ones of the AI sub-agents with a `@ChatMemoryProviderSupplier` and no `@MemoryId` parameter, default to the memory id of the instance.
-When the instance is destroyed, at the end of the request for a `@RequestScoped` agent, its `AgenticScope` and those chat memories are evicted.
+When the instance is destroyed, at the end of the request for a `@RequestScoped` agent, its `AgenticScope` is evicted and those chat memories are deleted, with the messages they stored: the memory id of the instance is never used again.
 A `@MemoryId` parameter keeps its explicit meaning.
 
 The same applies to an agent interface annotated with a scope.
