@@ -970,9 +970,31 @@ IMPORTANT: This feature is experimental and may change in future releases.
 [source,properties]
 ----
 quarkus.langchain4j.a2a.apicurio-registry.url=http://localhost:8080/apis/registry/v3
-# Optional: a bearer token for the registry
-quarkus.langchain4j.a2a.apicurio-registry.auth-token=my-token
 ----
+
+If the registry requires authentication, configure one of the following. The same credentials are used to publish agent cards and to discover agents.
+
+OAuth2 client credentials, for example with Keycloak. Tokens are fetched and refreshed automatically:
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.apicurio-registry.auth.token-endpoint=https://keycloak.example.com/realms/registry/protocol/openid-connect/token
+quarkus.langchain4j.a2a.apicurio-registry.auth.client-id=my-agent
+quarkus.langchain4j.a2a.apicurio-registry.auth.client-secret=${REGISTRY_CLIENT_SECRET}
+# Optional
+quarkus.langchain4j.a2a.apicurio-registry.auth.scope=openid
+----
+
+HTTP basic authentication:
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.apicurio-registry.auth.username=my-agent
+quarkus.langchain4j.a2a.apicurio-registry.auth.password=${REGISTRY_PASSWORD}
+----
+
+Configuring both fails at startup.
+`quarkus.langchain4j.a2a.apicurio-registry.auth-token` is deprecated: it was never applied, and setting it now fails at startup.
 
 === Discovering Agents
 
