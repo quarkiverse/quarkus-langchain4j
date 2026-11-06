@@ -1,9 +1,12 @@
 package io.quarkiverse.langchain4j.mcp.runtime.apicurio;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,6 +23,7 @@ import io.apicurio.registry.rest.client.RegistryClient;
 import io.apicurio.registry.rest.client.models.ArtifactMetaData;
 import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.SearchedArtifact;
+import io.apicurio.registry.rest.client.search.artifacts.ArtifactsRequestBuilder;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.vertx.core.Vertx;
@@ -38,6 +42,7 @@ public class ApicurioRegistryMcpTools {
     private static final String MCP_TOOL_TYPE = "MCP_TOOL";
     private static final String MCP_SERVER_TYPE = "MCP_SERVER";
     private static final String STREAMABLE_HTTP = "streamable-http";
+    private static final int SEARCH_LIMIT = 20;
 
     // Matches an unsubstituted {variable} placeholder left in a remote's url, as declared by
     // server.json's `variables` map. A registry-discovered server has no per-user substitution
@@ -68,11 +73,29 @@ public class ApicurioRegistryMcpTools {
         return formatted.isEmpty() ? "No MCP servers found matching '" + query + "'" : formatted;
     }
 
+    /**
+     * Matches the query against the description, and against the name or artifactId. The registry
+     * combines search parameters with AND, so these are two searches, merged without duplicates. Its
+     * name filter covers both the name and the artifactId, and matches a substring when the value is
+     * wrapped in {@code *}.
+     */
     private List<SearchedArtifact> search(String query, String artifactType) {
+        Map<String, SearchedArtifact> matches = new LinkedHashMap<>();
+        for (SearchedArtifact artifact : searchBy(artifactType, config -> config.description = query)) {
+            matches.putIfAbsent(artifact.getGroupId() + "/" + artifact.getArtifactId(), artifact);
+        }
+        for (SearchedArtifact artifact : searchBy(artifactType, config -> config.name = "*" + query + "*")) {
+            matches.putIfAbsent(artifact.getGroupId() + "/" + artifact.getArtifactId(), artifact);
+        }
+        return new ArrayList<>(matches.values());
+    }
+
+    private List<SearchedArtifact> searchBy(String artifactType,
+            Consumer<ArtifactsRequestBuilder.GetQueryParameters> filter) {
         var results = registryClient.search().artifacts().get(config -> {
-            config.queryParameters.description = query;
+            filter.accept(config.queryParameters);
             config.queryParameters.artifactType = artifactType;
-            config.queryParameters.limit = 20;
+            config.queryParameters.limit = SEARCH_LIMIT;
         });
         return results == null || results.getArtifacts() == null ? List.of() : results.getArtifacts();
     }

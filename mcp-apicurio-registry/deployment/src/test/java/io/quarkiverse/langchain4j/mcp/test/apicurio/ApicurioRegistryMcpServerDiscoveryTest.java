@@ -89,6 +89,28 @@ public class ApicurioRegistryMcpServerDiscoveryTest {
         }
     }
 
+    /**
+     * The search tool is described to the model as matching name, description and artifactId, so an
+     * artifact without a description must still be found by its artifactId or its name
+     * (quarkus-langchain4j#3144).
+     */
+    @Test
+    @Order(1)
+    void searchFindsServersWithoutADescriptionByArtifactIdAndName() throws Exception {
+        registerMcpServerArtifact("search-group", "zzartifactidonly-server",
+                serverJson("io.github.test/zzartifactidonly", "content description only",
+                        List.of(remote("streamable-http", "http://localhost:9999/mcp"))));
+        registerMcpServerArtifact("search-group", "zz-named-server",
+                serverJson("io.github.test/zz-named", "content description only",
+                        List.of(remote("streamable-http", "http://localhost:9999/mcp"))),
+                null, "Zznamedonly weather");
+
+        assertThat(apicurioRegistryMcpTools.searchMcpServers("zzartifactidonly"))
+                .contains("search-group/zzartifactidonly-server");
+        assertThat(apicurioRegistryMcpTools.searchMcpServers("Zznamedonly"))
+                .contains("search-group/zz-named-server");
+    }
+
     @Test
     @Order(1)
     void searchFindsBothArtifactTypes() throws Exception {
@@ -236,6 +258,11 @@ public class ApicurioRegistryMcpServerDiscoveryTest {
     // server.json's own description field, so a search fixture needs it set explicitly.
     private static void registerMcpServerArtifact(String groupId, String artifactId, String serverJson,
             String metadataDescription) throws Exception {
+        registerMcpServerArtifact(groupId, artifactId, serverJson, metadataDescription, null);
+    }
+
+    private static void registerMcpServerArtifact(String groupId, String artifactId, String serverJson,
+            String metadataDescription, String name) throws Exception {
         RegistryClientOptions options = RegistryClientOptions.create(registryUrl());
         RegistryClient client = RegistryClientFactory.create(options);
 
@@ -244,6 +271,9 @@ public class ApicurioRegistryMcpServerDiscoveryTest {
         createArtifact.setArtifactType("MCP_SERVER");
         if (metadataDescription != null) {
             createArtifact.setDescription(metadataDescription);
+        }
+        if (name != null) {
+            createArtifact.setName(name);
         }
 
         CreateVersion firstVersion = new CreateVersion();
