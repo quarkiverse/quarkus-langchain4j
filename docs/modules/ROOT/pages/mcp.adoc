@@ -649,6 +649,10 @@ public class MyHeaderProvider implements McpHeadersSupplier {
 
 When such bean exists, all Streamable HTTP-based MCP clients will be wired up to it automatically.
 
+NOTE: The two mechanisms can be combined. When both are in play, a client sends the statically configured
+headers plus whatever the supplier returns for that particular call; if both name the same header, the value
+returned by the supplier wins.
+
 == Authorization
 
 If your MCP server uses the *Streamable HTTP* transport, it may require client authorization using bearer tokens or API keys.
