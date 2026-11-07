@@ -18,7 +18,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<quarkus.platform.version>3.40.0</quarkus.platform.version>
 		<!-- Build the extensions from this checkout; includes the A2A input-key and republish fixes. -->
-		<quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+		<quarkus-langchain4j.version>1.15.0</quarkus-langchain4j.version>
 		<a2a.version>1.4.0.Final</a2a.version>
 		<mcp-server.version>2.0.2</mcp-server.version>
 		<apicurio.version>3.3.3</apicurio.version>
