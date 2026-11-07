@@ -2,13 +2,16 @@ package io.quarkiverse.langchain4j.gemini.common;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata usageMetadata, String modelVersion,
         String responseId, PromptFeedback promptFeedback) {
 
-    public record Candidate(Content content, FinishReason finishReason) {
+    public record Candidate(Content content,
+            @JsonFormat(with = JsonFormat.Feature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) FinishReason finishReason) {
 
         public record Content(List<Part> parts) {
 
@@ -20,7 +23,7 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
 
     }
 
-    public record PromptFeedback(String blockReason) {
+    public record PromptFeedback(String blockReason, String blockReasonMessage) {
 
     }
 
@@ -31,6 +34,7 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
 
     public enum FinishReason {
 
+        @JsonEnumDefaultValue
         FINISH_REASON_UNSPECIFIED,
         STOP,
         MAX_TOKENS,
@@ -44,7 +48,8 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
         MALFORMED_FUNCTION_CALL,
         IMAGE_SAFETY,
         UNEXPECTED_TOOL_CALL,
-        TOO_MANY_TOOL_CALLS
+        TOO_MANY_TOOL_CALLS,
+        MODEL_ARMOR
 
     }
 }

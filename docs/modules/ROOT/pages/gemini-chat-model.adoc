@@ -32,3 +32,19 @@ TIP: Alternatively, you can set the `QUARKUS_LANGCHAIN4J_AI_GEMINI_API_KEY` envi
 Several configuration properties are available:
 
 include::includes/quarkus-langchain4j-ai-gemini.adoc[leveloffset=+1,opts=optional]
+== Model Armor (Vertex AI Gemini)
+
+With `quarkus-langchain4j-vertex-ai-gemini`, Vertex AI can screen prompts and responses with https://docs.cloud.google.com/security-command-center/docs/model-armor-vertex-integration[Model Armor]:
+
+[source,properties]
+----
+quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.prompt-template-name=projects/my-project/locations/europe-west4/templates/my-template
+quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.response-template-name=projects/my-project/locations/europe-west4/templates/my-template
+----
+
+* Enable the Model Armor API and grant `roles/modelarmor.user` to the Vertex AI service agent (`service-PROJECT_NUMBER@gcp-sa-aiplatform.iam.gserviceaccount.com`).
+* Use templates in the same region as the configured `location`, otherwise the request fails with `Template not found`.
+* Model Armor cannot be combined with `safetySettings`, which the extension does not send.
+* Screening fails open: if Model Armor is unavailable, the request is not screened.
+
+A blocked prompt or response raises an `IllegalArgumentException`; a blocked streamed response finishes with `CONTENT_FILTER`.

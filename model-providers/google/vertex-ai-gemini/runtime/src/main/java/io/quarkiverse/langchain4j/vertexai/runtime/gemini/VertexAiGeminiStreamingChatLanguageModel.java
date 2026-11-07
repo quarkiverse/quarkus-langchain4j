@@ -25,11 +25,13 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
     private final VertxAiGeminiRestApi.ApiMetadata apiMetadata;
     private final VertxAiGeminiRestApi restApi;
+    private final GenerateContentRequest.ModelArmorConfig modelArmorConfig;
 
     private VertexAiGeminiStreamingChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
                 builder.listeners, null, false, null, builder.useGoogleSearch);
 
+        this.modelArmorConfig = builder.modelArmorConfig;
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
                 .modelId(builder.modelId)
@@ -70,7 +72,11 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
     @Override
     protected Multi<SseEvent<String>> generateStreamContext(GenerateContentRequest request) {
-        return restApi.generateContentStream(request, apiMetadata, "sse");
+        return restApi.generateContentStream(withModelArmor(request), apiMetadata, "sse");
+    }
+
+    private GenerateContentRequest withModelArmor(GenerateContentRequest request) {
+        return modelArmorConfig == null ? request : request.withModelArmorConfig(modelArmorConfig);
     }
 
     public static Builder builder() {
@@ -96,6 +102,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
         private List<ChatModelListener> listeners = Collections.emptyList();
         private Proxy proxy;
         private boolean useGoogleSearch = false;
+        private GenerateContentRequest.ModelArmorConfig modelArmorConfig;
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
@@ -179,6 +186,11 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
         public Builder useGoogleSearch(boolean useGoogleSearch) {
             this.useGoogleSearch = useGoogleSearch;
+            return this;
+        }
+
+        public Builder modelArmorConfig(GenerateContentRequest.ModelArmorConfig modelArmorConfig) {
+            this.modelArmorConfig = modelArmorConfig;
             return this;
         }
 
