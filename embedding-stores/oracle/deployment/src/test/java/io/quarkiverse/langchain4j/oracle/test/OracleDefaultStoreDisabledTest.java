@@ -15,12 +15,12 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.oracle.QuarkusOracleEmbeddingStore;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class OracleDefaultStoreDisabledTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.oracle.default-store-enabled", "false")
             .overrideConfigKey("quarkus.langchain4j.oracle.products.enabled", "true")

@@ -35,7 +35,7 @@ import dev.langchain4j.observability.api.event.AiServiceEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.Cancellable;
 
@@ -71,7 +71,7 @@ public class StreamingCancelledEventTest {
     private static final Duration SETTLE = Duration.ofMillis(500);
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(StreamingAiService.class, EventCollector.class,
                             MyStreamingChatModelSupplier.class, SlowStreamingChatModel.class));

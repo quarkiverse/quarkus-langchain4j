@@ -36,7 +36,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 /**
@@ -46,7 +46,7 @@ import io.smallrye.mutiny.Multi;
 public class ToolExecutionModelWithStreamingPartialToolCallTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, Lists.class));
 

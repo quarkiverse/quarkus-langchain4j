@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.config.ConfigValidationException;
 
 public class ClusterSchemaMissingConfigTest {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .assertException(t -> {
                 assertThat(t.getClass().getName()).isEqualTo(ConfigValidationException.class.getName());

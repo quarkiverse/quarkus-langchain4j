@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.config.ConfigValidationException;
 
 public class ChromaNamedStoreMissingUrlTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset(
                             "quarkus.langchain4j.chroma.devservices.enabled=false\n" +

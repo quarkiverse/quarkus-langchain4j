@@ -19,12 +19,12 @@ import io.quarkiverse.langchain4j.chatscopes.ChatScopeCDIEvent;
 import io.quarkiverse.langchain4j.chatscopes.ChatScopeDeactivated;
 import io.quarkiverse.langchain4j.chatscopes.ChatScopeEnded;
 import io.quarkiverse.langchain4j.chatscopes.ChatScopeStarted;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class CdiEventTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(
                             EventHandler.class));

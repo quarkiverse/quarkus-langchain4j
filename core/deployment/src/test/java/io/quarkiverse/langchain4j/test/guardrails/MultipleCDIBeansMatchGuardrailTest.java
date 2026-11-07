@@ -11,7 +11,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailRequest;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
 import io.quarkus.arc.Unremovable;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Test that should FAIL at build time because there are multiple CDI beans that match a guardrail class.
@@ -19,7 +19,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class MultipleCDIBeansMatchGuardrailTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withApplicationRoot(root -> root.addClasses(MyTools.class, Alpha.class, Bravo.class))
             .assertException(t -> {
                 // Expect build-time validation error for non-CDI bean guardrail

@@ -10,8 +10,6 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.internal.Json;
@@ -24,6 +22,7 @@ import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import tools.jackson.databind.node.ArrayNode;
 
 public abstract class McpResourcesAsToolsTestBase {
 

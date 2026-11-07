@@ -10,13 +10,13 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class EasyRagReuseEmbeddingsFileNotSetTest extends EasyRagReuseEmbeddingsDontAlreadyExistBaseTest {
     private static final Path EMBEDDINGS_FILE = Path.of(".", "easy-rag-embeddings.json");
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.easy-rag.path=src/test/resources/ragdocuments

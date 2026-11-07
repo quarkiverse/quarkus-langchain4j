@@ -1,17 +1,15 @@
 package io.quarkiverse.langchain4j.runtime.jackson;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
-
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.UserMessage;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.exc.ValueInstantiationException;
 
 public class UserMessageDeserializer extends StdDeserializer<UserMessage> {
 
@@ -20,29 +18,28 @@ public class UserMessageDeserializer extends StdDeserializer<UserMessage> {
     }
 
     @Override
-    public UserMessage deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public UserMessage deserialize(JsonParser p, DeserializationContext ctxt) {
 
         String text = null;
         String name = null;
         List<Content> contents = null;
         while (p.nextToken() != JsonToken.END_OBJECT) {
-            String key = p.getCurrentName();
+            String key = p.currentName();
             switch (key) {
                 case "text":
-                    text = p.getText();
+                    text = p.getString();
                     break;
                 case "name":
-                    name = p.getText();
+                    name = p.getString();
                     break;
                 case "contents":
-                    if (p.currentToken() == JsonToken.FIELD_NAME) {
-                        p.nextToken();
-                    }
+                    // Move to the value if we're currently on the field name
+                    p.nextToken();
                     if (p.currentToken() != JsonToken.START_ARRAY) {
                         throw ValueInstantiationException.from(p,
                                 "Cannot construct instance of `dev.langchain4j.data.message.UserMessage`, problem: expected `"
                                         + p.currentToken() + "` to be start of array",
-                                ctxt.constructType(UserMessage.class));
+                                ctxt.getTypeFactory().constructType(UserMessage.class));
                     }
                     contents = new ArrayList<>();
                     while (p.nextToken() != JsonToken.END_ARRAY) {
@@ -69,7 +66,7 @@ public class UserMessageDeserializer extends StdDeserializer<UserMessage> {
         } else {
             throw ValueInstantiationException.from(p,
                     "Cannot construct instance of `dev.langchain4j.data.message.UserMessage`, problem: No `text` or `contents` field present",
-                    ctxt.constructType(
+                    ctxt.getTypeFactory().constructType(
                             UserMessage.class));
         }
     }

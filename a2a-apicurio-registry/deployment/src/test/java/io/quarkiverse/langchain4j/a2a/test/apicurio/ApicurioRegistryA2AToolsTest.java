@@ -30,7 +30,7 @@ import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.ProblemDetails;
 import io.apicurio.registry.rest.client.models.VersionContent;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.ApicurioAgentsRegistry;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Integration test verifying that ApicurioAgentsRegistry can connect to
@@ -70,7 +70,7 @@ public class ApicurioRegistryA2AToolsTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(
                             new StringAsset(

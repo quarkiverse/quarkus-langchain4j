@@ -22,12 +22,12 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.McpClient;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpTracingDisabledTest {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class, InMemorySpanExporterProducer.class))
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "stdio")

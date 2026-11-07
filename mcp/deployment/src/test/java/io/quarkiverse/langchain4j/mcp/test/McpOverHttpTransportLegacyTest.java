@@ -7,14 +7,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.mcp.test.mock.LegacyMcpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpOverHttpTransportLegacyTest extends AbstractMcpOverHttpTransportTest {
 
     private static final String MCP_PATH = "/mcp/transport-legacy";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMcpOverHttpTransportTest.class)
                     .addPackage(McpMockServer.class.getPackage())

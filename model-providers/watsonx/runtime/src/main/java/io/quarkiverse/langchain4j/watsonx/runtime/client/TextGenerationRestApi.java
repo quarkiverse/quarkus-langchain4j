@@ -13,19 +13,19 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.textgeneration.TextGenerationResponse;
 import com.ibm.watsonx.ai.textgeneration.TextRequest;
 
-import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 
 @Path("/ml/v1")
+@RegisterProvider(WatsonxJacksonProviders.Reader.class)
+@RegisterProvider(WatsonxJacksonProviders.Writer.class)
 public interface TextGenerationRestApi {
 
     @POST
@@ -47,11 +47,6 @@ public interface TextGenerationRestApi {
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
             @QueryParam("version") String version,
             TextRequest request);
-
-    @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
-    }
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

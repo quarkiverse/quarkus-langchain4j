@@ -26,7 +26,7 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.service.TokenStream;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * A {@code TokenStream}-returning AI service method must be given the same {@link InvocationContext} as every
@@ -37,7 +37,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class TokenStreamInvocationContextTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(StreamingAssistant.class, CapturingStreamingModelSupplier.class,
                             RequestIssuedObserver.class));

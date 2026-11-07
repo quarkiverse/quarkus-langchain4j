@@ -15,12 +15,12 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.ChatMemoryRemover;
 import io.quarkiverse.langchain4j.chatscopes.ChatScope;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @Order(2)
 public class ChatMemoryShutdownRestartTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(
                             AiService.class, FileChatMemoryStore.class, MirrorModelSupplier.class));

@@ -28,14 +28,14 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkiverse.langchain4j.skills.Skills;
 import io.quarkiverse.langchain4j.skills.runtime.DefaultSkillsConfigurator;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class SkillsCustomConfiguratorTest {
 
     private static final Path SKILLS_DIR = Path.of("src/test/resources/skills").toAbsolutePath();
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             CustomConfigurator.class,

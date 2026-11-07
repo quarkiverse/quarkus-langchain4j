@@ -1,29 +1,27 @@
 package io.quarkiverse.langchain4j.runtime.jackson;
 
-import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Often LLMs return a date as a JSON object containing the date's constituents
  */
-public class CustomLocalDateDeserializer extends JsonDeserializer<LocalDate> {
+public class CustomLocalDateDeserializer extends ValueDeserializer<LocalDate> {
 
     private static final Logger log = Logger.getLogger(CustomLocalDateDeserializer.class);
 
     @Override
-    public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) {
         if (p.currentToken() == JsonToken.START_OBJECT) {
-            JsonNode node = p.getCodec().readTree(p);
+            JsonNode node = p.readValueAsTree();
             int year = node.get("year").asInt();
             int month = node.get("month").asInt();
             int day = node.get("day").asInt();
@@ -35,7 +33,17 @@ public class CustomLocalDateDeserializer extends JsonDeserializer<LocalDate> {
                 return null;
             }
         } else {
-            return LocalDateDeserializer.INSTANCE.deserialize(p, ctxt);
+            // Standard string format (e.g., "2024-03-15")
+            String text = p.getString();
+            if (text == null || text.isEmpty()) {
+                return null;
+            }
+            try {
+                return LocalDate.parse(text);
+            } catch (DateTimeException e) {
+                log.debug("Failed to parse LocalDate from string: " + text, e);
+                return null;
+            }
         }
     }
 }

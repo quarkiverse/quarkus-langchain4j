@@ -18,7 +18,7 @@ import io.quarkiverse.langchain4j.test.ToolnameValidation.ChatToolOne;
 import io.quarkiverse.langchain4j.test.ToolnameValidation.ChatToolTwo;
 import io.quarkiverse.langchain4j.test.ToolnameValidation.MyChatMemoryProvider;
 import io.quarkiverse.langchain4j.test.ToolnameValidation.MyLanguageModel;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 // Same method name for 2 tools used in same context is not ok
 public class ToolnameValidationSameMethodNameTest {
@@ -32,7 +32,7 @@ public class ToolnameValidationSameMethodNameTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ToolnameConflict.class,
                             ChatToolOne.class, ChatToolTwo.class,

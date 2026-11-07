@@ -11,11 +11,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class QuarkusDeclarativeAiServiceOutputGuardrailsConfigBuilderFactoryNoConfigTests {
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject

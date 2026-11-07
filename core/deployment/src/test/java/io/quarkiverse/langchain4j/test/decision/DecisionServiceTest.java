@@ -27,12 +27,12 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterDecisionService;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class DecisionServiceTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(FixedDecisionModel.class));
 
     public enum Team {

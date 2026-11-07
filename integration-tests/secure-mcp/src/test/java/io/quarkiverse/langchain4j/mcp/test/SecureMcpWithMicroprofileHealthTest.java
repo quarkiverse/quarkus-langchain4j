@@ -20,7 +20,7 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.smallrye.jwt.build.Jwt;
@@ -34,7 +34,7 @@ class SecureMcpWithMicroprofileHealthTest {
     private static Process process;
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class)
                     .addAsResource("privateKey.pem"))

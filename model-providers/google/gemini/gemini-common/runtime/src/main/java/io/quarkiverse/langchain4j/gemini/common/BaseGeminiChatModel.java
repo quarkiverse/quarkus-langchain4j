@@ -5,9 +5,6 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
@@ -16,6 +13,8 @@ import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.request.json.JsonRawSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
 
 public class BaseGeminiChatModel {
 
@@ -102,7 +101,7 @@ public class BaseGeminiChatModel {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
                         jsonRawSchema.schema(), new TypeReference<>() {
                         });
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Unable to parse raw JSON schema", e);
             }
         }

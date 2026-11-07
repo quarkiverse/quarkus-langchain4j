@@ -8,7 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 @RegisterRestClient(configKey = "contracts")
 @Path("/groups/{group}/artifacts/{artifact}")

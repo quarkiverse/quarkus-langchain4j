@@ -10,10 +10,6 @@ import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteConstants;
 import io.quarkiverse.langchain4j.chatscopes.SystemFailure;
 import io.quarkiverse.langchain4j.chatscopes.websocket.WebsocketChatRoutes;
@@ -23,6 +19,9 @@ import io.quarkiverse.langchain4j.chatscopes.websocket.WebsocketChatRoutes.Sessi
 import io.quarkus.websockets.next.BasicWebSocketConnector;
 import io.quarkus.websockets.next.WebSocketClientConnection;
 import io.vertx.mutiny.core.Promise;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class ChatRouteClient implements WebsocketChatRoutes.Client {
     static Logger log = Logger.getLogger(ChatRouteClient.class);
@@ -38,7 +37,7 @@ public class ChatRouteClient implements WebsocketChatRoutes.Client {
         public <T> T get(Type type) {
             try {
                 return (T) objectMapper.treeToValue(node, objectMapper.constructType(type));
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -213,7 +212,7 @@ public class ChatRouteClient implements WebsocketChatRoutes.Client {
             try {
                 String json = objectMapper.writeValueAsString(new DisconnectEvent(chatId));
                 connection.sendTextAndAwait(json);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }

@@ -36,7 +36,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import dev.langchain4j.service.tool.search.vector.VectorToolSearchStrategy;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * The built-in {@code VectorToolSearchStrategy} must work through the {@code @RegisterAiService} pickup: given a query
@@ -48,7 +48,7 @@ public class VectorToolSearchStrategyTest {
     static final String FOUND_TOOL_NAME = "getBookingDetails";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(BookingTools.class,
                             WeatherTools.class,

@@ -18,12 +18,12 @@ import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class NamedModelModeTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             // "completion" model uses the default chat-completion mode
             .overrideConfigKey("quarkus.langchain4j.openai.completion.chat-model.mode", "chat-completion")

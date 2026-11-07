@@ -12,16 +12,17 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
 import com.ibm.watsonx.ai.gateway.image.ModelGatewayImageGenerationRequest;
 import com.ibm.watsonx.ai.gateway.image.ModelGatewayImageResponse;
 
-import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 
 @Path("/ml/gateway/v1")
+@RegisterProvider(WatsonxJacksonProviders.Reader.class)
+@RegisterProvider(WatsonxJacksonProviders.Writer.class)
 public interface GatewayImageRestApi {
 
     @POST
@@ -32,11 +33,6 @@ public interface GatewayImageRestApi {
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @QueryParam("version") String version,
             ModelGatewayImageGenerationRequest request);
-
-    @ClientObjectMapper
-    static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
-    }
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

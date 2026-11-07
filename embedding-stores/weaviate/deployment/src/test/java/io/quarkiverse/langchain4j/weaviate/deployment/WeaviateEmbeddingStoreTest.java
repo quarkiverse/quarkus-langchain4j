@@ -16,7 +16,7 @@ import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2Quantize
 import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import dev.langchain4j.store.embedding.weaviate.WeaviateEmbeddingStore;
 import io.quarkus.logging.Log;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.weaviate.client.Config;
 import io.weaviate.client.WeaviateClient;
 import io.weaviate.client.base.Result;
@@ -24,7 +24,7 @@ import io.weaviate.client.v1.data.model.WeaviateObject;
 
 class WeaviateEmbeddingStoreTest extends EmbeddingStoreIT {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(
                             new StringAsset(String.format("quarkus.langchain4j.weaviate.metadata.keys=%s",

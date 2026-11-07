@@ -12,12 +12,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class Neo4jDefaultAndNamedStoreTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.neo4j.dimension", "384")
             .overrideConfigKey("quarkus.langchain4j.neo4j.named-store.database-name", "neo4j")

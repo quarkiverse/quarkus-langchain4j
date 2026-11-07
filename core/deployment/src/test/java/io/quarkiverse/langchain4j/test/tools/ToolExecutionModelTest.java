@@ -46,7 +46,7 @@ import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.test.Lists;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
@@ -56,7 +56,7 @@ import io.vertx.core.Vertx;
 public class ToolExecutionModelTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyAiService.class, Lists.class));
 
     @Inject

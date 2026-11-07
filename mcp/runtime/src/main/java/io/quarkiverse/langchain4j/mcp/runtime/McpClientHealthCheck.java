@@ -16,7 +16,6 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 
 import dev.langchain4j.mcp.client.McpClient;
-import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientRuntimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.http.McpMicroProfileHealthCheck;
@@ -86,7 +85,7 @@ public class McpClientHealthCheck implements HealthCheck {
                 McpMicroProfileHealthCheck microProfileHealthCheck = QuarkusRestClientBuilder.newBuilder()
                         .baseUri(buildHealthUri(entry.getKey(), entry.getValue().url().get(),
                                 entry.getValue().microprofileHealthCheckPath()))
-                        .register(new JacksonBasicMessageBodyReader(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER))
+                        .register(new JacksonBasicMessageBodyReader(new tools.jackson.databind.json.JsonMapper()))
                         .build(McpMicroProfileHealthCheck.class);
                 map.put(entry.getKey(), microProfileHealthCheck);
             }

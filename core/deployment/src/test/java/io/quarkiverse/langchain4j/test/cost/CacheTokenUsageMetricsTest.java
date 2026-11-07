@@ -31,7 +31,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.quarkiverse.langchain4j.cost.CacheTokenUsage;
 import io.quarkiverse.langchain4j.cost.CacheTokenUsageExtractor;
 import io.quarkiverse.langchain4j.runtime.listeners.MetricsChatModelListener;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Exercises the full metrics chain (listener -> resolver -> discovered extractor -> counters) without a real
@@ -43,7 +43,7 @@ import io.quarkus.test.QuarkusUnitTest;
 class CacheTokenUsageMetricsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(TestProviderTokenUsage.class, TestProviderCacheTokenUsageExtractor.class));
 

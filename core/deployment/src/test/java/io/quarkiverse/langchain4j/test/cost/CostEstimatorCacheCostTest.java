@@ -28,7 +28,7 @@ import io.quarkiverse.langchain4j.cost.CacheTokenUsageResolver;
 import io.quarkiverse.langchain4j.cost.Cost;
 import io.quarkiverse.langchain4j.cost.CostEstimator;
 import io.quarkiverse.langchain4j.cost.CostEstimatorService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Proves the cost path of the hybrid design: a {@link CostEstimator} reads prompt cache tokens via the injected
@@ -38,7 +38,7 @@ import io.quarkus.test.QuarkusUnitTest;
 class CostEstimatorCacheCostTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(CacheAwareTokenUsage.class, CacheAwareExtractor.class, CacheAwareCostEstimator.class));
 

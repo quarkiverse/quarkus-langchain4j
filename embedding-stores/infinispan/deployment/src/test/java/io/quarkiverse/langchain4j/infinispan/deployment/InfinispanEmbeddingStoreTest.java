@@ -14,7 +14,7 @@ import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2Quantize
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import io.quarkiverse.langchain4j.infinispan.InfinispanEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 // Cannot extend EmbeddingStoreWithFilteringIT because it contains tests parametrized through
 // @MethodSource, which is not supported by the quarkus-junit-internal testing framework.
@@ -22,7 +22,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class InfinispanEmbeddingStoreTest extends EmbeddingStoreIT {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.infinispan.dimension=384"),
                             "application.properties"));

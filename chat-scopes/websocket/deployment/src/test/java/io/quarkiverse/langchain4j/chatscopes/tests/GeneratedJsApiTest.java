@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.chatscopes.ChatRoute;
 import io.quarkiverse.langchain4j.chatscopes.DefaultChatRoute;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 /**
@@ -30,7 +30,7 @@ public class GeneratedJsApiTest {
     private static final String API = "/_static/quarkus-chat-scopes-api/chatscopes-api.js";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyChatService.class));
 
     @ApplicationScoped

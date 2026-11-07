@@ -7,14 +7,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpHttpErrorStatusModernTest extends AbstractMcpHttpErrorStatusTest {
 
     private static final String MCP_PATH = "/mcp/http-error-status-modern";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMcpHttpErrorStatusTest.class)
                     .addPackage(McpMockServer.class.getPackage())

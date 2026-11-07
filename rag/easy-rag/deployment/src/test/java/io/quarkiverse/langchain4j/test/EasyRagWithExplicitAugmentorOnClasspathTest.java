@@ -19,12 +19,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class EasyRagWithExplicitAugmentorOnClasspathTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
                     .addAsResource(new StringAsset("""

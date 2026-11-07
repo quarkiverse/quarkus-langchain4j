@@ -19,14 +19,14 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.skills.SkillsSystemMessageProvider;
 import io.quarkiverse.langchain4j.skills.runtime.SkillsToolProvider;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class SkillsTest {
 
     private static final Path SKILLS_DIR = Path.of("src/test/resources/skills").toAbsolutePath();
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.skills.directories", SKILLS_DIR.toString());
 

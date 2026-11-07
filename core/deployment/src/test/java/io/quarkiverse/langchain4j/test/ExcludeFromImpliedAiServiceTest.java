@@ -22,12 +22,12 @@ import io.quarkiverse.langchain4j.deployment.ExcludeFromImpliedAiServiceBuildIte
 import io.quarkus.builder.BuildChainBuilder;
 import io.quarkus.builder.BuildContext;
 import io.quarkus.builder.BuildStep;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ExcludeFromImpliedAiServiceTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(ImpliedService.class, ExcludedService.class, MyLanguageModel.class))
             .addBuildChainCustomizer(buildCustomizer());

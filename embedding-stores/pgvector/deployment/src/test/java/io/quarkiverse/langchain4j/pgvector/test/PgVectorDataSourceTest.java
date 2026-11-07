@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verify use of a non-default postgresql datasource
@@ -26,7 +26,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class PgVectorDataSourceTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset(
                             // DevServicesConfigBuilderCustomizer overrides the image-name only

@@ -2,20 +2,31 @@ package io.quarkiverse.langchain4j.watsonx.runtime.spi;
 
 import static java.util.Objects.isNull;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.ibm.watsonx.ai.WatsonxJacksonModule;
 import com.ibm.watsonx.ai.core.spi.json.TypeToken;
-
-import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class JsonProvider implements com.ibm.watsonx.ai.core.spi.json.JsonProvider {
 
     private static class MapperHolder {
-        static final ObjectMapper INSTANCE = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER
-                .copy().registerModule(new WatsonxJacksonModule());
+        // The watsonx SDK ships WatsonxJacksonModule as a Jackson 2 module, so this integration stays on Jackson 2
+        // (self-contained, not derived from the now-Jackson-3 QuarkusJsonCodecFactory holders) until the SDK
+        // provides a Jackson 3 module. Snake_case + NON_NULL match the previous SnakeCaseObjectMapperHolder config.
+        static final ObjectMapper INSTANCE = JsonMapper.builder()
+                .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
+                .addModule(new WatsonxJacksonModule())
+                .build();
     }
 
     public static ObjectMapper MAPPER = MapperHolder.INSTANCE;

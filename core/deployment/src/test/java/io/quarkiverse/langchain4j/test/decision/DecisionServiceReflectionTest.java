@@ -23,7 +23,7 @@ import io.quarkus.builder.BuildContext;
 import io.quarkus.builder.BuildStep;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * The types that upstream reads by reflection to implement a Decision Service are registered for the native image. The
@@ -32,7 +32,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class DecisionServiceReflectionTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(FixedDecisionModel.class))
             .addBuildChainCustomizer(checkRegistrations());
 

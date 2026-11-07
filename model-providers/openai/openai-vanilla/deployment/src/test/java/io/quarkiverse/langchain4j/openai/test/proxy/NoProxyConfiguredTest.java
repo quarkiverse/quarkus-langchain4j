@@ -15,12 +15,12 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class NoProxyConfiguredTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     WiremockAware.wiremockUrlForConfig("/v1"));

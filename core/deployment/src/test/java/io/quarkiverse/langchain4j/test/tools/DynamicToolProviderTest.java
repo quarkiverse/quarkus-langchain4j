@@ -36,7 +36,7 @@ import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 /**
@@ -46,7 +46,7 @@ import io.smallrye.mutiny.Multi;
 public class DynamicToolProviderTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(BlockingAssistant.class, StreamingAssistant.class, DynamicToolProviderSupplier.class,
                             ChatModelSupplier.class, StreamingChatModelSupplier.class));

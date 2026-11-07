@@ -4,8 +4,7 @@ import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.ibm.watsonx.ai.tool.builtin.GoogleSearchTool;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -17,9 +16,9 @@ public class Tools {
     GoogleSearchTool googleSearchService;
 
     @Inject
-    ObjectMapper objectMapper;
+    JsonMapper objectMapper;
 
-    public String googleSearch(String input) throws JsonProcessingException {
+    public String googleSearch(String input) {
         return objectMapper.writeValueAsString(googleSearchService.search(input));
     }
 

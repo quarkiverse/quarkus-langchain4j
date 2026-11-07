@@ -13,14 +13,13 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.planner.AgentInstance;
 import dev.langchain4j.agentic.planner.AgentsRegistry;
 import io.apicurio.registry.rest.client.RegistryClient;
 import io.apicurio.registry.rest.client.models.SearchedArtifact;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
+import tools.jackson.databind.JsonNode;
 
 public class ApicurioAgentsRegistry implements AgentsRegistry {
 

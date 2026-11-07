@@ -10,7 +10,7 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 /**
  * This class is used instead of {@link io.quarkiverse.wiremock.devservice.ConnectWireMock} because the latter does not
- * work well with {@code QuarkusUnitTest}
+ * work well with {@code QuarkusExtensionTest}
  */
 public abstract class WiremockAware {
 

@@ -13,9 +13,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -31,6 +28,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import tools.jackson.core.type.TypeReference;
 
 // TODO: this could use a lot of refactoring
 final class MessageMapper {
@@ -88,25 +86,21 @@ final class MessageMapper {
                         .build();
             }
 
-            try {
-                List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
-                List<ToolCall> toolCalls = new ArrayList<>(toolExecutionRequests.size());
-                for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-                    String argumentsStr = toolExecutionRequest.arguments();
-                    String name = toolExecutionRequest.name();
-                    // TODO: we need to update LangChain4j to make ToolExecutionRequest use a map instead of a String
-                    Map<String, Object> arguments = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(argumentsStr,
-                            Map.class);
-                    toolCalls.add(ToolCall.fromFunctionCall(name, arguments));
-                }
-
-                return Message.builder()
-                        .role(toOllamaRole(ChatMessageType.AI))
-                        .toolCalls(toolCalls)
-                        .build();
-            } catch (JsonProcessingException e) {
-                throw new IllegalStateException("Unable to perform conversion of tool response", e);
+            List<ToolExecutionRequest> toolExecutionRequests = aiMessage.toolExecutionRequests();
+            List<ToolCall> toolCalls = new ArrayList<>(toolExecutionRequests.size());
+            for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
+                String argumentsStr = toolExecutionRequest.arguments();
+                String name = toolExecutionRequest.name();
+                // TODO: we need to update LangChain4j to make ToolExecutionRequest use a map instead of a String
+                Map<String, Object> arguments = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(argumentsStr,
+                        Map.class);
+                toolCalls.add(ToolCall.fromFunctionCall(name, arguments));
             }
+
+            return Message.builder()
+                    .role(toOllamaRole(ChatMessageType.AI))
+                    .toolCalls(toolCalls)
+                    .build();
         }
 
         if (message instanceof ToolExecutionResultMessage) {

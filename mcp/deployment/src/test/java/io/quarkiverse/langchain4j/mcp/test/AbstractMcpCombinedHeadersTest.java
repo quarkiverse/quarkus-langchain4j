@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.mcp.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -12,8 +11,6 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
@@ -27,6 +24,9 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpTool;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Headers configured through {@code quarkus.langchain4j.mcp.<name>.header.*} and a
@@ -124,7 +124,7 @@ public abstract class AbstractMcpCombinedHeadersTest extends WiremockAware {
         try {
             JsonNode message = MAPPER.readTree(body);
             return message.path("method").asText(null);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             return null;
         }
     }

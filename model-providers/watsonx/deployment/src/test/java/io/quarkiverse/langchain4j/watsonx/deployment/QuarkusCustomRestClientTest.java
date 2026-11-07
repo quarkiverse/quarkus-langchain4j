@@ -59,12 +59,12 @@ import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusTextGenerat
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusTimeSeriesRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusTokenizationRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusToolRestClient;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class QuarkusCustomRestClientTest {
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Test

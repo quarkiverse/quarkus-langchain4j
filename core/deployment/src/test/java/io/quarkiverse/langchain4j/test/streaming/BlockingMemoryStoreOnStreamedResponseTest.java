@@ -21,16 +21,17 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
+import io.vertx.core.internal.ContextInternal;
 
 public class BlockingMemoryStoreOnStreamedResponseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(StreamTestUtils.class));
 
@@ -58,12 +59,12 @@ public class BlockingMemoryStoreOnStreamedResponseTest {
     void testFromDuplicatedContextThread() throws InterruptedException {
         Context context = VertxContext.getOrCreateDuplicatedContext(vertx);
         CountDownLatch latch = new CountDownLatch(1);
-        context.executeBlocking(v -> {
+        context.executeBlocking(() -> {
             try {
                 Arc.container().requestContext().activate();
                 var value = UUID.randomUUID().toString();
                 StreamTestUtils.FakeMemoryStore.DC_DATA = value;
-                Vertx.currentContext().putLocal("DC_DATA", value);
+                ((ContextInternal) Vertx.currentContext()).putLocal("DC_DATA", value);
                 List<String> list = service.hi("123", "Say hello").collect().asList().await().indefinitely();
                 assertThat(list).containsExactly("Hi!", " ", "World!");
                 Arc.container().requestContext().deactivate();
@@ -76,9 +77,10 @@ public class BlockingMemoryStoreOnStreamedResponseTest {
 
             } finally {
                 Arc.container().requestContext().deactivate();
-                Vertx.currentContext().removeLocal("DC_DATA");
+                ((ContextInternal) Vertx.currentContext()).removeLocal("DC_DATA");
 
             }
+            return null;
         }, false);
         assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
     }

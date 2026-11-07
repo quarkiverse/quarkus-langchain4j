@@ -12,9 +12,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpTools;
+import tools.jackson.databind.ObjectMapper;
 
 class DiscoveredWeatherTest {
     @Test

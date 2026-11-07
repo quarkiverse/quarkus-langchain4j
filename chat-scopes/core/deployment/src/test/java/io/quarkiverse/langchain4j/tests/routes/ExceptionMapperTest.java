@@ -17,7 +17,7 @@ import io.quarkiverse.langchain4j.chatscopes.ChatRouteContext;
 import io.quarkiverse.langchain4j.chatscopes.ChatRouteExceptionHandler;
 import io.quarkiverse.langchain4j.chatscopes.ChatRoutes;
 import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ExceptionMapperTest {
     public static class MyException extends RuntimeException {
@@ -25,7 +25,7 @@ public class ExceptionMapperTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(
                             MyChat.class, MyException.class));

@@ -16,7 +16,7 @@ import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.output.structured.Description;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that a class-level {@link Description} on a complex tool-parameter type reaches the generated
@@ -25,7 +25,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolParameterClassDescriptionTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Description("A customer order")

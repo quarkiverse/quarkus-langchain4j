@@ -25,7 +25,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.faulttolerance.api.BeforeRetry;
 import io.smallrye.faulttolerance.api.BeforeRetryHandler;
 import io.smallrye.faulttolerance.api.ExponentialBackoff;
@@ -49,7 +49,7 @@ public class AiServiceFaultToleranceAnnotationsTest {
     private static final int BACKOFF_FACTOR = 10;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(Assistant.class, FailingChatModel.class, FailingChatModelSupplier.class,
                             CountingBeforeRetryHandler.class));

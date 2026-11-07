@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -28,6 +26,7 @@ import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientOptions;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Provides tools for discovering and connecting to MCP servers registered in Apicurio Registry.
@@ -186,7 +185,7 @@ public class ApicurioRegistryMcpTools {
         JsonNode remotes = server.get("remotes");
         if (remotes != null && remotes.isArray() && !remotes.isEmpty()) {
             String sseUrl = null;
-            for (JsonNode remote : (Iterable<JsonNode>) remotes::elements) {
+            for (JsonNode remote : remotes) {
                 JsonNode type = remote.get("type");
                 JsonNode url = remote.get("url");
                 if (type == null || url == null || url.asText().isBlank()) {

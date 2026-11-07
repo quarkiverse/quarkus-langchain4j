@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.Tool;
 import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Check the tools usage when using the Request Scope
@@ -24,7 +24,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolsRequestScopeTest extends ToolsScopeTestBase {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyToolImpl.class, MyApp.class));
 
     @Inject

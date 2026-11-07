@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.skills.SkillsSystemMessageProvider;
 import io.quarkiverse.langchain4j.skills.runtime.SkillsToolProvider;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * The extension registers a {@link SkillsToolProvider} bean unconditionally, so the bean is present
@@ -23,7 +23,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class SkillsWithoutDirectoriesTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject

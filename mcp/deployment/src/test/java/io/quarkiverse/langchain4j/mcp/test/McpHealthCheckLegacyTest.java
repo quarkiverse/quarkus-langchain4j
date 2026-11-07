@@ -7,14 +7,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.mcp.test.mock.LegacyMcpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpHealthCheckLegacyTest extends AbstractMcpHealthCheckTest {
 
     private static final String MCP_PATH = "/mcp/health-check-legacy";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMcpHealthCheckTest.class)
                     .addPackage(McpMockServer.class.getPackage())

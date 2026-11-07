@@ -20,11 +20,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.exception.RateLimitException;
 import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.QuarkusHttpException;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class AnthropicRateLimitSmokeTest extends AnthropicSmokeTest {
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));

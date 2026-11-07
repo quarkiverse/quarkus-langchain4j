@@ -8,7 +8,7 @@ import jakarta.ws.rs.WebApplicationException;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 /** Observes version metadata for the walkthrough. Registry enforces compatibility when content is published. */
 @ApplicationScoped

@@ -28,7 +28,7 @@ import io.apicurio.registry.rest.client.models.CreateVersion;
 import io.apicurio.registry.rest.client.models.Labels;
 import io.apicurio.registry.rest.client.models.VersionContent;
 import io.quarkiverse.langchain4j.mcp.runtime.apicurio.ApicurioRegistryMcpTools;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ApicurioRegistryMcpToolsTest {
@@ -59,7 +59,7 @@ public class ApicurioRegistryMcpToolsTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(McpServerHelper.class)
                     .addAsResource(
