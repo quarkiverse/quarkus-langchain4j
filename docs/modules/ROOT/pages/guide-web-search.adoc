@@ -37,6 +37,23 @@ WebSearchEngine engine;
 
 You can now use it directly in your application via the `search` method, or make it available to the LLM using tools or RAG.
 
+== Proxy and TLS
+
+Requests to Tavily can go through a proxy from the Quarkus Proxy Registry, and use a named configuration from the Quarkus TLS Registry:
+
+[source,properties]
+----
+quarkus.langchain4j.tavily.proxy-configuration-name=tavily
+quarkus.proxy."tavily".host=proxy.example.com
+quarkus.proxy."tavily".port=3128
+
+quarkus.langchain4j.tavily.tls-configuration-name=tavily
+quarkus.tls.tavily.trust-store.p12.path=truststore.p12
+quarkus.tls.tavily.trust-store.p12.password=secret
+----
+
+When no proxy configuration name is set, the default `quarkus.proxy.*` configuration is used if present.
+
 == Using Tavily as a Tool
 
 You can expose web search to the LLM as a tool in a function calling setup. This allows the model to invoke the search when needed and incorporate the results in its response.
