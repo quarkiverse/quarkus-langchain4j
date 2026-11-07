@@ -95,4 +95,30 @@ public interface ChatModelConfig {
     @WithDefault("${quarkus.langchain4j.vertexai.gemini.timeout}")
     Optional<Duration> timeout();
 
+    /**
+     * Model Armor templates used by Vertex AI to screen prompts and responses.
+     *
+     * @see <a href=
+     *      "https://docs.cloud.google.com/security-command-center/docs/model-armor-vertex-integration">Model Armor
+     *      integration with Vertex AI</a>
+     */
+    ModelArmorConfig modelArmor();
+
+    @ConfigGroup
+    interface ModelArmorConfig {
+
+        /**
+         * The Model Armor template used to screen prompts, in the form
+         * {@code projects/{project}/locations/{location}/templates/{template}}.
+         * The template must be in the same location as the model.
+         */
+        Optional<String> promptTemplateName();
+
+        /**
+         * The Model Armor template used to screen responses, in the form
+         * {@code projects/{project}/locations/{location}/templates/{template}}.
+         * The template must be in the same location as the model.
+         */
+        Optional<String> responseTemplateName();
+    }
 }

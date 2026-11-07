@@ -21,7 +21,9 @@ import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
+import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
@@ -148,6 +150,7 @@ public class VertexAiGeminiRecorder {
             if (chatModelConfig.timeout().isPresent()) {
                 builder.timeout(chatModelConfig.timeout().get());
             }
+            builder.modelArmorConfig(toModelArmorConfig(chatModelConfig.modelArmor()));
 
             // TODO: add the rest of the properties
             return new Function<>() {
@@ -217,6 +220,7 @@ public class VertexAiGeminiRecorder {
             if (chatModelConfig.timeout().isPresent()) {
                 builder.timeout(chatModelConfig.timeout().get());
             }
+            builder.modelArmorConfig(toModelArmorConfig(chatModelConfig.modelArmor()));
 
             // TODO: add the rest of the properties
             return new Function<>() {
@@ -255,5 +259,13 @@ public class VertexAiGeminiRecorder {
                 "SRCFG00014: The config property quarkus.langchain4j.vertexai.gemini%s%s is required but it could not be found in any config source"
                         .formatted(
                                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    private static GenerateContentRequest.ModelArmorConfig toModelArmorConfig(ChatModelConfig.ModelArmorConfig config) {
+        if (config.promptTemplateName().isEmpty() && config.responseTemplateName().isEmpty()) {
+            return null;
+        }
+        return new GenerateContentRequest.ModelArmorConfig(config.promptTemplateName().orElse(null),
+                config.responseTemplateName().orElse(null));
     }
 }

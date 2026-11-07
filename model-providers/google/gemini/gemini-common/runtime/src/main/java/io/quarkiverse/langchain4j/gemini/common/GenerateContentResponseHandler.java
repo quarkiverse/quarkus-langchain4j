@@ -20,6 +20,8 @@ public final class GenerateContentResponseHandler {
             throw new IllegalArgumentException("The response is blocked due to safety reason.");
         } else if (finishReason == GenerateContentResponse.FinishReason.RECITATION) {
             throw new IllegalArgumentException("The response is blocked due to unauthorized citations.");
+        } else if (finishReason == GenerateContentResponse.FinishReason.MODEL_ARMOR) {
+            throw new IllegalArgumentException("The response is blocked by Model Armor.");
         }
 
         StringBuilder text = new StringBuilder();
@@ -44,6 +46,8 @@ public final class GenerateContentResponseHandler {
             throw new IllegalArgumentException("The response is blocked due to safety reason.");
         } else if (finishReason == GenerateContentResponse.FinishReason.RECITATION) {
             throw new IllegalArgumentException("The response is blocked due to unauthorized citations.");
+        } else if (finishReason == GenerateContentResponse.FinishReason.MODEL_ARMOR) {
+            throw new IllegalArgumentException("The response is blocked by Model Armor.");
         }
 
         StringBuilder text = new StringBuilder();
@@ -65,8 +69,9 @@ public final class GenerateContentResponseHandler {
     public static GenerateContentResponse.FinishReason getFinishReason(GenerateContentResponse response) {
         int candidateCount = response.candidates() == null ? 0 : response.candidates().size();
         if (candidateCount == 0 && response.promptFeedback() != null && response.promptFeedback().blockReason() != null) {
-            throw new IllegalArgumentException(
-                    "The prompt is blocked with reason " + response.promptFeedback().blockReason() + ".");
+            String message = response.promptFeedback().blockReasonMessage();
+            throw new IllegalArgumentException("The prompt is blocked with reason " + response.promptFeedback().blockReason()
+                    + "." + (message != null ? " " + message : ""));
         }
         if (candidateCount != 1) {
             throw new IllegalArgumentException(

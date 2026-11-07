@@ -184,6 +184,7 @@ class GeminiStreamingResponseBuilder {
             case SPII:
             case SAFETY:
             case LANGUAGE:
+            case MODEL_ARMOR:
                 return FinishReason.CONTENT_FILTER;
             case MAX_TOKENS:
                 return FinishReason.LENGTH;
