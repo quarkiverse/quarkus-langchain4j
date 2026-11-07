@@ -90,10 +90,5 @@ public interface LangChain4jOllamaConfig {
          * Embedding model related settings
          */
         EmbeddingModelConfig embeddingModel();
-
-        /**
-         * Decision model related settings
-         */
-        DecisionModelConfig decisionModel();
     }
 }

@@ -49,24 +49,21 @@ import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMess
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
+import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.openai.internal.audio.transcription.OpenAiAudioTranscriptionResponse;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
 import dev.langchain4j.model.openai.internal.completion.CompletionResponse;
-import dev.langchain4j.model.openai.internal.decision.DecisionCreateRequest;
-import dev.langchain4j.model.openai.internal.decision.DecisionCreateResponse;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingResponse;
 import dev.langchain4j.model.openai.internal.image.GenerateImagesRequest;
 import dev.langchain4j.model.openai.internal.image.GenerateImagesResponse;
 import dev.langchain4j.model.openai.internal.moderation.ModerationRequest;
 import dev.langchain4j.model.openai.internal.moderation.ModerationResponse;
-import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
-import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
@@ -179,20 +176,6 @@ public interface OpenAiRestApi {
     @POST
     ModerationResponse blockingModeration(ModerationRequest request, @BeanParam ApiMetadata input);
 
-    /**
-     * Perform a non-blocking request to the Decisions API
-     */
-    @Path("decisions")
-    @POST
-    Uni<DecisionCreateResponse> decision(DecisionCreateRequest request, @BeanParam ApiMetadata input);
-
-    /**
-     * Perform a blocking request to the Decisions API
-     */
-    @Path("decisions")
-    @POST
-    DecisionCreateResponse blockingDecision(DecisionCreateRequest request, @BeanParam ApiMetadata input);
-
     @Path("images/generations")
     @POST
     GenerateImagesResponse blockingImagesGenerations(GenerateImagesRequest request, @BeanParam ApiMetadata input);
@@ -219,8 +202,7 @@ public interface OpenAiRestApi {
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            return new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
-                    response.getStringHeaders());
+            return new HttpException(response.getStatus(), response.readEntity(String.class));
         }
         return null;
     }
@@ -359,11 +341,6 @@ public interface OpenAiRestApi {
                 if (r.id() == null) {
                     throw new OpenAiApiException(ModerationResponse.class);
                 }
-            } else if (result instanceof DecisionCreateResponse r) {
-                // the response has no id, so the presence of the answers is the only sign of a valid response
-                if (r.answers == null) {
-                    throw new OpenAiApiException(DecisionCreateResponse.class);
-                }
             }
             return result;
         }
@@ -475,12 +452,40 @@ public interface OpenAiRestApi {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
-                            headerValue = SensitiveHeaderMasker.mask(headerValue);
-                        }
+                        headerValue = switch (headerKey) {
+                            case "Authorization", "api-key" -> maskHeaderValue(headerValue);
+                            case "Set-Cookie" -> maskCookieHeaderValue(headerValue);
+                            default -> headerValue;
+                        };
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));
+        }
+
+        private static String maskHeaderValue(String apiKeyHeaderValue) {
+            try {
+                if (apiKeyHeaderValue.length() <= 4) {
+                    return apiKeyHeaderValue;
+                }
+                return apiKeyHeaderValue.substring(0, 2)
+                        + "..."
+                        + apiKeyHeaderValue.substring(apiKeyHeaderValue.length() - 2);
+            } catch (Exception e) {
+                return "Failed to mask the API key.";
+            }
+        }
+
+        private static String maskCookieHeaderValue(String cookieHeaderValue) {
+            try {
+                if (cookieHeaderValue.length() <= 4) {
+                    return cookieHeaderValue;
+                }
+                return cookieHeaderValue.substring(0, 2)
+                        + "..."
+                        + cookieHeaderValue.substring(cookieHeaderValue.length() - 2);
+            } catch (Exception e) {
+                return "Failed to mask the cookie value.";
+            }
         }
     }
 

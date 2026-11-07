@@ -98,7 +98,6 @@ class ToolGuardrailServiceTest {
                 spec,
                 "TestMapper",
                 ToolMethodCreateInfo.ExecutionModel.BLOCKING,
-                false,
                 null,
                 inputGuardrails,
                 outputGuardrails);

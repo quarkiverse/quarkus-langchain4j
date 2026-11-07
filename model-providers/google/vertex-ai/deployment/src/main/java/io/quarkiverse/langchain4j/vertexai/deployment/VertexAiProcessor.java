@@ -12,7 +12,6 @@ import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
-import org.jboss.logging.Logger;
 
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -35,8 +34,6 @@ import io.smallrye.config.Priorities;
 
 public class VertexAiProcessor {
 
-    private static final Logger LOG = Logger.getLogger(VertexAiProcessor.class);
-
     private static final String FEATURE = "langchain4j-vertexai";
     private static final String PROVIDER = "vertexai";
 
@@ -47,9 +44,6 @@ public class VertexAiProcessor {
 
     @BuildStep
     FeatureBuildItem feature() {
-        LOG.warn("The quarkus-langchain4j-vertex-ai extension is deprecated and will be removed in a future release,"
-                + " because the PaLM models it calls, such as chat-bison, are no longer available on Vertex AI."
-                + " Use quarkus-langchain4j-vertex-ai-gemini instead.");
         return new FeatureBuildItem(FEATURE);
     }
 

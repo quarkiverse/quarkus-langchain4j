@@ -5,12 +5,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.invocation.InvocationContext;
-import dev.langchain4j.invocation.InvocationEnd;
-import dev.langchain4j.observability.api.event.AiServiceCancelledEvent;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.smallrye.common.vertx.VertxContext;
@@ -24,8 +21,6 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private final List<ChatMessage> messagesToSend;
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolsExecutors;
-    private final Map<String, ReturnBehavior> toolReturnBehaviors;
-    private final DynamicToolProviders dynamicToolProviders;
     private final List<Content> contents;
     private final QuarkusAiServiceContext context;
     private final InvocationContext invocationContext;
@@ -36,8 +31,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private final Object[] methodArgs;
 
     TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
-            Map<String, ToolExecutor> toolExecutors, Map<String, ReturnBehavior> toolReturnBehaviors,
-            DynamicToolProviders dynamicToolProviders,
+            Map<String, ToolExecutor> toolExecutors,
             List<Content> contents, QuarkusAiServiceContext context, InvocationContext invocationContext, Object memoryId,
             boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread,
             AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs) {
@@ -45,8 +39,6 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         this.messagesToSend = messagesToSend;
         this.toolSpecifications = toolSpecifications;
         this.toolsExecutors = toolExecutors;
-        this.toolReturnBehaviors = toolReturnBehaviors;
-        this.dynamicToolProviders = dynamicToolProviders;
         this.contents = contents;
         this.context = context;
         this.invocationContext = invocationContext;
@@ -79,7 +71,6 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         Multi<ChatEvent> cancellableMulti = processor.onCancellation().invoke(() -> {
             cancelled.set(true);
             stream.getStreamingHandle().cancel();
-            fireCancelledEvent();
         });
 
         cancellableMulti.subscribe(subscriber);
@@ -88,29 +79,10 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         startTokenStream(stream, vertxContext);
     }
 
-    /**
-     * Reports the end of this invocation with an {@link AiServiceCancelledEvent}, mirroring upstream
-     * {@code dev.langchain4j.service.TerminalEvents#fireCancelled}. Without it a cancelled subscription ended the
-     * invocation with no terminal event at all, so an observer pairing
-     * {@code AiServiceStartedEvent} with a completed/error event never saw this invocation finish.
-     * <p>
-     * {@link InvocationEnd} keeps it to exactly one terminal event per invocation, so a completion or a provider
-     * error that lands after the cancellation is dropped rather than fired on top of this one.
-     */
-    private void fireCancelledEvent() {
-        if (!InvocationEnd.markEnded(invocationContext)) {
-            return;
-        }
-        context.eventListenerRegistrar.fireEvent(AiServiceCancelledEvent.builder()
-                .invocationContext(invocationContext)
-                .build());
-    }
-
     private QuarkusAiServiceTokenStream createTokenStream(UnicastProcessor<ChatEvent> processor, Context vertxContext,
             AtomicBoolean cancelled) {
         QuarkusAiServiceTokenStream stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
-                toolsExecutors, toolReturnBehaviors, dynamicToolProviders, contents, context, invocationContext, memoryId,
-                vertxContext,
+                toolsExecutors, contents, context, invocationContext, memoryId, vertxContext,
                 switchToWorkerThreadForToolExecution, isCallerRunningOnWorkerThread, methodCreateInfo, methodArgs, cancelled);
         stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))

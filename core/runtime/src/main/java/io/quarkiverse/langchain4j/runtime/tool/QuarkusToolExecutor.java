@@ -1,11 +1,8 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
-import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
@@ -18,9 +15,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.Content;
-import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.invocation.InvocationContext;
@@ -132,16 +126,9 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 invocationResult = ((Uni<?>) invocationResult).await().indefinitely();
             }
             if (invocationResult instanceof ToolExecutionResult ter) {
-                // resultContents(), not resultText(): the latter throws when the tool returned image or
-                // multiple content elements, and debugv evaluates its arguments eagerly
-                log.debugv("Tool execution result passed through. result: {0} | resultContents: {1}", ter.result(),
-                        ter.resultContents());
+                log.debugv("Tool execution result passed through. result: {0} | resultText: {1}", ter.result(),
+                        ter.resultText());
                 return ter;
-            }
-            List<Content> resultContents = toContents(invocationResult);
-            if (resultContents != null) {
-                log.debugv("Tool execution result contents: {0}", resultContents);
-                return ToolExecutionResult.builder().result(invocationResult).resultContents(resultContents).build();
             }
             String result = handleResult(invokerInstance, invocationResult);
             log.debugv("Tool execution result: {0}", result);
@@ -158,33 +145,6 @@ public class QuarkusToolExecutor implements ToolExecutor {
     }
 
     /**
-     * Converts a tool invocation result that already is, or is made of, {@link Content} elements into the
-     * contents sent back to the model, mirroring {@code DefaultToolExecutor#toContents}. Returns {@code null}
-     * when the result is not content-shaped, in which case it is rendered as text by
-     * {@link #handleResult(ToolInvoker, Object)} instead.
-     * <p>
-     * Without this, an {@code Image}- or {@code Content}-returning {@code @Tool} method would be
-     * JSON-serialized into the tool result text, so the model would never actually receive the image.
-     */
-    private static List<Content> toContents(Object invocationResult) {
-        if (invocationResult == null) {
-            return null;
-        }
-        if (invocationResult instanceof Image image) {
-            return List.of(ImageContent.from(image));
-        } else if (invocationResult instanceof Content content) {
-            return List.of(content);
-        } else if (invocationResult instanceof Collection<?> collection
-                && !collection.isEmpty()
-                && collection.iterator().next() instanceof Content) {
-            return collection.stream().map(Content.class::cast).toList();
-        } else if (invocationResult instanceof Content[] array) {
-            return List.of(array);
-        }
-        return null;
-    }
-
-    /**
      * Converts a tool invocation result into the text sent back to the model, mirroring
      * {@code DefaultToolExecutor}: {@code void} becomes {@code "Success"}, a {@link String} is passed through
      * unchanged, anything else is JSON-encoded. A {@code Uni<String>} is passed through as well, since it has
@@ -197,12 +157,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
         if (invocationResult instanceof String string) {
             return string;
         }
-        try {
-            // Keep tool results compact without changing the general JSON codec's formatting.
-            return QuarkusJsonCodecFactory.ObjectMapperHolder.COMPACT_WRITER.writeValueAsString(invocationResult);
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
+        return Json.toJson(invocationResult);
     }
 
     // TODO: cache
@@ -283,9 +238,6 @@ public class QuarkusToolExecutor implements ToolExecutor {
         Object invocationParams = invocationContext.invocationParameters();
         if (invocationParams != null && methodMetadata.getInvocationParamsParamPosition() != null) {
             finalArgs[methodMetadata.getInvocationParamsParamPosition()] = invocationParams;
-        }
-        if (methodMetadata.getInvocationContextParamPosition() != null) {
-            finalArgs[methodMetadata.getInvocationContextParamPosition()] = invocationContext;
         }
         return finalArgs;
     }

@@ -30,8 +30,6 @@ import static java.util.Objects.nonNull;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.inject.Inject;
@@ -174,7 +172,6 @@ public abstract class WireMockAbstract {
         private int status;
         private Integer dribbleChunks;
         private Duration dribbleDuration;
-        private final Map<String, String> responseHeaders = new LinkedHashMap<>();
 
         protected ServerBuilder(RequestMethod method, String apiURL, int status, String version) {
             this.builder = switch (method.getName()) {
@@ -238,11 +235,6 @@ public abstract class WireMockAbstract {
             return this;
         }
 
-        public ServerBuilder responseHeader(String name, String value) {
-            this.responseHeaders.put(name, value);
-            return this;
-        }
-
         public ServerBuilder chunkedDribbleDelay(int chunks, Duration duration) {
             this.dribbleChunks = chunks;
             this.dribbleDuration = duration;
@@ -254,9 +246,6 @@ public abstract class WireMockAbstract {
                     .withStatus(status)
                     .withHeader("Content-Type", responseMediaType)
                     .withBody(response);
-
-            for (Map.Entry<String, String> header : responseHeaders.entrySet())
-                responseDefinition.withHeader(header.getKey(), header.getValue());
 
             if (nonNull(dribbleChunks))
                 responseDefinition.withChunkedDribbleDelay(dribbleChunks, (int) dribbleDuration.toMillis());

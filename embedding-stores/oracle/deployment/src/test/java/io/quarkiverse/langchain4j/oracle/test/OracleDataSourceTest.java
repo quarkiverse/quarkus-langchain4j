@@ -29,7 +29,7 @@ public class OracleDataSourceTest {
             .overrideConfigKey("quarkus.datasource.embeddingsds.db-kind", "oracle")
             .overrideConfigKey("quarkus.langchain4j.oracle.datasource", "embeddingsds")
             .overrideRuntimeConfigKey("quarkus.langchain4j.oracle.create-option", "CREATE_OR_REPLACE")
-            .overrideConfigKey("quarkus.class-loading.parent-first-artifacts", "ai.djl.huggingface:tokenizers,ai.djl:api");
+            .overrideConfigKey("quarkus.class-loading.parent-first-artifacts", "ai.djl.huggingface:tokenizers");
 
     @DataSource("embeddingsds")
     AgroalDataSource ds;

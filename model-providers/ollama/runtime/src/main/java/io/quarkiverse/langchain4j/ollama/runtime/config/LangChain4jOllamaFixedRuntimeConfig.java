@@ -41,10 +41,5 @@ public interface LangChain4jOllamaFixedRuntimeConfig {
          * Embedding model related settings
          */
         EmbeddingModelFixedRuntimeConfig embeddingModel();
-
-        /**
-         * Decision model related settings
-         */
-        DecisionModelFixedRuntimeConfig decisionModel();
     }
 }

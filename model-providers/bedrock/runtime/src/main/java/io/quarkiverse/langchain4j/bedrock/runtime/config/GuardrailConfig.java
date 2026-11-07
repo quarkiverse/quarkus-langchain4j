@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.bedrock.runtime.config;
 
 import java.util.Optional;
 
-import dev.langchain4j.model.bedrock.BedrockGuardContentPlacement;
 import dev.langchain4j.model.bedrock.BedrockGuardrailConfiguration;
 import io.quarkus.runtime.annotations.ConfigGroup;
 
@@ -29,12 +28,4 @@ public interface GuardrailConfig {
      *      behavior</a>
      */
     Optional<BedrockGuardrailConfiguration.ProcessingMode> streamProcessingMode();
-
-    /**
-     * Controls which user messages receive the Bedrock {@code guardContent} qualifier. Possible values are
-     * {@code LAST_USER_MESSAGE} and {@code ALL_USER_MESSAGES}.
-     *
-     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html">Amazon Bedrock Guardrails</a>
-     */
-    Optional<BedrockGuardContentPlacement> guardContentPlacement();
 }

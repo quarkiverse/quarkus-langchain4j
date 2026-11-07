@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.quarkiverse.langchain4j</groupId>
+        <artifactId>quarkus-langchain4j-parent</artifactId>
+        <version>999-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>quarkus-langchain4j-gpu-llama3-parent</artifactId>
+    <name>Quarkus LangChain4j - GPULlama3.java - Parent</name>
+    <packaging>pom</packaging>
+
+    <properties>
+        <!-- Align the compiler release with the running JDK so preview-enabled dependencies link on JDK 21 and 24 builds -->
+        <maven.compiler.release>${java.specification.version}</maven.compiler.release>
+    </properties>
+
+    <modules>
+        <module>runtime</module>
+        <module>deployment</module>
+    </modules>
+</project>

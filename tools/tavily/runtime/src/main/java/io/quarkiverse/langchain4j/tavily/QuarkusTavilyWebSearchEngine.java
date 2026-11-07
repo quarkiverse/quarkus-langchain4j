@@ -9,11 +9,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
-import jakarta.ws.rs.core.UriBuilder;
-import jakarta.ws.rs.core.UriBuilderException;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
@@ -24,7 +20,6 @@ import dev.langchain4j.web.search.WebSearchInformationResult;
 import dev.langchain4j.web.search.WebSearchOrganicResult;
 import dev.langchain4j.web.search.WebSearchRequest;
 import dev.langchain4j.web.search.WebSearchResults;
-import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkiverse.langchain4j.tavily.runtime.TavilyClient;
 import io.quarkiverse.langchain4j.tavily.runtime.TavilyResponse;
 import io.quarkiverse.langchain4j.tavily.runtime.TavilySearchRequest;
@@ -36,8 +31,6 @@ import io.vertx.core.http.HttpClientResponse;
 
 // TODO: use the upstream implementation once it doesn't depend on OkHttp etc.
 public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
-
-    private static final Logger log = Logger.getLogger(QuarkusTavilyWebSearchEngine.class);
 
     private final TavilyClient tavilyClient;
     private final String apiKey;
@@ -97,7 +90,6 @@ public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
 
         final List<WebSearchOrganicResult> results = tavilyResponse.getResults().stream()
                 .map(QuarkusTavilyWebSearchEngine::toWebSearchOrganicResult)
-                .flatMap(Optional::stream)
                 .collect(toList());
 
         if (tavilyResponse.getAnswer() != null) {
@@ -112,30 +104,12 @@ public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
         return WebSearchResults.from(WebSearchInformationResult.from((long) results.size()), results);
     }
 
-    private static Optional<WebSearchOrganicResult> toWebSearchOrganicResult(TavilySearchResult tavilySearchResult) {
-        URI url;
-        try {
-            url = toUri(tavilySearchResult.getUrl());
-        } catch (IllegalArgumentException | UriBuilderException e) {
-            log.warnf(e, "Skipping Tavily search result with invalid URL: %s", tavilySearchResult.getUrl());
-            return Optional.empty();
-        }
-
-        return Optional.of(WebSearchOrganicResult.from(tavilySearchResult.getTitle(),
-                url,
+    private static WebSearchOrganicResult toWebSearchOrganicResult(TavilySearchResult tavilySearchResult) {
+        return WebSearchOrganicResult.from(tavilySearchResult.getTitle(),
+                URI.create(tavilySearchResult.getUrl().replaceAll(" ", "%20")),
                 tavilySearchResult.getContent(),
                 tavilySearchResult.getRawContent(),
-                Collections.singletonMap("score", String.valueOf(tavilySearchResult.getScore()))));
-    }
-
-    private static URI toUri(String url) {
-        URI uri;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException e) {
-            uri = UriBuilder.newInstance().uri(url).build();
-        }
-        return URI.create(uri.toASCIIString());
+                Collections.singletonMap("score", String.valueOf(tavilySearchResult.getScore())));
     }
 
     static class TavilyClientLogger implements ClientLogger {
@@ -205,9 +179,6 @@ public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
-                            headerValue = SensitiveHeaderMasker.mask(headerValue);
-                        }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));

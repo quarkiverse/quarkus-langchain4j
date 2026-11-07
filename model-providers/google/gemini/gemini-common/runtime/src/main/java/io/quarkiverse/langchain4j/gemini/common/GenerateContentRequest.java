@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record GenerateContentRequest(List<Content> contents, SystemInstruction systemInstruction, List<Tool> tools,
-        ToolConfig toolConfig, GenerationConfig generationConfig) {
+        GenerationConfig generationConfig) {
 
     public record SystemInstruction(List<Part> parts) {
 
@@ -39,19 +39,6 @@ public record GenerateContentRequest(List<Content> contents, SystemInstruction s
         }
 
         public record GoogleSearchRetrieval() {
-        }
-    }
-
-    public record ToolConfig(FunctionCallingConfig functionCallingConfig) {
-
-        public record FunctionCallingConfig(Mode mode) {
-
-        }
-
-        public enum Mode {
-            AUTO,
-            ANY,
-            NONE
         }
     }
 

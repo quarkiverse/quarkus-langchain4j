@@ -8,7 +8,6 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -17,30 +16,25 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.QuarkusMcpToolProvider;
-import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
-import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class McpClientAndToolProviderCDITest extends WiremockAware {
-
-    private static final String MCP_PATH = "/mcp/cdi";
+public class McpClientAndToolProviderCDITest {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addPackage(McpMockServer.class.getPackage())
+                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.openai.api-key=whatever
                             quarkus.langchain4j.mcp.client1.transport-type=streamable-http
-                            quarkus.langchain4j.mcp.client1.protocol-version=%s
-                            quarkus.langchain4j.mcp.client1.url=%s
+                            quarkus.langchain4j.mcp.client1.protocol-version=2025-11-25
+                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/mcp
                             quarkus.langchain4j.mcp.client1.log-requests=true
                             quarkus.langchain4j.mcp.client1.log-responses=true
                             quarkus.log.category."dev.langchain4j".level=DEBUG
                             quarkus.log.category."io.quarkiverse".level=DEBUG
-                            """.formatted(ModernMcpMockServer.PROTOCOL_VERSION, wiremockUrlForConfig(MCP_PATH))),
+                            """),
                             "application.properties"));
 
     @Inject
@@ -49,13 +43,6 @@ public class McpClientAndToolProviderCDITest extends WiremockAware {
 
     @Inject
     Instance<ToolProvider> toolProviderCDIInstance;
-
-    @BeforeEach
-    void setUpMcpServer() {
-        McpMockServer.modern(wiremock(), MCP_PATH)
-                .reset()
-                .stubInitialization();
-    }
 
     @Test
     public void test() {

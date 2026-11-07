@@ -16,7 +16,7 @@ import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVar
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
 import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
-import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMultiOrFlowPublisher;
+import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMulti;
 import static io.quarkus.arc.processor.DotNames.NAMED;
 import static io.quarkus.arc.processor.DotNames.SINGLETON;
 
@@ -89,11 +89,8 @@ import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.spi.classloading.ClassInstanceFactory;
 import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
-import dev.langchain4j.spi.guardrail.config.InputGuardrailsConfigBuilderFactory;
-import dev.langchain4j.spi.guardrail.config.OutputGuardrailsConfigBuilderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.SharedMemory;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem.DeclarativeAiServiceInputGuardrails;
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem.DeclarativeAiServiceOutputGuardrails;
@@ -159,7 +156,6 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ReflectiveHierarchyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
@@ -204,8 +200,6 @@ public class AiServicesProcessor {
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
-    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_MANAGE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
-            QuarkusAiServiceContext.class, "manageChatMemoryIds", void.class, Object[].class);
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_EVICT_CHAT_MEMORY = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "evictChatMemory", boolean.class, Object.class);
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_GET_CHAT_MEMORY = MethodDescriptor.ofMethod(
@@ -233,23 +227,13 @@ public class AiServicesProcessor {
 
     public static final String AGENTIC_PACKAGE_PREFIX = "dev.langchain4j.agentic.";
 
-    /**
-     * SmallRye Fault Tolerance annotations that are not interceptor bindings. The interceptor reads them from the
-     * intercepted method, so they have to be copied onto the generated implementation.
-     */
-    private static final String SMALLRYE_FAULT_TOLERANCE_API = "io.smallrye.faulttolerance.api.";
-
     private static final Set<DotName> GUARDRAIL_ANNOTATIONS = Set.of(
             TOOL_INPUT_GUARDRAIL, TOOL_INPUT_GUARDRAILS, TOOL_OUTPUT_GUARDRAIL, TOOL_OUTPUT_GUARDRAILS);
-
-    private static final Set<DotName> STRUCTURED_OUTPUT_WRAPPERS = Set.of(DotNames.MULTI, DotNames.UNI,
-            DotNames.COMPLETION_STAGE, LangChain4jDotNames.RESULT);
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
-            BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer,
             BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
         IndexView index = indexBuildItem.getIndex();
         Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.DESCRIPTION);
@@ -267,7 +251,6 @@ public class AiServicesProcessor {
         }
         Set<DotName> returnTypesToRegister = new HashSet<>();
         for (AiServicesMethodBuildItem aiServicesMethodBuildItem : aiServicesMethodBuildItems) {
-            registerStructuredOutputHierarchy(aiServicesMethodBuildItem.getMethodInfo(), reflectiveHierarchyProducer);
             Type type = aiServicesMethodBuildItem.getMethodInfo().returnType();
             if (type.kind() == Type.Kind.PRIMITIVE) {
                 continue;
@@ -293,10 +276,6 @@ public class AiServicesProcessor {
                 ClassMetadataProviderFactory.class.getName()));
         serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 ClassInstanceFactory.class.getName()));
-        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
-                InputGuardrailsConfigBuilderFactory.class.getName()));
-        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
-                OutputGuardrailsConfigBuilderFactory.class.getName()));
 
         // needed because various LLMs use these, so let's be proactive
         // there isn't one great place to put this, so this is probably as good as any
@@ -366,33 +345,6 @@ public class AiServicesProcessor {
                 checkGuardrailOnAiServiceMethod(serviceMethodInfo);
             }
         }
-    }
-
-    /**
-     * The model's answer is parsed into the method's return type, and that reaches every type the result is made of:
-     * those behind its fields and those behind its type arguments, as in a {@code List<Forecast>} or a record nested
-     * in another. Registering the return type alone leaves them out, and a native image then fails to construct them
-     * when the answer is parsed.
-     */
-    private static void registerStructuredOutputHierarchy(MethodInfo method,
-            BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer) {
-        Type type = method.returnType();
-        // the answer may come wrapped in a type that hands it back later or adds metadata to it
-        while (type.kind() == Type.Kind.PARAMETERIZED_TYPE && STRUCTURED_OUTPUT_WRAPPERS.contains(type.name())
-                && type.asParameterizedType().arguments().size() == 1) {
-            type = type.asParameterizedType().arguments().get(0);
-        }
-        if (type.kind() != Type.Kind.CLASS && type.kind() != Type.Kind.PARAMETERIZED_TYPE
-                && type.kind() != Type.Kind.ARRAY) {
-            return;
-        }
-        if (DotNames.STRING.equals(type.name()) || LangChain4jDotNames.TOKEN_STREAM.equals(type.name())) {
-            return;
-        }
-        reflectiveHierarchyProducer.produce(ReflectiveHierarchyBuildItem.builder(type)
-                .source(AiServicesProcessor.class.getSimpleName() + ": structured output of " + method.declaringClass().name()
-                        + "#" + method.name())
-                .build());
     }
 
     /**
@@ -629,11 +581,6 @@ public class AiServicesProcessor {
                     ? instance.value("allowContinuousForcedToolCalling").asBoolean()
                     : false;
 
-            // null when not set, in which case the global property applies
-            Boolean executeToolsConcurrently = instance.value("executeToolsConcurrently") != null
-                    ? instance.value("executeToolsConcurrently").asBoolean()
-                    : null;
-
             boolean shouldThrowExceptionOnEventError = instance.value("shouldThrowExceptionOnEventError") != null
                     ? instance.value("shouldThrowExceptionOnEventError").asBoolean()
                     : false;
@@ -688,7 +635,7 @@ public class AiServicesProcessor {
                     determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
                     determineThinkingHandler(declarativeAiServiceClassInfo, generatedClassOutput),
                     systemMessageProviderClassDotName,
-                    cdiScope(customScopes, declarativeAiServiceClassInfo, BuiltinScope.REQUEST.getName()),
+                    cdiScope(customScopes, declarativeAiServiceClassInfo),
                     chatModelName,
                     moderationModelName,
                     imageModelName,
@@ -703,7 +650,6 @@ public class AiServicesProcessor {
                     maxToolCallingRoundTrips,
                     maxToolCallsPerResponse,
                     allowContinuousForcedToolCalling,
-                    executeToolsConcurrently,
                     // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
                     impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
                     shouldThrowExceptionOnEventError,
@@ -794,13 +740,8 @@ public class AiServicesProcessor {
         return beanName;
     }
 
-    private static DotName cdiScope(CustomScopeAnnotationsBuildItem customScopes, ClassInfo declarativeAiServiceClassInfo,
-            DotName defaultScope) {
-        BuiltinScope builtinScope = BuiltinScope.from(declarativeAiServiceClassInfo);
-        if (builtinScope != null) {
-            return builtinScope.getName();
-        }
-        DotName cdiScope = defaultScope;
+    private static DotName cdiScope(CustomScopeAnnotationsBuildItem customScopes, ClassInfo declarativeAiServiceClassInfo) {
+        DotName cdiScope = BuiltinScope.REQUEST.getInfo().getDotName();
         Optional<AnnotationInstance> scopeAnnotation = customScopes.getScope(declarativeAiServiceClassInfo.annotations());
         if (scopeAnnotation.isPresent()) {
             cdiScope = scopeAnnotation.get().name();
@@ -1168,7 +1109,7 @@ public class AiServicesProcessor {
                     continue;
                 }
 
-                if (!returnsMultiOrFlowPublisher(method)) {
+                if (!DotNames.MULTI.equals(method.returnType().name())) {
                     continue;
                 }
                 boolean isSupportedResponseType = false;
@@ -1180,8 +1121,7 @@ public class AiServicesProcessor {
                     }
                 }
                 if (!isSupportedResponseType) {
-                    throw illegalConfiguration("Only Multi<String>, Multi<ChatEvent>, Flow.Publisher<String> and "
-                            + "Flow.Publisher<ChatEvent> are supported as streamed return types. Offending method is '"
+                    throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
                             + method.declaringClass().name().toString() + "#" + method.name() + "'");
                 }
                 injectStreamingChatModelBean = true;
@@ -1242,7 +1182,6 @@ public class AiServicesProcessor {
                                     maxToolCallingRoundTrips,
                                     bi.getMaxToolCallsPerResponse(),
                                     allowContinuousForcedToolCalling,
-                                    bi.getExecuteToolsConcurrently(),
                                     bi.isShouldThrowExceptionOnEventError(),
                                     defaultMemoryIdProviderClassName,
                                     bi.getSkillNames())))
@@ -1505,9 +1444,6 @@ public class AiServicesProcessor {
      * tools returning `Uni`, `CompletionStage` or that are blocking.
      * Basically, for "reactive AI service method, the switch is necessary except if all the tools are imperative (return `T`)
      * and marked explicitly as blocking (using `@Blocking`).
-     * `Flow.Publisher` methods are implemented like `Multi` ones. `TokenStream` methods are implemented by the upstream
-     * LangChain4j `AiServiceTokenStream`, which executes the tools on the thread that delivers the model response rather
-     * than on the caller thread, and that thread is an event loop for the Vert.x based model clients.
      *
      * @param method the AI method
      * @param tools the tools
@@ -1522,8 +1458,7 @@ public class AiServicesProcessor {
             IndexView index) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
-                || returnsMultiOrFlowPublisher(method)
-                || method.returnType().name().equals(LangChain4jDotNames.TOKEN_STREAM);
+                || method.returnType().name().equals(DotNames.MULTI);
 
         boolean requireSwitchToWorkerThread = false;
 
@@ -1569,11 +1504,6 @@ public class AiServicesProcessor {
             }
         }
         return requireSwitchToWorkerThread;
-    }
-
-    private static boolean returnsMultiOrFlowPublisher(MethodInfo method) {
-        DotName returnType = method.returnType().name();
-        return DotNames.MULTI.equals(returnType) || DotNames.FLOW_PUBLISHER.equals(returnType);
     }
 
     private static boolean isToolDeclaredInHierarchy(String declaringClassName, String toolClassName, IndexView index) {
@@ -1634,11 +1564,11 @@ public class AiServicesProcessor {
                 }
 
                 // Check that the accumulator is used on a method retuning a Multi
-                if (!returnsMultiOrFlowPublisher(method.getMethodInfo())) {
+                DotName returnedType = method.getMethodInfo().returnType().name();
+                if (!DotName.createSimple(Multi.class).equals(returnedType)) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
                             new DeploymentException("OutputGuardrailAccumulator can only be used on method returning a " +
-                                    "`Multi<X>` or a `Flow.Publisher<X>`: found `%s` for method `%s.%s`".formatted(
-                                            method.getMethodInfo().returnType().name(),
+                                    "`Multi<X>`: found `%s` for method `%s.%s`".formatted(returnedType,
                                             method.getMethodInfo().declaringClass().toString(),
                                             method.getMethodInfo().name()))));
                 }
@@ -2007,7 +1937,7 @@ public class AiServicesProcessor {
                         mc.returnVoid();
                     }
 
-                    // method from ChatMemoryRemovable
+                    // methods from ChatMemoryRemovable
                     {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "remove", void.class, Object[].class));
@@ -2016,7 +1946,7 @@ public class AiServicesProcessor {
                                 mc.getMethodParam(0));
                         mc.returnVoid();
                     }
-                    // method from ChatMemoryRemovable.removeAll()
+                    // methods from ChatMemoryRemovable.removeAll()
                     {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "removeAll", void.class));
@@ -2024,7 +1954,7 @@ public class AiServicesProcessor {
                         mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_CLEAR_CHAT_MEMORY, contextHandle);
                         mc.returnVoid();
                     }
-                    // method from ChatMemoryRemovable.getAllChatMemoryIds()
+                    // methods from ChatMemoryRemovable.getAllChatMemoryIds()
                     {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "getAllChatMemoryIds", Collection.class));
@@ -2033,15 +1963,6 @@ public class AiServicesProcessor {
                                 QUARKUS_AI_SERVICES_CONTEXT_GET_ALL_CHAT_MEMORY_IDS,
                                 contextHandle);
                         mc.returnValue(result);
-                    }
-                    // method from ChatMemoryRemovable
-                    {
-                        MethodCreator mc = classCreator.getMethodCreator(
-                                MethodDescriptor.ofMethod(implClassName, "manageChatMemory", void.class, Object[].class));
-                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
-                        mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_MANAGE_CHAT_MEMORY_IDS, contextHandle,
-                                mc.getMethodParam(0));
-                        mc.returnVoid();
                     }
 
                     // methods from ChatMemoryAccess
@@ -2090,8 +2011,7 @@ public class AiServicesProcessor {
     }
 
     private boolean shouldCopyAnnotation(AnnotationInstance annotationInstance, IndexView index) {
-        return hasInterceptorBinding(annotationInstance, index)
-                || annotationInstance.name().toString().startsWith(SMALLRYE_FAULT_TOLERANCE_API);
+        return hasInterceptorBinding(annotationInstance, index);
     }
 
     private boolean hasInterceptorBinding(AnnotationInstance annotationInstance, IndexView index) {
@@ -2211,7 +2131,7 @@ public class AiServicesProcessor {
         List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(method, allowedPredicates, ignoredPredicates,
                 chatRequestParametersParamPosition);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
-        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, index, templateParams,
+        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
                 systemMessageInfo, fallbackToDummyUserMessagePredicate, chatRequestParametersParamPosition);
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
@@ -2230,7 +2150,6 @@ public class AiServicesProcessor {
                             .formatted(ResponseSchemaUtil.placeholder(), method.declaringClass()));
 
         Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamPosition(method);
-        Optional<String> sharedMemoryName = gatherSharedMemoryName(method);
         Optional<Integer> overrideChatModelParamPosition = gatherOverrideChatModelParameterPosition(method);
         Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> metricsTimedInfo = gatherMetricsTimedInfo(method,
                 addMicrometerMetrics);
@@ -2265,7 +2184,7 @@ public class AiServicesProcessor {
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), parameterInfoList,
                 systemMessageInfo,
-                userMessageInfo, memoryIdParamPosition, sharedMemoryName, requiresModeration, methodReturnTypeSignature,
+                userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, chatRequestParametersParamPosition,
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
@@ -2280,7 +2199,7 @@ public class AiServicesProcessor {
 
     private static OutputGuardrailsLiteral gatherOutputGuardrails(MethodInfo method, String methodReturnTypeSignature) {
         var annotationInstance = getGuardrailsAnnotation(method, LangChain4jDotNames.OUTPUT_GUARDRAILS);
-        var methodReturnsMulti = TypeUtil.isMultiOrFlowPublisher(TypeSignatureParser.parse(methodReturnTypeSignature));
+        var methodReturnsMulti = TypeUtil.isMulti(TypeSignatureParser.parse(methodReturnTypeSignature));
         var maxRetriesAsSetByConfig = annotationInstance
                 .map(v -> v.value("maxRetries"))
                 .map(AnnotationValue::asInt)
@@ -2322,7 +2241,7 @@ public class AiServicesProcessor {
     }
 
     private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {
-        if (isMultiOrFlowPublisher(returnType)) {
+        if (isMulti(returnType)) {
             return Optional.empty();
         }
         // ServiceOutputParser supports collections; JsonSchemas.jsonSchemaFrom only handles POJOs.
@@ -2488,23 +2407,6 @@ public class AiServicesProcessor {
         return Optional.empty();
     }
 
-    private static Optional<String> gatherSharedMemoryName(MethodInfo method) {
-        AnnotationInstance instance = method.declaredAnnotation(LangChain4jDotNames.SHARED_MEMORY);
-        if (instance == null) {
-            instance = method.declaringClass().declaredAnnotation(LangChain4jDotNames.SHARED_MEMORY);
-        }
-        if (instance == null) {
-            return Optional.empty();
-        }
-        AnnotationValue value = instance.value();
-        String name = value != null ? value.asString() : SharedMemory.DEFAULT;
-        if (name.isBlank()) {
-            throw new IllegalConfigurationException("The value of @SharedMemory cannot be blank. Offending method is '"
-                    + method.declaringClass().name() + "#" + method.name() + "'");
-        }
-        return Optional.of(name);
-    }
-
     private Optional<Integer> gatherMemoryIdParamPosition(MethodInfo method) {
         return method.annotations(LangChain4jDotNames.MEMORY_ID).stream().filter(IS_METHOD_PARAMETER_ANNOTATION)
                 .map(METHOD_PARAMETER_POSITION_FUNCTION)
@@ -2540,7 +2442,6 @@ public class AiServicesProcessor {
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
-            IndexView index,
             List<TemplateParameterInfo> templateParams,
             Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo,
             Predicate<MethodInfo> fallbackToDummyUserMesage,
@@ -2636,11 +2537,6 @@ public class AiServicesProcessor {
                         continue;
                     } else if (parameter.hasAnnotation(LangChain4jDotNames.MEMORY_ID)) {
                         continue;
-                    } else if (isContentParam(parameter, index)) {
-                        // Content arguments are appended to the user message as-is at runtime,
-                        // so they must not be stringified into the user message text.
-                        // This mirrors LangChain4j's findUserMessageTemplateFromTheOnlyArgument.
-                        continue;
                     }
                     undefinedParams++;
                     if (undefinedParams > 1) {
@@ -2717,33 +2613,6 @@ public class AiServicesProcessor {
                 .filter(pi -> pi.type().name().equals(LangChain4jDotNames.VIDEO)
                         || isListOf(pi.type(), LangChain4jDotNames.VIDEO))
                 .map(pi -> (int) pi.position()).findFirst();
-    }
-
-    /**
-     * Is the given parameter a {@link dev.langchain4j.data.message.Content} (or a {@code List} of them)?
-     * Such parameters are appended to the user message as content at runtime, so they must not be
-     * selected as the parameter whose {@code toString()} forms the user message text.
-     */
-    private static boolean isContentParam(MethodParameterInfo parameter, IndexView index) {
-        Type type = parameter.type();
-        if (isContentType(type.name(), index)) {
-            return true;
-        }
-        if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
-            ParameterizedType parameterizedType = type.asParameterizedType();
-            if (DotNames.LIST.equals(parameterizedType.name()) && parameterizedType.arguments().size() == 1) {
-                return isContentType(parameterizedType.arguments().get(0).name(), index);
-            }
-        }
-        return false;
-    }
-
-    private static boolean isContentType(DotName typeName, IndexView index) {
-        if (LangChain4jDotNames.CONTENT.equals(typeName)) {
-            return true;
-        }
-        return index.getAllKnownImplementors(LangChain4jDotNames.CONTENT).stream()
-                .anyMatch(classInfo -> classInfo.name().equals(typeName));
     }
 
     private static boolean isListOf(org.jboss.jandex.Type type, DotName elementType) {

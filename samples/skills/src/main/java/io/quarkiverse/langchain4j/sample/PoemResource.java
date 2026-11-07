@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.sample;
 
-import io.quarkiverse.langchain4j.skills.Skills;
 import io.quarkiverse.langchain4j.skills.SkillsSystemMessageProvider;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
@@ -14,7 +13,6 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 @Path("/poem")
 public class PoemResource {
 
-    @Skills
     @RegisterAiService(systemMessageProviderSupplier = SkillsSystemMessageProvider.class)
     public interface PoemAiService {
 

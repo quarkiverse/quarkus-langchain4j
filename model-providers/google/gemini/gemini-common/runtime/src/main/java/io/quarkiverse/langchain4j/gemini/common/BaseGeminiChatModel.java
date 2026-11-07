@@ -8,13 +8,11 @@ import org.jboss.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.request.json.JsonRawSchema;
-import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class BaseGeminiChatModel {
@@ -29,18 +27,11 @@ public class BaseGeminiChatModel {
     protected final List<ChatModelListener> listeners;
     protected final Long thinkingBudget;
     protected final boolean includeThoughts;
-    protected final ThinkingLevel thinkingLevel;
     protected final boolean useGoogleSearch;
 
     public BaseGeminiChatModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK, Double topP,
             ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
-            boolean includeThoughts, ThinkingLevel thinkingLevel, boolean useGoogleSearch) {
-        if (thinkingBudget != null && thinkingLevel != null) {
-            throw new IllegalArgumentException(
-                    "Cannot configure both thinkingBudget and thinkingLevel. "
-                            + "thinkingBudget remains for Gemini 2.5 and upcoming models return 400 if it is sent. "
-                            + "Use thinkingLevel (minimal, low, medium, high) for Gemini 3 and later.");
-        }
+            boolean includeThoughts, boolean useGoogleSearch) {
         this.modelId = modelId;
         this.temperature = temperature;
         this.maxOutputTokens = maxOutputTokens;
@@ -50,22 +41,13 @@ public class BaseGeminiChatModel {
         this.listeners = listeners;
         this.thinkingBudget = thinkingBudget;
         this.includeThoughts = includeThoughts;
-        this.thinkingLevel = thinkingLevel;
         this.useGoogleSearch = useGoogleSearch;
-    }
-
-    protected void applyThinkingConfig(GenerationConfig.Builder generationConfigBuilder) {
-        if (thinkingBudget != null || includeThoughts || thinkingLevel != null) {
-            generationConfigBuilder
-                    .thinkingConfig(new ThinkingConfig(thinkingBudget, includeThoughts, thinkingLevel));
-        }
     }
 
     /**
      * Detects and returns the schema based on the given response format.
      * If the response format type is JSON or if a JSON schema is provided,
-     * a corresponding {@code Schema} object is created and returned. Otherwise, or if the JSON schema
-     * cannot be mapped to a {@code Schema} (see {@link #detectRawSchema(ResponseFormat)}), returns {@code null}.
+     * a corresponding {@code Schema} object is created and returned. Otherwise, returns {@code null}.
      *
      * @param effectiveResponseFormat nullable detected {@code ResponseFormat}
      * @return the detected {@code Schema} object; otherwise, {@code null}
@@ -75,7 +57,7 @@ public class BaseGeminiChatModel {
                 (effectiveResponseFormat.type().equals(ResponseFormatType.JSON)
                         || effectiveResponseFormat.jsonSchema() != null)) {
             if (effectiveResponseFormat.jsonSchema() != null
-                    && !SchemaMapper.isSupported(effectiveResponseFormat.jsonSchema().rootElement())) {
+                    && effectiveResponseFormat.jsonSchema().rootElement() instanceof JsonRawSchema) {
                 return null;
             }
             return SchemaMapper.fromJsonSchemaToSchema(effectiveResponseFormat.jsonSchema());
@@ -84,20 +66,15 @@ public class BaseGeminiChatModel {
     }
 
     /**
-     * Detects and returns the raw JSON schema as a map, to be sent as {@code responseJsonSchema}.
-     * This is the case if the response format uses {@link JsonRawSchema}, or a JSON schema that cannot be
-     * mapped to a {@code Schema}, such as one with {@code $ref} or {@code anyOf} for a recursive or
-     * polymorphic type.
+     * Detects and returns the raw JSON schema as a map if the response format uses {@link JsonRawSchema}.
      *
      * @param effectiveResponseFormat nullable detected {@code ResponseFormat}
-     * @return the raw schema as a {@code Map}, or {@code null} if the schema is mapped to a {@code Schema}
+     * @return the raw schema as a {@code Map}, or {@code null} if not a raw schema
      */
     protected Map<String, Object> detectRawSchema(ResponseFormat effectiveResponseFormat) {
-        if (effectiveResponseFormat == null || effectiveResponseFormat.jsonSchema() == null) {
-            return null;
-        }
-        JsonSchemaElement rootElement = effectiveResponseFormat.jsonSchema().rootElement();
-        if (rootElement instanceof JsonRawSchema jsonRawSchema) {
+        if (effectiveResponseFormat != null
+                && effectiveResponseFormat.jsonSchema() != null
+                && effectiveResponseFormat.jsonSchema().rootElement() instanceof JsonRawSchema jsonRawSchema) {
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
                         jsonRawSchema.schema(), new TypeReference<>() {
@@ -105,9 +82,6 @@ public class BaseGeminiChatModel {
             } catch (JsonProcessingException e) {
                 throw new IllegalArgumentException("Unable to parse raw JSON schema", e);
             }
-        }
-        if (!SchemaMapper.isSupported(rootElement)) {
-            return JsonSchemaElementUtils.toMap(rootElement);
         }
         return null;
     }
@@ -117,12 +91,15 @@ public class BaseGeminiChatModel {
      * If the response format is null or of type TEXT, returns "text/plain".
      * If the response format is of type JSON and contains a JSON schema with a root element
      * that is an instance of JsonEnumSchema, returns "text/x.enum".
-     * Otherwise, returns "application/json", also when no JSON schema is given.
+     * If detected schema and raw schema are both null, logs a warning and defaults to "text/plain".
+     * Otherwise, returns "application/json".
      *
      * @param responseFormat nullable {@code ResponseFormat}
+     * @param schema nullable {@code Schema}
+     * @param rawSchema nullable raw JSON schema {@code Map}
      * @return the computed MIME type as a string
      */
-    protected String computeMimeType(ResponseFormat responseFormat) {
+    protected String computeMimeType(ResponseFormat responseFormat, Schema schema, Map<String, Object> rawSchema) {
         if (responseFormat == null || ResponseFormatType.TEXT.equals(responseFormat.type())) {
             return "text/plain";
         }
@@ -132,6 +109,11 @@ public class BaseGeminiChatModel {
                 responseFormat.jsonSchema().rootElement() != null &&
                 responseFormat.jsonSchema().rootElement() instanceof JsonEnumSchema) {
             return "text/x.enum";
+        }
+
+        if (schema == null && rawSchema == null) {
+            log.warn("Schema is null while computing MIME type suggesting 'application/json'. Defaulting to 'text/plain'.");
+            return "text/plain";
         }
 
         return "application/json";

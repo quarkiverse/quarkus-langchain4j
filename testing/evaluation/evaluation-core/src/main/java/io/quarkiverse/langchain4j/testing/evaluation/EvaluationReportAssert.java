@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.testing.evaluation;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.assertj.core.api.AbstractAssert;
 
@@ -133,7 +132,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasAllPassed() {
         isNotNull();
 
-        long failedCount = blockingEvaluationResults()
+        long failedCount = actual.evaluations().stream()
                 .filter(e -> !e.passed())
                 .count();
 
@@ -141,7 +140,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
             failWithMessage(
                     "Expected all evaluations to pass, but %d out of %d failed:\n%s",
                     failedCount,
-                    blockingEvaluationResults().count(),
+                    actual.evaluations().size(),
                     formatFailures());
         }
 
@@ -157,14 +156,14 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasSomePassed() {
         isNotNull();
 
-        long passedCount = blockingEvaluationResults()
+        long passedCount = actual.evaluations().stream()
                 .filter(Scorer.EvaluationResult::passed)
                 .count();
 
         if (passedCount == 0) {
             failWithMessage(
                     "Expected at least one evaluation to pass, but all %d evaluations failed:\n%s",
-                    blockingEvaluationResults().count(),
+                    actual.evaluations().size(),
                     formatFailures());
         }
 
@@ -181,7 +180,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasPassedForTag(String tag) {
         isNotNull();
 
-        List<Scorer.EvaluationResult<?>> taggedEvaluations = blockingEvaluationResults()
+        List<Scorer.EvaluationResult<?>> taggedEvaluations = actual.evaluations().stream()
                 .filter(e -> e.sample().tags().contains(tag))
                 .collect(Collectors.toList());
 
@@ -221,7 +220,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasScoreForTag(String tag, double minScore) {
         isNotNull();
 
-        List<Scorer.EvaluationResult<?>> taggedEvaluations = blockingEvaluationResults()
+        List<Scorer.EvaluationResult<?>> taggedEvaluations = actual.evaluations().stream()
                 .filter(e -> e.sample().tags().contains(tag))
                 .collect(Collectors.toList());
 
@@ -258,7 +257,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasEvaluationCount(int expectedCount) {
         isNotNull();
 
-        long actualCount = blockingEvaluationResults().count();
+        int actualCount = actual.evaluations().size();
         if (actualCount != expectedCount) {
             failWithMessage(
                     "Expected %d evaluations but found %d",
@@ -279,7 +278,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasAtLeastEvaluations(int minCount) {
         isNotNull();
 
-        long actualCount = blockingEvaluationResults().count();
+        int actualCount = actual.evaluations().size();
         if (actualCount < minCount) {
             failWithMessage(
                     "Expected at least %d evaluations but found %d",
@@ -300,7 +299,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasPassedCount(int expectedCount) {
         isNotNull();
 
-        long actualCount = blockingEvaluationResults()
+        long actualCount = actual.evaluations().stream()
                 .filter(Scorer.EvaluationResult::passed)
                 .count();
 
@@ -324,7 +323,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasAtLeastPassedEvaluations(int minCount) {
         isNotNull();
 
-        long actualCount = blockingEvaluationResults()
+        long actualCount = actual.evaluations().stream()
                 .filter(Scorer.EvaluationResult::passed)
                 .count();
 
@@ -348,7 +347,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasFailedCount(int expectedCount) {
         isNotNull();
 
-        long actualCount = blockingEvaluationResults()
+        long actualCount = actual.evaluations().stream()
                 .filter(e -> !e.passed())
                 .count();
 
@@ -373,7 +372,7 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     public EvaluationReportAssert hasAtMostFailedEvaluations(int maxCount) {
         isNotNull();
 
-        long actualCount = blockingEvaluationResults()
+        long actualCount = actual.evaluations().stream()
                 .filter(e -> !e.passed())
                 .count();
 
@@ -389,20 +388,12 @@ public class EvaluationReportAssert extends AbstractAssert<EvaluationReportAsser
     }
 
     /**
-     * The evaluations that count: those not produced by an advisory strategy. No assertion of this class looks at
-     * advisory evaluations, so {@code passed + failed == evaluationCount} always holds.
-     */
-    private Stream<? extends Scorer.EvaluationResult<?>> blockingEvaluationResults() {
-        return actual.evaluations().stream().filter(e -> !e.advisory());
-    }
-
-    /**
      * Formats all failed evaluations as a detailed string.
      *
      * @return formatted string with failure details
      */
     private String formatFailures() {
-        return blockingEvaluationResults()
+        return actual.evaluations().stream()
                 .filter(e -> !e.passed())
                 .map(this::formatEvaluationFailure)
                 .collect(Collectors.joining("\n"));

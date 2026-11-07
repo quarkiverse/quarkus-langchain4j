@@ -45,7 +45,6 @@ public class ChatScopeManagedContext implements ContextState {
     }
 
     Map<String, ChatScopeImpl> activeScopes = new ConcurrentHashMap<>();
-    public static final String ROUTE = "route";
 
     public class ChatScopeImpl extends CustomContextState implements ChatScope {
         final ChatScopeImpl parent;
@@ -71,7 +70,7 @@ public class ChatScopeManagedContext implements ContextState {
         }
 
         public ChatScopeImpl(ChatScopeImpl parent) {
-            this(parent, parent.getRoute());
+            this(parent, parent.route);
         }
 
         public ChatScopeImpl() {
@@ -168,11 +167,6 @@ public class ChatScopeManagedContext implements ContextState {
             lock.lock();
             try {
                 activeScopes.remove(getId());
-                try {
-                    ChatScopeStoreManager.destroy(this);
-                } catch (Exception ex) {
-                    log.warn("Failed to destroy chat scope: " + getId(), ex);
-                }
                 children.forEach(ChatScopeImpl::destroy);
                 children.clear();
                 super.destroy();
@@ -184,17 +178,14 @@ public class ChatScopeManagedContext implements ContextState {
         }
     }
 
-    public ChatScopeImpl create(String id, String route, ChatScopeImpl parent) {
-        return new ChatScopeImpl(id, route, parent);
+    public boolean has(String id) {
+        return activeScopes.containsKey(id);
     }
 
     public ChatScopeImpl activate(String id) {
         ChatScopeImpl context = activeScopes.get(id);
         if (context == null) {
-            context = ChatScopeStoreManager.activate(id);
-            if (context == null) {
-                throw new ContextNotActiveException();
-            }
+            throw new ContextNotActiveException();
         }
         currentScope.set(context);
         fireEvent(new ChatScopeActivated(context));
@@ -210,12 +201,6 @@ public class ChatScopeManagedContext implements ContextState {
     }
 
     public void deactivate(ChatScope current) {
-        currentScope.remove();
-        ChatScopeStoreManager.passivate(current);
-        fireEvent(new ChatScopeDeactivated(current));
-    }
-
-    private void pushDeactivate(ChatScope current) {
         currentScope.remove();
         fireEvent(new ChatScopeDeactivated(current));
     }
@@ -239,14 +224,10 @@ public class ChatScopeManagedContext implements ContextState {
     }
 
     public ChatScopeImpl begin(String route) {
-        return begin(UUID.randomUUID().toString(), route);
-    }
-
-    public ChatScopeImpl begin(String id, String route) {
         if (currentScope.get() != null) {
             throw new ContextException("Existing scope already active");
         }
-        ChatScopeImpl context = new ChatScopeImpl(id, route, null);
+        ChatScopeImpl context = new ChatScopeImpl(route);
         currentScope.set(context);
         fireEvent(new ChatScopeStarted(context));
         fireEvent(new ChatScopeActivated(context));
@@ -263,7 +244,7 @@ public class ChatScopeManagedContext implements ContextState {
         if (current == null) {
             context = new ChatScopeImpl();
         } else {
-            pushDeactivate(current);
+            deactivate(current);
             context = current.nest();
         }
         currentScope.set(context);
@@ -278,7 +259,7 @@ public class ChatScopeManagedContext implements ContextState {
         if (current == null) {
             context = new ChatScopeImpl(route);
         } else {
-            pushDeactivate(current);
+            deactivate(current);
             context = current.nest(route);
         }
         currentScope.set(context);
@@ -292,7 +273,7 @@ public class ChatScopeManagedContext implements ContextState {
         if (current == null) {
             throw new ContextNotActiveException();
         }
-        current.setRoute(route);
+        current.route = route;
     }
 
     public void pop() {
@@ -327,11 +308,6 @@ public class ChatScopeManagedContext implements ContextState {
             return;
         }
         scope.destroy();
-    }
-
-    // really only used for testing passivation
-    public void clear() {
-        activeScopes.clear();
     }
 
 }

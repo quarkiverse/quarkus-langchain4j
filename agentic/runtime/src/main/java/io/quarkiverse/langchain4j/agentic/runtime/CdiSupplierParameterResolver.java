@@ -5,15 +5,9 @@ import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Set;
 
-import jakarta.enterprise.inject.ResolutionException;
-
 import dev.langchain4j.agentic.declarative.SupplierParameterResolver;
 import io.quarkus.arc.Arc;
 
-/**
- * Resolves from CDI the parameters of the static methods of the agents that are annotated with {@link CdiBean} or with
- * a CDI qualifier. The bean is looked up at each invocation of the method.
- */
 public class CdiSupplierParameterResolver implements SupplierParameterResolver {
 
     private final Set<String> qualifierNames;
@@ -43,12 +37,6 @@ public class CdiSupplierParameterResolver implements SupplierParameterResolver {
                 .filter(ann -> !ann.annotationType().equals(CdiBean.class))
                 .filter(ann -> qualifierNames.contains(ann.annotationType().getName()))
                 .toArray(Annotation[]::new);
-        try {
-            return Arc.container().select(parameter.getType(), qualifiers).get();
-        } catch (ResolutionException e) {
-            throw new IllegalStateException("Unable to resolve the CDI bean of type '" + parameter.getType().getName()
-                    + "' for parameter '" + parameter.getName() + "' of method '" + context.supplierMethod().getName()
-                    + "' of agent '" + context.declaringAgentClass().getName() + "'", e);
-        }
+        return Arc.container().select(parameter.getType(), qualifiers).get();
     }
 }

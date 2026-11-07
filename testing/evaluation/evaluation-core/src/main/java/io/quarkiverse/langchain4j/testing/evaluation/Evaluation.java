@@ -108,16 +108,6 @@ public final class Evaluation {
         Builder<T> withConcurrency(int concurrency);
 
         /**
-         * Set the number of times each sample is executed and evaluated.
-         * Running each sample several times makes the score and its confidence interval meaningful
-         * when the function under test is not deterministic.
-         *
-         * @param trials the number of trials per sample (default: 1)
-         * @return this builder
-         */
-        Builder<T> withTrials(int trials);
-
-        /**
          * Filter samples by tags. Only samples matching at least one of the specified tags will be evaluated.
          *
          * @param tags the tags to filter by
@@ -198,7 +188,6 @@ public final class Evaluation {
 
         private Samples<?> samples;
         private int concurrency = 1;
-        private int trials = 1;
         private List<String> tags = new ArrayList<>();
         private Function<Parameters, T> function;
         private final List<EvaluationStrategy<T>> strategies = new ArrayList<>();
@@ -227,15 +216,6 @@ public final class Evaluation {
                 throw new IllegalArgumentException("Concurrency must be at least 1");
             }
             this.concurrency = concurrency;
-            return this;
-        }
-
-        @Override
-        public Builder<T> withTrials(int trials) {
-            if (trials < 1) {
-                throw new IllegalArgumentException("Trials must be at least 1");
-            }
-            this.trials = trials;
             return this;
         }
 
@@ -280,10 +260,10 @@ public final class Evaluation {
 
             Samples<T> samplesToEvaluate = (Samples<T>) new Samples(filteredSamples);
 
-            LOG.infof("Starting evaluation with %d samples, %d strategies, concurrency: %d, trials: %d",
-                    samplesToEvaluate.size(), strategies.size(), concurrency, trials);
+            LOG.infof("Starting evaluation with %d samples, %d strategies, concurrency: %d",
+                    samplesToEvaluate.size(), strategies.size(), concurrency);
 
-            try (Scorer scorer = new Scorer(concurrency, trials)) {
+            try (Scorer scorer = new Scorer(concurrency)) {
                 @SuppressWarnings("unchecked")
                 EvaluationStrategy<T>[] strategiesArray = strategies.toArray(new EvaluationStrategy[0]);
                 EvaluationReport<T> report = scorer.evaluate(samplesToEvaluate, function, strategiesArray);
@@ -300,7 +280,6 @@ public final class Evaluation {
             return new EvaluationRunnerImpl<>(
                     samples,
                     concurrency,
-                    trials,
                     new ArrayList<>(tags),
                     function,
                     new ArrayList<>(strategies));
@@ -359,7 +338,6 @@ public final class Evaluation {
 
         private final Samples<?> samples;
         private final int concurrency;
-        private final int trials;
         private final List<String> tags;
         private final Function<Parameters, T> function;
         private final List<EvaluationStrategy<T>> strategies;
@@ -367,13 +345,11 @@ public final class Evaluation {
         public EvaluationRunnerImpl(
                 Samples<?> samples,
                 int concurrency,
-                int trials,
                 List<String> tags,
                 Function<Parameters, T> function,
                 List<EvaluationStrategy<T>> strategies) {
             this.samples = samples;
             this.concurrency = concurrency;
-            this.trials = trials;
             this.tags = tags;
             this.function = function;
             this.strategies = strategies;
@@ -392,10 +368,10 @@ public final class Evaluation {
 
             Samples<T> samplesToEvaluate = (Samples<T>) new Samples(filteredSamples);
 
-            LOG.infof("Starting evaluation with %d samples, %d strategies, concurrency: %d, trials: %d",
-                    samplesToEvaluate.size(), strategies.size(), concurrency, trials);
+            LOG.infof("Starting evaluation with %d samples, %d strategies, concurrency: %d",
+                    samplesToEvaluate.size(), strategies.size(), concurrency);
 
-            try (Scorer scorer = new Scorer(concurrency, trials)) {
+            try (Scorer scorer = new Scorer(concurrency)) {
                 @SuppressWarnings("unchecked")
                 EvaluationStrategy<T>[] strategiesArray = strategies.toArray(new EvaluationStrategy[0]);
                 EvaluationReport<T> report = scorer.evaluate(samplesToEvaluate, function, strategiesArray);
