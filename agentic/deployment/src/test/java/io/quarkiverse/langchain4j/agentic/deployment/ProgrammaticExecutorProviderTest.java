@@ -10,17 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.spi.ExecutorProvider;
-import io.quarkiverse.langchain4j.agentic.test.runtime.EnableProgrammaticExecutorProvider;
-import io.quarkiverse.langchain4j.agentic.test.runtime.ProgrammaticExecutorProvider;
 import io.quarkus.test.QuarkusUnitTest;
 
-@EnableProgrammaticExecutorProvider
 public class ProgrammaticExecutorProviderTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(ProgrammaticExecutorProviderTest.class,
+                    .addClasses(ProgrammaticExecutorProvider.class,
                             CustomExecutorProviderTestSupport.class,
                             CustomExecutorProviderTestSupport.LeftAgent.class,
                             CustomExecutorProviderTestSupport.RightAgent.class,

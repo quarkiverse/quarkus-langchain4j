@@ -26,12 +26,6 @@
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
-      <artifactId>quarkus-langchain4j-integration-test-agentic-executor-provider-deployment</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
       <scope>test</scope>
       <version>${project.version}</version>
