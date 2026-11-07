@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.chatscopes.internal;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,15 +11,12 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.transaction.TransactionScoped;
 
 import io.quarkus.arc.ContextInstanceHandle;
 import io.quarkus.arc.InjectableBean;
 import io.quarkus.arc.InjectableContext;
-import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.impl.ContextInstanceHandleImpl;
-import io.quarkus.arc.impl.CreationalContextImpl;
 
 /**
  * {@link jakarta.enterprise.context.spi.Context} class which defines the {@link TransactionScoped} context.
@@ -95,7 +91,7 @@ public abstract class CustomInjectableContext implements InjectableContext {
                     return instanceHandle.get();
                 }
 
-                T createdInstance = createInstance((InjectableBean<T>) contextual, creationalContext);
+                T createdInstance = contextual.create(creationalContext);
                 instanceHandle = new ContextInstanceHandleImpl<>((InjectableBean<T>) contextual, createdInstance,
                         creationalContext);
                 contextState.put(contextual, instanceHandle);
@@ -105,52 +101,6 @@ public abstract class CustomInjectableContext implements InjectableContext {
             }
         } else {
             return null;
-        }
-    }
-
-    protected <T> T createInstance(InjectableBean<T> contextual, CreationalContext<T> creationalContext) {
-        T createdInstance = contextual.create(creationalContext);
-        return createdInstance;
-    }
-
-    private static <T> T getField(Object target, String name) {
-        try {
-            Field field = target.getClass().getDeclaredField(name);
-            field.setAccessible(true);
-            return (T) field.get(target);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static <T> void printDependents(CreationalContext creationalContext) {
-        CreationalContextImpl impl = (CreationalContextImpl) creationalContext;
-        System.out.println("Class name of creational context: " + impl.getClass().getName());
-        Contextual<T> contextual = getField(creationalContext, "contextual");
-        if (contextual == null) {
-            System.out.println("Contextual is null");
-        } else {
-            System.out.println("Contextual: " + contextual.getClass().getName());
-        }
-        CreationalContextImpl<?> parent = getField(creationalContext, "parent");
-        if (parent == null) {
-            System.out.println("Parent is null");
-        } else {
-            System.out.println("Parent: " + parent.getClass().getName());
-        }
-        InjectionPoint ip = getField(creationalContext, "currentInjectionPoint");
-        if (ip == null) {
-            System.out.println("Injection point is null");
-        } else {
-            System.out.println("Injection point: " + ((Class) ip.getType()).getName());
-        }
-        List<InstanceHandle<?>> dependentInstances = getField(creationalContext, "dependentInstances");
-        if (dependentInstances == null) {
-            System.out.println("Dependent instances is null");
-        } else {
-            for (InstanceHandle<?> dependentInstance : dependentInstances) {
-                System.out.println("Dependent: " + dependentInstance.get().getClass().getName());
-            }
         }
     }
 
@@ -254,5 +204,4 @@ public abstract class CustomInjectableContext implements InjectableContext {
             return lock;
         }
     }
-
 }

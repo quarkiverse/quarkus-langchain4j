@@ -288,7 +288,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_MODEL_ID++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-3.5-flash+++`
+|`+++gemini-2.5-flash+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature[`+++quarkus.langchain4j.google.genai.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -489,7 +489,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-embedding-2+++`
+|`+++text-embedding-004+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai.embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -520,7 +520,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2.
+Optional task type for which the embeddings will be used.
 
 Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
 
@@ -820,7 +820,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-3.5-flash+++`
+|`+++gemini-2.5-flash+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature[`+++quarkus.langchain4j.google.genai."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1021,7 +1021,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDIN
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-embedding-2+++`
+|`+++text-embedding-004+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1052,7 +1052,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2.
+Optional task type for which the embeddings will be used.
 
 Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
 

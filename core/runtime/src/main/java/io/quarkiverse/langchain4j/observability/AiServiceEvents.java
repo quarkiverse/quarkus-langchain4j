@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.observability;
 
-import dev.langchain4j.observability.api.event.AiServiceCancelledEvent;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceEvent;
@@ -9,7 +8,6 @@ import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.observability.api.event.InputGuardrailExecutedEvent;
 import dev.langchain4j.observability.api.event.OutputGuardrailExecutedEvent;
-import dev.langchain4j.observability.api.event.RetrievalAugmentedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import io.quarkiverse.langchain4j.observability.listener.AiServiceListenerAdapter;
 
@@ -18,14 +16,12 @@ import io.quarkiverse.langchain4j.observability.listener.AiServiceListenerAdapte
  * is associated with a specific event class that extends {@link AiServiceEvent}.
  */
 public enum AiServiceEvents {
-    CANCELLED(AiServiceCancelledEvent.class),
     COMPLETED(AiServiceCompletedEvent.class),
     ERROR(AiServiceErrorEvent.class),
     INPUT_GUARDRAIL_EXECUTED(InputGuardrailExecutedEvent.class),
     OUTPUT_GUARDRAIL_EXECUTED(OutputGuardrailExecutedEvent.class),
     REQUEST_ISSUED(AiServiceRequestIssuedEvent.class),
     RESPONSE_RECEIVED(AiServiceResponseReceivedEvent.class),
-    RETRIEVAL_AUGMENTED(RetrievalAugmentedEvent.class),
     STARTED(AiServiceStartedEvent.class),
     TOOL_EXECUTED(ToolExecutedEvent.class);
 

@@ -15,7 +15,6 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
-import io.quarkiverse.langchain4j.runtime.SensitiveHeaderMasker;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -111,9 +110,6 @@ public interface OpenshiftAiRestApi {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (SensitiveHeaderMasker.isSensitive(headerKey)) {
-                            headerValue = SensitiveHeaderMasker.mask(headerValue);
-                        }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));

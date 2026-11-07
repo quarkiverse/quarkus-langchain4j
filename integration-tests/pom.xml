@@ -38,20 +38,34 @@
     <module>mcp-conformance</module>
     <module>mcp-native</module>
     <module>secure-mcp</module>
-    <module>skills</module>
   </modules>
 
 
   <profiles>
+    <!-- Temporarily disable this as it causing issues with the release -->
+    <!--
+    <profile>
+      <id>jdk21-plus</id>
+      <activation>
+        <jdk>[21,)</jdk>
+      </activation>
+      <modules>
+        <module>jlama</module>
+      </modules>
+    </profile>
+    -->
+  <!-- Temporarily disable this as it causing issues with the release -->
+  <!--
   <profile>
-    <id>jdk25-plus</id>
+    <id>jdk22-plus</id>
     <activation>
-      <jdk>[25,)</jdk>
+      <jdk>[22,)</jdk>
     </activation>
     <modules>
-      <module>jinfer</module>
+      <module>llama3-java</module>
     </modules>
   </profile>
+  -->
   <profile>
     <id>TornadoVM</id>
     <activation>
@@ -60,7 +74,7 @@
       </property>
     </activation>
     <modules>
-      <module>jitllm</module>
+      <module>gpu-llama3</module>
     </modules>
   </profile>
   <profile>
@@ -121,12 +135,17 @@
                   </dependency>
                   <dependency>
                       <groupId>io.quarkiverse.langchain4j</groupId>
-                      <artifactId>quarkus-langchain4j-jinfer</artifactId>
+                      <artifactId>quarkus-langchain4j-jlama</artifactId>
+                      <version>999-SNAPSHOT</version>
+                  </dependency>
+                  <dependency>
+                      <groupId>io.quarkiverse.langchain4j</groupId>
+                      <artifactId>quarkus-langchain4j-llama3-java</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
                 <dependency>
                   <groupId>io.quarkiverse.langchain4j</groupId>
-                  <artifactId>quarkus-langchain4j-jitllm</artifactId>
+                  <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
                   <version>999-SNAPSHOT</version>
                 </dependency>
                   <dependency>
@@ -161,11 +180,6 @@
                   </dependency>
                   <dependency>
                       <groupId>io.quarkiverse.langchain4j</groupId>
-                      <artifactId>quarkus-langchain4j-skills</artifactId>
-                      <version>999-SNAPSHOT</version>
-                  </dependency>
-                  <dependency>
-                      <groupId>io.quarkiverse.langchain4j</groupId>
                       <artifactId>quarkus-langchain4j-vertex-ai-gemini</artifactId>
                       <version>999-SNAPSHOT</version>
                   </dependency>
@@ -173,6 +187,12 @@
                       <groupId>io.quarkiverse.langchain4j</groupId>
                       <artifactId>quarkus-langchain4j-watsonx</artifactId>
                       <version>999-SNAPSHOT</version>
+                  </dependency>
+                  <dependency>
+                      <groupId>com.github.tjake</groupId>
+                      <artifactId>jlama-native</artifactId>
+                      <classifier>${os.detected.classifier}</classifier>
+                      <version>${jlama.version}</version>
                   </dependency>
               </dependencies>
           </dependencyManagement>
@@ -203,6 +223,12 @@
                       <type>pom</type>
                       <scope>import</scope>
                   </dependency>
+                  <dependency>
+                      <groupId>com.github.tjake</groupId>
+                      <artifactId>jlama-native</artifactId>
+                      <classifier>${os.detected.classifier}</classifier>
+                      <version>${jlama.version}</version>
+                  </dependency>
               </dependencies>
           </dependencyManagement>
       </profile>
@@ -216,7 +242,6 @@
           <groupId>${quarkus.platform.group-id}</groupId>
           <artifactId>quarkus-maven-plugin</artifactId>
           <version>${quarkus.platform.version}</version>
-          <extensions>true</extensions>
         </plugin>
       </plugins>
     </pluginManagement>

@@ -21,11 +21,6 @@ public interface LangChain4jOllamaOpenAiBuildConfig {
     EmbeddingModelBuildConfig embeddingModel();
 
     /**
-     * Decision model related settings
-     */
-    DecisionModelBuildConfig decisionModel();
-
-    /**
      * Dev services related settings
      */
     OllamaDevServicesBuildConfig devservices();

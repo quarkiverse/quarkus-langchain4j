@@ -1,5 +1,4 @@
 = Using Ollama with Quarkus LangChain4j
-:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-ollama
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]

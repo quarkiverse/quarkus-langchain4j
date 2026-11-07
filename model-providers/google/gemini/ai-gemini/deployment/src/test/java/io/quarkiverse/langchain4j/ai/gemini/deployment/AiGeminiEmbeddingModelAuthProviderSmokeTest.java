@@ -29,7 +29,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class AiGeminiEmbeddingModelAuthProviderSmokeTest extends WiremockAware {
 
     private static final String API_KEY = "dummy";
-    private static final String EMBED_MODEL_ID = "gemini-embedding-2";
+    private static final String EMBED_MODEL_ID = "text-embedding-004";
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()

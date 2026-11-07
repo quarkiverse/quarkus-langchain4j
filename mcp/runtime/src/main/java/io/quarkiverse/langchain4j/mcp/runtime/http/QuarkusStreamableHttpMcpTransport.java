@@ -20,11 +20,13 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.common.util.MultivaluedTreeMap;
 
-import dev.langchain4j.exception.HttpException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.transport.McpHeaderEncoding;
-import dev.langchain4j.mcp.client.transport.McpJson;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.protocol.McpClientMessage;
@@ -32,7 +34,6 @@ import dev.langchain4j.mcp.protocol.McpInitializationNotification;
 import dev.langchain4j.mcp.protocol.McpInitializeRequest;
 import io.quarkiverse.langchain4j.mcp.auth.McpAuthenticationException;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
-import io.quarkus.runtime.BlockingOperationControl;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.MultiMap;
@@ -48,6 +49,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private final Duration timeout;
     private final boolean logResponses;
     private final boolean logRequests;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final AtomicReference<String> mcpSessionId = new AtomicReference<>();
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
@@ -154,20 +156,14 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     @Override
     public void sendMessage(McpClientMessage operation) {
-        sendMessage(new McpCallContext(null, operation));
+        execute(new McpCallContext(null, operation), false, false).subscribe().with(ignored -> {
+        });
     }
 
     @Override
     public void sendMessage(McpCallContext context) {
-        execute(context, false, false).subscribeAsCompletionStage().whenComplete((ignored, failure) -> {
-            if (failure != null) {
-                log.warn("Failed to send MCP message", failure);
-            }
+        execute(context, false, false).subscribe().with(ignored -> {
         });
-    }
-
-    private static String text(Map<?, ?> map, String key) {
-        return map.get(key) instanceof String value ? value : null;
     }
 
     private Uni<String> execute(McpClientMessage operation, boolean isRetry, boolean expectsResponse) {
@@ -176,36 +172,18 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     private Uni<String> execute(McpCallContext context, boolean isRetry, boolean expectsResponse) {
         CompletableFuture<String> future = new CompletableFuture<>();
+        Uni<String> uni = Uni.createFrom().completionStage(future);
         Long id = context.message().getId();
-        // Register before scheduling so cancellation cannot be followed by a late pending operation.
+        McpClientMessage request = context.message();
         if (expectsResponse && id != null) {
             operationHandler.expectResponse(id, future);
         }
-        return Uni.createFrom().completionStage(future).onSubscription().invoke(() -> {
-            Uni<Void> preparation = Uni.createFrom().voidItem()
-                    .invoke(() -> executeRequest(context, isRetry, expectsResponse, future));
-            // A blocking caller must not queue preparation behind itself on the worker pool.
-            if (!BlockingOperationControl.isBlockingAllowed()) {
-                preparation = preparation.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-            }
-            preparation.subscribe().with(ignored -> {
-            }, future::completeExceptionally);
-        });
-    }
-
-    private void executeRequest(McpCallContext context, boolean isRetry, boolean expectsResponse,
-            CompletableFuture<String> future) {
-        if (future.isDone()) {
-            return;
-        }
-        Long id = context.message().getId();
-        McpClientMessage request = context.message();
         String body;
         try {
-            body = McpJson.serialize(request);
-        } catch (RuntimeException e) {
+            body = objectMapper.writeValueAsString(request);
+        } catch (JsonProcessingException e) {
             future.completeExceptionally(e);
-            return;
+            return uni;
         }
         if (logRequests) {
             log.info("Request: " + body);
@@ -223,25 +201,25 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
             }
             // Extract method from JSON-RPC message
             try {
-                Map<String, Object> bodyMap = McpJson.toMap(body);
-                String method = text(bodyMap, "method");
+                JsonNode bodyNode = objectMapper.readTree(body);
+                String method = bodyNode.path("method").asText(null);
                 if (method != null) {
                     options.addHeader("Mcp-Method", method);
                 }
                 // Extract name for tools/call, resources/read, prompts/get
-                Map<?, ?> params = bodyMap.get("params") instanceof Map<?, ?> map ? map : Map.of();
+                JsonNode params = bodyNode.path("params");
                 if ("tools/call".equals(method) || "prompts/get".equals(method)) {
-                    String name = text(params, "name");
+                    String name = params.path("name").asText(null);
                     if (name != null) {
                         options.addHeader("Mcp-Name", McpHeaderEncoding.encode(name));
                     }
                 } else if ("resources/read".equals(method)) {
-                    String uri = text(params, "uri");
+                    String uri = params.path("uri").asText(null);
                     if (uri != null) {
                         options.addHeader("Mcp-Name", McpHeaderEncoding.encode(uri));
                     }
                 }
-            } catch (RuntimeException e) {
+            } catch (JsonProcessingException e) {
                 // If we can't parse the body, continue without method/name headers
                 log.warn("Failed to parse request body for modern protocol headers", e);
             }
@@ -267,15 +245,10 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
             customHeaders.forEach((name, value) -> options.addHeader(name, value));
         }
         String finalBody = body;
-        if (future.isDone()) {
-            return;
-        }
         httpClient.request(options)
                 .onComplete(result -> {
                     if (result.failed()) {
                         future.completeExceptionally(result.cause());
-                    } else if (future.isDone()) {
-                        result.result().reset();
                     } else {
                         result.result().send(finalBody).onComplete(response -> {
                             if (response.failed()) {
@@ -290,12 +263,6 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                             this.mcpSessionId.set(mcpSessionId);
                                         }
                                     }
-                                    if (!expectsResponse || id == null) {
-                                        // Notifications and replies to server requests complete with the HTTP acknowledgement.
-                                        response.result().resume();
-                                        future.complete(null);
-                                        return;
-                                    }
                                     String contentType = response.result().getHeader("Content-Type");
                                     if (id != null && contentType != null && contentType.contains("text/event-stream")) {
                                         // the server has started an SSE channel
@@ -308,6 +275,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         });
                                     } else {
                                         // the server has sent a single regular response
+                                        if (id == null) {
+                                            // For operations with null ID, we don't expect
+                                            // a response, just mark the operation done when
+                                            // the server accepted it
+                                            future.complete(null);
+                                        }
                                         response.result().bodyHandler(bodyBuffer -> {
                                             try {
                                                 String responseString = bodyBuffer.toString();
@@ -331,10 +304,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         return;
                                     }
                                     sendInitializeRequest(initReq).thenAccept(ignored -> {
-                                        // Preserve the original expectsResponse flag: a retried notification, or a
-                                        // reply to a server-initiated request (which carries the server's id), must
-                                        // not be registered as a pending operation on retry either.
-                                        execute(request, true, expectsResponse)
+                                        execute(request, true, true)
                                                 .subscribeAsCompletionStage()
                                                 .thenAccept(future::complete)
                                                 .exceptionally(t -> {
@@ -357,22 +327,20 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                             // Try to parse as JSON-RPC error response
                                             if (id != null && responseString != null && !responseString.isEmpty()) {
                                                 try {
-                                                    Map<String, Object> node = McpJson.toMap(responseString);
-                                                    if (node.containsKey("error") && node.containsKey("jsonrpc")) {
+                                                    JsonNode node = objectMapper.readTree(responseString);
+                                                    if (node.has("error") && node.has("jsonrpc")) {
                                                         if (logResponses) {
                                                             log.info("Response: " + responseString);
                                                         }
                                                         operationHandler.onMessage(responseString);
                                                         return;
                                                     }
-                                                } catch (RuntimeException ignored) {
-                                                    // the error body is not JSON-RPC (e.g. a proxy's HTML error page); the HTTP status is the failure
+                                                } catch (JsonProcessingException ignored) {
                                                 }
                                             }
                                             future.completeExceptionally(
-                                                    new HttpException(
-                                                            statusCode,
-                                                            "Unexpected status code: " + statusCode
+                                                    new RuntimeException(
+                                                            "Unexpected status code: " + response.result().statusCode()
                                                                     + ", body: " + responseString));
                                         });
                                     }
@@ -381,6 +349,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                         });
                     }
                 });
+        return uni;
     }
 
     /**
@@ -393,14 +362,6 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
      * @return a future that completes when the channel setup attempt finishes
      */
     private CompletableFuture<Void> startSubsidiaryChannel(boolean firstAttempt) {
-        Uni<Void> channel = Uni.createFrom().completionStage(() -> openSubsidiaryChannel(firstAttempt));
-        if (!BlockingOperationControl.isBlockingAllowed()) {
-            channel = channel.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-        }
-        return channel.subscribeAsCompletionStage();
-    }
-
-    private CompletableFuture<Void> openSubsidiaryChannel(boolean firstAttempt) {
         if (closed.get()) {
             return CompletableFuture.completedFuture(null);
         }

@@ -17,7 +17,7 @@ public interface ChatModelConfig {
      * @see <a href=
      *      "https://ai.google.dev/gemini-api/docs/models/gemini">https://ai.google.dev/gemini-api/docs/models/gemini</a>
      */
-    @WithDefault("gemini-3.5-flash")
+    @WithDefault("gemini-2.5-flash")
     String modelId();
 
     /**

@@ -34,9 +34,9 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
 
     public GeminiChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
             Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
-            boolean includeThoughts, ThinkingLevel thinkingLevel, boolean useGoogleSearch) {
-        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, thinkingBudget,
-                includeThoughts, thinkingLevel, useGoogleSearch);
+            boolean includeThoughts, boolean useGoogleSearch) {
+        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, thinkingBudget, includeThoughts,
+                useGoogleSearch);
     }
 
     @Override
@@ -60,17 +60,18 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
 
         GenerationConfig.Builder generationConfigBuilder = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
-                .responseMimeType(computeMimeType(effectiveResponseFormat))
+                .responseMimeType(computeMimeType(effectiveResponseFormat, schema, rawSchema))
                 .responseSchema(schema)
                 .responseJsonSchema(rawSchema)
                 .stopSequences(requestParameters.stopSequences())
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))
                 .topP(getOrDefault(requestParameters.topP(), this.topP));
-        applyThinkingConfig(generationConfigBuilder);
+        if (thinkingBudget != null || includeThoughts) {
+            generationConfigBuilder.thinkingConfig(new ThinkingConfig(thinkingBudget, includeThoughts));
+        }
         GenerationConfig generationConfig = generationConfigBuilder.build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
-                requestParameters.toolChoice(),
                 generationConfig, this.modelId, this.useGoogleSearch);
 
         ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
@@ -101,10 +102,8 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
             AiMessage aiMessage = aiMessageBuilder.build();
 
             final TokenUsage tokenUsage = GenerateContentResponseHandler.getTokenUsage(response.usageMetadata());
-            final FinishReason finishReason = aiMessage.hasToolExecutionRequests()
-                    ? FinishReason.TOOL_EXECUTION
-                    : FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
-            final Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage, finishReason);
+            final FinishReason finishReason = FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
+            final Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage);
 
             ChatResponse modelListenerResponse = createModelListenerResponse(
                     null,
@@ -126,7 +125,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
             return dev.langchain4j.model.chat.response.ChatResponse.builder()
                     .aiMessage(aiMessage)
                     .tokenUsage(GenerateContentResponseHandler.getTokenUsage(response.usageMetadata()))
-                    .finishReason(finishReason)
+                    .finishReason(FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response)))
                     .build();
         } catch (RuntimeException e) {
             ChatModelErrorContext errorContext = new ChatModelErrorContext(
@@ -173,8 +172,9 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
 
         return ChatResponse.builder()
                 .aiMessage(response.content())
+                .finishReason(response.finishReason())
                 .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
-                        .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
+                        .tokenUsage(response.tokenUsage()).build())
                 .build();
     }
 

@@ -12,12 +12,12 @@ import dev.langchain4j.agentic.declarative.A2AClientAgent;
 import dev.langchain4j.agentic.declarative.A2AServerUrlSupplier;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.V;
-import io.quarkus.test.QuarkusExtensionTest;
+import io.quarkus.test.QuarkusUnitTest;
 
 public class NonStaticA2AServerUrlSupplierTest {
 
     @RegisterExtension
-    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(A2AAgentWithNonStaticSupplier.class))
             .assertException(

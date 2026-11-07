@@ -17,12 +17,12 @@ import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusExtensionTest;
+import io.quarkus.test.QuarkusUnitTest;
 
 public class NonAgentSubAgentTest {
 
     @RegisterExtension
-    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
+    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")

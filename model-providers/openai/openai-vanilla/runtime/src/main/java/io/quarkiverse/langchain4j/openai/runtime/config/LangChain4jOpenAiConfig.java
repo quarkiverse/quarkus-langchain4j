@@ -172,10 +172,5 @@ public interface LangChain4jOpenAiConfig {
          * Audio transcription model related settings
          */
         AudioTranscriptionModelConfig audioTranscriptionModel();
-
-        /**
-         * Decision model related settings
-         */
-        DecisionModelConfig decisionModel();
     }
 }

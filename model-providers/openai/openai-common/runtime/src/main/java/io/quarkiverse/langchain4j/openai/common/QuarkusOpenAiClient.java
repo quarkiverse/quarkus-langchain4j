@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,8 +48,6 @@ import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
 import dev.langchain4j.model.openai.internal.completion.CompletionResponse;
-import dev.langchain4j.model.openai.internal.decision.DecisionCreateRequest;
-import dev.langchain4j.model.openai.internal.decision.DecisionCreateResponse;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingResponse;
 import dev.langchain4j.model.openai.internal.image.GenerateImagesRequest;
@@ -321,8 +318,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                     throw new RuntimeException(e);
                 }
                 if (response == null || response.id() == null) {
-                    // keep the payload, as OpenAI-compatible servers send an error object mid-stream
-                    throw new OpenAiApiException(ChatCompletionResponse.class, data);
+                    throw new OpenAiApiException(ChatCompletionResponse.class);
                 }
                 return response;
             }
@@ -395,55 +391,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             }
                         },
                         responseHandler);
-            }
-        };
-    }
-
-    @Override
-    public SyncOrAsync<DecisionCreateResponse> decision(DecisionCreateRequest request) {
-        return new SyncOrAsync<>() {
-            @Override
-            public DecisionCreateResponse execute() {
-                return restApi.blockingDecision(request, decisionApiMetadata());
-            }
-
-            /**
-             * Used by {@code OpenAiDecisionModel.doDecideAsync}, whose default implementation in {@link SyncOrAsync}
-             * is unsupported.
-             */
-            @Override
-            public CompletableFuture<ParsedAndRawResponse<DecisionCreateResponse>> executeRawAsync() {
-                return restApi.decision(request, decisionApiMetadata())
-                        .map(new Function<DecisionCreateResponse, ParsedAndRawResponse<DecisionCreateResponse>>() {
-                            @Override
-                            @SuppressWarnings("unchecked")
-                            public ParsedAndRawResponse<DecisionCreateResponse> apply(DecisionCreateResponse response) {
-                                return ParsedAndRawResponse.builder().parsedResponse(response).build();
-                            }
-                        })
-                        .subscribeAsCompletionStage();
-            }
-
-            @Override
-            public AsyncResponseHandling onResponse(Consumer<DecisionCreateResponse> responseHandler) {
-                return new AsyncResponseHandlingImpl<>(
-                        new Supplier<>() {
-                            @Override
-                            public Uni<DecisionCreateResponse> get() {
-                                return restApi.decision(request, decisionApiMetadata());
-                            }
-                        },
-                        responseHandler);
-            }
-
-            private OpenAiRestApi.ApiMetadata decisionApiMetadata() {
-                return OpenAiRestApi.ApiMetadata.builder()
-                        .azureApiKey(azureApiKey)
-                        .azureAdToken(azureAdToken)
-                        .openAiApiKey(openaiApiKey)
-                        .apiVersion(apiVersion)
-                        .organizationId(organizationId)
-                        .build();
             }
         };
     }

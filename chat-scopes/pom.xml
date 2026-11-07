@@ -13,7 +13,6 @@
 
   <modules>
     <module>core</module>
-    <module>passivation</module>
     <module>websocket</module>
   </modules>
 

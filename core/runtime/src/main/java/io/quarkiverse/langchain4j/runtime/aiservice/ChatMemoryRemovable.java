@@ -12,6 +12,4 @@ public interface ChatMemoryRemovable {
     void removeAll();
 
     Collection<Object> getAllChatMemoryIds();
-
-    void manageChatMemory(Object... ids);
 }

@@ -6,12 +6,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-import java.util.logging.LogRecord;
-
 import jakarta.inject.Inject;
 
-import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -36,9 +32,7 @@ class MistralAiChatLanguageModelSmokeTest extends WiremockAware {
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.mistralai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
-            .setLogRecordPredicate(record -> true)
-            .assertLogRecords(MistralAiChatLanguageModelSmokeTest::verifyLogRecords);
+                    WiremockAware.wiremockUrlForConfig("/v1"));
 
     @Inject
     ChatModel chatLanguageModel;
@@ -83,15 +77,6 @@ class MistralAiChatLanguageModelSmokeTest extends WiremockAware {
         assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Quarkus REST Client");
         String requestBody = new String(loggedRequest.getBody());
         assertThat(requestBody).contains("hello").contains(CHAT_MODEL_ID);
-    }
-
-    private static void verifyLogRecords(List<LogRecord> logRecords) {
-        assertThat(logRecords.stream()
-                .map(record -> ((ExtLogRecord) record).getFormattedMessage())
-                .filter(message -> message.startsWith("Request:")))
-                .isNotEmpty()
-                .allSatisfy(message -> assertThat(message).doesNotContain(API_KEY))
-                .anySatisfy(message -> assertThat(message).contains("[Authorization: Beare...ey]"));
     }
 
 }

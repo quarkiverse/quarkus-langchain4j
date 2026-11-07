@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.bson.Document;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -25,9 +24,6 @@ public class MongoDBChatMemoryStore implements ChatMemoryStore {
     };
     private static final String MESSAGES_FIELD = "messages";
     private static final String ID_FIELD = "_id";
-    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
-    };
-    private static final ObjectMapper MAPPER = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER;
 
     private final MongoCollection<Document> collection;
 
@@ -47,13 +43,10 @@ public class MongoDBChatMemoryStore implements ChatMemoryStore {
             return Collections.emptyList();
         }
 
-        Object value = document.get(MESSAGES_FIELD);
         try {
-            // legacy format: messages stored as a JSON string
-            if (value instanceof String json) {
-                return MAPPER.readValue(json, MESSAGE_LIST_TYPE);
-            }
-            return MAPPER.convertValue(document.getList(MESSAGES_FIELD, Document.class), MESSAGE_LIST_TYPE);
+            String messagesJson = document.getString(MESSAGES_FIELD);
+            return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
+                    messagesJson, MESSAGE_LIST_TYPE);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -61,17 +54,18 @@ public class MongoDBChatMemoryStore implements ChatMemoryStore {
 
     @Override
     public void updateMessages(Object memoryId, List<ChatMessage> messages) {
-        List<Document> messageDocs = messages.stream()
-                .map(m -> new Document(MAPPER.convertValue(m, MAP_TYPE)))
-                .toList();
+        try {
+            String messagesJson = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(messages);
+            Document document = new Document()
+                    .append(ID_FIELD, memoryId.toString())
+                    .append(MESSAGES_FIELD, messagesJson);
 
-        Document document = new Document()
-                .append(ID_FIELD, memoryId.toString())
-                .append(MESSAGES_FIELD, messageDocs);
-
-        collection.replaceOne(
-                Filters.eq(ID_FIELD, memoryId.toString()),
-                document,
-                new ReplaceOptions().upsert(true));
+            collection.replaceOne(
+                    Filters.eq(ID_FIELD, memoryId.toString()),
+                    document,
+                    new ReplaceOptions().upsert(true));
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
