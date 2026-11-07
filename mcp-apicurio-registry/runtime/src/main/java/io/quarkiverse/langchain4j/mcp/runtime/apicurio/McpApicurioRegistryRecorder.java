@@ -19,6 +19,8 @@ import io.vertx.core.Vertx;
 @Recorder
 public class McpApicurioRegistryRecorder {
 
+    private static final String CONFIG_PREFIX = "quarkus.langchain4j.mcp.apicurio-registry";
+
     private final RuntimeValue<McpApicurioRegistryRuntimeConfig> runtimeConfig;
 
     public McpApicurioRegistryRecorder(RuntimeValue<McpApicurioRegistryRuntimeConfig> runtimeConfig) {
@@ -45,6 +47,7 @@ public class McpApicurioRegistryRecorder {
                 McpToolProvider mcpToolProvider = (McpToolProvider) unwrapped;
 
                 RegistryClientOptions options = RegistryClientOptions.create(config.url(), vertx.get());
+                RegistryClientAuth.apply(options, config.auth(), CONFIG_PREFIX);
                 RegistryClient registryClient = RegistryClientFactory.create(options);
 
                 return new ApicurioRegistryMcpTools(registryClient, mcpToolProvider, vertx.get());
