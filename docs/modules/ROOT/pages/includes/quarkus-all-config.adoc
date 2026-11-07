@@ -1599,7 +1599,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-temperature[`+++quarkus.langchain4j.ai.gemini.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1661,7 +1661,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-Default for gemini-2.5-flash: 0.95
+Default for gemini-3.5-flash: 0.95
 
 Leave this unset to omit `topP` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
 
@@ -1690,9 +1690,9 @@ For each token selection step, the top-K tokens with the highest probabilities a
 
 Specify a lower value for less random responses and a higher value for more random responses.
 
-Range: 1-40
+Range: 1-40, for models that support setting it
 
-gemini-2.5-flash doesn't support topK
+gemini-3.5-flash has a fixed topK of 64
 
 Leave this unset to omit `topK` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
 
@@ -1858,7 +1858,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_MODEL_ID
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-output-dimension[`+++quarkus.langchain4j.ai.gemini.embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1889,7 +1889,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2. Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2135,7 +2135,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-temperature[`+++quarkus.langchain4j.ai.gemini."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2197,7 +2197,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-Default for gemini-2.5-flash: 0.95
+Default for gemini-3.5-flash: 0.95
 
 Leave this unset to omit `topP` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
 
@@ -2226,9 +2226,9 @@ For each token selection step, the top-K tokens with the highest probabilities a
 
 Specify a lower value for less random responses and a higher value for more random responses.
 
-Range: 1-40
+Range: 1-40, for models that support setting it
 
-gemini-2.5-flash doesn't support topK
+gemini-3.5-flash has a fixed topK of 64
 
 Leave this unset to omit `topK` from the request. Setting it is for older models. Since Gemini 3.6 Flash, temperature, topP, and topK are ignored. Upcoming models reject the request if those fields are present.
 
@@ -2394,7 +2394,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_M
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-output-dimension[`+++quarkus.langchain4j.ai.gemini."model-name".embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2425,7 +2425,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2. Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -8298,6 +8298,27 @@ endif::add-copy-button-to-env-var[]
 a|`sync`, `async`
 |
 
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-guard-content-placement]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-guard-content-placement[`+++quarkus.langchain4j.bedrock.chat-model.guardrail.guard-content-placement+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.guardrail.guard-content-placement+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls which user messages receive the Bedrock `guardContent` qualifier. Possible values are `LAST_USER_MESSAGE` and `ALL_USER_MESSAGES`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_GUARD_CONTENT_PLACEMENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_GUARD_CONTENT_PLACEMENT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`last-user-message`, `all-user-messages`
+|
+
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching[`+++quarkus.langchain4j.bedrock.chat-model.prompt-caching+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.prompt-caching+++[]
@@ -10547,6 +10568,27 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GU
 endif::add-copy-button-to-env-var[]
 --
 a|`sync`, `async`
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-guard-content-placement]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-guard-content-placement[`+++quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.guard-content-placement+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.guard-content-placement+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls which user messages receive the Bedrock `guardContent` qualifier. Possible values are `LAST_USER_MESSAGE` and `ALL_USER_MESSAGES`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARD_CONTENT_PLACEMENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARD_CONTENT_PLACEMENT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`last-user-message`, `all-user-messages`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching[`+++quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching+++`]##
@@ -13146,7 +13188,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_CHAT_MODEL_MODEL_ID++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-chat-model-temperature[`+++quarkus.langchain4j.google.genai.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -13347,7 +13389,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI_EMBEDDING_MODEL_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai.embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -13378,7 +13420,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used.
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2.
 
 Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
 
@@ -13678,7 +13720,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__CHAT_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-chat-model-temperature[`+++quarkus.langchain4j.google.genai."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -13879,7 +13921,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GOOGLE_GENAI__MODEL_NAME__EMBEDDIN
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-embedding-004+++`
+|`+++gemini-embedding-2+++`
 
 a| [[quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-google-genai_quarkus-langchain4j-google-genai-model-name-embedding-model-output-dimension[`+++quarkus.langchain4j.google.genai."model-name".embedding-model.output-dimension+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -13910,7 +13952,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Optional task type for which the embeddings will be used.
+Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2.
 
 Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY
 
@@ -28020,7 +28062,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_MODEL_I
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-temperature[`+++quarkus.langchain4j.vertexai.gemini.chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -28034,9 +28076,9 @@ The temperature is used for sampling during response generation, which occurs wh
 
 If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
 
-Range for gemini-2.5-flash: 0.0 - 2.0
+Range for gemini-3.5-flash: 0.0 - 2.0
 
-Default for gemini-2.5-flash: 1.0
+Default for gemini-3.5-flash: 1.0
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -28084,7 +28126,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-Default for gemini-2.5-flash: 0.95
+Default for gemini-3.5-flash: 0.95
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -28111,9 +28153,9 @@ For each token selection step, the top-K tokens with the highest probabilities a
 
 Specify a lower value for less random responses and a higher value for more random responses.
 
-Range: 1-40
+Range: 1-40, for models that support setting it
 
-gemini-2.5-flash doesn't support topK
+gemini-3.5-flash has a fixed topK of 64
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -28569,7 +28611,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++gemini-2.5-flash+++`
+|`+++gemini-3.5-flash+++`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-temperature[`+++quarkus.langchain4j.vertexai.gemini."model-name".chat-model.temperature+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -28583,9 +28625,9 @@ The temperature is used for sampling during response generation, which occurs wh
 
 If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
 
-Range for gemini-2.5-flash: 0.0 - 2.0
+Range for gemini-3.5-flash: 0.0 - 2.0
 
-Default for gemini-2.5-flash: 1.0
+Default for gemini-3.5-flash: 1.0
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -28633,7 +28675,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-Default for gemini-2.5-flash: 0.95
+Default for gemini-3.5-flash: 0.95
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -28660,9 +28702,9 @@ For each token selection step, the top-K tokens with the highest probabilities a
 
 Specify a lower value for less random responses and a higher value for more random responses.
 
-Range: 1-40
+Range: 1-40, for models that support setting it
 
-gemini-2.5-flash doesn't support topK
+gemini-3.5-flash has a fixed topK of 64
 
 
 ifdef::add-copy-button-to-env-var[]

@@ -60,7 +60,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
 
         GenerationConfig.Builder generationConfigBuilder = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
-                .responseMimeType(computeMimeType(effectiveResponseFormat, schema, rawSchema))
+                .responseMimeType(computeMimeType(effectiveResponseFormat))
                 .responseSchema(schema)
                 .responseJsonSchema(rawSchema)
                 .stopSequences(requestParameters.stopSequences())

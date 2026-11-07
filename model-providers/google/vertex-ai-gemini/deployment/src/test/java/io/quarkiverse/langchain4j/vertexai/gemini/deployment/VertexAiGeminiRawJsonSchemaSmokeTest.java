@@ -33,7 +33,7 @@ import tools.jackson.databind.ObjectMapper;
 public class VertexAiGeminiRawJsonSchemaSmokeTest extends WiremockAware {
 
     private static final String API_KEY = "somekey";
-    private static final String CHAT_MODEL_ID = "gemini-2.5-flash";
+    private static final String CHAT_MODEL_ID = "gemini-3.5-flash";
 
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()

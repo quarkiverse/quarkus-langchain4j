@@ -1,15 +1,23 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
+import dev.langchain4j.model.chat.request.json.JsonAnyOfSchema;
+import dev.langchain4j.model.chat.request.json.JsonArraySchema;
+import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
+import dev.langchain4j.model.chat.request.json.JsonNullSchema;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonRawSchema;
+import dev.langchain4j.model.chat.request.json.JsonReferenceSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 
@@ -67,5 +75,47 @@ class SchemaMapperTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> SchemaMapper.fromJsonSchemaToSchema(rawSchema));
+    }
+
+    @Test
+    void should_support_nested_objects_arrays_and_enums() {
+        JsonObjectSchema schema = JsonObjectSchema.builder()
+                .addStringProperty("name")
+                .addProperty("tags", JsonArraySchema.builder().items(JsonStringSchema.builder().build()).build())
+                .addProperty("role", JsonEnumSchema.builder().enumValues("ADMIN", "USER").build())
+                .addProperty("address", JsonObjectSchema.builder().addStringProperty("city").build())
+                .build();
+
+        assertTrue(SchemaMapper.isSupported(schema));
+    }
+
+    @Test
+    void should_not_support_references_or_definitions() {
+        JsonObjectSchema schema = JsonObjectSchema.builder()
+                .addStringProperty("name")
+                .addProperty("children", JsonArraySchema.builder()
+                        .items(JsonReferenceSchema.builder().reference("node").build())
+                        .build())
+                .build();
+        JsonObjectSchema withDefinitions = JsonObjectSchema.builder()
+                .addStringProperty("name")
+                .definitions(Map.of("node", JsonObjectSchema.builder().addStringProperty("name").build()))
+                .build();
+
+        assertFalse(SchemaMapper.isSupported(schema));
+        assertFalse(SchemaMapper.isSupported(withDefinitions));
+    }
+
+    @Test
+    void should_not_support_any_of_or_null() {
+        JsonObjectSchema schema = JsonObjectSchema.builder()
+                .addProperty("shape", JsonAnyOfSchema.builder()
+                        .anyOf(JsonObjectSchema.builder().addNumberProperty("radius").build(),
+                                JsonObjectSchema.builder().addNumberProperty("side").build())
+                        .build())
+                .build();
+
+        assertFalse(SchemaMapper.isSupported(schema));
+        assertFalse(SchemaMapper.isSupported(new JsonNullSchema()));
     }
 }

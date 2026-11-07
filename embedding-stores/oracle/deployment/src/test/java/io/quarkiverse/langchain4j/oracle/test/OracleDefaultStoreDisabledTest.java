@@ -26,7 +26,7 @@ public class OracleDefaultStoreDisabledTest {
             .overrideConfigKey("quarkus.langchain4j.oracle.products.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.oracle.products.create-option", "CREATE_OR_REPLACE")
             .overrideRuntimeConfigKey("quarkus.langchain4j.oracle.products.table", "product_embeddings")
-            .overrideConfigKey("quarkus.class-loading.parent-first-artifacts", "ai.djl.huggingface:tokenizers");
+            .overrideConfigKey("quarkus.class-loading.parent-first-artifacts", "ai.djl.huggingface:tokenizers,ai.djl:api");
 
     @Inject
     @EmbeddingStoreName("products")

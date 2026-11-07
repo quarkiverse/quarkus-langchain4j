@@ -333,6 +333,8 @@ The main difference is that in Quarkus, you do not need to create an implementat
 
 All the events for a single invocation can be correlated by `event.invocationContext().invocationId()`.
 
+An invocation always ends with exactly one of `AiServiceCompletedEvent`, `AiServiceErrorEvent` or `AiServiceCancelledEvent`, so observing the three of them together is enough to see every invocation finish.
+
 The following example shows a class that audits all events fired by select AI Services.
 
 NOTE: These methods do not all need to live in the same class and the name of the class and the methods do not matter. It is only shown this way for demonstration purposes.
@@ -343,6 +345,7 @@ See an example below:
 
 [source,java]
 ----
+import dev.langchain4j.observability.api.event.AiServiceCancelledEvent;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
@@ -377,6 +380,11 @@ public class AuditingListener {
 
     public void assistant2ServiceError(@Observes @AiServiceSelector(Assistant2.class) AiServiceErrorEvent serviceErrorEvent) {
 		// Invoked when there was an exception computing the result of the Assistant2 AiService method
+	}
+
+	public void aiServiceCancelled(@Observes AiServiceCancelledEvent serviceCancelledEvent) {
+		// Invoked when the invocation was cancelled before it completed,
+		// for example when the subscription to a returned Multi is cancelled
 	}
 
 	public void serviceResponseReceived(@Observes AiServiceResponseReceivedEvent serviceResponseReceivedEvent) {

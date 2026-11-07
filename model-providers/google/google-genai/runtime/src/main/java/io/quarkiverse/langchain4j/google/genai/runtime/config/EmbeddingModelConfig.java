@@ -15,7 +15,7 @@ public interface EmbeddingModelConfig {
      * @see <a href=
      *      "https://ai.google.dev/gemini-api/docs/models/gemini">https://ai.google.dev/gemini-api/docs/models/gemini</a>
      */
-    @WithDefault("text-embedding-004")
+    @WithDefault("gemini-embedding-2")
     String modelId();
 
     /**
@@ -24,7 +24,7 @@ public interface EmbeddingModelConfig {
     Optional<Integer> outputDimension();
 
     /**
-     * Optional task type for which the embeddings will be used.
+     * Optional task type for which the embeddings will be used. Ignored by gemini-embedding-2.
      * <p>
      * Possible values: RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION,
      * CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION, CODE_RETRIEVAL_QUERY

@@ -18,7 +18,7 @@ public interface ChatModelConfig {
      * @see <a href=
      *      "https://ai.google.dev/gemini-api/docs/models/gemini">https://ai.google.dev/gemini-api/docs/models/gemini</a>
      */
-    @WithDefault("gemini-2.5-flash")
+    @WithDefault("gemini-3.5-flash")
     String modelId();
 
     /**
@@ -31,9 +31,9 @@ public interface ChatModelConfig {
      * If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the
      * temperature.
      * <p>
-     * Range for gemini-2.5-flash: 0.0 - 2.0
+     * Range for gemini-3.5-flash: 0.0 - 2.0
      * <p>
-     * Default for gemini-2.5-flash: 1.0
+     * Default for gemini-3.5-flash: 1.0
      */
     @WithDefault("${quarkus.langchain4j.temperature}")
     OptionalDouble temperature();
@@ -56,7 +56,7 @@ public interface ChatModelConfig {
      * <p>
      * Range: 0.0 - 1.0
      * <p>
-     * Default for gemini-2.5-flash: 0.95
+     * Default for gemini-3.5-flash: 0.95
      */
     OptionalDouble topP();
 
@@ -70,9 +70,9 @@ public interface ChatModelConfig {
      * <p>
      * Specify a lower value for less random responses and a higher value for more random responses.
      * <p>
-     * Range: 1-40
+     * Range: 1-40, for models that support setting it
      * <p>
-     * gemini-2.5-flash doesn't support topK
+     * gemini-3.5-flash has a fixed topK of 64
      */
     OptionalInt topK();
 

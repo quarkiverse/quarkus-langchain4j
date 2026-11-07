@@ -95,6 +95,7 @@ import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
+import dev.langchain4j.observability.api.event.RetrievalAugmentedEvent;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.query.Metadata;
@@ -339,6 +340,15 @@ public class AiServiceMethodImplementationSupport {
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
 
             augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
+
+            // New firing
+            context.eventListenerRegistrar.fireEvent(
+                    RetrievalAugmentedEvent.builder()
+                            .invocationContext(invocationContext)
+                            .chatMessage(userMessage)
+                            .contents(augmentationResult.contents())
+                            .build());
+
             userMessage = (UserMessage) augmentationResult.chatMessage();
         }
 
@@ -597,6 +607,7 @@ public class AiServiceMethodImplementationSupport {
                                 .invocationContext(invocationContext)
                                 .request(toolExecutionRequest)
                                 .resultContents(toolExecutionResult.resultContents())
+                                .isError(toolExecutionResult.isError())
                                 .build());
 
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessageUtil
@@ -739,6 +750,12 @@ public class AiServiceMethodImplementationSupport {
             tokenUsageAccumulator = sum(tokenUsageAccumulator, response.tokenUsage());
         }
 
+        // The last response the model produced, i.e. the first one without tool execution requests.
+        // Captured before the output guardrails run, because Result#finalResponse() is documented as the
+        // response returned by the ChatModel, which is what upstream's ToolServiceResult#finalResponse()
+        // holds as well.
+        ChatResponse finalModelResponse = response;
+
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
         var guardrailResult = GuardrailsSupport.executeOutputGuardrails(guardrailService, methodCreateInfo, response,
                 chatExecutor,
@@ -790,6 +807,8 @@ public class AiServiceMethodImplementationSupport {
                     .sources(augmentationResult == null ? null : augmentationResult.contents())
                     .finishReason(response.finishReason())
                     .toolExecutions(allToolExecutions)
+                    .intermediateResponses(intermediateResponses)
+                    .finalResponse(finalModelResponse)
                     .build();
 
             context.eventListenerRegistrar.fireEvent(
@@ -1388,6 +1407,12 @@ public class AiServiceMethodImplementationSupport {
                 if (memoryId != null) {
                     return memoryId + perServiceSuffix;
                 }
+            }
+            if (createInfo.getSharedMemoryName().isPresent()) {
+                // No provider had an ambient id to offer, which happens when an application scoped AI service is
+                // invoked outside a request context. Keep the suffix: @SharedMemory promises that its methods share
+                // one memory, and without it they would all fall back into the plain "default" one.
+                return "default" + perServiceSuffix;
             }
         }
 
