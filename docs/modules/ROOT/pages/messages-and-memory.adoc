@@ -317,6 +317,8 @@ Compression is implemented using a `ChatModel` that summarizes the conversation 
 
 Your custom `ChatMemory` implementation can handle these strategies, or you can use the built-in `MessageWindowChatMemory` or `TokenWindowChatMemory` (eviction based on message count or token count, respectively).
 
+The xref:context-compaction.adoc[Context Compaction] extension (experimental) provides a curated set of compaction strategies (tool output pruning, summarization, relevance, time decay...) that keep the full history in the store and only compact what is sent to the model.
+
 == `@MemoryId`: Multi-Session Memory
 
 To assign different memory instances to different users or conversations, annotate a method parameter with `@MemoryId`:
