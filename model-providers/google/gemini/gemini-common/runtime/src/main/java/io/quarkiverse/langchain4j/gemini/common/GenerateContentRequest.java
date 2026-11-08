@@ -2,10 +2,22 @@ package io.quarkiverse.langchain4j.gemini.common;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record GenerateContentRequest(List<Content> contents, SystemInstruction systemInstruction, List<Tool> tools,
-        ToolConfig toolConfig, GenerationConfig generationConfig) {
+        ToolConfig toolConfig, GenerationConfig generationConfig,
+        @JsonInclude(JsonInclude.Include.NON_NULL) ModelArmorConfig modelArmorConfig) {
+
+    public GenerateContentRequest(List<Content> contents, SystemInstruction systemInstruction, List<Tool> tools,
+            ToolConfig toolConfig, GenerationConfig generationConfig) {
+        this(contents, systemInstruction, tools, toolConfig, generationConfig, null);
+    }
+
+    public GenerateContentRequest withModelArmorConfig(ModelArmorConfig modelArmorConfig) {
+        return new GenerateContentRequest(contents, systemInstruction, tools, toolConfig, generationConfig,
+                modelArmorConfig);
+    }
 
     public record SystemInstruction(List<Part> parts) {
 
@@ -55,4 +67,11 @@ public record GenerateContentRequest(List<Content> contents, SystemInstruction s
         }
     }
 
+    /**
+     * Model Armor templates that Vertex AI uses to screen the prompt and the response.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record ModelArmorConfig(String promptTemplateName, String responseTemplateName) {
+
+    }
 }

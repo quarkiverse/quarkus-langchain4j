@@ -11,7 +11,7 @@ public final class FinishReasonMapper {
         return switch (finishReason) {
             case STOP -> FinishReason.STOP;
             case MAX_TOKENS -> FinishReason.LENGTH;
-            case SAFETY -> FinishReason.CONTENT_FILTER;
+            case SAFETY, MODEL_ARMOR -> FinishReason.CONTENT_FILTER;
             default -> FinishReason.OTHER;
         };
     }
