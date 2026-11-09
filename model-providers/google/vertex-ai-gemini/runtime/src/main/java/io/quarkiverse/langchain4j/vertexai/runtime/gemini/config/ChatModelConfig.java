@@ -96,7 +96,10 @@ public interface ChatModelConfig {
     Optional<Duration> timeout();
 
     /**
-     * Model Armor templates used by Vertex AI to screen prompts and responses.
+     * Screens prompts and responses with Google Cloud Model Armor (prompt injection, sensitive data, harmful content)
+     * before they reach the model or the caller. Requires the Model Armor API and {@code roles/modelarmor.user} for the
+     * Vertex AI service agent. A blocked request fails the call; a blocked streamed response finishes with
+     * {@code CONTENT_FILTER}.
      *
      * @see <a href=
      *      "https://docs.cloud.google.com/security-command-center/docs/model-armor-vertex-integration">Model Armor
@@ -108,16 +111,19 @@ public interface ChatModelConfig {
     interface ModelArmorConfig {
 
         /**
-         * The Model Armor template used to screen prompts, in the form
-         * {@code projects/{project}/locations/{location}/templates/{template}}.
-         * The template must be in the same location as the model.
+         * The Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they
+         * reach the model, in the form {@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}.
+         * The template must be in the same location as the model, and the Vertex AI service agent needs
+         * {@code roles/modelarmor.user}. A blocked prompt fails the call.
          */
         Optional<String> promptTemplateName();
 
         /**
-         * The Model Armor template used to screen responses, in the form
-         * {@code projects/{project}/locations/{location}/templates/{template}}.
-         * The template must be in the same location as the model.
+         * The Model Armor template that screens responses before they reach the caller, in the form
+         * {@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}.
+         * The template must be in the same location as the model, and the Vertex AI service agent needs
+         * {@code roles/modelarmor.user}. A blocked response fails the call; a blocked streamed response finishes with
+         * {@code CONTENT_FILTER}.
          */
         Optional<String> responseTemplateName();
     }

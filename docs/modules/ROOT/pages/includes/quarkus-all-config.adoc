@@ -29397,7 +29397,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The Model Armor template used to screen prompts, in the form `projects/++{++project`/locations/++{++location++}++/templates/++{++template++}}++. The template must be in the same location as the model.
+The Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model, in the form `projects/PROJECT/locations/LOCATION/templates/TEMPLATE`. The template must be in the same location as the model, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -29418,7 +29418,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The Model Armor template used to screen responses, in the form `projects/++{++project`/locations/++{++location++}++/templates/++{++template++}}++. The template must be in the same location as the model.
+The Model Armor template that screens responses before they reach the caller, in the form `projects/PROJECT/locations/LOCATION/templates/TEMPLATE`. The template must be in the same location as the model, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call; a blocked streamed response finishes with `CONTENT_FILTER`.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -29988,7 +29988,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The Model Armor template used to screen prompts, in the form `projects/++{++project`/locations/++{++location++}++/templates/++{++template++}}++. The template must be in the same location as the model.
+The Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model, in the form `projects/PROJECT/locations/LOCATION/templates/TEMPLATE`. The template must be in the same location as the model, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -30009,7 +30009,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The Model Armor template used to screen responses, in the form `projects/++{++project`/locations/++{++location++}++/templates/++{++template++}}++. The template must be in the same location as the model.
+The Model Armor template that screens responses before they reach the caller, in the form `projects/PROJECT/locations/LOCATION/templates/TEMPLATE`. The template must be in the same location as the model, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call; a blocked streamed response finishes with `CONTENT_FILTER`.
 
 
 ifdef::add-copy-button-to-env-var[]
