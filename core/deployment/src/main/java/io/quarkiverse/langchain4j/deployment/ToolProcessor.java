@@ -117,6 +117,7 @@ public class ToolProcessor {
     private static final DotName INVOCATION_CONTEXT = DotName.createSimple(InvocationContext.class);
 
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
+    private static final DotName OPTIONAL = DotName.createSimple(Optional.class);
     private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
             .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class, Integer.class,
@@ -388,6 +389,7 @@ public class ToolProcessor {
                         }
 
                         var pInstance = parameter.annotation(P);
+                        boolean isOptionalParameter = isOptional(parameter.type());
                         var jsonSchemaElement = toJsonSchemaElement(parameter, index);
                         properties.put(parameter.name(), jsonSchemaElement);
 
@@ -417,7 +419,7 @@ public class ToolProcessor {
                         AnnotationValue requiredValue = pInstance != null ? pInstance.value("required") : null;
                         // @P#required defaults to true, and Jandex does not materialize annotation defaults
                         boolean isRequired = requiredValue == null || requiredValue.asBoolean();
-                        if (!hasDefaultValue && isRequired) {
+                        if (!isOptionalParameter && !hasDefaultValue && isRequired) {
                             required.add(parameter.name());
                         }
                     }
@@ -996,10 +998,27 @@ public class ToolProcessor {
     }
 
     private JsonSchemaElement toJsonSchemaElement(MethodParameterInfo parameter, IndexView index) {
-        Type type = parameter.type();
+        // the LLM must be shown the schema of the wrapped type, not of Optional itself, mirroring
+        // ToolSpecifications#jsonSchemaElementFrom(Parameter, Map) in langchain4j core
+        Type type = unwrapOptional(parameter.type());
         String description = descriptionFrom(parameter);
 
         return toJsonSchemaElement(type, index, description);
+    }
+
+    private static boolean isOptional(Type type) {
+        return OPTIONAL.equals(type.name());
+    }
+
+    /**
+     * Returns the type argument of an {@code Optional<T>} type, or the type itself when it is not an
+     * {@code Optional} (or is a raw one, which carries no type argument to unwrap to).
+     */
+    private static Type unwrapOptional(Type type) {
+        if (isOptional(type) && type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            return type.asParameterizedType().arguments().get(0);
+        }
+        return type;
     }
 
     private JsonSchemaElement toJsonSchemaElement(Type type, IndexView index, String description) {
