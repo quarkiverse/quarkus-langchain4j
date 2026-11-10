@@ -1242,6 +1242,38 @@ public interface AnswerCascade {
 
 Both planners report their decisions, so each of them is notified to the listeners with `onPlannerModelResponse`, and the Executions page of the Dev UI shows their tokens on the row of the planner agent.
 
+== Authenticating to A2A Agents
+
+To send credentials to remote A2A agents, declare an `AgentAuthProvider` bean. Its `Authorization` header value is
+added to every request to an A2A agent: those declared with `@A2AClientAgent`, those built with
+`AgenticServices.a2aBuilder`, and those discovered through Apicurio Registry.
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.agentic.auth.AgentAuthProvider;
+
+@ApplicationScoped
+public class AgentTokens implements AgentAuthProvider {
+
+    @Inject
+    OidcClient oidcClient; // <1>
+
+    @Override
+    public String getAuthorization(Input input) { // <2>
+        return "Bearer " + oidcClient.getTokens().await().indefinitely().getAccessToken();
+    }
+}
+----
+<1> For example a Quarkus OIDC client, which refreshes the token.
+<2> Called for every request. `input.agentName()` and `input.agentUrl()` identify the agent, so the provider can choose
+credentials per agent. Returning `null` sends no `Authorization` header.
+
+Only one `AgentAuthProvider` bean is supported.
+
+The header is added by an interceptor on the client's JSON-RPC transport. An `@A2AClientCustomizer` method runs after it,
+so a customizer that configures the JSON-RPC transport itself replaces that interceptor and has to add the credentials
+itself.
+
 == Discovering A2A Agents with Apicurio Registry
 
 https://www.apicur.io/registry/[Apicurio Registry] can act as a catalog of https://a2a-protocol.org/[A2A] agents. With the

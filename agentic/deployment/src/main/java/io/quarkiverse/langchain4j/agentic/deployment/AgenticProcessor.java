@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.spi.DeploymentException;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -64,6 +65,7 @@ import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
 import io.quarkiverse.langchain4j.agentic.runtime.ClassAgentDelegate;
 import io.quarkiverse.langchain4j.agentic.runtime.ClassBasedAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.DecisionAgentInfo;
+import io.quarkiverse.langchain4j.agentic.runtime.a2a.A2AAgentAuth;
 import io.quarkiverse.langchain4j.deployment.AiServicesProcessor;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.ClassBasedAiServiceBuildItem;
@@ -97,6 +99,7 @@ import io.quarkus.arc.processor.BeanInfo;
 import io.quarkus.arc.processor.BeanResolver;
 import io.quarkus.arc.processor.BuiltinScope;
 import io.quarkus.arc.processor.ScopeInfo;
+import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -122,6 +125,10 @@ import io.quarkus.gizmo.TryBlock;
 public class AgenticProcessor {
 
     private static final Logger log = Logger.getLogger(AgenticProcessor.class);
+
+    // langchain4j-agentic-a2a, which creates the A2A client agents, is optional: a class literal would fail the build
+    // of the applications that don't use it
+    private static final String A2A_SERVICE_IMPLEMENTATION = "dev.langchain4j.agentic.a2a.DefaultA2AService";
 
     /**
      * The annotations of the agents that langchain4j-agentic implements with an AI service built from their interface:
@@ -2687,6 +2694,42 @@ public class AgenticProcessor {
             name = vInstance.value().asString();
         }
         return name;
+    }
+
+    @BuildStep
+    UnremovableBeanBuildItem keepAgentAuthProvider() {
+        // Looked up programmatically for each request to an A2A agent
+        return UnremovableBeanBuildItem.beanTypes(AgenticLangChain4jDotNames.AGENT_AUTH_PROVIDER);
+    }
+
+    @BuildStep
+    void validateAgentAuthProviders(ValidationPhaseBuildItem validationPhase,
+            BuildProducer<ValidationErrorBuildItem> validationErrors) {
+        List<String> providers = validationPhase.getContext().beans()
+                .withBeanType(AgenticLangChain4jDotNames.AGENT_AUTH_PROVIDER)
+                .stream().map(bean -> bean.getBeanClass().toString()).sorted().toList();
+        if (providers.size() > 1) {
+            validationErrors.produce(new ValidationErrorBuildItem(new DeploymentException(
+                    "Only one AgentAuthProvider bean is supported, found " + providers.size() + ": "
+                            + String.join(", ", providers)
+                            + ". It receives the agent each request is for, so one provider can choose credentials per agent.")));
+        }
+    }
+
+    @BuildStep
+    void registerA2AAgentAuth(BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
+        if (QuarkusClassLoader.isClassPresentAtRuntime(A2A_SERVICE_IMPLEMENTATION)) {
+            additionalBeans.produce(AdditionalBeanBuildItem.builder().addBeanClass(A2AAgentAuth.class)
+                    .setDefaultScope(BuiltinScope.SINGLETON.getName()).setUnremovable().build());
+        }
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void configureA2AAgentAuth(BeanContainerBuildItem beanContainer, AgenticRecorder recorder) {
+        if (QuarkusClassLoader.isClassPresentAtRuntime(A2A_SERVICE_IMPLEMENTATION)) {
+            recorder.configureA2AAgentAuth(beanContainer.getValue());
+        }
     }
 
 }
