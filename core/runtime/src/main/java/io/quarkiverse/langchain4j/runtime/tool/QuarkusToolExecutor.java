@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
@@ -276,6 +277,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
             }
         }
 
+        substituteEmptyOptionals(methodMetadata, finalArgs);
+
         Object memoryId = invocationContext.chatMemoryId();
         if (memoryId != null && methodMetadata.getMemoryIdParamPosition() != null) {
             finalArgs[methodMetadata.getMemoryIdParamPosition()] = memoryId;
@@ -288,6 +291,35 @@ public class QuarkusToolExecutor implements ToolExecutor {
             finalArgs[methodMetadata.getInvocationContextParamPosition()] = invocationContext;
         }
         return finalArgs;
+    }
+
+    /**
+     * Passes {@link Optional#empty()} rather than {@code null} for an {@code Optional<T>} parameter the LLM
+     * left out, mirroring {@code DefaultToolExecutor#createOptional}. Without this, tool code calling
+     * {@code isPresent()} on a parameter it deliberately declared optional throws a
+     * {@link NullPointerException} in exactly the case the {@code Optional} was meant to express.
+     * <p>
+     * The declared parameter types are read off the generated argument mapper, whose fields mirror the tool
+     * method's parameters one for one, the same way default-value substitution above does it.
+     */
+    private void substituteEmptyOptionals(ToolInvoker.MethodMetadata methodMetadata, Object[] finalArgs) {
+        Class<? extends Mappable> mapperClass = null;
+        for (var entry : methodMetadata.getNameToParamPosition().entrySet()) {
+            Integer pos = entry.getValue();
+            if (pos == null || finalArgs[pos] != null) {
+                continue;
+            }
+            if (mapperClass == null) {
+                mapperClass = loadMapperClass();
+            }
+            try {
+                if (mapperClass.getField(entry.getKey()).getType() == Optional.class) {
+                    finalArgs[pos] = Optional.empty();
+                }
+            } catch (NoSuchFieldException e) {
+                // not an LLM-supplied argument (e.g. a parameter the framework fills in), so nothing to do
+            }
+        }
     }
 
     private Set<String> parseRawJsonKeys(String argumentsJsonStr) throws JsonProcessingException {
