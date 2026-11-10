@@ -30,6 +30,8 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.service.decision.ThresholdProvider;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.quarkiverse.langchain4j.agentic.runtime.a2a.A2AAgentAuth;
+import io.quarkiverse.langchain4j.agentic.runtime.a2a.AuthenticatingA2AService;
 import io.quarkiverse.langchain4j.agentic.runtime.devui.DevAgentMonitorHolder;
 import io.quarkiverse.langchain4j.runtime.decision.ConfiguredThresholds;
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
@@ -161,6 +163,12 @@ public class AgenticRecorder {
                 log.warnf("Unable to register class '%s' for AgenticScope deserialization", className);
             }
         }
+    }
+
+    @RuntimeInit
+    public void configureA2AAgentAuth(BeanContainer beanContainer) {
+        // Every A2A client agent is created through the A2AService, including those of other extensions
+        AuthenticatingA2AService.configure(beanContainer.beanInstance(A2AAgentAuth.class));
     }
 
     @RuntimeInit

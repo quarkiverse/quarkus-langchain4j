@@ -19,6 +19,11 @@
       <artifactId>langchain4j-agentic</artifactId>
     </dependency>
     <dependency>
+      <groupId>dev.langchain4j</groupId>
+      <artifactId>langchain4j-agentic-a2a</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>

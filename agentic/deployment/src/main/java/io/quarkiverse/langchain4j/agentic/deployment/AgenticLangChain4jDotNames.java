@@ -34,6 +34,7 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.service.MemoryId;
+import io.quarkiverse.langchain4j.agentic.auth.AgentAuthProvider;
 
 public final class AgenticLangChain4jDotNames {
 
@@ -107,6 +108,7 @@ public final class AgenticLangChain4jDotNames {
             .createSimple(AGENTIC_PACKAGE + ".SupervisorRequest");
     public static final DotName A2A_CLIENT_CUSTOMIZER = DotName
             .createSimple(AGENTIC_PACKAGE + ".A2AClientCustomizer");
+    public static final DotName AGENT_AUTH_PROVIDER = DotName.createSimple(AgentAuthProvider.class);
     public static final DotName DECISION_MODEL_SUPPLIER = DotName
             .createSimple(AGENTIC_PACKAGE + ".DecisionModelSupplier");
     public static final DotName DECISION_THRESHOLD_SUPPLIER = DotName
