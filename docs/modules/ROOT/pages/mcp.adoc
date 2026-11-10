@@ -418,12 +418,28 @@ Point the integration at your Apicurio Registry instance:
 quarkus.langchain4j.mcp.apicurio-registry.url=http://localhost:8080/apis/registry/v3
 ----
 
-If your registry requires authentication, you can provide a bearer token:
+If the registry requires authentication, configure one of the following. They authenticate to the registry only, never to the MCP servers it lists.
+
+OAuth2 client credentials, for example with Keycloak. Tokens are fetched and refreshed automatically:
 
 [source,properties]
 ----
-quarkus.langchain4j.mcp.apicurio-registry.auth-token=my-token
+quarkus.langchain4j.mcp.apicurio-registry.auth.token-endpoint=https://keycloak.example.com/realms/registry/protocol/openid-connect/token
+quarkus.langchain4j.mcp.apicurio-registry.auth.client-id=my-agent
+quarkus.langchain4j.mcp.apicurio-registry.auth.client-secret=${REGISTRY_CLIENT_SECRET}
+# Optional
+quarkus.langchain4j.mcp.apicurio-registry.auth.scope=openid
 ----
+
+HTTP basic authentication:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.apicurio-registry.auth.username=my-agent
+quarkus.langchain4j.mcp.apicurio-registry.auth.password=${REGISTRY_PASSWORD}
+----
+
+Configuring both fails at startup.
 
 === How It Works
 

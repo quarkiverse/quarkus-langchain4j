@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.apicurio.registry.client.RegistryClientFactory;
+import io.apicurio.registry.client.common.HttpAdapterType;
 import io.apicurio.registry.client.common.RegistryClientOptions;
 import io.apicurio.registry.rest.client.RegistryClient;
 import io.quarkiverse.langchain4j.mcp.runtime.apicurio.config.McpApicurioRegistryRuntimeConfig;
@@ -19,10 +20,19 @@ import io.vertx.core.Vertx;
 @Recorder
 public class McpApicurioRegistryRecorder {
 
+    private static final String CONFIG_PREFIX = "quarkus.langchain4j.mcp.apicurio-registry";
+
     private final RuntimeValue<McpApicurioRegistryRuntimeConfig> runtimeConfig;
 
     public McpApicurioRegistryRecorder(RuntimeValue<McpApicurioRegistryRuntimeConfig> runtimeConfig) {
         this.runtimeConfig = runtimeConfig;
+    }
+
+    /**
+     * Fails startup on invalid registry credentials, rather than the first registry call.
+     */
+    public void validateConfiguration() {
+        RegistryClientAuth.validate(runtimeConfig.getValue().auth(), CONFIG_PREFIX);
     }
 
     public Function<SyntheticCreationalContext<ApicurioRegistryMcpTools>, ApicurioRegistryMcpTools> apicurioRegistryMcpToolsFunction(
@@ -44,7 +54,10 @@ public class McpApicurioRegistryRecorder {
                 }
                 McpToolProvider mcpToolProvider = (McpToolProvider) unwrapped;
 
-                RegistryClientOptions options = RegistryClientOptions.create(config.url(), vertx.get());
+                // The SDK's Vert.x adapter does not support Vert.x 5 OAuth2 yet, so use the JDK adapter
+                RegistryClientOptions options = RegistryClientOptions.create(config.url())
+                        .httpAdapter(HttpAdapterType.JDK);
+                RegistryClientAuth.apply(options, config.auth());
                 RegistryClient registryClient = RegistryClientFactory.create(options);
 
                 return new ApicurioRegistryMcpTools(registryClient, mcpToolProvider, vertx.get());

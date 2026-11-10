@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import dev.langchain4j.mcp.McpToolProvider;
 import io.apicurio.registry.client.RegistryClientFactory;
+import io.apicurio.registry.client.common.HttpAdapterType;
 import io.apicurio.registry.client.common.RegistryClientOptions;
 import io.apicurio.registry.rest.client.RegistryClient;
 import io.vertx.core.Vertx;
@@ -60,7 +61,8 @@ public class ApicurioRegistryMcpToolsBuilder {
         Objects.requireNonNull(toolProvider, "toolProvider is required");
         Objects.requireNonNull(vertx, "vertx is required");
 
-        RegistryClientOptions options = RegistryClientOptions.create(registryUrl);
+        // The SDK's Vert.x adapter does not support Vert.x 5 OAuth2 yet, so use the JDK adapter
+        RegistryClientOptions options = RegistryClientOptions.create(registryUrl).httpAdapter(HttpAdapterType.JDK);
         if (username != null && password != null) {
             options.basicAuth(username, password);
         } else if (tokenEndpoint != null && clientId != null && clientSecret != null) {
