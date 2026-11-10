@@ -1,0 +1,29 @@
+# Docs-only PR workflow.
+#
+# build-pull-request.yml is skipped when a PR touches ONLY the paths below (its paths-ignore).
+# The merge gate (ci-merge-gate.yml) is a workflow_run that fires when a watched workflow completes
+# and reads only the workflows that actually ran for the commit. Without a workflow running for
+# docs-only PRs, the 'CI Merge Gate' status would never be posted and such PRs would be stuck.
+# This lightweight workflow runs for exactly those PRs so the gate can resolve them.
+# Its name MUST stay in ci-merge-gate.yml's watched workflows list.
+name: Docs (on pull request)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '.gitignore'
+      - 'CODEOWNERS'
+      - 'LICENSE'
+      - '*.md'
+      - '*.adoc'
+      - '*.txt'
+      - '.all-contributorsrc'
+
+jobs:
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docs-only change, no build required
+        run: echo "Docs-only change; the full build is intentionally skipped."
