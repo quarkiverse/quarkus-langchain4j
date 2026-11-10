@@ -100,16 +100,51 @@ See <<configure-default-memory,Configuring the Default Memory>> for more details
 
 == CDI Scope and Memory Isolation
 
-Memory is tied to the CDI scope of the AI service.
-For each exchange (a potential multi-turn conversation), memory is isolated based on the service’s scope:
+Memory is tied to the CDI scope of the AI service.  This means when the CDI scope of the AI service ends (destroyed)
+any chat memory it referenced will also be cleared (even if it is shared and passed in with a `@MemoryId` parameter).
 
-* `@ApplicationScoped` — all users share the same memory (dangerous, requires the usage of `@MemoryId` to isolate).
-* `@RequestScoped` — memory is isolated per request, usually not useful except in function calling scenarios.
-* `@SessionScoped` — memory per user/session (recommended for web apps, but limited to websocket-next for the moment).
+* `@ApplicationScoped` — memory is never automatically cleared.
+* `@RequestScoped` — memory is retained for the duration of a request (i.e. a WebSocket or HTTP request)
+* `@SessionScoped` — memory is retained for duration of a session (currently only websocket-next connections support `@SessionScoped`).
+* `@ChatScoped` / `@PerChatScoped` — memory is retained for duration of the conversational scope whose lifecycle is controlled by the user. (see xref:chat-scopes.adoc[Chat Scopes Framework] extension).
+* `@InvocationScoped` — memory is retained for the duration of a single top-level method invocation. (see xref:chat-scopes.adoc[Chat Scopes Framework] extension).
+
+It is recommended that if you want to manage chat memory yourself, your AI services should be `@ApplicationScoped` and that
+you should use the `@MemoryId` parameter.  You will also have to manually evict memory using an injected reference
+of the `ChatMemoryStore`.
+
+Be careful sharing memory ids (with `@MemoryId`) between different AI services.  For example, if one AI service
+is `@ApplicationScoped` and the other is `@RequestScoped`, memory will be cleared for that `@MemoryId` each time
+the request scoped AI service is destroyed (at the end of every Web Socket or HTTP requst for instance).
+
+Generally you should let Quarkus LangChain4j manage chat memory for you.
+It is recommended that you do not use `@MemoryId` parameters.  Choose the appropriate CDI scope for your AI service
+and let Quarkus manage the default memory id generation and lifecycle of chat memory:
+
+* `@ChatScoped`/`@PerChatScoped` should be used for conversations that span user requests (i.e. a conversation with a remote client)
+* `@InvocationScoped` for one-off interactions with the LLM that require no conversational memory.
+* `@RequestScoped` if you have a small conversation with the context of an HTTP or Web Socket request
+
+
+[#default-memory-ids]
+=== Default Memory Ids
+
+When an AI service method does not have a `@MemoryId` parameter, Quarkus LangChain4J generates a default memory ID using this format:
+
+`<ID>#<FQN of AI service interface>.<method-name>`
+
+The `<ID>` portion of the default memory id is unique to the CDI scope the AI service is attached to.
+* `@ChatScoped` / `@PerChatScoped` services use the current chat scope ID.
+* `@InvocationScoped` services use the random ID generated for the current top-level invocation.
+* `@SessionScoped` is the current WebSocket connection ID
+* `@RequestScoped` is a random ID generated for the duration of the request (Web Socket or HTTP).
+
+You can define your own ID generator by plugging in an implementation of `DefaultMemoryIdProvider` which you can
+hook in via the Service Loader pattern.  This is not recommended though.
 
 [IMPORTANT]
 ====
-AI Services are `@RequestScoped` by default, meaning memory is isolated per request.
+AI Services are `@RequestScoped` by default.
 ====
 
 [NOTE]
