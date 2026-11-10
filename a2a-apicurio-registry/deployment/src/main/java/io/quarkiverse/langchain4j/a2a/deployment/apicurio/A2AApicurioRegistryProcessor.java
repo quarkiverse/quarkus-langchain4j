@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.spi.DeploymentException;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -12,12 +13,16 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.langchain4j.a2a.runtime.apicurio.A2AAgentAuthProvider;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.A2AAgentCardPublisher;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.A2AApicurioRegistryRecorder;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.ApicurioAgentsRegistry;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.PublishToAgentRegistry;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.config.A2AApicurioRegistryBuildTimeConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -32,6 +37,27 @@ public class A2AApicurioRegistryProcessor {
 
     private static final DotName AGENTS_REGISTRY = DotName.createSimple(ApicurioAgentsRegistry.class);
     private static final DotName PUBLISH_ANNOTATION = DotName.createSimple(PublishToAgentRegistry.class);
+
+    @BuildStep
+    UnremovableBeanBuildItem keepAgentAuthProvider() {
+        // Looked up programmatically when the agents registry is created
+        return UnremovableBeanBuildItem.beanTypes(A2AAgentAuthProvider.class);
+    }
+
+    @BuildStep
+    void validateAgentAuthProviders(ValidationPhaseBuildItem validationPhase,
+            BuildProducer<ValidationErrorBuildItem> errors) {
+        List<String> providers = validationPhase.getContext().beans()
+                .withBeanType(DotName.createSimple(A2AAgentAuthProvider.class))
+                .stream().map(bean -> bean.getBeanClass().toString()).sorted().toList();
+        if (providers.size() > 1) {
+            errors.produce(new ValidationErrorBuildItem(new DeploymentException(
+                    "Only one " + A2AAgentAuthProvider.class.getSimpleName() + " bean is supported, found "
+                            + providers.size() + ": " + String.join(", ", providers)
+                            + ". It receives the agent each request is for, so one provider can choose"
+                            + " credentials per agent.")));
+        }
+    }
 
     @BuildStep
     FeatureBuildItem feature() {
