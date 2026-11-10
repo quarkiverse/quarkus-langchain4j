@@ -23,6 +23,11 @@
             <artifactId>apicurio-registry-java-sdk</artifactId>
             <version>3.2.1</version>
         </dependency>
+        <dependency>
+            <groupId>io.apicurio</groupId>
+            <artifactId>apicurio-registry-java-sdk-adapter-jdk</artifactId>
+            <version>3.2.1</version>
+        </dependency>
     </dependencies>
 
     <build>
