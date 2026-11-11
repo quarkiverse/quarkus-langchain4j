@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.exception.ContentFilteredException;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.output.FinishReason;
@@ -31,6 +32,7 @@ class GeminiStreamingResponseBuilder {
     private final AtomicReference<String> modelName = new AtomicReference<>();
     private final AtomicReference<TokenUsage> tokenUsage = new AtomicReference<>();
     private final AtomicReference<FinishReason> finishReason = new AtomicReference<>();
+    private final AtomicReference<ContentFilteredException> blocked = new AtomicReference<>();
 
     /**
      * Constructs a new GeminiStreamingResponseBuilder.
@@ -60,6 +62,7 @@ class GeminiStreamingResponseBuilder {
             // Gemini returns no candidates when the prompt is blocked; the reason is in promptFeedback instead
             if (partialResponse.promptFeedback() != null && partialResponse.promptFeedback().blockReason() != null) {
                 finishReason.set(FinishReason.CONTENT_FILTER);
+                blocked.set(GenerateContentResponseHandler.promptBlocked(partialResponse.promptFeedback()));
             }
             return Optional.empty();
         }
@@ -76,6 +79,13 @@ class GeminiStreamingResponseBuilder {
         updateContentAndFunctionCalls(message);
 
         return Optional.ofNullable(message.text());
+    }
+
+    /**
+     * Returns the exception describing why the prompt or the response was blocked, or {@code null} if it was not blocked.
+     */
+    public ContentFilteredException blockedException() {
+        return blocked.get();
     }
 
     /**
@@ -124,6 +134,11 @@ class GeminiStreamingResponseBuilder {
     private void updateFinishReason(Candidate candidate) {
         if (candidate.finishReason() != null) {
             this.finishReason.set(fromGFinishReasonToFinishReason(candidate.finishReason()));
+            ContentFilteredException responseBlocked = GenerateContentResponseHandler
+                    .responseBlocked(candidate.finishReason());
+            if (responseBlocked != null) {
+                blocked.set(responseBlocked);
+            }
         }
     }
 
@@ -184,6 +199,7 @@ class GeminiStreamingResponseBuilder {
             case SPII:
             case SAFETY:
             case LANGUAGE:
+            case MODEL_ARMOR:
                 return FinishReason.CONTENT_FILTER;
             case MAX_TOKENS:
                 return FinishReason.LENGTH;

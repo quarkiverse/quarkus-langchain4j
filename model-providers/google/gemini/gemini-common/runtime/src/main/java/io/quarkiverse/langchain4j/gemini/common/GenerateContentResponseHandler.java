@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.exception.ContentFilteredException;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
@@ -15,11 +16,9 @@ public final class GenerateContentResponseHandler {
     }
 
     public static String getText(GenerateContentResponse response) {
-        GenerateContentResponse.FinishReason finishReason = getFinishReason(response);
-        if (finishReason == GenerateContentResponse.FinishReason.SAFETY) {
-            throw new IllegalArgumentException("The response is blocked due to safety reason.");
-        } else if (finishReason == GenerateContentResponse.FinishReason.RECITATION) {
-            throw new IllegalArgumentException("The response is blocked due to unauthorized citations.");
+        ContentFilteredException blocked = responseBlocked(getFinishReason(response));
+        if (blocked != null) {
+            throw blocked;
         }
 
         StringBuilder text = new StringBuilder();
@@ -39,11 +38,9 @@ public final class GenerateContentResponseHandler {
     }
 
     public static String getThoughts(GenerateContentResponse response) {
-        GenerateContentResponse.FinishReason finishReason = getFinishReason(response);
-        if (finishReason == GenerateContentResponse.FinishReason.SAFETY) {
-            throw new IllegalArgumentException("The response is blocked due to safety reason.");
-        } else if (finishReason == GenerateContentResponse.FinishReason.RECITATION) {
-            throw new IllegalArgumentException("The response is blocked due to unauthorized citations.");
+        ContentFilteredException blocked = responseBlocked(getFinishReason(response));
+        if (blocked != null) {
+            throw blocked;
         }
 
         StringBuilder text = new StringBuilder();
@@ -65,8 +62,7 @@ public final class GenerateContentResponseHandler {
     public static GenerateContentResponse.FinishReason getFinishReason(GenerateContentResponse response) {
         int candidateCount = response.candidates() == null ? 0 : response.candidates().size();
         if (candidateCount == 0 && response.promptFeedback() != null && response.promptFeedback().blockReason() != null) {
-            throw new IllegalArgumentException(
-                    "The prompt is blocked with reason " + response.promptFeedback().blockReason() + ".");
+            throw promptBlocked(response.promptFeedback());
         }
         if (candidateCount != 1) {
             throw new IllegalArgumentException(
@@ -75,6 +71,23 @@ public final class GenerateContentResponseHandler {
                             candidateCount));
         }
         return response.candidates().get(0).finishReason();
+    }
+
+    static ContentFilteredException promptBlocked(GenerateContentResponse.PromptFeedback promptFeedback) {
+        String message = promptFeedback.blockReasonMessage();
+        return new ContentFilteredException("The prompt is blocked with reason " + promptFeedback.blockReason()
+                + "." + (message != null ? " " + message : ""));
+    }
+
+    static ContentFilteredException responseBlocked(GenerateContentResponse.FinishReason finishReason) {
+        if (finishReason == GenerateContentResponse.FinishReason.SAFETY) {
+            return new ContentFilteredException("The response is blocked due to safety reason.");
+        } else if (finishReason == GenerateContentResponse.FinishReason.RECITATION) {
+            return new ContentFilteredException("The response is blocked due to unauthorized citations.");
+        } else if (finishReason == GenerateContentResponse.FinishReason.MODEL_ARMOR) {
+            return new ContentFilteredException("The response is blocked by Model Armor.");
+        }
+        return null;
     }
 
     public static TokenUsage getTokenUsage(GenerateContentResponse.UsageMetadata usageMetadata) {
