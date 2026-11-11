@@ -49,6 +49,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
+import dev.langchain4j.agent.tool.SearchBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -363,6 +364,11 @@ public class ToolProcessor {
                     if (returnBehavior != null) {
                         returnBehaviorEnum = ReturnBehavior.valueOf(returnBehavior.asEnum());
                     }
+                    AnnotationValue searchBehavior = instance.value("searchBehavior");
+                    // @Tool#searchBehavior defaults to SEARCHABLE, and Jandex does not materialize annotation defaults
+                    SearchBehavior searchBehaviorEnum = searchBehavior == null
+                            ? SearchBehavior.SEARCHABLE
+                            : SearchBehavior.valueOf(searchBehavior.asEnum());
 
                     ToolSpecification.Builder builder = ToolSpecification.builder()
                             .name(toolName)
@@ -435,18 +441,26 @@ public class ToolProcessor {
                     }
                     builder.parameters(parametersBuilder.build());
 
+                    // mirrors upstream ToolSpecifications#getMetadata: the JSON metadata first, then the
+                    // searchBehavior attribute, which ToolSearchService reads from ToolSpecification#metadata
+                    Map<String, Object> toolMetadata = new LinkedHashMap<>();
                     if (metadataValue != null) {
                         String metadataJson = metadataValue.asString();
                         if (!metadataJson.isEmpty()) {
                             try {
-                                Map<String, Object> toolMetadata = ObjectMapperHolder.OBJECT_MAPPER.readValue(metadataJson,
-                                        ObjectMapperHolder.MAP_TYPE_REF);
-                                builder.metadata(toolMetadata);
+                                toolMetadata.putAll(ObjectMapperHolder.OBJECT_MAPPER.readValue(metadataJson,
+                                        ObjectMapperHolder.MAP_TYPE_REF));
                             } catch (JsonProcessingException e) {
                                 throw new ValidationException("Invalid metadata JSON for tool " + toolName + " in " + className,
                                         e);
                             }
                         }
+                    }
+                    if (searchBehaviorEnum != SearchBehavior.SEARCHABLE) {
+                        toolMetadata.put(ToolSpecification.METADATA_SEARCH_BEHAVIOR, searchBehaviorEnum);
+                    }
+                    if (!toolMetadata.isEmpty()) {
+                        builder.metadata(toolMetadata);
                     }
 
                     Map<String, Integer> nameToParamPosition = toolMethod.parameters().stream().collect(
