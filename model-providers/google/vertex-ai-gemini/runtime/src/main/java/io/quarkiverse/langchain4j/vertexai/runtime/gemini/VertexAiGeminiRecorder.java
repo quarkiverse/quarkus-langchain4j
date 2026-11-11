@@ -150,7 +150,7 @@ public class VertexAiGeminiRecorder {
             if (chatModelConfig.timeout().isPresent()) {
                 builder.timeout(chatModelConfig.timeout().get());
             }
-            builder.modelArmorConfig(toModelArmorConfig(chatModelConfig.modelArmor()));
+            builder.modelArmorConfig(toModelArmorConfig(chatModelConfig.modelArmor(), projectId, location));
 
             // TODO: add the rest of the properties
             return new Function<>() {
@@ -220,7 +220,7 @@ public class VertexAiGeminiRecorder {
             if (chatModelConfig.timeout().isPresent()) {
                 builder.timeout(chatModelConfig.timeout().get());
             }
-            builder.modelArmorConfig(toModelArmorConfig(chatModelConfig.modelArmor()));
+            builder.modelArmorConfig(toModelArmorConfig(chatModelConfig.modelArmor(), projectId, location));
 
             // TODO: add the rest of the properties
             return new Function<>() {
@@ -261,11 +261,24 @@ public class VertexAiGeminiRecorder {
                                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 
-    private static GenerateContentRequest.ModelArmorConfig toModelArmorConfig(ChatModelConfig.ModelArmorConfig config) {
-        if (config.promptTemplateName().isEmpty() && config.responseTemplateName().isEmpty()) {
+    private static GenerateContentRequest.ModelArmorConfig toModelArmorConfig(ChatModelConfig.ModelArmorConfig config,
+            String projectId, String location) {
+        if (config.promptTemplate().isEmpty() && config.responseTemplate().isEmpty()) {
             return null;
         }
-        return new GenerateContentRequest.ModelArmorConfig(config.promptTemplateName().orElse(null),
-                config.responseTemplateName().orElse(null));
+        return new GenerateContentRequest.ModelArmorConfig(
+                toTemplateName(config.promptTemplate(), projectId, location),
+                toTemplateName(config.responseTemplate(), projectId, location));
+    }
+
+    private static String toTemplateName(Optional<String> template, String projectId, String location) {
+        if (template.isEmpty()) {
+            return null;
+        }
+        String value = template.get();
+        if (value.startsWith("projects/")) {
+            return value;
+        }
+        return "projects/" + projectId + "/locations/" + location + "/templates/" + value;
     }
 }

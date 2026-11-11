@@ -36,9 +36,10 @@ import io.quarkus.test.QuarkusUnitTest;
 public class VertexAiGeminiModelArmorTest extends WiremockAware {
 
     private static final String CHAT_MODEL_ID = "gemini-3-flash-preview";
-    private static final String MODEL_URL = "/v1/projects/dummy/locations/dummy/publishers/google/models/" + CHAT_MODEL_ID;
-    private static final String PROMPT_TEMPLATE = "projects/p/locations/europe-west4/templates/prompt";
-    private static final String RESPONSE_TEMPLATE = "projects/p/locations/europe-west4/templates/response";
+    private static final String MODEL_URL = "/v1/projects/my-project/locations/europe-west1/publishers/google/models/"
+            + CHAT_MODEL_ID;
+    private static final String PROMPT_TEMPLATE = "projects/my-project/locations/europe-west1/templates/prompt";
+    private static final String RESPONSE_TEMPLATE = "projects/other-project/locations/europe-west1/templates/response";
     private static final String OK_RESPONSE = """
             {"candidates":[{"content":{"role":"model","parts":[{"text":"Hi"}]},"finishReason":"STOP"}],
              "usageMetadata":{"promptTokenCount":1,"candidatesTokenCount":1,"totalTokenCount":2}}""";
@@ -50,10 +51,11 @@ public class VertexAiGeminiModelArmorTest extends WiremockAware {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(Assistant.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.project-id", "my-project")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.location", "europe-west1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-id", CHAT_MODEL_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.prompt-template-name",
-                    PROMPT_TEMPLATE)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.response-template-name",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.prompt-template", "prompt")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.response-template",
                     RESPONSE_TEMPLATE);
 
     @Inject

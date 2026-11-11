@@ -38,9 +38,13 @@ With `quarkus-langchain4j-vertex-ai-gemini`, Vertex AI can screen prompts and re
 
 [source,properties]
 ----
-quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.prompt-template-name=projects/my-project/locations/europe-west4/templates/my-template
-quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.response-template-name=projects/my-project/locations/europe-west4/templates/my-template
+quarkus.langchain4j.vertexai.gemini.project-id=my-project
+quarkus.langchain4j.vertexai.gemini.location=europe-west1
+quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.prompt-template=my-template
+quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.response-template=my-template
 ----
+
+The template IDs resolve to `projects/my-project/locations/europe-west1/templates/my-template`. To use a template from another project, set the full resource name instead.
 
 * Enable the Model Armor API and grant `roles/modelarmor.user` to the Vertex AI service agent (`service-PROJECT_NUMBER@gcp-sa-aiplatform.iam.gserviceaccount.com`).
 * Use templates in the same region as the configured `location`, otherwise the request fails with `Template not found`.

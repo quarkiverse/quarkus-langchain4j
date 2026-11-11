@@ -111,20 +111,22 @@ public interface ChatModelConfig {
     interface ModelArmorConfig {
 
         /**
-         * The Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they
-         * reach the model, in the form {@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}.
-         * The template must be in the same location as the model, and the Vertex AI service agent needs
+         * The ID of the Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before
+         * they reach the model. The template is looked up in the configured project and location; set a full resource name
+         * ({@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}) to use a template from another project. The template
+         * must be in the region the request is served from, and the Vertex AI service agent needs
          * {@code roles/modelarmor.user}. A blocked prompt fails the call.
          */
-        Optional<String> promptTemplateName();
+        Optional<String> promptTemplate();
 
         /**
-         * The Model Armor template that screens responses before they reach the caller, in the form
-         * {@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}.
-         * The template must be in the same location as the model, and the Vertex AI service agent needs
+         * The ID of the Model Armor template that screens responses before they reach the caller. The template is looked up in
+         * the configured project and location; set a full resource name
+         * ({@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}) to use a template from another project. The template
+         * must be in the region the request is served from, and the Vertex AI service agent needs
          * {@code roles/modelarmor.user}. A blocked response fails the call; a blocked streamed response finishes with
          * {@code CONTENT_FILTER}.
          */
-        Optional<String> responseTemplateName();
+        Optional<String> responseTemplate();
     }
 }
