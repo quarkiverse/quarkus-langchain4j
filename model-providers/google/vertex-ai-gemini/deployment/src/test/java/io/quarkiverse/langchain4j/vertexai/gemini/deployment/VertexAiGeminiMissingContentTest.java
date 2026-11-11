@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.exception.ContentFilteredException;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -53,12 +54,12 @@ public class VertexAiGeminiMissingContentTest extends WiremockAware {
                 .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody(BLOCKED_PROMPT)));
 
         assertThatThrownBy(() -> chatModel.chat(UserMessage.from("hello")))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ContentFilteredException.class)
                 .hasMessageContaining("PROHIBITED_CONTENT");
     }
 
     @Test
-    void blockedStreamedPromptFinishesWithContentFilter() throws Exception {
+    void blockedStreamedPromptFailsTheStream() {
         wiremock().register(post(urlPathEqualTo(MODEL_URL + ":streamGenerateContent"))
                 .willReturn(aResponse().withHeader("Content-Type", "text/event-stream")
                         .withBody("data: " + BLOCKED_PROMPT.replace("\n", "") + "\n\n")));
@@ -80,7 +81,9 @@ public class VertexAiGeminiMissingContentTest extends WiremockAware {
             }
         });
 
-        assertThat(response.get(30, TimeUnit.SECONDS).finishReason()).isEqualTo(FinishReason.CONTENT_FILTER);
+        assertThatThrownBy(() -> response.get(30, TimeUnit.SECONDS))
+                .hasCauseInstanceOf(ContentFilteredException.class)
+                .hasMessageContaining("PROHIBITED_CONTENT");
     }
 
     @Test

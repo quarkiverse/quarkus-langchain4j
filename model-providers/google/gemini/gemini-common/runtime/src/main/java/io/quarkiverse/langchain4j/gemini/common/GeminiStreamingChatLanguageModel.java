@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.exception.ContentFilteredException;
 import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.internal.ExceptionMapper;
 import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
@@ -154,6 +155,11 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
 
         @Override
         public void run() {
+            ContentFilteredException blocked = responseBuilder.blockedException();
+            if (blocked != null) {
+                new OnErrorConsumer(handler, listeners, modelListenerRequest, attributes).accept(blocked);
+                return;
+            }
             ChatResponse chatResponse = responseBuilder.build();
             ChatModelResponseContext responseContext = new ChatModelResponseContext(chatResponse, modelListenerRequest,
                     ModelProvider.OTHER, attributes);

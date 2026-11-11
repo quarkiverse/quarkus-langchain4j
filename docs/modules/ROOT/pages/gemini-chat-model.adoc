@@ -51,4 +51,4 @@ The template IDs resolve to `projects/my-project/locations/europe-west1/template
 * Model Armor cannot be combined with `safetySettings`, which the extension does not send.
 * Screening fails open: if Model Armor is unavailable, the request is not screened.
 
-A blocked prompt or response raises an `IllegalArgumentException`; a blocked streamed response finishes with `CONTENT_FILTER`.
+A blocked prompt or response raises a `ContentFilteredException` that carries the block reason, for both regular and streamed calls. A streamed response can deliver partial text before Model Armor blocks it.

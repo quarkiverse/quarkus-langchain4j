@@ -98,8 +98,8 @@ public interface ChatModelConfig {
     /**
      * Screens prompts and responses with Google Cloud Model Armor (prompt injection, sensitive data, harmful content)
      * before they reach the model or the caller. Requires the Model Armor API and {@code roles/modelarmor.user} for the
-     * Vertex AI service agent. A blocked request fails the call; a blocked streamed response finishes with
-     * {@code CONTENT_FILTER}.
+     * Vertex AI service agent. A blocked prompt or response fails the call, streamed or not, with a
+     * {@code ContentFilteredException}.
      *
      * @see <a href=
      *      "https://docs.cloud.google.com/security-command-center/docs/model-armor-vertex-integration">Model Armor
@@ -115,7 +115,7 @@ public interface ChatModelConfig {
          * they reach the model. The template is looked up in the configured project and location; set a full resource name
          * ({@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}) to use a template from another project. The template
          * must be in the region the request is served from, and the Vertex AI service agent needs
-         * {@code roles/modelarmor.user}. A blocked prompt fails the call.
+         * {@code roles/modelarmor.user}. A blocked prompt fails the call with a {@code ContentFilteredException}.
          */
         Optional<String> promptTemplate();
 
@@ -124,8 +124,8 @@ public interface ChatModelConfig {
          * the configured project and location; set a full resource name
          * ({@code projects/PROJECT/locations/LOCATION/templates/TEMPLATE}) to use a template from another project. The template
          * must be in the region the request is served from, and the Vertex AI service agent needs
-         * {@code roles/modelarmor.user}. A blocked response fails the call; a blocked streamed response finishes with
-         * {@code CONTENT_FILTER}.
+         * {@code roles/modelarmor.user}. A blocked response fails the call, streamed or not, with a
+         * {@code ContentFilteredException}.
          */
         Optional<String> responseTemplate();
     }

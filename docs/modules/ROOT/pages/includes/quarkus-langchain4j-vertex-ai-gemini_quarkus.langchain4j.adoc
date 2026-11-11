@@ -476,7 +476,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The ID of the Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call.
+The ID of the Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call with a `ContentFilteredException`.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -497,7 +497,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The ID of the Model Armor template that screens responses before they reach the caller. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call; a blocked streamed response finishes with `CONTENT_FILTER`.
+The ID of the Model Armor template that screens responses before they reach the caller. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call, streamed or not, with a `ContentFilteredException`.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1067,7 +1067,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The ID of the Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call.
+The ID of the Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call with a `ContentFilteredException`.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1088,7 +1088,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The ID of the Model Armor template that screens responses before they reach the caller. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call; a blocked streamed response finishes with `CONTENT_FILTER`.
+The ID of the Model Armor template that screens responses before they reach the caller. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call, streamed or not, with a `ContentFilteredException`.
 
 
 ifdef::add-copy-button-to-env-var[]
