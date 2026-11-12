@@ -21,7 +21,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Integration tests for tool input guardrails.
@@ -31,7 +31,7 @@ import io.quarkus.test.QuarkusUnitTest;
 class ToolInputGuardrailsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             MyTools.class,

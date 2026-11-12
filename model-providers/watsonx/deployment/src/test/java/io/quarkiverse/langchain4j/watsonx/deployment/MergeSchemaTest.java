@@ -38,7 +38,7 @@ import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaDeleteParameter
 import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaFetchParameters;
 import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class MergeSchemaTest extends WireMockAbstract {
 
@@ -75,7 +75,7 @@ public class MergeSchemaTest extends WireMockAbstract {
             }""";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)

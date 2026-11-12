@@ -30,14 +30,14 @@ import io.quarkiverse.langchain4j.chatscopes.ChatRouteThinking;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
 import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes;
 import io.quarkiverse.langchain4j.runtime.aiservice.ThinkingEmitted;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class ChatScopeThinkingForwarderTest {
 
     static final String THINKING_TEXT = "Let me think step by step about this problem.";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(
                             ThinkingAssistant.class, ThinkingModelSupplier.class, ThinkingRoute.class));

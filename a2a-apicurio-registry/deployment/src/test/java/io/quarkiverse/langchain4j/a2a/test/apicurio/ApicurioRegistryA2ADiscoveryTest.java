@@ -34,7 +34,7 @@ import io.apicurio.registry.rest.client.models.RuleType;
 import io.apicurio.registry.rest.client.models.VersionContent;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.A2AAgentCardPublisher;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.ApicurioAgentsRegistry;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 
@@ -55,7 +55,7 @@ public class ApicurioRegistryA2ADiscoveryTest {
     static String agentUrl;
 
     /**
-     * Not a configuration option. QuarkusUnitTest loads this class twice, once in the JUnit class
+     * Not a configuration option. QuarkusExtensionTest loads this class twice, once in the JUnit class
      * loader (which builds the archive) and once in the Quarkus class loader (which runs the
      * test), so static fields are not shared. The system property hands the URL of the one
      * container over to the second copy, which would otherwise start another registry.
@@ -78,7 +78,7 @@ public class ApicurioRegistryA2ADiscoveryTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withEmptyApplication()
             .overrideConfigKey("quarkus.http.test-port", "0")
             .overrideConfigKey("quarkus.langchain4j.a2a.apicurio-registry.url", registryUrl());

@@ -34,7 +34,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
 /**
@@ -49,7 +49,7 @@ import io.smallrye.mutiny.Multi;
 public class StreamingImmediateReturnToolTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class, MyStreamingChatModel.class,
                             MyStreamingChatModelSupplier.class, MyMemoryProviderSupplier.class));

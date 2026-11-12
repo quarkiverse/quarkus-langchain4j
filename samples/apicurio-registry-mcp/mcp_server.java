@@ -1,7 +1,7 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //JAVA 21
-//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.34.2}@pom
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-sse:1.11.1
+//DEPS io.quarkus:quarkus-bom:${quarkus.version:3.40.1.1}@pom
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-http:2.0.4
 
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;

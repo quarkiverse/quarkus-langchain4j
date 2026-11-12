@@ -23,14 +23,14 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class EasyRagReuseEmbeddingsOnClasspathAlreadyExistTest {
     private static final String EMBEDDING_FILE_NAME = "embeddings.json";
     private static final Path EMBEDDINGS_DIR = Path.of("src", "test", "resources", "embeddings");
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
                     .addAsResource(new StringAsset("""

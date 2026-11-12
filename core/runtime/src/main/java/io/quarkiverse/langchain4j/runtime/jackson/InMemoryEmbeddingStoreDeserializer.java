@@ -1,15 +1,13 @@
 package io.quarkiverse.langchain4j.runtime.jackson;
 
-import java.io.IOException;
 import java.util.List;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
 
 public class InMemoryEmbeddingStoreDeserializer extends StdDeserializer<InMemoryEmbeddingStore<TextSegment>> {
 
@@ -22,8 +20,7 @@ public class InMemoryEmbeddingStoreDeserializer extends StdDeserializer<InMemory
     }
 
     @Override
-    public InMemoryEmbeddingStore<TextSegment> deserialize(JsonParser p, DeserializationContext ctxt)
-            throws IOException {
+    public InMemoryEmbeddingStore<TextSegment> deserialize(JsonParser p, DeserializationContext ctxt) {
         return ctxt.readValue(p, InMemoryEmbeddingStoreMirror.class).toInMemoryEmbeddingStore();
     }
 

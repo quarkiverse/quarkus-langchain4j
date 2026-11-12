@@ -30,7 +30,7 @@ import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.redis.datasource.RedisDataSource;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 @Disabled("this only fails in CI and I've spent too much time trying to figure out why...")
 public class RedisChatMemoryStoreTest extends OpenAiBaseTest {
@@ -39,7 +39,7 @@ public class RedisChatMemoryStoreTest extends OpenAiBaseTest {
     public static final int SECOND_MEMORY_ID = 2;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",

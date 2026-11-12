@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.decision.DecisionModel;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Without an API key, and with the default base URL, the decision model bean must refuse to start, like the other
@@ -20,7 +20,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class DecisionModelMissingApiKeyTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .assertException(t -> assertThat(t).hasMessageContaining("quarkus.langchain4j.openai.api-key"));
 

@@ -30,7 +30,7 @@ import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotat
 import io.quarkus.builder.BuildChainBuilder;
 import io.quarkus.builder.BuildContext;
 import io.quarkus.builder.BuildStep;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * This class aims at testing which ai service method parameters are allowed to be used as prompt template variable.
@@ -48,7 +48,7 @@ public class AiServiceMethodParametersAnnotationsTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyResource.class, MyService.class, MirrorModelSupplier.class))
             .addBuildChainCustomizer(buildCustomizer());

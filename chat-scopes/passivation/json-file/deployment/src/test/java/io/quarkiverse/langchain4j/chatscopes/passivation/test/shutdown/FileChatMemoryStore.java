@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.chatscopes.passivation.test.shutdown;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -10,11 +9,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import tools.jackson.core.type.TypeReference;
 
 /**
  * This is not meant for real use only testing
@@ -46,11 +44,7 @@ public class FileChatMemoryStore implements ChatMemoryStore {
     public synchronized List<ChatMessage> getMessages(Object memoryId) {
         File memory = toFile(memoryId);
         if (memory.exists()) {
-            try {
-                return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(memory, MESSAGE_LIST_TYPE);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(memory, MESSAGE_LIST_TYPE);
         }
         return List.of();
     }
@@ -58,12 +52,7 @@ public class FileChatMemoryStore implements ChatMemoryStore {
     @Override
     public synchronized void updateMessages(Object memoryId, List<ChatMessage> messages) {
 
-        try {
-            QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValue(toFile(memoryId), messages);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValue(toFile(memoryId), messages);
     }
 
     @Override

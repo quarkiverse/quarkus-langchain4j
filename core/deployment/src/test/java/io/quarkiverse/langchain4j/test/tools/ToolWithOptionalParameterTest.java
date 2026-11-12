@@ -34,7 +34,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * An {@code Optional<T>} parameter of a {@code @Tool} method is supported by plain langchain4j:
@@ -48,7 +48,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolWithOptionalParameterTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class,
                             MyChatModelSupplier.class, MyChatModel.class, Lists.class));
@@ -183,7 +183,7 @@ public class ToolWithOptionalParameterTest {
 
         /**
          * Renders the parameter schema of one tool as {@code name:SchemaType,...|required=[...]} so the
-         * assertions can run outside the QuarkusUnitTest classloader.
+         * assertions can run outside the QuarkusExtensionTest classloader.
          */
         private static String render(List<ToolSpecification> toolSpecifications, String toolName) {
             ToolSpecification spec = toolSpecifications.stream()

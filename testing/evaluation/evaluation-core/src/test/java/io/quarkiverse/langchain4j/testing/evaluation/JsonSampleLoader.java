@@ -1,14 +1,14 @@
 package io.quarkiverse.langchain4j.testing.evaluation;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Example SampleLoader implementation for JSON files.
@@ -38,7 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ApplicationScoped
 public class JsonSampleLoader implements SampleLoader<Object> {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = tools.jackson.databind.json.JsonMapper.builder().build();
 
     @Override
     public boolean supports(String source) {
@@ -68,7 +68,7 @@ public class JsonSampleLoader implements SampleLoader<Object> {
 
             return new Samples<>(samples);
 
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new SampleLoadException("Failed to parse JSON file: " + source, e);
         }
     }

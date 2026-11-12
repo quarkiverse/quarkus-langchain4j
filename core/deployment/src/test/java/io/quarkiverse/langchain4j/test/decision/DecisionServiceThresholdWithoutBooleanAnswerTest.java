@@ -14,12 +14,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.model.decision.DecisionModel;
 import dev.langchain4j.service.decision.Decide;
 import io.quarkiverse.langchain4j.RegisterDecisionService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class DecisionServiceThresholdWithoutBooleanAnswerTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(FixedDecisionModel.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.decision-service.Router.threshold", "0.7")
             .assertException(throwable -> Assertions.assertThat(throwable)

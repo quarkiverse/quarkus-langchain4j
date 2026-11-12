@@ -11,13 +11,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.store.embedding.weaviate.WeaviateEmbeddingStore;
 import io.quarkiverse.langchain4j.EmbeddingStoreName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.weaviate.client.WeaviateClient;
 
 public class WeaviateNamedStoreTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest test = new QuarkusUnitTest()
+    static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideConfigKey("quarkus.langchain4j.weaviate.products.object-class", "ProductClass")
             .overrideRuntimeConfigKey("quarkus.langchain4j.weaviate.products.metadata.keys", "tags");

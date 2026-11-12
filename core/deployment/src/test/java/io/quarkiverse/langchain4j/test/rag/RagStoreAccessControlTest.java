@@ -37,7 +37,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.ForbiddenException;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
@@ -68,7 +68,7 @@ public class RagStoreAccessControlTest {
     private static final AtomicReference<String> AUGMENTED_FOR = new AtomicReference<>();
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .withEmptyApplication()
             .overrideConfigKey("quarkus.http.auth.basic", "true")
             .overrideConfigKey("quarkus.security.users.embedded.enabled", "true")

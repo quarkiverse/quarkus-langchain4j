@@ -7,14 +7,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpCombinedHeadersModernTest extends AbstractMcpCombinedHeadersTest {
 
     private static final String MCP_PATH = "/mcp/combined-headers-modern";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMcpCombinedHeadersTest.class,
                             AbstractMcpCombinedHeadersTest.ToolNameHeadersSupplier.class)

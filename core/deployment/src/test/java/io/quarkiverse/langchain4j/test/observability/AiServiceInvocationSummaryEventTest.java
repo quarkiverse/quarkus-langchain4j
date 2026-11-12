@@ -30,7 +30,7 @@ import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceSelector;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * LangChain4j 1.23.0 added {@link AiServiceInvocationSummaryEvent}, a composite event that the
@@ -43,7 +43,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class AiServiceInvocationSummaryEventTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, OtherAiService.class,
                             MyChatModel.class, MyChatModelSupplier.class,

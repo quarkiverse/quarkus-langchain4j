@@ -8,10 +8,15 @@ import org.junit.jupiter.api.BeforeEach;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 public abstract class AnthropicSmokeTest {
     protected static final int WIREMOCK_PORT = 8089;
     protected static final String CHAT_MODEL_ID = "claude-3-haiku-20240307";
     protected static final String API_KEY = "somekey";
+
+    protected static final ObjectMapper MAPPER = JsonMapper.builder().build();
 
     protected static WireMockServer wireMockServer;
 

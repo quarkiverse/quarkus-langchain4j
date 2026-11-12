@@ -25,7 +25,7 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.openai.common.OpenAiApiException;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * OpenAI-compatible servers (vLLM, the LiteLLM proxy, ...) report a failure that happens after the HTTP 200 has been sent
@@ -37,7 +37,7 @@ public class StreamingChatErrorChunkTest extends OpenAiBaseTest {
             {"error":{"message":"Upstream model overloaded, retry in 30s","type":"server_error","param":null,"code":"overloaded"}}""";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",

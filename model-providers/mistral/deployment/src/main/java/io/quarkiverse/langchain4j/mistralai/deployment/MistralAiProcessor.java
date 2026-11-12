@@ -16,8 +16,6 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiEmbeddingModel;
 import dev.langchain4j.model.mistralai.MistralAiModerationModel;
@@ -45,6 +43,7 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
 import io.smallrye.config.Priorities;
+import tools.jackson.databind.PropertyNamingStrategies;
 
 public class MistralAiProcessor {
 

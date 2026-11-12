@@ -15,7 +15,7 @@ import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.skills.runtime.SkillsToolProvider;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Test for loading skills from classpath resources.
@@ -24,7 +24,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class SkillsFromClasspathTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("skills/foobar-skill/SKILL.md", "skills/foobar-skill/SKILL.md")
                     .addAsResource("skills/foobar-skill/references/guide.md", "skills/foobar-skill/references/guide.md"))

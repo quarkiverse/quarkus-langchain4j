@@ -7,14 +7,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.mcp.test.mock.McpMockServer;
 import io.quarkiverse.langchain4j.mcp.test.mock.ModernMcpMockServer;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class McpOverStreamableHttpSseNoSpaceModernTest extends AbstractMcpOverStreamableHttpSseNoSpaceTest {
 
     private static final String MCP_PATH = "/mcp/sse-no-space-modern";
 
     @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMcpOverStreamableHttpSseNoSpaceTest.class)
                     .addPackage(McpMockServer.class.getPackage())

@@ -49,7 +49,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Real-world scenario tests for tool guardrails (PII filtering, rate limiting, authentication,
@@ -58,7 +58,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class MoreRealWorldToolGuardrailsTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             MyAiService.class,

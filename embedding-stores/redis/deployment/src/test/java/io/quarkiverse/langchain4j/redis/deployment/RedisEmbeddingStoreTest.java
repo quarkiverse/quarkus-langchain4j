@@ -24,7 +24,7 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
 
@@ -43,7 +43,7 @@ public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
             .collect(Collectors.joining(","));
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.redis.dimension=384\n" +
                             "quarkus.langchain4j.redis.numeric-metadata-fields=" + numericMetadataFields + "\n" +

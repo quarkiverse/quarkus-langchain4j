@@ -30,7 +30,7 @@ import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * {@link Result#intermediateResponses()} and {@link Result#finalResponse()} have existed upstream since
@@ -46,7 +46,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ResultIntermediateAndFinalResponsesTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class, MyChatModelSupplier.class, MyChatModel.class,
                             SuffixingOutputGuardrail.class));

@@ -13,12 +13,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.model.ModelDisabledException;
 import dev.langchain4j.model.audio.TextToSpeechModel;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class JinferTtsBeanTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.jinfer.enable-integration", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.jinfer.custom.enable-integration", "false");

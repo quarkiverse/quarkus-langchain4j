@@ -23,7 +23,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * AI service methods that hand the model response back to the caller must keep the response
@@ -39,7 +39,7 @@ public class ResponseMetadataPreservedTest {
     private static final TokenUsage TOKEN_USAGE = new TokenUsage(11, 22);
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyChatModelSupplier.class, MyChatModel.class));
 

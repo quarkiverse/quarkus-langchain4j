@@ -1,15 +1,11 @@
 package io.quarkiverse.langchain4j.memorystore;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -18,6 +14,8 @@ import com.mongodb.client.model.ReplaceOptions;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class MongoDBChatMemoryStore implements ChatMemoryStore {
 
@@ -48,15 +46,11 @@ public class MongoDBChatMemoryStore implements ChatMemoryStore {
         }
 
         Object value = document.get(MESSAGES_FIELD);
-        try {
-            // legacy format: messages stored as a JSON string
-            if (value instanceof String json) {
-                return MAPPER.readValue(json, MESSAGE_LIST_TYPE);
-            }
-            return MAPPER.convertValue(document.getList(MESSAGES_FIELD, Document.class), MESSAGE_LIST_TYPE);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        // legacy format: messages stored as a JSON string
+        if (value instanceof String json) {
+            return MAPPER.readValue(json, MESSAGE_LIST_TYPE);
         }
+        return MAPPER.convertValue(document.getList(MESSAGES_FIELD, Document.class), MESSAGE_LIST_TYPE);
     }
 
     @Override

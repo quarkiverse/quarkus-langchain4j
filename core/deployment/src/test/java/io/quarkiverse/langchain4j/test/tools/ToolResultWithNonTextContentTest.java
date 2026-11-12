@@ -35,7 +35,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * A {@link ToolExecutionResult} may carry any combination of {@link dev.langchain4j.data.message.Content}
@@ -49,7 +49,7 @@ public class ToolResultWithNonTextContentTest {
     static final String IMAGE_URL = "https://example.com/chart.png";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class, EventCollector.class,
                             MyChatModelSupplier.class, MyChatModel.class, Lists.class));

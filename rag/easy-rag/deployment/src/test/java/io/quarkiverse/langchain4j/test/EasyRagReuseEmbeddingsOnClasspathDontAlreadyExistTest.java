@@ -14,7 +14,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagConfig.PathType;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 class EasyRagReuseEmbeddingsOnClasspathDontAlreadyExistTest extends EasyRagReuseEmbeddingsDontAlreadyExistBaseTest {
     private static final String EMBEDDING_FILE_NAME = "embeddings.json";
@@ -24,7 +24,7 @@ class EasyRagReuseEmbeddingsOnClasspathDontAlreadyExistTest extends EasyRagReuse
             EasyRagReuseEmbeddingsOnClasspathDontAlreadyExistTest.class.getSimpleName());
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
                     .addAsResource(new StringAsset("""

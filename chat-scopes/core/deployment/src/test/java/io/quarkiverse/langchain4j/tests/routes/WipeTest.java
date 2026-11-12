@@ -37,12 +37,12 @@ import io.quarkiverse.langchain4j.chatscopes.ChatScopeMemory;
 import io.quarkiverse.langchain4j.chatscopes.ChatScoped;
 import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes;
 import io.quarkiverse.langchain4j.chatscopes.LocalChatRoutes.Session;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 public class WipeTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(AiService.class, MirrorModelSupplier.class,
                             CustomChatMemoryStore.class, RouteBean.class));

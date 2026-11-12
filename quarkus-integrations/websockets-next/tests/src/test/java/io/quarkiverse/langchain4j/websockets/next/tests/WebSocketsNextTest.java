@@ -33,7 +33,7 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.websockets.next.OnOpen;
 import io.quarkus.websockets.next.OnTextMessage;
@@ -45,7 +45,7 @@ import io.vertx.core.http.WebSocketClient;
 public class WebSocketsNextTest extends OpenAiBaseTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(RequestScopedChatBot.class, RestChatBot.class,
                             TrackingInMemoryChatMemoryStore.class))
@@ -116,7 +116,7 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
                                     assertThat(chatMemoryStore.idsFromGetMessages).hasSize(1)
                                             .hasOnlyElementsOfType(String.class);
 
-                                    webSocket.writeTextMessage("what is your name?", (firstWriteResult -> {
+                                    webSocket.writeTextMessage("what is your name?").onComplete((firstWriteResult -> {
                                         if (firstWriteResult.succeeded()) {
                                             // the message has been written
                                             assertThat(chatMemoryStore.idsFromGetMessages).hasSize(1)

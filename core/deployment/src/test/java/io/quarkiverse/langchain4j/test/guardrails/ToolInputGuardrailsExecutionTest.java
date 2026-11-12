@@ -40,7 +40,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Test for tool input guardrails with AI Service execution.
@@ -48,7 +48,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolInputGuardrailsExecutionTest {
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(
                             MyAiService.class,

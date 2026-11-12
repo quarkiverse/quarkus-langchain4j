@@ -31,7 +31,7 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.quarkiverse.langchain4j.runtime.listeners.MetricsChatModelListener;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Verifies that {@link MetricsChatModelListener#onError} records {@code gen_ai.client.operation.duration} with a
@@ -44,7 +44,7 @@ class OperationDurationErrorMetricsTest {
     private static final String DURATION_METER = "gen_ai.client.operation.duration";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject

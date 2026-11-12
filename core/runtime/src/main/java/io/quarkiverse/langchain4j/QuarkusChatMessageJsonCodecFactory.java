@@ -3,12 +3,11 @@ package io.quarkiverse.langchain4j;
 import java.util.Collections;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageJsonCodec;
 import dev.langchain4j.spi.data.message.ChatMessageJsonCodecFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
 
 public class QuarkusChatMessageJsonCodecFactory implements ChatMessageJsonCodecFactory {
     @Override
@@ -25,7 +24,7 @@ public class QuarkusChatMessageJsonCodecFactory implements ChatMessageJsonCodecF
         public ChatMessage messageFromJson(String json) {
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(json, ChatMessage.class);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -37,7 +36,7 @@ public class QuarkusChatMessageJsonCodecFactory implements ChatMessageJsonCodecF
             }
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(json, MESSAGE_LIST_TYPE);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -46,7 +45,7 @@ public class QuarkusChatMessageJsonCodecFactory implements ChatMessageJsonCodecF
         public String messageToJson(ChatMessage message) {
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(message);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -55,7 +54,7 @@ public class QuarkusChatMessageJsonCodecFactory implements ChatMessageJsonCodecF
         public String messagesToJson(List<ChatMessage> messages) {
             try {
                 return QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(messages);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new RuntimeException(e);
             }
         }

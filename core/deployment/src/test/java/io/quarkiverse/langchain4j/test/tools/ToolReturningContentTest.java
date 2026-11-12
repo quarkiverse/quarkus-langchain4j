@@ -32,7 +32,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.test.Lists;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * A {@code @Tool} method whose result already is, or is made of, {@link Content} elements must be sent to
@@ -48,7 +48,7 @@ public class ToolReturningContentTest {
     private static final String IMAGE_URL = "https://example.com/cat.png";
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, MyTools.class, Animal.class,
                             MyChatModelSupplier.class, MyChatModel.class, Lists.class));

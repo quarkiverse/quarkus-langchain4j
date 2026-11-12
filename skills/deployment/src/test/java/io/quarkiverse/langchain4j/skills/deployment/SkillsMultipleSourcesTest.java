@@ -17,7 +17,7 @@ import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.skills.runtime.SkillsToolProvider;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * Test for loading skills from classpath and filesystem resources at the same time
@@ -26,7 +26,7 @@ public class SkillsMultipleSourcesTest {
     private static final Path SKILLS_DIR = Path.of("src/test/resources/skills").toAbsolutePath();
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("mixed/boom-skill/SKILL.md", "mixed/boom-skill/SKILL.md"))
             .overrideRuntimeConfigKey("quarkus.langchain4j.skills.directories", "classpath:mixed," + SKILLS_DIR);
