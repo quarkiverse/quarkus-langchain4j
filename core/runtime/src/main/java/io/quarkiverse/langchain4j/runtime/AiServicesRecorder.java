@@ -4,7 +4,6 @@ import static io.quarkiverse.langchain4j.QuarkusAiServicesFactory.InstanceHolder
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,9 +148,15 @@ public class AiServicesRecorder {
                     var quarkusAiServices = INSTANCE.create(aiServiceContext);
 
                     // Populate the AI service listeners
-                    Arrays.stream(AiServiceEvents.values())
-                            .map(event -> event.createListener(serviceClass))
-                            .forEach(quarkusAiServices::registerListener);
+                    for (AiServiceEvents event : AiServiceEvents.values()) {
+                        if ((event == AiServiceEvents.INVOCATION_SUMMARY) && !info.registerInvocationSummaryListener()) {
+                            // The registrar only retains an invocation's events while a summary listener is
+                            // registered, so registering this one unconditionally would make every invocation of
+                            // every AI service collect and hold all of its events for nothing.
+                            continue;
+                        }
+                        quarkusAiServices.registerListener(event.createListener(serviceClass));
+                    }
 
                     if (info.languageModelSupplierClassName() != null
                             || info.streamingChatLanguageModelSupplierClassName() != null) {
