@@ -40,5 +40,6 @@ public record DeclarativeAiServiceCreateInfo(
         Boolean executeToolsConcurrently,
         boolean shouldThrowExceptionOnEventError,
         String defaultMemoryIdProviderClassName,
-        List<String> skillNames) {
+        List<String> skillNames,
+        boolean registerInvocationSummaryListener) {
 }
