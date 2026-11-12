@@ -1,0 +1,12 @@
+name: Quarkus LangChain4j - Memory Store - Hibernate
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides a Hibernate ORM Chat Memory Store
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - hibernate
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/memory-store-hibernate.html"
+  categories:
+    - "ai"
+  status: "preview"
