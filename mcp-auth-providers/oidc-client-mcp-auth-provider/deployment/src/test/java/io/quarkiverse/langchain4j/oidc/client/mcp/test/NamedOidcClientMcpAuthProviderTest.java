@@ -15,8 +15,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusExtensionTest;
 
 class NamedOidcClientMcpAuthProviderTest {
@@ -80,6 +82,12 @@ class NamedOidcClientMcpAuthProviderTest {
     @Test
     public void client2UsesProvider2Token() {
         assertThat(getToken(mcpClient2)).isEqualTo("Bearer token-from-provider2");
+    }
+
+    @Test
+    public void clientsWithoutProtocolVersionDetectModernProtocol() {
+        assertThat(((DefaultMcpClient) ClientProxy.unwrap(mcpClient1)).isModernProtocol()).isTrue();
+        assertThat(((DefaultMcpClient) ClientProxy.unwrap(mcpClient2)).isModernProtocol()).isTrue();
     }
 
     private String getToken(McpClient client) {

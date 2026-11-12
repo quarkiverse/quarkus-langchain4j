@@ -798,7 +798,7 @@ public class AiServiceMethodImplementationSupport {
 
         if (TypeUtil.isResult(returnType)) {
             var parsedResponse = SERVICE_OUTPUT_PARSER.parse(
-                    ChatResponse.builder().aiMessage(response.aiMessage()).build(),
+                    response,
                     TypeUtil.resultTypeParam((ParameterizedType) returnType));
             parsedResponse = ResponseAugmenterSupport.invoke(parsedResponse, methodCreateInfo, responseAugmenterParam);
             var result = Result.builder()
@@ -821,7 +821,7 @@ public class AiServiceMethodImplementationSupport {
         }
 
         var augmentedResponse = ResponseAugmenterSupport.invoke(
-                SERVICE_OUTPUT_PARSER.parse(ChatResponse.builder().aiMessage(response.aiMessage()).build(), returnType),
+                SERVICE_OUTPUT_PARSER.parse(response, returnType),
                 methodCreateInfo, responseAugmenterParam);
 
         context.eventListenerRegistrar.fireEvent(

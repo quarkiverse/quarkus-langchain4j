@@ -365,6 +365,18 @@ Alternatively, if a single `ToolSearchStrategy` CDI bean exists, it is used auto
 
 The tools the model surfaces through the search tool are added to the conversation and remain available in the following tool-calling rounds. Tool Search works for both blocking and streaming AI service methods.
 
+By default every tool is searchable, meaning it is only offered to the model once the search strategy finds it. A tool that must always be offered upfront can opt out with `@Tool(searchBehavior = ALWAYS_VISIBLE)`:
+
+[source,java]
+----
+@Tool(value = "Returns the current time", searchBehavior = SearchBehavior.ALWAYS_VISIBLE)
+String currentTime() {
+    // ...
+}
+----
+
+Always-visible tools are excluded from the search catalog, so the search strategy never has to find them. This attribute has no effect when no `ToolSearchStrategy` is configured, since the whole catalog is then exposed anyway.
+
 == How Function Calling Works Internally
 
 First, it's important to understand that the model never calls the _tools_ directly, **but** always goes through the AI-infused application.

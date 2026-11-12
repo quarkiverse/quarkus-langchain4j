@@ -1480,6 +1480,50 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |`+++empty list+++`
 
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-tls-configuration-name[`+++quarkus.langchain4j.tavily.tls-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tavily.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set, the named TLS configuration with the configured name will be applied to the HTTP client used to call Tavily
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-proxy-configuration-name]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-proxy-configuration-name[`+++quarkus.langchain4j.tavily.proxy-configuration-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tavily.proxy-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Quarkus Proxy Registry configuration to use.
+
+If not set and the default proxy configuration is configured (`quarkus.proxy.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.proxy.<name>.++*++`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_PROXY_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_PROXY_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 
 h|[.extension-name]##Quarkus LangChain4j - A2A Apicurio Registry - Runtime##
 h|Type
@@ -29389,6 +29433,48 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
+a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-model-armor-prompt-template]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-model-armor-prompt-template[`+++quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.prompt-template+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.prompt-template+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The ID of the Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call with a `ContentFilteredException`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_MODEL_ARMOR_PROMPT_TEMPLATE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_MODEL_ARMOR_PROMPT_TEMPLATE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-model-armor-response-template]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-model-armor-response-template[`+++quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.response-template+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.gemini.chat-model.model-armor.response-template+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The ID of the Model Armor template that screens responses before they reach the caller. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call, streamed or not, with a `ContentFilteredException`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_MODEL_ARMOR_RESPONSE_TEMPLATE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_MODEL_ARMOR_RESPONSE_TEMPLATE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-embedding-model-model-id[`+++quarkus.langchain4j.vertexai.gemini.embedding-model.model-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.vertexai.gemini.embedding-model.model-id+++[]
@@ -29937,6 +30023,48 @@ endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
+
+a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-model-armor-prompt-template]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-model-armor-prompt-template[`+++quarkus.langchain4j.vertexai.gemini."model-name".chat-model.model-armor.prompt-template+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.gemini."model-name".chat-model.model-armor.prompt-template+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The ID of the Model Armor template that screens prompts (prompt injection, sensitive data, harmful content) before they reach the model. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked prompt fails the call with a `ContentFilteredException`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_MODEL_MODEL_ARMOR_PROMPT_TEMPLATE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_MODEL_MODEL_ARMOR_PROMPT_TEMPLATE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-model-armor-response-template]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-model-armor-response-template[`+++quarkus.langchain4j.vertexai.gemini."model-name".chat-model.model-armor.response-template+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.gemini."model-name".chat-model.model-armor.response-template+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The ID of the Model Armor template that screens responses before they reach the caller. The template is looked up in the configured project and location; set a full resource name (`projects/PROJECT/locations/LOCATION/templates/TEMPLATE`) to use a template from another project. The template must be in the region the request is served from, and the Vertex AI service agent needs `roles/modelarmor.user`. A blocked response fails the call, streamed or not, with a `ContentFilteredException`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_MODEL_MODEL_ARMOR_RESPONSE_TEMPLATE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_MODEL_MODEL_ARMOR_RESPONSE_TEMPLATE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-embedding-model-model-id[`+++quarkus.langchain4j.vertexai.gemini."model-name".embedding-model.model-id+++`]##
 ifdef::add-copy-button-to-config-props[]

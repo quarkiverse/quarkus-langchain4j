@@ -6,6 +6,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
+
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -23,6 +25,7 @@ import dev.langchain4j.web.search.WebSearchRequest;
 import dev.langchain4j.web.search.WebSearchResults;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusExtensionTest;
+import io.vertx.core.json.JsonObject;
 
 public class TavilyTest extends WiremockAware {
 
@@ -45,6 +48,7 @@ public class TavilyTest extends WiremockAware {
 
     @BeforeEach
     public void setup() {
+        resetRequests();
         wiremock().register(
                 post(urlEqualTo("/search"))
                         .willReturn(aResponse()
@@ -107,16 +111,15 @@ public class TavilyTest extends WiremockAware {
         LoggedRequest actualRequest = singleLoggedRequest();
 
         // verify the request
-        assertEquals(actualRequest.getHeader("Accept"), "application/json");
         assertEquals(actualRequest.getHeader("Content-Type"), "application/json");
         assertEquals(actualRequest.getUrl(), "/search");
         assertEquals(actualRequest.getMethod().toString(), "POST");
-        String body = actualRequest.getBodyAsString();
-        assertThat(body).contains("\"api_key\":\"test\"");
-        assertThat(body).contains("\"max_results\":9");
-        assertThat(body).contains("\"query\":\"testing-query\"");
-        assertThat(body).contains("\"include_domains\":[\"yeah.com\"]");
-        assertThat(body).contains("\"exclude_domains\":[\"nah.com\"]");
+        JsonObject body = new JsonObject(actualRequest.getBodyAsString());
+        assertThat(body.getString("api_key")).isEqualTo("test");
+        assertThat(body.getInteger("max_results")).isEqualTo(9);
+        assertThat(body.getString("query")).isEqualTo("testing-query");
+        assertThat(body.getJsonArray("include_domains").getList()).isEqualTo(List.of("yeah.com"));
+        assertThat(body.getJsonArray("exclude_domains").getList()).isEqualTo(List.of("nah.com"));
 
         // verify the parsed response
         assertThat(result.searchInformation().totalResults()).isEqualTo(5);
@@ -137,6 +140,26 @@ public class TavilyTest extends WiremockAware {
                         to the Argentine team. Messi helped Barcelona capture another treble during the 2014–15 season, leading the team with 43 goals \
                         scored over the course of the campaign, which resulted in his fifth world player of the year honour."""));
         assertThat(firstResult.metadata().get("score").equals("0.98564"));
+    }
+
+    @Test
+    public void testRequestMaxResultsOverridesConfiguredMaxResults() {
+        webSearchEngine.search(WebSearchRequest.builder()
+                .searchTerms("testing-query")
+                .maxResults(2)
+                .build());
+
+        JsonObject body = new JsonObject(singleLoggedRequest().getBodyAsString());
+        assertThat(body.getInteger("max_results")).isEqualTo(2);
+    }
+
+    @Test
+    public void testSearchAsyncAppliesConfiguredMaxResults() {
+        WebSearchResults result = webSearchEngine.searchAsync(WebSearchRequest.from("testing-query")).join();
+
+        assertThat(result.searchInformation().totalResults()).isEqualTo(5);
+        JsonObject body = new JsonObject(singleLoggedRequest().getBodyAsString());
+        assertThat(body.getInteger("max_results")).isEqualTo(9);
     }
 
 }

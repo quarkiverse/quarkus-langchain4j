@@ -38,6 +38,12 @@ Each listed directory is expected to contain subdirectories, where each subdirec
 The body of the file becomes the skill's instructions.
 See the https://agentskills.io[Agent Skills specification] for details on the `SKILL.md` format.
 
+NOTE: If you plan to run the application in native mode, do not forget to include skill folders in the image:
+[source,properties]
+----
+quarkus.native.resources.includes=skills/**
+----
+
 == Example
 
 Given the following directory structure on the classpath:

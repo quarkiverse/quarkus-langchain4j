@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.deployment;
 
 import static dev.langchain4j.agent.tool.P.NO_DEFAULT;
+import static dev.langchain4j.internal.Utils.generateUUIDFrom;
 import static io.quarkiverse.langchain4j.deployment.DotNames.BLOCKING;
 import static io.quarkiverse.langchain4j.deployment.DotNames.COMPLETION_STAGE;
 import static io.quarkiverse.langchain4j.deployment.DotNames.MULTI;
@@ -45,6 +46,7 @@ import org.objectweb.asm.Opcodes;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
+import dev.langchain4j.agent.tool.SearchBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -57,6 +59,7 @@ import dev.langchain4j.model.chat.request.json.JsonIntegerSchema;
 import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema.Builder;
+import dev.langchain4j.model.chat.request.json.JsonReferenceSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 import dev.langchain4j.model.output.structured.Description;
@@ -116,6 +119,7 @@ public class ToolProcessor {
     private static final DotName INVOCATION_CONTEXT = DotName.createSimple(InvocationContext.class);
 
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
+    private static final DotName OPTIONAL = DotName.createSimple(Optional.class);
     private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
             .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class, Integer.class,
@@ -359,12 +363,18 @@ public class ToolProcessor {
                     if (returnBehavior != null) {
                         returnBehaviorEnum = ReturnBehavior.valueOf(returnBehavior.asEnum());
                     }
+                    AnnotationValue searchBehavior = instance.value("searchBehavior");
+                    // @Tool#searchBehavior defaults to SEARCHABLE, and Jandex does not materialize annotation defaults
+                    SearchBehavior searchBehaviorEnum = searchBehavior == null
+                            ? SearchBehavior.SEARCHABLE
+                            : SearchBehavior.valueOf(searchBehavior.asEnum());
 
                     ToolSpecification.Builder builder = ToolSpecification.builder()
                             .name(toolName)
                             .description(toolDescription);
 
                     var properties = new LinkedHashMap<String, JsonSchemaElement>(toolMethod.parametersCount());
+                    var schemaContext = new SchemaContext();
                     var required = new ArrayList<String>(toolMethod.parametersCount());
                     var defaultValues = new LinkedHashMap<String, String>();
 
@@ -387,7 +397,8 @@ public class ToolProcessor {
                         }
 
                         var pInstance = parameter.annotation(P);
-                        var jsonSchemaElement = toJsonSchemaElement(parameter, index);
+                        boolean isOptionalParameter = isOptional(parameter.type());
+                        var jsonSchemaElement = toJsonSchemaElement(parameter, index, schemaContext);
                         properties.put(parameter.name(), jsonSchemaElement);
 
                         AnnotationValue defaultValue = pInstance != null ? pInstance.value("defaultValue") : null;
@@ -416,29 +427,39 @@ public class ToolProcessor {
                         AnnotationValue requiredValue = pInstance != null ? pInstance.value("required") : null;
                         // @P#required defaults to true, and Jandex does not materialize annotation defaults
                         boolean isRequired = requiredValue == null || requiredValue.asBoolean();
-                        if (!hasDefaultValue && isRequired) {
+                        if (!isOptionalParameter && !hasDefaultValue && isRequired) {
                             required.add(parameter.name());
                         }
                     }
 
-                    builder.parameters(
-                            JsonObjectSchema.builder()
-                                    .addProperties(properties)
-                                    .required(required)
-                                    .build());
+                    JsonObjectSchema.Builder parametersBuilder = JsonObjectSchema.builder()
+                            .addProperties(properties)
+                            .required(required);
+                    if (!schemaContext.definitions.isEmpty()) {
+                        parametersBuilder.definitions(schemaContext.definitions);
+                    }
+                    builder.parameters(parametersBuilder.build());
 
+                    // mirrors upstream ToolSpecifications#getMetadata: the JSON metadata first, then the
+                    // searchBehavior attribute, which ToolSearchService reads from ToolSpecification#metadata
+                    Map<String, Object> toolMetadata = new LinkedHashMap<>();
                     if (metadataValue != null) {
                         String metadataJson = metadataValue.asString();
                         if (!metadataJson.isEmpty()) {
                             try {
-                                Map<String, Object> toolMetadata = ObjectMapperHolder.OBJECT_MAPPER.readValue(metadataJson,
-                                        ObjectMapperHolder.MAP_TYPE_REF);
-                                builder.metadata(toolMetadata);
+                                toolMetadata.putAll(ObjectMapperHolder.OBJECT_MAPPER.readValue(metadataJson,
+                                        ObjectMapperHolder.MAP_TYPE_REF));
                             } catch (Exception e) {
                                 throw new ValidationException("Invalid metadata JSON for tool " + toolName + " in " + className,
                                         e);
                             }
                         }
+                    }
+                    if (searchBehaviorEnum != SearchBehavior.SEARCHABLE) {
+                        toolMetadata.put(ToolSpecification.METADATA_SEARCH_BEHAVIOR, searchBehaviorEnum);
+                    }
+                    if (!toolMetadata.isEmpty()) {
+                        builder.metadata(toolMetadata);
                     }
 
                     Map<String, Integer> nameToParamPosition = toolMethod.parameters().stream().collect(
@@ -994,14 +1015,47 @@ public class ToolProcessor {
         return implClassName;
     }
 
-    private JsonSchemaElement toJsonSchemaElement(MethodParameterInfo parameter, IndexView index) {
-        Type type = parameter.type();
-        String description = descriptionFrom(parameter);
+    /**
+     * Tracks the complex types of one tool's parameters while their schema is built, so that a type which refers to
+     * itself, directly or through other types, gets a {@code $ref} instead of being expanded forever. Mirrors the
+     * recursion handling of {@code dev.langchain4j.internal.JsonSchemaElementUtils}: the recursive type's schema goes
+     * into the {@code $defs} of the tool's parameters, under the same reference name.
+     */
+    private static final class SchemaContext {
+        private final Set<DotName> inProgress = new HashSet<>();
+        private final Set<DotName> recursive = new HashSet<>();
+        private final Map<String, JsonSchemaElement> definitions = new LinkedHashMap<>();
 
-        return toJsonSchemaElement(type, index, description);
+        static String reference(DotName typeName) {
+            return generateUUIDFrom(typeName.toString());
+        }
     }
 
-    private JsonSchemaElement toJsonSchemaElement(Type type, IndexView index, String description) {
+    private JsonSchemaElement toJsonSchemaElement(MethodParameterInfo parameter, IndexView index, SchemaContext context) {
+        // the LLM must be shown the schema of the wrapped type, not of Optional itself, mirroring
+        // ToolSpecifications#jsonSchemaElementFrom(Parameter, Map) in langchain4j core
+        Type type = unwrapOptional(parameter.type());
+        String description = descriptionFrom(parameter);
+
+        return toJsonSchemaElement(type, index, description, context);
+    }
+
+    private static boolean isOptional(Type type) {
+        return OPTIONAL.equals(type.name());
+    }
+
+    /**
+     * Returns the type argument of an {@code Optional<T>} type, or the type itself when it is not an
+     * {@code Optional} (or is a raw one, which carries no type argument to unwrap to).
+     */
+    private static Type unwrapOptional(Type type) {
+        if (isOptional(type) && type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            return type.asParameterizedType().arguments().get(0);
+        }
+        return type;
+    }
+
+    private JsonSchemaElement toJsonSchemaElement(Type type, IndexView index, String description, SchemaContext context) {
         DotName typeName = type.name();
 
         if (type.kind() == Type.Kind.WILDCARD_TYPE) {
@@ -1010,7 +1064,7 @@ public class ToolProcessor {
                 boundType = type.asWildcardType().superBound();
             }
             if (boundType != null) {
-                return toJsonSchemaElement(boundType, index, description);
+                return toJsonSchemaElement(boundType, index, description, context);
             } else {
                 throw new IllegalArgumentException("Unsupported wildcard type with no bounds: " + type);
             }
@@ -1052,7 +1106,7 @@ public class ToolProcessor {
             Type elementType = parameterizedType != null ? parameterizedType.arguments().get(0)
                     : type.asArrayType().component();
 
-            JsonSchemaElement element = toJsonSchemaElement(elementType, index, null);
+            JsonSchemaElement element = toJsonSchemaElement(elementType, index, null, context);
 
             return JsonArraySchema.builder().description(description).items(element).build();
         }
@@ -1070,28 +1124,41 @@ public class ToolProcessor {
         }
 
         if (isComplexType(type)) {
-            var builder = JsonObjectSchema.builder()
-                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type, index)));
-
-            ClassInfo targetClass = index.getClassByName(type.name());
-
-            if (targetClass != null) {
-                buildSchema(index, builder, targetClass);
-            } else {
-                log.warnf("The type '%s' could not be accessed from the index", type.name());
+            if (!context.inProgress.add(typeName)) {
+                // the type refers to itself: point back to it instead of expanding it again
+                context.recursive.add(typeName);
+                return JsonReferenceSchema.builder().reference(SchemaContext.reference(typeName)).build();
             }
+            try {
+                var builder = JsonObjectSchema.builder()
+                        .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type, index)));
 
-            return builder.build();
+                ClassInfo targetClass = index.getClassByName(type.name());
+
+                if (targetClass != null) {
+                    buildSchema(index, builder, targetClass, context);
+                } else {
+                    log.warnf("The type '%s' could not be accessed from the index", type.name());
+                }
+
+                JsonObjectSchema schema = builder.build();
+                if (context.recursive.contains(typeName)) {
+                    context.definitions.putIfAbsent(SchemaContext.reference(typeName), schema);
+                }
+                return schema;
+            } finally {
+                context.inProgress.remove(typeName);
+            }
         }
 
         throw new IllegalArgumentException("Unsupported type: " + type);
     }
 
-    private void buildSchema(IndexView index, Builder builder, ClassInfo targetClass) {
+    private void buildSchema(IndexView index, Builder builder, ClassInfo targetClass, SchemaContext context) {
         if (targetClass.superName() != null) {
             ClassInfo superClass = index.getClassByName(targetClass.superName());
             if (superClass != null) {
-                buildSchema(index, builder, superClass);
+                buildSchema(index, builder, superClass, context);
             }
         }
         Optional.of(targetClass)
@@ -1105,7 +1172,7 @@ public class ToolProcessor {
                     var fieldName = field.name();
                     var fieldType = field.type();
                     var fieldDescription = descriptionFrom(field);
-                    var fieldSchema = toJsonSchemaElement(fieldType, index, fieldDescription);
+                    var fieldSchema = toJsonSchemaElement(fieldType, index, fieldDescription, context);
 
                     builder.addProperty(fieldName, fieldSchema);
                 });

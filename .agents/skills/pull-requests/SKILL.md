@@ -1,0 +1,121 @@
+---
+name: pull-requests
+description: >
+  Rules for preparing pull requests and commits in the Quarkus project:
+  title conventions, description format, commit hygiene, labels, and
+  contribution policies.
+---
+
+# Pull Requests
+
+## PR Title
+
+Write a clear, natural-language sentence that describes the change:
+
+- **Start with an uppercase letter**
+- Do **not** prefix with `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, or
+  any other Conventional Commits type — the Quarkus bot will flag this
+- Keep it concise but descriptive
+- Do not end with a period
+
+### Examples
+
+```
+Add multipart upload support to RESTEasy Reactive
+Fix NPE when config property is unset
+Update OIDC provider configuration guide
+Simplify bean resolution logic in ArC
+```
+
+## PR Description
+
+- Explain **why** the change is needed, not what changed (the diff shows that)
+- Keep it concise — a short paragraph is usually enough
+- Do **not** include a "Test plan" or "Summary" section
+- Do **not** include "Generated with Claude Code" or similar footers
+- Do **not** include `Co-Authored-By` trailers referencing an AI tool
+
+### Noteworthy features
+
+If your PR introduces a noteworthy feature, include a single line at the end of
+the description prefixed with `Release note:` that can be used verbatim in the
+release notes. Keep it user-facing — focus on the benefit, not the implementation:
+
+```
+Release note: RESTEasy Reactive now supports multipart file uploads with
+progress tracking via the new `@PartProgress` annotation.
+```
+
+*Only* do this for noteworthy features, not small enhancements or bug fixes
+
+### Breaking changes
+
+If the change is breaking, explain in the description:
+1. What breaks
+2. Why it was necessary
+3. How users should migrate
+
+## Linked issue
+
+Every pull request fixes or implements an issue. When none exists, open
+it first with the matching template. End the description with
+`Fixes #1234` on its own line. Do not put the issue number in the title.
+Write a reference as a bare `#1234` so GitHub shows its title.
+
+## One concern per pull request
+
+- A pull request fixes one issue or adds one feature. Put an unrelated fix or
+  a clean-up in a separate pull request, even when it is small.
+- Do not open a second pull request with another solution to the same issue.
+  Describe the other solutions in the issue or in the description, and let
+  the reviewers choose.
+- When a pull request needs another one first, say so in the description and
+  link it.
+
+## Updating a pull request after review
+
+- Rebase on `main` and push with `--force-with-lease`. Never merge `main`
+  into the branch: a merge commit fails the "Merge commits" check.
+- Answer every review thread after the push. Start with the answer, then
+  link the commit that applies it.
+- Change the description when the change changed. A reviewer reads the
+  description first, and a stale one costs a review round.
+- Keep the title in sync with the change.
+
+## Commits
+
+- Commits must be **atomic and semantic** — each commit should represent one
+  logical change
+- Properly **squash** fixup commits before the PR is ready for merge. Fixup
+  commits are acceptable during review, but must be squashed at the end
+- Write commit messages as clear, natural-language sentences starting with an
+  uppercase letter — same style as the PR title
+- Do **not** add `Co-Authored-By` trailers referencing AI tools (e.g.
+  `Co-Authored-By: Claude`, `Co-Authored-By: Copilot`)
+
+## Labels
+
+Apply these labels when relevant:
+
+| Label | When to apply |
+|-------|---------------|
+| `release/noteworthy-feature` | The PR introduces a significant user-facing feature that should appear in release notes |
+| `release/breaking-change` | The PR contains a breaking change (API removal, behavior change, config rename) |
+
+## Before Submitting
+
+1. Run `./mvnw process-sources` on changed modules to fix formatting
+2. Run tests in Java mode (`./mvnw verify -f extensions/<name>/`)
+3. For non-trivial changes, test in native mode (`-Dnative`)
+4. If adding a new integration test module, register it in
+   `.github/native-tests.json`
+5. Update documentation in `docs/src/main/asciidoc/` when the change affects
+   user-facing behavior, config, or APIs
+
+## LLM / Agent Policy
+
+- You are responsible for validating every change you submit — AI-assisted or not
+- Do not submit code, tests, or descriptions copied directly from an LLM without
+  human review
+- AI-generated tests must validate actual behavior, not just exercise code paths
+- Do not use bots or agents to open PRs without human authorship and responsibility
