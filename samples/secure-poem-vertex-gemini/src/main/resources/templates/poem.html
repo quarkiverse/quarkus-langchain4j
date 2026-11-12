@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/app.css">
+    <title>Secure Poem</title>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="brand"><img src="/images/quarkus-logo.png" alt="Quarkus" width="30" height="30"><span>Secure Poem<small>OIDC model access demo</small></span></div>
+        <a class="signout" href="/logout">Sign out</a>
+    </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <section class="intro">
+            <h1>Hello, <em>{name}</em>.</h1>
+            <p>You signed in with Google. Ask Gemini on Vertex AI for a poem: the call carries your access token, and Google checks that you approved the <code>cloud-platform</code> scope.</p>
+            <button class="button" type="button" id="read" data-model="{model}">Read a poem</button>
+        </section>
+
+        <div id="result" aria-live="polite"></div>
+
+        <div class="trace" id="trace" data-state="idle">
+            <div class="node">browser</div>
+            <div class="edge"><span>session</span></div>
+            <div class="node">this application</div>
+            <div class="edge scope-edge"><span>access token</span></div>
+            <div class="node">Google Vertex AI<small id="provider-status">ready</small></div>
+        </div>
+    </div>
+</main>
+
+<script>
+    var read = document.getElementById('read');
+    var result = document.getElementById('result');
+    var trace = document.getElementById('trace');
+    var providerStatus = document.getElementById('provider-status');
+
+    function setTrace(state, label) {
+        trace.dataset.state = state;
+        providerStatus.textContent = label;
+    }
+
+    function showThinking() {
+        result.replaceChildren();
+        var dots = document.createElement('span');
+        dots.className = 'thinking';
+        dots.append(document.createElement('i'), document.createElement('i'), document.createElement('i'));
+        result.append(dots);
+    }
+
+    function showNotice(title, text, denied) {
+        result.replaceChildren();
+        var box = document.createElement('div');
+        box.className = denied ? 'notice denied' : 'notice';
+        var strong = document.createElement('strong');
+        strong.textContent = title;
+        var paragraph = document.createElement('p');
+        paragraph.textContent = text;
+        box.append(strong, paragraph);
+        result.append(box);
+        return box;
+    }
+
+    function showDenied() {
+        var box = showNotice('Access to the model was not granted',
+            'The provider rejected your access token because it lacks the required scope. Sign out, sign in again and approve the access request.',
+            true);
+        var link = document.createElement('a');
+        link.className = 'button';
+        link.href = '/logout';
+        link.textContent = 'Sign out and try again';
+        box.append(link);
+    }
+
+    function showPoem(text) {
+        result.replaceChildren();
+        var article = document.createElement('article');
+        article.className = 'answer';
+        var label = document.createElement('span');
+        label.className = 'answer-label';
+        label.textContent = 'Poem';
+        var body = document.createElement('div');
+        body.className = 'answer-body';
+        body.textContent = text;
+        article.append(label, body);
+        result.append(article);
+    }
+
+    async function readPoem() {
+        read.disabled = true;
+        showThinking();
+        setTrace('sending', 'checking scope');
+        try {
+            var response = await fetch('/poem/' + read.dataset.model);
+            if (response.ok) {
+                showPoem(await response.text());
+                setTrace('allowed', 'access granted');
+            } else if (response.status === 403) {
+                showDenied();
+                setTrace('denied', '403 scope missing');
+            } else if (response.status === 401) {
+                showNotice('Your session or token expired', 'Sign out and sign in again.', false);
+                setTrace('error', 'token expired');
+            } else {
+                showNotice('The model could not answer', 'It responded with HTTP ' + response.status + '. Try again in a moment.', false);
+                setTrace('error', 'HTTP ' + response.status);
+            }
+        } catch (error) {
+            showNotice('Could not reach the application', 'If your session expired, sign out and sign in again.', false);
+            setTrace('error', 'unreachable');
+        } finally {
+            read.disabled = false;
+        }
+    }
+
+    read.addEventListener('click', readPoem);
+</script>
+</body>
+</html>
