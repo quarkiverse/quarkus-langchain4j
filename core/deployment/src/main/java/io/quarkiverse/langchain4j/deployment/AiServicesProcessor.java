@@ -18,6 +18,8 @@ import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVar
 import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
 import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMultiOrFlowPublisher;
 import static io.quarkus.arc.processor.DotNames.NAMED;
+import static io.quarkus.arc.processor.DotNames.OBSERVES;
+import static io.quarkus.arc.processor.DotNames.OBSERVES_ASYNC;
 import static io.quarkus.arc.processor.DotNames.SINGLETON;
 
 import java.io.IOException;
@@ -77,6 +79,7 @@ import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
+import dev.langchain4j.observability.api.event.AiServiceInvocationSummaryEvent;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
@@ -183,6 +186,8 @@ public class AiServicesProcessor {
     public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     public static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
     private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
+    private static final DotName AI_SERVICE_INVOCATION_SUMMARY_EVENT = DotName
+            .createSimple(AiServiceInvocationSummaryEvent.class);
     private static final DotName CHAT_REQUEST_PARAMETERS = DotName.createSimple(ChatRequestParameters.class);
     public static final String DEFAULT_DELIMITER = "\n";
     public static final Predicate<AnnotationInstance> IS_METHOD_PARAMETER_ANNOTATION = ai -> ai.target()
@@ -1049,14 +1054,41 @@ public class AiServicesProcessor {
         }));
     }
 
+    /**
+     * Determines whether the application contains an observer for {@link AiServiceInvocationSummaryEvent}.
+     * <p>
+     * {@code @Observes} and {@code @ObservesAsync} can only target a method parameter, so the observed type is the
+     * type of the annotated parameter.
+     */
+    private static boolean hasInvocationSummaryObserver(IndexView index) {
+        for (DotName observesAnnotation : List.of(OBSERVES, OBSERVES_ASYNC)) {
+            for (AnnotationInstance instance : index.getAnnotations(observesAnnotation)) {
+                if (instance.target().kind() != AnnotationTarget.Kind.METHOD_PARAMETER) {
+                    continue;
+                }
+                MethodParameterInfo parameter = instance.target().asMethodParameter();
+                Type observedType = parameter.method().parameterType(parameter.position());
+                if (AI_SERVICE_INVOCATION_SUMMARY_EVENT.equals(observedType.name())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     public void handleDeclarativeServices(AiServicesRecorder recorder,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<SelectedChatModelProviderBuildItem> selectedChatModelProvider,
             List<ToolQualifierProvider.BuildItem> toolQualifierProviderItems,
+            CombinedIndexBuildItem combinedIndex,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+
+        // An AiServiceInvocationSummaryEvent listener makes the registrar retain every event of every invocation,
+        // so it is only worth registering when the application actually observes the event.
+        boolean registerInvocationSummaryListener = hasInvocationSummaryObserver(combinedIndex.getIndex());
 
         boolean needsChatModelBean = false;
         boolean needsStreamingChatModelBean = false;
@@ -1244,7 +1276,8 @@ public class AiServicesProcessor {
                                     bi.getExecuteToolsConcurrently(),
                                     bi.isShouldThrowExceptionOnEventError(),
                                     defaultMemoryIdProviderClassName,
-                                    bi.getSkillNames())))
+                                    bi.getSkillNames(),
+                                    registerInvocationSummaryListener)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)

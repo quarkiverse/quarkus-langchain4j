@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-sample-secure-poem-multiple-models</artifactId>
-    <name>Quarkus LangChain4j - Sample - Secure Poem Multiple Models</name>
+    <artifactId>quarkus-langchain4j-sample-secure-poem-vertex-gemini</artifactId>
+    <name>Quarkus LangChain4j - Sample - Secure Poem Vertex Gemini</name>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -50,11 +50,6 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-vertex-ai-gemini</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-azure-openai</artifactId>
             <version>${quarkus-langchain4j.version}</version>
         </dependency>
         <dependency>

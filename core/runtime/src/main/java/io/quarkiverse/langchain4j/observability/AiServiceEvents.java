@@ -4,6 +4,7 @@ import dev.langchain4j.observability.api.event.AiServiceCancelledEvent;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceEvent;
+import dev.langchain4j.observability.api.event.AiServiceInvocationSummaryEvent;
 import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
@@ -22,6 +23,12 @@ public enum AiServiceEvents {
     COMPLETED(AiServiceCompletedEvent.class),
     ERROR(AiServiceErrorEvent.class),
     INPUT_GUARDRAIL_EXECUTED(InputGuardrailExecutedEvent.class),
+    /**
+     * A composite event that the registrar synthesises from all the other events of an invocation. The registrar only
+     * records those events while a listener for this event is registered, so unlike every other constant here this
+     * listener is registered only when the application actually observes the event.
+     */
+    INVOCATION_SUMMARY(AiServiceInvocationSummaryEvent.class),
     OUTPUT_GUARDRAIL_EXECUTED(OutputGuardrailExecutedEvent.class),
     REQUEST_ISSUED(AiServiceRequestIssuedEvent.class),
     RESPONSE_RECEIVED(AiServiceResponseReceivedEvent.class),
