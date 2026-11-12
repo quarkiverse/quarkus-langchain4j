@@ -62,14 +62,16 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
         spanChatModelListener.onRequest(ctx.requestContext());
         spanChatModelListener.onResponse(ctx.responseContext());
 
-        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(1));
+        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(2));
         verify(onRequest, times(2)).accept(any(), any());
-        var actualSpan = exporter.getFinishedSpanItems().get(0);
-        assertThat(actualSpan.getEvents())
+        SpanData openingSpan = span("chat --mock-model-name-- open");
+        SpanData closingSpan = span("chat --mock-model-name-- close");
+        assertThat(openingSpan.getEvents())
                 .hasSize(2)
                 .extracting("exception")
                 .extracting("message")
                 .contains("--failure-on-request-of-contributor--", "--failure-on-request-of-contributor--");
+        assertThat(closingSpan.getEvents()).isEmpty();
     }
 
     @Test
@@ -81,10 +83,12 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
         spanChatModelListener.onRequest(ctx.requestContext());
         spanChatModelListener.onResponse(ctx.responseContext());
 
-        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(1));
+        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(2));
         verify(onResponse, times(2)).accept(any(), any());
-        var actualSpan = exporter.getFinishedSpanItems().get(0);
-        assertThat(actualSpan.getEvents())
+        SpanData openingSpan = span("chat --mock-model-name-- open");
+        SpanData closingSpan = span("chat --mock-model-name-- close");
+        assertThat(openingSpan.getEvents()).isEmpty();
+        assertThat(closingSpan.getEvents())
                 .hasSize(2)
                 .extracting("exception")
                 .extracting("message")
@@ -101,10 +105,12 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
         spanChatModelListener.onRequest(ctx.requestContext());
         spanChatModelListener.onError(ctx.errorContext());
 
-        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(1));
+        await().untilAsserted(() -> assertThat(exporter.getFinishedSpanItems()).hasSize(2));
         verify(onError, times(2)).accept(any(), any());
-        var actualSpan = exporter.getFinishedSpanItems().get(0);
-        assertThat(actualSpan.getEvents())
+        SpanData openingSpan = span("chat --mock-model-name-- open");
+        SpanData closingSpan = span("chat --mock-model-name-- close");
+        assertThat(openingSpan.getEvents()).isEmpty();
+        assertThat(closingSpan.getEvents())
                 .hasSize(3)
                 .extracting("exception")
                 .extracting("message")
@@ -115,14 +121,14 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
     }
 
     @Override
-    protected void verifySuccessfulSpan(SpanData actualSpan) {
+    protected void verifySuccessfulSpan(SpanData openingSpan, SpanData closingSpan) {
         verify(onRequest, times(2)).accept(any(), any());
         verify(onResponse, times(2)).accept(any(), any());
         verifyNoInteractions(onError);
     }
 
     @Override
-    protected void verifyFailedSpan(SpanData actualSpan) {
+    protected void verifyFailedSpan(SpanData openingSpan, SpanData closingSpan) {
         verify(onRequest, times(2)).accept(any(), any());
         verifyNoInteractions(onResponse);
         verify(onError, times(2)).accept(any(), any());
