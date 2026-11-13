@@ -18,6 +18,7 @@ import org.jboss.jandex.Type;
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
+import io.quarkiverse.langchain4j.deployment.TemplateUtil;
 import io.quarkiverse.langchain4j.deployment.ToolProviderMetaBuildItem;
 import io.quarkiverse.langchain4j.deployment.ToolsMetadataBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
@@ -246,19 +247,36 @@ public class LangChain4jDevUIProcessor {
     }
 
     private void addChatPage(CardPageBuildItem card, List<DeclarativeAiServiceBuildItem> aiServices) {
-        List<String> systemMessages = aiServices.stream()
-                .map(s -> s.getServiceClassInfo())
-                .flatMap(c -> c.annotations().stream()) //This includes method annotations
-                .filter(a -> a.name().equals(LangChain4jDotNames.SYSTEM_MESSAGE))
-                // TODO: remove and support 'fromResource'
-                .filter(a -> a.value() != null)
-                .map(a -> String.join("", a.value().asStringArray()))
-                .toList();
+        List<ClassInfo> serviceClasses = new ArrayList<>();
+        for (DeclarativeAiServiceBuildItem aiService : aiServices) {
+            serviceClasses.add(aiService.getServiceClassInfo());
+        }
 
-        card.addBuildTimeData("systemMessages", systemMessages);
+        card.addBuildTimeData("systemMessages", collectSystemMessages(serviceClasses));
         card.addPage(Page.webComponentPageBuilder().title("Chat")
                 .componentLink("qwc-chat.js")
                 .icon("font-awesome-solid:comments"));
+    }
+
+    /**
+     * Collects the system messages declared on the given AI service classes and their methods.
+     *
+     * @param serviceClasses the AI service interfaces to inspect
+     * @return the resolved text of each non-empty {@code @SystemMessage}, whether inline or read from {@code fromResource}
+     */
+    static List<String> collectSystemMessages(List<ClassInfo> serviceClasses) {
+        List<String> systemMessages = new ArrayList<>();
+        for (ClassInfo serviceClass : serviceClasses) {
+            for (AnnotationInstance annotation : serviceClass.annotations()) {
+                if (annotation.name().equals(LangChain4jDotNames.SYSTEM_MESSAGE)) {
+                    String systemMessage = TemplateUtil.getTemplateFromAnnotationInstance(annotation);
+                    if (!systemMessage.isEmpty()) {
+                        systemMessages.add(systemMessage);
+                    }
+                }
+            }
+        }
+        return systemMessages;
     }
 
     @BuildStep
