@@ -18,8 +18,6 @@ import jakarta.inject.Singleton;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
@@ -95,7 +93,6 @@ public class ToolExecutionModelTest {
 
     @Test
     @ActivateRequestContext
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testBlockingToolInvocationFromVirtualThread() throws ExecutionException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
         AtomicReference<String> caller = new AtomicReference<>();
@@ -145,7 +142,6 @@ public class ToolExecutionModelTest {
 
     @Test
     @ActivateRequestContext
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testNonBlockingToolInvocationFromVirtualThread() throws ExecutionException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
         AtomicReference<String> caller = new AtomicReference<>();
@@ -194,7 +190,6 @@ public class ToolExecutionModelTest {
 
     @Test
     @ActivateRequestContext
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testUniToolInvocationFromVirtualThread() throws ExecutionException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
         AtomicReference<String> caller = new AtomicReference<>();
@@ -214,7 +209,6 @@ public class ToolExecutionModelTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_21)
     @ActivateRequestContext
     void testToolInvocationOnVirtualThread() {
         String uuid = UUID.randomUUID().toString();
@@ -223,7 +217,6 @@ public class ToolExecutionModelTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testToolInvocationOnVirtualThreadFromVirtualThread() throws ExecutionException, InterruptedException {
         String uuid = UUID.randomUUID().toString();
         AtomicReference<String> caller = new AtomicReference<>();
@@ -243,7 +236,6 @@ public class ToolExecutionModelTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testToolInvocationOnVirtualThreadFromEventLoop() {
         String uuid = UUID.randomUUID().toString();
         AtomicReference<Throwable> failure = new AtomicReference<>();
