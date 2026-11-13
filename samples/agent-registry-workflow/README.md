@@ -43,7 +43,7 @@ the generated text is not deterministic. Weather data is a small, fictional fixt
 | Apicurio Registry container and Java SDK | `3.3.3` |
 | Ollama model | `qwen2.5:7b` by default |
 
-Use Java 17 or newer (the verification run used Java 25), Docker with Compose v2, Python 3.9+
+Use Java 21 or newer (the verification run used Java 25), Docker with Compose v2, Python 3.9+
 and a running [Ollama](https://ollama.com/). Allow enough memory for the 7B model and four JVMs.
 This uses the latest released Registry found when creating the sample, not a floating snapshot image.
 The extension source includes fixes for discovered A2A input keys and card republishing;

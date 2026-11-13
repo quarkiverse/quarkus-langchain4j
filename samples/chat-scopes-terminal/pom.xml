@@ -11,7 +11,7 @@
     <properties>
         <compiler-plugin.version>3.16.0</compiler-plugin.version>
         <maven.compiler.parameters>true</maven.compiler.parameters>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
@@ -22,7 +22,7 @@
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
         <quarkus-langchain4j.version>2.0.0.Beta4</quarkus-langchain4j.version>
    </properties>
-    
+
     <dependencyManagement>
         <dependencies>
             <dependency>

@@ -16,8 +16,6 @@ import jakarta.inject.Singleton;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
@@ -106,7 +104,6 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testBlockingToolInvocationFromVirtualThread() throws ExecutionException, InterruptedException {
         AtomicReference<String> value = new AtomicReference<>();
         AtomicReference<String> caller = new AtomicReference<>();
@@ -185,7 +182,6 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
     @Test
     @RunOnVertxContext
     @ActivateRequestContext
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testNonBlockingToolInvocationFromVirtualThread() throws ExecutionException, InterruptedException {
         String uuid = uuidGenerator.get();
         AtomicReference<String> caller = new AtomicReference<>();
@@ -233,7 +229,6 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
     @Test
     @RunOnVertxContext
     @ActivateRequestContext
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void testUniToolInvocationFromVirtualThread() throws ExecutionException, InterruptedException {
         String uuid = uuidGenerator.get();
         AtomicReference<String> caller = new AtomicReference<>();
@@ -249,7 +244,6 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_21)
     @RunOnVertxContext(runOnEventLoop = false)
     @ActivateRequestContext
     void testToolInvocationOnVirtualThread() {
@@ -260,7 +254,6 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_21)
     @RunOnVertxContext
     @ActivateRequestContext
     void testToolInvocationOnVirtualThreadFromVirtualThread() throws ExecutionException, InterruptedException {
@@ -278,7 +271,6 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_21)
     @ActivateRequestContext
     void testToolInvocationOnVirtualThreadFromEventLoop() {
         AtomicReference<String> value = new AtomicReference<>();

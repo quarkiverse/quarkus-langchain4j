@@ -17,8 +17,6 @@ import jakarta.inject.Singleton;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.Tool;
@@ -131,7 +129,6 @@ public class ToolExecutionWithEventLoopDeliveryTest {
 
     @Test
     @ActivateRequestContext
-    @EnabledForJreRange(min = JRE.JAVA_21)
     void virtualThreadAndNonBlockingToolsRunFromVirtualThreadWithTokenStream() throws Exception {
         String uuid = UUID.randomUUID().toString();
 

@@ -271,7 +271,7 @@ public class ToolGuardrailWithObjectTest {
     }
 
     /**
-     * Record for address (Java 17+)
+     * Record for address
      */
     public record Address(String street, String city, String zipCode) {
     }
