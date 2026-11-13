@@ -10,6 +10,7 @@ import tools.jackson.core.JsonToken;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.ext.javatime.deser.LocalTimeDeserializer;
 
 /**
  * Often LLMs return a time as a JSON object containing the time's constituents
@@ -34,17 +35,9 @@ public class CustomLocalTimeDeserializer extends ValueDeserializer<LocalTime> {
                 return null;
             }
         } else {
-            // Standard string format (e.g., "14:30:00")
-            String text = p.getString();
-            if (text == null || text.isEmpty()) {
-                return null;
-            }
-            try {
-                return LocalTime.parse(text);
-            } catch (DateTimeException e) {
-                log.debug("Failed to parse LocalTime from string: " + text, e);
-                return null;
-            }
+            // delegate to Jackson's own deserializer so that a value it cannot parse fails loudly instead of
+            // silently becoming null
+            return LocalTimeDeserializer.INSTANCE.deserialize(p, ctxt);
         }
     }
 }

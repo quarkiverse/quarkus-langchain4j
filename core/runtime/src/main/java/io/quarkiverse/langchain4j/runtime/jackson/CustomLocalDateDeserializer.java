@@ -10,6 +10,7 @@ import tools.jackson.core.JsonToken;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.ext.javatime.deser.LocalDateDeserializer;
 
 /**
  * Often LLMs return a date as a JSON object containing the date's constituents
@@ -33,17 +34,10 @@ public class CustomLocalDateDeserializer extends ValueDeserializer<LocalDate> {
                 return null;
             }
         } else {
-            // Standard string format (e.g., "2024-03-15")
-            String text = p.getString();
-            if (text == null || text.isEmpty()) {
-                return null;
-            }
-            try {
-                return LocalDate.parse(text);
-            } catch (DateTimeException e) {
-                log.debug("Failed to parse LocalDate from string: " + text, e);
-                return null;
-            }
+            // delegate to Jackson's own deserializer so that all the formats it accepts (plain ISO dates, but also
+            // date-time strings such as "2024-03-15T00:00:00" or "2024-03-15T00:00:00Z") keep working, and so that
+            // a value Jackson cannot parse fails loudly instead of silently becoming null
+            return LocalDateDeserializer.INSTANCE.deserialize(p, ctxt);
         }
     }
 }
