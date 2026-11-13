@@ -2,7 +2,15 @@ package io.quarkiverse.langchain4j.runtime.devui.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
+
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.UserMessage;
 
 class ChatMessagePojoTest {
 
@@ -68,5 +76,30 @@ class ChatMessagePojoTest {
         String result = ChatMessagePojo.formatRagAugmentedText(original, original);
 
         assertEquals(original, result);
+    }
+
+    @Test
+    void userMessageWithImageIsRenderedAsTextAndMarkdownImage() {
+        UserMessage message = UserMessage.from(TextContent.from("What is in this picture?"),
+                ImageContent.from("aGVsbG8=", "image/png"));
+
+        ChatMessagePojo pojo = ChatMessagePojo.fromMessage(message, Map.of());
+
+        assertEquals(MessageType.USER, pojo.getType());
+        assertEquals("What is in this picture?\n\n![image](data:image/png;base64,aGVsbG8=)", pojo.getMessage());
+    }
+
+    @Test
+    void ragAugmentedUserMessageWithImageKeepsTheImage() {
+        String original = "What is in this picture?";
+        UserMessage message = UserMessage.from(TextContent.from(original + "\n\nSome context."),
+                ImageContent.from("aGVsbG8=", "image/jpeg"));
+        Map<ChatMessage, String> ragOriginalTexts = new IdentityHashMap<>();
+        ragOriginalTexts.put(message, original);
+
+        ChatMessagePojo pojo = ChatMessagePojo.fromMessage(message, ragOriginalTexts);
+
+        assertEquals(original + "\n\n<blockquote class=\"lc4j-rag-context\"><strong>Retrieved context</strong><br>"
+                + "Some context.</blockquote>\n\n![image](data:image/jpeg;base64,aGVsbG8=)", pojo.getMessage());
     }
 }

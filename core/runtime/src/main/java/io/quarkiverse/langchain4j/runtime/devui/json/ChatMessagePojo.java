@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
@@ -52,9 +56,23 @@ public class ChatMessagePojo {
             case USER:
                 json.type = MessageType.USER;
                 UserMessage userMessage = (UserMessage) message;
-                String text = userMessage.hasSingleText() ? userMessage.singleText() : null;
+                StringBuilder text = null;
+                StringBuilder images = new StringBuilder();
+                for (Content content : userMessage.contents()) {
+                    if (content instanceof TextContent textContent) {
+                        text = text == null ? new StringBuilder() : text.append("\n\n");
+                        text.append(textContent.text());
+                    } else if (content instanceof ImageContent imageContent) {
+                        images.append("\n\n").append(toMarkdownImage(imageContent.image()));
+                    }
+                }
                 String originalText = ragOriginalTexts.get(message);
-                json.message = originalText != null && text != null ? formatRagAugmentedText(originalText, text) : text;
+                String formatted = text == null ? null
+                        : originalText != null ? formatRagAugmentedText(originalText, text.toString()) : text.toString();
+                if (!images.isEmpty()) {
+                    formatted = formatted == null ? images.toString().strip() : formatted + images;
+                }
+                json.message = formatted;
                 break;
             case AI:
                 AiMessage aiMessage = (AiMessage) message;
@@ -108,6 +126,19 @@ public class ChatMessagePojo {
             result.append("\n\n").append(suffix);
         }
         return result.toString();
+    }
+
+    static String toMarkdownImage(Image image) {
+        String src;
+        if (image.base64Data() != null) {
+            String mimeType = image.mimeType() != null ? image.mimeType() : "image/jpeg";
+            src = "data:" + mimeType + ";base64," + image.base64Data();
+        } else if (image.url() != null) {
+            src = image.url().toString();
+        } else {
+            return "";
+        }
+        return "![image](" + src + ")";
     }
 
     private static String escapeHtml(String text) {
