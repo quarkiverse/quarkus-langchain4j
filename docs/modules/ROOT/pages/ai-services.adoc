@@ -243,7 +243,7 @@ To customize the memory provider, you can specify a custom class implementing `C
 @RegisterAiService(chatMemoryProviderSupplier = MyCustomMemoryProvider.class)
 ----
 
-See the <<Memory Management>> reference for detailed customization.
+See the xref:messages-and-memory.adoc[Messages and Memory] reference for detailed customization.
 
 == LLM Response Mapping
 

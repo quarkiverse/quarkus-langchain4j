@@ -118,6 +118,7 @@ Using `@ApplicationScoped` with memory enabled can result in users sharing conve
 It requires careful management of `@MemoryId` to ensure isolation.
 ====
 
+[#configure-default-memory]
 == Configuring the Default Memory
 
 To configure the default memory behavior, you can set properties in `application.properties`:

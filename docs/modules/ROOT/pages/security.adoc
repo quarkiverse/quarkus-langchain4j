@@ -180,7 +180,7 @@ String prompt = """
 
 LLMs can sometimes generate harmful, inappropriate, or incorrectly formatted responses. *Guardrails* are checks that validate the model's output before it is used or displayed.
 
-Quarkus Langchain4j does not have ready made guardrails for certain cases, but you can implement them easily, compare the https://docs.quarkiverse.io/quarkus-langchain4j/dev/guardrails.html[Guardrails documentation]:
+Quarkus Langchain4j does not have ready made guardrails for certain cases, but you can implement them easily, compare the xref:guardrails.adoc[Guardrails documentation]:
 
 * *Format Validation*: If you expect a JSON object, validate the output to ensure it is well-formed JSON and conforms to the expected schema.
 * *Content Moderation*: Use moderation models or keyword filtering to check for harmful or undesirable content in the response.
