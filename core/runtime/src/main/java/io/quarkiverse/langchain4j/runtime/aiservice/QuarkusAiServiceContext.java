@@ -211,7 +211,8 @@ public class QuarkusAiServiceContext extends AiServiceContext {
      * Makes the upstream LangChain4j {@code AiServiceTokenStream} execute tools on the thread they require when a
      * {@code TokenStream} method of this AI service has tools that cannot run on an event loop, or when this AI service
      * has a {@linkplain ToolProvider#isDynamic() dynamic} tool provider, which is re-evaluated after the tools are
-     * executed and may block. The upstream
+     * executed and may block, or when the tools are executed concurrently, as the wrapper then reports the tool calls
+     * that the model does not report. The upstream
      * implementation does not pass the method to the model, so the wrapped model is used by every {@code TokenStream}
      * method of the AI service, while the {@code Multi} methods, implemented in Quarkus, keep using the delegate.
      */
@@ -227,7 +228,8 @@ public class QuarkusAiServiceContext extends AiServiceContext {
                 switchToWorkerThreadForToolExecution |= methodCreateInfo.isSwitchToWorkerThreadForToolExecution();
             }
         }
-        if (switchToWorkerThreadForToolExecution || (!tokenStreamMethodCreateInfos.isEmpty() && hasDynamicToolProvider())) {
+        if (switchToWorkerThreadForToolExecution || (!tokenStreamMethodCreateInfos.isEmpty()
+                && (hasDynamicToolProvider() || executeToolsConcurrently))) {
             streamingChatModel = new ToolExecutionDispatchingStreamingChatModel(streamingChatModel, this,
                     tokenStreamMethodCreateInfos);
         }

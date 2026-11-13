@@ -1,7 +1,10 @@
 package io.quarkiverse.langchain4j.test.toolresolution;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -68,6 +71,11 @@ public class MaxToolCallingRoundTripsTokenStreamTest {
         TokenStream chat(String message);
     }
 
+    @RegisterAiService(maxToolCallingRoundTrips = 3, executeToolsConcurrently = true, tools = PingTool.class, streamingChatLanguageModelSupplier = AlwaysCallsToolStreamingSupplier.class)
+    public interface ConcurrentTokenStreamAssistantWithCap3 {
+        TokenStream chat(String message);
+    }
+
     public static class AlwaysCallsToolStreamingSupplier implements Supplier<StreamingChatModel> {
         @Override
         public StreamingChatModel get() {
@@ -78,16 +86,21 @@ public class MaxToolCallingRoundTripsTokenStreamTest {
     @ApplicationScoped
     public static class PingTool {
         static volatile int invocations = 0;
+        static volatile CountDownLatch capExceeded = new CountDownLatch(4);
 
         @Tool("Does nothing.")
         public String ping() {
             invocations++;
+            capExceeded.countDown();
             return "pong";
         }
     }
 
     @Inject
     TokenStreamAssistantWithCap3 assistant;
+
+    @Inject
+    ConcurrentTokenStreamAssistantWithCap3 concurrentAssistant;
 
     @Test
     @ActivateRequestContext
@@ -108,5 +121,38 @@ public class MaxToolCallingRoundTripsTokenStreamTest {
         String result = outcome.get();
         Assertions.assertThat(result).contains("exceeded").contains("3");
         Assertions.assertThat(PingTool.invocations).isEqualTo(3);
+    }
+
+    @Test
+    @ActivateRequestContext
+    public void testConcurrentTokenStreamDoesNotExecuteToolsBeyondRoundTripLimit() throws Exception {
+        PingTool.capExceeded = new CountDownLatch(4);
+        roundTrips.set(0);
+
+        CompletableFuture<String> outcome = new CompletableFuture<>();
+        try {
+            concurrentAssistant.chat("go")
+                    .onCompleteResponse(new Consumer<ChatResponse>() {
+                        @Override
+                        public void accept(ChatResponse response) {
+                            outcome.complete("returned normally");
+                        }
+                    })
+                    .onError(new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable error) {
+                            outcome.complete(error.getMessage());
+                        }
+                    })
+                    .start();
+        } catch (RuntimeException e) {
+            outcome.complete(e.getMessage());
+        }
+
+        Assertions.assertThat(outcome.get(10, TimeUnit.SECONDS)).contains("exceeded").contains("3");
+        Assertions.assertThat(PingTool.capExceeded.await(500, TimeUnit.MILLISECONDS))
+                .as("a tool was executed beyond the round trip limit")
+                .isFalse();
+        Assertions.assertThat(PingTool.capExceeded.getCount()).isEqualTo(1);
     }
 }
