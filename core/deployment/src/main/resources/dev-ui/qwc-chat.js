@@ -90,6 +90,30 @@ export class QwcChat extends LitElement {
             flex: 1;
             overflow: auto;
         }
+
+        .inputRow {
+            display: flex;
+            align-items: center;
+        }
+
+        .inputRow vaadin-message-input {
+            flex: 1;
+        }
+
+        .attachedImage {
+            display: flex;
+            align-items: center;
+            gap: var(--lumo-space-xs);
+            padding: 0 var(--lumo-space-m);
+            font-size: var(--lumo-font-size-s);
+            color: var(--lumo-secondary-text-color);
+        }
+
+        .attachedImage img {
+            max-height: 48px;
+            max-width: 96px;
+            border-radius: var(--lumo-border-radius-s);
+        }
     `;
 
     static properties = {
@@ -103,7 +127,14 @@ export class QwcChat extends LitElement {
         _showToolRelatedMessages: {state: true},
         _showSettingsDialog: {state: true},
         _observer: {state: false},
+        _image: {state: true},
     }
+
+    // The image is sent as a JSON-RPC argument over the Dev UI WebSocket. Browsers send a message as a single frame,
+    // and quarkus.http.websocket-server.max-frame-size defaults to 64 KB, so the image is downscaled to leave room
+    // for the message text and the JSON-RPC envelope in that frame
+    static MAX_IMAGE_DIMENSION = 1024;
+    static MAX_IMAGE_BASE64_LENGTH = 48 * 1024;
 
     constructor() {
         super();
@@ -114,6 +145,7 @@ export class QwcChat extends LitElement {
         this._progressBarClass = "hide";
         this._unfilteredChatItems = [];
         this._showSettingsDialog = false;
+        this._image = null;
         this.jsonRpc.reset({systemMessage: this._systemMessage});
         this._streamingChatSupported = this.jsonRpc.isStreamingChatSupported();
         this._streamingChatEnabled = this._streamingChatSupported && !this._ragEnabled;
@@ -175,7 +207,9 @@ export class QwcChat extends LitElement {
     _renderEmptyState() {
         return html`
             <div class="chatContainerEmpty">
-                <vaadin-message-input class="emptyStateInput" @submit="${this._handleSendChat}"></vaadin-message-input>
+                <div class="emptyStateInput">
+                    ${this._renderMessageInput()}
+                </div>
             </div>
         `;
     }
@@ -185,9 +219,84 @@ export class QwcChat extends LitElement {
             <div class="chatContainer">
                 <vaadin-message-list .items="${this._chatItems}" markdown></vaadin-message-list>
                 <vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>
+                ${this._renderMessageInput()}
+            </div>
+        `;
+    }
+
+    _renderMessageInput() {
+        return html`
+            ${this._image ? html`
+                <div class="attachedImage">
+                    <img src="${this._image.dataUrl}" alt="Attached image">
+                    <span>${this._image.name}</span>
+                    <vaadin-button theme="tertiary icon" title="Remove image" @click="${() => { this._image = null; }}">
+                        <vaadin-icon icon="vaadin:close-small"></vaadin-icon>
+                    </vaadin-button>
+                </div>
+            ` : ''}
+            <div class="inputRow">
+                <input id="imageInput" type="file" accept="image/*" hidden @change="${this._handleImageSelected}">
+                <vaadin-button theme="tertiary icon" title="Attach an image"
+                    @click="${() => this.shadowRoot.getElementById('imageInput').click()}">
+                    <vaadin-icon icon="vaadin:paperclip"></vaadin-icon>
+                </vaadin-button>
                 <vaadin-message-input @submit="${this._handleSendChat}"></vaadin-message-input>
             </div>
         `;
+    }
+
+    async _handleImageSelected(e) {
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (!file) {
+            return;
+        }
+        try {
+            const dataUrl = await this._downscaleImage(file);
+            this._image = {
+                name: file.name,
+                dataUrl: dataUrl,
+                mimeType: dataUrl.substring(5, dataUrl.indexOf(';')),
+                base64: dataUrl.substring(dataUrl.indexOf(',') + 1),
+            };
+        } catch (error) {
+            this._showError(error.message ? error.message : error);
+        }
+    }
+
+    // Draws the image on a canvas no larger than MAX_IMAGE_DIMENSION and encodes it as JPEG, lowering the quality and
+    // then the size until it fits in MAX_IMAGE_BASE64_LENGTH
+    async _downscaleImage(file) {
+        const bitmap = await createImageBitmap(file);
+        try {
+            let scale = Math.min(1, QwcChat.MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
+            const canvas = document.createElement('canvas');
+            while (true) {
+                canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+                canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+                const context = canvas.getContext('2d');
+                context.fillStyle = '#fff';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                for (const quality of [0.85, 0.7, 0.55, 0.4]) {
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    if (dataUrl.length - dataUrl.indexOf(',') - 1 <= QwcChat.MAX_IMAGE_BASE64_LENGTH) {
+                        return dataUrl;
+                    }
+                }
+                if (canvas.width <= 64 && canvas.height <= 64) {
+                    throw new Error('The image could not be made small enough to send');
+                }
+                scale = scale * 0.75;
+            }
+        } finally {
+            bitmap.close();
+        }
+    }
+
+    _imageMarkdown(image) {
+        return image ? `\n\n![image](${image.dataUrl})` : '';
     }
 
     _renderSettingsDialog() {
@@ -256,6 +365,7 @@ export class QwcChat extends LitElement {
     }
 
     _startNewConversation() {
+        this._image = null;
         this._clearHistory();
         if (this._systemMessage && this._systemMessage.trim().length > 0) {
             this._addSystemMessage(this._systemMessage);
@@ -266,20 +376,26 @@ export class QwcChat extends LitElement {
     _handleSendChat(e) {
         let message = e.detail.value;
         if (message && message.trim().length > 0) {
-            var indexUserMessage = this._addUserMessage(message);
+            const image = this._image;
+            this._image = null;
+            const imageBase64 = image ? image.base64 : null;
+            const imageMimeType = image ? image.mimeType : null;
+            var indexUserMessage = this._addUserMessage(message + this._imageMarkdown(image));
             this._showProgressBar();
 
             if (this._streamingChatEnabled) {
                 var msg = "";
                 var index = null;
                 try {
-                    this._observer = this.jsonRpc.streamingChat({message: message, ragEnabled: this._ragEnabled})
+                    this._observer = this.jsonRpc.streamingChat({message: message, ragEnabled: this._ragEnabled,
+                            imageBase64: imageBase64, imageMimeType: imageMimeType})
                         .onNext(jsonRpcResponse => {
                             if (jsonRpcResponse.result.error) {
                                 this._showError(jsonRpcResponse.result.error);
                                 this._hideProgressBar();
                             } else if (jsonRpcResponse.result.augmentedMessage) {
-                                this._updateMessage(indexUserMessage, jsonRpcResponse.result.augmentedMessage);
+                                this._updateMessage(indexUserMessage,
+                                    jsonRpcResponse.result.augmentedMessage + this._imageMarkdown(image));
                             } else if (jsonRpcResponse.result.toolExecutionRequest) {
                                 var item = jsonRpcResponse.result.toolExecutionRequest;
                                 this._addToolMessage(`Request to execute the following tool:
@@ -311,7 +427,8 @@ export class QwcChat extends LitElement {
                     this._hideProgressBar();
                 }
             } else {
-                this.jsonRpc.chat({message: message, ragEnabled: this._ragEnabled}).then(jsonRpcResponse => {
+                this.jsonRpc.chat({message: message, ragEnabled: this._ragEnabled,
+                        imageBase64: imageBase64, imageMimeType: imageMimeType}).then(jsonRpcResponse => {
                     this._showResponse(jsonRpcResponse);
                 }).catch((error) => {
                     this._showError(error);

@@ -14,6 +14,9 @@ with a list of tools that they are declared to use.
 
 * *Chat* page: allows you to manually hold a conversation with a chat model. This
 page is only available if the application contains a chat model.
+You can attach an image to a message, for models with vision capabilities. The image is sent over the
+Dev UI WebSocket, in a single frame, so the page downscales it to a JPEG of at most 48 KB (base64) to stay within
+the default `quarkus.http.websocket-server.max-frame-size` of 64 KB.
 
 * *Images* page: allows you to test the outputs of image models and tune its parameters.
 This page is provided specifically by the `openai-vanilla` extension and is currently specific

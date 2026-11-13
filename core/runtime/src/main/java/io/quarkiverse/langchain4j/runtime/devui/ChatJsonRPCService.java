@@ -20,6 +20,8 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -161,7 +163,7 @@ public class ChatJsonRPCService {
         return streamingModel.isPresent();
     }
 
-    public Multi<JsonObject> streamingChat(String message, boolean ragEnabled) {
+    public Multi<JsonObject> streamingChat(String message, boolean ragEnabled, String imageBase64, String imageMimeType) {
         ChatMemory m = currentMemory.get();
         if (m == null) {
             reset("");
@@ -183,12 +185,14 @@ public class ChatJsonRPCService {
                     Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
                     AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
                     ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
+                    String augmentedText = chatMessageToText(augmentedMessage);
+                    augmentedMessage = withImage(augmentedMessage, imageBase64, imageMimeType);
                     memory.add(augmentedMessage);
                     ragOriginalTexts.put(augmentedMessage, message);
                     em.emit(new JsonObject().put("augmentedMessage",
-                            ChatMessagePojo.formatRagAugmentedText(message, chatMessageToText(augmentedMessage))));
+                            ChatMessagePojo.formatRagAugmentedText(message, augmentedText)));
                 } else {
-                    memory.add(new UserMessage(message));
+                    memory.add(withImage(userMessage, imageBase64, imageMimeType));
                 }
 
                 StreamingChatModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
@@ -230,7 +234,7 @@ public class ChatJsonRPCService {
         return stream.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
-    public ChatResultPojo chat(String message, boolean ragEnabled) {
+    public ChatResultPojo chat(String message, boolean ragEnabled, String imageBase64, String imageMimeType) {
         ChatMemory memory = currentMemory.get();
         if (memory == null) {
             reset("");
@@ -246,11 +250,12 @@ public class ChatJsonRPCService {
             if (retrievalAugmentor != null && ragEnabled) {
                 Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
                 AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
-                ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
+                ChatMessage augmentedMessage = withImage(retrievalAugmentor.augment(augmentationRequest).chatMessage(),
+                        imageBase64, imageMimeType);
                 memory.add(augmentedMessage);
                 ragOriginalTexts.put(augmentedMessage, message);
             } else {
-                memory.add(new UserMessage(message));
+                memory.add(withImage(userMessage, imageBase64, imageMimeType));
             }
 
             boolean hasToolProvider = setToolsViaProviderIfAvailable(memory, userMessage);
@@ -275,6 +280,19 @@ public class ChatJsonRPCService {
             Log.warn(t);
             return new ChatResultPojo(null, t.getMessage());
         }
+    }
+
+    /**
+     * Adds the image attached in the Dev UI, if any, to the user message. The retrieval augmentor only gets the text,
+     * because augmentors generally expect a single text content.
+     */
+    static ChatMessage withImage(ChatMessage message, String imageBase64, String imageMimeType) {
+        if (imageBase64 == null || imageBase64.isBlank() || !(message instanceof UserMessage userMessage)) {
+            return message;
+        }
+        List<Content> contents = new ArrayList<>(userMessage.contents());
+        contents.add(ImageContent.from(imageBase64, imageMimeType != null ? imageMimeType : "image/jpeg"));
+        return userMessage.toBuilder().contents(contents).build();
     }
 
     // FIXME: this was basically copied from `dev.langchain4j.service.DefaultAiServices`,
