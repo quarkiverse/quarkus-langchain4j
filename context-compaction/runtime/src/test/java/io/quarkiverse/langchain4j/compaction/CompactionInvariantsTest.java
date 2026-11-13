@@ -55,4 +55,36 @@ class CompactionInvariantsTest {
         view.addAll(original.subList(original.size() - 3, original.size()));
         assertThat(CompactionInvariants.violations(original, view)).isEmpty();
     }
+
+    @Test
+    void detectsDroppedLatestUserMessage() {
+        List<ChatMessage> broken = new ArrayList<>(original);
+        broken.remove(broken.size() - 2); // the latest question; the turn ends with its answer
+        assertThat(CompactionInvariants.violations(original, broken))
+                .anyMatch(v -> v.contains("latest user message dropped"));
+    }
+
+    @Test
+    void detectsViewNotStartingWithUserMessage() {
+        List<ChatMessage> broken = new ArrayList<>(original);
+        broken.remove(1); // the first question: the view now starts with its tool exchange
+        assertThat(CompactionInvariants.violations(original, broken))
+                .anyMatch(v -> v.contains("instead of a user message"));
+    }
+
+    @Test
+    void acceptsViewStartingWithSummary() {
+        List<ChatMessage> view = new ArrayList<>();
+        view.add(Fixtures.SYSTEM);
+        view.add(CompactionMessages.summary("earlier"));
+        view.add(original.get(original.size() - 2));
+        view.add(original.getLast());
+        assertThat(CompactionInvariants.violations(original, view)).isEmpty();
+    }
+
+    @Test
+    void acceptsHistoryWithoutUserMessage() {
+        List<ChatMessage> history = List.of(Fixtures.SYSTEM, dev.langchain4j.data.message.AiMessage.from("Hello!"));
+        assertThat(CompactionInvariants.violations(history, history)).isEmpty();
+    }
 }

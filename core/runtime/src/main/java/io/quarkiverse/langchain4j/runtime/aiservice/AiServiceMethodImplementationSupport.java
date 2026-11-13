@@ -118,6 +118,7 @@ import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.VideoUrl;
+import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
@@ -247,6 +248,15 @@ public class AiServiceMethodImplementationSupport {
         Object memoryId = invocationContext.chatMemoryId();
 
         var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getOrCreateChatMemory(memoryId) : null;
+        if (methodCreateInfo.isChatMemoryMayBlock() && chatMemory instanceof HistoryViewChatMemory
+                && TypeUtil.isTokenStream(methodCreateInfo.getReturnType())
+                && !BlockingOperationControl.isBlockingAllowed()) {
+            // the view is computed when the memory is read below, on the caller thread, and may call a model
+            throw new IllegalStateException("The AI service method '" + methodCreateInfo.getInterfaceName() + "#"
+                    + methodCreateInfo.getMethodName() + "' returns a TokenStream and was called on the event loop, but "
+                    + "its chat memory may block when it is read (for example to compact the conversation). Call it from "
+                    + "a worker thread (e.g. annotate the endpoint with @Blocking) or return a Multi instead.");
+        }
         CommittableChatMemory committableChatMemory = determineCommittableChatMemory(chatMemory,
                 context.chatMemoryFlushStrategy);
 

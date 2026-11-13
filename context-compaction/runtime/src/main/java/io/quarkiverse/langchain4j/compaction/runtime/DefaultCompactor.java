@@ -10,8 +10,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -29,6 +31,8 @@ import io.smallrye.common.annotation.Identifier;
  * The default {@link Compactor}: runs the strategy beans with fresh state on each call.
  */
 @Singleton
+@Reserve
+@Priority(0)
 public class DefaultCompactor implements Compactor {
 
     private final Instance<CompactionStrategy> strategies;

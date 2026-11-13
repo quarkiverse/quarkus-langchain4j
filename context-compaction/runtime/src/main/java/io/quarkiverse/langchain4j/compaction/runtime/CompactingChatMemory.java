@@ -208,7 +208,7 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
         List<ChatMessage> result = new ArrayList<>();
         system.ifPresent(result::add);
         result.addAll(stored.subList(0, lastMatched + 1));
-        if (!trailing.isEmpty() && trailing.get(0) instanceof UserMessage) {
+        if (!trailing.isEmpty() && trailing.getFirst() instanceof UserMessage) {
             LOG.debugf("Conversation %s: %d messages written by another call kept, %d new messages appended", id,
                     trailing.size(), tail.size());
             result.addAll(trailing);

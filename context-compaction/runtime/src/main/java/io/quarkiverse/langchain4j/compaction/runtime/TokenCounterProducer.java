@@ -2,8 +2,10 @@ package io.quarkiverse.langchain4j.compaction.runtime;
 
 import java.util.Map;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.inject.Singleton;
 
 import dev.langchain4j.data.message.ChatMessage;
@@ -12,7 +14,6 @@ import dev.langchain4j.data.message.ContentType;
 import dev.langchain4j.model.TokenCountEstimator;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.TokenCounter;
-import io.quarkus.arc.DefaultBean;
 
 /**
  * Produces the default {@link TokenCounter}: a LangChain4j {@link TokenCountEstimator} when the application has one,
@@ -22,7 +23,8 @@ public class TokenCounterProducer {
 
     @Produces
     @Singleton
-    @DefaultBean
+    @Reserve
+    @Priority(0)
     TokenCounter tokenCounter(Instance<TokenCountEstimator> estimators) {
         if (estimators.isResolvable()) {
             TokenCountEstimator estimator = estimators.get();

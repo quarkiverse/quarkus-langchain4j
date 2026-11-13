@@ -5,17 +5,19 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Reserve;
 
 import io.quarkiverse.langchain4j.compaction.ToolOutputArchive;
-import io.quarkus.arc.DefaultBean;
 
 /**
  * The default {@link ToolOutputArchive}: keeps the outputs in memory, until the chat memory is cleared or the
  * compaction state of the conversation is evicted.
  */
 @ApplicationScoped
-@DefaultBean
+@Reserve
+@Priority(0)
 public class InMemoryToolOutputArchive implements ToolOutputArchive {
 
     private final Map<Object, Map<String, String>> archive = new ConcurrentHashMap<>();

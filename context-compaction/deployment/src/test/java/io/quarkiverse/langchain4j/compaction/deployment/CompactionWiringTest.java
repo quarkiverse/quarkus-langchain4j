@@ -165,7 +165,7 @@ class CompactionWiringTest {
         // the model received a bounded context
         List<ChatMessage> lastRequest = model.requests.get(model.requests.size() - 1);
         assertThat(lastRequest.size()).isLessThan(31);
-        assertThat(lastRequest.get(0)).isInstanceOf(dev.langchain4j.data.message.SystemMessage.class);
+        assertThat(lastRequest.getFirst()).isInstanceOf(dev.langchain4j.data.message.SystemMessage.class);
         assertThat(lastRequest).anyMatch(CompactionMessages::isSummary);
 
         assertThat(inspector.reports()).isNotEmpty();

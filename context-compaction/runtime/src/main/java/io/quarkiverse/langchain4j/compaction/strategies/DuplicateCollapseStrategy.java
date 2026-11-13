@@ -99,14 +99,14 @@ public class DuplicateCollapseStrategy implements CompactionStrategy {
         if (segment.kind() != Conversation.Kind.TOOL_EXCHANGE || segment.messages().size() != 2) {
             return null;
         }
-        AiMessage ai = (AiMessage) segment.messages().get(0);
+        AiMessage ai = (AiMessage) segment.messages().getFirst();
         if (ai.text() != null && !ai.text().isBlank() || ai.toolExecutionRequests().size() != 1) {
             return null;
         }
         if (!(segment.messages().get(1) instanceof ToolExecutionResultMessage result)) {
             return null;
         }
-        ToolExecutionRequest request = ai.toolExecutionRequests().get(0);
+        ToolExecutionRequest request = ai.toolExecutionRequests().getFirst();
         return request.name() + "\u0000" + request.arguments() + "\u0000" + result.text();
     }
 
@@ -114,7 +114,7 @@ public class DuplicateCollapseStrategy implements CompactionStrategy {
         ToolExecutionResultMessage result = (ToolExecutionResultMessage) segment.messages().get(1);
         String text = result.text() + "\n[Collapsed " + (total - 1)
                 + " earlier identical calls to this tool with the same arguments and output.]";
-        return new Conversation.Segment(segment.kind(), List.of(segment.messages().get(0),
+        return new Conversation.Segment(segment.kind(), List.of(segment.messages().getFirst(),
                 CompactionMessages.replaceToolResult(result, text, CompactionMessages.KIND_COLLAPSED)));
     }
 

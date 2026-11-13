@@ -49,7 +49,7 @@ public final class Conversation {
         }
 
         public ChatMessage first() {
-            return messages.get(0);
+            return messages.getFirst();
         }
 
         public String text() {
@@ -80,7 +80,7 @@ public final class Conversation {
         }
 
         public ChatMessage first() {
-            return segments.get(0).first();
+            return segments.getFirst().first();
         }
 
         public String text() {
@@ -95,7 +95,7 @@ public final class Conversation {
         }
 
         public boolean isSummary() {
-            return segments.get(0).kind() == Kind.SUMMARY;
+            return segments.getFirst().kind() == Kind.SUMMARY;
         }
     }
 
@@ -113,36 +113,29 @@ public final class Conversation {
         int i = 0;
         while (i < messages.size()) {
             ChatMessage message = messages.get(i);
-            if (message instanceof SystemMessage s) {
-                system.add(s);
-                i++;
-            } else if (message instanceof UserMessage u) {
-                segments.add(new Segment(CompactionMessages.isSummary(u) ? Kind.SUMMARY : Kind.USER, List.of(u)));
-                i++;
-            } else if (message instanceof AiMessage ai && ai.hasToolExecutionRequests()) {
-                List<ChatMessage> group = new ArrayList<>();
-                group.add(ai);
-                Set<String> ids = new HashSet<>();
-                for (ToolExecutionRequest request : ai.toolExecutionRequests()) {
-                    ids.add(request.id());
+            switch (message) {
+                case SystemMessage s -> system.add(s);
+                case UserMessage u ->
+                    segments.add(new Segment(CompactionMessages.isSummary(u) ? Kind.SUMMARY : Kind.USER, List.of(u)));
+                case AiMessage ai when ai.hasToolExecutionRequests() -> {
+                    List<ChatMessage> group = new ArrayList<>();
+                    group.add(ai);
+                    Set<String> ids = new HashSet<>();
+                    for (ToolExecutionRequest request : ai.toolExecutionRequests()) {
+                        ids.add(request.id());
+                    }
+                    while (i + 1 < messages.size() && messages.get(i + 1) instanceof ToolExecutionResultMessage result
+                            && (result.id() == null || ids.isEmpty() || ids.contains(result.id()))) {
+                        group.add(result);
+                        i++;
+                    }
+                    segments.add(new Segment(Kind.TOOL_EXCHANGE, group));
                 }
-                i++;
-                while (i < messages.size() && messages.get(i) instanceof ToolExecutionResultMessage result
-                        && (result.id() == null || ids.isEmpty() || ids.contains(result.id()))) {
-                    group.add(result);
-                    i++;
-                }
-                segments.add(new Segment(Kind.TOOL_EXCHANGE, group));
-            } else if (message instanceof AiMessage ai) {
-                segments.add(new Segment(Kind.AI, List.of(ai)));
-                i++;
-            } else if (message instanceof ToolExecutionResultMessage r) {
-                segments.add(new Segment(Kind.ORPHAN_TOOL_RESULT, List.of(r)));
-                i++;
-            } else {
-                segments.add(new Segment(Kind.OTHER, List.of(message)));
-                i++;
+                case AiMessage ai -> segments.add(new Segment(Kind.AI, List.of(ai)));
+                case ToolExecutionResultMessage r -> segments.add(new Segment(Kind.ORPHAN_TOOL_RESULT, List.of(r)));
+                default -> segments.add(new Segment(Kind.OTHER, List.of(message)));
             }
+            i++;
         }
         return new Conversation(system, segments);
     }

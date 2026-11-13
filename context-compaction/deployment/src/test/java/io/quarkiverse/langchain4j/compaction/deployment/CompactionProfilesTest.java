@@ -81,7 +81,7 @@ class CompactionProfilesTest {
 
         List<ChatMessage> lastRequestStartingWith(String system) {
             for (int i = requests.size() - 1; i >= 0; i--) {
-                if (CompactionMessages.text(requests.get(i).get(0)).startsWith(system)) {
+                if (CompactionMessages.text(requests.get(i).getFirst()).startsWith(system)) {
                     return requests.get(i);
                 }
             }

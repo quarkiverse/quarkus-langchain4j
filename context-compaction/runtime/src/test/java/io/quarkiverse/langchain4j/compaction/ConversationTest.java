@@ -38,7 +38,7 @@ class ConversationTest {
                 ToolExecutionResultMessage.from("lost", "lookupOrder", "orphan"),
                 UserMessage.from("hello"));
         Conversation conversation = Conversation.parse(messages);
-        assertThat(conversation.segments().get(0).kind()).isEqualTo(Conversation.Kind.ORPHAN_TOOL_RESULT);
+        assertThat(conversation.segments().getFirst().kind()).isEqualTo(Conversation.Kind.ORPHAN_TOOL_RESULT);
         assertThat(conversation.assemble(conversation.segments())).containsExactly(Fixtures.SYSTEM,
                 UserMessage.from("hello"));
     }
@@ -48,6 +48,6 @@ class ConversationTest {
         Conversation conversation = Conversation.parse(List.of(CompactionMessages.summary("s"), UserMessage.from("q")));
         assertThat(conversation.segments()).extracting(Conversation.Segment::kind)
                 .containsExactly(Conversation.Kind.SUMMARY, Conversation.Kind.USER);
-        assertThat(conversation.turns().get(0).isSummary()).isTrue();
+        assertThat(conversation.turns().getFirst().isSummary()).isTrue();
     }
 }

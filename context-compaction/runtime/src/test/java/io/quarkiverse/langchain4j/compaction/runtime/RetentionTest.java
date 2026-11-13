@@ -137,7 +137,7 @@ class RetentionTest {
         // 12 messages > 10: trimmed to 8, the system message is kept
         List<ChatMessage> stored = store.getMessages("c1");
         assertThat(stored).hasSize(9);
-        assertThat(stored.get(0)).isEqualTo(SystemMessage.from("system"));
+        assertThat(stored.getFirst()).isEqualTo(SystemMessage.from("system"));
         assertThat(stored.get(1)).isEqualTo(UserMessage.from("q2"));
 
         // AI service path: buffered history written back at the end of the invocation

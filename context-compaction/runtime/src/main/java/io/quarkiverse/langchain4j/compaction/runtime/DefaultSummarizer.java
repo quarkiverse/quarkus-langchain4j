@@ -1,10 +1,13 @@
 package io.quarkiverse.langchain4j.compaction.runtime;
 
 import java.util.List;
+import java.util.Optional;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -18,14 +21,14 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.compaction.CompactionException;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.Summarizer;
-import io.quarkus.arc.DefaultBean;
 
 /**
  * Summarizes conversation spans with a chat model. The model is selected with
  * {@code quarkus.langchain4j.compaction.summary.model-name} (default model otherwise).
  */
 @Singleton
-@DefaultBean
+@Reserve
+@Priority(0)
 public class DefaultSummarizer implements Summarizer {
 
     static final String INSTRUCTIONS = """
@@ -42,14 +45,16 @@ public class DefaultSummarizer implements Summarizer {
             Do not invent anything. Do not address the user. Use short bullet points.
             Stay under %d words.""";
 
-    private final CompactionModelsConfig config;
-    private final Instance<ChatModel> models;
-    private volatile ChatModel model;
+    private final Optional<String> modelName;
+    private final Instance<ChatModel> model;
+    private volatile ChatModel resolved;
 
     @Inject
     public DefaultSummarizer(CompactionModelsConfig config, @Any Instance<ChatModel> models) {
-        this.config = config;
-        this.models = models;
+        this.modelName = config.summary().modelName();
+        // resolved on first use: the strategies are created even when they do not summarize, possibly without any model
+        this.model = modelName.map(name -> models.select(ModelName.Literal.of(name)))
+                .orElseGet(() -> models.select(Default.Literal.INSTANCE));
     }
 
     @Override
@@ -73,20 +78,15 @@ public class DefaultSummarizer implements Summarizer {
     public static String render(List<ChatMessage> messages) {
         StringBuilder sb = new StringBuilder();
         for (ChatMessage message : messages) {
-            String line;
-            if (message instanceof UserMessage u && CompactionMessages.isSummary(u)) {
-                line = "Earlier summary: " + CompactionMessages.text(u);
-            } else if (message instanceof UserMessage u) {
-                line = "User: " + CompactionMessages.text(u);
-            } else if (message instanceof AiMessage ai && ai.hasToolExecutionRequests()) {
-                line = "Assistant (tool calls): " + CompactionMessages.text(ai);
-            } else if (message instanceof AiMessage ai) {
-                line = "Assistant: " + CompactionMessages.text(ai);
-            } else if (message instanceof ToolExecutionResultMessage r) {
-                line = "Tool " + r.toolName() + " returned: " + CompactionMessages.text(r);
-            } else {
-                line = null;
-            }
+            String line = switch (message) {
+                case UserMessage u when CompactionMessages.isSummary(u) -> "Earlier summary: " + CompactionMessages.text(u);
+                case UserMessage u -> "User: " + CompactionMessages.text(u);
+                case AiMessage ai when ai.hasToolExecutionRequests() ->
+                    "Assistant (tool calls): " + CompactionMessages.text(ai);
+                case AiMessage ai -> "Assistant: " + CompactionMessages.text(ai);
+                case ToolExecutionResultMessage r -> "Tool " + r.toolName() + " returned: " + CompactionMessages.text(r);
+                default -> null;
+            };
             if (line != null) {
                 sb.append(line).append('\n');
             }
@@ -95,17 +95,14 @@ public class DefaultSummarizer implements Summarizer {
     }
 
     private ChatModel model() {
-        ChatModel m = model;
+        ChatModel m = resolved;
         if (m == null) {
-            Instance<ChatModel> selected = config.summary().modelName()
-                    .map(name -> models.select(ModelName.Literal.of(name)))
-                    .orElseGet(() -> models.select(Default.Literal.INSTANCE));
-            if (!selected.isResolvable()) {
+            if (!model.isResolvable()) {
                 throw new CompactionException("No chat model available for summarization"
-                        + config.summary().modelName().map(n -> " (model name '" + n + "')").orElse(""));
+                        + modelName.map(n -> " (model name '" + n + "')").orElse(""));
             }
-            m = selected.get();
-            model = m;
+            m = model.get();
+            resolved = m;
         }
         return m;
     }

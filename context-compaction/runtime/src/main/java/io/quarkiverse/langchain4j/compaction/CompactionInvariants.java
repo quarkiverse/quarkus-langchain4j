@@ -10,6 +10,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.message.UserMessage;
 import io.smallrye.common.annotation.Experimental;
 
 /**
@@ -18,7 +19,9 @@ import io.smallrye.common.annotation.Experimental;
  * <li>Every system message of the original history is present in the compacted view.</li>
  * <li>Every tool result follows the assistant message that requested it, and every tool request has its result.</li>
  * <li>Original messages kept in the view appear in their original relative order.</li>
- * <li>The view is not larger than the original history (in messages), except for summaries replacing spans.</li>
+ * <li>The latest user message of the original history is kept.</li>
+ * <li>The first non-system message of the view is a user message (or a summary), when the original history has a user
+ * message: several providers reject a conversation starting otherwise.</li>
  * </ol>
  */
 @Experimental("This feature is experimental and the API is subject to change")
@@ -35,6 +38,11 @@ public final class CompactionInvariants {
         checkSystemMessages(original, compacted, violations);
         checkToolPairing(compacted, violations);
         checkOrder(original, compacted, violations);
+        ChatMessage latestQuestion = latestQuestion(original);
+        if (latestQuestion != null) {
+            checkLatestQuestionKept(latestQuestion, compacted, violations);
+            checkStartsWithUserMessage(compacted, violations);
+        }
         return violations;
     }
 
@@ -98,6 +106,34 @@ public final class CompactionInvariants {
                 continue;
             }
             cursor = index;
+        }
+    }
+
+    private static ChatMessage latestQuestion(List<ChatMessage> messages) {
+        for (ChatMessage message : messages.reversed()) {
+            if (message instanceof UserMessage && !CompactionMessages.isSummary(message)) {
+                return message;
+            }
+        }
+        return null;
+    }
+
+    private static void checkLatestQuestionKept(ChatMessage latestQuestion, List<ChatMessage> compacted,
+            List<String> violations) {
+        if (!compacted.contains(latestQuestion)) {
+            violations.add("latest user message dropped: " + abbreviate(latestQuestion));
+        }
+    }
+
+    private static void checkStartsWithUserMessage(List<ChatMessage> compacted, List<String> violations) {
+        for (ChatMessage message : compacted) {
+            if (message instanceof SystemMessage) {
+                continue;
+            }
+            if (!(message instanceof UserMessage)) {
+                violations.add("view starts with " + abbreviate(message) + " instead of a user message");
+            }
+            return;
         }
     }
 

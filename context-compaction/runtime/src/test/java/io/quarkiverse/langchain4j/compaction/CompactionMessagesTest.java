@@ -47,7 +47,7 @@ class CompactionMessagesTest {
     void replacingTheTextKeepsTheMediaAndTheAttributes() {
         UserMessage replaced = CompactionMessages.replaceText(withImage(), "short", CompactionMessages.KIND_TRUNCATED);
         assertThat(replaced.contents()).hasSize(3);
-        assertThat(replaced.contents().get(0)).isEqualTo(TextContent.from("short"));
+        assertThat(replaced.contents().getFirst()).isEqualTo(TextContent.from("short"));
         assertThat(replaced.contents().get(1)).isInstanceOf(ImageContent.class);
         assertThat(replaced.attributes()).containsEntry("source", "mobile")
                 .containsEntry(CompactionMessages.MARKER, CompactionMessages.KIND_TRUNCATED);
@@ -78,9 +78,9 @@ class CompactionMessagesTest {
     void foldingKeepsTheMediaOfTheUserMessage() {
         List<ChatMessage> folded = CompactionMessages.foldSummaries(List.of(CompactionMessages.summary("s"), withImage()));
 
-        UserMessage merged = (UserMessage) folded.get(0);
+        UserMessage merged = (UserMessage) folded.getFirst();
         assertThat(merged.contents()).hasSize(4);
-        assertThat(((TextContent) merged.contents().get(0)).text()).contains("s");
+        assertThat(((TextContent) merged.contents().getFirst()).text()).contains("s");
         assertThat(merged.contents().get(1)).isEqualTo(TextContent.from("What is on this picture?"));
         assertThat(merged.contents().get(2)).isInstanceOf(ImageContent.class);
         assertThat(merged.attributes()).containsEntry("source", "mobile");
@@ -90,6 +90,6 @@ class CompactionMessagesTest {
     void leavesASummaryNotFollowedByAUserMessage() {
         List<ChatMessage> view = List.of(CompactionMessages.summary("s"), AiMessage.from("a"));
         assertThat(CompactionMessages.foldSummaries(view)).isEqualTo(view);
-        assertThat(((UserMessage) view.get(0)).name()).isNull();
+        assertThat(((UserMessage) view.getFirst()).name()).isNull();
     }
 }

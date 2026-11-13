@@ -81,7 +81,7 @@ class CompactingChatMemoryTest {
         // the view is compacted
         List<ChatMessage> view = memory.messages();
         assertThat(view.size()).isLessThan(41);
-        assertThat(view.get(0)).isEqualTo(Fixtures.SYSTEM);
+        assertThat(view.getFirst()).isEqualTo(Fixtures.SYSTEM);
         assertThat(view.stream().filter(CompactionMessages::isSummary)).hasSize(1);
         assertThat(reports).isNotEmpty();
         assertThat(reports.get(reports.size() - 1).tokensAfter()).isLessThan(reports.get(reports.size() - 1).tokensBefore());
@@ -112,7 +112,7 @@ class CompactingChatMemoryTest {
         working.add(UserMessage.from("next"));
         memory.set(working);
         assertThat(store.getMessages("c1")).hasSize(4);
-        assertThat(store.getMessages("c1").get(0)).isEqualTo(SystemMessage.from("New instructions"));
+        assertThat(store.getMessages("c1").getFirst()).isEqualTo(SystemMessage.from("New instructions"));
     }
 
     @Test
@@ -127,7 +127,7 @@ class CompactingChatMemoryTest {
             exchange(memory, "question " + "x".repeat(100), "answer " + "y".repeat(100));
         }
         List<ChatMessage> view = memory.messages();
-        assertThat(view.get(0)).isEqualTo(Fixtures.SYSTEM);
+        assertThat(view.getFirst()).isEqualTo(Fixtures.SYSTEM);
         assertThat(reports.get(reports.size() - 1).fallback()).isTrue();
     }
 
@@ -157,7 +157,7 @@ class CompactingChatMemoryTest {
             buffer.add(ToolExecutionResultMessage.from("call-" + i, "logs", "line " + i + " ".repeat(400)));
             List<ChatMessage> view = memory.view(buffer);
             assertThat(new TokenCounterProducer.HeuristicTokenCounter().count(view)).isLessThanOrEqualTo(480);
-            assertThat(view.get(0)).isEqualTo(Fixtures.SYSTEM);
+            assertThat(view.getFirst()).isEqualTo(Fixtures.SYSTEM);
             assertThat(view).contains(UserMessage.from("Why is the payment service down?"));
             assertThat(view.get(view.size() - 1)).isSameAs(buffer.get(buffer.size() - 1));
         }
@@ -224,7 +224,7 @@ class CompactingChatMemoryTest {
 
         List<ChatMessage> history = store.getMessages("c1");
         assertThat(history).hasSize(42).noneMatch(CompactionMessages::isDerived);
-        assertThat(history.get(0)).isEqualTo(Fixtures.SYSTEM);
+        assertThat(history.getFirst()).isEqualTo(Fixtures.SYSTEM);
         assertThat(history.get(41)).isEqualTo(UserMessage.from("one more question"));
     }
 
@@ -322,7 +322,7 @@ class CompactingChatMemoryTest {
         assertThat(report.fallback()).isFalse();
         assertThat(report.notes()).anyMatch(n -> n.contains("applying token-window"));
         assertThat(report.tokensAfter()).isLessThanOrEqualTo(new TokenBudget(300, 0, 0.8, 0.6).target());
-        assertThat(view.get(0)).isInstanceOf(UserMessage.class);
+        assertThat(view.getFirst()).isInstanceOf(UserMessage.class);
         // the full history is still stored
         assertThat(store.getMessages("c1")).hasSize(20);
     }

@@ -114,7 +114,7 @@ class StrategyPropertiesTest {
             if (!violations.isEmpty()) {
                 failures.add("seed " + seed + ": " + violations);
             }
-            if (!(view.get(0) instanceof SystemMessage)) {
+            if (!(view.getFirst() instanceof SystemMessage)) {
                 failures.add("seed " + seed + ": view does not start with the system message");
             }
             ChatMessage question = latestQuestion(history);

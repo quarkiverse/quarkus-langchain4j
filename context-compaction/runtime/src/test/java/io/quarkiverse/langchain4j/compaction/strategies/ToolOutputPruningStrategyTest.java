@@ -40,11 +40,11 @@ class ToolOutputPruningStrategyTest {
         List<ToolExecutionResultMessage> results = toolResults(view);
         // turns 0, 2, 4 have tool calls; turn 4 is within the last 2 turns
         assertThat(results).hasSize(3);
-        assertThat(CompactionMessages.kind(results.get(0))).isEqualTo(CompactionMessages.KIND_PRUNED);
-        assertThat(results.get(0).text()).contains("Preview: order 1000 shipped")
+        assertThat(CompactionMessages.kind(results.getFirst())).isEqualTo(CompactionMessages.KIND_PRUNED);
+        assertThat(results.getFirst().text()).contains("Preview: order 1000 shipped")
                 // no retrieval tool configured: the stub promises nothing
                 .doesNotContain("reference").doesNotContain("retrieve");
-        assertThat(results.get(0).id()).isEqualTo("call-0");
+        assertThat(results.getFirst().id()).isEqualTo("call-0");
         assertThat(CompactionMessages.kind(results.get(2))).isNull();
         assertThat(archive.get("test", "call-0")).hasValueSatisfying(v -> assertThat(v).startsWith("order 1000"));
         assertThat(context.notes).anyMatch(n -> n.contains("pruned 2 tool outputs"));
@@ -102,7 +102,7 @@ class ToolOutputPruningStrategyTest {
     void givesTheReferenceToTheRetrievalToolWhenEnabled() {
         List<ChatMessage> view = new ToolOutputPruningStrategy(new ToolOutputPruningStrategy.Options(2, 200, 30, true),
                 archive).compact(Fixtures.conversation(6), Fixtures.context(10_000));
-        assertThat(toolResults(view).get(0).text()).contains("Read it with retrieveToolOutput reference=\"call-0\"");
+        assertThat(toolResults(view).getFirst().text()).contains("Read it with retrieveToolOutput reference=\"call-0\"");
     }
 
     @Test
@@ -134,7 +134,7 @@ class ToolOutputPruningStrategyTest {
 
         List<ChatMessage> view = new ToolOutputPruningStrategy(new ToolOutputPruningStrategy.Options(1, 200, 30, true),
                 archive).compact(history, Fixtures.context(10_000));
-        String stub = toolResults(view).get(0).text();
+        String stub = toolResults(view).getFirst().text();
         String key = stub.substring(stub.indexOf("reference=\"") + 11, stub.lastIndexOf('"'));
         assertThat(key).startsWith("tool#");
         assertThat(archive.get("test", key)).contains(output);

@@ -46,19 +46,22 @@ import io.vertx.core.Vertx;
  * event loop when they can run there, and goes to a virtual thread when they all run on virtual threads, or to a worker
  * thread otherwise, including for the tools that are not known in advance, such as the ones of a {@code ToolProvider}.
  * A response is never handled on the event loop when the AI service has a dynamic {@code ToolProvider}, as it is
- * re-evaluated after the tools are executed.
+ * re-evaluated after the tools are executed, nor when the chat memory may block, as it is read and written after the
+ * tools are executed.
  */
 public class ToolExecutionDispatchingStreamingChatModel implements StreamingChatModel {
 
     private final StreamingChatModel delegate;
     private final QuarkusAiServiceContext context;
     private final Collection<AiServiceMethodCreateInfo> methodCreateInfos;
+    private final boolean chatMemoryMayBlock;
 
     public ToolExecutionDispatchingStreamingChatModel(StreamingChatModel delegate, QuarkusAiServiceContext context,
             Collection<AiServiceMethodCreateInfo> methodCreateInfos) {
         this.delegate = delegate;
         this.context = context;
         this.methodCreateInfos = methodCreateInfos;
+        this.chatMemoryMayBlock = methodCreateInfos.stream().anyMatch(AiServiceMethodCreateInfo::isChatMemoryMayBlock);
     }
 
     public StreamingChatModel delegate() {
@@ -124,8 +127,9 @@ public class ToolExecutionDispatchingStreamingChatModel implements StreamingChat
         for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
             toolThread = mostPermissive(toolThread, toolThread(toolExecutionRequest.name()));
         }
-        if (toolThread == ToolThread.EVENT_LOOP && context.hasDynamicToolProvider()) {
-            // the dynamic tool providers are re-evaluated on this thread after the tools are executed, and may block
+        if (toolThread == ToolThread.EVENT_LOOP && (chatMemoryMayBlock || context.hasDynamicToolProvider())) {
+            // the chat memory is written and read, and the dynamic tool providers are re-evaluated, on this thread after
+            // the tools are executed, and both may block
             return ToolThread.WORKER_THREAD;
         }
         return toolThread;

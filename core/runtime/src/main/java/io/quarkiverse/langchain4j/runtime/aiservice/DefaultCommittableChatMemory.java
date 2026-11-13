@@ -23,7 +23,7 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
     /**
      * The view of {@link #newMessages}, computed lazily and reset whenever the buffer changes.
      */
-    private List<ChatMessage> view;
+    private List<ChatMessage> cachedView;
 
     public DefaultCommittableChatMemory(ChatMemory delegate) {
         this.delegate = delegate;
@@ -39,7 +39,7 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
 
     @Override
     public void add(ChatMessage message) {
-        view = null;
+        cachedView = null;
         if (message instanceof SystemMessage) {
             Optional<SystemMessage> systemMessage = findSystemMessage(newMessages);
             if (systemMessage.isPresent()) {
@@ -67,24 +67,24 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
         if (historyView == null) {
             return new ArrayList<>(newMessages);
         }
-        if (view == null) {
-            view = List.copyOf(historyView.view(List.copyOf(newMessages)));
+        if (cachedView == null) {
+            cachedView = List.copyOf(historyView.view(List.copyOf(newMessages)));
         }
-        return new ArrayList<>(view);
+        return new ArrayList<>(cachedView);
     }
 
     // the following operations are terminal
 
     @Override
     public void clear() {
-        view = null;
+        cachedView = null;
         newMessages.clear();
         delegate.clear();
     }
 
     @Override
     public void replaceLastAiMessage(AiMessage newAiMessage) {
-        view = null;
+        cachedView = null;
         ListIterator<ChatMessage> it = newMessages.listIterator(newMessages.size());
         while (it.hasPrevious()) {
             if (it.previous() instanceof AiMessage) {

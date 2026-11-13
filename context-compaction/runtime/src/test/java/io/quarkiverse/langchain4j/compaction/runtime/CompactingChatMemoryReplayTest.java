@@ -98,7 +98,7 @@ class CompactingChatMemoryReplayTest {
     void keepsTheFullHistoryWhileServingValidViews() {
         List<ChatMessage> recording = Dataset.supportConversation();
         CompactingChatMemory memory = memory(defaultPipeline(), BUDGET);
-        memory.add(recording.get(0));
+        memory.add(recording.getFirst());
 
         int compactions = 0;
         for (List<ChatMessage> call : calls(recording.subList(1, recording.size()))) {
@@ -122,7 +122,7 @@ class CompactingChatMemoryReplayTest {
 
     private void replay(CompactingChatMemory memory) {
         List<ChatMessage> recording = Dataset.supportConversation();
-        memory.add(recording.get(0));
+        memory.add(recording.getFirst());
         for (List<ChatMessage> call : calls(recording.subList(1, recording.size()))) {
             List<ChatMessage> working = memory.messages();
             working.addAll(call);

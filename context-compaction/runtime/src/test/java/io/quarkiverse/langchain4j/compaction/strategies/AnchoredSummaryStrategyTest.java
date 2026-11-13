@@ -25,7 +25,7 @@ class AnchoredSummaryStrategyTest {
         List<Conversation.Turn> turns = Conversation.parse(history).turns();
         List<ChatMessage> expected = new ArrayList<>();
         expected.add(Fixtures.SYSTEM);
-        expected.addAll(turns.get(0).messages());
+        expected.addAll(turns.getFirst().messages());
         expected.addAll(turns.get(1).messages());
         int summaryIndex = expected.size();
         expected.add(view.get(summaryIndex));

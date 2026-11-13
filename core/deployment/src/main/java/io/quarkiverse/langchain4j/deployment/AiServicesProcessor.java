@@ -2307,7 +2307,7 @@ public class AiServicesProcessor {
                 overrideChatModelParamPosition, chatRequestParametersParamPosition,
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, methodSkillNames, switchToWorkerThreadForToolExecution,
-                accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
+                chatMemoryMayBlock, accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
                 gatherOutputGuardrails(method, methodReturnTypeSignature));
     }
 

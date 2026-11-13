@@ -138,7 +138,7 @@ class ToolOutputRetrievalTest {
         List<String> stubs = beforeRetrieval.stream().filter(m -> m instanceof ToolExecutionResultMessage)
                 .map(m -> ((ToolExecutionResultMessage) m).text()).filter(t -> t.contains("reference=\"")).toList();
         assertThat(stubs).hasSize(3);
-        assertThat(stubs.get(0)).contains("reference=\"call_0\"");
+        assertThat(stubs.getFirst()).contains("reference=\"call_0\"");
         assertThat(stubs.get(1)).contains("reference=\"call_0#");
         assertThat(stubs.get(2)).contains("reference=\"call_0#");
         assertThat(stubs).doesNotHaveDuplicates();

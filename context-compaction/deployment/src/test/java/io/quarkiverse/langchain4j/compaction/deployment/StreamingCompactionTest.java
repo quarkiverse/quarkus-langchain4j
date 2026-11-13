@@ -29,6 +29,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -49,7 +50,7 @@ class StreamingCompactionTest {
     static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .withApplicationRoot(jar -> jar.addClasses(Assistant.class, Agent.class, FakeStreamingModel.class,
                     FakeStreamingModelSupplier.class, RecordingSummarizer.class, Lookup.class, CompactionThreads.class,
-                    NonBlockingAgent.class, NonBlockingLookup.class,
+                    NonBlockingAgent.class, NonBlockingLookup.class, TokenStreamAgent.class,
                     CompactionProfilesTest.FakeModel.class, CompactionProfilesTest.FakeModelSupplier.class))
             .overrideConfigKey("quarkus.langchain4j.compaction.strategy", "rolling-summary")
             .overrideConfigKey("quarkus.langchain4j.compaction.summary.keep-last-turns", "1")
@@ -72,6 +73,12 @@ class StreamingCompactionTest {
     @ApplicationScoped
     interface NonBlockingAgent {
         Multi<String> chat(@MemoryId String id, @UserMessage String question);
+    }
+
+    @RegisterAiService(chatLanguageModelSupplier = CompactionProfilesTest.FakeModelSupplier.class, streamingChatLanguageModelSupplier = FakeStreamingModelSupplier.class, tools = NonBlockingLookup.class)
+    @ApplicationScoped
+    interface TokenStreamAgent {
+        TokenStream chat(@MemoryId String id, @UserMessage String question);
     }
 
     @ApplicationScoped
@@ -138,8 +145,6 @@ class StreamingCompactionTest {
         @Override
         public String summarize(String previousSummary, List<ChatMessage> messages, int maxWords) {
             calls.incrementAndGet();
-            System.out.println("SUMMARIZE on " + Thread.currentThread().getName() + " el=" + Context.isOnEventLoopThread());
-            new Exception("TRACE").printStackTrace(System.out);
             if (Context.isOnEventLoopThread()) {
                 eventLoopCalls.add(Thread.currentThread().getName());
             }
@@ -200,6 +205,9 @@ class StreamingCompactionTest {
 
     @Inject
     NonBlockingAgent nonBlockingAgent;
+
+    @Inject
+    TokenStreamAgent tokenStreamAgent;
 
     @Inject
     RecordingSummarizer summarizer;
@@ -281,5 +289,46 @@ class StreamingCompactionTest {
         assertThat(result.get(10, TimeUnit.SECONDS)).isEqualTo("Your order has shipped.");
         assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(3);
         assertThat(compactions.eventLoop()).as("compactions on the event loop").isEmpty();
+    }
+
+    /**
+     * {@code TokenStream} methods are implemented upstream and execute the tools on the thread delivering the response,
+     * an event loop: with non-blocking tools only, the chat memory, written and read after the tools, must still be
+     * reached from a worker thread.
+     */
+    @Test
+    void tokenStreamToolLoopWithNonBlockingTool() throws Exception {
+        longConversation("token-stream");
+        CompletableFuture<String> result = new CompletableFuture<>();
+        tokenStreamAgent.chat("token-stream", "And order 11?")
+                .onPartialResponse(ignored -> {
+                })
+                .onCompleteResponse(response -> result.complete(response.aiMessage().text()))
+                .onError(result::completeExceptionally)
+                .start();
+        assertThat(result.get(10, TimeUnit.SECONDS)).isEqualTo("Your order has shipped.");
+        assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(3);
+        assertThat(compactions.eventLoop()).as("compactions on the event loop").isEmpty();
+    }
+
+    /**
+     * The first read of the memory happens on the caller thread: a {@code TokenStream} method called on the event loop
+     * is rejected rather than compacting, and possibly calling a model, there.
+     */
+    @Test
+    void tokenStreamCallFromTheEventLoopIsRejected() throws Exception {
+        longConversation("token-stream-event-loop");
+        CompletableFuture<Throwable> failure = new CompletableFuture<>();
+        vertx.getOrCreateContext().runOnContext(v -> {
+            try {
+                tokenStreamAgent.chat("token-stream-event-loop", "And order 11?");
+                failure.complete(null);
+            } catch (Throwable t) {
+                failure.complete(t);
+            }
+        });
+        assertThat(failure.get(10, TimeUnit.SECONDS)).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("returns a TokenStream and was called on the event loop");
+        assertThat(compactions.all()).isEmpty();
     }
 }

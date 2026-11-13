@@ -334,6 +334,9 @@ Eviction also releases the inspector snapshot of the conversation and, with the 
 Reading a compacting chat memory may call a model (summaries, embeddings), so the extension marks the chat memory as blocking: streaming AI services read it on a worker thread, even when all their tools are non-blocking.
 Expect extra latency on the call that triggers a summary.
 
+`TokenStream` methods are the exception: they read the chat memory on the calling thread, so calling one on the event loop fails with an `IllegalStateException`.
+Call them from a worker thread (for example, annotate the endpoint with `@Blocking`), or return a `Multi` instead, which is moved to a worker thread automatically.
+
 [#observability]
 == Observability
 
