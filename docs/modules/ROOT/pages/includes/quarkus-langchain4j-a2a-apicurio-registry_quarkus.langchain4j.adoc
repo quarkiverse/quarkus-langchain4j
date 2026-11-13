@@ -49,22 +49,127 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token[`+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++`]##
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token-endpoint]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token-endpoint[`+++quarkus.langchain4j.a2a.apicurio-registry.auth.token-endpoint+++`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth.token-endpoint+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-Optional authentication token for the registry.
+The OAuth2 token endpoint, for the client credentials flow (e.g. https://keycloak.example.com/realms/registry/protocol/openid-connect/token). Tokens are fetched and refreshed automatically.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN_ENDPOINT+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN_ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-client-id]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-client-id[`+++quarkus.langchain4j.a2a.apicurio-registry.auth.client-id+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth.client-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The OAuth2 client ID, for the client credentials flow.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_CLIENT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_CLIENT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-client-secret]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-client-secret[`+++quarkus.langchain4j.a2a.apicurio-registry.auth.client-secret+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth.client-secret+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The OAuth2 client secret, for the client credentials flow.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_CLIENT_SECRET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_CLIENT_SECRET+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-scope]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-scope[`+++quarkus.langchain4j.a2a.apicurio-registry.auth.scope+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth.scope+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The OAuth2 scope to request, for the client credentials flow.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_SCOPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_SCOPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-username]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-username[`+++quarkus.langchain4j.a2a.apicurio-registry.auth.username+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth.username+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The user name, for HTTP basic authentication.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_USERNAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_USERNAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-password]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-password[`+++quarkus.langchain4j.a2a.apicurio-registry.auth.password+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth.password+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The password, for HTTP basic authentication.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_PASSWORD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_PASSWORD+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -134,6 +239,29 @@ endif::add-copy-button-to-env-var[]
 --
 |list of string
 |`+++input+++`
+
+a| [[quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token]] [.property-path]##link:#quarkus-langchain4j-a2a-apicurio-registry_quarkus-langchain4j-a2a-apicurio-registry-auth-token[[.line-through]#`+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++`#]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.a2a.apicurio-registry.auth-token+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+_This property is deprecated: use `auth.client-id`, `auth.client-secret` and `auth.token-endpoint`, or `auth.username` and `auth.password`._
+
+Not supported: setting it fails at startup. It was never applied, so a configured token was silently ignored. Use the client credentials or basic authentication settings under `auth` instead.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_A2A_APICURIO_REGISTRY_AUTH_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
 
 |===
 

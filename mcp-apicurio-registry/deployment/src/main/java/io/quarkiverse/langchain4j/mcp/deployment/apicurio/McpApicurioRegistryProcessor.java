@@ -45,6 +45,7 @@ public class McpApicurioRegistryProcessor {
             return;
         }
 
+        recorder.validateConfiguration();
         log.info("Apicurio Registry MCP integration enabled, registering ApicurioRegistryMcpTools bean");
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(APICURIO_REGISTRY_MCP_TOOLS)
