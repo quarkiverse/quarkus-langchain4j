@@ -54,13 +54,23 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
 
     private final RegistryClient registryClient;
     private final List<String> defaultInputKeys;
+    private final A2AAgentAuthProvider authProvider;
 
     public ApicurioAgentsRegistry(RegistryClient registryClient) {
         this(registryClient, FALLBACK_INPUT_KEYS);
     }
 
     public ApicurioAgentsRegistry(RegistryClient registryClient, List<String> defaultInputKeys) {
+        this(registryClient, defaultInputKeys, null);
+    }
+
+    /**
+     * @param authProvider credentials for calls to the discovered agents, or {@code null} for none
+     */
+    public ApicurioAgentsRegistry(RegistryClient registryClient, List<String> defaultInputKeys,
+            A2AAgentAuthProvider authProvider) {
         this.registryClient = registryClient;
+        this.authProvider = authProvider;
         this.defaultInputKeys = defaultInputKeys == null || defaultInputKeys.isEmpty()
                 ? FALLBACK_INPUT_KEYS
                 : List.copyOf(defaultInputKeys);
@@ -131,7 +141,8 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
                         // whole argument map.
                         String[] inputKeys = resolveInputKeys(artifact);
 
-                        byQualifiedKey.put(qualifiedKey, new Candidate(name, agentUrl, inputKeys));
+                        byQualifiedKey.put(qualifiedKey, new Candidate(artifact.getGroupId(),
+                                artifact.getArtifactId(), name, agentUrl, inputKeys));
                         qualifiedKeysByName.computeIfAbsent(name, k -> new ArrayList<>()).add(qualifiedKey);
                     } catch (Exception e) {
                         log.warnf(e, "Failed to resolve A2A agent from artifact %s/%s",
@@ -220,10 +231,15 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
 
     private void registerAgent(Map<String, AgentInstance> discovered, String registrationKey, Candidate candidate) {
         try {
-            AgentInstance agent = (AgentInstance) AgenticServices.a2aBuilder(candidate.agentUrl())
+            var builder = AgenticServices.a2aBuilder(candidate.agentUrl())
                     .inputKeys(candidate.inputKeys())
-                    .outputKey(registrationKey)
-                    .build();
+                    .outputKey(registrationKey);
+            if (authProvider != null) {
+                var agent = new DiscoveredAgentInfo(candidate.groupId(), candidate.artifactId(),
+                        registrationKey, candidate.agentUrl());
+                builder.clientCustomizer(new A2AAgentAuthCustomizer(authProvider, agent));
+            }
+            AgentInstance agent = (AgentInstance) builder.build();
             discovered.put(registrationKey, agent);
             log.debugf("Discovered A2A agent '%s' at %s with input keys %s",
                     registrationKey, candidate.agentUrl(), Arrays.toString(candidate.inputKeys()));
@@ -313,7 +329,12 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
         return value != null ? value.toString() : null;
     }
 
-    private record Candidate(String name, String agentUrl, String[] inputKeys) {
+    private record DiscoveredAgentInfo(String groupId, String artifactId, String name, String url)
+            implements
+                A2AAgentAuthProvider.DiscoveredAgent {
+    }
+
+    private record Candidate(String groupId, String artifactId, String name, String agentUrl, String[] inputKeys) {
     }
 
     private record Discovery(Map<String, AgentInstance> agents, Map<String, List<String>> ambiguousNames) {

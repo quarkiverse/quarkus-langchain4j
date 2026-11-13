@@ -8,6 +8,7 @@ import io.apicurio.registry.client.common.HttpAdapterType;
 import io.apicurio.registry.client.common.RegistryClientOptions;
 import io.apicurio.registry.rest.client.RegistryClient;
 import io.quarkiverse.langchain4j.a2a.runtime.apicurio.config.A2AApicurioRegistryRuntimeConfig;
+import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
@@ -28,7 +29,7 @@ public class A2AApicurioRegistryRecorder {
             public ApicurioAgentsRegistry apply(SyntheticCreationalContext<ApicurioAgentsRegistry> context) {
                 A2AApicurioRegistryRuntimeConfig config = runtimeConfig.getValue();
                 RegistryClient registryClient = createRegistryClient(config);
-                return new ApicurioAgentsRegistry(registryClient, config.defaultInputKeys());
+                return new ApicurioAgentsRegistry(registryClient, config.defaultInputKeys(), authProvider());
             }
         };
     }
@@ -47,6 +48,12 @@ public class A2AApicurioRegistryRecorder {
                 agentVersion,
                 skills);
         publisher.publish();
+    }
+
+    /** The application's {@link A2AAgentAuthProvider} bean, if it declares one. */
+    private static A2AAgentAuthProvider authProvider() {
+        var instance = Arc.container().select(A2AAgentAuthProvider.class);
+        return instance.isResolvable() ? instance.get() : null;
     }
 
     private static RegistryClient createRegistryClient(A2AApicurioRegistryRuntimeConfig config) {
