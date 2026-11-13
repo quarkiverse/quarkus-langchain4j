@@ -441,10 +441,10 @@ If a tool fails in a way that fails the AI service invocation (for example becau
 
 [NOTE]
 ====
-* Concurrent tool execution currently only applies to AI service methods that do not stream their response. Tools called from streaming methods are still executed sequentially.
+* For streaming methods, `beforeToolExecution` and the tool executed events may be emitted in completion order rather than request order, while the tool results sent to the LLM are always in request order. The streamed response never waits for the tools on the event loop: when the model delivers it there, it waits on a virtual thread (or on a worker thread when virtual threads are disabled), whatever the execution model of the tools.
 * The request context is shared, not copied, between the concurrently executing tools. `@RequestScoped` beans used by tools must therefore be thread-safe when this option is enabled.
 * When `maxToolCallsPerResponse` is set, only the tool calls within the limit are executed before the `ToolCallsLimitExceededException` is thrown.
-* The tools are deliberately not executed on the worker pool, because the AI service is often invoked from a worker thread (for example from a blocking REST endpoint) that then waits for the tools. If virtual threads are not available (Java 17) or are disabled via `quarkus.virtual-threads.enabled=false`, a dedicated unbounded pool of platform threads is used instead.
+* The tools are deliberately not executed on the worker pool, because the AI service is often invoked from a worker thread (for example from a blocking REST endpoint) that then waits for the tools. If virtual threads are disabled via `quarkus.virtual-threads.enabled=false`, a dedicated unbounded pool of platform threads is used instead.
 ====
 
 === Tool Error Handling

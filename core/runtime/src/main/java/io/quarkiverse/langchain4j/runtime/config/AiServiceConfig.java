@@ -36,9 +36,8 @@ public interface AiServiceConfig {
     /**
      * Whether the tool calls requested in a single LLM response should be executed concurrently.
      * When enabled, the tools are executed on virtual threads (or on dedicated platform threads when
-     * virtual threads are not available) and the CDI request context is propagated to the tool invocations.
+     * virtual threads are disabled) and the CDI request context is propagated to the tool invocations.
      * A specific AI service can override this using {@code @RegisterAiService(executeToolsConcurrently = ...)}.
-     * This currently only applies to AI service methods that do not stream their response.
      */
     @WithDefault("false")
     boolean executeToolsConcurrently();

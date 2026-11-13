@@ -10,8 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -56,7 +58,10 @@ import dev.langchain4j.service.tool.ToolServiceContext;
 import dev.langchain4j.service.tool.search.ToolSearchService;
 import io.quarkiverse.langchain4j.runtime.ToolCallsLimitExceededException;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
+import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 
 /**
  * A {@link StreamingResponseHandler} implementation for Quarkus. The main difference with the upstream implementation is the
@@ -350,7 +355,12 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         return streamingHandle;
     }
 
-    private void executeTools(Runnable runnable) {
+    /**
+     * @param awaitsConcurrentTools whether the runnable waits for tools executed concurrently, which must never happen on
+     *        the event loop, whatever the execution model of the tools. The wait happens on a virtual thread unless they are
+     *        disabled, so that no platform thread is held while the tools execute.
+     */
+    private void executeTools(Runnable runnable, boolean awaitsConcurrentTools) {
         Runnable safeRunnable = new Runnable() {
             @Override
             public void run() {
@@ -362,7 +372,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             }
         };
 
-        if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
+        if (awaitsConcurrentTools && Context.isOnEventLoopThread()
+                && AiServiceMethodImplementationSupport.areVirtualThreadsEnabled()) {
+            executeOnVirtualThread(safeRunnable);
+        } else if ((mustSwitchToWorkerThread || awaitsConcurrentTools) && Context.isOnEventLoopThread()) {
             executeOnWorkerThread(safeRunnable, false);
         } else {
             safeRunnable.run();
@@ -374,6 +387,31 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             executeOnWorkerThread(runnable, true);
         } else {
             runnable.run();
+        }
+    }
+
+    /**
+     * The virtual thread runs on the context it is submitted from, so it is submitted from the execution context.
+     */
+    private void executeOnVirtualThread(Runnable runnable) {
+        Executor virtualThreads = VirtualThreadsRecorder.getCurrent();
+        if (executionContext == null || executionContext == Vertx.currentContext()) {
+            submit(virtualThreads, runnable);
+            return;
+        }
+        executionContext.runOnContext(new Handler<Void>() {
+            @Override
+            public void handle(Void ignored) {
+                submit(virtualThreads, runnable);
+            }
+        });
+    }
+
+    private void submit(Executor executor, Runnable runnable) {
+        try {
+            executor.execute(runnable);
+        } catch (RejectedExecutionException e) {
+            onError(e);
         }
     }
 
@@ -433,12 +471,25 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                                 .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-calls-per-response", Integer.class)
                                 .orElse(0);
                     }
+                    List<ToolExecutionResult> concurrentToolExecutionResults = null;
+                    if (context.executeToolsConcurrently && toolExecutionRequests.size() > 1 && !isCancelled()) {
+                        int toolsToExecute = maxToolCallsPerResponse > 0
+                                ? Math.min(toolExecutionRequests.size(), maxToolCallsPerResponse)
+                                : toolExecutionRequests.size();
+                        Object toolExecutionHandlersLock = new Object();
+                        concurrentToolExecutionResults = AiServiceMethodImplementationSupport.executeToolsConcurrently(
+                                context, invocationContext, toolExecutors,
+                                toolExecutionRequests.subList(0, toolsToExecute),
+                                serialized(beforeToolExecutionHandler, toolExecutionHandlersLock),
+                                serialized(toolExecuteHandler, toolExecutionHandlersLock));
+                    }
                     int toolCallsCount = 0;
                     for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
                         if (maxToolCallsPerResponse > 0 && toolCallsCount >= maxToolCallsPerResponse) {
                             throw new ToolCallsLimitExceededException(maxToolCallsPerResponse,
                                     toolExecutionRequests.size());
                         }
+                        int toolIndex = toolCallsCount;
                         toolCallsCount++;
                         if (isCancelled()) {
                             // Fill cancelled tools with error results to keep memory consistent:
@@ -448,9 +499,14 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
                             continue;
                         }
-                        ToolExecutionResult toolExecutionResult = context.toolService.executeTool(
-                                invocationContext, toolExecutors, toolExecutionRequest,
-                                beforeToolExecutionHandler, toolExecuteHandler);
+                        ToolExecutionResult toolExecutionResult;
+                        if (concurrentToolExecutionResults != null) {
+                            toolExecutionResult = concurrentToolExecutionResults.get(toolIndex);
+                        } else {
+                            toolExecutionResult = context.toolService.executeTool(
+                                    invocationContext, toolExecutors, toolExecutionRequest,
+                                    beforeToolExecutionHandler, toolExecuteHandler);
+                        }
 
                         fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult);
                         rawToolResults.add(toolExecutionResult);
@@ -547,9 +603,35 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     fireRequestIssuedEvent(chatRequest);
                     effectiveStreamingChatModel.chat(chatRequest, handler);
                 }
-            });
+            }, context.executeToolsConcurrently && aiMessage.toolExecutionRequests().size() > 1);
         } else {
             emitFinalResponse(completeResponse, aiMessage, true);
+        }
+    }
+
+    private static <T> Consumer<T> serialized(Consumer<T> delegate, Object lock) {
+        return delegate == null ? null : new SerializedConsumer<>(delegate, lock);
+    }
+
+    /**
+     * Serializes the calls made by the concurrently executed tools, because the handlers emit events on the
+     * subscriber, which must not receive concurrent {@code onNext} signals.
+     */
+    private static final class SerializedConsumer<T> implements Consumer<T> {
+
+        private final Consumer<T> delegate;
+        private final Object lock;
+
+        private SerializedConsumer(Consumer<T> delegate, Object lock) {
+            this.delegate = delegate;
+            this.lock = lock;
+        }
+
+        @Override
+        public void accept(T value) {
+            synchronized (lock) {
+                delegate.accept(value);
+            }
         }
     }
 

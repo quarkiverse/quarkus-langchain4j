@@ -41,6 +41,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -104,6 +105,7 @@ import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
+import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutionResult;
@@ -419,6 +421,7 @@ public class AiServiceMethodImplementationSupport {
                     .context(context)
                     .invocationContext(invocationContext)
                     .methodKey(methodCreateInfo)
+                    .toolExecutor(context.toolService.executor())
                     .toolArgumentsErrorHandler((e, c) -> {
                         throw new RuntimeException(e);
                     })
@@ -1477,6 +1480,13 @@ public class AiServiceMethodImplementationSupport {
     private static List<ToolExecutionResult> executeToolsConcurrently(QuarkusAiServiceContext context,
             InvocationContext invocationContext, Map<String, ToolExecutor> toolExecutors,
             List<ToolExecutionRequest> toolExecutionRequests) {
+        return executeToolsConcurrently(context, invocationContext, toolExecutors, toolExecutionRequests, null, null);
+    }
+
+    static List<ToolExecutionResult> executeToolsConcurrently(QuarkusAiServiceContext context,
+            InvocationContext invocationContext, Map<String, ToolExecutor> toolExecutors,
+            List<ToolExecutionRequest> toolExecutionRequests, Consumer<BeforeToolExecution> beforeToolExecution,
+            Consumer<ToolExecution> afterToolExecution) {
         Executor executor = context.toolService.effectiveToolExecutor();
         List<CompletableFuture<ToolExecutionResult>> futures = new ArrayList<>(toolExecutionRequests.size());
         for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
@@ -1484,8 +1494,8 @@ public class AiServiceMethodImplementationSupport {
             futures.add(CompletableFuture.supplyAsync(new Supplier<>() {
                 @Override
                 public ToolExecutionResult get() {
-                    return context.toolService.executeTool(invocationContext, toolExecutors, toolExecutionRequest, null,
-                            null);
+                    return context.toolService.executeTool(invocationContext, toolExecutors, toolExecutionRequest,
+                            beforeToolExecution, afterToolExecution);
                 }
             }, executor));
         }
@@ -1525,12 +1535,12 @@ public class AiServiceMethodImplementationSupport {
      * Creates the executor on which the tools are executed concurrently.
      * The tools are executed on virtual threads rather than on the worker pool: the caller may occupy a worker
      * thread while waiting for the tools, and once the pool is exhausted by such callers the tools would never run.
-     * When virtual threads are not available, a dedicated unbounded pool of platform threads is used, because
+     * When virtual threads are disabled, a dedicated unbounded pool of platform threads is used, because
      * Quarkus would otherwise fall back to the worker pool.
      * The CDI request context of the caller is propagated to the tools.
      */
     public static Executor createToolExecutor() {
-        Executor executor = areVirtualThreadsAvailable() ? VirtualThreadsRecorder.getCurrent()
+        Executor executor = areVirtualThreadsEnabled() ? VirtualThreadsRecorder.getCurrent()
                 : PlatformThreadToolExecutorHolder.EXECUTOR;
         InstanceHandle<ThreadContext> threadContext = Arc.container().instance(ThreadContext.class);
         if (!threadContext.isAvailable()) {
@@ -1539,10 +1549,9 @@ public class AiServiceMethodImplementationSupport {
         return new ContextPropagatingExecutor(executor, threadContext.get());
     }
 
-    private static boolean areVirtualThreadsAvailable() {
-        return Runtime.version().feature() >= 21
-                && ConfigProvider.getConfig().getOptionalValue("quarkus.virtual-threads.enabled", Boolean.class)
-                        .orElse(true);
+    static boolean areVirtualThreadsEnabled() {
+        return ConfigProvider.getConfig().getOptionalValue("quarkus.virtual-threads.enabled", Boolean.class)
+                .orElse(true);
     }
 
     private static class PlatformThreadToolExecutorHolder {
