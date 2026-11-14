@@ -224,7 +224,6 @@ public @interface RegisterAiService {
      * If not set for a specific AI service, the AI service will use the value of the common
      * {@code quarkus.langchain4j.ai-service.execute-tools-concurrently} property.
      * A value set here, whether {@code true} or {@code false}, takes precedence over that property.
-     * This currently only applies to AI service methods that do not stream their response.
      */
     boolean executeToolsConcurrently() default false;
 

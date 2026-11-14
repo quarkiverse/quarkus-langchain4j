@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,9 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.RejectedExecutionException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
@@ -46,7 +50,8 @@ import io.vertx.core.Vertx;
  * event loop when they can run there, and goes to a virtual thread when they all run on virtual threads, or to a worker
  * thread otherwise, including for the tools that are not known in advance, such as the ones of a {@code ToolProvider}.
  * A response is never handled on the event loop when the AI service has a dynamic {@code ToolProvider}, as it is
- * re-evaluated after the tools are executed.
+ * re-evaluated after the tools are executed. When the tools are executed concurrently, the response is handed to a
+ * virtual thread, unless they are disabled, whatever the execution model of the tools, as it then only waits for them.
  */
 public class ToolExecutionDispatchingStreamingChatModel implements StreamingChatModel {
 
@@ -67,17 +72,41 @@ public class ToolExecutionDispatchingStreamingChatModel implements StreamingChat
 
     @Override
     public void chat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-        delegate.chat(chatRequest, new ToolExecutionDispatchingHandler(handler));
+        delegate.chat(chatRequest, new ToolExecutionDispatchingHandler(handler, executesToolCalls(chatRequest)));
     }
 
     @Override
     public void chat(ChatRequest chatRequest, ChatRequestOptions options, StreamingChatResponseHandler handler) {
-        delegate.chat(chatRequest, options, new ToolExecutionDispatchingHandler(handler));
+        delegate.chat(chatRequest, options,
+                new ToolExecutionDispatchingHandler(handler, executesToolCalls(chatRequest)));
     }
 
     @Override
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-        delegate.doChat(chatRequest, new ToolExecutionDispatchingHandler(handler));
+        delegate.doChat(chatRequest, new ToolExecutionDispatchingHandler(handler, executesToolCalls(chatRequest)));
+    }
+
+    /**
+     * Upstream executes the tools of the reported tool calls before it checks {@code maxToolCallingRoundTrips}, so the
+     * tool calls of a response exceeding the limit are not reported. The previous round trips of the invocation are
+     * the responses requesting tools since its user message, fewer being counted if the chat memory evicted some.
+     */
+    private boolean executesToolCalls(ChatRequest chatRequest) {
+        if (!context.executeToolsConcurrently) {
+            return false;
+        }
+        List<ChatMessage> messages = chatRequest.messages();
+        int roundTrips = 0;
+        for (int index = messages.size() - 1; index >= 0; index--) {
+            ChatMessage message = messages.get(index);
+            if (message instanceof UserMessage) {
+                break;
+            }
+            if (message instanceof AiMessage aiMessage && aiMessage.hasToolExecutionRequests()) {
+                roundTrips++;
+            }
+        }
+        return roundTrips < context.toolService.maxToolCallingRoundTrips();
     }
 
     @Override
@@ -174,18 +203,31 @@ public class ToolExecutionDispatchingStreamingChatModel implements StreamingChat
     private class ToolExecutionDispatchingHandler implements StreamingChatResponseHandler {
 
         private final StreamingChatResponseHandler delegate;
+        private final boolean executesToolCalls;
+        private final Set<Integer> receivedToolCallIndexes = new HashSet<>();
 
-        ToolExecutionDispatchingHandler(StreamingChatResponseHandler delegate) {
+        /**
+         * @param executesToolCalls whether the tools of the tool calls are executed concurrently, as soon as the tool
+         *        calls are received
+         */
+        ToolExecutionDispatchingHandler(StreamingChatResponseHandler delegate, boolean executesToolCalls) {
             this.delegate = delegate;
+            this.executesToolCalls = executesToolCalls;
         }
 
         @Override
         public void onCompleteResponse(ChatResponse completeResponse) {
-            if (!Context.isOnEventLoopThread() || !completeResponse.aiMessage().hasToolExecutionRequests()) {
+            AiMessage aiMessage = completeResponse.aiMessage();
+            if (executesToolCalls && aiMessage.hasToolExecutionRequests()) {
+                notifyUnreportedToolCalls(aiMessage.toolExecutionRequests());
+            }
+            if (!Context.isOnEventLoopThread() || !aiMessage.hasToolExecutionRequests()) {
                 delegate.onCompleteResponse(completeResponse);
                 return;
             }
-            switch (toolThread(completeResponse.aiMessage().toolExecutionRequests())) {
+            ToolThread toolThread = context.executeToolsConcurrently ? waitingThread()
+                    : toolThread(aiMessage.toolExecutionRequests());
+            switch (toolThread) {
                 case EVENT_LOOP:
                     delegate.onCompleteResponse(completeResponse);
                     break;
@@ -194,6 +236,23 @@ public class ToolExecutionDispatchingStreamingChatModel implements StreamingChat
                     break;
                 default:
                     executeOnWorkerThread(completeResponse);
+            }
+        }
+
+        private ToolThread waitingThread() {
+            return AiServiceMethodImplementationSupport.areVirtualThreadsEnabled() ? ToolThread.VIRTUAL_THREAD
+                    : ToolThread.WORKER_THREAD;
+        }
+
+        /**
+         * Upstream executes the tools concurrently only from the tool calls reported with
+         * {@link StreamingChatResponseHandler#onCompleteToolCall}, which some models do not report.
+         */
+        private void notifyUnreportedToolCalls(List<ToolExecutionRequest> toolExecutionRequests) {
+            for (int index = 0; index < toolExecutionRequests.size(); index++) {
+                if (!receivedToolCallIndexes.contains(index)) {
+                    delegate.onCompleteToolCall(new CompleteToolCall(index, toolExecutionRequests.get(index)));
+                }
             }
         }
 
@@ -289,7 +348,10 @@ public class ToolExecutionDispatchingStreamingChatModel implements StreamingChat
 
         @Override
         public void onCompleteToolCall(CompleteToolCall completeToolCall) {
-            delegate.onCompleteToolCall(completeToolCall);
+            receivedToolCallIndexes.add(completeToolCall.index());
+            if (executesToolCalls || !context.executeToolsConcurrently) {
+                delegate.onCompleteToolCall(completeToolCall);
+            }
         }
 
         @Override
