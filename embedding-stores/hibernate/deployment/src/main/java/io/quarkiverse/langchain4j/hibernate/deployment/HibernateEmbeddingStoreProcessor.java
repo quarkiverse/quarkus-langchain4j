@@ -6,6 +6,7 @@ import static io.quarkus.hibernate.orm.deployment.util.HibernateProcessorSupport
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -45,6 +46,7 @@ import dev.langchain4j.store.embedding.hibernate.HibernateEmbeddingStore;
 import dev.langchain4j.store.embedding.hibernate.MetadataAttribute;
 import dev.langchain4j.store.embedding.hibernate.UnmappedMetadata;
 import io.agroal.api.AgroalPoolInterceptor;
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.hibernate.runtime.DynamicEmbeddingStoreAdditionalMappingContributor;
 import io.quarkiverse.langchain4j.hibernate.runtime.HibernateEmbeddingStoreRecorder;
@@ -94,6 +96,7 @@ class HibernateEmbeddingStoreProcessor {
     private static final DotName EMBEDDING_VECTOR = DotName
             .createSimple("dev.langchain4j.store.embedding.hibernate.EmbeddingVector");
     private static final DotName EMBEDDED_TEXT = DotName.createSimple(EmbeddedText.class);
+    private static final DotName EMBEDDING_STORE_NAME = DotName.createSimple(EmbeddingStoreName.class);
     private static final DotName UNMAPPED_METADATA = DotName.createSimple(UnmappedMetadata.class);
     private static final DotName METADATA_ATTRIBUTE = DotName.createSimple(MetadataAttribute.class);
 
@@ -137,10 +140,28 @@ class HibernateEmbeddingStoreProcessor {
             mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
                     DEFAULT_DYNAMIC_PU_NAME,
                     EMBEDDING_ENTITY.toString(),
+                    dynamicBuildTimeConfig.storeName().orElse(null),
                     dynamicBuildTimeConfig.distanceFunction()));
-        } else {
-            mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
-                    null, null, null));
+        }
+    }
+
+    @BuildStep
+    public void customEntities(
+            BuildProducer<HibernateEmbeddingStoreMappingBuildItem> mappingBuildItemProducer,
+            JpaModelIndexBuildItem indexBuildItem,
+            JpaModelPersistenceUnitMappingBuildItem persistenceUnitMappingBuildItem) {
+        List<ClassInfo> entityClassInfos = getEntityClassInfos(indexBuildItem);
+        for (ClassInfo entityClassInfo : entityClassInfos) {
+            Set<String> persistenceUnits = persistenceUnitMappingBuildItem.getEntityToPersistenceUnits()
+                    .get(entityClassInfo.name().toString());
+            for (String persistenceUnit : persistenceUnits) {
+                AnnotationInstance name = entityClassInfo.annotation(EMBEDDING_STORE_NAME);
+                String base = name == null ? entityClassInfo.simpleName() : name.value().asString();
+                String binding = persistenceUnits.size() == 1 ? base : persistenceUnit + "/" + base;
+                HibernateEmbeddingStoreMappingBuildItem mappingBuildItem = new HibernateEmbeddingStoreMappingBuildItem(
+                        persistenceUnit, entityClassInfo.name().toString(), binding);
+                mappingBuildItemProducer.produce(mappingBuildItem);
+            }
         }
     }
 
@@ -310,8 +331,34 @@ class HibernateEmbeddingStoreProcessor {
             List<HibernateEmbeddingStoreMappingBuildItem> mappings,
             JpaModelIndexBuildItem indexBuildItem,
             JpaModelPersistenceUnitMappingBuildItem persistenceUnitMappingBuildItem) {
+        Set<String> embeddedPus = new HashSet<>();
+        boolean isDefault = mappings.size() == 1;
         for (HibernateEmbeddingStoreMappingBuildItem mapping : mappings) {
-            createBean(beanProducer, recorder, mapping, pus, indexBuildItem, persistenceUnitMappingBuildItem);
+            embeddedPus.add(mapping.getPersistenceUnitName());
+            createBean(beanProducer, recorder, mapping, pus, indexBuildItem, isDefault);
+        }
+        for (String persistenceUnitName : embeddedPus) {
+            PersistenceUnitDescriptorBuildItem persistenceUnitDescriptor = getPersistenceUnitDescriptor(pus,
+                    persistenceUnitName);
+            String databaseKind = persistenceUnitDescriptor.getConfig().getDbKind().get();
+            DatabaseKind langchain4jDatabaseKind = HibernateEmbeddingStoreRecorder.langchain4jDatabaseKind(databaseKind);
+            if (!DEFAULT_DYNAMIC_PU_NAME.equals(persistenceUnitName)
+                    && langchain4jDatabaseKind != null && langchain4jDatabaseKind.getSetupSql() != null) {
+                AnnotationInstance datasourceQualifier = persistenceUnitDescriptor.getConfig().getDataSource()
+                        .filter(dn -> !"<default>".equals(dn))
+                        .map(dn -> AnnotationInstance.builder(DataSource.class).add("value", dn).build())
+                        .orElse(AnnotationInstance.builder(Default.class).build());
+
+                beanProducer.produce(SyntheticBeanBuildItem
+                        .configure(SETUP_VECTOR_CONFIG_AGROAL_POOL_INTERCEPTOR)
+                        .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
+                        .setRuntimeInit()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.setupVectorConfigAgroalPoolInterceptor(langchain4jDatabaseKind.getSetupSql()))
+                        .qualifiers(datasourceQualifier)
+                        .done());
+            }
         }
     }
 
@@ -321,99 +368,22 @@ class HibernateEmbeddingStoreProcessor {
             HibernateEmbeddingStoreMappingBuildItem mappingBuildItem,
             List<PersistenceUnitDescriptorBuildItem> pus,
             JpaModelIndexBuildItem indexBuildItem,
-            JpaModelPersistenceUnitMappingBuildItem persistenceUnitMappingBuildItem) {
+            boolean isDefault) {
 
-        AnnotationInstance entityManagerFactoryQualifier;
-        String persistenceUnitName = null;
-        if (mappingBuildItem.getPersistenceUnitName().isPresent()) {
-            persistenceUnitName = mappingBuildItem.getPersistenceUnitName().get();
-            entityManagerFactoryQualifier = AnnotationInstance.builder(PersistenceUnit.class)
-                    .add("value", persistenceUnitName)
-                    .build();
-        } else {
-            List<ClassInfo> entityClassInfos = getEntityClassInfos(indexBuildItem);
-            for (ClassInfo entityClassInfo : entityClassInfos) {
-                Set<String> persistenceUnits = persistenceUnitMappingBuildItem.getEntityToPersistenceUnits()
-                        .get(entityClassInfo.name().toString());
-                if (persistenceUnits != null && !persistenceUnits.isEmpty()) {
-                    if (persistenceUnits.size() == 1) {
-                        String persistenceUnit = persistenceUnits.iterator().next();
-                        if (persistenceUnitName != null && persistenceUnitName.equals(persistenceUnit)) {
-                            throw new IllegalArgumentException(
-                                    "Can't determine persistence unit for HibernateEmbeddingStore, because candidate classes are part of multiple persistence units: ["
-                                            + persistenceUnitName + ", " + persistenceUnit + "]");
-                        }
-                        persistenceUnitName = persistenceUnit;
-                    } else {
-                        throw new IllegalArgumentException(
-                                "Can't determine entity class for HibernateEmbeddingStore, because the candidate class "
-                                        + entityClassInfo.name() + " is part of multiple persistence units: "
-                                        + persistenceUnits);
-                    }
-                }
-            }
+        String persistenceUnitName = mappingBuildItem.getPersistenceUnitName();
+        AnnotationInstance entityManagerFactoryQualifier = AnnotationInstance.builder(PersistenceUnit.class)
+                .add("value", mappingBuildItem.getPersistenceUnitName())
+                .build();
+        entityManagerFactoryQualifier = "<default>".equals(persistenceUnitName)
+                ? AnnotationInstance.builder(Default.class).build()
+                : AnnotationInstance.builder(PersistenceUnit.class)
+                        .add("value", persistenceUnitName)
+                        .build();
 
-            if (persistenceUnitName == null) {
-                throw new IllegalArgumentException(
-                        "Can't determine persistence unit for HibernateEmbeddingStore, because none of the candidate classes are part of a persistence unit: "
-                                + entityClassInfos.stream().map(ClassInfo::name).toList());
-            }
-            entityManagerFactoryQualifier = "<default>".equals(persistenceUnitName)
-                    ? AnnotationInstance.builder(Default.class).build()
-                    : AnnotationInstance.builder(PersistenceUnit.class)
-                            .add("value", persistenceUnitName)
-                            .build();
-        }
+        ClassInfo entityClassInfo = indexBuildItem.getIndex().getClassByName(mappingBuildItem.getEntityName());
 
         PersistenceUnitDescriptorBuildItem persistenceUnitDescriptor = getPersistenceUnitDescriptor(pus, persistenceUnitName);
         String databaseKind = persistenceUnitDescriptor.getConfig().getDbKind().get();
-
-        ClassInfo entityClassInfo;
-        if (mappingBuildItem.getEntityName().isPresent()) {
-            String entityName = mappingBuildItem.getEntityName().get();
-            entityClassInfo = indexBuildItem.getIndex().getClassByName(entityName);
-            if (entityClassInfo != null) {
-                // If there is a top-level class with the given entity name as class name,
-                // but has no @Entity annotation, ignore it, unless it's the dynamic embedding entity
-                if (entityClassInfo.annotation(ENTITY) == null && !entityName.equals(EMBEDDING_ENTITY.toString())) {
-                    entityClassInfo = null;
-                }
-            }
-            if (entityClassInfo == null) {
-                // Search for @Entity annotated classes
-                for (AnnotationInstance annotation : indexBuildItem.getIndex().getAnnotations(ENTITY)) {
-                    ClassInfo annotationTargetClass = annotation.target().asClass();
-                    AnnotationValue nameValue = annotation.value("name");
-                    String explicitEntityName = nameValue == null ? "" : nameValue.asString();
-                    // Match explicit name or implicit via simple class name
-                    if (entityName.equals(explicitEntityName)
-                            || explicitEntityName.isEmpty() && annotationTargetClass.simpleName().equals(entityName)) {
-                        entityClassInfo = annotationTargetClass;
-                        break;
-                    }
-                }
-            }
-            if (entityClassInfo == null) {
-                throw new IllegalArgumentException(
-                        "Unable to find entity class for entity name configured for HibernateEmbeddingStore " + entityName);
-            }
-        } else {
-            // Search for @Embedding annotations
-            List<ClassInfo> entityClassInfos = getEntityClassInfos(indexBuildItem);
-            // Ignore classes that are not part of the chosen PU
-            String persistenceUnit = persistenceUnitName;
-            entityClassInfos.removeIf(
-                    classInfo -> !persistenceUnitMappingBuildItem.getEntityToPersistenceUnits().get(classInfo.name().toString())
-                            .contains(persistenceUnit));
-            entityClassInfo = switch (entityClassInfos.size()) {
-                case 0 -> throw new IllegalArgumentException(
-                        "Unable to find entity classes containing @Embedding annotation for configured HibernateEmbeddingStore");
-                case 1 -> entityClassInfos.get(0);
-                default -> throw new IllegalArgumentException(
-                        "Multiple entity classes containing @Embedding annotation found. Please explicitly configure quarkus.langchain4j.hibernate-orm.entity-name");
-            };
-        }
-
         String entityName = entityClassInfo.name().toString();
         String embeddingAttributeName = null;
         String embeddedTextAttributeName = null;
@@ -491,14 +461,13 @@ class HibernateEmbeddingStoreProcessor {
                         ? localDistanceFunction
                         : DistanceFunction.COSINE;
 
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(HIBERNATE_EMBEDDING_STORE)
-                .types(ClassType.create(HibernateEmbeddingStore.class),
-                        ParameterizedType.create(HibernateEmbeddingStore.class, ClassType.create(entityClassInfo.name())),
-                        ClassType.create(EmbeddingStore.class),
-                        ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
+        SyntheticBeanBuildItem.ExtendedBeanConfigurator beanBuilder = SyntheticBeanBuildItem
+                .configure(HIBERNATE_EMBEDDING_STORE);
+        beanBuilder.types(ClassType.create(HibernateEmbeddingStore.class),
+                ParameterizedType.create(HibernateEmbeddingStore.class, ClassType.create(entityClassInfo.name())),
+                ClassType.create(EmbeddingStore.class),
+                ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .setRuntimeInit()
-                .defaultBean()
                 .unremovable()
                 .scope(ApplicationScoped.class)
                 .createWith(recorder.embeddingStoreFunction(
@@ -511,27 +480,15 @@ class HibernateEmbeddingStoreProcessor {
                         "<default>".equals(persistenceUnitName) ? null : persistenceUnitName,
                         distanceFunction))
                 .addInjectionPoint(ClassType.create(DotName.createSimple(EntityManagerFactory.class)),
-                        entityManagerFactoryQualifier)
-                .done());
-
-        DatabaseKind langchain4jDatabaseKind = HibernateEmbeddingStoreRecorder.langchain4jDatabaseKind(databaseKind);
-        if (!DEFAULT_DYNAMIC_PU_NAME.equals(persistenceUnitName)
-                && langchain4jDatabaseKind != null && langchain4jDatabaseKind.getSetupSql() != null) {
-            AnnotationInstance datasourceQualifier = persistenceUnitDescriptor.getConfig().getDataSource()
-                    .filter(dn -> !"<default>".equals(dn))
-                    .map(dn -> AnnotationInstance.builder(DataSource.class).add("value", dn).build())
-                    .orElse(AnnotationInstance.builder(Default.class).build());
-
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(SETUP_VECTOR_CONFIG_AGROAL_POOL_INTERCEPTOR)
-                    .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
-                    .setRuntimeInit()
-                    .unremovable()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.setupVectorConfigAgroalPoolInterceptor(langchain4jDatabaseKind.getSetupSql()))
-                    .qualifiers(datasourceQualifier)
-                    .done());
+                        entityManagerFactoryQualifier);
+        if (isDefault) {
+            beanBuilder.reserve(true);
+        } else {
+            String storeName = mappingBuildItem.getStoreName();
+            storeName = storeName == null ? "<generic>" : storeName;
+            beanBuilder.qualifiers(AnnotationInstance.builder(EMBEDDING_STORE_NAME).add("value", storeName).build());
         }
+        beanProducer.produce(beanBuilder.done());
     }
 
     private static List<ClassInfo> getEntityClassInfos(JpaModelIndexBuildItem indexBuildItem) {
