@@ -48,6 +48,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
     private final String model;
     private final String format;
     private final Options options;
+    private final Boolean think;
     private final List<ChatModelListener> listeners;
 
     private OllamaStreamingChatLanguageModel(OllamaStreamingChatLanguageModel.Builder builder) {
@@ -56,6 +57,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
         model = builder.model;
         format = builder.format;
         options = builder.options;
+        think = builder.think;
         this.listeners = builder.listeners;
     }
 
@@ -75,6 +77,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                 .messages(toOllamaMessages(messages))
                 .options(options)
                 .format(format)
+                .think(think)
                 .tools(tools)
                 .stream(true)
                 .build();
@@ -272,6 +275,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
         private String model;
         private String format;
         private Options options;
+        private Boolean think;
 
         private boolean logRequests = false;
         private boolean logResponses = false;
@@ -306,6 +310,11 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
         public Builder options(Options val) {
             options = val;
+            return this;
+        }
+
+        public Builder think(Boolean val) {
+            think = val;
             return this;
         }
 

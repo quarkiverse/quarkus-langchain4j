@@ -29,6 +29,14 @@ public class OllamaStreamingModelOptionsRequestTest extends WiremockAware {
             .overrideConfigKey("quarkus.langchain4j.ollama.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-name", "qwen3:1.7b")
             .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.think", "true")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.return-thinking", "true")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.num-ctx", "4096")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.repeat-last-n", "64")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.repeat-penalty", "1.2")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.mirostat", "2")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.mirostat-eta", "0.2")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.mirostat-tau", "4.0")
+            .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.model-options.min-p", "0.05")
             .overrideConfigKey("quarkus.langchain4j.ollama.chat-model.seed", "42")
             .overrideConfigKey("quarkus.langchain4j.devservices.enabled", "false");
 
@@ -56,9 +64,16 @@ public class OllamaStreamingModelOptionsRequestTest extends WiremockAware {
                                     "temperature" : 0.8,
                                     "top_k" : 40,
                                     "top_p" : 0.9,
-                                    "think" : true,
-                                    "seed" : 42
+                                    "seed" : 42,
+                                    "num_ctx" : 4096,
+                                    "repeat_last_n" : 64,
+                                    "repeat_penalty" : 1.2,
+                                    "mirostat" : 2,
+                                    "mirostat_eta" : 0.2,
+                                    "mirostat_tau" : 4.0,
+                                    "min_p" : 0.05
                                   },
+                                  "think" : true,
                                   "stream" : true
                                 }
                                 """))
