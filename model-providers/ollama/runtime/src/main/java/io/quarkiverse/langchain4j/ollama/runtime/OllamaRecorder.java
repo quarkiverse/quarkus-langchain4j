@@ -230,32 +230,27 @@ public class OllamaRecorder {
             }
 
             ChatModelConfig.ModelOptionsConfig modelOptions = chatModelConfig.modelOptions();
-            if (modelOptions.think().isPresent()) {
-                optionsBuilder.option("think", modelOptions.think().get());
-            }
-            if (modelOptions.returnThinking().isPresent()) {
-                optionsBuilder.option("returnThinking", modelOptions.returnThinking().get());
-            }
             if (modelOptions.numCtx().isPresent()) {
-                optionsBuilder.option("numCtx", modelOptions.numCtx().getAsInt());
+                optionsBuilder.numCtx(modelOptions.numCtx().getAsInt());
             }
+            // the keys given to option() are written to the request as they are, so they have to be the Ollama names
             if (modelOptions.repeatLastN().isPresent()) {
-                optionsBuilder.option("repeatLastN", modelOptions.repeatLastN().getAsInt());
+                optionsBuilder.option("repeat_last_n", modelOptions.repeatLastN().getAsInt());
             }
             if (modelOptions.repeatPenalty().isPresent()) {
-                optionsBuilder.option("repeatPenalty", modelOptions.repeatPenalty().getAsDouble());
+                optionsBuilder.repeatPenalty(modelOptions.repeatPenalty().getAsDouble());
             }
             if (modelOptions.mirostat().isPresent()) {
                 optionsBuilder.option("mirostat", modelOptions.mirostat().getAsInt());
             }
             if (modelOptions.mirostatEta().isPresent()) {
-                optionsBuilder.option("mirostatEta", modelOptions.mirostatEta().getAsDouble());
+                optionsBuilder.option("mirostat_eta", modelOptions.mirostatEta().getAsDouble());
             }
             if (modelOptions.mirostatTau().isPresent()) {
-                optionsBuilder.option("mirostatTau", modelOptions.mirostatTau().getAsDouble());
+                optionsBuilder.option("mirostat_tau", modelOptions.mirostatTau().getAsDouble());
             }
             if (modelOptions.minP().isPresent()) {
-                optionsBuilder.option("minP", modelOptions.minP().getAsDouble());
+                optionsBuilder.option("min_p", modelOptions.minP().getAsDouble());
             }
 
             var builder = OllamaStreamingChatLanguageModel.builder()
@@ -267,6 +262,7 @@ public class OllamaRecorder {
                     .logCurl(firstOrDefault(false, ollamaConfig.logRequestsCurl()))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .options(optionsBuilder.build())
+                    .think(modelOptions.think().orElse(null))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName);
 
             return new Function<>() {

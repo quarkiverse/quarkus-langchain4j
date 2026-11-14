@@ -10,6 +10,7 @@ public record ChatRequest(
         List<Tool> tools,
         Options options,
         @JsonSerialize(using = FormatJsonSerializer.class) String format,
+        Boolean think,
         Boolean stream) {
 
     public static Builder builder() {
@@ -22,6 +23,7 @@ public record ChatRequest(
         private List<Tool> tools;
         private Options options;
         private String format;
+        private Boolean think;
         private Boolean stream;
 
         public Builder model(String model) {
@@ -49,6 +51,11 @@ public record ChatRequest(
             return this;
         }
 
+        public Builder think(Boolean think) {
+            this.think = think;
+            return this;
+        }
+
         public Builder stream(Boolean stream) {
             this.stream = stream;
             return this;
@@ -59,12 +66,13 @@ public record ChatRequest(
             messages(request.messages);
             options(request.options);
             format(request.format);
+            think(request.think);
             stream(request.stream);
             return this;
         }
 
         public ChatRequest build() {
-            return new ChatRequest(model, messages, tools, options, format, stream);
+            return new ChatRequest(model, messages, tools, options, format, think, stream);
         }
     }
 
