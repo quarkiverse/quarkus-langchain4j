@@ -12,6 +12,7 @@
   <packaging>pom</packaging>
   <name>Quarkus LangChain4j - hibernate - Parent</name>
   <modules>
+    <module>embedding-store</module>
     <module>deployment</module>
     <module>runtime</module>
   </modules>

@@ -19,14 +19,9 @@
         <version>${project.version}</version>
     </dependency>
     <dependency>
-        <groupId>dev.langchain4j</groupId>
-        <artifactId>langchain4j-hibernate</artifactId>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>io.quarkiverse.langchain4j</groupId>
+        <artifactId>langchain4j-hibernate-quarkus4</artifactId>
+        <version>${project.version}</version>
     </dependency>
     <dependency>
         <groupId>io.quarkus</groupId>
