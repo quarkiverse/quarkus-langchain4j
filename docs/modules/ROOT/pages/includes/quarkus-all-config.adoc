@@ -37998,6 +37998,1145 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
+h|[.extension-name]##Quarkus LangChain4j Context Compaction##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-model-name]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-model-name[`+++quarkus.langchain4j.compaction.summary.model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.summary.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the chat model used to summarize (`quarkus.langchain4j.<provider>.<name>.++*++`). Uses the default model if not set. Pointing this to a cheaper model is recommended.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-relevance-embedding-model-name]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-relevance-embedding-model-name[`+++quarkus.langchain4j.compaction.relevance.embedding-model-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.relevance.embedding-model-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the embedding model used to score relevance. When no embedding model is available, a lexical similarity is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_RELEVANCE_EMBEDDING_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_RELEVANCE_EMBEDDING_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-enabled]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-enabled[`+++quarkus.langchain4j.compaction.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether compaction is enabled. When disabled, chat memories store and send the full history.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-strategy]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-strategy[`+++quarkus.langchain4j.compaction.strategy+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.strategy+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Identifier of the strategy applied to the conversations of the AI services using this profile.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_STRATEGY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_STRATEGY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++pipeline+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-verify-invariants]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-verify-invariants[`+++quarkus.langchain4j.compaction.verify-invariants+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.verify-invariants+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the compacted view is checked against the compaction invariants. A violation falls back to the token window strategy and is reported.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_VERIFY_INVARIANTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_VERIFY_INVARIANTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-context-window]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-context-window[`+++quarkus.langchain4j.compaction.budget.context-window+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.budget.context-window+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Context window of the target model, in tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_CONTEXT_WINDOW+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_CONTEXT_WINDOW+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++16000+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-reserved-completion-tokens]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-reserved-completion-tokens[`+++quarkus.langchain4j.compaction.budget.reserved-completion-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.budget.reserved-completion-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Tokens reserved for the completion.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_RESERVED_COMPLETION_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_RESERVED_COMPLETION_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-trigger-ratio]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-trigger-ratio[`+++quarkus.langchain4j.compaction.budget.trigger-ratio+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.budget.trigger-ratio+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Fraction of the usable window above which compaction runs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_TRIGGER_RATIO+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_TRIGGER_RATIO+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++0.8+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-target-ratio]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-budget-target-ratio[`+++quarkus.langchain4j.compaction.budget.target-ratio+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.budget.target-ratio+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Fraction of the usable window strategies aim for.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_TARGET_RATIO+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_BUDGET_TARGET_RATIO+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++0.6+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-state-max-conversations]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-state-max-conversations[`+++quarkus.langchain4j.compaction.state.max-conversations+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.state.max-conversations+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of conversations whose compaction state is kept in memory. The least recently used are evicted first.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_STATE_MAX_CONVERSATIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_STATE_MAX_CONVERSATIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++10000+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-state-idle-timeout]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-state-idle-timeout[`+++quarkus.langchain4j.compaction.state.idle-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.state.idle-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Idle time after which the compaction state of a conversation is evicted, together with its inspector snapshot and its archived tool outputs (default in-memory archive).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_STATE_IDLE_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_STATE_IDLE_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++4H+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-inspector-snapshots]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-inspector-snapshots[`+++quarkus.langchain4j.compaction.inspector-snapshots+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.inspector-snapshots+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the `CompactionInspector` keeps, for each conversation, a snapshot of the last history and view. Snapshots copy the history on every call; compaction reports are always kept. Defaults to `true` in dev and test mode, `false` otherwise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_INSPECTOR_SNAPSHOTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_INSPECTOR_SNAPSHOTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-retention-max-messages]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-retention-max-messages[`+++quarkus.langchain4j.compaction.retention.max-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.retention.max-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of messages (system message excluded) kept in the store. When the history exceeds it, the oldest turns are deleted until it is back to about 80% of the limit, so the store is not rewritten on each message.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_RETENTION_MAX_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_RETENTION_MAX_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-retention-max-age]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-retention-max-age[`+++quarkus.langchain4j.compaction.retention.max-age+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.retention.max-age+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum age of the stored turns. A turn whose messages are all older is deleted when the history is written. Turns whose age is unknown (stored before the application started, or after the state of the conversation was evicted) are kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_RETENTION_MAX_AGE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_RETENTION_MAX_AGE+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-message-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-message-window-max-messages[`+++quarkus.langchain4j.compaction.message-window.max-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.message-window.max-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of non-system messages kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_MESSAGE_WINDOW_MAX_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_MESSAGE_WINDOW_MAX_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++20+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-keep-last-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-keep-last-turns[`+++quarkus.langchain4j.compaction.tool-output-pruning.keep-last-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.tool-output-pruning.keep-last-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of most recent turns whose tool outputs are never pruned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_KEEP_LAST_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_KEEP_LAST_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++2+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-min-chars]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-min-chars[`+++quarkus.langchain4j.compaction.tool-output-pruning.min-chars+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.tool-output-pruning.min-chars+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Tool outputs shorter than this number of characters are kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_MIN_CHARS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_MIN_CHARS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++200+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-preview-chars]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-preview-chars[`+++quarkus.langchain4j.compaction.tool-output-pruning.preview-chars+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.tool-output-pruning.preview-chars+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of characters of the original output kept as a preview in the stub.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_PREVIEW_CHARS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_PREVIEW_CHARS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++120+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-retrieval]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-tool-output-pruning-retrieval[`+++quarkus.langchain4j.compaction.tool-output-pruning.retrieval+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.tool-output-pruning.retrieval+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How the model can read a pruned output again. `none`: the stub only says that the output was pruned, and the model calls the tool again if it needs it. `tool`: the stub gives a reference to pass to the `retrieveToolOutput` tool; add `ArchivedToolOutputs` to the tools of the AI services.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_RETRIEVAL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_TOOL_OUTPUT_PRUNING_RETRIEVAL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `tool`
+|`+++none+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-keep-last-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-keep-last-turns[`+++quarkus.langchain4j.compaction.summary.keep-last-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.summary.keep-last-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of most recent turns kept verbatim.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_KEEP_LAST_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_KEEP_LAST_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++4+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-anchor-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-anchor-turns[`+++quarkus.langchain4j.compaction.summary.anchor-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.summary.anchor-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of first turns kept verbatim by the anchored summary strategy (the original goal).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_ANCHOR_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_ANCHOR_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-max-words]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-summary-max-words[`+++quarkus.langchain4j.compaction.summary.max-words+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.summary.max-words+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Soft limit for the summary length, in words.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_MAX_WORDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_SUMMARY_MAX_WORDS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++250+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-time-decay-recent]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-time-decay-recent[`+++quarkus.langchain4j.compaction.time-decay.recent+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.time-decay.recent+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Turns younger than this are kept verbatim.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_TIME_DECAY_RECENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_TIME_DECAY_RECENT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++15M+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-time-decay-stale]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-time-decay-stale[`+++quarkus.langchain4j.compaction.time-decay.stale+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.time-decay.stale+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Turns older than this are summarized (or dropped if summarization fails). Turns between `recent` and `stale` have their tool outputs pruned and long messages truncated.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_TIME_DECAY_STALE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_TIME_DECAY_STALE+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++2H+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-time-decay-truncate-chars]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-time-decay-truncate-chars[`+++quarkus.langchain4j.compaction.time-decay.truncate-chars+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.time-decay.truncate-chars+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Messages of aging turns are truncated to this number of characters.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_TIME_DECAY_TRUNCATE_CHARS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_TIME_DECAY_TRUNCATE_CHARS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++400+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-relevance-keep-last-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-relevance-keep-last-turns[`+++quarkus.langchain4j.compaction.relevance.keep-last-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.relevance.keep-last-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of most recent turns always kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_RELEVANCE_KEEP_LAST_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_RELEVANCE_KEEP_LAST_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++3+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-relevance-top-k]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-relevance-top-k[`+++quarkus.langchain4j.compaction.relevance.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.relevance.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of older turns kept, chosen by relevance to the latest user message.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_RELEVANCE_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_RELEVANCE_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++4+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-pipeline-steps]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-pipeline-steps[`+++quarkus.langchain4j.compaction.pipeline.steps+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.pipeline.steps+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Identifiers of the strategies applied in order. The pipeline stops as soon as the history fits the target.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PIPELINE_STEPS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PIPELINE_STEPS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|`+++tool-output-pruning+++`, `+++duplicate-collapse+++`, `+++rolling-summary+++`, `+++token-window+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-enabled]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-enabled[`+++quarkus.langchain4j.compaction.profiles."profile-name".enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether compaction is enabled. When disabled, chat memories store and send the full history.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-strategy]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-strategy[`+++quarkus.langchain4j.compaction.profiles."profile-name".strategy+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".strategy+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Identifier of the strategy applied to the conversations of the AI services using this profile.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__STRATEGY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__STRATEGY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++pipeline+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-verify-invariants]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-verify-invariants[`+++quarkus.langchain4j.compaction.profiles."profile-name".verify-invariants+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".verify-invariants+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the compacted view is checked against the compaction invariants. A violation falls back to the token window strategy and is reported.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__VERIFY_INVARIANTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__VERIFY_INVARIANTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-context-window]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-context-window[`+++quarkus.langchain4j.compaction.profiles."profile-name".budget.context-window+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".budget.context-window+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Context window of the target model, in tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_CONTEXT_WINDOW+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_CONTEXT_WINDOW+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++16000+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-reserved-completion-tokens]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-reserved-completion-tokens[`+++quarkus.langchain4j.compaction.profiles."profile-name".budget.reserved-completion-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".budget.reserved-completion-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Tokens reserved for the completion.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_RESERVED_COMPLETION_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_RESERVED_COMPLETION_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1024+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-trigger-ratio]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-trigger-ratio[`+++quarkus.langchain4j.compaction.profiles."profile-name".budget.trigger-ratio+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".budget.trigger-ratio+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Fraction of the usable window above which compaction runs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_TRIGGER_RATIO+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_TRIGGER_RATIO+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++0.8+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-target-ratio]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-budget-target-ratio[`+++quarkus.langchain4j.compaction.profiles."profile-name".budget.target-ratio+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".budget.target-ratio+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Fraction of the usable window strategies aim for.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_TARGET_RATIO+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__BUDGET_TARGET_RATIO+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`+++0.6+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-state-max-conversations]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-state-max-conversations[`+++quarkus.langchain4j.compaction.profiles."profile-name".state.max-conversations+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".state.max-conversations+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of conversations whose compaction state is kept in memory. The least recently used are evicted first.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__STATE_MAX_CONVERSATIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__STATE_MAX_CONVERSATIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++10000+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-state-idle-timeout]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-state-idle-timeout[`+++quarkus.langchain4j.compaction.profiles."profile-name".state.idle-timeout+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".state.idle-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Idle time after which the compaction state of a conversation is evicted, together with its inspector snapshot and its archived tool outputs (default in-memory archive).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__STATE_IDLE_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__STATE_IDLE_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++4H+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-inspector-snapshots]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-inspector-snapshots[`+++quarkus.langchain4j.compaction.profiles."profile-name".inspector-snapshots+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".inspector-snapshots+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the `CompactionInspector` keeps, for each conversation, a snapshot of the last history and view. Snapshots copy the history on every call; compaction reports are always kept. Defaults to `true` in dev and test mode, `false` otherwise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__INSPECTOR_SNAPSHOTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__INSPECTOR_SNAPSHOTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-retention-max-messages]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-retention-max-messages[`+++quarkus.langchain4j.compaction.profiles."profile-name".retention.max-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".retention.max-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of messages (system message excluded) kept in the store. When the history exceeds it, the oldest turns are deleted until it is back to about 80% of the limit, so the store is not rewritten on each message.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RETENTION_MAX_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RETENTION_MAX_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-retention-max-age]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-retention-max-age[`+++quarkus.langchain4j.compaction.profiles."profile-name".retention.max-age+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".retention.max-age+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum age of the stored turns. A turn whose messages are all older is deleted when the history is written. Turns whose age is unknown (stored before the application started, or after the state of the conversation was evicted) are kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RETENTION_MAX_AGE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RETENTION_MAX_AGE+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-message-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-message-window-max-messages[`+++quarkus.langchain4j.compaction.profiles."profile-name".message-window.max-messages+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".message-window.max-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of non-system messages kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__MESSAGE_WINDOW_MAX_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__MESSAGE_WINDOW_MAX_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++20+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-keep-last-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-keep-last-turns[`+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.keep-last-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.keep-last-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of most recent turns whose tool outputs are never pruned.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_KEEP_LAST_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_KEEP_LAST_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++2+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-min-chars]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-min-chars[`+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.min-chars+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.min-chars+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Tool outputs shorter than this number of characters are kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_MIN_CHARS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_MIN_CHARS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++200+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-preview-chars]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-preview-chars[`+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.preview-chars+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.preview-chars+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of characters of the original output kept as a preview in the stub.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_PREVIEW_CHARS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_PREVIEW_CHARS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++120+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-retrieval]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-tool-output-pruning-retrieval[`+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.retrieval+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".tool-output-pruning.retrieval+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How the model can read a pruned output again. `none`: the stub only says that the output was pruned, and the model calls the tool again if it needs it. `tool`: the stub gives a reference to pass to the `retrieveToolOutput` tool; add `ArchivedToolOutputs` to the tools of the AI services.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_RETRIEVAL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TOOL_OUTPUT_PRUNING_RETRIEVAL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `tool`
+|`+++none+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-summary-keep-last-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-summary-keep-last-turns[`+++quarkus.langchain4j.compaction.profiles."profile-name".summary.keep-last-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".summary.keep-last-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of most recent turns kept verbatim.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__SUMMARY_KEEP_LAST_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__SUMMARY_KEEP_LAST_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++4+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-summary-anchor-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-summary-anchor-turns[`+++quarkus.langchain4j.compaction.profiles."profile-name".summary.anchor-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".summary.anchor-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of first turns kept verbatim by the anchored summary strategy (the original goal).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__SUMMARY_ANCHOR_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__SUMMARY_ANCHOR_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++1+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-summary-max-words]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-summary-max-words[`+++quarkus.langchain4j.compaction.profiles."profile-name".summary.max-words+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".summary.max-words+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Soft limit for the summary length, in words.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__SUMMARY_MAX_WORDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__SUMMARY_MAX_WORDS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++250+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-time-decay-recent]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-time-decay-recent[`+++quarkus.langchain4j.compaction.profiles."profile-name".time-decay.recent+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".time-decay.recent+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Turns younger than this are kept verbatim.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TIME_DECAY_RECENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TIME_DECAY_RECENT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++15M+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-time-decay-stale]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-time-decay-stale[`+++quarkus.langchain4j.compaction.profiles."profile-name".time-decay.stale+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".time-decay.stale+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Turns older than this are summarized (or dropped if summarization fails). Turns between `recent` and `stale` have their tool outputs pruned and long messages truncated.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TIME_DECAY_STALE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TIME_DECAY_STALE+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|`+++2H+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-time-decay-truncate-chars]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-time-decay-truncate-chars[`+++quarkus.langchain4j.compaction.profiles."profile-name".time-decay.truncate-chars+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".time-decay.truncate-chars+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Messages of aging turns are truncated to this number of characters.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TIME_DECAY_TRUNCATE_CHARS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__TIME_DECAY_TRUNCATE_CHARS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++400+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-relevance-keep-last-turns]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-relevance-keep-last-turns[`+++quarkus.langchain4j.compaction.profiles."profile-name".relevance.keep-last-turns+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".relevance.keep-last-turns+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of most recent turns always kept.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RELEVANCE_KEEP_LAST_TURNS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RELEVANCE_KEEP_LAST_TURNS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++3+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-relevance-top-k]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-relevance-top-k[`+++quarkus.langchain4j.compaction.profiles."profile-name".relevance.top-k+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".relevance.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Number of older turns kept, chosen by relevance to the latest user message.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RELEVANCE_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__RELEVANCE_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++4+++`
+
+a| [[quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-pipeline-steps]] [.property-path]##link:#quarkus-langchain4j-context-compaction_quarkus-langchain4j-compaction-profiles-profile-name-pipeline-steps[`+++quarkus.langchain4j.compaction.profiles."profile-name".pipeline.steps+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.compaction.profiles."profile-name".pipeline.steps+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Identifiers of the strategies applied in order. The pipeline stops as soon as the history fits the target.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__PIPELINE_STEPS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COMPACTION_PROFILES__PROFILE_NAME__PIPELINE_STEPS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|`+++tool-output-pruning+++`, `+++duplicate-collapse+++`, `+++rolling-summary+++`, `+++token-window+++`
+
+
 h|[.extension-name]##Quarkus LangChain4j Skills##
 h|Type
 h|Default
