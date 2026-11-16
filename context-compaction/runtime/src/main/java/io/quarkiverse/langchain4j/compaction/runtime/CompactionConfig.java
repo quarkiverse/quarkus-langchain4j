@@ -1,0 +1,299 @@
+package io.quarkiverse.langchain4j.compaction.runtime;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+
+import io.quarkiverse.langchain4j.compaction.CompactionProfile;
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigPhase;
+import io.quarkus.runtime.annotations.ConfigRoot;
+import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithParentName;
+
+/**
+ * Context compaction configuration.
+ */
+@ConfigMapping(prefix = "quarkus.langchain4j.compaction")
+@ConfigRoot(phase = ConfigPhase.RUN_TIME)
+public interface CompactionConfig {
+
+    /**
+     * Identifies the default profile (see {@link #defaultProfile()}) in {@code CompactionProfiles#provider(String)}.
+     */
+    String DEFAULT_PROFILE = "<default>";
+
+    /**
+     * The default profile, configured directly under {@code quarkus.langchain4j.compaction}, used by AI services without
+     * {@link CompactionProfile}.
+     */
+    @WithParentName
+    Profile defaultProfile();
+
+    /**
+     * Named profiles, configured under {@code quarkus.langchain4j.compaction.profiles."<name>"} and selected with
+     * {@link CompactionProfile}. A named profile does not inherit from the default one: unset properties take their
+     * built-in default.
+     */
+    @ConfigDocMapKey("profile-name")
+    Map<String, Profile> profiles();
+
+    /**
+     * @return {@code true} if the profile is the default one or has at least one property set
+     */
+    default boolean hasProfile(String name) {
+        return DEFAULT_PROFILE.equals(name) || profiles().containsKey(name);
+    }
+
+    /**
+     * @param name a profile name, or {@link #DEFAULT_PROFILE}
+     * @return the profile, or {@code null} if it is not configured
+     */
+    default Profile profile(String name) {
+        return DEFAULT_PROFILE.equals(name) ? defaultProfile() : profiles().get(name);
+    }
+
+    interface Profile {
+
+        /**
+         * Whether compaction is enabled. When disabled, chat memories store and send the full history.
+         */
+        @WithDefault("true")
+        boolean enabled();
+
+        /**
+         * Identifier of the strategy applied to the conversations of the AI services using this profile.
+         */
+        @WithDefault("pipeline")
+        String strategy();
+
+        /**
+         * Whether the compacted view is checked against the compaction invariants. A violation falls back to the token
+         * window strategy and is reported.
+         */
+        @WithDefault("true")
+        boolean verifyInvariants();
+
+        /**
+         * Token budget.
+         */
+        Budget budget();
+
+        /**
+         * Limits of the compaction state kept in memory for each conversation (message timestamps, summary and
+         * embedding caches). Evicting the state of a conversation never touches its history: summaries are recomputed
+         * and message ages become unknown.
+         */
+        StateLimits state();
+
+        /**
+         * Whether the {@code CompactionInspector} keeps, for each conversation, a snapshot of the last history and view.
+         * Snapshots copy the history on every call; compaction reports are always kept. Defaults to {@code true} in dev
+         * and test mode, {@code false} otherwise.
+         */
+        Optional<Boolean> inspectorSnapshots();
+
+        /**
+         * Retention of the stored history. By default the full history is kept forever: compaction only shapes what the
+         * model receives. When a limit is set, the oldest turns are deleted from the {@code ChatMemoryStore} when the
+         * history is written. Turns are deleted whole, the system message and the last turn are never deleted.
+         */
+        Retention retention();
+
+        /**
+         * Message window strategy ({@code message-window}).
+         */
+        MessageWindow messageWindow();
+
+        /**
+         * Tool output pruning strategy ({@code tool-output-pruning}).
+         */
+        ToolOutputPruning toolOutputPruning();
+
+        /**
+         * Rolling summary and anchored summary strategies ({@code rolling-summary}, {@code anchored-summary}).
+         */
+        Summary summary();
+
+        /**
+         * Time decay strategy ({@code time-decay}).
+         */
+        TimeDecay timeDecay();
+
+        /**
+         * Relevance strategy ({@code relevance}).
+         */
+        Relevance relevance();
+
+        /**
+         * Pipeline strategy ({@code pipeline}).
+         */
+        Pipeline pipeline();
+
+        interface Budget {
+            /**
+             * Context window of the target model, in tokens.
+             */
+            @WithDefault("16000")
+            int contextWindow();
+
+            /**
+             * Tokens reserved for the completion.
+             */
+            @WithDefault("1024")
+            int reservedCompletionTokens();
+
+            /**
+             * Fraction of the usable window above which compaction runs.
+             */
+            @WithDefault("0.8")
+            double triggerRatio();
+
+            /**
+             * Fraction of the usable window strategies aim for.
+             */
+            @WithDefault("0.6")
+            double targetRatio();
+        }
+
+        interface StateLimits {
+            /**
+             * Maximum number of conversations whose compaction state is kept in memory. The least recently used are
+             * evicted first.
+             */
+            @WithDefault("10000")
+            int maxConversations();
+
+            /**
+             * Idle time after which the compaction state of a conversation is evicted, together with its inspector
+             * snapshot and its archived tool outputs (default in-memory archive).
+             */
+            @WithDefault("4h")
+            Duration idleTimeout();
+        }
+
+        interface Retention {
+            /**
+             * Maximum number of messages (system message excluded) kept in the store. When the history exceeds it, the
+             * oldest turns are deleted until it is back to about 80% of the limit, so the store is not rewritten on each
+             * message.
+             */
+            OptionalInt maxMessages();
+
+            /**
+             * Maximum age of the stored turns. A turn whose messages are all older is deleted when the history is
+             * written. Turns whose age is unknown (stored before the application started, or after the state of the
+             * conversation was evicted) are kept.
+             */
+            Optional<Duration> maxAge();
+        }
+
+        interface MessageWindow {
+            /**
+             * Maximum number of non-system messages kept.
+             */
+            @WithDefault("20")
+            int maxMessages();
+        }
+
+        interface ToolOutputPruning {
+            /**
+             * Number of most recent turns whose tool outputs are never pruned.
+             */
+            @WithDefault("2")
+            int keepLastTurns();
+
+            /**
+             * Tool outputs shorter than this number of characters are kept.
+             */
+            @WithDefault("200")
+            int minChars();
+
+            /**
+             * Number of characters of the original output kept as a preview in the stub.
+             */
+            @WithDefault("120")
+            int previewChars();
+
+            /**
+             * How the model can read a pruned output again. {@code none}: the stub only says that the output was
+             * pruned, and the model calls the tool again if it needs it. {@code tool}: the stub gives a reference to
+             * pass to the {@code retrieveToolOutput} tool; add {@code ArchivedToolOutputs} to the tools of the AI
+             * services.
+             */
+            @WithDefault("none")
+            Retrieval retrieval();
+
+            enum Retrieval {
+                NONE,
+                TOOL
+            }
+        }
+
+        interface Summary {
+            /**
+             * Number of most recent turns kept verbatim.
+             */
+            @WithDefault("4")
+            int keepLastTurns();
+
+            /**
+             * Number of first turns kept verbatim by the anchored summary strategy (the original goal).
+             */
+            @WithDefault("1")
+            int anchorTurns();
+
+            /**
+             * Soft limit for the summary length, in words.
+             */
+            @WithDefault("250")
+            int maxWords();
+        }
+
+        interface TimeDecay {
+            /**
+             * Turns younger than this are kept verbatim.
+             */
+            @WithDefault("15m")
+            Duration recent();
+
+            /**
+             * Turns older than this are summarized (or dropped if summarization fails). Turns between {@code recent} and
+             * {@code stale} have their tool outputs pruned and long messages truncated.
+             */
+            @WithDefault("2h")
+            Duration stale();
+
+            /**
+             * Messages of aging turns are truncated to this number of characters.
+             */
+            @WithDefault("400")
+            int truncateChars();
+        }
+
+        interface Relevance {
+            /**
+             * Number of most recent turns always kept.
+             */
+            @WithDefault("3")
+            int keepLastTurns();
+
+            /**
+             * Number of older turns kept, chosen by relevance to the latest user message.
+             */
+            @WithDefault("4")
+            int topK();
+        }
+
+        interface Pipeline {
+            /**
+             * Identifiers of the strategies applied in order. The pipeline stops as soon as the history fits the target.
+             */
+            @WithDefault("tool-output-pruning,duplicate-collapse,rolling-summary,token-window")
+            List<String> steps();
+        }
+    }
+}

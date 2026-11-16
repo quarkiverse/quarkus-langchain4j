@@ -9,6 +9,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.ChatMemory;
+import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
 
 /**
  * <pre>
@@ -36,7 +37,7 @@ class ImmediateFlushChatMemory implements CommittableChatMemory {
     @Override
     public void add(ChatMessage message) {
         if (message instanceof SystemMessage) {
-            List<ChatMessage> messages = new ArrayList<>(delegate.messages());
+            List<ChatMessage> messages = history();
             Optional<SystemMessage> systemMessage = findSystemMessage(messages);
             if (systemMessage.isPresent()) {
                 if (systemMessage.get().equals(message)) {
@@ -46,7 +47,7 @@ class ImmediateFlushChatMemory implements CommittableChatMemory {
                 }
             }
             messages.add(0, message); // the system message must be in the first position
-            delegate.set(messages);
+            write(messages);
         } else {
             delegate.add(message);
         }
@@ -69,14 +70,29 @@ class ImmediateFlushChatMemory implements CommittableChatMemory {
 
     @Override
     public void replaceLastAiMessage(AiMessage newAiMessage) {
-        List<ChatMessage> messages = new ArrayList<>(delegate.messages());
+        List<ChatMessage> messages = history();
         ListIterator<ChatMessage> it = messages.listIterator(messages.size());
         while (it.hasPrevious()) {
             if (it.previous() instanceof AiMessage) {
                 it.set(newAiMessage);
-                delegate.set(messages);
+                write(messages);
                 return;
             }
+        }
+    }
+
+    /**
+     * @return a mutable copy of the stored messages: the full history when the delegate sends a view of it to the model
+     */
+    private List<ChatMessage> history() {
+        return delegate instanceof HistoryViewChatMemory h ? h.history() : new ArrayList<>(delegate.messages());
+    }
+
+    private void write(List<ChatMessage> messages) {
+        if (delegate instanceof HistoryViewChatMemory h) {
+            h.setHistory(messages);
+        } else {
+            delegate.set(messages);
         }
     }
 

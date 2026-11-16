@@ -68,6 +68,7 @@ public final class AiServiceMethodCreateInfo {
 
     private final LazyValue<Integer> quarkusGuardrailsMaxRetry;
     private final boolean switchToWorkerThreadForToolExecution;
+    private final boolean chatMemoryMayBlock;
 
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName,
@@ -89,6 +90,7 @@ public final class AiServiceMethodCreateInfo {
             List<String> mcpClientNames,
             List<String> skillNames,
             boolean switchToWorkerThreadForToolExecution,
+            boolean chatMemoryMayBlock,
             String outputTokenAccumulatorClassName,
             String responseAugmenterClassName,
             InputGuardrailsLiteral inputGuardrails,
@@ -129,6 +131,7 @@ public final class AiServiceMethodCreateInfo {
             }
         });
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
+        this.chatMemoryMayBlock = chatMemoryMayBlock;
         this.responseAugmenterClassName = responseAugmenterClassName;
     }
 
@@ -276,6 +279,13 @@ public final class AiServiceMethodCreateInfo {
 
     public boolean isSwitchToWorkerThreadForToolExecution() {
         return switchToWorkerThreadForToolExecution;
+    }
+
+    /**
+     * @return whether reading or writing the chat memory may block, for example because it compacts the history
+     */
+    public boolean isChatMemoryMayBlock() {
+        return chatMemoryMayBlock;
     }
 
     public void setResponseAugmenter(Class<? extends AiResponseAugmenter<?>> augmenter) {

@@ -44,6 +44,7 @@
 *** xref:memory-store-redis.adoc[Redis Chat Memory Store]
 ** xref:response-augmenter.adoc[Response Augmenter]
 ** xref:chat-scopes.adoc[Chat Scopes Framework]
+** xref:context-compaction.adoc[Context Compaction]
 * xref:agentic.adoc[Agentic AI]
 * xref:models.adoc[Models]
 ** Chat Models

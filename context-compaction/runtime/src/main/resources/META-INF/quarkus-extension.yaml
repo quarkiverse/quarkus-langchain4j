@@ -1,0 +1,13 @@
+name: "Quarkus LangChain4j Context Compaction"
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: "Curated context compaction strategies for LangChain4j chat memory"
+metadata:
+  keywords:
+    - "ai"
+    - "langchain4j"
+    - "compaction"
+    - "memory"
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/context-compaction.html"
+  categories:
+    - "ai"
+  status: "experimental"
