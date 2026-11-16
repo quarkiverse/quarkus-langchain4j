@@ -399,18 +399,19 @@ public class ToolProcessor {
                         var pInstance = parameter.annotation(P);
                         boolean isOptionalParameter = isOptional(parameter.type());
                         var jsonSchemaElement = toJsonSchemaElement(parameter, index, schemaContext);
-                        properties.put(parameter.name(), jsonSchemaElement);
+                        String parameterName = parameterName(parameter);
+                        properties.put(parameterName, jsonSchemaElement);
 
                         AnnotationValue defaultValue = pInstance != null ? pInstance.value("defaultValue") : null;
                         boolean hasDefaultValue = defaultValue != null && !NO_DEFAULT.equals(defaultValue.asString());
 
                         if (hasDefaultValue) {
                             String defaultValueStr = defaultValue.asString();
-                            defaultValues.put(parameter.name(), defaultValueStr);
+                            defaultValues.put(parameterName, defaultValueStr);
                             try {
                                 Class<?> paramClass = JandexUtil.load(parameter.type(),
                                         Thread.currentThread().getContextClassLoader());
-                                QuarkusToolExecutor.parseDefaultValue(defaultValueStr, parameter.name(), paramClass);
+                                QuarkusToolExecutor.parseDefaultValue(defaultValueStr, parameterName, paramClass);
                             } catch (Exception e) {
                                 validationErrors.produce(
                                         new ValidationPhaseBuildItem.ValidationErrorBuildItem(
@@ -428,7 +429,7 @@ public class ToolProcessor {
                         // @P#required defaults to true, and Jandex does not materialize annotation defaults
                         boolean isRequired = requiredValue == null || requiredValue.asBoolean();
                         if (!isOptionalParameter && !hasDefaultValue && isRequired) {
-                            required.add(parameter.name());
+                            required.add(parameterName);
                         }
                     }
 
@@ -463,7 +464,7 @@ public class ToolProcessor {
                     }
 
                     Map<String, Integer> nameToParamPosition = toolMethod.parameters().stream().collect(
-                            Collectors.toMap(MethodParameterInfo::name, i -> Integer.valueOf(i.position())));
+                            Collectors.toMap(ToolProcessor::parameterName, i -> Integer.valueOf(i.position())));
 
                     String methodSignature = createUniqueSignature(toolMethod);
 
@@ -990,7 +991,9 @@ public class ToolProcessor {
 
             List<FieldDescriptor> fieldDescriptors = new ArrayList<>();
             for (MethodParameterInfo parameter : methodInfo.parameters()) {
-                FieldDescriptor fieldDescriptor = FieldDescriptor.of(implClassName, parameter.name(),
+                // the field is what Jackson binds the LLM's JSON argument to, so it has to carry the name the LLM
+                // was shown in the schema, which is also the key of nameToParamPosition and of the default values
+                FieldDescriptor fieldDescriptor = FieldDescriptor.of(implClassName, parameterName(parameter),
                         parameter.type().name().toString());
                 fieldDescriptors.add(fieldDescriptor);
 
@@ -1222,6 +1225,24 @@ public class ToolProcessor {
         return Optional.ofNullable(parameter.annotation(P))
                 .map(ToolProcessor::descriptionFrom)
                 .orElse(null);
+    }
+
+    /**
+     * The name the LLM sees for a tool parameter: {@code @P#name()} when set, otherwise the Java parameter name.
+     * Mirrors {@code ToolSpecifications#toolSpecificationFrom} and {@code DefaultToolExecutor#getName} in
+     * langchain4j. This is the single key under which a parameter is known everywhere outside the method
+     * signature: the schema property, its {@code required} entry, its default value, the generated argument
+     * mapper's field and the name-to-position map the executor uses to place the argument.
+     */
+    private static String parameterName(MethodParameterInfo parameter) {
+        AnnotationInstance pAnnotation = parameter.annotation(P);
+        if (pAnnotation != null) {
+            String name = stringValueOrNull(pAnnotation, "name");
+            if (name != null) {
+                return name;
+            }
+        }
+        return parameter.name();
     }
 
     /**
