@@ -15,9 +15,11 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
+import io.quarkiverse.langchain4j.compaction.CompactionException;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionInvariants;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
@@ -323,6 +325,20 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
             }
             return history;
         }
+        // the trigger applies to the view, not the history: grow the last compacted view with the new messages until it
+        // exceeds the trigger, so the gap between target and trigger spares a compaction (and a summary) per turn
+        ConversationStates.State.Compacted last = state.compacted;
+        if (last != null && last.size() <= history.size()
+                && history.subList(0, last.size()).hashCode() == last.fingerprint()) {
+            List<ChatMessage> view = new ArrayList<>(last.view());
+            view.addAll(history.subList(last.size(), history.size()));
+            if (!c.budget().exceeded(c.tokenCounter().count(view))) {
+                if (c.snapshots()) {
+                    c.inspector().record(id, history, view, null);
+                }
+                return view;
+            }
+        }
         return compact(history, tokens, timestamps(history, state), state);
     }
 
@@ -398,7 +414,34 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
         if (c.events() != null) {
             c.events().accept(report);
         }
+        // the target is best effort, the usable window is not: never drop required messages, never send a request
+        // estimated not to fit
+        if (report.tokensAfter() > c.budget().usable()) {
+            throw new CompactionException(tooLarge(view, report.tokensAfter()));
+        }
+        // a degraded or fallback view is not reused: the next call retries the strategy
+        state.compacted = fallback || context.degraded() ? null
+                : new ConversationStates.State.Compacted(history.size(), history.hashCode(), List.copyOf(view));
         return view;
+    }
+
+    private String tooLarge(List<ChatMessage> view, int tokens) {
+        ChatMessage largest = null;
+        int largestTokens = 0;
+        for (ChatMessage message : view) {
+            int t = c.tokenCounter().count(List.of(message));
+            if (t > largestTokens) {
+                largest = message;
+                largestTokens = t;
+            }
+        }
+        String what = largest instanceof ToolExecutionResultMessage tool
+                ? "the output of tool '" + tool.toolName() + "'"
+                : "a " + largest.type().name().toLowerCase() + " message";
+        return "Conversation " + id + " (profile " + c.profile() + "): the messages that cannot be compacted need about "
+                + tokens + " tokens, more than the usable window of " + c.budget().usable()
+                + " tokens (context window minus reserved completion tokens). The largest is " + what + " (about "
+                + largestTokens + " tokens). Reduce the size of that message or increase the context window.";
     }
 
     @Override

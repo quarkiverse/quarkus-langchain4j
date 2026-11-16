@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.compaction.runtime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -15,12 +16,14 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+import io.quarkiverse.langchain4j.compaction.CompactionException;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionMessages;
 import io.quarkiverse.langchain4j.compaction.CompactionReport;
@@ -180,8 +183,8 @@ class CompactingChatMemoryTest {
             }
             return conv.toMessages();
         };
-        // a tiny window so that every view is a compaction
-        CompactingChatMemory memory = memory(recording, 10, clock);
+        // a tiny window so that every view is a compaction (trigger 11 tokens), yet fits the usable window (14 tokens)
+        CompactingChatMemory memory = memory(recording, 14, clock);
         UserMessage question = UserMessage.from("question");
         memory.add(question);
 
@@ -325,6 +328,72 @@ class CompactingChatMemoryTest {
         assertThat(view.getFirst()).isInstanceOf(UserMessage.class);
         // the full history is still stored
         assertThat(store.getMessages("c1")).hasSize(20);
+    }
+
+    @Test
+    void doesNotCompactAgainUntilTheViewExceedsTheTrigger() {
+        // trigger 800 tokens, target 600 tokens
+        CompactingChatMemory memory = memory(new TokenWindowStrategy(), 1000);
+        TokenCounterProducer.HeuristicTokenCounter counter = new TokenCounterProducer.HeuristicTokenCounter();
+        while (reports.isEmpty()) {
+            exchange(memory, "question " + "x".repeat(100), "answer " + "y".repeat(100));
+        }
+        List<ChatMessage> compacted = memory.messages();
+        assertThat(reports).hasSize(1); // the read above reuses the view of the exchange that triggered it
+
+        // the history is over the trigger, the compacted view plus the new exchange is not: reuse the view
+        int before = reports.size();
+        exchange(memory, "small question", "small answer");
+        List<ChatMessage> view = memory.messages();
+        assertThat(reports).hasSize(before);
+        assertThat(counter.count(store.getMessages("c1"))).isGreaterThan(800);
+        assertThat(view.subList(0, compacted.size())).isEqualTo(compacted);
+        assertThat(view).endsWith(UserMessage.from("small question"), AiMessage.from("small answer"));
+
+        // compacts again only once the view exceeds the trigger
+        while (counter.count(memory.messages()) + 60 <= 800) {
+            exchange(memory, "question " + "x".repeat(100), "answer " + "y".repeat(100));
+            assertThat(reports).hasSize(before);
+        }
+        exchange(memory, "question " + "x".repeat(100), "answer " + "y".repeat(100));
+        exchange(memory, "question " + "x".repeat(100), "answer " + "y".repeat(100));
+        assertThat(reports.size()).isGreaterThan(before);
+        assertThat(counter.count(memory.messages())).isLessThanOrEqualTo(800);
+    }
+
+    @Test
+    void retriesTheStrategyAfterADegradedCompaction() {
+        int[] calls = { 0 };
+        CompactingChatMemory memory = memory(new RollingSummaryStrategy(new RollingSummaryStrategy.Options(2, 100),
+                (previous, messages, maxWords) -> {
+                    calls[0]++;
+                    throw new IllegalStateException("model unavailable");
+                }), 300);
+        for (int i = 0; i < 10; i++) {
+            exchange(memory, "question " + i + " " + "x".repeat(100), "answer " + i + " " + "y".repeat(100));
+        }
+        int before = calls[0];
+        memory.messages();
+        assertThat(calls[0]).isGreaterThan(before);
+    }
+
+    @Test
+    void failsWhenTheRequiredMessagesExceedTheUsableWindow() {
+        CompactingChatMemory memory = memory(new TokenWindowStrategy(), 300);
+        exchange(memory, "hi", "hello");
+        // the current turn: a tool result larger than the whole window, which compaction must not drop
+        List<ChatMessage> working = memory.messages();
+        working.add(UserMessage.from("search the docs"));
+        ToolExecutionRequest request = ToolExecutionRequest.builder().id("1").name("searchDocs").arguments("{}").build();
+        working.add(AiMessage.from(request));
+        working.add(ToolExecutionResultMessage.from(request, "z".repeat(2000)));
+
+        assertThatThrownBy(() -> memory.view(working))
+                .isInstanceOf(CompactionException.class)
+                .hasMessageContaining("usable window of 300 tokens")
+                .hasMessageContaining("'searchDocs'");
+        // the failed compaction is still reported
+        assertThat(reports).isNotEmpty();
     }
 
     static final class MutableClock extends Clock {

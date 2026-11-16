@@ -103,6 +103,10 @@ Whatever the strategy, the view sent to the model respects these invariants:
 Strategies achieve this by working on _turns_ (a user message and everything that follows until the next one) and _segments_ (a user message, an assistant message, or an assistant message with its tool calls and their results), never on individual messages.
 The view is also checked against these invariants after each compaction (`quarkus.langchain4j.compaction.verify-invariants`, enabled by default).
 
+The target is best effort: the messages above can exceed it, for example when a tool called in the current turn returns a large output.
+The usable window is a hard limit: when the compacted view is still estimated above it, the call fails with a `CompactionException` naming the largest message, instead of dropping required messages or sending a request that the model would reject.
+Without a `TokenCountEstimator` bean, this check relies on the heuristic estimate.
+
 When something goes wrong, the extension degrades instead of failing the call:
 
 * if a strategy throws or produces an invalid view, the extension falls back to `token-window`, and the compaction report is flagged `fallback`;
@@ -146,7 +150,7 @@ quarkus.langchain4j.compaction.pipeline.steps=tool-output-pruning,duplicate-coll
 ----
 
 In agentic conversations, tool outputs usually dominate the context, so pruning them is often enough.
-Summarization only happens when pruning and collapsing do not reach the target, and `token-window`, as the last step, guarantees that the view fits.
+Summarization only happens when pruning and collapsing do not reach the target, and `token-window`, as the last step, drops the oldest segments until the view fits the target, keeping the latest question and its tool calls whatever their size.
 Keep a window strategy at the end of your own pipelines for the same reason.
 
 [#tool-output-pruning]
@@ -248,6 +252,7 @@ Media contents are never sent to the embedding model.
 === Windows
 
 `token-window` keeps the most recent segments that fit the target and has no options.
+It never drops the latest user message, nor the most recent segment, even when they alone exceed the target.
 `message-window` keeps the most recent segments up to `message-window.max-messages` messages (default: 20, system messages excluded).
 Both keep the latest user message, and start the view with a user message.
 
