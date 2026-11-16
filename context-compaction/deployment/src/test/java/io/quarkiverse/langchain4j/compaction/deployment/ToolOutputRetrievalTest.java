@@ -132,16 +132,15 @@ class ToolOutputRetrievalTest {
         agent.chat("orders", "Look up order 3");
         agent.chat("orders", "Read the first order again");
 
-        // the request that triggered the retrieval had the outputs of the three earlier turns pruned, with distinct
-        // references although the provider sent the same id every time
+        // the request that triggered the retrieval had the outputs of the first two turns pruned, with distinct
+        // references although the provider sent the same id every time; the output of the third turn still fits under
+        // the trigger, so the view compacted during that turn is reused as is
         List<ChatMessage> beforeRetrieval = model.requests.get(model.requests.size() - 2);
         List<String> stubs = beforeRetrieval.stream().filter(m -> m instanceof ToolExecutionResultMessage)
                 .map(m -> ((ToolExecutionResultMessage) m).text()).filter(t -> t.contains("reference=\"")).toList();
-        assertThat(stubs).hasSize(3);
+        assertThat(stubs).hasSize(2);
         assertThat(stubs.getFirst()).contains("reference=\"call_0\"");
         assertThat(stubs.get(1)).contains("reference=\"call_0#");
-        assertThat(stubs.get(2)).contains("reference=\"call_0#");
-        assertThat(stubs).doesNotHaveDuplicates();
 
         assertThat(model.retrieved).containsExactly(Orders.output("1"));
     }

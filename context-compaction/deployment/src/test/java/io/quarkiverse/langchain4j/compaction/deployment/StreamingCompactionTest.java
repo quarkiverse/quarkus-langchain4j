@@ -46,6 +46,9 @@ import io.vertx.core.Vertx;
  */
 class StreamingCompactionTest {
 
+    // large enough to push the view over the trigger: the request following the tool call compacts again
+    static final String OUTPUT = "order shipped. " + "z".repeat(1900);
+
     @RegisterExtension
     static final QuarkusExtensionTest test = new QuarkusExtensionTest()
             .withApplicationRoot(jar -> jar.addClasses(Assistant.class, Agent.class, FakeStreamingModel.class,
@@ -86,7 +89,7 @@ class StreamingCompactionTest {
         @Tool("Looks up an order")
         @io.smallrye.common.annotation.NonBlocking
         public String lookup() {
-            return "order shipped";
+            return OUTPUT;
         }
     }
 
@@ -94,7 +97,7 @@ class StreamingCompactionTest {
     public static class Lookup {
         @Tool("Looks up an order")
         public String lookup() {
-            return "order shipped";
+            return OUTPUT;
         }
     }
 
@@ -270,7 +273,8 @@ class StreamingCompactionTest {
         // the request following the tool call is built in the callback of the streaming client, which runs on the
         // event loop; core switches to another thread to execute blocking tools, and builds the request there
         assertThat(collect(agent.chat("tools", "And order 11?"))).isEqualTo("Your order has shipped.");
-        assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(3);
+        // the first request, and the request following the tool call
+        assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(2);
         assertThat(compactions.eventLoop()).as("compactions on the event loop").isEmpty();
     }
 
@@ -287,7 +291,8 @@ class StreamingCompactionTest {
                 .collect().asList().subscribe().with(list -> result.complete(String.join("", list)),
                         result::completeExceptionally));
         assertThat(result.get(10, TimeUnit.SECONDS)).isEqualTo("Your order has shipped.");
-        assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(3);
+        // the first request, and the request following the tool call
+        assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(2);
         assertThat(compactions.eventLoop()).as("compactions on the event loop").isEmpty();
     }
 
@@ -307,7 +312,8 @@ class StreamingCompactionTest {
                 .onError(result::completeExceptionally)
                 .start();
         assertThat(result.get(10, TimeUnit.SECONDS)).isEqualTo("Your order has shipped.");
-        assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(3);
+        // the first request, and the request following the tool call
+        assertThat(compactions.all()).hasSizeGreaterThanOrEqualTo(2);
         assertThat(compactions.eventLoop()).as("compactions on the event loop").isEmpty();
     }
 

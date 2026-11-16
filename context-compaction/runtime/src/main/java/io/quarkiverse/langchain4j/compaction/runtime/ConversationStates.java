@@ -55,6 +55,15 @@ public class ConversationStates {
         List<ChatMessage> lastView;
 
         /**
+         * The last compaction: the view computed for the first {@code size} messages of the history, whose hash is
+         * {@code fingerprint}. Messages appended to that prefix are appended to the view until it exceeds the trigger.
+         */
+        record Compacted(int size, int fingerprint, List<ChatMessage> view) {
+        }
+
+        Compacted compacted;
+
+        /**
          * When messages not stored yet (buffered by an AI service invocation) were first seen, keyed by identity.
          * Cleared when the history is written.
          */
@@ -102,6 +111,7 @@ public class ConversationStates {
             strategyState.clear();
             pending.clear();
             lastView = null;
+            compacted = null;
         }
     }
 

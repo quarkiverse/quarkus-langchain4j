@@ -37,7 +37,8 @@ import io.quarkiverse.langchain4j.memory.HistoryViewChatMemory;
  * The {@link ChatMemoryStore} holds the complete, original history; compaction only shapes what
  * {@link #messages()} returns, so it is auditable and can be changed without losing data. The only messages ever
  * deleted from the store are the oldest turns, when a {@link Retention} is configured. Compaction runs when the
- * history exceeds the trigger of the {@link io.quarkiverse.langchain4j.compaction.TokenBudget}.
+ * view (the last compacted view followed by the newer messages, or the history if none) exceeds the trigger of the
+ * {@link io.quarkiverse.langchain4j.compaction.TokenBudget}.
  * <p>
  * Quarkus LangChain4j AI services use it as a {@link HistoryViewChatMemory}: they buffer the full {@link #history()}
  * during an invocation, ask for the compacted {@link #view(List)} of that buffer before each request to the model (so

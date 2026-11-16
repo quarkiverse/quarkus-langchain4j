@@ -53,6 +53,9 @@ A compacting chat memory keeps two things apart:
 
 While the history fits the budget, the view is the history.
 When it exceeds the _trigger_, the configured strategy computes a smaller view that aims for the _target_.
+The following messages are appended to that view, and the strategy runs again only when the view exceeds the trigger.
+The compacted view is kept in memory: after a restart, or when the stored history changed (for example, retention deleted old turns), it is recomputed from the history.
+Time-based strategies such as `time-decay` are therefore only re-applied when compaction runs again.
 Compaction never modifies the history: you can audit or replay a conversation, and change the strategy, without losing data.
 
 For example, after compaction, an agent that looked up orders sees something like this, while its history still holds every message verbatim:
@@ -84,7 +87,7 @@ quarkus.langchain4j.compaction.budget.target-ratio=0.6                 # <4>
 <1> The context window of the model, in tokens. Default: 16000.
 <2> Tokens reserved for the answer. The _usable_ window is the context window minus this value (123904 tokens here). Default: 1024.
 <3> Compaction runs when the view would exceed 80% of the usable window (99123 tokens).
-<4> Strategies aim for 60% of the usable window (74342 tokens). A target below the trigger avoids compacting again on the next turn.
+<4> Strategies aim for 60% of the usable window (74342 tokens). The gap between the target and the trigger is room for the following turns: the compacted view grows until it exceeds the trigger before compacting again (and, with summaries, calling the model again).
 
 Tokens are counted with the `TokenCountEstimator` bean of the application when there is exactly one.
 Otherwise, a heuristic counts about four characters per token, plus a small overhead per message.

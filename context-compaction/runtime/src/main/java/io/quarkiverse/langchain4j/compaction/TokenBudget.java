@@ -6,8 +6,9 @@ import io.smallrye.common.annotation.Experimental;
  * The token budget of a conversation.
  * <p>
  * The usable window is the model context window minus the tokens reserved for the completion. Compaction is
- * triggered when the history exceeds {@code triggerRatio} of the usable window, and strategies aim to bring it under
- * {@code targetRatio} of the usable window. Keeping the target below the trigger avoids compacting on every turn.
+ * triggered when the view exceeds {@code triggerRatio} of the usable window, and strategies aim to bring it under
+ * {@code targetRatio} of the usable window. Keeping the target below the trigger avoids compacting on every turn: the
+ * compacted view grows with the following messages until it exceeds the trigger again.
  *
  * @param contextWindow the model context window, in tokens
  * @param reservedForCompletion tokens reserved for the model answer ({@code max_tokens})
