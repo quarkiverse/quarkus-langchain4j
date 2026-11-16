@@ -28,6 +28,7 @@ import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.merge.MergeSchemaService;
+import com.ibm.watsonx.ai.textprocessing.storage.cos.CosStorageService;
 import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationService;
 import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionService;
 import com.ibm.watsonx.ai.timeseries.TimeSeriesService;
@@ -39,6 +40,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCP4DIAMRest
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCP4DLegacyRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusChatRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusClusterSchemaRestClient;
+import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCosStorageRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusCreateSchemaRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusDeploymentRestClient;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.impl.QuarkusDetectionRestClient;
@@ -269,6 +271,22 @@ public class QuarkusCustomRestClientTest {
         clientField.setAccessible(true);
         var client = clientField.get(textExtractionService);
         assertThat(client).isInstanceOf(QuarkusTextExtractionRestClient.class);
+    }
+
+    @Test
+    public void cos_storage_client() throws Exception {
+
+        CosStorageService cosStorageService = CosStorageService.builder()
+                .apiKey("test")
+                .cosUrl("http://localhost")
+                .bucket("test")
+                .build();
+
+        Class<CosStorageService> clazz = CosStorageService.class;
+        var clientField = clazz.getDeclaredField("client");
+        clientField.setAccessible(true);
+        var client = clientField.get(cosStorageService);
+        assertThat(client).isInstanceOf(QuarkusCosStorageRestClient.class);
     }
 
     @Test

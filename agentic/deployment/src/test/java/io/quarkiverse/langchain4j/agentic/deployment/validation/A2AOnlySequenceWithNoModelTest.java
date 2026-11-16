@@ -1,9 +1,7 @@
 package io.quarkiverse.langchain4j.agentic.deployment.validation;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import jakarta.enterprise.inject.CreationException;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -11,6 +9,8 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.agentic.a2a.A2AAgentCardException;
+import dev.langchain4j.agentic.agent.AgentInvocationException;
 import dev.langchain4j.agentic.declarative.A2AClientAgent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.service.V;
@@ -29,10 +29,12 @@ public class A2AOnlySequenceWithNoModelTest {
 
     @Test
     void a2aOnlySequenceShouldNotRequireChatModel() {
-        // the exception is expected as there isn't any A2A server, but if we get there
-        // it means that the agents have been successfully configured, including the A2A one
-        assertThat(assertThrows(CreationException.class, () -> pipeline.run("dragons and wizards")))
-                .hasMessageContaining("Failed to obtain agent card");
+        // the agents have been successfully configured, including the A2A ones: there isn't any A2A server,
+        // so the exception is expected, but only when the first A2A agent is invoked and fetches its agent card
+        assertThatThrownBy(() -> pipeline.run("dragons and wizards"))
+                .isInstanceOf(AgentInvocationException.class)
+                .hasStackTraceContaining(A2AAgentCardException.class.getName()
+                        + ": Failed to fetch the agent card of A2A agent 'generate' from http://localhost:9090");
     }
 
     @Inject

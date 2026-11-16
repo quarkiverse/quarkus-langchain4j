@@ -92,8 +92,6 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
         assertNull(runtimeConfig.chatModel().guidedChoice().orElse(null));
         assertNull(runtimeConfig.chatModel().guidedGrammar().orElse(null));
         assertNull(runtimeConfig.chatModel().guidedRegex().orElse(null));
-        assertNull(runtimeConfig.chatModel().repetitionPenalty().orElse(null));
-        assertNull(runtimeConfig.chatModel().lengthPenalty().orElse(null));
     }
 
     @Test

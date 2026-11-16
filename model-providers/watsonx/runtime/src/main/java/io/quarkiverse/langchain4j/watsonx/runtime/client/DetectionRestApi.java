@@ -16,9 +16,14 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 
 import com.ibm.watsonx.ai.core.exception.WatsonxException;
+import com.ibm.watsonx.ai.detection.DetectionContextResponse;
+import com.ibm.watsonx.ai.detection.DetectionGeneratedResponse;
 import com.ibm.watsonx.ai.detection.DetectionResponse;
+import com.ibm.watsonx.ai.detection.DetectionRestClient;
 import com.ibm.watsonx.ai.detection.DetectionTextResponse;
 import com.ibm.watsonx.ai.detection.TextDetectionContentDetectors;
+import com.ibm.watsonx.ai.detection.TextDetectionContextDetectors;
+import com.ibm.watsonx.ai.detection.TextDetectionGeneratedDetectors;
 
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 
@@ -34,8 +39,31 @@ public interface DetectionRestApi {
     DetectionResponse<DetectionTextResponse> detect(
             @HeaderParam(REQUEST_ID_HEADER) String requestId,
             @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
+            @HeaderParam(DetectionRestClient.GOVERNANCE_INSTANCE_ID_HEADER) String serviceInstanceId,
             @QueryParam("version") String version,
             TextDetectionContentDetectors request);
+
+    @POST
+    @Path("/text/detection/context")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    DetectionResponse<DetectionContextResponse> detectContext(
+            @HeaderParam(REQUEST_ID_HEADER) String requestId,
+            @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
+            @HeaderParam(DetectionRestClient.GOVERNANCE_INSTANCE_ID_HEADER) String serviceInstanceId,
+            @QueryParam("version") String version,
+            TextDetectionContextDetectors request);
+
+    @POST
+    @Path("/text/detection/generated")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    DetectionResponse<DetectionGeneratedResponse> detectGenerated(
+            @HeaderParam(REQUEST_ID_HEADER) String requestId,
+            @HeaderParam(TRANSACTION_ID_HEADER) String transactionId,
+            @HeaderParam(DetectionRestClient.GOVERNANCE_INSTANCE_ID_HEADER) String serviceInstanceId,
+            @QueryParam("version") String version,
+            TextDetectionGeneratedDetectors request);
 
     @ClientExceptionMapper
     static WatsonxException toException(Response response) {

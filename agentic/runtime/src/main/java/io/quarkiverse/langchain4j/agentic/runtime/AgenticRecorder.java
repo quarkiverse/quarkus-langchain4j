@@ -317,8 +317,19 @@ public class AgenticRecorder {
 
         @Override
         public void accept(AgenticServices.DeclarativeAgentCreationContext agenticContext) {
+            if (agenticContext.agenticService() != null) {
+                // an agent orchestrating subagents, like a workflow, a supervisor or a planner agent
+                Instance<AgentListener> listeners = cdiContext.getInjectedReference(AGENT_LISTENER_INSTANCE);
+                for (AgentListener listener : listeners) {
+                    agenticContext.agenticService().listener(listener);
+                }
+                return;
+            }
             if (agenticContext.agentBuilder() == null) {
-                configureDecisionAgent(agenticContext.decisionAgentBuilder(), agenticContext.agentServiceClass());
+                // a context providing none of the builders known here is left alone
+                if (agenticContext.decisionAgentBuilder() != null) {
+                    configureDecisionAgent(agenticContext.decisionAgentBuilder(), agenticContext.agentServiceClass());
+                }
                 return;
             }
             var agentBuilder = agenticContext.agentBuilder();

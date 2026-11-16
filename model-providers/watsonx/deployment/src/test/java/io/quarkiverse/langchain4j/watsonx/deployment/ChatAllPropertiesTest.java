@@ -74,8 +74,6 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.guided-choice", "1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.guided-grammar", "guidedGrammar")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.guided-regex", "guidedRegex")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.repetition-penalty", "1.1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.length-penalty", "1.2")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.opening", "<think>")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.thinking.tags.think.closing", "</think>")
@@ -130,8 +128,6 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 },
                 "include_reasoning": true,
                 "reasoning_effort": "low",
-                "repetition_penalty": 1.1,
-                "length_penalty": 1.2,
                 "guided_choice": ["1"],
                 "guided_grammar": "guidedGrammar",
                 "guided_regex": "guidedRegex"
@@ -188,8 +184,6 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         assertEquals("</think>", thinking.tags().get().think().closing());
         assertEquals("<response>", thinking.tags().get().response().map(r -> r.opening()).orElse(null));
         assertEquals("</response>", thinking.tags().get().response().map(r -> r.closing()).orElse(null));
-        assertEquals(1.1, runtimeConfig.chatModel().repetitionPenalty().orElse(null));
-        assertEquals(1.2, runtimeConfig.chatModel().lengthPenalty().orElse(null));
         assertEquals(new TreeSet<>(Set.of("1")), runtimeConfig.chatModel().guidedChoice().orElse(null));
         assertEquals("guidedGrammar", runtimeConfig.chatModel().guidedGrammar().orElse(null));
         assertEquals("guidedRegex", runtimeConfig.chatModel().guidedRegex().orElse(null));

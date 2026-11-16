@@ -586,7 +586,8 @@ public class CdiHelperParameterResolverTest {
     @Test
     void a2aServerUrlSupplier() {
         // there is no A2A server: the URL supplied by the bean is used to fetch the agent card
-        assertThatThrownBy(() -> remoteStory.write("dragons")).hasStackTraceContaining("Failed to obtain agent card");
+        assertThatThrownBy(() -> remoteStory.write("dragons"))
+                .hasStackTraceContaining("Failed to fetch the agent card of A2A agent 'write' from http://localhost:1");
         assertThat(endpoints.calls()).isPositive();
     }
 

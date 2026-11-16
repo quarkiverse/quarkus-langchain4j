@@ -131,6 +131,52 @@ public class PlainProcessListAgent {
 
 The `static` method can also use CDI beans, see <<_using_cdi_beans_in_agent_methods>>.
 
+=== A2A and MCP Client Agents
+
+An agent can also be a remote one: `@A2AClientAgent` declares an agent executed by a remote https://a2a-protocol.org/[A2A] agent, and `@McpClientAgent` an agent that calls a tool of an MCP server.
+They need the `langchain4j-agentic-a2a` and the `langchain4j-agentic-mcp` library respectively:
+
+[source,xml]
+----
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-agentic-a2a</artifactId>
+</dependency>
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-agentic-mcp</artifactId>
+</dependency>
+----
+
+[source,java]
+----
+public interface RemoteWriter {
+
+    @A2AClientAgent(a2aServerUrl = "http://localhost:8080", description = "Writes a story", outputKey = "story")
+    String writeStory(@V("topic") String topic);
+}
+
+public interface WeatherAgent {
+
+    @McpClientAgent(toolName = "getWeatherForecast", description = "Fetches the weather forecast", outputKey = "weather")
+    String fetchWeather(@V("destination") String destination);
+
+    @McpClientSupplier
+    static McpClient mcpClient(@McpClientName("weather") McpClient mcpClient) {
+        return mcpClient;
+    }
+}
+----
+
+The `@McpClientSupplier` method provides the MCP client, here one configured with the xref:mcp.adoc[MCP extension] and received as a CDI parameter, see <<_using_cdi_beans_in_agent_methods>>.
+
+The remote agent and the MCP server are contacted when the agent is first invoked, and not when the application starts, so they don't have to be available then:
+
+* the agent card of an A2A agent is fetched at its first invocation, within 30 seconds. `resolutionTimeoutSeconds` on `@A2AClientAgent` changes this limit, and `0` removes it
+* the `@McpClientSupplier` method runs, and the tools of the MCP server are listed, at the first invocation of an MCP client agent. This has no time limit of its own: the timeouts of the MCP client apply, like its `initialization-timeout`. `resolutionTimeoutSeconds` on `@McpClientAgent` adds a limit, and the lower one wins
+* when the remote agent or the MCP server doesn't answer, or not in time, the invocation fails with an exception caused by an `A2AAgentCardException` or by an `McpToolResolutionException`, and the next invocation tries again. Both are `AgentUnavailableException`s, which an `@ErrorHandler` can look for among the causes of the failure to skip the agent
+* the fetch of the agent card, and the `@McpClientSupplier` method of an agent with a resolution timeout, run on another thread, where no request context is active
+
 == Workflow Patterns
 
 === Sequential Workflow
@@ -304,6 +350,62 @@ public interface BatchHoroscopeAgent {
 
 Each `Person` in the list is passed to a separate invocation of `PersonAstrologyAgent`, all running in parallel.
 
+=== Asynchronous Agents
+
+An agent declared with `async = true` runs on another thread, and the workflow waits for it only where its result is read: by a later agent taking its output key as an argument, or by the output key or the `@Output` method of the workflow.
+A workflow does not wait for an asynchronous agent whose result nobody reads: it returns while that agent is still running.
+A slow last step, like a fix that takes minutes or a notification, can then run on its own while the workflow returns its result as soon as it is known:
+
+[source,java]
+----
+public interface Remediation {
+
+    @UserMessage("Apply the fix required by this decision: {{decision}}")
+    @Agent(description = "Applies the fix required by a decision", outputKey = "fix", async = true)
+    String remediate(@V("decision") String decision);
+}
+
+public interface RolloutAnalysis {
+
+    @SequenceAgent(outputKey = "decision", subAgents = { RolloutAnalyst.class, Remediation.class })
+    String analyze(@V("rollout") String rollout);
+}
+
+@ApplicationScoped
+public class RemediationListener implements AgentListener {
+
+    @Override
+    public void afterAgentInvocation(AgentResponse response) {
+        if (response.agentName().equals("remediate")) {
+            Log.infof("Fix applied: %s", response.output());
+        }
+    }
+
+    @Override
+    public void onAgentInvocationError(AgentInvocationError error) {
+        if (error.agentName().equals("remediate")) {
+            Log.error("Fix failed", error.error());
+        }
+    }
+}
+----
+
+`analyze` returns the decision while `remediate` is still running, since no agent reads `fix`.
+For such an agent:
+
+* the result and the failure are notified to the listeners of the agent, with `afterAgentInvocation` and `onAgentInvocationError`. For an AI agent, like the one above, they include the `AgentListener` beans, see <<_listeners_monitoring_and_dev_ui>>. They are notified on the thread of the agent, possibly after the request that invoked the workflow has returned, so these beans must be `@ApplicationScoped` and can't use the request, the security identity or a `@RequestScoped` bean
+* the result is also written to the `AgenticScope` under the output key of the agent, where a later invocation with the same memory id can read it
+* a failure is handled by the `@ErrorHandler` of the workflow, but its caller has already received a successful result: it gets no exception, and no compensation runs
+* the work in progress is lost when the application shuts down
+* a later invocation with the same memory id waits for the agent before it starts, so an endpoint invoking the same memory id repeatedly can block on the side task of the previous invocation
+
+To tell whether an invocation waited for an asynchronous agent, enable the `DEBUG` level of the category below: at the end of an invocation it logs the output keys of the asynchronous agents still running.
+
+[source,properties]
+----
+quarkus.log.category."dev.langchain4j.agentic.scope.DefaultAgenticScope".level=DEBUG
+----
+
 === Conditional Workflow
 
 The `@ConditionalAgent` annotation routes execution to different sub-agents based on conditions evaluated against the `AgenticScope`.
@@ -464,6 +566,9 @@ public interface SupervisorStoryCreator {
 }
 ----
 
+The model calls that a supervisor makes to plan its work are notified to its `AgentListener`s with `onPlannerModelResponse`, which gives the token usage and the model name of each call.
+The Executions page of the Dev UI shows their tokens on the row of the supervisor, separately from the ones of its sub-agents.
+
 === Planner Agent
 
 The `@PlannerAgent` annotation uses a custom `Planner` implementation for orchestration logic.
@@ -495,6 +600,10 @@ static Planner planner(@ModelName("planning") ChatModel chatModel) {
     return new MyLlmPlanner(chatModel);
 }
 ----
+
+Such a `Planner` reports each response of its model with `planningContext.reportChatModelResponse(...)` or `planningContext.reportDecisionModelResponse(...)`, from `firstAction` or `nextAction` and not from `init`.
+The responses are then notified to the listeners and counted in the Executions page like the planning calls of a supervisor.
+A planner that calls an AI service reports from an `AiServiceResponseReceivedListener` registered on that service.
 
 == Accessing AgenticScope
 
@@ -621,6 +730,7 @@ public interface AudienceRetriever {
 ----
 
 The optional `async = true` flag, used in this example, allows running this in a separate thread so the workflow engine is not blocked while waiting for the human response. Another agent or external trigger completes the `CompletableFuture` to resume execution.
+The workflow waits for the human response only where a later agent reads `audience`, see <<_asynchronous_agents>>.
 
 A human-in-the-loop agent doesn't use a chat model.
 This agent can be composed in a sequential workflow with other agents:
@@ -898,6 +1008,9 @@ A key that matches no decision agent logs a warning.
 
 === Listeners, Monitoring and Dev UI
 
+An `AgentListener` bean, which must be `@ApplicationScoped` or `@Singleton`, is registered on every AI agent, decision agent, workflow, supervisor and planner agent of the application.
+The other agents, like the non-AI ones, are not given the listener beans: a listener bean is notified of them only through the agent that contains them, when its `inheritedBySubagents()` method returns `true`.
+
 The `AgentListener` beans receive the response of the decision model with `AgentResponse.decisionResponse()`, which carries the probabilities of the answers, the name of the model that answered and the token usage.
 The `AgentMonitor` of a `MonitoredAgent` records it as well.
 
@@ -946,6 +1059,8 @@ public interface AnswerCascade {
     }
 }
 ----
+
+Both planners report their decisions, so each of them is notified to the listeners with `onPlannerModelResponse`, and the Executions page of the Dev UI shows their tokens on the row of the planner agent.
 
 == Discovering A2A Agents with Apicurio Registry
 
@@ -999,8 +1114,9 @@ under that name. Each is registered under `<groupId>/<artifactId>` instead, and 
 with an error that lists both qualified names.
 * The agent's URL comes from the artifact's `a2a-agent-url` label. Without that label, the first `JSONRPC` entry in the
 card's `supportedInterfaces` is used. An agent with neither is skipped, with a warning in the log.
-* Building an agent fetches its card from the agent itself. An agent that cannot be reached is skipped, with a warning
-in the log.
+* Discovery does not contact the agents. The card of an agent is fetched from the agent itself the first time it is
+invoked, so an agent that cannot be reached is still listed, and fails when it is invoked. Its description is the one
+stored in the registry or, when the artifact has none, the one of its card.
 * The inputs an agent expects are read from the comma-separated `a2a-input-keys` label, or default to
 `quarkus.langchain4j.a2a.apicurio-registry.default-input-keys` (`input`).
 
@@ -1095,7 +1211,7 @@ The methods can be declared on the agent type or on one of its parent interfaces
 
 A CDI parameter:
 
-* is looked up at each invocation of the method, so a `@RequestScoped` bean is the one of the current request
+* is looked up at each invocation of the method, so a `@RequestScoped` bean is the one of the current request. The CDI parameters of a `@A2AClientCustomizer` method are instead looked up when the agent is created, like the ones of the supplier methods, although the method itself runs later, when the remote agent is first invoked. A `@McpClientSupplier` method also runs later, when the MCP client is first needed, on the first invocation of the agent: a `@McpClientName` client that it returns connects to its server at that moment, unless something else already used it
 * of type `ChatModel`, `DecisionModel`, `ModerationModel` or `ImageModel`, without qualifier or with `@ModelName`, gets the bean of the configured model provider, even if nothing else injects it
 * is not an argument of the agent: it is not read from the `AgenticScope`, not reported to listeners, and not described to a supervisor
 * must resolve to exactly one bean, otherwise the build fails
@@ -1104,6 +1220,7 @@ A CDI parameter:
 ====
 The bean is looked up on the thread invoking the method.
 A `@RequestScoped` bean can't be used by a method invoked on another thread, like the subagents of a parallel workflow or an `async` agent, because the request context is not propagated there.
+An `async` agent can also run after the request that invoked the workflow has returned, see <<_asynchronous_agents>>, so a bean it uses can't depend on that request either.
 A `@Dependent` bean is created at each invocation and never destroyed: prefer a normal scope, like `@ApplicationScoped`.
 ====
 

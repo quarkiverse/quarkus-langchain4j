@@ -623,6 +623,8 @@ public class WatsonxProcessor {
         serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 "com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationRestClient$TextClassificationRestClientBuilderFactory"));
         serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.textprocessing.storage.cos.CosStorageRestClient$CosStorageRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 "com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaRestClient$CreateSchemaRestClientBuilderFactory"));
         serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 "com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaRestClient$ImproveSchemaRestClientBuilderFactory"));

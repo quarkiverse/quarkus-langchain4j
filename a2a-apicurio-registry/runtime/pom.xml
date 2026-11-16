@@ -27,16 +27,6 @@
             <artifactId>langchain4j-agentic-a2a</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.a2aproject.sdk</groupId>
-            <artifactId>a2a-java-sdk-spec</artifactId>
-            <version>1.0.0.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.a2aproject.sdk</groupId>
-            <artifactId>a2a-java-sdk-client</artifactId>
-            <version>1.0.0.Final</version>
-        </dependency>
-        <dependency>
             <groupId>io.apicurio</groupId>
             <artifactId>apicurio-registry-java-sdk</artifactId>
             <version>${apicurio-registry-sdk.version}</version>

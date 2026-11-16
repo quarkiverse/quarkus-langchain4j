@@ -1,12 +1,15 @@
 package io.quarkiverse.langchain4j.a2a.test.apicurio;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -20,6 +23,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import dev.langchain4j.agentic.UntypedAgent;
+import dev.langchain4j.agentic.a2a.A2AAgentCardException;
+import dev.langchain4j.agentic.planner.AgentInstance;
 import io.apicurio.registry.client.RegistryClientFactory;
 import io.apicurio.registry.client.common.HttpAdapterType;
 import io.apicurio.registry.client.common.RegistryClientOptions;
@@ -36,12 +42,13 @@ import io.quarkus.test.QuarkusExtensionTest;
  * Integration test verifying that ApicurioAgentsRegistry can connect to
  * a real Apicurio Registry and search for AGENT_CARD artifacts.
  *
- * Note: allAgents() returns empty here because the registered agent card URLs
- * (localhost:9999, localhost:9998) are not reachable, so the A2A client builder
- * fails to fetch /.well-known/agent-card.json before an agent can be built. That
- * is the only reason left: the input keys the builder requires are resolved by
- * ApicurioAgentsRegistryInputKeysTest in the runtime module. The registry
- * connectivity itself is verified by querying the search API directly.
+ * Note: the registered agent card URLs (localhost:9999, localhost:9998) are not
+ * reachable. allAgents() returns the agents all the same, with the name and the
+ * description of their artifacts, because /.well-known/agent-card.json is fetched
+ * from an agent only when that agent is invoked. The input keys the builder
+ * requires are resolved by ApicurioAgentsRegistryInputKeysTest in the runtime
+ * module. The registry connectivity itself is verified by querying the search
+ * API directly.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ApicurioRegistryA2AToolsTest {
@@ -172,8 +179,26 @@ public class ApicurioRegistryA2AToolsTest {
 
     @Test
     @Order(3)
-    void allAgentsReturnsEmptyWhenA2AServersUnreachable() {
-        var agents = agentsRegistry.allAgents();
-        assertThat(agents).isEmpty();
+    void allAgentsListsUnreachableAgents() {
+        Map<String, AgentInstance> agents = agentsRegistry.allAgents();
+        // Assert on the keys and on each agent: discovered agents are proxies whose toString() invokes the agent.
+        assertThat(agents.keySet()).contains("Translation Agent", "Sentiment Analysis Agent");
+
+        // the name and the description are the ones of the registry: describing an agent does not contact it
+        AgentInstance translator = agents.get("Translation Agent");
+        assertThat(translator.name()).isEqualTo("Translation Agent");
+        assertThat(translator.description()).isEqualTo("Translates text between languages");
+        AgentInstance sentimentAnalyzer = agents.get("Sentiment Analysis Agent");
+        assertThat(sentimentAnalyzer.name()).isEqualTo("Sentiment Analysis Agent");
+        assertThat(sentimentAnalyzer.description()).isEqualTo("Analyzes sentiment of provided text");
+
+        // the agent card is fetched from the agent when it is invoked, and nothing listens at its URL
+        assertThatThrownBy(new ThrowingCallable() {
+            @Override
+            public void call() {
+                ((UntypedAgent) translator).invoke(Map.of("input", "Hello"));
+            }
+        }).hasStackTraceContaining(A2AAgentCardException.class.getName()
+                + ": Failed to fetch the agent card of A2A agent 'Translation Agent' from http://localhost:9999/a2a");
     }
 }
