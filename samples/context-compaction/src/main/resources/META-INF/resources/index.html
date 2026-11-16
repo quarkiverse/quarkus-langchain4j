@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Context compaction</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #f6f7f9; --surface: #fff; --text: #1f2328; --muted: #656d76; --border: #d8dee4;
+            --accent: #4153af; --accent-soft: #eef0fb; --gain: #e9f7ef; --gain-text: #1a7f37; --on-accent: #fff;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0d1117; --surface: #161b22; --text: #e6edf3; --muted: #8d96a0; --border: #30363d;
+                --accent: #8a9cf0; --accent-soft: #1f2440; --gain: #12261b; --gain-text: #56d364; --on-accent: #0d1117;
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+            margin: 0 auto; max-width: 1200px; padding: 24px 16px; color: var(--text); background: var(--bg);
+        }
+        h1 { font-size: 28px; margin: 0 0 8px; }
+        h2 { font-size: 18px; margin: 0 0 4px; }
+        p { color: var(--muted); }
+        .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+        @media (max-width: 800px) { .columns { grid-template-columns: 1fr; } }
+        .card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+            box-shadow: 0 1px 3px rgb(0 0 0 / 6%);
+        }
+        .card p { font-size: 14px; }
+        .gain {
+            background: var(--gain); color: var(--gain-text); border-radius: 8px; padding: 10px 12px;
+            font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-line;
+        }
+        .log { margin-top: 12px; }
+        .qa { border-top: 1px solid var(--border); padding: 12px 0; font-size: 14px; }
+        .q { font-weight: 600; margin-bottom: 4px; }
+        .expected { color: var(--muted); font-size: 13px; margin-top: 4px; }
+        button, input { font: inherit; font-size: 14px; border-radius: 8px; }
+        button {
+            margin: 3px 2px; padding: 6px 12px; cursor: pointer; text-align: left;
+            border: 1px solid var(--border); background: var(--surface); color: var(--text);
+            transition: border-color .15s, background .15s;
+        }
+        button:hover { border-color: var(--accent); background: var(--accent-soft); }
+        button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        #replay, #ask { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+        #replay:hover, #ask:hover { filter: brightness(1.1); }
+        #replay { display: block; margin: 12px 0 0; }
+        input {
+            width: min(70%, 600px); padding: 7px 12px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--text);
+        }
+        code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+        h2 code { font-size: 15px; }
+    </style>
+</head>
+<body>
+<h1>Context compaction</h1>
+<p>Both assistants use the same model and an 8k-token budget. They only differ in their compaction profile.
+    <button id="replay">1. Replay the recorded conversation (126 messages, ~14k tokens) into both</button></p>
+
+<p>2. Ask both assistants about facts from the beginning of the conversation, and compare with the expected answer:</p>
+<div id="questions"></div>
+<p><input id="free" placeholder="Or ask your own question"> <button id="ask">Ask both</button></p>
+
+<div class="columns">
+    <div class="card" data-name="summarizing">
+        <h2>Default profile</h2>
+        <p><code>pipeline</code>: prune old tool outputs, collapse duplicate calls, summarize old turns
+            (<code>gpt-4.1-mini</code>), drop turns as a last resort.</p>
+        <div class="gain">Not replayed yet</div>
+        <div class="log"></div>
+    </div>
+    <div class="card" data-name="window">
+        <h2><code>@CompactionProfile("window")</code></h2>
+        <p><code>token-window</code>: keep the most recent turns that fit, drop the rest. No model call.</p>
+        <div class="gain">Not replayed yet</div>
+        <div class="log"></div>
+    </div>
+</div>
+
+<script>
+    const cards = [...document.querySelectorAll('.card')];
+
+    function showGain(card, stats) {
+        if (!stats) return;
+        const r = stats.last;
+        let text = `Last compaction (${r.strategy}): ${r.messagesBefore} → ${r.messagesAfter} messages, `
+            + `${r.tokensBefore} → ${r.tokensAfter} tokens (−${Math.round(100 * (r.tokensBefore - r.tokensAfter) / r.tokensBefore)}%)`;
+        if (r.degraded) text += ' [degraded]';
+        if (stats.calls > 0) {
+            text += `\nOver ${stats.calls} model call(s): ${stats.tokensWith} input tokens sent instead of ${stats.tokensWithout}`
+                + ` (${stats.tokensWithout - stats.tokensWith} saved)`;
+        }
+        card.querySelector('.gain').textContent = text;
+    }
+
+    async function replay() {
+        await Promise.all(cards.map(async card => {
+            card.querySelector('.gain').textContent = 'Replaying...';
+            card.querySelector('.log').replaceChildren();
+            const res = await fetch(`/assistants/${card.dataset.name}/replay`, {method: 'POST'});
+            showGain(card, await res.json());
+        }));
+    }
+
+    function ask(question, expected) {
+        cards.forEach(async card => {
+            const qa = document.createElement('div');
+            qa.className = 'qa';
+            qa.innerHTML = '<div class="q"></div><div class="a">…</div><div class="expected"></div>';
+            qa.querySelector('.q').textContent = question;
+            if (expected) qa.querySelector('.expected').textContent = 'Expected: ' + expected;
+            card.querySelector('.log').prepend(qa);
+            // one call at a time per conversation: concurrent calls on the same memory id would overwrite each other
+            card.queue = (card.queue || Promise.resolve()).then(async () => {
+                const res = await fetch(`/assistants/${card.dataset.name}/messages`,
+                    {method: 'POST', headers: {'Content-Type': 'text/plain'}, body: question});
+                const body = res.ok ? await res.json() : {answer: 'Error ' + res.status};
+                qa.querySelector('.a').textContent = body.answer;
+                showGain(card, body.tokens);
+            });
+        });
+    }
+
+    document.getElementById('replay').onclick = replay;
+    document.getElementById('ask').onclick = () => {
+        const free = document.getElementById('free');
+        if (free.value.trim()) ask(free.value.trim());
+        free.value = '';
+    };
+    fetch('/assistants/questions').then(r => r.json()).then(questions => questions.forEach(q => {
+        const b = document.createElement('button');
+        b.textContent = q.question;
+        b.onclick = () => ask(q.question, q.expected);
+        document.getElementById('questions').append(b);
+    }));
+</script>
+</body>
+</html>
