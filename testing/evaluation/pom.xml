@@ -18,6 +18,7 @@
         <module>evaluation-strategies/semantic-similarity</module>
         <module>evaluation-strategies/ai-judge</module>
         <module>evaluation-junit5</module>
+        <module>evaluation-compaction</module>
     </modules>
 
 

@@ -1,0 +1,33 @@
+[
+  {
+    "question": "What is our flight booking reference?",
+    "expected": [
+      "FNR-QX4T7"
+    ]
+  },
+  {
+    "question": "What dietary constraints do we have?",
+    "expected": [
+      "vegetarian",
+      "shellfish"
+    ]
+  },
+  {
+    "question": "What is the total budget of the trip?",
+    "expected": [
+      "6,800"
+    ]
+  },
+  {
+    "question": "What is the confirmation number of our Tokyo hotel?",
+    "expected": [
+      "HTL-NR-55190"
+    ]
+  },
+  {
+    "question": "Where do we spend the last night of the trip?",
+    "expected": [
+      "Hakone"
+    ]
+  }
+]

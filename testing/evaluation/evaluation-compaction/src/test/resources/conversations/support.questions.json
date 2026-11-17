@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is my order number?",
+    "expected": [
+      "ORD-4242"
+    ]
+  },
+  {
+    "question": "What is the weather at the warehouse?",
+    "expected": [
+      "sunny"
+    ]
+  }
+]

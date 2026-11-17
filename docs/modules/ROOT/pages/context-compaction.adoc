@@ -511,6 +511,72 @@ public class ClaimsMemorySupplier implements Supplier<ChatMemoryProvider> {
 }
 ----
 
+== Evaluating profiles
+
+To pick a profile, replay a recorded conversation through it and check what the model can still recall. Add the evaluation module to your tests:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-testing-evaluation-compaction</artifactId>
+    <version>{project-version}</version>
+    <scope>test</scope>
+</dependency>
+----
+
+Record the conversation as JSON lines, one message per line, with an optional ISO-8601 `ts`, and write the recall questions:
+
+[source,json]
+----
+{"role": "system", "text": "You are a support assistant."}
+{"role": "user", "text": "My order number is ORD-4242.", "ts": "2026-01-01T09:00:00Z"}
+{"role": "tool_call", "id": "c1", "name": "orders", "arguments": "{\"id\": \"ORD-4242\"}"}
+{"role": "tool_result", "id": "c1", "name": "orders", "text": "ORD-4242: shipped"}
+{"role": "assistant", "text": "Your order has shipped."}
+----
+
+[source,json]
+----
+[{"question": "What is my order number?", "expected": ["ORD-4242"]}]
+----
+
+Then annotate a method of a `@QuarkusTest`:
+
+[source,java]
+----
+@QuarkusTest
+class SupportCompactionTest {
+
+    @CompactionEvaluation(conversation = "conversations/support.jsonl",
+            questions = "conversations/support.questions.json",
+            profiles = { "default", "claims" }, // empty: every profile
+            repeats = 3, minRecall = 0.8, minSavings = 0.3)
+    void evaluate(CompactionEvaluationReport report) {
+        // optional: more assertions
+    }
+
+    @Inject
+    @ModelName("assistant") // quarkus.langchain4j.assistant.chat-model.provider=...
+    @AnswerModel
+    ChatModel assistant;
+
+    @Inject
+    @ModelName("judge")
+    @JudgeModel
+    ChatModel judge;
+}
+----
+
+For each profile, the conversation is replayed through the profile's chat memory, on a clock that follows the recorded timestamps. Each question is then asked with the compacted view, the full history and no history, always to the same model: the `@AnswerModel` field, or the default chat model.
+The `@JudgeModel` field, or the answering model, grades the compacted answers against the full-history answer, and the full-history answer against the `expected` facts, so a question the model cannot answer even with the full history is visible.
+`@AnswerModel` and `@JudgeModel` only mark the fields: injecting the models is what makes Quarkus create them. Summaries made while replaying use the model of the compaction configuration (`summary.model-name`).
+An answer containing every expected fact is accepted without calling the judge.
+
+The test fails when a profile's recall or prompt-token savings falls below the thresholds. A markdown report, with recall, prompt tokens (one call per recorded assistant message), final context size, compactions and every miss, is written to `target/compaction-evaluation`.
+
+WARNING: Evaluations call real models: the summarizer while replaying, then, for each question and repeat, one answer per profile plus the two baselines, and the judge when the facts are not found verbatim.
+
 == Current limitations
 
 * *Message ages are kept in memory.* After a restart, or when the state of a conversation is evicted, the age of its stored messages is unknown: `time-decay` and `retention.max-age` treat them as recent.

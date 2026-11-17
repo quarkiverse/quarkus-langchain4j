@@ -54,6 +54,44 @@ The token panel of each assistant shows the last compaction (messages and tokens
 questions you asked, the input tokens sent to the model compared with what the full history would have cost. These
 numbers come from the `CompactionReport` CDI event fired by the extension (see `TokenGain`).
 
+## Evaluating the profiles
+
+The UI shows one conversation; `CompactionEvaluationTest` measures the two profiles on two other recorded conversations,
+in `src/test/resources/conversations`: a trip planning session (~9k tokens) and a production incident investigation
+(~13k tokens, with large log and metric outputs). Each comes with recall questions and the facts expected in the
+answers.
+
+```shell
+export QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=<your-openai-api-key>
+mvn test
+```
+
+For each conversation, the test replays it through the `default` and `window` profiles, then asks the questions to the
+assistants' model (`gpt-4.1`) with each compacted view, with the full history and with no history. A separate `judge`
+model grades each compacted answer against the full-history answer:
+
+```java
+@Inject
+@AnswerModel            // the model of the assistants
+ChatModel assistant;
+
+@Inject
+@ModelName("judge")     // %test.quarkus.langchain4j.openai.judge.* in application.properties
+@JudgeModel
+ChatModel judge;
+
+@CompactionEvaluation(conversation = "conversations/incident.jsonl",
+        questions = "conversations/incident.questions.json",
+        profiles = { "default", "window" }, minSavings = 0.25)
+void incident(CompactionEvaluationReport report) {
+    assertTrue(report.recall("window") < report.recall("default"), "window recall");
+}
+```
+
+The reports (recall, prompt tokens and savings, compactions, and every missed answer) are written to
+`target/compaction-evaluation`. The test is skipped when no API key is set; a run makes up to about a hundred model calls (answers, judge
+calls when the expected facts are not found verbatim, and summaries).
+
 ## Things to try
 
 * Lower `quarkus.langchain4j.compaction.budget.context-window` to `5000`: pruning is no longer enough, and the
