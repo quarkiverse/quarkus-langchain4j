@@ -583,9 +583,24 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
             return this;
         }
 
+        /**
+         * The URL set so far, or {@code null}. Meant for {@link StreamableHttpMcpTransportListener}s.
+         */
+        public String getUrl() {
+            return url;
+        }
+
         public QuarkusStreamableHttpMcpTransport.Builder mcpClientName(String mcpClientName) {
             this.mcpClientName = mcpClientName;
             return this;
+        }
+
+        /**
+         * The name of the MCP client the transport belongs to, or {@code null} if none was set. Meant for
+         * {@link StreamableHttpMcpTransportListener}s.
+         */
+        public String getMcpClientName() {
+            return mcpClientName;
         }
 
         public QuarkusStreamableHttpMcpTransport.Builder timeout(Duration timeout) {
@@ -652,6 +667,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         }
 
         public QuarkusStreamableHttpMcpTransport build() {
+            for (StreamableHttpMcpTransportListener listener : StreamableHttpMcpTransportListener.resolve()) {
+                listener.onNewTransport(this);
+            }
             return new QuarkusStreamableHttpMcpTransport(this);
         }
     }

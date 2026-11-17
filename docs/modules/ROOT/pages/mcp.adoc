@@ -653,6 +653,36 @@ NOTE: The two mechanisms can be combined. When both are in play, a client sends 
 headers plus whatever the supplier returns for that particular call; if both name the same header, the value
 returned by the supplier wins.
 
+== Listening for new Streamable HTTP transports
+
+Everything a Streamable HTTP transport is built with can be inspected and changed right before the transport is built,
+by providing a CDI bean that implements the `StreamableHttpMcpTransportListener` interface:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
+import io.quarkiverse.langchain4j.mcp.runtime.http.StreamableHttpMcpTransportListener;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class MyTransportListener implements StreamableHttpMcpTransportListener {
+
+    @Override
+    public void onNewTransport(QuarkusStreamableHttpMcpTransport.Builder builder) {
+        if ("github".equals(builder.getMcpClientName())) {
+            builder.url(builder.getUrl().replace("https://api.example.com", "http://localhost:8089"));
+        }
+    }
+}
+----
+
+Every such bean is notified about every Streamable HTTP transport of the application: those of the MCP clients declared
+in configuration, and those built programmatically using `QuarkusStreamableHttpMcpTransport.Builder`.
+`getMcpClientName()` returns `null` for a programmatically built transport that was not given a client name.
+When there are several listeners, they are notified in the order of their bean priority, highest first.
+
+NOTE: This applies to the Streamable HTTP transport only. The STDIO and WebSocket transports have no such listener.
+
 == Authorization
 
 If your MCP server uses the *Streamable HTTP* transport, it may require client authorization using bearer tokens or API keys.

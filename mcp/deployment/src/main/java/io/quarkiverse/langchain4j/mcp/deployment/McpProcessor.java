@@ -39,6 +39,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
+import io.quarkiverse.langchain4j.mcp.runtime.http.StreamableHttpMcpTransportListener;
 import io.quarkus.arc.deployment.OpenTelemetrySdkBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
@@ -298,6 +299,7 @@ public class McpProcessor {
     public void addMcpAuthProvider(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpClientAuthProvider.class));
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpHeadersSupplier.class));
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(StreamableHttpMcpTransportListener.class));
     }
 
     private static boolean isConfigurableClient(String clientName) {
