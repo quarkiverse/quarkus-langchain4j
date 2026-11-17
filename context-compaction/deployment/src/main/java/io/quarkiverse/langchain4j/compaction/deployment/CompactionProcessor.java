@@ -30,6 +30,7 @@ import io.quarkiverse.langchain4j.compaction.ArchivedToolOutputs;
 import io.quarkiverse.langchain4j.compaction.CompactionInspector;
 import io.quarkiverse.langchain4j.compaction.CompactionProfile;
 import io.quarkiverse.langchain4j.compaction.runtime.ChatMemoryProviderProducer;
+import io.quarkiverse.langchain4j.compaction.runtime.ClockProducer;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionModelsConfig;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionProfileUsage;
 import io.quarkiverse.langchain4j.compaction.runtime.CompactionRecorder;
@@ -127,6 +128,7 @@ class CompactionProcessor {
                         InMemoryToolOutputArchive.class,
                         DefaultSummarizer.class,
                         TokenCounterProducer.class,
+                        ClockProducer.class,
                         // built-in strategies
                         MessageWindowStrategy.class,
                         TokenWindowStrategy.class,
