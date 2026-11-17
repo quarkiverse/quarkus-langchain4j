@@ -40,6 +40,18 @@
             <version>${quarkus-langchain4j.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-testing-evaluation-compaction</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Minimal dependencies to constrain the build -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

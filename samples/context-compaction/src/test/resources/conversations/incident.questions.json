@@ -1,0 +1,34 @@
+[
+  {
+    "question": "What is the incident id and its severity?",
+    "expected": [
+      "INC-20931",
+      "SEV-2"
+    ]
+  },
+  {
+    "question": "Who is the incident commander?",
+    "expected": [
+      "Tomasz Wrona"
+    ]
+  },
+  {
+    "question": "Which commit introduced the problem?",
+    "expected": [
+      "7c0de55"
+    ]
+  },
+  {
+    "question": "What was the maximum number of card vault connections before the faulty release?",
+    "expected": [
+      "128"
+    ]
+  },
+  {
+    "question": "What is the follow-up ticket and who owns it?",
+    "expected": [
+      "PAY-7712",
+      "omar.s"
+    ]
+  }
+]

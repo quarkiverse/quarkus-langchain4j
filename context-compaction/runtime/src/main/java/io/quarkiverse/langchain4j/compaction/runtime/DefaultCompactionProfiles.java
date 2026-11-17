@@ -56,12 +56,13 @@ public class DefaultCompactionProfiles implements CompactionProfiles {
     private final CompactionInspector inspector;
     private final ToolOutputArchive archive;
     private final Event<CompactionReport> events;
+    private final Clock clock;
     private final Map<String, CompactingChatMemoryProvider> providers = new ConcurrentHashMap<>();
 
     @Inject
     public DefaultCompactionProfiles(CompactionConfig config, StrategyFactory factory, ChatMemoryStore store,
             TokenCounter tokenCounter, CompactionInspector inspector, ToolOutputArchive archive,
-            Event<CompactionReport> events, CompactionProfileUsage usage) {
+            Event<CompactionReport> events, CompactionProfileUsage usage, @CompactionClock Clock clock) {
         this.config = config;
         this.factory = factory;
         this.store = store;
@@ -69,6 +70,7 @@ public class DefaultCompactionProfiles implements CompactionProfiles {
         this.inspector = inspector;
         this.archive = archive;
         this.events = events;
+        this.clock = clock;
         provider(CompactionConfig.DEFAULT_PROFILE);
         for (String profile : config.profiles().keySet()) {
             provider(profile);
@@ -164,7 +166,7 @@ public class DefaultCompactionProfiles implements CompactionProfiles {
     }
 
     private ConversationStates states(CompactionConfig.Profile p) {
-        return new ConversationStates(p.state().maxConversations(), p.state().idleTimeout(), Clock.systemUTC(),
+        return new ConversationStates(p.state().maxConversations(), p.state().idleTimeout(), clock,
                 memoryId -> {
                     // the conversation is no longer active: release what is attached to it
                     inspector.remove(memoryId);
@@ -188,7 +190,7 @@ public class DefaultCompactionProfiles implements CompactionProfiles {
             CompactingChatMemory.Components components = new CompactingChatMemory.Components(name, store,
                     p.strategy(), factory.create(p.strategy(), p), budget, tokenCounter, p.enabled(),
                     p.verifyInvariants(), states(p), inspector, snapshots(p), archive, events::fire,
-                    Clock.systemUTC(), new Retention(p.retention().maxMessages(), p.retention().maxAge()));
+                    clock, new Retention(p.retention().maxMessages(), p.retention().maxAge()));
             return new CompactingChatMemoryProvider(components);
         } catch (CompactionException | IllegalArgumentException e) {
             throw new CompactionException(e.getMessage() + " in compaction profile " + name + " (" + prefix + ".*)", e);
