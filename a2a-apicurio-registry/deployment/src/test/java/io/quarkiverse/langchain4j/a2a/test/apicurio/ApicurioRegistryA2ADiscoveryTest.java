@@ -40,7 +40,7 @@ import io.vertx.core.http.HttpServer;
 
 /**
  * Discovery against a real Registry with agents that are actually reachable: a local HTTP server
- * serves a valid Agent Card at /.well-known/agent-card.json, so discovered agents can be built.
+ * serves a valid Agent Card at /.well-known/agent-card.json, which an agent fetches when it is first invoked.
  */
 public class ApicurioRegistryA2ADiscoveryTest {
 

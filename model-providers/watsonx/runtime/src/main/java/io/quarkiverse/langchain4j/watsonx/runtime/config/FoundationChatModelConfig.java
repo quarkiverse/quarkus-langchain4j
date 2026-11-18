@@ -31,30 +31,6 @@ public interface FoundationChatModelConfig extends CommonChatModelConfig {
     Optional<String> guidedRegex();
 
     /**
-     * Sets the length penalty to be applied during text generation. This penalty influences the length of the generated text. A
-     * length penalty
-     * discourages the model from generating overly long responses, or conversely, it can encourage more extended outputs.
-     * <p>
-     * When the penalty value is greater than 1.0, it discourages generating longer responses. Conversely, a value less than 1.0
-     * incentivizes the
-     * model to generate longer text. A value of 1.0 means no penalty, and the length of the output will be determined by other
-     * factors, such as the
-     * input prompt and model's natural completion behavior.
-     */
-    Optional<Double> lengthPenalty();
-
-    /**
-     * Sets the repetition penalty to be applied during text generation. This penalty helps to discourage the model from
-     * repeating the same words or
-     * phrases too often.
-     * <p>
-     * The penalty value should be greater than 1.0 for repetition discouragement. A value of 1.0 means no penalty, and values
-     * above 1.0 increase the
-     * strength of the penalty.
-     */
-    Optional<Double> repetitionPenalty();
-
-    /**
      * Configuration to enable and customize the reasoning part of model responses.
      * <p>
      * The appropriate configuration depends on the model’s output format:

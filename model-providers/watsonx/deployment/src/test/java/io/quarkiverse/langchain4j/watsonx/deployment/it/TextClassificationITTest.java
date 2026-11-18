@@ -83,7 +83,6 @@ public class TextClassificationITTest {
         assertTrue(response.entity().parameters().languages().size() == 1);
         assertNotNull(response.entity().results());
         assertNotNull(response.entity().results().status());
-        assertNotNull(response.entity().results().numberPagesProcessed());
         assertNotNull(response.metadata().id());
         assertNotNull(response.metadata().createdAt());
         assertNotNull(response.metadata().projectId());
@@ -107,7 +106,6 @@ public class TextClassificationITTest {
         assertNotNull(response.entity().results().completedAt());
         assertNotNull(response.entity().results().runningAt());
         assertNotNull(response.entity().results().status());
-        assertNotNull(response.entity().results().numberPagesProcessed());
         assertNotNull(response.metadata().id());
         assertNotNull(response.metadata().createdAt());
         assertNotNull(response.metadata().modifiedAt());
@@ -130,7 +128,6 @@ public class TextClassificationITTest {
         var result = classificationService.uploadClassifyAndFetch(file, parameters);
         assertNull(result.error());
         assertNotNull(result.completedAt());
-        assertNotNull(result.numberPagesProcessed());
         assertNotNull(result.runningAt());
         assertTrue(result.documentClassified());
         assertEquals("Invoice", result.documentType());

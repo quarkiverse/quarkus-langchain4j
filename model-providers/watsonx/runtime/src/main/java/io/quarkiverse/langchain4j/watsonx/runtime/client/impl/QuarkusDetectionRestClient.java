@@ -9,10 +9,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import com.ibm.watsonx.ai.detection.DetectionContextResponse;
+import com.ibm.watsonx.ai.detection.DetectionGeneratedResponse;
 import com.ibm.watsonx.ai.detection.DetectionResponse;
 import com.ibm.watsonx.ai.detection.DetectionRestClient;
 import com.ibm.watsonx.ai.detection.DetectionTextResponse;
 import com.ibm.watsonx.ai.detection.TextDetectionContentDetectors;
+import com.ibm.watsonx.ai.detection.TextDetectionContextDetectors;
+import com.ibm.watsonx.ai.detection.TextDetectionGeneratedDetectors;
 
 import io.quarkiverse.langchain4j.watsonx.runtime.client.DetectionRestApi;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.QuarkusRestClientConfig;
@@ -48,12 +52,37 @@ public final class QuarkusDetectionRestClient extends DetectionRestClient {
     }
 
     @Override
-    public DetectionResponse<DetectionTextResponse> detect(String transactionId, TextDetectionContentDetectors request) {
+    public DetectionResponse<DetectionTextResponse> detect(String transactionId, String serviceInstanceId,
+            TextDetectionContentDetectors request) {
         var requestId = UUID.randomUUID().toString();
         return retryOn(requestId, new Callable<DetectionResponse<DetectionTextResponse>>() {
             @Override
             public DetectionResponse<DetectionTextResponse> call() throws Exception {
-                return client.detect(requestId, transactionId, version, request);
+                return client.detect(requestId, transactionId, serviceInstanceId, version, request);
+            }
+        });
+    }
+
+    @Override
+    public DetectionResponse<DetectionContextResponse> detectContext(String transactionId, String serviceInstanceId,
+            TextDetectionContextDetectors request) {
+        var requestId = UUID.randomUUID().toString();
+        return retryOn(requestId, new Callable<DetectionResponse<DetectionContextResponse>>() {
+            @Override
+            public DetectionResponse<DetectionContextResponse> call() throws Exception {
+                return client.detectContext(requestId, transactionId, serviceInstanceId, version, request);
+            }
+        });
+    }
+
+    @Override
+    public DetectionResponse<DetectionGeneratedResponse> detectGenerated(String transactionId, String serviceInstanceId,
+            TextDetectionGeneratedDetectors request) {
+        var requestId = UUID.randomUUID().toString();
+        return retryOn(requestId, new Callable<DetectionResponse<DetectionGeneratedResponse>>() {
+            @Override
+            public DetectionResponse<DetectionGeneratedResponse> call() throws Exception {
+                return client.detectGenerated(requestId, transactionId, serviceInstanceId, version, request);
             }
         });
     }

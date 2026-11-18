@@ -266,6 +266,12 @@ public class GoogleGenAiRecorder {
         if (config.baseUrl().isPresent()) {
             httpOptions.baseUrl(config.baseUrl().get());
         }
+        if (!config.vertexAi()) {
+            // The GenAI SDK 2.x defaults to "v1" on the Gemini Developer API, while 1.x used "v1beta".
+            // Keep "v1beta", as LangChain4j does for the clients it builds itself: some features and
+            // models are only available there.
+            httpOptions.apiVersion("v1beta");
+        }
 
         Client.Builder clientBuilder = Client.builder()
                 .httpOptions(httpOptions.build())

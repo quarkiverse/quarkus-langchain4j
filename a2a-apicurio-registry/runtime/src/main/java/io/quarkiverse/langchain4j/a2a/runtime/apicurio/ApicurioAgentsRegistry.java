@@ -131,7 +131,8 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
                         // whole argument map.
                         String[] inputKeys = resolveInputKeys(artifact);
 
-                        byQualifiedKey.put(qualifiedKey, new Candidate(name, agentUrl, inputKeys));
+                        byQualifiedKey.put(qualifiedKey,
+                                new Candidate(name, artifact.getDescription(), agentUrl, inputKeys));
                         qualifiedKeysByName.computeIfAbsent(name, k -> new ArrayList<>()).add(qualifiedKey);
                     } catch (Exception e) {
                         log.warnf(e, "Failed to resolve A2A agent from artifact %s/%s",
@@ -220,7 +221,12 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
 
     private void registerAgent(Map<String, AgentInstance> discovered, String registrationKey, Candidate candidate) {
         try {
+            // The agent card is fetched from the agent itself only when it is first needed. With the name and
+            // the description the registry knows, describing a discovered agent, for example to a supervisor,
+            // does not need it, so an agent that cannot be reached is discovered too and fails when invoked.
             AgentInstance agent = (AgentInstance) AgenticServices.a2aBuilder(candidate.agentUrl())
+                    .name(registrationKey)
+                    .description(candidate.description())
                     .inputKeys(candidate.inputKeys())
                     .outputKey(registrationKey)
                     .build();
@@ -313,7 +319,7 @@ public class ApicurioAgentsRegistry implements AgentsRegistry {
         return value != null ? value.toString() : null;
     }
 
-    private record Candidate(String name, String agentUrl, String[] inputKeys) {
+    private record Candidate(String name, String description, String agentUrl, String[] inputKeys) {
     }
 
     private record Discovery(Map<String, AgentInstance> agents, Map<String, List<String>> ambiguousNames) {

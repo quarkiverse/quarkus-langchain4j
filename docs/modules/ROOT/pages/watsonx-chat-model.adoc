@@ -181,8 +181,8 @@ quarkus.langchain4j.watsonx.gateway-chat-model.user=user-1234
 quarkus.langchain4j.watsonx.gateway-chat-model.metadata.my-key=my-value
 ----
 
-NOTE: The foundation-model only parameters (`guided-choice`, `guided-grammar`, `guided-regex`,
-`length-penalty`, `repetition-penalty` and `thinking`) are not supported by the Model Gateway and are
+NOTE: The foundation-model only parameters (`guided-choice`, `guided-grammar`, `guided-regex` and
+`thinking`) are not supported by the Model Gateway and are
 therefore not available under `quarkus.langchain4j.watsonx.gateway-chat-model`.
 
 ==== Overriding the routing options per request
