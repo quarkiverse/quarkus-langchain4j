@@ -19,6 +19,7 @@ import jakarta.enterprise.context.control.ActivateRequestContext;
 
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agentic.agent.AgentUnavailableException;
 import dev.langchain4j.agentic.observability.AgentInvocation;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.HtmlReportGenerator;
@@ -180,8 +181,9 @@ public class AgenticJsonRpcService {
             node.put("typeName", agent.type().getSimpleName());
             node.put("className", agent.type().getName());
         }
-        if (agent.description() != null && !agent.description().isEmpty()) {
-            node.put("description", agent.description());
+        String description = description(agent);
+        if (description != null && !description.isEmpty()) {
+            node.put("description", description);
         }
         if (agent.outputType() != null) {
             node.put("outputType", simpleTypeName(agent.outputType()));
@@ -380,6 +382,18 @@ public class AgenticJsonRpcService {
         @Override
         public int compare(JsonObject first, JsonObject second) {
             return first.getString("typeName").compareTo(second.getString("typeName"));
+        }
+    }
+
+    /**
+     * The description of a remote agent, like an A2A or MCP one whose server is down, may be unavailable: it is
+     * reported for that agent only, as the LangChain4j report does, instead of failing the whole topology.
+     */
+    private static String description(AgentInstance agent) {
+        try {
+            return agent.description();
+        } catch (AgentUnavailableException e) {
+            return "unavailable: " + e.getMessage();
         }
     }
 
