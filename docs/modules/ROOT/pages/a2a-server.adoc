@@ -1,0 +1,122 @@
+= Agent2Agent (A2A) Server
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-a2a-server
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The https://a2a-protocol.org/latest/specification/[Agent2Agent (A2A) protocol] is an open standard that lets independent AI agents discover each other and collaborate as peers.
+Where MCP connects an agent to _tools_, A2A connects an agent to _other agents_.
+
+This extension exposes a Quarkus LangChain4j AI Service as an A2A agent: it publishes an Agent Card describing what the agent can do.
+
+[IMPORTANT]
+====
+This extension implements version `1.0` of the A2A protocol.
+It is experimental: the annotations and configuration properties described here may still change.
+====
+
+[NOTE]
+====
+This page is about the A2A *server* side: making your agent reachable by others.
+To *consume* a remote A2A agent, use the `@A2AClientAgent` annotation of the xref:agentic.adoc[agentic module], adding `dev.langchain4j:langchain4j-agentic-a2a` to your application yourself.
+====
+
+== Adding the extension
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-a2a-server</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+The extension brings the JSON-RPC transport, which is the one A2A clients are most likely to support.
+
+== Exposing an AI Service
+
+Annotate an AI Service with `@ExposeA2AAgent` and describe the skills it offers:
+
+[source,java]
+----
+@RegisterAiService
+@ExposeA2AAgent(skills = @ExposeA2AAgent.Skill(
+        id = "weather_search",
+        name = "Search weather",
+        description = "Answers questions about the weather in a city or state",
+        tags = "weather",
+        examples = "weather in LA, CA"))
+public interface WeatherAgent {
+
+    @SystemMessage("You are a specialized weather forecast assistant.")
+    String chat(@UserMessage String question);
+}
+----
+
+That is all that is required. At build time the extension produces the Agent Card served at `/.well-known/agent-card.json`:
+
+[source,json]
+----
+{
+  "name": "weather-app",
+  "description": "",
+  "version": "1.0.0",
+  "capabilities": { "streaming": false, "pushNotifications": false, "extendedAgentCard": false },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": [
+    {
+      "id": "weather_search",
+      "name": "Search weather",
+      "description": "Answers questions about the weather in a city or state",
+      "tags": ["weather"],
+      "examples": ["weather in LA, CA"]
+    }
+  ],
+  "supportedInterfaces": [
+    { "protocolBinding": "JSONRPC", "url": "http://localhost:8080", "protocolVersion": "1.0" }
+  ]
+}
+----
+
+[TIP]
+====
+Every skill must declare at least one tag, since the A2A specification requires it, and the build fails with a clear message if one is missing.
+====
+
+== Describing the agent
+
+The identity of the agent belongs to the application, not to any single class, so it is configured rather than annotated:
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.server.name=Weather Agent
+quarkus.langchain4j.a2a.server.description=Answers questions about the weather
+quarkus.langchain4j.a2a.server.version=1.0.0
+----
+
+When `name` is not set it falls back to `quarkus.application.name`.
+
+The URL advertised on the card is derived from the address the HTTP server actually bound to, preferring HTTPS when both are enabled.
+Outside dev and test mode Quarkus binds to the wildcard address, which names no host a client can dial, so the card carries the address the host's own name resolves to in its place.
+That is not always one other machines can reach: some Linux distributions resolve the host name to a loopback address such as `127.0.1.1`, and behind a reverse proxy or an ingress the address is not the one clients should use. Declare the public one in those cases:
+
+[source,properties]
+----
+quarkus.langchain4j.a2a.server.url=https://agents.example.com
+----
+
+== Supported method signatures
+
+The exposed type must be an AI Service interface with exactly one abstract method.
+The method has to return the agent's answer itself as a `String`, so a `void` method fails the build, and so does one returning any other type, `Multi`, `Uni`, `CompletionStage`, `Future`, `TokenStream` and `Result` included.
+
+== Current limitations
+
+- *The Agent Card declares no security schemes*, so a client learns that the endpoints are protected only when its requests are refused.
+- *Agent Card signing* is not performed. The specification describes JWS signatures in https://a2a-protocol.org/latest/specification/#84-agent-card-signing[section 8.4]; the SDK models the field but does not sign or verify.
+
+== Configuration reference
+
+include::includes/quarkus-langchain4j-a2a-server.adoc[leveloffset=+1,opts=optional]
