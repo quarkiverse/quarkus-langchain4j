@@ -4,7 +4,7 @@
   },
   "devDependencies": {
     "@antora/cli": "3.1.10",
-    "@antora/site-generator": "3.1.10"
+    "@antora/site-generator": "3.2.2"
   },
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^11.6.0",
