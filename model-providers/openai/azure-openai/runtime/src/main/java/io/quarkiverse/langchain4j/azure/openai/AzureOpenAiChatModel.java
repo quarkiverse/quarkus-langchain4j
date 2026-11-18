@@ -162,6 +162,11 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .frequencyPenalty(frequencyPenalty)
                 .responseFormat(responseFormat);
 
+        if (usesV1Endpoint()) {
+            // v1 endpoints have no deployment in the URL, so the deployment is selected through the model
+            requestBuilder.model(modelName);
+        }
+
         if (toolSpecifications != null && !toolSpecifications.isEmpty()) {
             if (supportsTools()) {
                 requestBuilder.tools(toTools(toolSpecifications, false));
@@ -264,14 +269,22 @@ public class AzureOpenAiChatModel implements ChatModel {
      * Returns {@code true} if the configured Azure API version supports the {@code tools} parameter.
      * The {@code tools} parameter was introduced in Azure API version {@code 2023-12-01-preview}.
      * Older API versions only support the deprecated {@code functions} parameter.
+     * The unversioned v1 endpoints always support {@code tools}.
      */
     private boolean supportsTools() {
-        if (apiVersion == null) {
-            return false;
+        if (usesV1Endpoint()) {
+            return true;
         }
         // Strip any suffix like "-preview" for comparison, e.g. "2023-12-01-preview" -> "2023-12-01"
         String normalized = apiVersion.length() > 10 ? apiVersion.substring(0, 10) : apiVersion;
         return normalized.compareTo(TOOLS_MIN_API_VERSION) >= 0;
+    }
+
+    /**
+     * The v1 endpoints are not versioned, so a model built without an API version targets them.
+     */
+    private boolean usesV1Endpoint() {
+        return apiVersion == null;
     }
 
     public static Builder builder() {

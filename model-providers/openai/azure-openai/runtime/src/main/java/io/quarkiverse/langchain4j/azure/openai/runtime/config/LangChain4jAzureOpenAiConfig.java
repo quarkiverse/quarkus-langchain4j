@@ -77,9 +77,29 @@ public interface LangChain4jAzureOpenAiConfig {
          * and {@code quarkus.langchain4j.azure-openai.deployment-name} are required.
          * In this case the endpoint will be set to
          * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.${quarkus.langchain4j.azure-openai.domain-name}/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-name}}
+         * or, when {@code quarkus.langchain4j.azure-openai.endpoint-style} is {@code v1}, to
+         * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.${quarkus.langchain4j.azure-openai.domain-name}/openai/v1}
          * </p>
          */
         Optional<String> endpoint();
+
+        /**
+         * The style of Azure OpenAI endpoint used by the chat and embedding models.
+         * <p>
+         * {@code deployment} uses the classic deployment-based endpoints
+         * ({@code .../openai/deployments/{deployment-name}}) together with the {@code api-version} query parameter.
+         * </p>
+         * <p>
+         * {@code v1} uses the {@code .../openai/v1} endpoints: no {@code api-version} is sent, and the deployment name
+         * is passed as the {@code model} of each request, so {@code deployment-name} is required.
+         * If {@code endpoint} is set explicitly, it must point to the {@code v1} base URL (ending in {@code /openai/v1}).
+         * </p>
+         * <p>
+         * Image and audio transcription models always use the deployment-based endpoints.
+         * </p>
+         */
+        @WithDefault("deployment")
+        EndpointStyle endpointStyle();
 
         /**
          * The Azure AD token to use for this operation.
@@ -255,6 +275,17 @@ public interface LangChain4jAzureOpenAiConfig {
             EMBEDDING,
             IMAGE,
             AUDIO_TRANSCRIPTION
+        }
+
+        enum EndpointStyle {
+            /**
+             * Classic deployment-based endpoints, versioned with the {@code api-version} query parameter.
+             */
+            DEPLOYMENT,
+            /**
+             * The {@code /openai/v1} endpoints, which take no {@code api-version}.
+             */
+            V1
         }
     }
 }
