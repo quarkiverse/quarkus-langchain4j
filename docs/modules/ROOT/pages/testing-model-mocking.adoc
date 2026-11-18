@@ -10,6 +10,8 @@ Unlike xref:testing.adoc[model evaluation], these tests do not measure the quali
 
 The extension is strictly opt-in: adding the dependency changes nothing until you enable it.
 
+TIP: The https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/mock-model-api[Mock Model API sample] is a complete application whose tests script replies, tool calls, structured output and errors against the mock, and which runs in dev mode without an API key.
+
 == Dependency
 
 Add the extension in `test` scope. The same artifact carries the test API, the ready-made `MockModelApiTestProfile` and the automatic reset of the mock before each `@QuarkusTest` method, which is active whenever `quarkus-junit` is on the classpath:
