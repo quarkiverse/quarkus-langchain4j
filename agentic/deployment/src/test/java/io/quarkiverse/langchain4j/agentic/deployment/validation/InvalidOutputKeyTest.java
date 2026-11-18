@@ -23,7 +23,8 @@ public class InvalidOutputKeyTest {
                     () -> ShrinkWrap.create(JavaArchive.class))
             .assertException(
                     throwable -> Assertions.assertThat(throwable).isInstanceOf(IllegalConfigurationException.class)
-                            .hasMessageContaining("No agent provides an output key named"));
+                            .hasMessageContaining("No agent provides an output key named 'story'")
+                            .hasMessageContaining("of method 'editStory'"));
 
     @Test
     public void test() {
