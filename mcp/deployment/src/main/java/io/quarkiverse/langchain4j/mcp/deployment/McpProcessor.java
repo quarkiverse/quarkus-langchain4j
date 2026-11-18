@@ -11,15 +11,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
+import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
@@ -35,6 +39,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRegistryClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpResourceUpdatedEvent;
+import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
@@ -42,6 +47,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkus.arc.deployment.OpenTelemetrySdkBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -69,6 +75,7 @@ public class McpProcessor {
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
     private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
     private static final DotName MCP_RESOURCE_UPDATED_EVENT = DotName.createSimple(McpResourceUpdatedEvent.class);
+    private static final DotName MCP_TOOL_BOX = DotName.createSimple(McpToolBox.class);
     private static final DotName OBSERVES = DotName.createSimple("jakarta.enterprise.event.Observes");
     private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client", "tracing",
             "apicurio-registry");
@@ -277,6 +284,55 @@ public class McpProcessor {
     public void indexMcpClientDependency(BuildProducer<IndexDependencyBuildItem> index) {
         // this is needed for the 'reflectionRegistrations' build step to work
         index.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-mcp"));
+    }
+
+    /**
+     * Fails the build when a {@link McpToolBox} names an MCP client that is not configured at all.
+     * Without this check such a name silently resolves to no client: the generated {@code ToolProvider}
+     * logs a {@code NullPointerException} wrapped in "Failed to retrieve tools from MCP server" and the AI
+     * service runs without the tools the user asked for. The set of clients is fixed at build time
+     * (the {@code quarkus.langchain4j.mcp.<name>} sections plus the Claude Desktop config file), so the
+     * mistake can be reported precisely. Disabled clients still count as known, because disabling one per
+     * profile is legitimate and must not break the build.
+     */
+    @BuildStep
+    public void validateMcpToolBoxClientNames(McpBuildTimeConfiguration mcpBuildTimeConfiguration,
+            Optional<McpConfigFileContentsBuildItem> maybeMcpConfigFileContents,
+            CombinedIndexBuildItem combinedIndex,
+            BuildProducer<ValidationErrorBuildItem> validationErrors) {
+        if (!mcpBuildTimeConfiguration.enabled()
+                || !mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
+            // a custom ToolProvider is free to interpret the names however it likes
+            return;
+        }
+        Set<String> knownClients = new TreeSet<>();
+        Map<String, McpClientBuildTimeConfig> configuredClients = mcpBuildTimeConfiguration.clients();
+        if (configuredClients != null) {
+            for (String name : configuredClients.keySet()) {
+                if (isConfigurableClient(name)) {
+                    knownClients.add(name);
+                }
+            }
+        }
+        if (maybeMcpConfigFileContents.isPresent()) {
+            knownClients.addAll(maybeMcpConfigFileContents.get().getContents().keySet());
+        }
+        for (AnnotationInstance instance : combinedIndex.getIndex().getAnnotations(MCP_TOOL_BOX)) {
+            AnnotationValue value = instance.value();
+            if (value == null || instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                continue;
+            }
+            MethodInfo method = instance.target().asMethod();
+            for (String name : value.asStringArray()) {
+                if (!knownClients.contains(name)) {
+                    validationErrors.produce(new ValidationErrorBuildItem(new IllegalStateException(
+                            "@McpToolBox on method '" + method.declaringClass().name() + "#" + method.name()
+                                    + "' refers to the MCP client '" + name
+                                    + "', but no such client is configured. Configured MCP clients: " + knownClients
+                                    + ". Check the 'quarkus.langchain4j.mcp." + name + ".*' configuration.")));
+                }
+            }
+        }
     }
 
     @BuildStep
