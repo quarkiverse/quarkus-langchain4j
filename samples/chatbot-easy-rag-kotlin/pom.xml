@@ -23,8 +23,6 @@
     <kotest.version>5.9.1</kotest.version>
     <kotlinx-datetime.version>0.7.1</kotlinx-datetime.version>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
-    <!-- FIXME: tests are getting stuck -->
-    <skipTests>true</skipTests>
   </properties>
 
   <dependencyManagement>
