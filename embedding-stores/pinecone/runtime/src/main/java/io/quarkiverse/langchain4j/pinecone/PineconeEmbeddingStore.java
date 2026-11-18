@@ -159,6 +159,12 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
 
     @Override
     public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
+        if (request.filter() != null) {
+            throw new UnsupportedOperationException(
+                    "The Pinecone embedding store does not support metadata filtering. The search request carried a "
+                            + "filter that the store cannot apply, and silently returning unfiltered results would "
+                            + "bypass the filter instead of honoring it.");
+        }
         indexExists.get();
         QueryRequest queryRequest = new QueryRequest(namespace, (long) request.maxResults(), true, true,
                 request.queryEmbedding().vector());
