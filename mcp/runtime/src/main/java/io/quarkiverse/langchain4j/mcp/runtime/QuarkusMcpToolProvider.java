@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,9 +47,15 @@ public class QuarkusMcpToolProvider extends McpToolProvider {
                 // limit the request to only these clients
                 // use the nameToClient map, avoid calling .key() on the client itself
                 // because that may unnecessarily trigger an initialization of it
-                List<McpClient> allowedClients = quarkusRequest.getMcpClientNames().stream()
-                        .map(nameToClient::get)
-                        .toList();
+                List<McpClient> allowedClients = new ArrayList<>();
+                for (String mcpClientName : quarkusRequest.getMcpClientNames()) {
+                    McpClient client = nameToClient.get(mcpClientName);
+                    // a configured-but-disabled client has no bean and must simply contribute no tools;
+                    // names that are not configured at all are rejected at build time by McpProcessor
+                    if (client != null) {
+                        allowedClients.add(client);
+                    }
+                }
                 return provideTools(request, AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE, allowedClients);
             }
         } else {
