@@ -318,6 +318,42 @@ quarkus.otel.exporter.otlp.headers=<opik_otlp_headers>
 
 Run the same AI service example shown above and verify traces in your Opik project.
 
+=== Future AGI
+
+You can also send Quarkus LangChain4j traces to Future AGI via OpenTelemetry. The https://docs.futureagi.com/docs/integrations/traceai/java/quarkus-langchain4j[Future AGI guide for Quarkus LangChain4j] has a complete example and the privacy settings.
+
+==== Step 1: Enable OpenTelemetry in Quarkus LangChain4j
+
+Use the same setup as in the Langfuse section:
+
+* Add the `quarkus-opentelemetry` dependency
+* Set `quarkus.otel.exporter.otlp.traces.protocol=http/protobuf`
+* Optionally enable prompt, completion and tool content via `quarkus.langchain4j.tracing.*` (all off by default)
+
+==== Step 2: Configure the Future AGI OTLP endpoint and headers
+
+Quarkus appends `/v1/traces` to the endpoint, so the value stops at `/tracer`. Both the `X-Api-Key` and `X-Secret-Key` headers are required, and `project_name` must be a resource attribute. With `FI_API_KEY`, `FI_SECRET_KEY` and `FI_PROJECT_NAME` set in your environment:
+
+[source,bash]
+----
+export QUARKUS_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://api.futureagi.com/tracer
+export QUARKUS_OTEL_EXPORTER_OTLP_TRACES_HEADERS="X-Api-Key=${FI_API_KEY},X-Secret-Key=${FI_SECRET_KEY}"
+export QUARKUS_OTEL_RESOURCE_ATTRIBUTES="project_name=${FI_PROJECT_NAME},project_type=observe"
+----
+
+Or configure in `application.properties`:
+
+[source,properties]
+----
+quarkus.otel.exporter.otlp.traces.endpoint=https://api.futureagi.com/tracer
+quarkus.otel.exporter.otlp.traces.headers=X-Api-Key=${FI_API_KEY},X-Secret-Key=${FI_SECRET_KEY}
+quarkus.otel.resource.attributes=project_name=${FI_PROJECT_NAME},project_type=observe
+----
+
+==== Step 3: Run a test AI operation
+
+Run the same AI service example shown above and open your project in Future AGI Observe.
+
 == Auditing
 
 :langchain4j-observability-url: https://docs.langchain4j.dev/tutorials/observability
