@@ -3436,7 +3436,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Enable Anthropic's Tool Search Tool for on-demand tool discovery. When enabled, this automatically adds the tool search server tool, sets the required beta header, and enables the "defer_loading" tool metadata key. Tools annotated with `@Tool(metadata = "++{\++"defer_loading++\++": true`")++}++ will be discovered on demand instead of loaded upfront.
+Enable Anthropic's Tool Search Tool for on-demand tool discovery. When enabled, this automatically adds the tool search server tool, sets the required beta header, and enables the "defer_loading" tool metadata key. Tools annotated with `@Tool(metadata = "++{\++"defer_loading++\++": true++}++")` will be discovered on demand instead of loaded upfront.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -3480,7 +3480,7 @@ endif::add-copy-button-to-config-props[]
 --
 Enable Anthropic's Programmatic Tool Calling via the Code Execution server tool. When enabled, this automatically adds the code execution server tool, the `"allowed_callers"` key is sent with tool definitions, and the required beta header is set. Claude can orchestrate multiple tool calls from within generated Python code, keeping intermediate results out of the context window rather than accumulating them in the conversation, significantly reducing token consumption.
 
-Tools that should be callable from code must include: `@Tool(metadata = "++{\++"allowed_callers++\++": ++[\++"code_execution_20250825++\++"++]++`")++}++
+Tools that should be callable from code must include: `@Tool(metadata = "++{\++"allowed_callers++\++": ++[\++"code_execution_20250825++\++"++]}++")`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -3503,7 +3503,7 @@ endif::add-copy-button-to-config-props[]
 --
 Enable Anthropic's Tool Use Examples feature. When enabled, the `"input_examples"` key is sent with tool definitions, and the required beta header is set. Providing concrete input examples alongside tool schemas helps Claude learn correct parameter usage, formats, and conventions that cannot be expressed in JSON Schema alone.
 
-Tools with examples must include: `@Tool(metadata = "++{\++"input_examples++\++": ++[{++...`, ...++]}++")++}++
+Tools with examples must include: `@Tool(metadata = "++{\++"input_examples++\++": ++[{++...++}++, ...++]}++")`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -4157,7 +4157,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Enable Anthropic's Tool Search Tool for on-demand tool discovery. When enabled, this automatically adds the tool search server tool, sets the required beta header, and enables the "defer_loading" tool metadata key. Tools annotated with `@Tool(metadata = "++{\++"defer_loading++\++": true`")++}++ will be discovered on demand instead of loaded upfront.
+Enable Anthropic's Tool Search Tool for on-demand tool discovery. When enabled, this automatically adds the tool search server tool, sets the required beta header, and enables the "defer_loading" tool metadata key. Tools annotated with `@Tool(metadata = "++{\++"defer_loading++\++": true++}++")` will be discovered on demand instead of loaded upfront.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -4201,7 +4201,7 @@ endif::add-copy-button-to-config-props[]
 --
 Enable Anthropic's Programmatic Tool Calling via the Code Execution server tool. When enabled, this automatically adds the code execution server tool, the `"allowed_callers"` key is sent with tool definitions, and the required beta header is set. Claude can orchestrate multiple tool calls from within generated Python code, keeping intermediate results out of the context window rather than accumulating them in the conversation, significantly reducing token consumption.
 
-Tools that should be callable from code must include: `@Tool(metadata = "++{\++"allowed_callers++\++": ++[\++"code_execution_20250825++\++"++]++`")++}++
+Tools that should be callable from code must include: `@Tool(metadata = "++{\++"allowed_callers++\++": ++[\++"code_execution_20250825++\++"++]}++")`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -4224,7 +4224,7 @@ endif::add-copy-button-to-config-props[]
 --
 Enable Anthropic's Tool Use Examples feature. When enabled, the `"input_examples"` key is sent with tool definitions, and the required beta header is set. Providing concrete input examples alongside tool schemas helps Claude learn correct parameter usage, formats, and conventions that cannot be expressed in JSON Schema alone.
 
-Tools with examples must include: `@Tool(metadata = "++{\++"input_examples++\++": ++[{++...`, ...++]}++")++}++
+Tools with examples must include: `@Tool(metadata = "++{\++"input_examples++\++": ++[{++...++}++, ...++]}++")`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -4427,7 +4427,7 @@ endif::add-copy-button-to-config-props[]
 --
 The endpoint for the Azure OpenAI resource.
 
-If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++
+If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name++}++.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}++`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -5883,7 +5883,7 @@ endif::add-copy-button-to-config-props[]
 --
 The endpoint for the Azure OpenAI resource.
 
-If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++
+If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name++}++.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}++`
 
 
 ifdef::add-copy-button-to-env-var[]

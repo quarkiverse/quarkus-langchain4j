@@ -191,7 +191,7 @@ endif::add-copy-button-to-config-props[]
 --
 The endpoint for the Azure OpenAI resource.
 
-If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++
+If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name++}++.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}++`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1647,7 +1647,7 @@ endif::add-copy-button-to-config-props[]
 --
 The endpoint for the Azure OpenAI resource.
 
-If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name`.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}}++
+If not specified, then `quarkus.langchain4j.azure-openai.resource-name`, `quarkus.langchain4j.azure-openai.domain-name` (defaults to "openai.azure.com") and `quarkus.langchain4j.azure-openai.deployment-name` are required. In this case the endpoint will be set to `https://$++{++quarkus.langchain4j.azure-openai.resource-name++}++.$++{++quarkus.langchain4j.azure-openai.domain-name++}++/openai/deployments/$++{++quarkus.langchain4j.azure-openai.deployment-name++}++`
 
 
 ifdef::add-copy-button-to-env-var[]
