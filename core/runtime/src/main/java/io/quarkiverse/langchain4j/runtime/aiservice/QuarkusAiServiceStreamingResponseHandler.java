@@ -26,6 +26,8 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.internal.CurrentInvocation;
+import dev.langchain4j.internal.HandlerWithoutInvocation;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationEnd;
 import dev.langchain4j.model.StreamingResponseHandler;
@@ -601,7 +603,12 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             cancelled, toolCallingRoundTripsLeft);
 
                     fireRequestIssuedEvent(chatRequest);
-                    effectiveStreamingChatModel.chat(chatRequest, handler);
+                    CurrentInvocation.runWith(invocationContext, new Runnable() {
+                        @Override
+                        public void run() {
+                            effectiveStreamingChatModel.chat(chatRequest, HandlerWithoutInvocation.wrap(handler));
+                        }
+                    });
                 }
             }, context.executeToolsConcurrently && aiMessage.toolExecutionRequests().size() > 1);
         } else {
