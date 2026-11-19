@@ -154,6 +154,11 @@ final class MessageMapper {
         if (parameters == null) {
             return Tool.Function.Parameters.empty();
         }
+        if (parameters.definitions() != null && !parameters.definitions().isEmpty()) {
+            // A recursive parameter type refers to its definitions with $ref, so send them along.
+            return Tool.Function.Parameters.objectType(JsonSchemaElementUtils.toMap(parameters.properties()),
+                    parameters.required(), JsonSchemaElementUtils.toMap(parameters.definitions()));
+        }
         return Tool.Function.Parameters.objectType(JsonSchemaElementUtils.toMap(parameters.properties()),
                 parameters.required());
     }

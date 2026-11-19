@@ -204,7 +204,14 @@ public final class ContentMapper {
     }
 
     private static FunctionDeclaration toFunctionDeclaration(ToolSpecification toolSpecification) {
-        FunctionDeclaration.Parameters functionParameters = toFunctionParameters(toolSpecification.parameters());
+        JsonObjectSchema parameters = toolSpecification.parameters();
+        if (parameters != null && !SchemaMapper.isSupported(parameters)) {
+            // A recursive or polymorphic parameter type needs $defs, $ref or anyOf, which the OpenAPI
+            // `parameters` schema can't express; send the full JSON schema instead, as for response schemas.
+            return new FunctionDeclaration(toolSpecification.name(), toolSpecification.description(), null,
+                    JsonSchemaElementUtils.toMap(parameters));
+        }
+        FunctionDeclaration.Parameters functionParameters = toFunctionParameters(parameters);
 
         return new FunctionDeclaration(toolSpecification.name(), toolSpecification.description(), functionParameters);
     }
