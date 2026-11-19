@@ -13,6 +13,7 @@ import org.beehive.jitllm.api.LocalModel;
 import org.beehive.jitllm.api.LocalModels;
 import org.beehive.jitllm.api.ModelCapabilities;
 import org.beehive.jitllm.api.ModelOptions;
+import org.beehive.jitllm.api.ReasoningEffort;
 import org.beehive.jitllm.api.SessionOptions;
 import org.beehive.jitllm.api.TextGenerationModel;
 import org.beehive.jitllm.api.ThinkingMode;
@@ -52,6 +53,7 @@ public class JitLLMModelHolder implements AutoCloseable {
     final boolean withPrefillDecode;
     final int prefillBatchSize;
     final boolean enableThinking;
+    final ReasoningEffort reasoningEffort;
     private final String deviceMemory;
 
     // force happens-before relationship between initialization and usage
@@ -83,6 +85,7 @@ public class JitLLMModelHolder implements AutoCloseable {
             Boolean withPrefillDecode,
             Integer prefillBatchSize,
             Boolean enableThinking,
+            ReasoningEffort reasoningEffort,
             String deviceMemory) {
         DefaultConfig defaultConfig = defaultConfigForModel(modelName);
         this.modelCachePath = modelCachePath;
@@ -96,6 +99,7 @@ public class JitLLMModelHolder implements AutoCloseable {
         this.withPrefillDecode = getOrDefault(withPrefillDecode, Boolean.FALSE);
         this.prefillBatchSize = getOrDefault(prefillBatchSize, 1);
         this.enableThinking = getOrDefault(enableThinking, Boolean.FALSE);
+        this.reasoningEffort = getOrDefault(reasoningEffort, ReasoningEffort.DEFAULT);
         this.deviceMemory = getOrDefault(deviceMemory, "4GB");
     }
 
@@ -134,6 +138,7 @@ public class JitLLMModelHolder implements AutoCloseable {
                     + ", withPrefillDecode=" + withPrefillDecode
                     + ", prefillBatchSize=" + prefillBatchSize
                     + ", enableThinking=" + enableThinking
+                    + ", reasoningEffort=" + reasoningEffort
                     + ", deviceMemory=" + deviceMemory + "}...");
 
             ModelOptions.Builder options = ModelOptions.builder()
@@ -157,8 +162,10 @@ public class JitLLMModelHolder implements AutoCloseable {
             this.session = openSession((TextGenerationModel) model);
 
             initialized = true;
-            LOG.infof("JitLLM model initialization complete! (%s: toolCalling=%s, thinkingControl=%s)",
-                    model.info().name(), capabilities().toolCalling(), capabilities().thinkingControl());
+            LOG.infof("JitLLM model initialization complete! (%s: toolCalling=%s, thinkingControl=%s,"
+                    + " reasoningEffortControl=%s)",
+                    model.info().name(), capabilities().toolCalling(), capabilities().thinkingControl(),
+                    capabilities().reasoningEffortControl());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (InterruptedException e) {
@@ -197,9 +204,10 @@ public class JitLLMModelHolder implements AutoCloseable {
      */
     private GenerationSession openSession(TextGenerationModel generation) {
         ThinkingMode requested = enableThinking ? ThinkingMode.ENABLED : ThinkingMode.DISABLED;
+        ReasoningEffort effort = effectiveReasoningEffort(model.info().capabilities());
         try {
             GenerationSession opened = generation.newSession(
-                    SessionOptions.builder().thinkingMode(requested).build());
+                    SessionOptions.builder().thinkingMode(requested).reasoningEffort(effort).build());
             this.resolvedThinkingMode = requested;
             return opened;
         } catch (IllegalArgumentException notControllable) {
@@ -208,6 +216,33 @@ public class JitLLMModelHolder implements AutoCloseable {
             this.resolvedThinkingMode = ThinkingMode.DEFAULT;
             return generation.newSession();
         }
+    }
+
+    /**
+     * The configured {@code reasoning-effort}, or {@link ReasoningEffort#DEFAULT} where it cannot
+     * apply.
+     *
+     * <p>
+     * The engine rejects an explicit effort on a family whose template has no effort control, and
+     * one asked for with thinking disabled, since there is then no reasoning phase to apply it to.
+     * Like {@code enable-thinking} on a family without a reasoning phase, the property is a no-op
+     * there rather than a startup failure, and says so in the log.
+     */
+    ReasoningEffort effectiveReasoningEffort(ModelCapabilities capabilities) {
+        if (!reasoningEffort.isExplicit()) {
+            return ReasoningEffort.DEFAULT;
+        }
+        if (!capabilities.reasoningEffortControl()) {
+            LOG.warnf("reasoning-effort=%s has no effect: the model '%s' has no reasoning-effort control.",
+                    reasoningEffort, modelName);
+            return ReasoningEffort.DEFAULT;
+        }
+        if (!enableThinking) {
+            LOG.warnf("reasoning-effort=%s has no effect: enable-thinking is false, so the model does not reason.",
+                    reasoningEffort);
+            return ReasoningEffort.DEFAULT;
+        }
+        return reasoningEffort;
     }
 
     /**

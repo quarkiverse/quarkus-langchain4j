@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
+import org.beehive.jitllm.api.ReasoningEffort;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -112,6 +113,7 @@ public class JitLLMChatModel extends JitLLMBaseModel implements ChatModel {
         private Boolean withPrefillDecode;
         private Integer prefillBatchSize;
         private Boolean enableThinking;
+        private ReasoningEffort reasoningEffort;
         private String deviceMemory;
 
         public Builder() {
@@ -178,6 +180,11 @@ public class JitLLMChatModel extends JitLLMBaseModel implements ChatModel {
             return this;
         }
 
+        public Builder reasoningEffort(ReasoningEffort reasoningEffort) {
+            this.reasoningEffort = reasoningEffort;
+            return this;
+        }
+
         public Builder deviceMemory(String deviceMemory) {
             this.deviceMemory = deviceMemory;
             return this;
@@ -188,7 +195,7 @@ public class JitLLMChatModel extends JitLLMBaseModel implements ChatModel {
                     ? modelHolder
                     : new JitLLMModelHolder(modelCachePath, modelName, quantization,
                             temperature, topP, seed, maxTokens, onGPU, withPrefillDecode, prefillBatchSize, enableThinking,
-                            deviceMemory);
+                            reasoningEffort, deviceMemory);
             return new JitLLMChatModel(h);
         }
     }

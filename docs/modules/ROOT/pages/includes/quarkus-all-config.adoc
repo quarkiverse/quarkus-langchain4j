@@ -16687,9 +16687,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path.
+Whether to choose the prefill/decode execution policy explicitly instead of leaving it to the engine. When `true`, the prompt is processed in a dedicated prefill phase of `prefill-batch-size()` tokens per step before single-token decoding, and the vendor native libraries (cuBLAS/cuDNN, MLX) are not used.
 
-Off by default. Batched prefill is default-off in the engine on every backend, and enabling it is an opt-in that needs its own performance evidence for the model and device in question.
+Off by default, which lets the engine pick the execution policy for the model and device: on GPU that is batched prefill (512 tokens per step where the model supports it) with the native libraries where they are installed.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -16710,7 +16710,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Number of prompt tokens processed per batch during the prefill phase. Only used when `prefill-decode()` is `true`: a value greater than 1 enables the batched prefill path, while 1 falls back to sequential prefill/decode.
+Number of prompt tokens processed per batch during the prefill phase. Only used when `prefill-decode()` is `true`: a value greater than 1 enables the batched prefill path, while 1 falls back to sequential prefill/decode. When `prefill-decode()` is `false` the engine chooses the batch size.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -16745,6 +16745,27 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-chat-model-reasoning-effort[`+++quarkus.langchain4j.jitllm.chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.jitllm.chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long the model reasons before answering: `xhigh`, `medium` or `low`. Only models whose chat template takes a reasoning effort (e.g. Qwen3.8) honor this, and only with `enable-thinking()` set; otherwise it has no effect. When unset, the model's own default applies, which for Qwen3.8 is the longest reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_JITLLM_CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_JITLLM_CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`default`, `xhigh`, `medium`, `low`
+|`+++the model's default+++`
 
 a| [[quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-chat-model-device-memory]] [.property-path]##link:#quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-chat-model-device-memory[`+++quarkus.langchain4j.jitllm.chat-model.device-memory+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -16970,9 +16991,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Whether to use the prefill/decode inference path, which processes the prompt in a dedicated prefill phase before single-token decoding. Combined with a `prefill-batch-size()` greater than 1 this enables the batched prefill path.
+Whether to choose the prefill/decode execution policy explicitly instead of leaving it to the engine. When `true`, the prompt is processed in a dedicated prefill phase of `prefill-batch-size()` tokens per step before single-token decoding, and the vendor native libraries (cuBLAS/cuDNN, MLX) are not used.
 
-Off by default. Batched prefill is default-off in the engine on every backend, and enabling it is an opt-in that needs its own performance evidence for the model and device in question.
+Off by default, which lets the engine pick the execution policy for the model and device: on GPU that is batched prefill (512 tokens per step where the model supports it) with the native libraries where they are installed.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -16993,7 +17014,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Number of prompt tokens processed per batch during the prefill phase. Only used when `prefill-decode()` is `true`: a value greater than 1 enables the batched prefill path, while 1 falls back to sequential prefill/decode.
+Number of prompt tokens processed per batch during the prefill phase. Only used when `prefill-decode()` is `true`: a value greater than 1 enables the batched prefill path, while 1 falls back to sequential prefill/decode. When `prefill-decode()` is `false` the engine chooses the batch size.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -17028,6 +17049,27 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-model-name-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-model-name-chat-model-reasoning-effort[`+++quarkus.langchain4j.jitllm."model-name".chat-model.reasoning-effort+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.jitllm."model-name".chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+How long the model reasons before answering: `xhigh`, `medium` or `low`. Only models whose chat template takes a reasoning effort (e.g. Qwen3.8) honor this, and only with `enable-thinking()` set; otherwise it has no effect. When unset, the model's own default applies, which for Qwen3.8 is the longest reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_JITLLM__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_JITLLM__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`default`, `xhigh`, `medium`, `low`
+|`+++the model's default+++`
 
 a| [[quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-model-name-chat-model-device-memory]] [.property-path]##link:#quarkus-langchain4j-jitllm_quarkus-langchain4j-jitllm-model-name-chat-model-device-memory[`+++quarkus.langchain4j.jitllm."model-name".chat-model.device-memory+++`]##
 ifdef::add-copy-button-to-config-props[]
