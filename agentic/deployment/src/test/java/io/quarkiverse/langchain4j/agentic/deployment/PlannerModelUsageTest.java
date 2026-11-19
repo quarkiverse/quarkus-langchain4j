@@ -267,9 +267,10 @@ public class PlannerModelUsageTest {
 
         assertThat(bareSupervisor.invoke("What time is it?")).isEqualTo("It is noon");
 
-        // the call choosing the clock and the one ending the invocation, then the invocation itself
-        assertThat(notifications.of("bean")).containsExactly("planning bareSupervisor", "planning bareSupervisor",
-                "after bareSupervisor");
+        // the call choosing the clock, the invocation of the clock, the call ending the invocation, then the
+        // invocation of the supervisor itself
+        assertThat(notifications.of("bean")).containsExactly("planning bareSupervisor", "after clock",
+                "planning bareSupervisor", "after bareSupervisor");
     }
 
     @Test
@@ -293,15 +294,17 @@ public class PlannerModelUsageTest {
     }
 
     @Test
-    void listenerBeanIsNotifiedOfANonAiSubagentOnlyWhenItIsInheritedBySubagents() {
+    void listenerBeanIsNotifiedOnceOfANonAiSubagent() {
         planningModel.script(reply(INVOKE_CLOCK, new TokenUsage(100, 20)), reply(DONE, new TokenUsage(30, 5)));
         notifications.clear();
 
         bareSupervisor.invoke("What time is it?");
 
-        // the listener beans are not registered on a non-AI agent: it is observed through the supervisor
+        // the listener beans are registered on the non-AI agent too: the inherited ones reach it twice, from the
+        // supervisor and from that registration, and are notified once
+        assertThat(notifications.of("bean")).containsOnlyOnce("after clock");
         assertThat(notifications.of("inherited")).containsExactly("after clock", "after bareSupervisor");
-        assertThat(notifications.of("bean")).doesNotContain("after clock");
+        assertThat(notifications.of("singletonInherited")).containsExactly("after clock", "after bareSupervisor");
     }
 
     // ── Supervisor ──

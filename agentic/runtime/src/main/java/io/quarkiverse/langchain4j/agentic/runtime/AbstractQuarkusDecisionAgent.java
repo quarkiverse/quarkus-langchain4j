@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.agentic.runtime;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -32,6 +34,14 @@ public abstract class AbstractQuarkusDecisionAgent implements InternalAgent, Age
 
     public void setAgentProxy(Object proxy) {
         this.agentProxy = proxy;
+    }
+
+    /**
+     * Invokes an agent method, declared by the agent type, on the LangChain4j agent: the entry point of the generated
+     * methods of the agent type.
+     */
+    public Object invokeAgentMethod(Method method, Object[] args) throws Throwable {
+        return ((InvocationHandler) agent).invoke(this, method, args);
     }
 
     // InternalAgent / AgentInstance delegation

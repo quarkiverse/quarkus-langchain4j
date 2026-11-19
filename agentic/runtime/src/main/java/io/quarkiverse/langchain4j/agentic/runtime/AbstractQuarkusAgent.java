@@ -25,6 +25,9 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
 
     protected InternalAgent agent;
     private Object agentProxy;
+    private Object instanceMemoryId;
+    /** The object the invocation handler receives as the agent object: this object, or the one delegating to it. */
+    private final Object invocationTarget;
 
     private static final Method METHOD_withAgenticScope;
     private static final Method METHOD_registry;
@@ -37,6 +40,7 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
     private static final Method METHOD_onEvent;
     private static final Method METHOD_getAgenticScope;
     private static final Method METHOD_evictAgenticScope;
+    private static final Method METHOD_deleteAgenticScope;
 
     static {
         try {
@@ -51,24 +55,67 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
             METHOD_onEvent = AiServiceListener.class.getMethod("onEvent", AiServiceEvent.class);
             METHOD_getAgenticScope = AgenticScopeAccess.class.getMethod("getAgenticScope", Object.class);
             METHOD_evictAgenticScope = AgenticScopeAccess.class.getMethod("evictAgenticScope", Object.class);
+            METHOD_deleteAgenticScope = AgenticScopeAccess.class.getMethod("deleteAgenticScope", Object.class);
         } catch (NoSuchMethodException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
     protected AbstractQuarkusAgent() {
+        this.invocationTarget = this;
     }
 
     protected AbstractQuarkusAgent(InternalAgent agent) {
+        this(agent, null);
+    }
+
+    /**
+     * @param invocationTarget the object the invocation handler receives as the agent object, the one delegating to
+     *        this object, or {@code null} for this object
+     */
+    protected AbstractQuarkusAgent(InternalAgent agent, Object invocationTarget) {
         this.agent = agent;
+        this.invocationTarget = invocationTarget != null ? invocationTarget : this;
     }
 
     public void setAgentProxy(Object proxy) {
         this.agentProxy = proxy;
     }
 
+    /**
+     * @return the LangChain4j agent this object delegates to, the invocation handler of the agent
+     */
+    public InternalAgent internalAgent() {
+        return agent;
+    }
+
+    /**
+     * @return the memory id of this bean instance, when the agent has a scope other than the application scope and
+     *         its agentic scope and chat memories belong to the instance, or {@code null}
+     */
+    public Object instanceMemoryId() {
+        return instanceMemoryId;
+    }
+
+    public void setInstanceMemoryId(Object instanceMemoryId) {
+        this.instanceMemoryId = instanceMemoryId;
+    }
+
+    /**
+     * Invokes an agent method, declared by the agent type, on the LangChain4j agent: the entry point of the generated
+     * methods of the agent type.
+     */
+    public Object invokeAgentMethod(Method method, Object[] args) throws Throwable {
+        if (instanceMemoryId == null) {
+            return invokeOnAgent(method, args);
+        }
+        return AgentClassSupport.withInstanceMemoryId(instanceMemoryId, () -> invokeOnAgent(method, args));
+    }
+
+    // no protected methods: the interception subclass ArC generates for an agent with interceptor bindings forwards
+    // them to its delegate, which the verifier rejects for a protected method
     private Object invokeOnAgent(Method method, Object[] args) throws Throwable {
-        return ((InvocationHandler) agent).invoke(this, method, args);
+        return ((InvocationHandler) agent).invoke(invocationTarget, method, args);
     }
 
     // InternalAgent / AgentInstance delegation
@@ -290,6 +337,16 @@ public abstract class AbstractQuarkusAgent implements InternalAgent, AgenticScop
     public boolean evictAgenticScope(Object memoryId) {
         try {
             return (boolean) invokeOnAgent(METHOD_evictAgenticScope, new Object[] { memoryId });
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean deleteAgenticScope(Object memoryId) {
+        try {
+            return (boolean) invokeOnAgent(METHOD_deleteAgenticScope, new Object[] { memoryId });
         } catch (RuntimeException | Error e) {
             throw e;
         } catch (Throwable e) {
