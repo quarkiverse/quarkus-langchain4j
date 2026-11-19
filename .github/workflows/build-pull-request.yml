@@ -37,11 +37,16 @@ jobs:
       all_modules: ${{ steps.matrices.outputs.all_modules }}
       it_modules: ${{ steps.matrices.outputs.it_modules }}
       in_process_embedding_modules: ${{ steps.matrices.outputs.in_process_embedding_modules }}
+      run_mcp_conformance: ${{ steps.matrices.outputs.run_mcp_conformance }}
+      scalpel_impacted: ${{ steps.matrices.outputs.scalpel_impacted }}
 
     steps:
       - uses: runs-on/action@v2
 
       - uses: actions/checkout@v4
+        with:
+          # Full history so Scalpel and git diff can compare against the base branch
+          fetch-depth: 0
 
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
@@ -55,6 +60,69 @@ jobs:
 
       - name: Build with Maven
         run: ./mvnw -B clean install -DskipTests -Dno-format -ntp
+
+      - name: Compute impacted set
+        env:
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -uo pipefail
+          IMPACTED="$GITHUB_WORKSPACE/impacted.txt"
+          rm -f target/scalpel-report.json
+
+          # Escape hatch: ci/disable-scalpel label, or a backport source branch -> full build.
+          # (Release-branch bases are handled by Scalpel's own -Dscalpel.disableOnBaseBranch below.)
+          DISABLE=false
+          if echo "$PR_LABELS" | jq -e 'index("ci/disable-scalpel")' >/dev/null 2>&1; then
+            DISABLE=true
+          fi
+          if [[ "$HEAD_REF" == *backport* ]]; then
+            DISABLE=true
+          fi
+
+          if [ "$DISABLE" = "true" ]; then
+            echo "Scalpel disabled (label or backport branch) -> full build"
+            echo "ALL" > "$IMPACTED"
+            exit 0
+          fi
+
+          # Run Scalpel in report mode. Scalpel is disabled by default (.mvn/maven.config: scalpel.enabled=false)
+          # so every other Maven invocation is inert; we enable it only here for the report.
+          # Activate the jdk21-plus/jdk25-plus profiles so jitllm/jinfer are in the reactor Scalpel analyzes
+          # (it runs on JDK 17); otherwise a change upstream of them (e.g. core) would leave them out of the
+          # impacted set and they'd never be tested on JDK 21/25. enforcer.skip is required because jinfer's
+          # enforcer demands JDK 25; report mode only reads the reactor model and compiles nothing.
+          # disableOnBaseBranch makes Scalpel force a full build when the PR targets a release branch (\d+.\d+).
+          # Non-fatal: on error, leave no report so the empty check below fails safe to a full build.
+          ./mvnw -q -Dscalpel.enabled=true -Dincremental -Dscalpel.mode=report \
+            -Pjdk21-plus,jdk25-plus -Denforcer.skip=true \
+            -Dscalpel.baseBranch="origin/${BASE_REF}" \
+            -Dscalpel.disableOnBaseBranch='\d+\.\d+' \
+            -Dscalpel.reportFile=target/scalpel-report.json validate \
+            || echo "Scalpel report generation failed; will fail safe to a full build"
+
+          # Missing report (tool error) or an explicit full-build signal -> full build.
+          # fullBuildTriggered covers release-branch disable and disableTriggers.
+          if [ ! -f target/scalpel-report.json ] || \
+             [ "$(jq -r '.fullBuildTriggered // false' target/scalpel-report.json)" = "true" ]; then
+            echo "ALL" > "$IMPACTED"
+            echo "Impacted set: ALL"
+            exit 0
+          fi
+
+          # Impacted = affected modules, excluding upstream-only (they don't need testing).
+          # jitllm/jinfer are reported natively because the jdk profiles were active above.
+          COMBINED=$(jq -r '.affectedModules[] | select(.category != "UPSTREAM") | .path' target/scalpel-report.json \
+            | sed '/^$/d' | sort -u)
+
+          # Nothing impacted -> fail safe to a full build (never skip everything).
+          if [ -z "$COMBINED" ]; then
+            echo "ALL" > "$IMPACTED"
+          else
+            printf '%s\n' "$COMBINED" > "$IMPACTED"
+          fi
+          echo "Impacted set:"; cat "$IMPACTED"
 
       - name: Zip the Maven repo
         run: |
@@ -72,11 +140,15 @@ jobs:
       - name: Compute matrices
         id: matrices
         run: |
+          IMPACTED="$GITHUB_WORKSPACE/impacted.txt"
+          FILTER="$GITHUB_WORKSPACE/.github/filter-modules.sh"
+
           # Compute the JVM tests
           ALL_MODULES=$(find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
                 | jq -R -s -c 'split("\n")[:-1]')
+          ALL_MODULES=$(bash "$FILTER" "$IMPACTED" "" "$ALL_MODULES")
 
           # Integration tests (without the in-process embedding models)
           # Remove Jinfer and JitLLM from the list
@@ -90,6 +162,7 @@ jobs:
                 | grep -v mcp-conformance \
                 | grep -v in-process-embedding-models \
                 | jq -R -s -c 'split("\n")[:-1]')
+          IT_MODULES=$(bash "$FILTER" "$IMPACTED" "integration-tests" "$IT_MODULES")
 
           # We extract in process embedding models as there are many modules and we want parallelism
           cd in-process-embedding-models
@@ -98,10 +171,24 @@ jobs:
                 | sed 's|^\./||' \
                 | sort -u \
                 | jq -R -s -c 'split("\n")[:-1]')
+          IN_PROCESS_EMBEDDING_MODULES=$(bash "$FILTER" "$IMPACTED" "integration-tests/in-process-embedding-models" "$IN_PROCESS_EMBEDDING_MODULES")
+
+          # MCP conformance: run when its module (or anything upstream of it) is impacted
+          MCP=$(bash "$FILTER" "$IMPACTED" "integration-tests" '["mcp-conformance"]')
+          if [ "$MCP" = "[]" ]; then RUN_MCP=false; else RUN_MCP=true; fi
+
+          # Impacted module paths (root-relative, space-separated) or ALL, consumed by jvm-tests for -pl narrowing
+          if [ "$(cat "$IMPACTED")" = "ALL" ]; then
+            SCALPEL_IMPACTED=ALL
+          else
+            SCALPEL_IMPACTED=$(tr '\n' ' ' < "$IMPACTED")
+          fi
 
           echo "all_modules=${ALL_MODULES}" >> $GITHUB_OUTPUT
           echo "it_modules=${IT_MODULES}" >> $GITHUB_OUTPUT
           echo "in_process_embedding_modules=${IN_PROCESS_EMBEDDING_MODULES}" >> $GITHUB_OUTPUT
+          echo "run_mcp_conformance=${RUN_MCP}" >> $GITHUB_OUTPUT
+          echo "scalpel_impacted=${SCALPEL_IMPACTED}" >> $GITHUB_OUTPUT
 
       # Publish build reports
       - name: Prepare build reports archive
@@ -216,8 +303,32 @@ jobs:
           ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jinfer/pom.xml
 
       - name: Run tests of ${{ matrix.module }} with JDK ${{ matrix.java }}
+        env:
+          SCALPEL_IMPACTED: ${{ needs.quick-build.outputs.scalpel_impacted }}
+          MODULE: ${{ matrix.module }}
         run: |
-          cd ${{ matrix.module }} && ../mvnw -B verify -Dci=true -Dno-format -ntp
+          # Narrow the aggregator build to the impacted submodules (-pl), like Quarkus.
+          # SCALPEL_IMPACTED holds root-relative module paths (or ALL). We keep the ones under this
+          # aggregator and strip the prefix (model-providers/mistral/runtime -> mistral/runtime).
+          PL_ARGS=""
+          if [ "$SCALPEL_IMPACTED" != "ALL" ]; then
+            PL=""
+            for p in $SCALPEL_IMPACTED; do
+              case "$p" in
+                "$MODULE"/*) PL="${PL:+$PL,}${p#"$MODULE"/}" ;;
+              esac
+            done
+            # jitllm/jinfer are JDK-gated: their reactor membership varies by JDK and -pl on an absent
+            # module hard-fails. If the impacted set under this aggregator includes one, build the whole
+            # aggregator and let the JDK profiles include/exclude them correctly.
+            if printf '%s' "$PL" | grep -qE '(^|,)(jitllm|jinfer)(/|,|$)'; then
+              echo "JDK-gated module impacted under $MODULE -> building the full aggregator"
+            elif [ -n "$PL" ]; then
+              PL_ARGS="-pl $PL"
+            fi
+          fi
+          echo "Running: cd $MODULE && mvnw verify ${PL_ARGS:-(full aggregator)}"
+          cd "$MODULE" && ../mvnw -B verify -Dci=true -Dno-format -ntp $PL_ARGS
 
       # Publish build reports
       - name: Prepare build reports archive
@@ -238,6 +349,8 @@ jobs:
 
   native-tests:
     needs: quick-build
+    # An empty matrix is a GitHub config error (not a clean skip), so guard against no impacted IT modules
+    if: needs.quick-build.outputs.it_modules != '[]'
     name: Native tests - ${{matrix.module}}
     strategy:
       fail-fast: false
@@ -291,6 +404,8 @@ jobs:
 
   in-process-embedding-model-tests:
     needs: quick-build
+    # An empty matrix is a GitHub config error (not a clean skip), so guard against no impacted modules
+    if: needs.quick-build.outputs.in_process_embedding_modules != '[]'
     name: In process embedding model tests - ${{matrix.module}}
     strategy:
       fail-fast: false
@@ -342,6 +457,7 @@ jobs:
 
   mcp-conformance-tests:
     needs: quick-build
+    if: needs.quick-build.outputs.run_mcp_conformance == 'true'
     name: MCP Conformance tests
     runs-on: runs-on=${{ github.run_id }}/runner=linux
     steps:
@@ -403,3 +519,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-reports-artifacts-path: build-reports-artifacts
+          # Branch protection requires the 'CI Merge Gate' commit status, posted by ci-merge-gate.yml
+          # based on this workflow's conclusion (see that file). No per-workflow gate job is needed.
