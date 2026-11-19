@@ -1669,7 +1669,27 @@ public class AgenticProcessor {
             }
         });
 
-        // we need to know if any of the parameters are passed by the user, so we need to analyze the known usages
+        // an agent that no other agent uses as a sub-agent is the root of an agentic system, or a part of a system
+        // composed with the programmatic API: its parameters are passed by its caller, which the build may not see
+        Set<MethodInfo> subAgentMethods = new HashSet<>();
+        for (List<MethodInfo> agenticMethods : ifaceToAgentMethodsMap.values()) {
+            for (MethodInfo agenticMethod : agenticMethods) {
+                for (DotName annotation : AgenticLangChain4jDotNames.AGENT_ANNOTATIONS_WITH_SUB_AGENTS) {
+                    AnnotationInstance agentInstance = agenticMethod.annotation(annotation);
+                    if (agentInstance == null) {
+                        continue;
+                    }
+                    for (Type subAgentType : subAgentTypes(agentInstance)) {
+                        subAgentMethods.addAll(ifaceToAgentMethodsMap.getOrDefault(subAgentType.name(), List.of()));
+                        subAgentMethods.addAll(classToNonAiAgentMethodsMap.getOrDefault(subAgentType.name(), List.of()));
+                    }
+                }
+            }
+        }
+        markRootAgentParametersAsUserProvided(ifaceToAgentMethodsMap, subAgentMethods, index, builder);
+        markRootAgentParametersAsUserProvided(classToNonAiAgentMethodsMap, subAgentMethods, index, builder);
+
+        // an agent can be both a sub-agent and called by the user, so we also need to analyze the known usages
         beanDiscoveryFinished.getInjectionPoints().forEach(ip -> {
             DotName requiredName = ip.getRequiredType().name();
             List<MethodInfo> agentMethods = ifaceToAgentMethodsMap.getOrDefault(requiredName, Collections.emptyList());
@@ -1683,6 +1703,40 @@ public class AgenticProcessor {
         });
 
         return builder.build();
+    }
+
+    private void markRootAgentParametersAsUserProvided(Map<DotName, List<MethodInfo>> agentToMethodsMap,
+            Set<MethodInfo> subAgentMethods, IndexView index, OutputKeyBuildItem.Builder builder) {
+        for (var entry : agentToMethodsMap.entrySet()) {
+            // the upstream agents are not agents of the application
+            if (entry.getKey().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
+                continue;
+            }
+            for (MethodInfo agenticMethod : entry.getValue()) {
+                if (subAgentMethods.contains(agenticMethod)) {
+                    continue;
+                }
+                for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(agenticMethod, index)) {
+                    String parameterName = determineParameterName(parameter);
+                    if (parameterName != null) {
+                        builder.addUserProvidedKey(parameterName);
+                    }
+                }
+            }
+        }
+    }
+
+    private static List<Type> subAgentTypes(AnnotationInstance agentInstance) {
+        List<Type> subAgentTypes = new ArrayList<>();
+        AnnotationValue subAgentsValue = agentInstance.value("subAgents");
+        if (subAgentsValue != null) {
+            subAgentTypes.addAll(List.of(subAgentsValue.asClassArray()));
+        }
+        AnnotationValue subAgentValue = agentInstance.value("subAgent");
+        if (subAgentValue != null) {
+            subAgentTypes.add(subAgentValue.asClass());
+        }
+        return subAgentTypes;
     }
 
     private Optional<MethodInfo> subagentMethod(DotName subagentName, Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap,
@@ -1766,7 +1820,7 @@ public class AgenticProcessor {
                             throw new IllegalConfigurationException(
                                     "No agent provides an output key named '%s'. This means that parameter no.%d of method '%s' of class '%s' cannot be resolved"
                                             .formatted(
-                                                    parameterName, i, method.declaringClass().name(),
+                                                    parameterName, i, method.name(),
                                                     method.declaringClass().name()));
                         }
                     } else if (!expectedParameterTypeName.equals(parameterType.name())) {
@@ -1819,17 +1873,7 @@ public class AgenticProcessor {
         Map<String, DotName> explicitNameToClass = new HashMap<>();
         Map<String, DotName> effectiveNameToClass = new HashMap<>();
 
-        List<Type> subAgentTypes = new ArrayList<>();
-        AnnotationValue subAgentsValue = workflowInstance.value("subAgents");
-        if (subAgentsValue != null) {
-            subAgentTypes.addAll(List.of(subAgentsValue.asClassArray()));
-        }
-        AnnotationValue subAgentValue = workflowInstance.value("subAgent");
-        if (subAgentValue != null) {
-            subAgentTypes.add(subAgentValue.asClass());
-        }
-
-        for (Type subAgentType : subAgentTypes) {
+        for (Type subAgentType : subAgentTypes(workflowInstance)) {
             DotName subAgentClassName = subAgentType.name();
             Optional<MethodInfo> maybeSubAgentMethod = subagentMethod(subAgentClassName, ifaceToAgentMethodsMap,
                     classToNonAiAgentMethodsMap);
