@@ -23,4 +23,10 @@ public interface McpApicurioRegistryRuntimeConfig {
      */
     @WithName("tool-provider")
     Optional<String> toolProvider();
+
+    /**
+     * Credentials for the registry, used to discover MCP servers and tools. These authenticate to the
+     * registry only, never to the discovered MCP servers.
+     */
+    RegistryAuthConfig auth();
 }
