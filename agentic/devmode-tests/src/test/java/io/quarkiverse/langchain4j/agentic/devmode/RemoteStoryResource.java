@@ -16,6 +16,6 @@ public class RemoteStoryResource {
     @GET
     @Path("/topology")
     public String topology() {
-        return new AgenticJsonRpcService().getTopologyHtml(0);
+        return new AgenticJsonRpcService().getTopologyReportHtml(0);
     }
 }
