@@ -245,9 +245,18 @@ public class AiServiceMethodImplementationSupport {
                 && !BlockingOperationControl.isBlockingAllowed()) {
             // this a special case where we can't block, so we need to delegate the to a worker pool
             // as so many of the things done in LangChain4j are blocking
-            return Multi.createFrom().deferred(
-                    () -> ((Multi<?>) doImplement0(methodCreateInfo, invocationContext, context)))
-                    .runSubscriptionOn(createExecutor());
+            // the deferred work runs when the Multi is subscribed, so it is not covered by the callWithout in implement
+            return Multi.createFrom().deferred(new Supplier<Multi<?>>() {
+                @Override
+                public Multi<?> get() {
+                    return CurrentInvocation.callWithout(new Supplier<Multi<?>>() {
+                        @Override
+                        public Multi<?> get() {
+                            return (Multi<?>) doImplement0(methodCreateInfo, invocationContext, context);
+                        }
+                    });
+                }
+            }).runSubscriptionOn(createExecutor());
         } else {
             return doImplement0(methodCreateInfo, invocationContext, context);
         }
