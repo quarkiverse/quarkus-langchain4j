@@ -16,6 +16,7 @@
     <module>json-file</module>
     <module>json-redis</module>
     <module>json-mongo</module>
+    <module>json-infinispan</module>
   </modules>
 
 
