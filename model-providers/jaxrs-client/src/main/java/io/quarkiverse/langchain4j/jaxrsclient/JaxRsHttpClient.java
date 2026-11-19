@@ -2,12 +2,17 @@ package io.quarkiverse.langchain4j.jaxrsclient;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.nio.ByteBuffer;
 import java.security.KeyStore;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import javax.net.ssl.SSLContext;
 
@@ -15,8 +20,8 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 
 import org.jboss.resteasy.reactive.client.BasicRestResponse;
@@ -29,6 +34,9 @@ import org.jboss.resteasy.reactive.client.impl.MultiInvoker;
 import dev.langchain4j.http.client.HttpClient;
 import dev.langchain4j.http.client.HttpRequest;
 import dev.langchain4j.http.client.SuccessfulHttpResponse;
+import dev.langchain4j.http.client.sse.HttpErrorResponseReceived;
+import dev.langchain4j.http.client.sse.HttpResponseReceived;
+import dev.langchain4j.http.client.sse.HttpStreamingEvent;
 import dev.langchain4j.http.client.sse.ServerSentEvent;
 import dev.langchain4j.http.client.sse.ServerSentEventContext;
 import dev.langchain4j.http.client.sse.ServerSentEventListener;
@@ -36,6 +44,9 @@ import dev.langchain4j.http.client.sse.ServerSentEventParser;
 import dev.langchain4j.http.client.sse.ServerSentEventParsingHandle;
 import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkus.tls.TlsConfiguration;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.subscription.Cancellable;
+import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscriber;
 import io.smallrye.mutiny.subscription.UniSubscription;
@@ -44,17 +55,25 @@ import io.vertx.core.net.ProxyType;
 import io.vertx.core.net.SSLOptions;
 import io.vertx.core.net.TrustOptions;
 
-public class JaxRsHttpClient implements HttpClient {
+public class JaxRsHttpClient implements HttpClient, AutoCloseable {
 
     private static final GenericType<SseEvent<String>> SSE_EVENT_TYPE = new GenericType<>() {
+    };
+
+    private static final GenericType<byte[]> BYTES_TYPE = new GenericType<>() {
     };
 
     private final Client delegate;
 
     public JaxRsHttpClient(JaxRsHttpClientBuilder builder) {
-        ClientBuilderImpl clientBuilder = (ClientBuilderImpl) new ClientBuilderImpl()
-                .connectTimeout(builder.connectTimeout().getSeconds(), TimeUnit.SECONDS)
-                .readTimeout(builder.readTimeout().getSeconds(), TimeUnit.SECONDS);
+        ClientBuilderImpl clientBuilder = new ClientBuilderImpl();
+        if (builder.connectTimeout() != null) {
+            clientBuilder.connectTimeout(builder.connectTimeout().toMillis(), TimeUnit.MILLISECONDS);
+        }
+        if (builder.readTimeout() != null) {
+            clientBuilder.readTimeout(builder.readTimeout().toMillis(), TimeUnit.MILLISECONDS);
+        }
+        clientBuilder.register(new RawBodyResponseFilter());
         for (Object provider : builder.clientProviders()) {
             clientBuilder.register(provider);
         }
@@ -126,11 +145,16 @@ public class JaxRsHttpClient implements HttpClient {
         return new JaxRsHttpClientBuilder();
     }
 
+    /**
+     * Closes the underlying JAX-RS client, together with the connections it holds.
+     */
     @Override
-    public SuccessfulHttpResponse execute(HttpRequest request) {
-        WebTarget target = delegate.target(request.url());
-        Invocation.Builder invocationBuilder = target.request();
+    public void close() {
+        delegate.close();
+    }
 
+    private Invocation.Builder invocationBuilder(HttpRequest request) {
+        Invocation.Builder invocationBuilder = delegate.target(request.url()).request();
         for (var headers : request.headers().entrySet()) {
             List<String> values = headers.getValue();
             if ((values != null) && (!values.isEmpty())) {
@@ -139,6 +163,12 @@ public class JaxRsHttpClient implements HttpClient {
                 }
             }
         }
+        return invocationBuilder;
+    }
+
+    @Override
+    public SuccessfulHttpResponse execute(HttpRequest request) {
+        Invocation.Builder invocationBuilder = invocationBuilder(request);
 
         Response response = switch (request.method()) {
             case GET -> invocationBuilder.get();
@@ -151,17 +181,7 @@ public class JaxRsHttpClient implements HttpClient {
 
     @Override
     public CompletableFuture<SuccessfulHttpResponse> executeAsync(HttpRequest request) {
-        WebTarget target = delegate.target(request.url());
-        Invocation.Builder invocationBuilder = target.request();
-
-        for (var headers : request.headers().entrySet()) {
-            List<String> values = headers.getValue();
-            if ((values != null) && (!values.isEmpty())) {
-                for (String value : values) {
-                    invocationBuilder.header(headers.getKey(), value);
-                }
-            }
-        }
+        Invocation.Builder invocationBuilder = invocationBuilder(request);
 
         String method = request.method().name();
         Entity<?> entity = (request.body() != null) ? Entity.json(request.body()) : null;
@@ -190,6 +210,23 @@ public class JaxRsHttpClient implements HttpClient {
                 .build();
     }
 
+    private static SuccessfulHttpResponse toSuccessfulHttpResponse(BasicRestResponse response, String contentType) {
+        if (contentType == null) {
+            return toSuccessfulHttpResponse(response);
+        }
+        Map<String, List<String>> headers = new LinkedHashMap<>(response.headers());
+        for (Iterator<String> names = headers.keySet().iterator(); names.hasNext();) {
+            if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(names.next())) {
+                names.remove();
+            }
+        }
+        headers.put(HttpHeaders.CONTENT_TYPE, List.of(contentType));
+        return SuccessfulHttpResponse.builder()
+                .statusCode(response.status())
+                .headers(headers)
+                .build();
+    }
+
     private static QuarkusHttpException toHttpException(Response response) {
         return new QuarkusHttpException(response.getStatus(), response.readEntity(String.class),
                 response.getStringHeaders());
@@ -209,17 +246,7 @@ public class JaxRsHttpClient implements HttpClient {
 
     @Override
     public void execute(HttpRequest request, ServerSentEventParser parser, ServerSentEventListener listener) {
-        WebTarget target = delegate.target(request.url());
-        Invocation.Builder invocationBuilder = target.request();
-
-        for (var headers : request.headers().entrySet()) {
-            List<String> values = headers.getValue();
-            if ((values != null) && (!values.isEmpty())) {
-                for (String value : values) {
-                    invocationBuilder.header(headers.getKey(), value);
-                }
-            }
-        }
+        Invocation.Builder invocationBuilder = invocationBuilder(request);
 
         String method = request.method().name();
         Entity<?> entity = (request.body() != null) ? Entity.json(request.body()) : null;
@@ -296,5 +323,89 @@ public class JaxRsHttpClient implements HttpClient {
                         listener.onClose();
                     }
                 });
+    }
+
+    /**
+     * Unlike {@link #execute(HttpRequest, ServerSentEventParser, ServerSentEventListener)}, which lets RESTEasy parse an
+     * event stream, this passes the response body to the supplied parser as raw bytes, as they arrive and whatever the
+     * content type. The caller can then decide from the {@link HttpResponseReceived} headers how to read the body, which
+     * is needed when the server may answer with either a single JSON document or an event stream.
+     */
+    @Override
+    public Flow.Publisher<HttpStreamingEvent> stream(HttpRequest request, ServerSentEventParser parser) {
+        return Multi.createFrom().emitter(new Consumer<MultiEmitter<? super HttpStreamingEvent>>() {
+            @Override
+            public void accept(MultiEmitter<? super HttpStreamingEvent> emitter) {
+                startStream(request, parser, emitter);
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void startStream(HttpRequest request, ServerSentEventParser parser,
+            MultiEmitter<? super HttpStreamingEvent> emitter) {
+        RawBodyResponseFilter.OriginalContentType originalContentType = new RawBodyResponseFilter.OriginalContentType();
+        Invocation.Builder invocationBuilder = invocationBuilder(request)
+                .property(RawBodyResponseFilter.PROPERTY, originalContentType);
+        String method = request.method().name();
+        Entity<?> entity = (request.body() != null) ? Entity.json(request.body()) : null;
+
+        RestMultiResponse<byte[]> stream = (RestMultiResponse<byte[]>) invocationBuilder.rx(MultiInvoker.class)
+                .method(method, entity, BYTES_TYPE, true);
+        // as in execute(..., listener) above, subscribing to response() first delivers the headers before the body;
+        // a non-2xx response fails the body stream instead, which is handled below
+        stream.response().subscribe().withSubscriber(new UniSubscriber<BasicRestResponse>() {
+            @Override
+            public void onSubscribe(UniSubscription subscription) {
+            }
+
+            @Override
+            public void onItem(BasicRestResponse response) {
+                emitter.emit(new HttpResponseReceived(toSuccessfulHttpResponse(response, originalContentType.value)));
+            }
+
+            @Override
+            public void onFailure(Throwable failure) {
+            }
+        });
+
+        ServerSentEventParser.Incremental incremental = parser.incremental();
+        // Unbounded demand, as in execute(..., listener) above: the events of a chunk are buffered by the emitter.
+        Cancellable body = stream.subscribe().with(
+                new Consumer<byte[]>() {
+                    @Override
+                    public void accept(byte[] chunk) {
+                        for (ServerSentEvent event : incremental.feed(ByteBuffer.wrap(chunk))) {
+                            emitter.emit(event);
+                        }
+                    }
+                },
+                new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable failure) {
+                        if (failure instanceof WebApplicationException wae && wae.getResponse() != null) {
+                            Response response = wae.getResponse();
+                            emitter.emit(new HttpErrorResponseReceived(response.getStatus(), response.getStringHeaders()));
+                        }
+                        emitter.fail(toHttpExceptionIfPossible(failure));
+                    }
+                },
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        for (ServerSentEvent event : incremental.flush()) {
+                            emitter.emit(event);
+                        }
+                        emitter.complete();
+                    }
+                });
+        // Only on a cancellation from downstream: MultiInvoker cancels by closing the connection, which may already
+        // carry the next request once the response has completed.
+        emitter.onCancellation(new Runnable() {
+            @Override
+            public void run() {
+                body.cancel();
+            }
+        });
     }
 }

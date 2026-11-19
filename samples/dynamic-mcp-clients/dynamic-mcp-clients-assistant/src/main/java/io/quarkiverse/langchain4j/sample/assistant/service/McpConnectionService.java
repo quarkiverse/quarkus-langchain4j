@@ -9,14 +9,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
-import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
-import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
+import io.quarkiverse.langchain4j.mcp.runtime.http.McpHttpClients;
 import io.quarkiverse.langchain4j.sample.assistant.dto.McpConnection;
 import io.quarkiverse.langchain4j.sample.assistant.oauth2.BearerMcpAuthClientProvider;
 import io.quarkiverse.langchain4j.sample.assistant.oauth2.McpAuthorization;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientOptions;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -27,9 +26,6 @@ public class McpConnectionService {
 
     @Inject
     McpToolProvider mcpToolProvider;
-    
-    @Inject
-    Vertx vertx;
 
     public McpConnection addConnection(io.quarkiverse.langchain4j.sample.assistant.service.McpConnectionRequest request) {
         if (connections.containsKey(request.name())) {
@@ -93,20 +89,16 @@ public class McpConnectionService {
                 if (request.url() == null || request.url().isBlank()) {
                     throw new IllegalArgumentException("URL is required for STREAMABLE_HTTP transport");
                 }
-                QuarkusStreamableHttpMcpTransport.Builder transportBuilder = new QuarkusStreamableHttpMcpTransport.Builder()
-                    .url(request.url())
-                    .httpClient(vertx.createHttpClient(new HttpClientOptions()))
-                    .mcpClientName(request.name());
-                
+                // an access token from the request takes precedence over a McpClientAuthProvider bean
                 McpAuthorization mcpAuthorization = request.mcpAuthorization();
-                if (request.mcpAuthorization() != null) {
-                    if (mcpAuthorization.accessToken() != null) {
-                        McpClientAuthProvider authProvider = new BearerMcpAuthClientProvider(mcpAuthorization.accessToken());
-                        transportBuilder.mcpClientAuthProvider(authProvider);
-                    }
-                }
-                
-                QuarkusStreamableHttpMcpTransport transport = transportBuilder.build();
+                JaxRsHttpClientBuilder httpClientBuilder = mcpAuthorization != null && mcpAuthorization.accessToken() != null
+                    ? McpHttpClients.builder(new BearerMcpAuthClientProvider(mcpAuthorization.accessToken()))
+                    : McpHttpClients.builder(request.name());
+
+                StreamableHttpMcpTransport transport = StreamableHttpMcpTransport.builder()
+                    .url(request.url())
+                    .httpClientBuilder(httpClientBuilder)
+                    .build();
                 yield new DefaultMcpClient.Builder()
                     .key(request.name())
                     .transport(transport)

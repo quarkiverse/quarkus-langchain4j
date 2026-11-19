@@ -22,6 +22,7 @@ import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.McpMetaSupplier;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
+import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.mcp.registryclient.DefaultMcpRegistryClient;
@@ -29,7 +30,7 @@ import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.*;
-import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
+import io.quarkiverse.langchain4j.mcp.runtime.http.McpHttpClients;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
@@ -38,9 +39,6 @@ import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.tls.TlsConfiguration;
 import io.quarkus.tls.TlsConfigurationRegistry;
-import io.quarkus.tls.runtime.config.TlsConfigUtils;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientOptions;
 
 @Recorder
 public class McpRecorder {
@@ -48,8 +46,6 @@ public class McpRecorder {
     public static Map<String, LocalLaunchParams> claudeConfigContents = Collections.emptyMap();
 
     private final RuntimeValue<McpRuntimeConfiguration> mcpRuntimeConfiguration;
-
-    private Vertx vertx;
 
     public McpRecorder(RuntimeValue<McpRuntimeConfiguration> mcpRuntimeConfiguration) {
         this.mcpRuntimeConfiguration = mcpRuntimeConfiguration;
@@ -62,7 +58,6 @@ public class McpRecorder {
     public Function<SyntheticCreationalContext<McpClient>, McpClient> mcpClientSupplier(String key,
             McpTransportType mcpTransportType,
             ShutdownContext shutdown,
-            Supplier<Vertx> vertx,
             boolean addMetrics,
             boolean hasResourceUpdatedObserver,
             RuntimeValue<Boolean> openTelemetryEnabled) {
@@ -96,22 +91,21 @@ public class McpRecorder {
                                 .build();
                     }
                     case STREAMABLE_HTTP -> {
-                        HttpClientOptions httpClientOptions = new HttpClientOptions();
-                        tlsConfiguration.ifPresent(tls -> {
-                            TlsConfigUtils.configure(httpClientOptions, tls);
-                        });
-                        QuarkusStreamableHttpMcpTransport.Builder streamableBuilder = new QuarkusStreamableHttpMcpTransport.Builder()
+                        JaxRsHttpClientBuilder httpClientBuilder = McpHttpClients.builder(key);
+                        if (tlsConfiguration.isPresent()) {
+                            httpClientBuilder.tlsConfiguration(tlsConfiguration.get());
+                        }
+                        StreamableHttpMcpTransport.Builder streamableBuilder = StreamableHttpMcpTransport.builder()
                                 .url(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
                                         "MCP client configuration named " + key + " is missing the 'url' property")))
                                 .logRequests(runtimeConfig.logRequests().orElse(false))
                                 .logResponses(runtimeConfig.logResponses().orElse(false))
-                                .httpClient(vertx.get().createHttpClient(httpClientOptions))
-                                .mcpClientName(key)
+                                .httpClientBuilder(httpClientBuilder)
                                 .timeout(runtimeConfig.toolExecutionTimeout());
                         Optional<McpHeadersSupplier> combinedHeaders = combineHeaders(runtimeConfig.header(),
                                 mcpHeadersSupplier);
                         if (combinedHeaders.isPresent()) {
-                            streamableBuilder.headers(combinedHeaders.get());
+                            streamableBuilder.customHeaders(combinedHeaders.get());
                         }
                         streamableBuilder.subsidiaryChannel(runtimeConfig.subsidiaryChannel());
                         yield streamableBuilder.build();
