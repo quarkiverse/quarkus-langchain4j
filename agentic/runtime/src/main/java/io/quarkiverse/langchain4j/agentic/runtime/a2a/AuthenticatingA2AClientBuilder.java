@@ -1,7 +1,10 @@
 package io.quarkiverse.langchain4j.agentic.runtime.a2a;
 
+import java.time.Duration;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.a2aproject.sdk.client.ClientBuilder;
 import org.a2aproject.sdk.client.transport.jsonrpc.JSONRPCTransport;
@@ -35,6 +38,36 @@ final class AuthenticatingA2AClientBuilder<T> implements A2AClientBuilder<T> {
         if (clientCustomizer != null) {
             this.clientCustomizer = (Consumer<ClientBuilder>) clientCustomizer;
         }
+        return this;
+    }
+
+    @Override
+    public A2AClientBuilder<T> name(String name) {
+        delegate.name(name);
+        return this;
+    }
+
+    @Override
+    public A2AClientBuilder<T> description(String description) {
+        delegate.description(description);
+        return this;
+    }
+
+    @Override
+    public A2AClientBuilder<T> tenant(String tenant) {
+        delegate.tenant(tenant);
+        return this;
+    }
+
+    @Override
+    public A2AClientBuilder<T> agentCardHeaders(Supplier<Map<String, String>> headers) {
+        delegate.agentCardHeaders(headers);
+        return this;
+    }
+
+    @Override
+    public A2AClientBuilder<T> resolutionTimeout(Duration resolutionTimeout) {
+        delegate.resolutionTimeout(resolutionTimeout);
         return this;
     }
 
