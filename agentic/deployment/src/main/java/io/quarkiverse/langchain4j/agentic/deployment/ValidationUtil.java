@@ -25,7 +25,8 @@ class ValidationUtil {
 
     /**
      * Validates that the given helper method of the given agent type can be invoked: it is a static method, or an
-     * instance method with a body of an agent class, invoked on the bean of the class.
+     * instance method with a body of an agent class, invoked on the bean of the class through its client proxy, so
+     * neither private nor final, which the proxy could not override.
      */
     static void validateHelperMethod(ClassInfo agentType, MethodInfo method, DotName annotationName) {
         if (Modifier.isStatic(method.flags())) {
@@ -33,6 +34,13 @@ class ValidationUtil {
         }
         if (!agentType.isInterface() && !method.declaringClass().isInterface()
                 && !Modifier.isAbstract(method.flags()) && !Modifier.isNative(method.flags())) {
+            if (Modifier.isPrivate(method.flags()) || Modifier.isFinal(method.flags())) {
+                throw new IllegalConfigurationException(
+                        String.format("Instance methods annotated with '%s' can be neither private nor final: they are "
+                                + "invoked through the client proxy of the bean, which cannot override them. Remove the "
+                                + "modifier, or make the method static. Offending method is '%s' of class '%s'",
+                                annotationName, method.name(), method.declaringClass().name().toString()));
+            }
             return;
         }
         throw new IllegalConfigurationException(

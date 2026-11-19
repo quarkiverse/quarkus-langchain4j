@@ -105,14 +105,21 @@ public final class AgentClassSupport {
      * back to the agent object that routed it; otherwise the bean was invoked by the application and the call starts
      * on the agent object of the class, with the memory id of the bean instance when it has one.
      *
-     * @param agentClass the class declaring the method
+     * @param declaringClass the class declaring the method: the agent class, or a superclass of it declaring another
+     *        {@code native} method of the agent, like an AI service method
      * @param bean the bean instance the method was invoked on
      * @param name the name of the method
      * @param descriptor the JVM descriptor of the method
      * @param args the arguments of the invocation
      */
-    public static Object invoke(Class<?> agentClass, Object bean, String name, String descriptor, Object[] args)
+    public static Object invoke(Class<?> declaringClass, Object bean, String name, String descriptor, Object[] args)
             throws Throwable {
+        Class<?> agentClass = agentClassNames.contains(declaringClass.getName()) ? declaringClass
+                : agentClass(bean.getClass());
+        if (agentClass == null) {
+            throw new IllegalStateException("The method " + name + " of " + declaringClass.getName()
+                    + " was invoked on " + bean.getClass().getName() + ", which is not a class-based agent");
+        }
         Method method = method(agentClass, name, descriptor);
         Object current = DELEGATE.get();
         if (current != null && current != ROOT && current.getClass().getSuperclass() == agentClass) {

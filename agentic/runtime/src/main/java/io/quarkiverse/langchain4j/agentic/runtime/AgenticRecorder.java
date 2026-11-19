@@ -237,7 +237,8 @@ public class AgenticRecorder {
      * @param agents the class-based agents, keyed by class name
      * @param instanceAgentBeanClassNames the names of the beans with an instance {@code @Agent} or
      *        {@code @HumanInTheLoop} method
-     * @param perInstanceScopeClassNames the names of the class-based agents whose scope is not the application scope
+     * @param perInstanceScopeClassNames the names of the class-based agents whose scope is neither the application
+     *        scope nor {@code @Singleton}
      */
     @RuntimeInit
     public void initClassBasedAgents(Map<String, AiAgentCreateInfo> agents, Set<String> instanceAgentBeanClassNames,

@@ -167,9 +167,12 @@ public class AgenticProcessor {
      * agent implemented by a synthetic bean; an annotated method of a class declares, when it is static, a non-AI
      * agent on a plain class, when it has a body, a non-AI or human-in-the-loop agent on a bean instance, and when
      * it is {@code native}, a class-based agent: a bean whose agentic method is implemented at build time.
+     * A class with an instance agent method with a body is a bean when it declares a scope, or when it can be one:
+     * any other such class, like a final class, a record or a class without a no-arg constructor, stays a plain class,
+     * whose instances the application passes to the programmatic builders, as in plain LangChain4j.
      */
     @BuildStep
-    void detectAgents(CombinedIndexBuildItem indexBuildItem,
+    void detectAgents(CombinedIndexBuildItem indexBuildItem, CustomScopeAnnotationsBuildItem customScopes,
             BuildProducer<DetectedAiAgentAsMapBuildItem> aiMapProducer,
             BuildProducer<DetectedNonAiAgentAsMapBuildItem> nonAiMapProducer,
             BuildProducer<AgentBeanClassesBuildItem> agentBeansProducer,
@@ -180,8 +183,8 @@ public class AgenticProcessor {
         Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap = new HashMap<>();
         Set<DotName> instanceAgentBeans = new HashSet<>();
         for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
-            collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap,
-                    instanceAgentBeans);
+            collectAgentsWithMethodAnnotations(index, customScopes, dotName, ifaceToAgentMethodsMap,
+                    classToNonAiAgentMethodsMap, instanceAgentBeans);
         }
         aiMapProducer.produce(DetectedAiAgentAsMapBuildItem.from(ifaceToAgentMethodsMap));
         nonAiMapProducer.produce(DetectedNonAiAgentAsMapBuildItem.from(classToNonAiAgentMethodsMap));
@@ -1187,9 +1190,8 @@ public class AgenticProcessor {
             }
 
             boolean hasMcpToolBox = !detectedAiAgentBuildItem.getMcpToolBoxMethods().isEmpty();
-            // an agent bean with a scope other than the application scope has an agentic scope per bean instance
             DotName scope = agentScope(detectedAiAgentBuildItem.getIface(), customScopes);
-            boolean perInstanceScope = !BuiltinScope.APPLICATION.getName().equals(scope);
+            boolean perInstanceScope = perInstanceScope(scope);
             String agentClassName = detectedAiAgentBuildItem.getIface().toString();
 
             if (detectedAiAgentBuildItem.isClassBased()) {
@@ -1294,6 +1296,15 @@ public class AgenticProcessor {
         return AiServicesProcessor.cdiScope(customScopes, agentType, BuiltinScope.APPLICATION.getName());
     }
 
+    /**
+     * Whether an agent bean with the given scope has an agentic scope per bean instance: the agents with the
+     * application scope, and the {@code @Singleton} ones, whose single instance is shared by every caller as well,
+     * have an ephemeral agentic scope per invocation instead.
+     */
+    private static boolean perInstanceScope(DotName scope) {
+        return !BuiltinScope.APPLICATION.getName().equals(scope) && !BuiltinScope.SINGLETON.getName().equals(scope);
+    }
+
     private static ScopeInfo scopeInfo(DotName scope) {
         BuiltinScope builtinScope = BuiltinScope.from(scope);
         return builtinScope != null ? builtinScope.getInfo() : new ScopeInfo(scope, true);
@@ -1346,7 +1357,7 @@ public class AgenticProcessor {
                 continue;
             }
             ClassInfo agentClass = agent.getIface();
-            if (!BuiltinScope.APPLICATION.getName().equals(agentScope(agentClass, customScopes))) {
+            if (perInstanceScope(agentScope(agentClass, customScopes))) {
                 scopedAgents.add(agentClass.name());
             }
             boolean leafAiAgent = !agent.isDecisionAgent() && agent.getAgenticMethods().stream()
@@ -2128,8 +2139,8 @@ public class AgenticProcessor {
         return null;
     }
 
-    private static void collectAgentsWithMethodAnnotations(IndexView index, DotName annotation,
-            Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap,
+    private static void collectAgentsWithMethodAnnotations(IndexView index, CustomScopeAnnotationsBuildItem customScopes,
+            DotName annotation, Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap,
             Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap, Set<DotName> instanceAgentBeans) {
         Collection<AnnotationInstance> annotations = index.getAnnotations(annotation);
         for (AnnotationInstance ai : annotations) {
@@ -2147,9 +2158,12 @@ public class AgenticProcessor {
                 // a non-AI agent on a plain class, invoked statically, or an agent of langchain4j-agentic itself
                 addMethodToMap(methodInfo, declaringClass, classToNonAiAgentMethodsMap);
             } else if (hasBody(methodInfo)) {
-                // a non-AI or human-in-the-loop agent on a bean instance
+                // a non-AI or human-in-the-loop agent on an instance: a bean when the class declares a scope or can
+                // be a bean, a plain class otherwise
                 addMethodToMap(methodInfo, declaringClass, classToNonAiAgentMethodsMap);
-                instanceAgentBeans.add(declaringClass.name());
+                if (customScopes.isScopeDeclaredOn(declaringClass) || canBeBean(declaringClass)) {
+                    instanceAgentBeans.add(declaringClass.name());
+                }
             } else {
                 // a class-based agent: a bean whose native agentic method is implemented at build time
                 addMethodToMap(methodInfo, declaringClass, ifaceToAgentMethodsMap);
@@ -2159,6 +2173,15 @@ public class AgenticProcessor {
 
     private static boolean hasBody(MethodInfo method) {
         return !Modifier.isAbstract(method.flags()) && !Modifier.isNative(method.flags());
+    }
+
+    /**
+     * Whether a class without a scope annotation can be registered as a bean: concrete, non-final, with a no-arg
+     * constructor.
+     */
+    private static boolean canBeBean(ClassInfo classInfo) {
+        return !Modifier.isAbstract(classInfo.flags()) && !Modifier.isFinal(classInfo.flags())
+                && classInfo.hasNoArgsConstructor();
     }
 
     private static void addMethodToMap(MethodInfo methodInfo, ClassInfo iface, Map<ClassInfo, List<MethodInfo>> map) {

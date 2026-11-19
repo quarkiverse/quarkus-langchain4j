@@ -9,8 +9,8 @@ import io.quarkus.arc.SyntheticCreationalContext;
 
 /**
  * @param decisionModelInfo how the decision model of a decision agent is obtained, {@code null} for the other agents
- * @param perInstanceScope whether the scope of the agent bean is not the application scope, so that each bean
- *        instance has its own memory id, and its agentic scope and chat memories are evicted with it
+ * @param perInstanceScope whether the scope of the agent bean is neither the application scope nor {@code @Singleton},
+ *        so that each bean instance has its own memory id, and its agentic scope and chat memories are evicted with it
  */
 public record AiAgentCreateInfo(String agentClassName, ChatModelInfo chatModelInfo, boolean hasInterceptorBindings,
         boolean hasMcpToolBox, DecisionModelInfo decisionModelInfo, boolean perInstanceScope) {
