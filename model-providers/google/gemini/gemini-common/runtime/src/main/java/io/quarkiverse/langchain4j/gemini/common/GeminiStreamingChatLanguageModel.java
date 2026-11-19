@@ -14,6 +14,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.exception.ContentFilteredException;
 import dev.langchain4j.http.client.sse.ServerSentEvent;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.internal.ExceptionMapper;
 import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
 import dev.langchain4j.model.ModelProvider;
@@ -56,6 +57,8 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
 
     @Override
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler aHandler) {
+        // the listeners of the response or error may be notified on another thread, so read the invocation now
+        UUID invocationId = CurrentInvocation.invocationId();
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
         Schema schema = detectSchema(effectiveResponseFormat);
@@ -79,8 +82,8 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
                 chatRequest.toolSpecifications());
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
+        ChatModelRequestContext requestContext = ChatModelRequestContext.builder().chatRequest(modelListenerRequest)
+                .modelProvider(ModelProvider.OTHER).attributes(attributes).invocationId(invocationId).build();
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -97,14 +100,12 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
             Multi<SseEvent<String>> event = generateStreamContext(request);
             event.subscribe().with(
                     new OnItemConsumer(responseBuilder, trackingHandler),
-                    new OnErrorConsumer(trackingHandler, listeners, modelListenerRequest, attributes),
-                    new OnCompleteRunnable(responseBuilder, trackingHandler, listeners, modelListenerRequest, attributes));
+                    new OnErrorConsumer(trackingHandler, listeners, modelListenerRequest, attributes, invocationId),
+                    new OnCompleteRunnable(responseBuilder, trackingHandler, listeners, modelListenerRequest, attributes,
+                            invocationId));
         } catch (RuntimeException e) {
-            ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                    e,
-                    modelListenerRequest,
-                    null,
-                    attributes);
+            ChatModelErrorContext errorContext = ChatModelErrorContext.builder().error(e).chatRequest(modelListenerRequest)
+                    .attributes(attributes).invocationId(invocationId).build();
 
             listeners.forEach(listener -> {
                 try {
@@ -142,26 +143,30 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         private final List<ChatModelListener> listeners;
         private final ChatRequest modelListenerRequest;
         private final Map<Object, Object> attributes;
+        private final UUID invocationId;
 
         public OnCompleteRunnable(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler handler,
-                List<ChatModelListener> listeners, ChatRequest modelListenerRequest, Map<Object, Object> attributes) {
+                List<ChatModelListener> listeners, ChatRequest modelListenerRequest, Map<Object, Object> attributes,
+                UUID invocationId) {
             this.responseBuilder = responseBuilder;
             this.handler = handler;
             this.listeners = listeners;
             this.modelListenerRequest = modelListenerRequest;
             this.attributes = attributes;
+            this.invocationId = invocationId;
         }
 
         @Override
         public void run() {
             ContentFilteredException blocked = responseBuilder.blockedException();
             if (blocked != null) {
-                new OnErrorConsumer(handler, listeners, modelListenerRequest, attributes).accept(blocked);
+                new OnErrorConsumer(handler, listeners, modelListenerRequest, attributes, invocationId).accept(blocked);
                 return;
             }
             ChatResponse chatResponse = responseBuilder.build();
-            ChatModelResponseContext responseContext = new ChatModelResponseContext(chatResponse, modelListenerRequest,
-                    ModelProvider.OTHER, attributes);
+            ChatModelResponseContext responseContext = ChatModelResponseContext.builder().chatResponse(chatResponse)
+                    .chatRequest(modelListenerRequest).modelProvider(ModelProvider.OTHER).attributes(attributes)
+                    .invocationId(invocationId).build();
             listeners.forEach(listener -> {
                 try {
                     listener.onResponse(responseContext);
@@ -183,20 +188,23 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         private final List<ChatModelListener> listeners;
         private final ChatRequest modelListenerRequest;
         private final Map<Object, Object> attributes;
+        private final UUID invocationId;
 
         public OnErrorConsumer(StreamingChatResponseHandler handler, List<ChatModelListener> listeners,
-                ChatRequest modelListenerRequest, Map<Object, Object> attributes) {
+                ChatRequest modelListenerRequest, Map<Object, Object> attributes, UUID invocationId) {
             this.handler = handler;
             this.listeners = listeners;
             this.modelListenerRequest = modelListenerRequest;
             this.attributes = attributes;
+            this.invocationId = invocationId;
         }
 
         @Override
         public void accept(Throwable x) {
             RuntimeException mappedError = ExceptionMapper.DEFAULT.mapException(x);
-            ChatModelErrorContext errorContext = new ChatModelErrorContext(mappedError, modelListenerRequest,
-                    ModelProvider.OTHER, attributes);
+            ChatModelErrorContext errorContext = ChatModelErrorContext.builder().error(mappedError)
+                    .chatRequest(modelListenerRequest).modelProvider(ModelProvider.OTHER).attributes(attributes)
+                    .invocationId(invocationId).build();
             listeners.forEach(listener -> {
                 try {
                     listener.onError(errorContext);

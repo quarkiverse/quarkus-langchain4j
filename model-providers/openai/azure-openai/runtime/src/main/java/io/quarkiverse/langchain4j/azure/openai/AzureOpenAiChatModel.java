@@ -17,12 +17,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.model.chat.ChatModel;
@@ -148,6 +150,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
+        UUID invocationId = CurrentInvocation.invocationId();
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
 
@@ -174,8 +177,8 @@ public class AzureOpenAiChatModel implements ChatModel {
 
         ChatRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
+        ChatModelRequestContext requestContext = ChatModelRequestContext.builder().chatRequest(modelListenerRequest)
+                .modelProvider(ModelProvider.OTHER).attributes(attributes).invocationId(invocationId).build();
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -197,11 +200,9 @@ public class AzureOpenAiChatModel implements ChatModel {
                     chatCompletionResponse.id(),
                     chatCompletionResponse.model(),
                     response);
-            ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                    modelListenerResponse,
-                    modelListenerRequest,
-                    ModelProvider.OTHER,
-                    attributes);
+            ChatModelResponseContext responseContext = ChatModelResponseContext.builder().chatResponse(modelListenerResponse)
+                    .chatRequest(modelListenerRequest).modelProvider(ModelProvider.OTHER).attributes(attributes)
+                    .invocationId(invocationId).build();
             listeners.forEach(listener -> {
                 try {
                     listener.onResponse(responseContext);
@@ -213,11 +214,8 @@ public class AzureOpenAiChatModel implements ChatModel {
             return response;
 
         } catch (Exception e) {
-            ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                    e,
-                    modelListenerRequest,
-                    null,
-                    attributes);
+            ChatModelErrorContext errorContext = ChatModelErrorContext.builder().error(e).chatRequest(modelListenerRequest)
+                    .attributes(attributes).invocationId(invocationId).build();
 
             listeners.forEach(listener -> {
                 try {

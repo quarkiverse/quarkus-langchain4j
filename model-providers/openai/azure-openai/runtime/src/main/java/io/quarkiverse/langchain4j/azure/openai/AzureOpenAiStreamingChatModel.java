@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,6 +24,7 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.TokenCountEstimator;
@@ -144,7 +146,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
     @Override
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-
+        // the listeners of the response or error may be notified on another thread, so read the invocation now
+        UUID invocationId = CurrentInvocation.invocationId();
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
 
@@ -173,8 +176,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
         ChatRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
+        ChatModelRequestContext requestContext = ChatModelRequestContext.builder().chatRequest(modelListenerRequest)
+                .modelProvider(ModelProvider.OTHER).attributes(attributes).invocationId(invocationId).build();
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -206,11 +209,9 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                             responseId.get(),
                             responseModel.get(),
                             response);
-                    ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                            modelListenerResponse,
-                            modelListenerRequest,
-                            ModelProvider.OTHER,
-                            attributes);
+                    ChatModelResponseContext responseContext = ChatModelResponseContext.builder()
+                            .chatResponse(modelListenerResponse).chatRequest(modelListenerRequest)
+                            .modelProvider(ModelProvider.OTHER).attributes(attributes).invocationId(invocationId).build();
                     listeners.forEach(listener -> {
                         try {
                             listener.onResponse(responseContext);
@@ -229,11 +230,9 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                             responseModel.get(),
                             response);
 
-                    ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                            error,
-                            modelListenerRequest,
-                            ModelProvider.OTHER,
-                            attributes);
+                    ChatModelErrorContext errorContext = ChatModelErrorContext.builder().error(error)
+                            .chatRequest(modelListenerRequest).modelProvider(ModelProvider.OTHER).attributes(attributes)
+                            .invocationId(invocationId).build();
 
                     listeners.forEach(listener -> {
                         try {
