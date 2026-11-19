@@ -1201,6 +1201,14 @@ public class AgenticProcessor {
                 if (perInstanceScope) {
                     perInstanceScopeClassNames.add(agentClassName);
                 }
+                // the models of a class-based agent are looked up programmatically, with no injection point keeping
+                // their beans, which ArC would otherwise remove as unused
+                if (chatModelInfo instanceof AiAgentCreateInfo.ChatModelInfo.FromBeanWithName) {
+                    unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.CHAT_MODEL));
+                }
+                if (decisionModelInfo instanceof AiAgentCreateInfo.DecisionModelInfo.FromBeanWithName) {
+                    unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.DECISION_MODEL));
+                }
                 if (hasMcpToolBox) {
                     unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.TOOL_PROVIDER));
                 }
