@@ -14,14 +14,14 @@ https://github.com/beehive-lab/gpullama3-quarkus-langchain4j-demo[Here] you can 
 == Prerequisites
 
 === Java Version and TornadoVM SDK
-The extension uses https://github.com/beehive-lab/jitllm[JitLLM] 1.0.2, which is published in two lines, each paired with a TornadoVM 7.0.1 SDK for the same JDK line:
+The extension uses https://github.com/beehive-lab/jitllm[JitLLM] 3.0.0, which is published in two lines, each paired with a TornadoVM 8.1.0 SDK for the same JDK line:
 
 [cols="1,1,1", options="header"]
 |===
 | JDK | JitLLM | TornadoVM SDK
 
-| 21 | `io.github.beehive-lab:jitllm:1.0.2-jdk21` | `7.0.1-jdk21-<backend>`
-| 22 and newer (tested with 25) | `io.github.beehive-lab:jitllm:1.0.2-jdk22plus` | `7.0.1-jdk22plus-<backend>`
+| 21 | `io.github.beehive-lab:jitllm:3.0.0-jdk21` | `8.1.0-jdk21-<backend>`
+| 22 and newer (tested with 25) | `io.github.beehive-lab:jitllm:3.0.0-jdk22plus` | `8.1.0-jdk22plus-<backend>`
 |===
 
 The build picks the JitLLM line that matches the JDK running Maven.
@@ -39,8 +39,8 @@ sdk install java 21.0.2-open
 sdk use java 21.0.2-open
 
 # TornadoVM SDK
-sdk install tornadovm 7.0.1-jdk21-<backend>
-sdk use tornadovm 7.0.1-jdk21-<backend>
+sdk install tornadovm 8.1.0-jdk21-<backend>
+sdk use tornadovm 8.1.0-jdk21-<backend>
 ----
 * JDK 22 and newer (tested with JDK 25):
 [source,shell]
@@ -50,8 +50,8 @@ sdk install java 25.0.2-open
 sdk use java 25.0.2-open
 
 # TornadoVM SDK
-sdk install tornadovm 7.0.1-jdk22plus-<backend>
-sdk use tornadovm 7.0.1-jdk22plus-<backend>
+sdk install tornadovm 8.1.0-jdk22plus-<backend>
+sdk use tornadovm 8.1.0-jdk22plus-<backend>
 ----
 
 To verify installation:
@@ -220,6 +220,10 @@ java @$TORNADOVM_HOME/tornado-argfile --add-modules jdk.incubator.vector \
 ----
 
 IMPORTANT: Ensure `TORNADOVM_HOME` is set and points at the SDK matching your JDK. The `tornado-argfile` does not add `jdk.incubator.vector`, which the engine needs, so pass `--add-modules jdk.incubator.vector` yourself.
+
+TIP: On GPU the engine chooses the execution policy itself: batched prefill (512 tokens per step where the model supports it) and the vendor native libraries (cuBLAS/cuDNN on CUDA, MLX on Apple silicon) where they are installed. Leave `quarkus.langchain4j.jitllm.chat-model.prefill-decode` at its default `false` to keep that choice; setting it to `true` fixes the prefill batch size to `prefill-batch-size` and turns the native libraries off.
+
+TIP: Qwen3.8 reasons at its template's longest effort (`xhigh`) by default when `enable-thinking=true`. Set `quarkus.langchain4j.jitllm.chat-model.reasoning-effort` to `medium` or `low` for shorter reasoning. Models without a reasoning-effort control ignore the property.
 
 TIP: The model's device-memory budget is set by `quarkus.langchain4j.jitllm.chat-model.device-memory` (default `4GB`). The extension sets `tornado.device.memory` from it at model initialization, so a bare `-Dtornado.device.memory` on the command line has no effect.
 

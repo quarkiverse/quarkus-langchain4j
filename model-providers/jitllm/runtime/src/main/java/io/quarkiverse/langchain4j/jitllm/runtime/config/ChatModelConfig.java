@@ -4,6 +4,8 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
+import org.beehive.jitllm.api.ReasoningEffort;
+
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
@@ -41,13 +43,14 @@ public interface ChatModelConfig {
     OptionalInt maxTokens();
 
     /**
-     * Whether to use the prefill/decode inference path, which processes the prompt in a
-     * dedicated prefill phase before single-token decoding. Combined with a
-     * {@link #prefillBatchSize()} greater than 1 this enables the batched prefill path.
+     * Whether to choose the prefill/decode execution policy explicitly instead of leaving it to
+     * the engine. When {@code true}, the prompt is processed in a dedicated prefill phase of
+     * {@link #prefillBatchSize()} tokens per step before single-token decoding, and the vendor
+     * native libraries (cuBLAS/cuDNN, MLX) are not used.
      * <p>
-     * Off by default. Batched prefill is default-off in the engine on every backend, and
-     * enabling it is an opt-in that needs its own performance evidence for the model and
-     * device in question.
+     * Off by default, which lets the engine pick the execution policy for the model and device:
+     * on GPU that is batched prefill (512 tokens per step where the model supports it) with the
+     * native libraries where they are installed.
      */
     @WithDefault("false")
     boolean prefillDecode();
@@ -55,7 +58,8 @@ public interface ChatModelConfig {
     /**
      * Number of prompt tokens processed per batch during the prefill phase. Only used when
      * {@link #prefillDecode()} is {@code true}: a value greater than 1 enables the batched
-     * prefill path, while 1 falls back to sequential prefill/decode.
+     * prefill path, while 1 falls back to sequential prefill/decode. When
+     * {@link #prefillDecode()} is {@code false} the engine chooses the batch size.
      */
     @WithDefault("1")
     int prefillBatchSize();
@@ -70,6 +74,15 @@ public interface ChatModelConfig {
      */
     @WithDefault("false")
     boolean enableThinking();
+
+    /**
+     * How long the model reasons before answering: {@code xhigh}, {@code medium} or {@code low}.
+     * Only models whose chat template takes a reasoning effort (e.g. Qwen3.8) honor this, and only
+     * with {@link #enableThinking()} set; otherwise it has no effect. When unset, the model's own
+     * default applies, which for Qwen3.8 is the longest reasoning.
+     */
+    @ConfigDocDefault("the model's default")
+    Optional<ReasoningEffort> reasoningEffort();
 
     /**
      * Amount of GPU memory TornadoVM is allowed to allocate e.g. {@code "7GB"}, {@code "512MB"}.

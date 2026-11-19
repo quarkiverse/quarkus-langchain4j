@@ -101,6 +101,7 @@ public class JitLLMRecorder {
                     chatModelConfig.prefillDecode(),
                     chatModelConfig.prefillBatchSize(),
                     chatModelConfig.enableThinking(),
+                    chatModelConfig.reasoningEffort().orElse(null),
                     chatModelConfig.deviceMemory().orElse(null));
         });
     }
