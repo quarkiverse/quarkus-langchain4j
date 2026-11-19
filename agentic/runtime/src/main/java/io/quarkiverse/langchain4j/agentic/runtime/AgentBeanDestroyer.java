@@ -7,8 +7,8 @@ import jakarta.enterprise.context.spi.CreationalContext;
 import io.quarkus.arc.BeanDestroyer;
 
 /**
- * Destroys a bean instance of an agent interface whose scope is not the application scope: evicts the agentic scope
- * of the instance and the chat memories created for it.
+ * Destroys a bean instance of an agent interface whose scope is neither the application scope nor
+ * {@code @Singleton}: evicts the agentic scope of the instance and the chat memories created for it.
  */
 public class AgentBeanDestroyer implements BeanDestroyer<Object> {
 

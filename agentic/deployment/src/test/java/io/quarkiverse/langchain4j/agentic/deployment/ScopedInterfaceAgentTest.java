@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -104,8 +105,26 @@ public class ScopedInterfaceAgentTest {
         }
     }
 
+    @Singleton
+    public interface SingletonEchoSequence {
+
+        AtomicReference<Object> LAST_MEMORY_ID = new AtomicReference<>();
+
+        @SequenceAgent(outputKey = "echo", subAgents = Echo.class)
+        String echo(@V("text") String text);
+
+        @Output
+        static String output(AgenticScope scope) {
+            LAST_MEMORY_ID.set(scope.memoryId());
+            return scope.readState("echo", "");
+        }
+    }
+
     @Inject
     EchoSequence echoSequence;
+
+    @Inject
+    SingletonEchoSequence singletonEchoSequence;
 
     @Inject
     MemoryStore memoryStore;
@@ -145,5 +164,15 @@ public class ScopedInterfaceAgentTest {
         } finally {
             requestContext.terminate();
         }
+    }
+
+    @Test
+    void singletonInterfaceAgentHasAnEphemeralAgenticScopePerInvocation() {
+        // the single instance is shared by every caller, like an @ApplicationScoped one: no agentic scope of its own
+        assertThat(singletonEchoSequence.echo("one")).isEqualTo("Echo one");
+        Object firstMemoryId = SingletonEchoSequence.LAST_MEMORY_ID.get();
+        assertThat(((AgenticScopeAccess) singletonEchoSequence).getAgenticScope(firstMemoryId)).isNull();
+        assertThat(singletonEchoSequence.echo("two")).isEqualTo("Echo two");
+        assertThat(SingletonEchoSequence.LAST_MEMORY_ID.get()).isNotEqualTo(firstMemoryId);
     }
 }

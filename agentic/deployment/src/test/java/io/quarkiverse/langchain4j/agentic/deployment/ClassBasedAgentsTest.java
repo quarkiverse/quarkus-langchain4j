@@ -16,6 +16,7 @@ import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InterceptorBinding;
@@ -186,8 +187,26 @@ public class ClassBasedAgentsTest {
         }
     }
 
+    @Singleton
+    public static class SingletonReview {
+
+        static final AtomicReference<Object> LAST_MEMORY_ID = new AtomicReference<>();
+
+        @SequenceAgent(outputKey = "story", subAgents = { StyleScorer.class, StyleEditor.class })
+        public native String review(@V("story") String story);
+
+        @Output
+        String done(AgenticScope scope, @V("story") String story) {
+            LAST_MEMORY_ID.set(scope.memoryId());
+            return story;
+        }
+    }
+
     @Inject
     StoryReview storyReview;
+
+    @Inject
+    SingletonReview singletonReview;
 
     @Inject
     ScoringRules scoringRules;
@@ -242,6 +261,57 @@ public class ClassBasedAgentsTest {
         } finally {
             requestContext.terminate();
         }
+    }
+
+    @Test
+    void singletonAgentHasAnEphemeralAgenticScopePerInvocation() {
+        // the single instance is shared by every caller, like an @ApplicationScoped one: no agentic scope of its own
+        AgenticScopeAccess root = (AgenticScopeAccess) AgentClassSupport.rootAgent(SingletonReview.class);
+        assertThat(singletonReview.review("first")).isEqualTo("first!");
+        Object firstMemoryId = SingletonReview.LAST_MEMORY_ID.get();
+        assertThat(root.getAgenticScope(firstMemoryId)).isNull();
+        scoringRules.reset();
+        assertThat(singletonReview.review("second")).isEqualTo("second!");
+        assertThat(SingletonReview.LAST_MEMORY_ID.get()).isNotEqualTo(firstMemoryId);
+    }
+
+    // ── an agent class inheriting an AI service method from a superclass ──
+
+    public static class Summarizer {
+
+        @UserMessage("Summarize {{text}}")
+        public native String summarize(@V("text") String text);
+    }
+
+    @ApplicationScoped
+    public static class Writer extends Summarizer {
+
+        @UserMessage("Write about {{topic}}")
+        @Agent(description = "Writes a story", outputKey = "story")
+        public native String write(@V("topic") String topic);
+
+        @ChatModelSupplier
+        ChatModel model() {
+            return new ChatModel() {
+                @Override
+                public dev.langchain4j.model.chat.response.ChatResponse doChat(
+                        dev.langchain4j.model.chat.request.ChatRequest request) {
+                    var last = (dev.langchain4j.data.message.UserMessage) request.messages()
+                            .get(request.messages().size() - 1);
+                    return dev.langchain4j.model.chat.response.ChatResponse.builder()
+                            .aiMessage(new dev.langchain4j.data.message.AiMessage(last.singleText())).build();
+                }
+            };
+        }
+    }
+
+    @Inject
+    Writer writer;
+
+    @Test
+    void inheritedNativeMethodIsAnAiServiceMethodOfTheAgent() {
+        assertThat(writer.write("cats")).isEqualTo("Write about cats");
+        assertThat(writer.summarize("a long text")).isEqualTo("Summarize a long text");
     }
 
     // ── the expert router in the class form, with instance activation conditions ──
