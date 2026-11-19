@@ -14433,6 +14433,48 @@ endif::add-copy-button-to-env-var[]
 a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
 |`+++cosine+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-consistency-level]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-consistency-level[`+++quarkus.langchain4j.generic.consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The consistency level for query operations.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|tooltip:strong[Reads are guaranteed to see all committed data across sessions.], tooltip:session[Reads are guaranteed to see data that the current session changed.], tooltip:bounded[Reads are guaranteed to see data previously changed data up to a certain staleness.], tooltip:eventually[Reads are not guaranteed to see previously changed data, but will do so eventually when indexing finishes.]
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-default-store-enabled[`+++quarkus.langchain4j.generic.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Milvus embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-setup-vector-config]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-setup-vector-config[`+++quarkus.langchain4j.hibernate-orm.setup-vector-config+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.hibernate-orm.setup-vector-config+++[]
@@ -14487,6 +14529,214 @@ endif::add-copy-button-to-env-var[]
 --
 a|tooltip:none[No schema action.], tooltip:create[Create the schema.], tooltip:drop-and-create[Drop and then recreate the schema.], tooltip:drop[Drop the schema.], tooltip:update[Update (alter) the database schema.], tooltip:validate[Validate the database schema.]
 |tooltip:none[No schema action.]
+
+
+h|[[quarkus-langchain4j-hibernate_section_quarkus-langchain4j-generic]] [.section-name.section-level0]##link:#quarkus-langchain4j-hibernate_section_quarkus-langchain4j-generic[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-datasource]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-datasource[`+++quarkus.langchain4j.generic."store-name".datasource+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".datasource+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the configured datasource to use for this store. If not set, the default datasource from the Agroal extension will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-table]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-table[`+++quarkus.langchain4j.generic."store-name".table+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".table+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The table name for storing embeddings
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__TABLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-dimension]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-dimension[`+++quarkus.langchain4j.generic."store-name".dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384. OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-create-index]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-create-index[`+++quarkus.langchain4j.generic."store-name".create-index+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".create-index+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the vector index should be created if not already existing.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__CREATE_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__CREATE_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-index-options]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-index-options[`+++quarkus.langchain4j.generic."store-name".index-options+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".index-options+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A fine-tuning parameter for configuring the vector index, like e.g. `lists=1` for the pgvector IVFFlat index. Consult the database vendor documentation for details about the possible index options.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__INDEX_OPTIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__INDEX_OPTIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-index-type]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-index-type[`+++quarkus.langchain4j.generic."store-name".index-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".index-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The database specific type of the vector index, like e.g. `hnsw` or `ivfflat` on pgvector. Consult the database vendor documentation for details about the possible vector index types.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__INDEX_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__INDEX_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+h|[[quarkus-langchain4j-hibernate_section_quarkus-langchain4j-generic-store-name-schema-management]] [.section-name.section-level1]##link:#quarkus-langchain4j-hibernate_section_quarkus-langchain4j-generic-store-name-schema-management[Schema management configuration]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-schema-management-strategy]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-schema-management-strategy[`+++quarkus.langchain4j.generic."store-name".schema-management.strategy+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".schema-management.strategy+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Select whether the database schema is generated or not.
+<p>
+`drop-and-create` is awesome in development mode.
+<p>
+This defaults to 'none'.
+<p>
+However if Dev Services is in use and no other extensions that manage the schema are present
+the value will be automatically overridden to 'drop-and-create'.
+<p>
+Accepted values: `none`, `create`, `drop-and-create`, `drop`, `update`, `validate`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__SCHEMA_MANAGEMENT_STRATEGY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__SCHEMA_MANAGEMENT_STRATEGY+++`
+endif::add-copy-button-to-env-var[]
+--
+a|tooltip:none[No schema action.], tooltip:create[Create the schema.], tooltip:drop-and-create[Drop and then recreate the schema.], tooltip:drop[Drop the schema.], tooltip:update[Update (alter) the database schema.], tooltip:validate[Validate the database schema.]
+|tooltip:none[No schema action.]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-distance-function[`+++quarkus.langchain4j.generic."store-name".distance-function+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".distance-function+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The distance function to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__DISTANCE_FUNCTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__DISTANCE_FUNCTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
+|`+++cosine+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-consistency-level]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-generic-store-name-consistency-level[`+++quarkus.langchain4j.generic."store-name".consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic."store-name".consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The consistency level for query operations.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC__STORE_NAME__CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|tooltip:strong[Reads are guaranteed to see all committed data across sessions.], tooltip:session[Reads are guaranteed to see data that the current session changed.], tooltip:bounded[Reads are guaranteed to see data previously changed data up to a certain staleness.], tooltip:eventually[Reads are not guaranteed to see previously changed data, but will do so eventually when indexing finishes.]
+|
 
 
 
