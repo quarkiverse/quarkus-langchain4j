@@ -282,6 +282,12 @@
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
+                        <artifactId>quarkus-langchain4j-memory-store-infinispan</artifactId>
+                        <version>${project.version}</version>
+                        <classifier>codestarts</classifier>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-anthropic</artifactId>
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
