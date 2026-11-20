@@ -18,12 +18,18 @@ public class JsonProvider implements com.ibm.watsonx.ai.core.spi.json.JsonProvid
                 .copy().registerModule(new WatsonxJacksonModule());
     }
 
-    public static ObjectMapper MAPPER = MapperHolder.INSTANCE;
+    /**
+     * Returns the mapper lazily. The watsonx SDK instantiates this provider via ServiceLoader in a static initializer,
+     * which native-image may run at build time, so this class must not touch the Arc-backed mapper eagerly.
+     */
+    public static ObjectMapper mapper() {
+        return MapperHolder.INSTANCE;
+    }
 
     @Override
     public <T> T fromJson(String json, Class<T> type) {
         try {
-            return MAPPER.readValue(json, type);
+            return mapper().readValue(json, type);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -32,8 +38,8 @@ public class JsonProvider implements com.ibm.watsonx.ai.core.spi.json.JsonProvid
     @Override
     public <T> T fromJson(String json, TypeToken<T> type) {
         try {
-            JavaType javaType = MAPPER.getTypeFactory().constructType(type.getType());
-            return MAPPER.readValue(json, javaType);
+            JavaType javaType = mapper().getTypeFactory().constructType(type.getType());
+            return mapper().readValue(json, javaType);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -42,7 +48,7 @@ public class JsonProvider implements com.ibm.watsonx.ai.core.spi.json.JsonProvid
     @Override
     public String toJson(Object obj) {
         try {
-            return MAPPER.writeValueAsString(obj);
+            return mapper().writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -52,8 +58,8 @@ public class JsonProvider implements com.ibm.watsonx.ai.core.spi.json.JsonProvid
     public String prettyPrint(Object value) {
         try {
             return value instanceof String str
-                    ? MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(MAPPER.readTree((str)))
-                    : MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(value);
+                    ? mapper().writerWithDefaultPrettyPrinter().writeValueAsString(mapper().readTree((str)))
+                    : mapper().writerWithDefaultPrettyPrinter().writeValueAsString(value);
         } catch (JsonProcessingException e) {
             return value.toString();
         }
@@ -65,7 +71,7 @@ public class JsonProvider implements com.ibm.watsonx.ai.core.spi.json.JsonProvid
             return false;
 
         try {
-            JsonNode node = MAPPER.readTree(json);
+            JsonNode node = mapper().readTree(json);
             return node.isObject();
         } catch (JsonProcessingException e) {
             return false;

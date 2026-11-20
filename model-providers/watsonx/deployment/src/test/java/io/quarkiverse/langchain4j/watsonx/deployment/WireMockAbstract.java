@@ -67,7 +67,7 @@ public abstract class WireMockAbstract {
 
     @BeforeAll
     static void beforeAll() {
-        mapper = JsonProvider.MAPPER;
+        mapper = JsonProvider.mapper();
 
         watsonxServer = new WireMockServer(options().port(PORT_WATSONX_SERVER));
         watsonxServer.start();
