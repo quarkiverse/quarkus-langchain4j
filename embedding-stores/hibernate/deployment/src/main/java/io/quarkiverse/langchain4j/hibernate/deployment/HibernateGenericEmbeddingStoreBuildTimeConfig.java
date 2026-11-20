@@ -1,18 +1,13 @@
 package io.quarkiverse.langchain4j.hibernate.deployment;
 
-import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
-
 import java.util.Optional;
 
 import dev.langchain4j.store.embedding.hibernate.DistanceFunction;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigRoot;
-import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
-@ConfigRoot(phase = BUILD_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.generic")
+@ConfigGroup
 public interface HibernateGenericEmbeddingStoreBuildTimeConfig {
 
     /**
@@ -64,6 +59,11 @@ public interface HibernateGenericEmbeddingStoreBuildTimeConfig {
      */
     @WithDefault("COSINE")
     DistanceFunction distanceFunction();
+
+    /**
+     * The consistency level for query operations.
+     */
+    Optional<ConsistencyLevel> consistencyLevel();
 
     @ConfigGroup
     interface SchemaManagement {

@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.hibernate.runtime;
 
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -24,15 +25,32 @@ public class HibernateEmbeddingStoreRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
+    public RuntimeValue<DatabaseKind> resolveDatabaseKindRuntimeValue(String databaseKind) {
+        return new RuntimeValue<>(resolveDatabaseKind(databaseKind));
+    }
+
+    public static DatabaseKind resolveDatabaseKind(String databaseKind) {
+        return switch (databaseKind) {
+            case "db2" -> DatabaseKind.DB2;
+            case "mariadb" -> DatabaseKind.MARIADB;
+            case "mssql" -> DatabaseKind.MSSQL;
+            case "mysql" -> DatabaseKind.MYSQL;
+            case "postgresql" -> DatabaseKind.POSTGRESQL;
+            case "oracle" -> DatabaseKind.ORACLE;
+            default -> throw new IllegalArgumentException("Unknown database kind: " + databaseKind);
+        };
+    }
+
     public Function<SyntheticCreationalContext<HibernateEmbeddingStore<?>>, HibernateEmbeddingStore<?>> embeddingStoreFunction(
-            String databaseKind,
+            RuntimeValue<DatabaseKind> databaseKind,
             String entityName,
             String embeddingAttributeName,
             String embeddedTextAttributeName,
             String unmappedMetadataAttributeName,
             String[] metadataAttributeNames,
             String persistenceUnitName,
-            DistanceFunction distanceFunction) {
+            DistanceFunction distanceFunction,
+            Map<String, Object> queryHints) {
         return new Function<>() {
             @Override
             public HibernateEmbeddingStore<?> apply(SyntheticCreationalContext<HibernateEmbeddingStore<?>> context) {
@@ -48,13 +66,14 @@ public class HibernateEmbeddingStoreRecorder {
                 }
 
                 return HibernateEmbeddingStore.builder(entityManagerFactory.getMetamodel().entity(entityName).getJavaType())
-                        .databaseKind(langchain4jDatabaseKind(databaseKind))
+                        .databaseKind(databaseKind.getValue())
                         .sessionFactory(entityManagerFactory.unwrap(SessionFactory.class))
                         .embeddingAttributeName(embeddingAttributeName)
                         .embeddedTextAttributeName(embeddedTextAttributeName)
                         .unmappedMetadataAttributeName(unmappedMetadataAttributeName)
                         .metadataAttributeNames(metadataAttributeNames)
                         .distanceFunction(distanceFunction)
+                        .queryHints(queryHints)
                         .build();
             }
         };
@@ -66,18 +85,6 @@ public class HibernateEmbeddingStoreRecorder {
             public SetupVectorConfigAgroalPoolInterceptor get() {
                 return new SetupVectorConfigAgroalPoolInterceptor(runtimeConfig.getValue(), setupSql);
             }
-        };
-    }
-
-    public static DatabaseKind langchain4jDatabaseKind(String databaseKind) {
-        return switch (databaseKind) {
-            case "db2" -> DatabaseKind.DB2;
-            case "mariadb" -> DatabaseKind.MARIADB;
-            case "mssql" -> DatabaseKind.MSSQL;
-            case "mysql" -> DatabaseKind.MYSQL;
-            case "postgresql" -> DatabaseKind.POSTGRESQL;
-            case "oracle" -> DatabaseKind.ORACLE;
-            default -> null;
         };
     }
 }
