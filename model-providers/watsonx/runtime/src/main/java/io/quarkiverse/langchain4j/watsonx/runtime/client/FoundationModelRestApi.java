@@ -49,7 +49,7 @@ public interface FoundationModelRestApi {
 
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
+        return JsonProvider.mapper();
     }
 
     @ClientExceptionMapper
