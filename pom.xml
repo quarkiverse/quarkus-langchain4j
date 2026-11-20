@@ -58,7 +58,7 @@
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
     <jinfer.version>0.3.1</jinfer.version>
     <jitllm.version>3.0.0-jdk21</jitllm.version>
-    <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
+    <smallrye-certificate-generator.version>0.9.4</smallrye-certificate-generator.version>
     <apicurio-registry-sdk.version>3.3.4</apicurio-registry-sdk.version>
     <quarkus.config.doc.skip>false</quarkus.config.doc.skip>
   </properties>
