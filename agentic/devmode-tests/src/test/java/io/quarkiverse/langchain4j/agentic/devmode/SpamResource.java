@@ -27,7 +27,7 @@ public class SpamResource {
     @GET
     @Path("/topology")
     public String topology() {
-        return new AgenticJsonRpcService().getTopologyHtml(0);
+        return new AgenticJsonRpcService().getTopologyReportHtml(0);
     }
 
     @GET
