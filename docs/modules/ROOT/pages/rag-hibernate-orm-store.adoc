@@ -34,7 +34,8 @@ The currently supported databases are:
 
 To enable the LangChain4j Hibernate ORM extension in your Quarkus project, add the following Maven dependency:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-hibernate]
+:provider-artifact: quarkus-langchain4j-hibernate
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 This extension requires a configured Hibernate ORM persistence unit.
 For configuration details, refer to the https://quarkus.io/guides/hibernate-orm[Hibernate ORM Guide].
@@ -162,6 +163,89 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/QueryExampleWithHiber
 ----
 
 For further examples, take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#examples[LangChain4j Hibernate ORM documentation examples].
+
+== Multiple Entities and/or PUs
+
+This extension supports multiple embedding entity classes per Persistent Unit and also multiple Persistent Units that each have their
+own embedding entities.  When this scenario happens, you must use the `@EmbedddingStoreName` qualifer to inject the
+store you want.  The name to use differs depending on your deployment
+
+The base name for an embedding entity is the simple name of the entity class, or, if the entity class has an `@EmbeddingStoreName`
+annotation applied to the class, then that value is used as a base name.
+
+If there is only one PU that defines embedding entities, then just use the base name to inject your stores.Use
+
+Here's an example:
+
+For these entities in one PU:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
+
+@Entity
+public class MyEmbeddingEntity {
+    @Id
+    UUID id;
+    @EmbeddingVector
+    @Array(length = 384)                // The dimension of the embedding vector based on the embedding model
+    float[] embedding;
+}
+
+@Entity
+@EmbedddingStoreName("another")
+public class AnotherEmbeddingEntity {
+    @Id
+    UUID id;
+    @EmbeddingVector
+    @Array(length = 384)                // The dimension of the embedding vector based on the embedding model
+    float[] embedding;
+}
+----
+This is how you would inject them
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
+
+@ApplicationScoped
+public class MyAugmentor {
+    @Inject
+    @EmbeddingStoreName("MyEmbeddingEntity")
+    protected EmbeddingStore<TextSegment> custom;
+
+    @Inject
+    @EmbeddingStoreName("another")
+    protected EmbeddingStore<TextSegment> another;
+}
+----
+
+When there are multiple PUs that define embedding entities, then the name of the store is `<PU-name>/<base-name>`.
+Let's say you had the above entites in two different PUs ("one" and "two").  The injection would look like this:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
+
+@ApplicationScoped
+public class MyAugmentor {
+    @Inject
+    @EmbeddingStoreName("one/MyEmbeddingEntity")
+    protected EmbeddingStore<TextSegment> myOne;
+
+    @Inject
+    @EmbeddingStoreName("two/MyEmbeddingEntity")
+    protected EmbeddingStore<TextSegment> myTwo;
+
+    @Inject
+    @EmbeddingStoreName("one/another")
+    protected EmbeddingStore<TextSegment> anotherOne;
+
+    @Inject
+    @EmbeddingStoreName("two/another")
+    protected EmbeddingStore<TextSegment> anotherTwo;
+}
+----
 
 == Configuration
 

@@ -5,6 +5,7 @@ import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 import java.util.Optional;
 
 import dev.langchain4j.store.embedding.hibernate.DistanceFunction;
+import io.quarkiverse.langchain4j.EmbeddingStoreName;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -20,6 +21,14 @@ public interface HibernateGenericEmbeddingStoreBuildTimeConfig {
      * the default datasource from the Agroal extension will be used.
      */
     Optional<String> datasource();
+
+    /**
+     * Embedding store name
+     * see {@link EmbeddingStoreName}
+     *
+     * @return
+     */
+    Optional<String> storeName();
 
     /**
      * The table name for storing embeddings
