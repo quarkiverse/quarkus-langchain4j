@@ -16,6 +16,7 @@ import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.RelevanceScore;
 import io.quarkiverse.qdrant.runtime.QdrantClient;
+import io.quarkiverse.qdrant.runtime.SearchBuilder;
 import io.quarkiverse.qdrant.runtime.model.PointStruct;
 import io.quarkiverse.qdrant.runtime.model.ScoredPoint;
 
@@ -102,12 +103,16 @@ public class QdrantEmbeddingStore implements EmbeddingStore<TextSegment> {
     public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
         float[] queryVector = request.queryEmbedding().vector();
 
-        List<ScoredPoint> scoredPoints = qdrantClient.search(collectionName)
+        SearchBuilder searchBuilder = qdrantClient.search(collectionName)
                 .vector(queryVector)
                 .limit(request.maxResults())
                 .withPayload(true)
-                .withVector(true)
-                .execute();
+                .withVector(true);
+        if (request.filter() != null) {
+            searchBuilder.filter(QdrantFilterConverter.convert(request.filter()));
+        }
+
+        List<ScoredPoint> scoredPoints = searchBuilder.execute();
 
         List<EmbeddingMatch<TextSegment>> matches = new ArrayList<>();
         if (scoredPoints != null) {
