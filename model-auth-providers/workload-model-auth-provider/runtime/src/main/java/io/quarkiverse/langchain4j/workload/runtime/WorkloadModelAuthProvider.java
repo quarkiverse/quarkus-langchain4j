@@ -12,6 +12,8 @@ import org.jboss.logging.Logger;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkus.oidc.client.OidcClient;
 import io.quarkus.oidc.client.runtime.TokensHelper;
+import io.quarkus.spiffe.svid.jwt.JwtSvidClient;
+import io.quarkus.spiffe.svid.jwt.WorkloadJsonWebToken;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -31,15 +33,18 @@ public class WorkloadModelAuthProvider implements ModelAuthProvider {
     private final OidcClient oidcClient;
     private final TokensHelper tokensHelper = new TokensHelper();
     private final Path tokenPath;
+    private final JwtSvidClient spiffeClient;
     private final String tokenParamName;
     private volatile IdentityToken identityToken;
 
-    WorkloadModelAuthProvider(Vertx vertx, OidcClient oidcClient, String tokenPath, String tokenParamName) {
+    WorkloadModelAuthProvider(Vertx vertx, OidcClient oidcClient, String tokenPath, JwtSvidClient spiffeClient,
+            String tokenParamName) {
         this.vertx = vertx;
         this.oidcClient = oidcClient;
-        this.tokenPath = Path.of(tokenPath);
+        this.tokenPath = tokenPath == null ? null : Path.of(tokenPath);
+        this.spiffeClient = spiffeClient;
         this.tokenParamName = tokenParamName;
-        this.identityToken = loadFromFileSystem();
+        this.identityToken = loadToken();
     }
 
     @Override
@@ -58,9 +63,24 @@ public class WorkloadModelAuthProvider implements ModelAuthProvider {
     private synchronized IdentityToken loadIdentityToken() {
         if (isInvalid(identityToken)) {
             cancelRefresh();
-            identityToken = loadFromFileSystem();
+            identityToken = loadToken();
         }
         return identityToken;
+    }
+
+    private IdentityToken loadToken() {
+        return tokenPath != null ? loadFromFileSystem() : loadFromSpiffeWorkloadApi();
+    }
+
+    private IdentityToken loadFromSpiffeWorkloadApi() {
+        try {
+            WorkloadJsonWebToken jwtSvid = spiffeClient.getWorkloadJsonWebToken().await().indefinitely();
+            long expiresAt = jwtSvid.expiry().getEpochSecond();
+            return new IdentityToken(jwtSvid.token(), expiresAt, scheduleRefresh(expiresAt));
+        } catch (RuntimeException e) {
+            LOG.errorf(e, "Failed to fetch a SPIFFE JWT-SVID from the SPIFFE Workload API: %s", e.getMessage());
+            return null;
+        }
     }
 
     private long scheduleRefresh(long expiresAt) {
@@ -74,7 +94,7 @@ public class WorkloadModelAuthProvider implements ModelAuthProvider {
         return vertx.setTimer(delayMs, new Handler<Long>() {
             @Override
             public void handle(Long ignored) {
-                WorkloadModelAuthProvider.this.identityToken = loadFromFileSystem();
+                WorkloadModelAuthProvider.this.identityToken = loadToken();
             }
         });
     }

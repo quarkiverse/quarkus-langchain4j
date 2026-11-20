@@ -13,7 +13,6 @@ For single-cluster deployments where no additional identity infrastructure is ne
 - `oc` CLI logged in to the cluster
 - An Anthropic organization with Workload Identity Federation access
 - `envsubst` (used for placeholder substitution in YAML files)
-- `jq` (optional, can be used to decode the SPIFFE token claims)
 
 ## 1. Deploy SPIRE
 
@@ -136,16 +135,26 @@ Wait for the pod to be ready:
 oc wait pod -l app.kubernetes.io/name=workload-identity-federation-spiffe -n workload-identity-spiffe --for=condition=Ready --timeout=120s
 ```
 
-## 7. Verify the token issuer URL and subject
+## 7. Verify the token subject and audience
 
-Verify that the issuer URL and subject that you used to configure Anthropic Workload Identity Federation in the step 2 are correct by decoding a token from a running pod:
+The JWT-SVID is fetched from the SPIFFE Workload API and never written to disk, so it cannot be read from the pod filesystem. Instead, the sample exposes `WorkloadIdentityResource`, which acquires a fresh JWT-SVID with the programmatic `SpiffeClient` API and returns its details.
+
+Get the route URL and request them:
 
 ```bash
-oc exec deployment/workload-identity-federation-spiffe -n workload-identity-spiffe -c app \
-    -- cat /var/run/secrets/tokens/spiffe-jwt-svid | cut -d. -f2 | base64 -d 2>/dev/null | jq
+ROUTE=$(oc get route workload-identity-federation-spiffe -n workload-identity-spiffe -o jsonpath='{.spec.host}')
+curl https://$ROUTE/api/identity
 ```
 
-This will show the JWT payload with `iss` (issuer), `sub` (subject), and `aud` (audience) claims.
+This prints the `sub` (subject) and `aud` (audience) claims of the issued token, along with its expiry:
+
+```
+subject: spiffe://<trust-domain>/ns/workload-identity-spiffe/sa/workload-identity-federation-spiffe
+audience: [https://api.anthropic.com]
+expiry: 2026-10-19T12:34:56Z
+```
+
+Check that the subject and audience match the federation rule you registered with Anthropic in step 2.
 
 ## 8. Access the chat UI
 
