@@ -11,6 +11,8 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.search.ToolSearchService;
+import dev.langchain4j.service.tool.search.ToolSearchStrategy;
 import dev.langchain4j.spi.services.AiServicesFactory;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
@@ -56,6 +58,12 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
         public AiServices<T> toolHallucinationStrategy(Object toolHallucinationStrategy) {
             context.toolService.hallucinatedToolNameStrategy(
                     (Function<ToolExecutionRequest, ToolExecutionResultMessage>) toolHallucinationStrategy);
+            return this;
+        }
+
+        @Override
+        public AiServices<T> toolSearchStrategy(ToolSearchStrategy toolSearchStrategy) {
+            quarkusAiServiceContext().toolSearchService = new ToolSearchService(toolSearchStrategy);
             return this;
         }
 

@@ -28,6 +28,7 @@ import dev.langchain4j.agentic.declarative.RetrievalAugmentorSupplier;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.agentic.declarative.SupervisorAgent;
 import dev.langchain4j.agentic.declarative.ToolProviderSupplier;
+import dev.langchain4j.agentic.declarative.ToolSearchStrategySupplier;
 import dev.langchain4j.agentic.declarative.ToolsSupplier;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.scope.AgenticScope;
@@ -95,6 +96,8 @@ public final class AgenticLangChain4jDotNames {
             .createSimple(ToolProviderSupplier.class.getName());
     public static final DotName TOOL_SUPPLIER = DotName
             .createSimple(ToolsSupplier.class.getName());
+    public static final DotName TOOL_SEARCH_STRATEGY_SUPPLIER = DotName
+            .createSimple(ToolSearchStrategySupplier.class);
     public static final DotName STREAMING_CHAT_MODEL_SUPPLIER = DotName
             .createSimple(AGENTIC_PACKAGE + ".StreamingChatModelSupplier");
     public static final DotName SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName
@@ -122,6 +125,7 @@ public final class AgenticLangChain4jDotNames {
             // suppliers
             CHAT_MODEL_SUPPLIER, STREAMING_CHAT_MODEL_SUPPLIER, CHAT_MEMORY_SUPPLIER, CHAT_MEMORY_PROVIDER_SUPPLIER,
             CONTENT_RETRIEVER_SUPPLIER, RETRIEVAL_AUGMENTER_SUPPLIER, TOOL_SUPPLIER, TOOL_PROVIDER_SUPPLIER,
+            TOOL_SEARCH_STRATEGY_SUPPLIER,
             AGENT_LISTENER_SUPPLIER, SYSTEM_MESSAGE_PROVIDER_SUPPLIER, USER_MESSAGE_PROVIDER_SUPPLIER,
             MCP_CLIENT_SUPPLIER, PLANNER_SUPPLIER, A2A_SERVER_URL_SUPPLIER, PARALLEL_EXECUTOR, DECISION_MODEL_SUPPLIER,
             DECISION_THRESHOLD_SUPPLIER,

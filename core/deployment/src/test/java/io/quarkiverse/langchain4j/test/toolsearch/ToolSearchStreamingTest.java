@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.test.toolsearch;
 
 import static dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Duration;
@@ -27,7 +28,9 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.QuarkusAiServicesFactory;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 
@@ -60,6 +63,21 @@ public class ToolSearchStreamingTest {
                 .collect().asList()
                 .await().atMost(Duration.ofSeconds(30));
         assertEquals("REAL_TOOL_RESULT", String.join("", tokens));
+    }
+
+    @Test
+    @ActivateRequestContext
+    void programmaticStrategyDiscoversAndExecutesTheTool() {
+        StreamingServiceWithToolSearch programmatic = QuarkusAiServicesFactory.InstanceHolder.INSTANCE
+                .<StreamingServiceWithToolSearch> create(new QuarkusAiServiceContext(StreamingServiceWithToolSearch.class))
+                .streamingChatModel(new StreamingModel())
+                .tools(new BookingTools())
+                .toolSearchStrategy(new FakeToolSearchStrategy())
+                .build();
+
+        List<String> tokens = programmatic.chat("get my booking details", 2)
+                .collect().asList().await().atMost(Duration.ofSeconds(30));
+        assertThat(String.join("", tokens)).isEqualTo("REAL_TOOL_RESULT");
     }
 
     public static class StreamingModelSupplier implements Supplier<StreamingChatModel> {

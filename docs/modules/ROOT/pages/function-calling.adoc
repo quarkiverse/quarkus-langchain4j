@@ -365,6 +365,10 @@ Alternatively, if a single `ToolSearchStrategy` CDI bean exists, it is used auto
 
 The tools the model surfaces through the search tool are added to the conversation and remain available in the following tool-calling rounds. Tool Search works for both blocking and streaming AI service methods.
 
+For a programmatically built AI service, configure the strategy with `AiServices.builder(MyAiService.class).toolSearchStrategy(strategy)`.
+Declarative agents can supply it through an agentic `@ToolSearchStrategySupplier` method.
+Its parameters can be resolved from CDI with `@CdiBean` or a CDI qualifier, like other agentic supplier methods.
+
 By default every tool is searchable, meaning it is only offered to the model once the search strategy finds it. A tool that must always be offered upfront can opt out with `@Tool(searchBehavior = ALWAYS_VISIBLE)`:
 
 [source,java]
