@@ -648,41 +648,19 @@ public class AiServiceMethodImplementationSupport {
             }
             if (shouldReturnImmediately(anyToolErrored, returnBehaviors)) {
                 if (!TypeUtil.isResult(returnType)) {
-                    if (returnType.equals(void.class) || returnType.equals(Void.class)) {
-                        // return type is void, so just return.
-                        log.debug("return type is void so just return null");
-                        return null;
-                    }
-
-                    // can't automatically return if there are any TO_LLM behaviors
-                    if (returnBehaviors.stream().allMatch(rb -> rb == IMMEDIATE || rb == IMMEDIATE_IF_LAST)) {
-                        int numNullResults = 0;
-                        ToolExecution lastNonNullResult = null;
-                        for (ToolExecution execution : toolExecutions) {
-                            if (execution.resultObject() != null) {
-                                lastNonNullResult = execution;
-                            } else {
-                                numNullResults++;
-                            }
-                        }
-                        boolean returnTypeNullable = !(returnType instanceof Class) || !((Class) returnType).isPrimitive()
-                                || ((Class) returnType).equals(void.class);
-
-                        if (returnTypeNullable && numNullResults == toolExecutions.size()) {
-                            // if all results are null, we can return null
-                            return null;
-                        } else if (numNullResults + 1 == toolExecutions.size()) {
-                            Object o = lastNonNullResult.resultObject();
-                            if (resolvesToType(o, returnType)) {
-                                // if only one tool result returns non-null, we can return it
-                                return lastNonNullResult.resultObject();
-                            }
-                        }
-                        // Cannot resolve return type.  Need to barf.
-                    }
-                    throw illegalConfiguration(
-                            "AI Service method '%s' call cannot resolve return type from tool executions with ReturnBehavior.%s/%s.  Use %s as your return type.",
-                            methodCreateInfo.getMethodName(), IMMEDIATE, IMMEDIATE_IF_LAST, Result.class.getName());
+                    // Resolve the value first: an unresolvable return type is a configuration error, and the
+                    // messages of a failed invocation are not committed, like on every other failure path.
+                    Object immediateReturnValue = resolveImmediateReturnValue(returnType, returnBehaviors, toolExecutions,
+                            methodCreateInfo);
+                    // The tool deliberately ended the conversation turn, so this is a success path: persist the
+                    // messages added during the tool loop and report completion, exactly like the Result<T> path below.
+                    committableChatMemory.commit();
+                    context.eventListenerRegistrar.fireEvent(
+                            AiServiceCompletedEvent.builder()
+                                    .invocationContext(invocationContext)
+                                    .result(immediateReturnValue)
+                                    .build());
+                    return immediateReturnValue;
                 }
                 committableChatMemory.commit();
                 ChatResponse finalResponse = intermediateResponses.remove(intermediateResponses.size() - 1);
@@ -862,6 +840,52 @@ public class AiServiceMethodImplementationSupport {
             return true;
         }
         return returnBehaviors.stream().allMatch(rb -> rb == IMMEDIATE || rb == IMMEDIATE_IF_LAST);
+    }
+
+    /**
+     * Resolves the value an AI service method that does not return {@code Result<T>} yields when a tool declaring
+     * {@link ReturnBehavior#IMMEDIATE} / {@link ReturnBehavior#IMMEDIATE_IF_LAST} ends the tool-calling loop.
+     *
+     * @throws dev.langchain4j.service.IllegalConfigurationException when the value cannot be resolved from the tool
+     *         executions, in which case the method must be declared to return {@code Result<T>}
+     */
+    private static Object resolveImmediateReturnValue(Type returnType, List<ReturnBehavior> returnBehaviors,
+            List<ToolExecution> toolExecutions, AiServiceMethodCreateInfo methodCreateInfo) {
+        if (returnType.equals(void.class) || returnType.equals(Void.class)) {
+            // return type is void, so just return.
+            log.debug("return type is void so just return null");
+            return null;
+        }
+
+        // can't automatically return if there are any TO_LLM behaviors
+        if (returnBehaviors.stream().allMatch(rb -> rb == IMMEDIATE || rb == IMMEDIATE_IF_LAST)) {
+            int numNullResults = 0;
+            ToolExecution lastNonNullResult = null;
+            for (ToolExecution execution : toolExecutions) {
+                if (execution.resultObject() != null) {
+                    lastNonNullResult = execution;
+                } else {
+                    numNullResults++;
+                }
+            }
+            boolean returnTypeNullable = !(returnType instanceof Class) || !((Class) returnType).isPrimitive()
+                    || ((Class) returnType).equals(void.class);
+
+            if (returnTypeNullable && numNullResults == toolExecutions.size()) {
+                // if all results are null, we can return null
+                return null;
+            } else if (numNullResults + 1 == toolExecutions.size()) {
+                Object o = lastNonNullResult.resultObject();
+                if (resolvesToType(o, returnType)) {
+                    // if only one tool result returns non-null, we can return it
+                    return lastNonNullResult.resultObject();
+                }
+            }
+            // Cannot resolve return type.  Need to barf.
+        }
+        throw illegalConfiguration(
+                "AI Service method '%s' call cannot resolve return type from tool executions with ReturnBehavior.%s/%s.  Use %s as your return type.",
+                methodCreateInfo.getMethodName(), IMMEDIATE, IMMEDIATE_IF_LAST, Result.class.getName());
     }
 
     private static void emitThinkingIfPresent(ChatResponse response,
