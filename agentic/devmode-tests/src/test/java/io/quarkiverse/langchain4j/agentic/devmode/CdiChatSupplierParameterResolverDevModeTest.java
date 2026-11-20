@@ -49,10 +49,9 @@ public class CdiChatSupplierParameterResolverDevModeTest {
                                     FixedResponseChatModel.class, EchoResponseChatModel.class)
                             .addAsResource(new StringAsset(String.join("\n",
                                     "quarkus.http.port=" + HTTP_PORT,
-                                    "quarkus.wiremock.devservices.reload=false",
+                                    "quarkus.langchain4j.mock-api.enabled=true",
                                     "quarkus.langchain4j.openai.echo.api-key=echo",
-                                    "quarkus.langchain4j.openai.fixed.api-key=fixed",
-                                    "quarkus.langchain4j.openai.base-url=http://localhost:${quarkus.wiremock.devservices.port}/v1")),
+                                    "quarkus.langchain4j.openai.fixed.api-key=fixed")),
                                     "application.properties"));
 
     static final String SELECTED_RESPONSE = "selected-by-cdi-bean";

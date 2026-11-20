@@ -1,11 +1,5 @@
 package io.quarkiverse.langchain4j.anthropic.deployment.advancedtooluse;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.absent;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.not;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,6 +7,7 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -22,48 +17,47 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.anthropic.deployment.AnthropicSmokeTest;
+import io.quarkiverse.langchain4j.mockapi.ChatReply;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusExtensionTest;
 import tools.jackson.databind.JsonNode;
 
 class AnthropicToolUseExamplesTest extends AnthropicSmokeTest {
     private static final String MODEL_ID = "claude-sonnet-4-6";
     private static final String EXPECTED_BETA_HEADER = "tools-2024-04-04,advanced-tool-use-2025-11-20";
-    private static final String MINIMAL_VALID_ANTHROPIC_RESPONSE = """
-            {
-              "type": "message",
-              "role": "assistant",
-              "content": [ { "type": "text", "text": "ok" } ],
-              "stop_reason": "end_turn",
-              "usage": { "input_tokens": 1, "output_tokens": 1 }
-            }
-            """;
-
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.chat-model.model-name", MODEL_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.chat-model.tool-use-examples.enabled", "true")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.chat-model.tool-use-examples.enabled", "true");
 
     @Inject
     TestAiService aiService;
 
+    @Inject
+    MockModelServer mock;
+
+    @BeforeEach
+    void reset() {
+        mock.reset();
+    }
+
     @Test
     void shouldContainInputExamplesInToolDefinition() throws Exception {
-        wireMockServer.stubFor(
-                post(urlPathEqualTo("/messages"))
-                        .withHeader("x-api-key", equalTo(API_KEY))
-                        .withHeader("anthropic-version", not(absent()))
-                        .withHeader("anthropic-beta", equalTo(EXPECTED_BETA_HEADER))
-                        .willReturn(okJson(MINIMAL_VALID_ANTHROPIC_RESPONSE)));
+        mock.chat().reply(ChatReply.text("ok").usage(1, 1));
 
         aiService.chat("Create a critical bug ticket for the login page");
 
-        assertThat(wireMockServer.getAllServeEvents()).hasSize(1);
+        assertThat(mock.requests()).hasSize(1);
 
-        var loggedRequest = wireMockServer.getAllServeEvents().get(0).getRequest();
-        var body = MAPPER.readTree(loggedRequest.getBodyAsString());
+        var loggedRequest = mock.chat().singleRequest();
+        assertThat(loggedRequest.path()).isEqualTo("/anthropic/v1/messages");
+        assertThat(loggedRequest.header("x-api-key")).isEqualTo(API_KEY);
+        assertThat(loggedRequest.header("anthropic-version")).isNotNull();
+        assertThat(loggedRequest.header("anthropic-beta")).isEqualTo(EXPECTED_BETA_HEADER);
+        var body = loggedRequest.bodyAsJson();
         var tools = body.get("tools");
 
         var createTicketTool = findTool(tools, "create_ticket");
@@ -73,27 +67,27 @@ class AnthropicToolUseExamplesTest extends AnthropicSmokeTest {
         assertThat(inputExamples.isArray()).isTrue();
         assertThat(inputExamples.size()).isEqualTo(3);
 
-        assertThat(inputExamples.get(0).path("title").asText())
+        assertThat(inputExamples.get(0).path("title").asString())
                 .isEqualTo("Login page returns 500 error");
-        assertThat(inputExamples.get(0).path("priority").asText())
+        assertThat(inputExamples.get(0).path("priority").asString())
                 .isEqualTo("critical");
-        assertThat(inputExamples.get(0).path("date").asText())
+        assertThat(inputExamples.get(0).path("date").asString())
                 .isEqualTo("2024-11-06");
 
-        assertThat(inputExamples.get(1).path("title").asText())
+        assertThat(inputExamples.get(1).path("title").asString())
                 .isEqualTo("Update API documentation");
         assertThat(inputExamples.get(1).has("priority")).isFalse();
-        assertThat(inputExamples.get(1).path("date").asText())
+        assertThat(inputExamples.get(1).path("date").asString())
                 .isEqualTo("2024-12-01");
 
-        assertThat(inputExamples.get(2).path("title").asText())
+        assertThat(inputExamples.get(2).path("title").asString())
                 .isEqualTo("Brainstorming session");
         assertThat(inputExamples.get(2).has("date")).isFalse();
     }
 
     private JsonNode findTool(JsonNode tools, String name) {
         for (JsonNode tool : tools) {
-            if (name.equals(tool.path("name").asText())) {
+            if (name.equals(tool.path("name").asString())) {
                 return tool;
             }
         }

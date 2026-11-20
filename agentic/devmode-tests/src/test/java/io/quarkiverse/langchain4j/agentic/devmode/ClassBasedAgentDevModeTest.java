@@ -30,9 +30,8 @@ public class ClassBasedAgentDevModeTest {
                                     CountingLoopAgent.class, CountingLoopAgent.Counter.class)
                             .addAsResource(new StringAsset(String.join("\n",
                                     "quarkus.http.port=" + HTTP_PORT,
-                                    "quarkus.wiremock.devservices.reload=false",
-                                    "quarkus.langchain4j.openai.api-key=whatever",
-                                    "quarkus.langchain4j.openai.base-url=http://localhost:${quarkus.wiremock.devservices.port}/v1")),
+                                    "quarkus.langchain4j.mock-api.enabled=true",
+                                    "quarkus.langchain4j.openai.api-key=whatever")),
                                     "application.properties"));
 
     @Test

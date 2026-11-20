@@ -18,7 +18,7 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkus.test.QuarkusExtensionTest;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class BedrockChatModelDisabledTest extends BedrockTestBase {
+class BedrockChatModelDisabledTest {
 
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()

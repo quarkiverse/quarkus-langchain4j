@@ -14,6 +14,10 @@ The skills are verbatim copies from Quarkus core, see [UPSTREAM.md](.agents/skil
 - In `runtime` modules it is a hard requirement. Use anonymous classes, loops and `if` statements, and avoid streams.
 - The only accepted exception is a case where every alternative is clearly worse. Explain it in the PR.
 
+## Dependencies
+
+- Use Jackson 3 (`tools.jackson`) everywhere, including modules that do not depend on Quarkus. `com.fasterxml.jackson.annotation` is the only Jackson 2 package new code imports. Jackson 2 stays only where a third-party SDK forces it, as the watsonx SDK does.
+
 ## Deployment modules
 
 - Create `DotName` constants from class literals when the class is on the deployment classpath, and keep them as `static final` fields. Use a String only when the class is not available to the deployment module.
@@ -29,7 +33,8 @@ The skills are verbatim copies from Quarkus core, see [UPSTREAM.md](.agents/skil
 ## Tests
 
 - The `writing-tests` skill prefers `QuarkusExtensionTest`. This repository still has many `QuarkusUnitTest` tests, so follow the style of the neighbouring tests in the module you are changing.
-- Mock the wire, not the classes. Use WireMock or a stub chat model, and Vert.x if a test needs a fake HTTP server. Avoid Mockito mocks of internal classes.
+- Mock the wire, not the classes. Model provider tests run against the mock model API extension (`testing/mock-api`, documented in `docs/modules/ROOT/pages/testing-model-mocking.adoc`): enable it in the test, enqueue replies and assert on the captured requests. Keep WireMock for services the mock does not speak, such as MCP and Tavily, and use a stub chat model or a Vert.x fake HTTP server when neither fits. Avoid Mockito mocks of internal classes.
+- When the mock lacks a provider, an operation or a wire shape, extend it (a dialect under `testing/mock-api/core`, with the provider's public API documentation as the source of truth) instead of falling back to WireMock.
 - Assert outcomes, such as what the client actually sends or what the AI service returns. Do not assert internal state of a class.
 
 ## Pull requests

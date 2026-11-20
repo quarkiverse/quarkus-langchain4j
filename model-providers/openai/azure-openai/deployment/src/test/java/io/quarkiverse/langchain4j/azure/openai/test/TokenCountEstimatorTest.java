@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusExtensionTest;
 
 public class TokenCountEstimatorTest {
@@ -16,8 +15,8 @@ public class TokenCountEstimatorTest {
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.api-key", TOKEN)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.endpoint", WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.api-key", TOKEN);
 
     @Test
     @Disabled("It is disabled because the tokenizer variable is always null. Set it in the AzureOpenAiRecorder class!")

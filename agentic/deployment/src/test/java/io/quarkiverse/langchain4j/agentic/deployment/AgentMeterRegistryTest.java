@@ -32,8 +32,6 @@ import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ManagedContext;
 import io.quarkus.test.QuarkusExtensionTest;
@@ -46,7 +44,7 @@ import io.vertx.core.Vertx;
  * MetricsChatModelListener registers gen_ai.client.token.usage with inconsistent tag sets
  * when both @Agent and @RegisterAiService are used in the same application.
  */
-public class AgentMeterRegistryTest extends OpenAiBaseTest {
+public class AgentMeterRegistryTest {
 
     @BeforeAll
     static void addSimpleRegistry() {
@@ -58,8 +56,7 @@ public class AgentMeterRegistryTest extends OpenAiBaseTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(SimpleAgent.class, SimpleAiService.class, TestChatModelSupplier.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true");
 
     private static final ChatModel testChatModel = new ChatModel() {
         @Override

@@ -51,6 +51,7 @@
         <module>workload-identity-federation-kubernetes</module>
         <module>context-compaction</module>
         <module>analyze-pdf-document</module>
+        <module>mock-model-api</module>
     </modules>
 
     <profiles>

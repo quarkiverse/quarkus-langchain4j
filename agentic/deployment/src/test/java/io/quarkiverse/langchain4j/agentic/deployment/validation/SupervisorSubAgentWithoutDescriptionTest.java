@@ -15,7 +15,6 @@ import dev.langchain4j.agentic.declarative.SupervisorAgent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusExtensionTest;
 
 public class SupervisorSubAgentWithoutDescriptionTest {
@@ -24,8 +23,7 @@ public class SupervisorSubAgentWithoutDescriptionTest {
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .setLogRecordPredicate(SupervisorSubAgentWithoutDescriptionTest::isAgenticWarning)
             .assertLogRecords(SupervisorSubAgentWithoutDescriptionTest::assertWarnsAboutMissingDescription);
 

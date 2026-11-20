@@ -1,0 +1,13 @@
+name: Quarkus LangChain4j Mock Model API
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Mock of LLM provider HTTP APIs for tests and dev mode
+metadata:
+   keywords:
+    - ai
+    - langchain4j
+    - testing
+    - mock
+   guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+   categories:
+     - "ai"
+   status: "preview"

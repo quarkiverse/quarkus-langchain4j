@@ -1,11 +1,5 @@
 package io.quarkiverse.langchain4j.ollama.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -22,9 +16,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.tomakehurst.wiremock.client.MappingBuilder;
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
@@ -44,22 +35,28 @@ import dev.langchain4j.model.decision.response.DecisionResponse;
 import dev.langchain4j.model.decision.response.ScaleAnswer;
 import dev.langchain4j.model.ollama.OllamaDecisionModel;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusExtensionTest;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * Exercises {@code OllamaDecisionModel} through the CDI bean, the Quarkus configuration and the Quarkus HTTP client.
+ * Exercises {@code OllamaDecisionModel} through the CDI bean, the Quarkus configuration and the Quarkus HTTP client. The
+ * Ollama decision model speaks the SystemOne API, which the mock serves through raw stubs, so the fixtures are the
+ * provider's own and the request bodies are compared as JSON.
  */
-public class OllamaDecisionModelTest extends WiremockAware {
+public class OllamaDecisionModelTest {
+
+    private static final String SYSTEM_ONE_PATH = "/ollama/v1/systemone";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(RecordingListener.class))
-            .overrideConfigKey("quarkus.langchain4j.ollama.base-url", WiremockAware.wiremockUrlForConfig())
-            .overrideConfigKey("quarkus.langchain4j.ollama.m1.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideConfigKey("quarkus.langchain4j.ollama.m1.decision-model.model-id", "tev1")
-            .overrideConfigKey("quarkus.langchain4j.devservices.enabled", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.ollama.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.ollama.log-responses", "true");
 
@@ -111,53 +108,53 @@ public class OllamaDecisionModelTest extends WiremockAware {
     @ModelName("m1")
     DecisionModel namedModel;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setUp() {
-        resetRequests();
-        resetMappings();
+        mock.reset();
         RecordingListener.clear();
     }
 
     @Test
-    void should_send_request_in_system_one_api_format() {
+    void should_send_request_in_system_one_api_format() throws JacksonException {
         assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OllamaDecisionModel.class);
-        wiremock().register(systemOne()
-                .withRequestBody(equalToJson(
-                        """
-                                {
-                                  "model": "nimble",
-                                  "state": "Help! My payouts have been failing for 3 days.",
-                                  "questions": {
-                                    "team": {
-                                      "type": "choice",
-                                      "instructions": "Which team should handle this?",
-                                      "criteria": {
-                                        "billing": "Payments, invoicing, refunds",
-                                        "support": "Bugs. Not for invoices"
-                                      }
-                                    },
-                                    "urgent": {
-                                      "type": "noul",
-                                      "instructions": "Does this need attention today?\\nAnswer yes when: Money is not reaching the customer"
-                                    },
-                                    "frustration": {
-                                      "type": "score",
-                                      "instructions": "How frustrated is the customer?",
-                                      "criteria": ["Calm", "Frustrated", "Angry"]
-                                    }
-                                  }
-                                }
-                                """))
-                .willReturn(ok()));
+        stubResponse(RESPONSE);
 
         defaultModel.decide(REQUEST);
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        CapturedRequest request = singleRequest();
+        assertThat(request.bodyAsJson()).isEqualTo(MAPPER.readTree("""
+                {
+                  "model": "nimble",
+                  "state": "Help! My payouts have been failing for 3 days.",
+                  "questions": {
+                    "team": {
+                      "type": "choice",
+                      "instructions": "Which team should handle this?",
+                      "criteria": {
+                        "billing": "Payments, invoicing, refunds",
+                        "support": "Bugs. Not for invoices"
+                      }
+                    },
+                    "urgent": {
+                      "type": "noul",
+                      "instructions": "Does this need attention today?\\nAnswer yes when: Money is not reaching the customer"
+                    },
+                    "frustration": {
+                      "type": "score",
+                      "instructions": "How frustrated is the customer?",
+                      "criteria": ["Calm", "Frustrated", "Angry"]
+                    }
+                  }
+                }
+                """));
     }
 
     @Test
     void should_map_response() {
-        wiremock().register(systemOne().willReturn(ok()));
+        stubResponse(RESPONSE);
 
         DecisionResponse response = defaultModel.decide(REQUEST);
 
@@ -178,21 +175,10 @@ public class OllamaDecisionModelTest extends WiremockAware {
     }
 
     @Test
-    void should_send_images_separately_from_the_state() {
-        wiremock().register(systemOne()
-                .withRequestBody(equalToJson("""
-                        {
-                          "model": "nimble",
-                          "state": "The customer attached this photo.\\n\\n[image 1]",
-                          "images": ["iVBORw0KGgo="],
-                          "questions": {
-                            "damaged": {"type": "noul", "instructions": "Is the item visibly damaged?"}
-                          }
-                        }
-                        """))
-                .willReturn(ok("""
-                        {"model": "nimble", "answers": {"damaged": {"type": "noul", "noul": 0.2}}}
-                        """)));
+    void should_send_images_separately_from_the_state() throws JacksonException {
+        stubResponse("""
+                {"model": "nimble", "answers": {"damaged": {"type": "noul", "noul": 0.2}}}
+                """);
 
         DecisionResponse response = defaultModel.decide(DecisionRequest.builder()
                 .inputContents(
@@ -202,36 +188,42 @@ public class OllamaDecisionModelTest extends WiremockAware {
                 .build());
 
         assertThat(response.yesNo("damaged").probability()).isEqualTo(0.2);
+        assertThat(singleRequest().bodyAsJson()).isEqualTo(MAPPER.readTree("""
+                {
+                  "model": "nimble",
+                  "state": "The customer attached this photo.\\n\\n[image 1]",
+                  "images": ["iVBORw0KGgo="],
+                  "questions": {
+                    "damaged": {"type": "noul", "instructions": "Is the item visibly damaged?"}
+                  }
+                }
+                """));
     }
 
     @Test
     void should_use_named_configuration() {
         assertThat(ClientProxy.unwrap(namedModel)).isInstanceOf(OllamaDecisionModel.class);
-        wiremock().register(systemOne()
-                .withRequestBody(matchingJsonPath("$.model", equalTo("tev1")))
-                .willReturn(ok()));
+        stubResponse(RESPONSE);
 
         namedModel.decide(REQUEST);
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        assertThat(singleRequest().bodyAsJson().path("model").stringValue()).isEqualTo("tev1");
     }
 
     @Test
     void request_model_name_should_override_default() {
-        wiremock().register(systemOne()
-                .withRequestBody(matchingJsonPath("$.model", equalTo("clef")))
-                .willReturn(ok()));
+        stubResponse(RESPONSE);
 
         defaultModel.decide(REQUEST.toBuilder()
                 .parameters(DecisionRequestParameters.builder().modelName("clef").build())
                 .build());
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        assertThat(singleRequest().bodyAsJson().path("model").stringValue()).isEqualTo("clef");
     }
 
     @Test
     void should_decide_async() throws Exception {
-        wiremock().register(systemOne().willReturn(ok()));
+        stubResponse(RESPONSE);
 
         DecisionResponse response = defaultModel.decideAsync(REQUEST).get(10, TimeUnit.SECONDS);
 
@@ -241,7 +233,7 @@ public class OllamaDecisionModelTest extends WiremockAware {
 
     @Test
     void should_notify_listeners_and_report_provider() {
-        wiremock().register(systemOne().willReturn(ok()));
+        stubResponse(RESPONSE);
 
         DecisionResponse response = defaultModel.decide(REQUEST);
 
@@ -254,25 +246,25 @@ public class OllamaDecisionModelTest extends WiremockAware {
 
     @Test
     void should_retry_server_errors_according_to_max_retries() {
-        wiremock().register(systemOne().willReturn(aResponse().withStatus(500).withBody("boom")));
+        mock.raw().on("POST", SYSTEM_ONE_PATH).reply(500, "boom");
 
         assertThatThrownBy(() -> defaultModel.decide(REQUEST)).isInstanceOf(RuntimeException.class);
 
         // the max-retries is 1, so the first attempt is retried once
-        assertThat(wiremock().getServeEvents()).hasSize(2);
+        assertThat(mock.requests()).hasSize(2)
+                .allSatisfy(request -> assertThat(request.path()).isEqualTo(SYSTEM_ONE_PATH));
         assertThat(RecordingListener.ERRORS).hasSize(1);
     }
 
-    private static MappingBuilder systemOne() {
-        return post(urlEqualTo("/v1/systemone"));
+    private void stubResponse(String body) {
+        mock.raw().on("POST", SYSTEM_ONE_PATH).reply(200, body);
     }
 
-    private static ResponseDefinitionBuilder ok() {
-        return ok(RESPONSE);
-    }
-
-    private static ResponseDefinitionBuilder ok(String body) {
-        return aResponse().withHeader("Content-Type", "application/json").withBody(body);
+    private CapturedRequest singleRequest() {
+        assertThat(mock.requests()).hasSize(1);
+        CapturedRequest request = mock.requests().get(0);
+        assertThat(request.path()).isEqualTo(SYSTEM_ONE_PATH);
+        return request;
     }
 
     @ApplicationScoped

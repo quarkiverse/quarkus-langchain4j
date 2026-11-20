@@ -21,8 +21,10 @@ public class ToolsSingletonTest extends ToolsScopeTestBase {
 
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyToolImpl.class, MyApp.class));
-
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyToolImpl.class, MyApp.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
+            // about the Chat Completions API: without a base URL of its own the model would target the Responses API
+            .overrideConfigKey("quarkus.langchain4j.openai.chat-model.mode", "chat-completion");
     @Inject
     MyApp app;
 

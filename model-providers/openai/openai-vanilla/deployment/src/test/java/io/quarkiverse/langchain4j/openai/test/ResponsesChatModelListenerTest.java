@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -24,14 +21,13 @@ import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusExtensionTest;
 
 /**
  * {@link ChatModelListener} beans are wired into the model in Responses mode too.
  */
-public class ResponsesChatModelListenerTest extends OpenAiBaseTest {
+public class ResponsesChatModelListenerTest {
 
     @ApplicationScoped
     public static class RecordingListener implements ChatModelListener {
@@ -78,10 +74,9 @@ public class ResponsesChatModelListenerTest extends OpenAiBaseTest {
     @RegisterExtension
     static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(RecordingListener.class))
+            .overrideConfigKey("quarkus.langchain4j.mock-api.enabled", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.chat-model.mode", "responses")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
-                    WiremockAware.wiremockUrlForConfig("/v1"));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "my-key");
 
     @Inject
     ChatModel chatModel;
@@ -89,36 +84,22 @@ public class ResponsesChatModelListenerTest extends OpenAiBaseTest {
     @Inject
     RecordingListener listener;
 
+    @Inject
+    MockModelServer mock;
+
     @BeforeEach
     void setUp() {
-        resetMappings();
-        resetRequests();
+        mock.reset();
         listener.clear();
     }
 
     @Test
     void listenerSeesRequestAndResponse() {
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .willReturn(aResponse()
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "id": "resp_1",
-                                  "model": "gpt-6-luna",
-                                  "status": "completed",
-                                  "output": [
-                                    {
-                                      "type": "message",
-                                      "role": "assistant",
-                                      "content": [ { "type": "output_text", "text": "hello" } ]
-                                    }
-                                  ],
-                                  "usage": { "input_tokens": 1, "output_tokens": 2, "total_tokens": 3 }
-                                }
-                                """)));
+        mock.chat().reply("hello");
 
         assertThat(chatModel.chat("hi")).isEqualTo("hello");
 
+        assertThat(mock.chat().singleRequest().path()).isEqualTo("/v1/responses");
         assertThat(listener.requestedModels()).containsExactly("gpt-6-luna");
         assertThat(listener.responseTexts()).containsExactly("hello");
         assertThat(listener.errors()).isEmpty();
@@ -126,16 +107,12 @@ public class ResponsesChatModelListenerTest extends OpenAiBaseTest {
 
     @Test
     void listenerSeesError() {
-        wiremock().register(post(urlEqualTo("/v1/responses"))
-                .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {"error": {"message": "boom", "type": "server_error"}}
-                                """)));
+        mock.chat().fail(500, "boom");
 
         assertThatThrownBy(() -> chatModel.chat("hi")).isInstanceOf(InternalServerException.class);
 
+        assertThat(mock.requests()).isNotEmpty()
+                .allSatisfy(request -> assertThat(request.path()).isEqualTo("/v1/responses"));
         assertThat(listener.requestedModels()).containsExactly("gpt-6-luna");
         assertThat(listener.responseTexts()).isEmpty();
         assertThat(listener.errors()).singleElement().isInstanceOf(InternalServerException.class);
