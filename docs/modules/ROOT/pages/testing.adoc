@@ -540,7 +540,7 @@ image::evaluation-baseline-workflow.svg[Baseline workflow,align="center"]
 
 This walkthrough uses the optional <<evaluation-review-command,review command>>. Install it before starting, and
 run it from the project or module directory containing the test. If you prefer to work directly with files, follow
-<<reviewing-results-manually>> instead. A complete example is in the
+<<reviewing-results-manually>> instead. To try the workflow without an API key, use the offline walkthrough in the
 https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/chatbot-evaluation[chatbot-evaluation sample].
 
 There is no baseline yet, so the first run fails and says what to do. The values in `<...>` depend on your test:

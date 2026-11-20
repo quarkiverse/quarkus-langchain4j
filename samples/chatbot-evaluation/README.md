@@ -14,16 +14,121 @@ The sample includes a simple customer support chatbot and showcases various eval
 - **Test Suite-Level Reporting** - Aggregated reports across multiple tests
 - **Baseline Comparison** - Detect score drops beyond a chosen tolerance against a committed baseline
 
-## Trying out baseline comparison
+## Setup
+
+Run the commands below from `samples/chatbot-evaluation`. The sample uses the repository's Maven wrapper and
+`999-SNAPSHOT` dependencies, which must be built and installed locally from this checkout.
+The tests are skipped by default because most call OpenAI; the walkthroughs select one test and enable it with
+`-DskipTests=false`.
+
+Install the evaluation modules (this also builds the optional review command):
+
+```shell
+../../mvnw install -f ../../testing/evaluation/pom.xml -DskipTests
+```
+
+For the interactive walkthroughs, register the command with the Quarkus CLI. To work directly with files, skip
+registration and use [Reviewing results without the CLI](#reviewing-results-without-the-cli) for each review step.
+
+```shell
+quarkus plugin add io.quarkiverse.langchain4j:quarkus-langchain4j-eval-cli:runner:jar:999-SNAPSHOT
+```
+
+Without the Quarkus CLI, replace `quarkus langchain4j-eval` in the commands below with
+`jbang io.quarkiverse.langchain4j:quarkus-langchain4j-eval-cli:999-SNAPSHOT:runner`.
+The Quarkus CLI also runs the plugin through JBang and installs JBang when it is missing.
+
+## Trying out baseline comparison without an API key
+
+`OfflineBaselineEvaluationTest` runs the same evaluation as `BaselineEvaluationTest`, with the
+[mock model API](../mock-model-api) playing both the bot's model and the AI judge. The mock answers each question
+with the sample's expected output and the judge approves, so every run gives the same scores, without an API key or
+credits. The scorer and both strategies are the real ones, and semantic similarity runs on a local embedding model.
+The mock matches replies to each question, so concurrent execution does not change which answer a sample receives.
+This exercises the baseline workflow with scripted model responses; it does not measure a real model's quality.
+
+1. Run the evaluation:
+
+   ```shell
+   ../../mvnw test -DskipTests=false -Dtest=OfflineBaselineEvaluationTest
+   ```
+
+   The first run fails as expected: `No baseline yet for
+   io.quarkiverse.langchain4j.sample.chatbot.OfflineBaselineEvaluationTest/customerSupportIsNotWorseThanBaseline,
+   6 samples pending review.` All six samples score 100%; the missing baseline is the reason for the failure.
+
+2. Review the result:
+
+   ```shell
+   quarkus langchain4j-eval review
+   ```
+
+   It lists the six samples as `new`. Enter `d` to inspect the responses, then `a` to accept.
+   Each command is followed by Enter. Acceptance writes the baseline under `src/test/resources/evaluation-baselines/`.
+
+3. Run the test command from step 1 again. It passes, and `review` has nothing left to show because the scores are
+   unchanged.
+
+4. Introduce a scripted regression:
+
+   ```shell
+   ../../mvnw test -DskipTests=false -Dtest=OfflineBaselineEvaluationTest -Danswers=regressed
+   quarkus langchain4j-eval review
+   ```
+
+   The bot now answers the business hours question with "I'm not sure about our hours, please check the website."
+   The test fails with a mean difference of -16.67 points, naming
+   `Business Hours Query: 100.00% -> 0.00%`: one of six samples lost 100 points. It also logs that the advisory
+   evaluations dropped. In `review`, `d` shows
+   the similarity strategy's `Similarity 0.7380 below threshold 0.8000` and the judge's `false` for each trial. Press
+   `r` to reject; the baseline stays as it was.
+
+5. Run the test command from step 1 again, without `-Danswers=regressed`. It passes against the original baseline.
+   Rejection discarded the pending result; omitting the flag restores the scripted answers.
+
+To repeat the walkthrough from scratch, delete only this test's baseline:
+`src/test/resources/evaluation-baselines/io.quarkiverse.langchain4j.sample.chatbot.OfflineBaselineEvaluationTest/customerSupportIsNotWorseThanBaseline.json`.
+
+## Reviewing results without the CLI
+
+The failure message prints the pending-result and baseline paths. For the offline test, set:
+
+```shell
+evaluation_id='io.quarkiverse.langchain4j.sample.chatbot.OfflineBaselineEvaluationTest/customerSupportIsNotWorseThanBaseline'
+pending="target/evaluation-baselines/$evaluation_id.json"
+baseline="src/test/resources/evaluation-baselines/$evaluation_id.json"
+```
+
+Open the pending file in your editor. Inspect `comparison` for score changes and `report.evaluations` for expected
+outputs, actual outputs, verdicts and any errors. To accept, save the value of its top-level `report` field as the
+baseline file, then delete the pending file. Copy only that object's contents and surrounding braces; copying the
+whole pending file produces an invalid baseline.
+
+If you have `jq`, these commands perform that extraction after you have reviewed the result:
+
+```shell
+mkdir -p "$(dirname "$baseline")" &&
+jq -e '.report' "$pending" > "$baseline.tmp" &&
+mv "$baseline.tmp" "$baseline" &&
+rm "$pending"
+```
+
+To reject instead, run only `rm "$pending"`. This leaves the baseline unchanged. Continue the walkthrough by
+running the test again, without `-Danswers=regressed` when restoring the original answers.
+
+The extracted report is a supported baseline format, but includes responses and evaluation details. Review its
+contents and diff before committing it. CLI acceptance produces a smaller summary containing scores and sample
+metadata. For the OpenAI walkthrough, use the paths printed by `BaselineEvaluationTest` instead.
+See the [manual workflow in the testing guide](../../docs/modules/ROOT/pages/testing.adoc#reviewing-results-manually)
+for more details.
+
+## Trying out baseline comparison with OpenAI
 
 `BaselineEvaluationTest` ends with `assertThat(report).isNotWorseThanBaseline()`. It compares each run with the
 baseline committed under `src/test/resources/evaluation-baselines/`, and writes the result of every run under
 `target/evaluation-baselines/` as a pending result. The test never changes a committed file; the
-`quarkus langchain4j-eval` command does, once you accept a pending result. Alternatively, use the
-[manual workflow](../../docs/modules/ROOT/pages/testing.adoc#reviewing-results-manually).
+`quarkus langchain4j-eval` command or the manual steps above do, once you accept a pending result.
 There is no baseline when you first check out the sample, so the walkthrough starts by creating one.
-Run the commands below from this directory; the sample uses the Maven wrapper of the repository root.
-The tests call OpenAI, so they are skipped by default; pass `-DskipTests=false`.
 Set `OPENAI_API_KEY` in your environment or in a local `.env` file, and check the model settings in
 `src/main/resources/application.properties` against the models available to your account. Both the chatbot and
 the judge call OpenAI, so this walkthrough requires API credits. Do not commit your key.
@@ -43,16 +148,7 @@ Model output varies between runs, so the scores, warnings and samples named belo
    Manual review (no CLI): https://docs.quarkiverse.io/quarkus-langchain4j/dev/testing.html#reviewing-results-manually
    ```
 
-2. Review it. The command is an optional Quarkus CLI plugin; until a release ships it in the extension's metadata, add it once
-   (the plugin is built from `testing/evaluation/evaluation-cli`, so install that module first):
-
-   ```
-   quarkus plugin add io.quarkiverse.langchain4j:quarkus-langchain4j-eval-cli:runner:jar:999-SNAPSHOT
-   ```
-
-   Without the Quarkus CLI, `jbang io.quarkiverse.langchain4j:quarkus-langchain4j-eval-cli:999-SNAPSHOT:runner review`
-   runs the same command; the Quarkus CLI runs the plugin through JBang too, and installs JBang when it is missing.
-   Use the released version instead of `999-SNAPSHOT` once there is one.
+2. Review it using the command installed in [Setup](#setup):
 
    ```
    quarkus langchain4j-eval review
@@ -101,7 +197,7 @@ Model output varies between runs, so the scores, warnings and samples named belo
    Also inspect answers that passed. Semantic similarity can approve a plausible but factually wrong answer, such
    as one that changes the return policy from 30 to 10 days. The AI judge may notice, but it is advisory in this
    sample and cannot fail the test. When particular facts are requirements, add a blocking strategy that checks
-   them explicitly.
+   them explicitly. Use the offline walkthrough above when you need a reproducible regression demonstration.
 
 5. Add a sample to `customer-support-samples.yaml` and run the test. The existing samples are compared as usual, so
    the test passes if their mean score drop stays within the tolerance, and logs `1 new samples pending review: <sample name>`. Run

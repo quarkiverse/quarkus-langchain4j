@@ -14,10 +14,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
+import io.quarkiverse.langchain4j.mockapi.ChatRequestView;
 import io.quarkiverse.langchain4j.mockapi.Operation;
 import io.quarkiverse.langchain4j.mockapi.RawResponse;
 import io.quarkiverse.langchain4j.mockapi.Reply;
 import io.quarkiverse.langchain4j.mockapi.internal.model.RawStub;
+import io.quarkiverse.langchain4j.mockapi.internal.model.ReplyRule;
 import tools.jackson.core.JsonPointer;
 import tools.jackson.databind.JsonNode;
 
@@ -30,6 +32,7 @@ final class MockState {
     private final Map<Operation, ConcurrentLinkedQueue<Reply>> queues = new ConcurrentHashMap<>();
     private final Map<Operation, Reply> userDefaults = new ConcurrentHashMap<>();
     private final List<CompiledStub> rawStubs = new CopyOnWriteArrayList<>();
+    private final List<CompiledRule> rules = new CopyOnWriteArrayList<>();
     private final ConcurrentSkipListMap<Long, CapturedRequest> journal = new ConcurrentSkipListMap<>();
     private final AtomicLong index = new AtomicLong();
 
@@ -44,6 +47,41 @@ final class MockState {
 
     void setDefault(Operation op, Reply reply) {
         userDefaults.put(op, reply);
+    }
+
+    void addRule(ReplyRule rule) {
+        if (rule.userMessageContains() == null || rule.replies() == null || rule.replies().isEmpty()) {
+            throw new IllegalArgumentException("a rule needs a text to match and at least one reply");
+        }
+        rules.add(new CompiledRule(rule));
+    }
+
+    /**
+     * The reply for a request: the first rule matching its last user message, else the next queued reply, else the
+     * default.
+     */
+    Reply next(Operation op, ChatRequestView chat) {
+        if (op == Operation.CHAT && chat != null) {
+            String userMessage = lastUserMessage(chat);
+            if (userMessage != null) {
+                for (CompiledRule rule : rules) {
+                    if (userMessage.contains(rule.rule().userMessageContains())) {
+                        return rule.next();
+                    }
+                }
+            }
+        }
+        return next(op);
+    }
+
+    private static String lastUserMessage(ChatRequestView chat) {
+        List<ChatRequestView.Message> messages = chat.messages();
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            if ("user".equals(messages.get(i).role())) {
+                return messages.get(i).text();
+            }
+        }
+        return null;
     }
 
     Reply next(Operation op) {
@@ -95,6 +133,7 @@ final class MockState {
         queues.clear();
         userDefaults.clear();
         rawStubs.clear();
+        rules.clear();
         journal.clear();
     }
 
@@ -118,6 +157,28 @@ final class MockState {
             }
         }
         return Pattern.compile(regex.toString());
+    }
+
+    private static final class CompiledRule {
+
+        private final ReplyRule rule;
+        private final Deque<Reply> replies;
+
+        private CompiledRule(ReplyRule rule) {
+            this.rule = rule;
+            this.replies = new ArrayDeque<>(rule.replies());
+        }
+
+        ReplyRule rule() {
+            return rule;
+        }
+
+        /**
+         * The replies are consumed in order and the last one repeats.
+         */
+        synchronized Reply next() {
+            return replies.size() > 1 ? replies.poll() : replies.peek();
+        }
     }
 
     static final class CompiledStub {

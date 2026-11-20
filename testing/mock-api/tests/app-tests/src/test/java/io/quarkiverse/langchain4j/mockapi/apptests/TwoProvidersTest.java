@@ -49,5 +49,7 @@ class TwoProvidersTest {
         assertThat(requests.get(0).path()).isEqualTo("/v1/responses");
         assertThat(requests.get(1).dialect()).isEqualTo("mistralai");
         assertThat(requests.get(1).path()).isEqualTo("/mistralai/v1/chat/completions");
+        // the configured key comes from a variable that is not set, so the placeholder replaces it
+        assertThat(requests.get(1).header("authorization")).contains("Bearer mock-api-key");
     }
 }

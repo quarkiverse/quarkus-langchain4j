@@ -54,6 +54,32 @@ class IdentityDefaultValuesTest {
     }
 
     @Test
+    void aKeyWhoseExpressionCannotBeExpandedGetsThePlaceholder() {
+        // api-key=${OPENAI_API_KEY} without the variable: the application would fail to start against the mock
+        assertThat(MockModelApiProcessor.identityDefaultValues(providers(Map.of(ProviderSpecs.OPENAI, List.of(DEFAULT))),
+                config(Map.of("quarkus.langchain4j.openai.api-key", "${MOCK_API_TEST_UNSET_VARIABLE}"))))
+                .containsEntry("quarkus.langchain4j.openai.api-key", "mock-api-key");
+    }
+
+    @Test
+    void onlyThePlaceholdersReplacingAnUnexpandedValueAreOverrides() {
+        var config = config(Map.of("quarkus.langchain4j.openai.m1.api-key", "${MOCK_API_TEST_UNSET_VARIABLE}"));
+        var identity = MockModelApiProcessor.identityDefaultValues(
+                providers(Map.of(ProviderSpecs.OPENAI, List.of(DEFAULT, "m1"))),
+                config);
+
+        assertThat(MockModelApiProcessor.replacingUnexpanded(identity, config))
+                .containsOnly(Map.entry("quarkus.langchain4j.openai.m1.api-key", "mock-api-key"));
+    }
+
+    @Test
+    void aKeyWhoseExpressionExpandsCountsAsConfigured() {
+        assertThat(MockModelApiProcessor.identityDefaultValues(providers(Map.of(ProviderSpecs.OPENAI, List.of(DEFAULT))),
+                config(Map.of("quarkus.langchain4j.openai.api-key", "${my.key}", "my.key", "real"))))
+                .doesNotContainKey("quarkus.langchain4j.openai.api-key");
+    }
+
+    @Test
     void skipsAKeyWhenAnAlternativeIsConfigured() {
         assertThat(MockModelApiProcessor.identityDefaultValues(providers(Map.of(ProviderSpecs.AZURE_OPENAI, List.of(DEFAULT))),
                 config(Map.of("quarkus.langchain4j.azure-openai.ad-token", "t"))))
@@ -131,6 +157,7 @@ class IdentityDefaultValuesTest {
     }
 
     static Config config(Map<String, String> properties) {
-        return new SmallRyeConfigBuilder().withDefaultValues(properties).build();
+        // with the default interceptors, so expressions expand as in Quarkus
+        return new SmallRyeConfigBuilder().addDefaultInterceptors().withDefaultValues(properties).build();
     }
 }

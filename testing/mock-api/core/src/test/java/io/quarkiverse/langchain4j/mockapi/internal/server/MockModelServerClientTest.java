@@ -119,6 +119,49 @@ class MockModelServerClientTest {
         assertThatThrownBy(() -> mock.embeddings().reply("x")).isInstanceOf(IllegalStateException.class);
     }
 
+    @Test
+    void repliesMatchedOnTheUserMessageComeBeforeQueuedOnes() {
+        mock.chat().whenUserMessageContains("hours").reply("9 to 5");
+        mock.chat().whenUserMessageContains("refund").replies(ChatReply.text("first"), ChatReply.text("then"));
+        mock.chat().reply("queued");
+
+        assertThat(postChatText(chat("Can I get a refund?"))).isEqualTo("first");
+        assertThat(postChatText(chat("What are your hours?"))).isEqualTo("9 to 5");
+        assertThat(postChatText(chat("And the refund?"))).isEqualTo("then");
+        assertThat(postChatText(chat("refund, again"))).isEqualTo("then");
+        assertThat(postChatText(chat("hello"))).isEqualTo("queued");
+        assertThat(postChatText(chat("hello"))).isEqualTo("default reply");
+    }
+
+    @Test
+    void onlyTheLastUserMessageIsMatched() {
+        mock.chat().whenUserMessageContains("hours").reply("9 to 5");
+
+        assertThat(postChatText("{\"model\":\"m\",\"messages\":[{\"role\":\"user\",\"content\":\"hours?\"},"
+                + "{\"role\":\"assistant\",\"content\":\"9 to 5\"},{\"role\":\"user\",\"content\":\"thanks\"}]}"))
+                .isEqualTo("default reply");
+    }
+
+    @Test
+    void matchedRepliesCanFailAndAreClearedByReset() {
+        mock.chat().whenUserMessageContains("quota").fail(429, "You exceeded your current quota");
+        assertThat(postChat(chat("quota?")).statusCode()).isEqualTo(429);
+
+        mock.reset();
+        assertThat(postChatText(chat("quota?"))).isEqualTo("default reply");
+    }
+
+    @Test
+    void matchingIsOnlyForChat() {
+        assertThatThrownBy(() -> mock.embeddings().whenUserMessageContains("x"))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    private static String chat(String userMessage) {
+        return "{\"model\":\"m\",\"messages\":[{\"role\":\"user\",\"content\":"
+                + MockApiJson.mapper().valueToTree(userMessage) + "}]}";
+    }
+
     private static Resp postChat(String body) {
         return http.send(HttpMethod.POST, "/v1/chat/completions", "application/json", body);
     }
