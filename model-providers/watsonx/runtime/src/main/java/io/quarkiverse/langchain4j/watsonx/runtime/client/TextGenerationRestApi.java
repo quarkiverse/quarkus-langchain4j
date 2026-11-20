@@ -50,7 +50,7 @@ public interface TextGenerationRestApi {
 
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
-        return JsonProvider.MAPPER;
+        return JsonProvider.mapper();
     }
 
     @ClientExceptionMapper
