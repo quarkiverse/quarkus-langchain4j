@@ -23,6 +23,13 @@ class EvaluationReportTest {
     }
 
     @Test
+    void reportWithoutStrategiesHasEmptyList() {
+        EvaluationReport<String> report = new EvaluationReport<>(List.of());
+
+        assertThat(report.strategies()).isEmpty();
+    }
+
+    @Test
     void globalScoreShouldBeCorrect() {
         // Create mock evaluations.
         Scorer.EvaluationResult<String> result1 = Scorer.EvaluationResult.fromCompletedEvaluation(
@@ -227,6 +234,170 @@ class EvaluationReportTest {
 
     private static Scorer.EvaluationResult<String> advisory(EvaluationSample<String> sample, boolean passed) {
         return Scorer.EvaluationResult.fromCompletedEvaluation(sample, "x", EvaluationResult.fromBoolean(passed), true);
+    }
+
+    @Test
+    void comparisonWithBaselineShouldBePairedPerSample() {
+        // Baseline: A 100%, B 100%, C 50%, D 0%, F 100%; advisory on A fails
+        EvaluationSnapshot baseline = new EvaluationSnapshot(2, List.of(), List.of(
+                record("A", true), record("A", true), record("A", false, true),
+                record("B", true), record("B", true),
+                record("C", true), record("C", false),
+                record("D", false), record("D", false),
+                record("F", true), record("F", true)));
+        // Current: A 100%, B 50%, C 0%, D 0%, E 100%; advisory on A passes
+        List<Scorer.EvaluationResult<String>> results = new ArrayList<>();
+        EvaluationSample<String> a = sample("A");
+        EvaluationSample<String> b = sample("B");
+        EvaluationSample<String> c = sample("C");
+        EvaluationSample<String> d = sample("D");
+        EvaluationSample<String> e = sample("E");
+        results.addAll(List.of(evaluation(a, true, false), evaluation(a, true, false), evaluation(a, true, true)));
+        results.addAll(List.of(evaluation(b, true, false), evaluation(b, false, false)));
+        results.addAll(List.of(evaluation(c, false, false), evaluation(c, false, false)));
+        results.addAll(List.of(evaluation(d, false, false), evaluation(d, false, false)));
+        results.addAll(List.of(evaluation(e, true, false), evaluation(e, true, false)));
+        EvaluationReport<String> report = new EvaluationReport<>(results, 2);
+
+        BaselineComparison comparison = report.compareWith(baseline);
+
+        // Paired differences in points: A 0, B -50, C -50, D 0
+        assertThat(comparison.differences()).containsExactly(
+                new BaselineComparison.SampleDifference("A", 100.0, 100.0),
+                new BaselineComparison.SampleDifference("B", 100.0, 50.0),
+                new BaselineComparison.SampleDifference("C", 50.0, 0.0),
+                new BaselineComparison.SampleDifference("D", 0.0, 0.0));
+        assertThat(comparison.meanDifference()).isEqualTo(-25.0);
+        // sample variance of {0, -50, -50, 0} is 833.33, SE = sqrt(833.33 / 4) = 14.43
+        assertThat(comparison.standardError()).isCloseTo(14.43, within(0.01));
+        assertThat(comparison.confidenceInterval().low()).isCloseTo(-53.29, within(0.01));
+        assertThat(comparison.confidenceInterval().high()).isCloseTo(3.29, within(0.01));
+        assertThat(comparison.regressions()).extracting(BaselineComparison.SampleDifference::name)
+                .containsExactly("B", "C");
+        assertThat(comparison.added()).containsExactly("E");
+        assertThat(comparison.removed()).containsExactly("F");
+        // Advisory: baseline 0%, current 100%
+        assertThat(comparison.advisoryDifference()).isEqualTo(100.0);
+    }
+
+    @Test
+    void compareWithListsAddedAndRemovedSeparately() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of(), List.of(record("A", true), record("B", true)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(evaluation("A", true), evaluation("C", true)), 1);
+
+        BaselineComparison comparison = report.compareWith(baseline);
+
+        assertThat(comparison.added()).containsExactly("C");
+        assertThat(comparison.removed()).containsExactly("B");
+        assertThat(comparison.incompatibility()).isEmpty();
+    }
+
+    @Test
+    void compareWithReportsTrialsMismatchAsIncompatibility() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(2, List.of(), List.of(record("A", true), record("B", true)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(evaluation("A", true), evaluation("C", true)), 3);
+
+        BaselineComparison comparison = report.compareWith(baseline);
+
+        assertThat(comparison.incompatibility()).hasValueSatisfying(
+                message -> assertThat(message).contains("2 trials per sample and this run with 3"));
+        assertThat(comparison.differences()).isEmpty();
+        assertThat(comparison.added()).isEmpty();
+        assertThat(comparison.removed()).isEmpty();
+    }
+
+    @Test
+    void compareWithReportsStrategyChange() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of("Exact"), List.of(record("A", true)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(evaluation("A", true)), 1,
+                List.of("Exact", "Judge (advisory)"));
+
+        BaselineComparison comparison = report.compareWith(baseline);
+
+        assertThat(comparison.incompatibility()).hasValueSatisfying(
+                message -> assertThat(message).contains("[Exact] and this run with [Exact, Judge (advisory)]"));
+        assertThat(comparison.differences()).isEmpty();
+    }
+
+    @Test
+    void compareWithIgnoresStrategiesWhenEitherSideHasNone() {
+        EvaluationSnapshot noStrategies = new EvaluationSnapshot(1, List.of(), List.of(record("A", true)));
+        EvaluationSnapshot withStrategies = new EvaluationSnapshot(1, List.of("Exact"), List.of(record("A", true)));
+        EvaluationReport<String> unknown = new EvaluationReport<>(List.of(evaluation("A", true)), 1);
+        EvaluationReport<String> known = new EvaluationReport<>(List.of(evaluation("A", true)), 1, List.of("Judge"));
+
+        assertThat(known.compareWith(noStrategies).incompatibility()).isEmpty();
+        assertThat(unknown.compareWith(withStrategies).incompatibility()).isEmpty();
+    }
+
+    @Test
+    void compareWithRejectsDuplicateSampleNames() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of(), List.of(record("A", true)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(evaluation("A", true), evaluation("A", true)), 1);
+
+        assertThatThrownBy(() -> report.compareWith(baseline))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Sample names must be unique, found duplicates: A");
+    }
+
+    @Test
+    void duplicateSampleNamesIgnoresSeveralEvaluationsOfTheSameSample() {
+        EvaluationSample<String> sample = new EvaluationSample<>("A", new Parameters(), "expected", List.of());
+        List<Scorer.EvaluationResult<String>> results = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            results.add(Scorer.EvaluationResult.fromCompletedEvaluation(sample, "x", EvaluationResult.fromBoolean(true)));
+        }
+        EvaluationReport<String> report = new EvaluationReport<>(results, 2, List.of("S1", "S2"));
+
+        assertThat(report.duplicateSampleNames()).isEmpty();
+    }
+
+    @Test
+    void duplicateSampleNamesListsNamesSharedByDistinctSamples() {
+        EvaluationReport<String> report = new EvaluationReport<>(
+                List.of(evaluation("B", true), evaluation("A", true), evaluation("A", false), evaluation("B", true)), 1);
+
+        assertThat(report.duplicateSampleNames()).containsExactly("B", "A");
+    }
+
+    @Test
+    void comparisonWithoutPairedSamplesShouldHaveNoDifference() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of(), List.of(record("X", true)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(evaluation("A", true)), 1);
+
+        BaselineComparison comparison = report.compareWith(baseline);
+
+        assertThat(comparison.differences()).isEmpty();
+        assertThat(comparison.meanDifference()).isEqualTo(0.0);
+        assertThat(comparison.standardError()).isEqualTo(0.0);
+        assertThat(comparison.added()).containsExactly("A");
+        assertThat(comparison.removed()).containsExactly("X");
+    }
+
+    private static EvaluationSample<String> sample(String name) {
+        return new EvaluationSample<>(name, new Parameters(), "expected", List.of());
+    }
+
+    private static EvaluationSnapshot.Record record(String name, boolean passed) {
+        return record(name, passed, false);
+    }
+
+    private static EvaluationSnapshot.Record record(String name, boolean passed, boolean advisory) {
+        return new EvaluationSnapshot.Record(name, List.of(), passed, advisory);
+    }
+
+    private static Scorer.EvaluationResult<String> evaluation(String name, boolean passed) {
+        return evaluation(name, passed, false);
+    }
+
+    private static Scorer.EvaluationResult<String> evaluation(String name, boolean passed, boolean advisory) {
+        return evaluation(sample(name), passed, advisory);
+    }
+
+    private static Scorer.EvaluationResult<String> evaluation(EvaluationSample<String> sample, boolean passed,
+            boolean advisory) {
+        return Scorer.EvaluationResult.fromCompletedEvaluation(sample, "x", EvaluationResult.fromBoolean(passed),
+                advisory);
     }
 
     @Test

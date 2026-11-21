@@ -108,7 +108,7 @@ final class ModelApiHandler implements Handler<HttpServerRequest> {
         CapturedRequest captured = capture(index, request, headers, body, op, dialect.id(), chat, decision);
         state.record(captured);
 
-        Reply reply = state.next(op);
+        Reply reply = state.next(op, chat);
         if (reply == null) {
             ObjectNode node = MAPPER.createObjectNode().put("error", "no reply configured").put("operation", op.name());
             writeJson(request.response(), 404, node.toString());

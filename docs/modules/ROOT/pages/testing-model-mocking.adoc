@@ -124,6 +124,26 @@ class ProfileEnabledTest {
 }
 ----
 
+=== Replies matched on the request
+
+A queue answers requests in the order they arrive, which concurrent requests make unpredictable, for instance
+an evaluation that runs its samples in parallel, or an AI service that is also used as a judge.
+`whenUserMessageContains` answers by content instead: a chat request whose last user message contains the text gets
+that reply, whatever its order.
+
+[source,java]
+----
+mock.chat().whenUserMessageContains("business hours").reply("We are open Monday to Friday, 9 AM to 5 PM.");
+mock.chat().whenUserMessageContains("refund").replies(ChatReply.text("First answer"), ChatReply.text("Then this"));
+mock.chat().whenUserMessageContains("quota").fail(429, "You exceeded your current quota");
+----
+
+A rule stays until the mock is reset, and answers every request it matches: its replies are sent in order, and the
+last one repeats.
+The match is case-sensitive, and when several rules match, the first one added wins, so add the more specific ones
+first.
+Rules come before the queued replies, which come before the default reply.
+
 === Tool calls
 
 Queue a tool call followed by the final answer to script a tool-calling conversation:
@@ -306,10 +326,14 @@ With `URL` set to the mock's base URL (shown in the Dev UI):
 # queue a chat reply
 curl -X POST $URL/_admin/replies/chat -H 'Content-Type: application/json' -d '[{"kind":"ChatReply","text":"hi"}]'
 
+# answer every chat request whose last user message contains "hours"
+curl -X POST $URL/_admin/rules/chat -H 'Content-Type: application/json' \
+     -d '{"userMessageContains":"hours","replies":[{"kind":"ChatReply","text":"9 to 5"}]}'
+
 # list the requests captured so far
 curl $URL/_admin/requests
 
-# clear queued replies and captured requests
+# clear queued replies, rules and captured requests
 curl -X POST $URL/_admin/reset
 ----
 
@@ -317,7 +341,8 @@ curl -X POST $URL/_admin/reset
 == Identity defaults
 
 Some providers refuse to start without identity configuration.
-When you do not set such a value at all, the mock fills in a placeholder:
+When you do not set such a value at all, or set it to an expression that cannot be expanded, such as
+`api-key=$\{OPENAI_API_KEY}` without that variable, the mock fills in a placeholder:
 
 [cols="1,1"]
 |===

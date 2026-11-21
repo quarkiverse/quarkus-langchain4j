@@ -14,11 +14,13 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>evaluation-review</module>
         <module>evaluation-core</module>
         <module>evaluation-strategies/semantic-similarity</module>
         <module>evaluation-strategies/ai-judge</module>
         <module>evaluation-junit5</module>
         <module>evaluation-compaction</module>
+        <module>evaluation-cli</module>
     </modules>
 
 

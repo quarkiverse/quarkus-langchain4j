@@ -29,6 +29,16 @@ class JsonReportFormatterTest {
     }
 
     @Test
+    void writesStrategies() throws IOException {
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(), 1, List.of("A", "B (advisory)"));
+
+        String json = new JsonReportFormatter().format(report, Map.of("pretty", true));
+
+        assertThat(new tools.jackson.databind.ObjectMapper().readTree(json).get("strategies"))
+                .extracting(n -> n.asString()).containsExactly("A", "B (advisory)");
+    }
+
+    @Test
     void shouldFormatReportWithPrettyPrint() {
         // Create test data
         Parameters params1 = new Parameters();
@@ -119,6 +129,51 @@ class JsonReportFormatterTest {
         assertThat(json).contains("\\n"); // Escaped newlines
         assertThat(json).contains("\\t"); // Escaped tabs
         assertThat(json).contains("\\\\"); // Escaped backslashes
+    }
+
+    @Test
+    void writesTrialStrategyAndWhyAnEvaluationFailed() {
+        EvaluationSample<String> sample = new EvaluationSample<>("S", new Parameters(), "e", List.of());
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "a", EvaluationResult.failed("off topic"))
+                        .from(1, "Judge"),
+                Scorer.EvaluationResult.fromEvaluationThrowable(sample, "a",
+                        new RuntimeException("judge failed", new java.net.SocketTimeoutException("Read timed out")),
+                        true).from(1, "Judge (advisory)"),
+                Scorer.EvaluationResult.fromEvaluationThrowable(sample, new AssertionError("Failed to execute sample",
+                        new IllegalStateException("down"))).from(2, null)));
+
+        tools.jackson.databind.JsonNode evaluations = new tools.jackson.databind.ObjectMapper()
+                .readTree(new JsonReportFormatter().format(report, Map.of())).get("evaluations");
+
+        assertThat(evaluations.get(0).get("trial").asInt()).isEqualTo(1);
+        assertThat(evaluations.get(0).get("strategy").asString()).isEqualTo("Judge");
+        assertThat(evaluations.get(0).get("explanation").asString()).isEqualTo("off topic");
+        assertThat(evaluations.get(0).has("error")).isFalse();
+        assertThat(evaluations.get(1).get("error").asString())
+                .isEqualTo("java.net.SocketTimeoutException: Read timed out");
+        assertThat(evaluations.get(1).has("explanation")).isFalse();
+        assertThat(evaluations.get(2).get("actualOutput").isNull()).isTrue();
+        assertThat(evaluations.get(2).has("strategy")).isFalse();
+        assertThat(evaluations.get(2).get("error").asString()).isEqualTo("java.lang.IllegalStateException: down");
+    }
+
+    @Test
+    void writesTextAsJsonStringsEvenWhenItLooksLikeAValueOrHasControlCharacters() {
+        EvaluationSample<String> sample = new EvaluationSample<>("007", new Parameters(), "true",
+                List.of("say \"hi\""));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(Scorer.EvaluationResult
+                .fromCompletedEvaluation(sample, "bell\u0007", EvaluationResult.fromBoolean(true))));
+
+        tools.jackson.databind.JsonNode json = new tools.jackson.databind.ObjectMapper()
+                .readTree(new JsonReportFormatter().format(report, Map.of()));
+
+        tools.jackson.databind.JsonNode evaluation = json.get("evaluations").get(0);
+        assertThat(evaluation.get("name").isString()).isTrue();
+        assertThat(evaluation.get("name").asString()).isEqualTo("007");
+        assertThat(evaluation.get("expectedOutput").isString()).isTrue();
+        assertThat(evaluation.get("actualOutput").asString()).isEqualTo("bell\u0007");
+        assertThat(json.get("tagScores").has("say \"hi\"")).isTrue();
     }
 
     @Test

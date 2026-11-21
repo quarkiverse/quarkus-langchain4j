@@ -3,9 +3,21 @@ package io.quarkiverse.langchain4j.testing.evaluation;
 import static io.quarkiverse.langchain4j.testing.evaluation.EvaluationAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import io.quarkiverse.langchain4j.testing.evaluation.review.PendingFile;
+import io.quarkiverse.langchain4j.testing.evaluation.review.PendingResult;
+import io.quarkiverse.langchain4j.testing.evaluation.review.PendingResults;
+import io.quarkiverse.langchain4j.testing.evaluation.review.Review;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 class EvaluationAssertionsTest {
 
@@ -274,6 +286,510 @@ class EvaluationAssertionsTest {
         assertThatThrownBy(() -> assertThat(report).hasAllPassed())
                 .isInstanceOf(AssertionError.class)
                 .hasMessageContaining("1 out of 1 failed");
+    }
+
+    @Test
+    void isNotWorseThan_shouldPassWithinTolerance() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of(), List.of(
+                new EvaluationSnapshot.Record("A", List.of(), true, false),
+                new EvaluationSnapshot.Record("B", List.of(), true, false)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("B"), "x", EvaluationResult.fromBoolean(true))));
+
+        assertThat(report).isNotWorseThan(baseline, 0.0);
+    }
+
+    @Test
+    void isNotWorseThan_shouldFailAndNameTheRegressedSamples() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of(), List.of(
+                new EvaluationSnapshot.Record("A", List.of(), true, false),
+                new EvaluationSnapshot.Record("B", List.of(), true, false)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("B"), "x", EvaluationResult.fromBoolean(false))));
+
+        assertThatThrownBy(() -> assertThat(report).isNotWorseThan(baseline, 10.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("-50.00")
+                .hasMessageContaining("10.00")
+                .hasMessageContaining("B: 100.00% -> 0.00%")
+                .hasMessageNotContaining("A:");
+    }
+
+    @Test
+    void isNotWorseThan_shouldFailWhenTrialsDiffer() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(3, List.of(), List.of(
+                new EvaluationSnapshot.Record("A", List.of(), true, false)));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true))));
+
+        assertThatThrownBy(() -> assertThat(report).isNotWorseThan(baseline, 0.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("trials");
+    }
+
+    @Test
+    void isNotWorseThan_withStoreShouldFailWhenTheBaselineIsMissingAndSayHowToReviewTheReceivedReport(
+            @TempDir Path tempDir) {
+        FileBaselineStore store = new FileBaselineStore(tempDir.resolve("baselines"), tempDir.resolve("received"));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true))));
+
+        assertThatThrownBy(() -> assertThat(report).isNotWorseThan(store, "faq", 0.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("No baseline yet for faq, 1 samples pending review.")
+                .hasMessageContaining(reviewHint(store, "faq"));
+        org.assertj.core.api.Assertions.assertThat(store.load("faq")).isEmpty();
+        org.assertj.core.api.Assertions.assertThat(store.pendingFileOf("faq")).exists();
+    }
+
+    @Test
+    void isNotWorseThan_withStoreShouldWriteThePendingResultOnEveryRun(@TempDir Path tempDir) {
+        FileBaselineStore store = new FileBaselineStore(tempDir.resolve("baselines"), tempDir.resolve("received"));
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true))));
+        store.save("faq", report);
+
+        assertThat(report).isNotWorseThan(store, "faq", 0.0);
+
+        org.assertj.core.api.Assertions.assertThat(store.pendingFileOf("faq")).exists();
+    }
+
+    @Test
+    void isNotWorseThan_withStoreShouldCompareWithTheStoredBaseline(@TempDir Path tempDir) {
+        FileBaselineStore store = new FileBaselineStore(tempDir.resolve("baselines"), tempDir.resolve("received"));
+        store.save("faq", new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true)))));
+        EvaluationReport<String> worse = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(false))));
+
+        assertThatThrownBy(() -> assertThat(worse).isNotWorseThan(store, "faq", 0.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("A: 100.00% -> 0.00%")
+                .hasMessageContaining("Run `quarkus langchain4j-eval review` to accept or reject it.");
+    }
+
+    @Test
+    void isNotWorseThan_shouldWarnWhenAdvisoryEvaluationsDropEvenIfItPasses() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of(), List.of(
+                new EvaluationSnapshot.Record("A", List.of(), true, false),
+                new EvaluationSnapshot.Record("A", List.of(), true, true)));
+        EvaluationSample<String> a = sample("A");
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(a, "x", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(a, "x", EvaluationResult.fromBoolean(false),
+                        true)));
+        List<String> warnings = new java.util.concurrent.CopyOnWriteArrayList<>();
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(EvaluationReportAssert.class.getName());
+        java.util.logging.Handler handler = new java.util.logging.Handler() {
+            @Override
+            public void publish(java.util.logging.LogRecord record) {
+                if (record.getLevel().intValue() >= java.util.logging.Level.WARNING.intValue()) {
+                    warnings.add(new java.util.logging.SimpleFormatter().formatMessage(record));
+                }
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        logger.addHandler(handler);
+        try {
+            assertThat(report).isNotWorseThan(baseline, 5.0);
+        } finally {
+            logger.removeHandler(handler);
+        }
+
+        org.assertj.core.api.Assertions.assertThat(warnings).singleElement().asString()
+                .contains("advisory")
+                .contains("dropped by 100.00 points");
+    }
+
+    @Test
+    void isNotWorseThan_shouldNotWarnWhenAdvisoryEvaluationsStayWithinTolerance() {
+        EvaluationSnapshot baseline = new EvaluationSnapshot(1, List.of(), List.of(
+                new EvaluationSnapshot.Record("A", List.of(), true, false),
+                new EvaluationSnapshot.Record("A", List.of(), true, true)));
+        EvaluationSample<String> a = sample("A");
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(a, "x", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(a, "x", EvaluationResult.fromBoolean(true),
+                        true)));
+        List<String> warnings = new java.util.concurrent.CopyOnWriteArrayList<>();
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(EvaluationReportAssert.class.getName());
+        java.util.logging.Handler handler = new java.util.logging.Handler() {
+            @Override
+            public void publish(java.util.logging.LogRecord record) {
+                if (record.getLevel().intValue() >= java.util.logging.Level.WARNING.intValue()) {
+                    warnings.add(record.getMessage());
+                }
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        logger.addHandler(handler);
+        try {
+            assertThat(report).isNotWorseThan(baseline, 5.0);
+        } finally {
+            logger.removeHandler(handler);
+        }
+
+        org.assertj.core.api.Assertions.assertThat(warnings).isEmpty();
+    }
+
+    private static String reviewHint(FileBaselineStore store, String id) {
+        return "Pending result: " + store.pendingFileOf(id) + "\nBaseline: " + store.fileOf(id)
+                + "\nRun `quarkus langchain4j-eval review` to accept or reject it.\n"
+                + "Manual review (no CLI): https://docs.quarkiverse.io/quarkus-langchain4j/dev/testing.html#reviewing-results-manually";
+    }
+
+    private static String idOf(String method) {
+        return EvaluationAssertionsTest.class.getName() + "/" + method;
+    }
+
+    private static EvaluationReport<String> reportOf(boolean... passed) {
+        List<Scorer.EvaluationResult<String>> results = new java.util.ArrayList<>();
+        for (int i = 0; i < passed.length; i++) {
+            results.add(Scorer.EvaluationResult.fromCompletedEvaluation(sample(String.valueOf((char) ('A' + i))), "x",
+                    EvaluationResult.fromBoolean(passed[i])));
+        }
+        return new EvaluationReport<>(results);
+    }
+
+    private static JsonNode pendingComparison(FileBaselineStore store, String id) throws IOException {
+        return new ObjectMapper().readTree(store.pendingFileOf(id).toFile()).path(PendingFile.COMPARISON);
+    }
+
+    private static void assertStatus(FileBaselineStore store, String id, String status) throws IOException {
+        org.assertj.core.api.Assertions.assertThat(pendingComparison(store, id).path("status").asString())
+                .isEqualTo(status);
+    }
+
+    @Test
+    void isNotWorseThanBaseline_failsWithoutBaselineAndWritesPendingFile(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_failsWithoutBaselineAndWritesPendingFile");
+
+        assertThatThrownBy(() -> assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessage("No baseline yet for " + id + ", 1 samples pending review.\n\n" + reviewHint(store, id));
+
+        org.assertj.core.api.Assertions.assertThat(store.pendingFileOf(id)).exists();
+        assertStatus(store, id, "new");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_listsEverySampleAsAddedOnFirstRun(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_listsEverySampleAsAddedOnFirstRun");
+
+        assertThatThrownBy(() -> assertThat(reportOf(true, false)).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class);
+
+        JsonNode added = pendingComparison(store, id).path("added");
+        org.assertj.core.api.Assertions.assertThat(added).extracting(JsonNode::asString).containsExactly("A", "B");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_derivesIdFromTestMethod(@TempDir Path tempDir) {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+
+        assertThatThrownBy(() -> assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class);
+
+        org.assertj.core.api.Assertions
+                .assertThat(tempDir.resolve("target/evaluation-baselines")
+                        .resolve(EvaluationAssertionsTest.class.getName())
+                        .resolve("isNotWorseThanBaseline_derivesIdFromTestMethod.json"))
+                .exists();
+    }
+
+    @Test
+    void isNotWorseThanBaseline_derivesIdInsideLambda(@TempDir Path tempDir) {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        Runnable run = () -> assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0);
+
+        assertThatThrownBy(run::run).isInstanceOf(AssertionError.class).hasMessageContaining("No baseline yet for");
+
+        org.assertj.core.api.Assertions
+                .assertThat(store.pendingFileOf(idOf("isNotWorseThanBaseline_derivesIdInsideLambda"))).exists();
+    }
+
+    @Test
+    void isNotWorseThanBaseline_failsWhenNotInATest(@TempDir Path tempDir) throws InterruptedException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        Thread thread = new Thread(() -> {
+            try {
+                assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0);
+            } catch (Throwable t) {
+                failure.set(t);
+            }
+        });
+        thread.start();
+        thread.join();
+
+        org.assertj.core.api.Assertions.assertThat(failure.get()).isInstanceOf(AssertionError.class)
+                .hasMessage("Cannot tell which test is running: call isNotWorseThanBaseline from a JUnit test method, "
+                        + "or pass an explicit id.");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_failsOnRegressionWithHint(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_failsOnRegressionWithHint");
+        store.save(id, reportOf(true, true));
+
+        assertThatThrownBy(() -> assertThat(reportOf(true, false)).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("B: 100.00% -> 0.00%")
+                .hasMessageEndingWith("\n\n" + reviewHint(store, id));
+
+        assertStatus(store, id, "failed");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_failsOnTrialsChange(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_failsOnTrialsChange");
+        store.save(id, reportOf(true));
+        EvaluationReport<String> threeTrials = new EvaluationReport<>(reportOf(true).evaluations().stream()
+                .map(e -> (Scorer.EvaluationResult<String>) e).toList(), 3);
+
+        assertThatThrownBy(() -> assertThat(threeTrials).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageStartingWith("Cannot compare " + id + " with its baseline: ")
+                .hasMessageContaining("trials")
+                .hasMessageContaining(". Accept this run to make it the new baseline.\n\n" + reviewHint(store, id));
+
+        assertStatus(store, id, "incompatible");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_failsOnStrategyChange(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_failsOnStrategyChange");
+        List<Scorer.EvaluationResult<String>> results = List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true)));
+        store.save(id, new EvaluationReport<>(results, 1, List.of("one")));
+
+        assertThatThrownBy(() -> assertThat(new EvaluationReport<>(results, 1, List.of("two")))
+                .isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageStartingWith("Cannot compare " + id + " with its baseline: ")
+                .hasMessageContaining("strategies");
+
+        assertStatus(store, id, "incompatible");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_passesWithAddedSamplesAndMarksChanged(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_passesWithAddedSamplesAndMarksChanged");
+        store.save(id, reportOf(true, true));
+
+        assertThat(reportOf(true, true, true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0);
+
+        assertStatus(store, id, "changed");
+        org.assertj.core.api.Assertions.assertThat(pendingComparison(store, id).path("added").get(0).asString())
+                .isEqualTo("C");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_passesWithRemovedSamplesAndMarksChanged(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_passesWithRemovedSamplesAndMarksChanged");
+        store.save(id, reportOf(true, true));
+
+        assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0);
+
+        assertStatus(store, id, "changed");
+        org.assertj.core.api.Assertions.assertThat(pendingComparison(store, id).path("removed").get(0).asString())
+                .isEqualTo("B");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_unchangedRunHasUnchangedStatus(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_unchangedRunHasUnchangedStatus");
+        store.save(id, reportOf(true, false));
+
+        assertThat(reportOf(true, false)).isNotWorseThanBaseline(store, Optional.empty(), 5.0);
+
+        assertStatus(store, id, "unchanged");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_advisoryOnlyChangeHasChangedStatus(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_advisoryOnlyChangeHasChangedStatus");
+        store.save(id, withAdvisory(true));
+
+        assertThat(withAdvisory(false)).isNotWorseThanBaseline(store, Optional.empty(), 0.0);
+
+        assertStatus(store, id, "changed");
+    }
+
+    private static EvaluationReport<String> withAdvisory(boolean advisoryPassed) {
+        EvaluationSample<String> a = sample("A");
+        return new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(a, "x", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(a, "x", EvaluationResult.fromBoolean(advisoryPassed),
+                        true)));
+    }
+
+    @Test
+    void isNotWorseThanBaseline_keepsNumericLookingOutputsAsText(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_keepsNumericLookingOutputsAsText");
+        EvaluationSample<String> sample = new EvaluationSample<>("007", new Parameters(), "1.50", List.of());
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample, "007", EvaluationResult.fromBoolean(true))));
+
+        assertThatThrownBy(() -> assertThat(report).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageStartingWith("No baseline yet for " + id);
+
+        PendingResult.SampleDetail detail = PendingResults.read(store.pendingFileOf(id)).details().get(0);
+        org.assertj.core.api.Assertions.assertThat(detail.name()).isEqualTo("007");
+        org.assertj.core.api.Assertions.assertThat(detail.expectedOutput()).isEqualTo("1.50");
+        org.assertj.core.api.Assertions.assertThat(detail.responses().get(0).output()).isEqualTo("007");
+        store.save(id, report);
+        org.assertj.core.api.Assertions.assertThat(store.load(id)).isPresent();
+    }
+
+    @Test
+    void isNotWorseThanBaseline_structurallyInvalidBaselineIsIncompatible(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_structurallyInvalidBaselineIsIncompatible");
+        java.nio.file.Files.createDirectories(store.fileOf(id).getParent());
+        java.nio.file.Files.writeString(store.fileOf(id), "{}");
+
+        assertThatThrownBy(() -> assertThat(reportOf(false, false)).isNotWorseThanBaseline(store, Optional.empty(), 0.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageStartingWith("Cannot compare " + id + " with its baseline: the baseline file cannot be read: ");
+
+        assertStatus(store, id, "incompatible");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_listsSamplesWithOnlyAdvisoryEvaluations(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_listsSamplesWithOnlyAdvisoryEvaluations");
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(Scorer.EvaluationResult
+                .fromCompletedEvaluation(sample("J"), "x", EvaluationResult.fromBoolean(true), true)));
+
+        assertThatThrownBy(() -> assertThat(report).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageStartingWith("No baseline yet for " + id + ", 1 samples pending review.");
+
+        org.assertj.core.api.Assertions.assertThat(pendingComparison(store, id).path("added"))
+                .extracting(JsonNode::asString).containsExactly("J");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_replacesAPendingFileCutShortByAnEarlierRun(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_replacesAPendingFileCutShortByAnEarlierRun");
+        java.nio.file.Files.createDirectories(store.pendingFileOf(id).getParent());
+        java.nio.file.Files.writeString(store.pendingFileOf(id), "{\"id\": \"x\", \"run\": \"r");
+
+        assertThatThrownBy(() -> assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageStartingWith("No baseline yet for " + id);
+
+        assertStatus(store, id, "new");
+        try (var files = java.nio.file.Files.list(store.pendingFileOf(id).getParent())) {
+            org.assertj.core.api.Assertions.assertThat(files.map(f -> f.getFileName().toString()))
+                    .containsExactly(store.pendingFileOf(id).getFileName().toString());
+        }
+    }
+
+    @Test
+    void isNotWorseThanBaseline_saysWhenEvaluationsEndedInAnError(@TempDir Path tempDir) {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_saysWhenEvaluationsEndedInAnError");
+        RuntimeException quota = new RuntimeException("credit_balance_exhausted");
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromEvaluationThrowable(sample("A"), new AssertionError("Failed", quota)),
+                Scorer.EvaluationResult.fromEvaluationThrowable(sample("B"), new AssertionError("Failed", quota))));
+
+        assertThatThrownBy(() -> assertThat(report).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessage("No baseline yet for " + id + ", 2 samples pending review.\n\n"
+                        + "2 of 2 evaluations ended in an error, so their scores say nothing about the answers:\n"
+                        + "  - RuntimeException: credit_balance_exhausted (2)\n\n" + reviewHint(store, id));
+    }
+
+    @Test
+    void isNotWorseThanBaseline_failsWhenSameIdAssertedTwice(@TempDir Path tempDir) {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        store.save("twice", reportOf(true));
+        assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.of("twice"), 5.0);
+
+        assertThatThrownBy(() -> assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.of("twice"), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("twice was already compared with its baseline in this run");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_unreadableBaselineIsIncompatible(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_unreadableBaselineIsIncompatible");
+        java.nio.file.Files.createDirectories(store.fileOf(id).getParent());
+        java.nio.file.Files.writeString(store.fileOf(id), "<<<<<<< HEAD\n{}\n=======\n{}\n>>>>>>> branch\n");
+
+        assertThatThrownBy(() -> assertThat(reportOf(true)).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageStartingWith("Cannot compare " + id + " with its baseline: the baseline file cannot be read: ")
+                .hasMessageEndingWith(". Accept this run to make it the new baseline.\n\n" + reviewHint(store, id));
+
+        assertStatus(store, id, "incompatible");
+        org.assertj.core.api.Assertions.assertThat(pendingComparison(store, id).path("incompatibility").asString())
+                .startsWith("the baseline file cannot be read: ");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_acceptedResultIsTheNextBaseline(@TempDir Path tempDir) throws IOException {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        String id = idOf("isNotWorseThanBaseline_acceptedResultIsTheNextBaseline");
+        assertThatThrownBy(() -> assertThat(reportOf(true, false)).isNotWorseThanBaseline(store, Optional.empty(), 5.0))
+                .isInstanceOf(AssertionError.class);
+        assertStatus(store, id, "new");
+
+        Review.accept(PendingResults.read(store.pendingFileOf(id)));
+        assertThat(reportOf(true, false)).isNotWorseThanBaseline(store, Optional.empty(), 5.0);
+
+        assertStatus(store, id, "unchanged");
+    }
+
+    @Test
+    void isNotWorseThanBaseline_failsOnDuplicateSampleNames(@TempDir Path tempDir) {
+        FileBaselineStore store = FileBaselineStore.conventional(tempDir);
+        EvaluationReport<String> report = new EvaluationReport<>(List.of(
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true)),
+                Scorer.EvaluationResult.fromCompletedEvaluation(sample("A"), "x", EvaluationResult.fromBoolean(true))));
+
+        assertThatThrownBy(() -> assertThat(report).isNotWorseThanBaseline(store, Optional.of("dup"), 5.0))
+                .isInstanceOf(AssertionError.class)
+                .hasMessage("Sample names must be unique, found duplicates: A");
+
+        org.assertj.core.api.Assertions.assertThat(store.pendingFileOf("dup")).doesNotExist();
+    }
+
+    private static EvaluationSample<String> sample(String name) {
+        return new EvaluationSample<>(name, new Parameters(), "expected", List.of());
     }
 
     @Test

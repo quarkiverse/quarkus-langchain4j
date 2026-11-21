@@ -9,3 +9,5 @@ metadata:
   categories:
     - "ai"
   status: "stable"
+  cli-plugins:
+    - "io.quarkiverse.langchain4j:quarkus-langchain4j-eval-cli:runner:jar:${project.version}"

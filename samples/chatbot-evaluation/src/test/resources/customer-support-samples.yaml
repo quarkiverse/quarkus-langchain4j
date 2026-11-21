@@ -13,7 +13,7 @@
 - name: Return Policy Inquiry
   parameters:
     - "What is your return policy?"
-  expected-output: "We have a 30-day return policy for all items."
+  expected-output: "We have a 30-day return policy. You can return items within 30 days of receiving your order for a full refund."
   tags: ["returns", "critical"]
 
 - name: Contact Information Request
