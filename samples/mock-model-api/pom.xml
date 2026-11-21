@@ -21,7 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <skipITs>true</skipITs>
-        <quarkus-langchain4j.version>${project.version}</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>2.0.0.CR1</quarkus-langchain4j.version>
     </properties>
 
     <dependencies>
