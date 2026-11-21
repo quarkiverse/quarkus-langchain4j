@@ -4,18 +4,18 @@
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-_AI Services_ provide a declarative mechanism for interacting with LLMs, abstracting complexities behind annotated interfaces.
+_AI Services_ provide a declarative mechanism for interacting with LLMs, abstracting complexities behind annotated classes or interfaces.
 
 == Overview
 
-_AI Services_ act as the core connection between your application and Large Language Models (LLMs). They simplify the integration by encapsulating interactions declaratively within annotated Java interfaces, removing boilerplate and complexities typically associated with manual LLM integrations.
+_AI Services_ act as the core connection between your application and Large Language Models (LLMs). They simplify the integration by encapsulating interactions declaratively within annotated Java classes, or interfaces, removing boilerplate and complexities typically associated with manual LLM integrations.
 
 [source,java]
 ----
 @RegisterAiService
-public interface GreetingService {
+public class GreetingService {
     @UserMessage("Greet the user named {name}")
-    String greet(String name);
+    public native String greet(String name);
 }
 ----
 
@@ -28,13 +28,71 @@ Inject and use the generated service:
 String greeting = service.greet("Quarkus");
 ----
 
-IMPORTANT: You do **not** need to implement the interface. Quarkus LangChain4j automatically generates the implementation.
+IMPORTANT: You do **not** implement the `native` methods. Quarkus LangChain4j generates their implementation at build time.
+
+[[ai-services-as-classes]]
+== AI Services as Classes
+
+An AI service is an ordinary CDI bean when it is declared as a class: it can inject other beans, run a `@PostConstruct` method, declare a scope, bind interceptors and declare concrete methods next to the AI ones.
+
+[source,java]
+----
+@RequestScoped
+@RegisterAiService(tools = OrderTools.class)
+public class OrderAssistant {
+
+    @Inject
+    OrderRepository orders;
+
+    @PostConstruct
+    void init() {
+        // runs on each bean instance
+    }
+
+    @SystemMessage("You help customers with their orders.")
+    @UserMessage("{question}")
+    @Transactional
+    public native String answer(@MemoryId String customer, String question);
+
+    public String answerLoudly(String customer, String question) {
+        return answer(customer, question).toUpperCase();
+    }
+}
+----
+
+The rules of the class form are:
+
+* The AI methods are `native`: the extension implements them in a generated subclass of the class, which is the bean. An abstract class fails the build: make it concrete and declare its AI methods `native`.
+* The class must be concrete and non-final, with a non-private no-arg constructor, which runs for the generated subclass too, so it must be cheap and free of side effects. Keep the state in injected fields or initialize it in a `@PostConstruct` method. Constructor injection is not supported, and a constructor annotated with `@Inject` fails the build: inject fields instead.
+* The native methods must be neither `private`, `static` nor `final`, and at least one is required. The native methods declared by a superclass are AI methods of the service too, as are the `@SystemMessage` and `@UserMessage` annotations found there.
+* Interceptor bindings on the class, on the native methods and on the concrete methods apply, since the bean is invoked through its client proxy.
+* The scope is the one declared on the class, `@RequestScoped` by default, with the same effect on the chat memory as for an interface, see xref:messages-and-memory.adoc[Messages and Memory].
+* The `@RegisterAiService` attributes, `@ToolBox`, `@MemoryId`, streaming return types, guardrails, and the static `@SeedMemory`, `@OnThinking` and tool error handler methods work as on an interface.
+* Tools declared on the service class itself, as `@Tool` methods, are not supported yet: a `@Tool` method on the class fails the build. Declare the tools on a separate bean listed in the `tools` attribute, or in a `@ToolBox`.
+* A `@Produces` or `@Disposes` member on the class fails the build: the bean is the generated subclass, which inherits the injected fields, the lifecycle callbacks and the observer methods of the class, but never its producers and disposers. Declare them on another bean.
+
+Because the bean is the generated subclass, the class itself must be injected, never instantiated: calling a native method on an instance created with `new` throws an `IllegalStateException`.
+
+=== The Interface Form
+
+An AI service can also be declared as an interface with abstract methods, the form shared with plain LangChain4j:
+
+[source,java]
+----
+@RegisterAiService
+public interface GreetingService {
+    @UserMessage("Greet the user named {name}")
+    String greet(String name);
+}
+----
+
+The interface form has no injected fields, lifecycle callbacks or concrete methods beyond `default` ones, but everything else in this guide applies to both forms alike.
 
 == Annotations Reference
 
 === @RegisterAiService
 
-Marks an interface as an AI Service managed by CDI, creating a bean for interactions with an LLM.
+Marks a class or an interface as an AI Service managed by CDI, creating a bean for interactions with an LLM.
 
 [source,java]
 ----
@@ -94,17 +152,47 @@ Marks an interface as an AI Service managed by CDI, creating a bean for interact
 |`chatLanguageModelSupplier`
 |Supplier for chat model (optional).
 |Unset
-| If not set, it uses the streaming support of the configured model.
+| If not set, it uses the configured model.
 
-|`maxSequentialToolInvocations`
-|Maximum number of sequential tool invocations allowed per request.
-|10, but see the note
-|If not set, the value of the `quarkus.langchain4j.ai-service.max-tool-executions` property will be used. The default value of that property is 10.
+|`toolSearchStrategySupplier`
+|Supplier for the tool search strategy letting the model discover tools dynamically at inference time.
+|Unset
+|If not set, the `ToolSearchStrategy` CDI bean is used when exactly one exists. Use `NoToolSearchStrategySupplier` to opt out even when such a bean is present.
+
+|`systemMessageProviderSupplier`
+|A `SystemMessageProvider` or `SystemMessageProviderWithContext` supplying the system message dynamically at runtime.
+|Unset
+|If not set, the system message comes from the `@SystemMessage` annotation.
+
+|`chatMemoryFlushStrategySupplier`
+|Supplier for the strategy deciding when the messages of a chat memory are persisted to its store.
+|`DEFERRED`
+|With `DEFERRED`, the messages are persisted at the end of a successful interaction; with `IMMEDIATE`, as they are added. The supplier may be a CDI bean, or a class with a no-arg constructor.
+
+|`maxToolCallingRoundTrips`
+|Maximum number of LLM request and response round trips while handling a single chat request.
+|0, meaning the configured value
+|If not set, the value of the `quarkus.langchain4j.ai-service.max-tool-calling-round-trips` property will be used, 10 by default. Exceeding the limit fails the request.
+
+|`maxToolCallsPerResponse`
+|Maximum number of tool calls allowed in a single LLM response.
+|0, meaning the configured value
+|If not set, the value of the `quarkus.langchain4j.ai-service.max-tool-calls-per-response` property will be used, unlimited by default. Exceeding the limit throws a `ToolCallsLimitExceededException`.
+
+|`allowContinuousForcedToolCalling`
+|Whether the `toolChoice` of the initial request is kept after the first tool call, instead of being set to `AUTO`.
+|`false`
+|Dangerous with `toolChoice` set to `REQUIRED`: the interaction can loop forever.
 
 |`executeToolsConcurrently`
 |Whether the tool calls requested in a single LLM response are executed concurrently.
 |`false`
 |If not set, the value of the `quarkus.langchain4j.ai-service.execute-tools-concurrently` property will be used. A value set here takes precedence over that property. See <<executing-tools-concurrently>> for details.
+
+|`shouldThrowExceptionOnEventError`
+|Whether an exception thrown by an AI service event handler is rethrown by the interaction.
+|`false`
+|By default such errors are handled silently.
 
 |===
 
@@ -113,16 +201,16 @@ In most cases, using an empty `@RegisterAiService` is sufficient, as it defaults
 [source,java]
 ----
 @RegisterAiService
-public interface MyAiService {
+public class MyAiService {
     @UserMessage("Answer the following question: {input}")
-    String process(String input);
+    public native String process(String input);
 }
 ----
 
 === @SystemMessage
 
 The `@SystemMessage` annotation defines initial instructions or context for the LLM interaction.
-The system message can be set on the AI Service interface itself or on individual methods. In the first case, it applies to all methods in the service.
+The system message can be set on the AI Service type itself or on individual methods. In the first case, it applies to all methods in the service.
 
 [source,java]
 ----

@@ -5,6 +5,7 @@ import static io.restassured.RestAssured.given;
 import java.net.URL;
 
 import org.acme.example.openai.TestUtils;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -27,5 +28,17 @@ public class AssistantResourceTest {
                 .then()
                 .statusCode(200)
                 .body(TestUtils.containsStringOrMock("Quarkus"));
+    }
+
+    @Test
+    public void getFromClass() {
+        given()
+                .baseUri(url.toString())
+                .queryParam("message", "Hello, my name is Quarkus")
+                .get("/class")
+                .then()
+                .statusCode(200)
+                .body(TestUtils.containsStringOrMock("Quarkus"))
+                .body(Matchers.endsWith(" -- signed"));
     }
 }

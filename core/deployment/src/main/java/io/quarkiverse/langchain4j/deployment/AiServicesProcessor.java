@@ -17,9 +17,12 @@ import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVar
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
 import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
 import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMultiOrFlowPublisher;
+import static io.quarkus.arc.processor.DotNames.DISPOSES;
+import static io.quarkus.arc.processor.DotNames.INJECT;
 import static io.quarkus.arc.processor.DotNames.NAMED;
 import static io.quarkus.arc.processor.DotNames.OBSERVES;
 import static io.quarkus.arc.processor.DotNames.OBSERVES_ASYNC;
+import static io.quarkus.arc.processor.DotNames.PRODUCES;
 import static io.quarkus.arc.processor.DotNames.SINGLETON;
 
 import java.io.IOException;
@@ -48,6 +51,7 @@ import java.util.stream.Stream;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Vetoed;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
@@ -58,6 +62,7 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationTransformation;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
@@ -156,6 +161,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
@@ -165,6 +171,7 @@ import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
+import io.quarkus.gizmo.BytecodeCreator;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
 import io.quarkus.gizmo.FieldDescriptor;
@@ -468,8 +475,13 @@ public class AiServicesProcessor {
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
-            BuildProducer<GeneratedClassBuildItem> generatedClassProducer) {
+            BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
+            BuildProducer<AnnotationsTransformerBuildItem> annotationsTransformerProducer,
+            BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformerProducer) {
         IndexView index = indexBuildItem.getIndex();
+        Set<DotName> agentClassBasedAiServices = classBasedNames(classBasedAiServiceItems);
+        Set<DotName> classFormAiServices = new HashSet<>();
+        Set<DotName> transformedClasses = new HashSet<>();
 
         Set<String> chatModelNames = new HashSet<>();
         Set<String> moderationModelNames = new HashSet<>();
@@ -489,7 +501,7 @@ public class AiServicesProcessor {
                 .collect(Collectors.toSet());
 
         Set<AnnotationInstance> impliedRegisterAiServiceInstance = determinedImpliedRegisterAiService(
-                annotationsThatImplyAiService, index, excludedFromImplied, classBasedNames(classBasedAiServiceItems));
+                annotationsThatImplyAiService, index, excludedFromImplied, agentClassBasedAiServices);
         Set<DotName> impliedRegisterAiServiceTarget = impliedRegisterAiServiceInstance.stream()
                 .map(ai -> ai.target().asClass().name()).collect(Collectors.toSet());
         registerAiServicesInstances.addAll(impliedRegisterAiServiceInstance);
@@ -503,6 +515,21 @@ public class AiServicesProcessor {
                 continue;
             }
             alreadyHandled.add(declarativeAiServiceClassInfo.name());
+
+            if (isClassFormAiService(declarativeAiServiceClassInfo, agentClassBasedAiServices)) {
+                // the class form of a plain AI service: the bean is the generated subclass implementing the native
+                // methods, the class itself is vetoed from bean discovery and its native methods get a body
+                validateClassFormAiService(declarativeAiServiceClassInfo, index);
+                classFormAiServices.add(declarativeAiServiceClassInfo.name());
+                for (ClassInfo type : classHierarchy(declarativeAiServiceClassInfo, index)) {
+                    List<MethodInfo> nativeMethods = instanceNativeMethods(type);
+                    if (!nativeMethods.isEmpty() && transformedClasses.add(type.name())) {
+                        bytecodeTransformerProducer.produce(new BytecodeTransformerBuildItem(type.name().toString(),
+                                new NativeAiServiceMethodEnhancer(declarativeAiServiceClassInfo.name().toString(),
+                                        nativeMethods)));
+                    }
+                }
+            }
 
             DotName chatLanguageModelSupplierClassDotName = getSupplierDotName(instance.value("chatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER,
@@ -719,6 +746,23 @@ public class AiServicesProcessor {
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
 
+        if (!classFormAiServices.isEmpty()) {
+            annotationsTransformerProducer.produce(new AnnotationsTransformerBuildItem(AnnotationTransformation
+                    .forClasses()
+                    .whenClass(new Predicate<ClassInfo>() {
+                        @Override
+                        public boolean test(ClassInfo classInfo) {
+                            return classFormAiServices.contains(classInfo.name());
+                        }
+                    })
+                    .transform(new Consumer<AnnotationTransformation.TransformationContext>() {
+                        @Override
+                        public void accept(AnnotationTransformation.TransformationContext context) {
+                            context.add(Vetoed.class);
+                        }
+                    })));
+        }
+
         for (String chatModelName : chatModelNames) {
             requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(chatModelName));
         }
@@ -734,6 +778,122 @@ public class AiServicesProcessor {
 
     private static Set<DotName> classBasedNames(List<ClassBasedAiServiceBuildItem> classBasedAiServiceItems) {
         return classBasedAiServiceItems.stream().map(ClassBasedAiServiceBuildItem::getClassName).collect(Collectors.toSet());
+    }
+
+    /**
+     * Whether the given AI service type is a class in its class form: a class annotated with {@code @RegisterAiService}
+     * that the agentic extension does not declare as a class-based agent. The agentic extension owns the bean of its
+     * agents, while the bean of a class-form service is the generated subclass of the class.
+     */
+    private static boolean isClassFormAiService(ClassInfo serviceType, Set<DotName> agentClassBasedAiServices) {
+        return !serviceType.isInterface() && !agentClassBasedAiServices.contains(serviceType.name());
+    }
+
+    /**
+     * Validates the class form of an AI service: a concrete, non-final class with a non-private no-arg constructor,
+     * which the generated subclass calls, declaring at least one {@code native} instance method, neither private,
+     * static nor final, which the subclass implements. Tools declared on the class are not supported yet, and
+     * producers, disposers and injected constructors are rejected: the bean is the generated subclass, which does not
+     * inherit the former and calls the no-arg constructor only.
+     */
+    private static void validateClassFormAiService(ClassInfo serviceClass, IndexView index) {
+        String name = serviceClass.name().toString();
+        List<AnnotationInstance> producers = serviceClass.annotations(PRODUCES);
+        if (!producers.isEmpty()) {
+            throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService declares the producer "
+                    + "'%s', but the bean of an AI service class is its generated subclass, which does not inherit "
+                    + "producers: declare the producer on another bean").formatted(name,
+                            memberName(producers.get(0).target())));
+        }
+        List<AnnotationInstance> disposers = serviceClass.annotations(DISPOSES);
+        if (!disposers.isEmpty()) {
+            throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService declares the disposer "
+                    + "'%s', but the bean of an AI service class is its generated subclass, which does not inherit "
+                    + "disposers: declare the disposer on another bean").formatted(name,
+                            memberName(disposers.get(0).target())));
+        }
+        if (Modifier.isAbstract(serviceClass.flags())) {
+            throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService is abstract, so it "
+                    + "cannot be a CDI bean: make it concrete and declare its AI service methods 'native', the extension "
+                    + "implements them").formatted(name));
+        }
+        if (Modifier.isFinal(serviceClass.flags())) {
+            throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService must not be final: "
+                    + "the extension implements it with a generated subclass, which is the bean").formatted(name));
+        }
+        MethodInfo noArgConstructor = serviceClass.method("<init>");
+        if (noArgConstructor == null || Modifier.isPrivate(noArgConstructor.flags())) {
+            throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService must declare a "
+                    + "non-private no-arg constructor: the generated subclass implementing it calls it").formatted(name));
+        }
+        for (MethodInfo constructor : serviceClass.constructors()) {
+            if (constructor.hasDeclaredAnnotation(INJECT)) {
+                throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService declares a "
+                        + "constructor annotated with @Inject, but the generated subclass implementing it calls the "
+                        + "no-arg constructor only: inject fields instead").formatted(name));
+            }
+        }
+        List<MethodInfo> nativeMethods = new ArrayList<>();
+        for (ClassInfo type : classHierarchy(serviceClass, index)) {
+            for (MethodInfo method : type.methods()) {
+                if (Modifier.isNative(method.flags())) {
+                    nativeMethods.add(method);
+                }
+            }
+            for (AnnotationInstance tool : type.annotations(DotNames.TOOL)) {
+                if (tool.target().kind() == AnnotationTarget.Kind.METHOD) {
+                    throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService declares the "
+                            + "method '%s' annotated with @Tool, but tools declared on an AI service class are not "
+                            + "supported yet: declare them on a separate bean listed in the 'tools' attribute of "
+                            + "@RegisterAiService").formatted(name, tool.target().asMethod().name()));
+                }
+            }
+        }
+        if (nativeMethods.isEmpty()) {
+            throw new IllegalConfigurationException(("Class '%s' annotated with @RegisterAiService declares no 'native' "
+                    + "method: declare its AI service methods 'native', the extension implements them").formatted(name));
+        }
+        for (MethodInfo method : nativeMethods) {
+            short flags = method.flags();
+            if (Modifier.isPrivate(flags) || Modifier.isStatic(flags) || Modifier.isFinal(flags)) {
+                throw new IllegalConfigurationException(("The native method '%s' of class '%s' annotated with "
+                        + "@RegisterAiService must be neither private, static nor final: it is implemented by the "
+                        + "generated subclass of the class").formatted(method.name(), name));
+            }
+        }
+    }
+
+    private static String memberName(AnnotationTarget target) {
+        return switch (target.kind()) {
+            case FIELD -> target.asField().name();
+            case METHOD -> target.asMethod().name();
+            case METHOD_PARAMETER -> target.asMethodParameter().method().name();
+            default -> target.toString();
+        };
+    }
+
+    /**
+     * The given class and its superclasses, as far as they are in the index, the class first.
+     */
+    private static List<ClassInfo> classHierarchy(ClassInfo classInfo, IndexView index) {
+        List<ClassInfo> hierarchy = new ArrayList<>();
+        ClassInfo current = classInfo;
+        while (current != null) {
+            hierarchy.add(current);
+            DotName superName = current.superName();
+            current = superName == null || DotNames.OBJECT.equals(superName) ? null : index.getClassByName(superName);
+        }
+        return hierarchy;
+    }
+
+    private static List<MethodInfo> instanceNativeMethods(ClassInfo type) {
+        List<MethodInfo> methods = new ArrayList<>();
+        for (MethodInfo method : type.methods()) {
+            if (Modifier.isNative(method.flags()) && !Modifier.isStatic(method.flags())) {
+                methods.add(method);
+            }
+        }
+        return methods;
     }
 
     private static Set<AnnotationInstance> determinedImpliedRegisterAiService(Set<DotName> annotationsThatImplyAiService,
@@ -959,7 +1119,7 @@ public class AiServicesProcessor {
                 }
             }
 
-            ResultHandle result = handleMethod.invokeStaticInterfaceMethod(targetMethod,
+            ResultHandle result = invokeStatic(handleMethod, targetMethod, MethodDescriptor.of(targetMethod),
                     paramHandles.toArray(new ResultHandle[0]));
             if (returnType.equals(LangChain4jDotNames.TOOL_ERROR_HANDLER_RESULT)) {
                 handleMethod.returnValue(result);
@@ -1791,7 +1951,7 @@ public class AiServicesProcessor {
 
         IndexView index = indexBuildItem.getIndex();
         boolean chatMemoryMayBlock = !blockingChatMemoryItems.isEmpty();
-        Set<DotName> classBasedAiServices = classBasedNames(classBasedAiServiceItems);
+        Set<DotName> agentClassBasedAiServices = classBasedNames(classBasedAiServiceItems);
 
         List<AiServicesUseAnalyzer.Result.Entry> aiServicesAnalysisResults = new ArrayList<>();
         for (ClassInfo classInfo : index.getKnownUsers(LangChain4jDotNames.AI_SERVICES)) {
@@ -1849,7 +2009,8 @@ public class AiServicesProcessor {
                         + "an AiService using this class will fail");
                 continue;
             }
-            if (!classInfo.isInterface() && !classBasedAiServices.contains(classInfo.name())) {
+            if (!classInfo.isInterface() && !agentClassBasedAiServices.contains(classInfo.name())
+                    && !registeredAiServiceClassNames.contains(className)) {
                 log.warn("'" + className
                         + "' used for creating an AiService is not an interface. Attempting to create an AiService "
                         + "using this class will fail");
@@ -1880,8 +2041,12 @@ public class AiServicesProcessor {
             ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
                 // a class-based AI service is implemented by a subclass of the class, which implements the native
-                // and abstract methods of the class and of its superclasses, and nothing else
-                boolean classBased = classBasedAiServices.contains(iface.name());
+                // and abstract methods of the class and of its superclasses, and nothing else: the class of an agent
+                // declared by the agentic extension is the bean, while the generated subclass of a class annotated
+                // with @RegisterAiService is the bean, registered like the implementation of an interface
+                boolean agentOwned = agentClassBasedAiServices.contains(iface.name());
+                boolean classBased = agentOwned
+                        || (!iface.isInterface() && registeredAiServiceClassNames.contains(iface.name().toString()));
                 List<MethodInfo> allMethods = new ArrayList<>(iface.methods());
                 if (classBased) {
                     allMethods.addAll(superclassMethods(iface, index));
@@ -1892,17 +2057,21 @@ public class AiServicesProcessor {
 
                 List<MethodInfo> methodsToImplement = new ArrayList<>();
                 Map<String, AiServiceMethodCreateInfo> perMethodMetadata = new HashMap<>();
+                // every method seen so far, the most specific type first: a method of a supertype with the signature
+                // of one already seen is overridden, by a method implemented here or by a concrete one of the user,
+                // which the generated implementation must not replace
+                List<MethodInfo> seenMethods = new ArrayList<>();
                 for (MethodInfo method : allMethods) {
                     short modifiers = method.flags();
                     if (Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers)) {
                         continue;
                     }
-                    if (classBased ? !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers)
-                            : JandexUtil.isDefault(modifiers)) {
+                    if (seenMethods.stream().anyMatch(m -> MethodUtil.methodSignaturesMatch(m, method))) {
                         continue;
                     }
-
-                    if (methodsToImplement.stream().anyMatch(m -> MethodUtil.methodSignaturesMatch(m, method))) {
+                    seenMethods.add(method);
+                    if (classBased ? !Modifier.isNative(modifiers) && !Modifier.isAbstract(modifiers)
+                            : JandexUtil.isDefault(modifiers)) {
                         continue;
                     }
                     methodsToImplement.add(method);
@@ -1910,8 +2079,8 @@ public class AiServicesProcessor {
 
                 String ifaceName = iface.name().toString();
                 String implClassName = ifaceName + "$$QuarkusImpl";
-                // the class of a class-based AI service is the bean, its generated subclass is not
-                boolean isRegisteredService = !classBased && registeredAiServiceClassNames.contains(ifaceName);
+                // the class of a class-based agent is the bean, its generated subclass is not
+                boolean isRegisteredService = !agentOwned && registeredAiServiceClassNames.contains(ifaceName);
                 MethodDescriptor superConstructor = classBased ? MethodDescriptor.ofConstructor(ifaceName)
                         : OBJECT_CONSTRUCTOR;
 
@@ -1961,7 +2130,7 @@ public class AiServicesProcessor {
                         MethodCreator ctor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
                                 QuarkusAiServiceContext.class);
                         ctor.setModifiers(Modifier.PUBLIC);
-                        if (!classBased) {
+                        if (!agentOwned) {
                             ctor.addAnnotation(Inject.class);
                             ctor.getParameterAnnotations(0)
                                     .addAnnotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
@@ -2029,7 +2198,7 @@ public class AiServicesProcessor {
                             MethodCreator mc = classCreator.getMethodCreator(MethodDescriptor.of(methodInfo));
 
                             // copy annotations
-                            if (!classBased) {
+                            if (!agentOwned) {
                                 for (AnnotationInstance annotationInstance : methodInfo.declaredAnnotations()) {
                                     // TODO: we need to review this
                                     if (shouldCopyAnnotation(annotationInstance, index)) {
@@ -3164,7 +3333,7 @@ public class AiServicesProcessor {
                 .interfaces(ThinkingHandler.class.getName());
         try (ClassCreator classCreator = classCreatorBuilder.build()) {
             MethodCreator methodCreator = classCreator.getMethodCreator("emit", void.class, ThinkingEmitted.class);
-            methodCreator.invokeStaticInterfaceMethod(
+            invokeStatic(methodCreator, thinkingTargetMethod,
                     MethodDescriptor.ofMethod(
                             thinkingTargetMethod.declaringClass().name().toString(),
                             thinkingTargetMethod.name(),
@@ -3257,14 +3426,14 @@ public class AiServicesProcessor {
             }
 
             if (seedMemoryTargetMethodParams.isEmpty()) {
-                ResultHandle resultHandle = methodCreator.invokeStaticInterfaceMethod(
+                ResultHandle resultHandle = invokeStatic(methodCreator, seedMemoryTargetMethod,
                         MethodDescriptor.ofMethod(
                                 seedMemoryTargetMethod.declaringClass().name().toString(),
                                 seedMemoryTargetMethod.name(),
                                 seedMemoryTargetMethod.returnType().name().toString()));
                 methodCreator.returnValue(resultHandle);
             } else {
-                ResultHandle resultHandle = methodCreator.invokeStaticInterfaceMethod(
+                ResultHandle resultHandle = invokeStatic(methodCreator, seedMemoryTargetMethod,
                         MethodDescriptor.ofMethod(
                                 seedMemoryTargetMethod.declaringClass().name().toString(),
                                 seedMemoryTargetMethod.name(),
@@ -3277,6 +3446,17 @@ public class AiServicesProcessor {
         }
 
         return implClassName;
+    }
+
+    /**
+     * Invokes the given static method of an AI service type, declared by an interface or by a class in its class form.
+     */
+    private static ResultHandle invokeStatic(BytecodeCreator bytecodeCreator, MethodInfo target, MethodDescriptor descriptor,
+            ResultHandle... args) {
+        if (target.declaringClass().isInterface()) {
+            return bytecodeCreator.invokeStaticInterfaceMethod(descriptor, args);
+        }
+        return bytecodeCreator.invokeStaticMethod(descriptor, args);
     }
 
     private String defaultAiServiceSpanName(MethodInfo method) {
