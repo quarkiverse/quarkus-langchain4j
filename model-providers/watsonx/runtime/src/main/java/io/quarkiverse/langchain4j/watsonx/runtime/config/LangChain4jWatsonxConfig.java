@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +53,14 @@ public interface LangChain4jWatsonxConfig {
         Optional<String> baseUrl();
 
         /**
+         * Base URL of the platform Projects API used to resolve the project's default storage container.
+         * <p>
+         * For known IBM Cloud ML endpoints, the regional platform endpoint is selected automatically. For custom ML
+         * endpoints, this defaults to {@code base-url}. Set this property when the Projects API is hosted separately.
+         */
+        Optional<URI> projectBaseUrl();
+
+        /**
          * IBM Cloud API key.
          */
         Optional<String> apiKey();
@@ -66,6 +75,7 @@ public interface LangChain4jWatsonxConfig {
         /**
          * The version date for the API of the form YYYY-MM-DD.
          */
+        @ConfigDocDefault("2026-10-28")
         Optional<String> version();
 
         /**

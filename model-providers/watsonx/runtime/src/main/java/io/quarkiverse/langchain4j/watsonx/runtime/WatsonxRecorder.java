@@ -5,6 +5,7 @@ import static io.quarkiverse.langchain4j.watsonx.runtime.AuthenticatorCache.getO
 import static java.util.Objects.nonNull;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,12 +13,12 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import com.ibm.watsonx.ai.CloudRegion;
 import com.ibm.watsonx.ai.chat.ChatModeration;
 import com.ibm.watsonx.ai.chat.model.ExtractionTags;
 import com.ibm.watsonx.ai.chat.model.ExtractionTags.Response;
@@ -29,6 +30,10 @@ import com.ibm.watsonx.ai.detection.detector.GraniteGuardian;
 import com.ibm.watsonx.ai.detection.detector.Hap;
 import com.ibm.watsonx.ai.detection.detector.Pii;
 import com.ibm.watsonx.ai.gateway.chat.ModelGatewayChatParameters.Cache;
+import com.ibm.watsonx.ai.project.ProjectService;
+import com.ibm.watsonx.ai.textprocessing.ContainerReference;
+import com.ibm.watsonx.ai.textprocessing.CosReference;
+import com.ibm.watsonx.ai.textprocessing.DocumentReference;
 import com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.create.CreateSchemaService;
 import com.ibm.watsonx.ai.textprocessing.schema.improve.ImproveSchemaService;
@@ -68,6 +73,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.config.ClusterSchemaConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.CommonChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.CreateSchemaConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.DeploymentChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.DocumentReferenceConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.FoundationChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.FoundationChatModelConfig.ExtractionTagsConfig;
@@ -84,6 +90,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig.GraniteGuardianConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationModelConfig.HapConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ModerationsConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ResultReferenceConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ScoringModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.TextClassificationConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.TextExtractionConfig;
@@ -635,15 +642,10 @@ public class WatsonxRecorder {
     }
 
     private static URI resolveBaseUrl(WatsonxConfig specificConfig, WatsonxConfig defaultConfig) {
-        return specificConfig.baseUrl()
-                .or(new Supplier<Optional<String>>() {
-                    @Override
-                    public Optional<String> get() {
-                        return defaultConfig.baseUrl();
-                    }
-                })
-                .map(URI::create)
-                .orElseThrow();
+        String baseUrl = specificConfig.baseUrl().isPresent()
+                ? specificConfig.baseUrl().get()
+                : defaultConfig.baseUrl().orElseThrow();
+        return URI.create(baseUrl);
     }
 
     private static Boolean resolveLogRequests(WatsonxConfig defaultConfig, WatsonxConfig specificConfig,
@@ -1208,33 +1210,35 @@ public class WatsonxRecorder {
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
         TextExtractionConfig textExtractionConfig = watsonxConfig.textExtraction().orElse(null);
 
+        var configProblems = checkTextExtractionConfigurations(configName, textExtractionConfig);
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
         var apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null), watsonxConfig.apiKey());
 
-        URI baseUrl = watsonxConfig.baseUrl()
-                .or(() -> defaultConfig.baseUrl())
-                .map(URI::create)
-                .orElseThrow();
+        URI baseUrl = resolveBaseUrl(watsonxConfig, defaultConfig);
+
+        boolean logRequests = firstOrDefault(
+                defaultConfig.logRequests().orElse(false),
+                textExtractionConfig == null ? Optional.empty() : textExtractionConfig.logRequests(),
+                watsonxConfig.logRequests());
+
+        boolean logResponses = firstOrDefault(
+                defaultConfig.logResponses().orElse(false),
+                textExtractionConfig == null ? Optional.empty() : textExtractionConfig.logResponses(),
+                watsonxConfig.logResponses());
 
         TextExtractionService.Builder builder = TextExtractionService.builder()
                 .baseUrl(baseUrl)
                 .timeout(watsonxConfig.timeout().orElse(null))
-                .documentReference(textExtractionConfig.documentReference().connection(),
-                        textExtractionConfig.documentReference().bucketName())
-                .resultReference(textExtractionConfig.resultsReference().connection(),
-                        textExtractionConfig.resultsReference().bucketName())
-                .cosUrl(textExtractionConfig.cosUrl());
+                .documentReference(toDocumentReference(
+                        textExtractionConfig == null ? Optional.empty() : textExtractionConfig.documentReference()))
+                .resultReference(toResultReference(
+                        textExtractionConfig == null ? Optional.empty() : textExtractionConfig.resultsReference()))
+                .cosUrl(textExtractionConfig == null ? null : textExtractionConfig.cosUrl().orElse(null));
 
-        builder.logRequests(
-                firstOrDefault(
-                        defaultConfig.logRequests().orElse(false),
-                        textExtractionConfig.logRequests(),
-                        watsonxConfig.logRequests()));
-
-        builder.logResponses(
-                firstOrDefault(
-                        defaultConfig.logResponses().orElse(false),
-                        textExtractionConfig.logResponses(),
-                        watsonxConfig.logResponses()));
+        builder.logRequests(logRequests);
+        builder.logResponses(logResponses);
 
         builder.spaceId(
                 firstOrDefault(
@@ -1253,13 +1257,19 @@ public class WatsonxRecorder {
                 QuarkusRestClientConfig.setLogCurl(
                         firstOrDefault(
                                 defaultConfig.logRequestsCurl().orElse(false),
-                                textExtractionConfig.logRequestsCurl(),
+                                textExtractionConfig == null ? Optional.empty() : textExtractionConfig.logRequestsCurl(),
                                 watsonxConfig.logRequestsCurl()));
                 try {
                     builder.authenticator(authenticator);
+                    builder.projectService(
+                            buildProjectService(baseUrl,
+                                    firstOrDefault(defaultConfig.projectBaseUrl().orElse(null), watsonxConfig.projectBaseUrl()),
+                                    authenticator, watsonxConfig.timeout().orElse(null),
+                                    logRequests, logResponses));
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(TEXT_EXTRACTION_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
+                    builder.authenticator(QuarkusRestClientConfig.withLogCurl(builder.authenticator()));
                     return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
@@ -1274,31 +1284,33 @@ public class WatsonxRecorder {
         WatsonxConfig watsonxConfig = correspondingWatsonxRuntimeConfig(configName);
         TextClassificationConfig textClassificationConfig = watsonxConfig.textClassification().orElse(null);
 
+        var configProblems = checkTextClassificationConfigurations(configName, textClassificationConfig);
+        if (!configProblems.isEmpty())
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+
         var apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null), watsonxConfig.apiKey());
 
-        URI baseUrl = watsonxConfig.baseUrl()
-                .or(() -> defaultConfig.baseUrl())
-                .map(URI::create)
-                .orElseThrow();
+        URI baseUrl = resolveBaseUrl(watsonxConfig, defaultConfig);
+
+        boolean logRequests = firstOrDefault(
+                defaultConfig.logRequests().orElse(false),
+                textClassificationConfig == null ? Optional.empty() : textClassificationConfig.logRequests(),
+                watsonxConfig.logRequests());
+
+        boolean logResponses = firstOrDefault(
+                defaultConfig.logResponses().orElse(false),
+                textClassificationConfig == null ? Optional.empty() : textClassificationConfig.logResponses(),
+                watsonxConfig.logResponses());
 
         TextClassificationService.Builder builder = TextClassificationService.builder()
                 .baseUrl(baseUrl)
                 .timeout(watsonxConfig.timeout().orElse(null))
-                .documentReference(textClassificationConfig.documentReference().connection(),
-                        textClassificationConfig.documentReference().bucketName())
-                .cosUrl(textClassificationConfig.cosUrl());
+                .documentReference(toDocumentReference(
+                        textClassificationConfig == null ? Optional.empty() : textClassificationConfig.documentReference()))
+                .cosUrl(textClassificationConfig == null ? null : textClassificationConfig.cosUrl().orElse(null));
 
-        builder.logRequests(
-                firstOrDefault(
-                        defaultConfig.logRequests().orElse(false),
-                        textClassificationConfig.logRequests(),
-                        watsonxConfig.logRequests()));
-
-        builder.logResponses(
-                firstOrDefault(
-                        defaultConfig.logResponses().orElse(false),
-                        textClassificationConfig.logResponses(),
-                        watsonxConfig.logResponses()));
+        builder.logRequests(logRequests);
+        builder.logResponses(logResponses);
 
         builder.spaceId(
                 firstOrDefault(
@@ -1317,13 +1329,20 @@ public class WatsonxRecorder {
                 QuarkusRestClientConfig.setLogCurl(
                         firstOrDefault(
                                 defaultConfig.logRequestsCurl().orElse(false),
-                                textClassificationConfig.logRequestsCurl(),
+                                textClassificationConfig == null ? Optional.empty()
+                                        : textClassificationConfig.logRequestsCurl(),
                                 watsonxConfig.logRequestsCurl()));
                 try {
                     builder.authenticator(authenticator);
+                    builder.projectService(
+                            buildProjectService(baseUrl,
+                                    firstOrDefault(defaultConfig.projectBaseUrl().orElse(null), watsonxConfig.projectBaseUrl()),
+                                    authenticator, watsonxConfig.timeout().orElse(null),
+                                    logRequests, logResponses));
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(TEXT_CLASSIFICATION_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
+                    builder.authenticator(QuarkusRestClientConfig.withLogCurl(builder.authenticator()));
                     return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
@@ -1346,10 +1365,7 @@ public class WatsonxRecorder {
 
         var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
 
-        URI baseUrl = watsonxConfig.baseUrl()
-                .or(() -> defaultConfig.baseUrl())
-                .map(URI::create)
-                .orElseThrow();
+        URI baseUrl = resolveBaseUrl(watsonxConfig, defaultConfig);
 
         CreateSchemaService.Builder builder = CreateSchemaService.builder()
                 .baseUrl(baseUrl)
@@ -1394,6 +1410,7 @@ public class WatsonxRecorder {
                     ModelBuilderCustomizer.applyCustomizers(
                             context.getInjectedReference(CREATE_SCHEMA_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
                             builder, configName);
+                    builder.authenticator(QuarkusRestClientConfig.withLogCurl(builder.authenticator()));
                     return builder.build();
                 } finally {
                     QuarkusRestClientConfig.clear();
@@ -1415,10 +1432,7 @@ public class WatsonxRecorder {
 
         var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
 
-        URI baseUrl = watsonxConfig.baseUrl()
-                .or(() -> defaultConfig.baseUrl())
-                .map(URI::create)
-                .orElseThrow();
+        URI baseUrl = resolveBaseUrl(watsonxConfig, defaultConfig);
 
         ImproveSchemaService.Builder builder = ImproveSchemaService.builder()
                 .baseUrl(baseUrl)
@@ -1481,10 +1495,7 @@ public class WatsonxRecorder {
 
         var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
 
-        URI baseUrl = watsonxConfig.baseUrl()
-                .or(() -> defaultConfig.baseUrl())
-                .map(URI::create)
-                .orElseThrow();
+        URI baseUrl = resolveBaseUrl(watsonxConfig, defaultConfig);
 
         MergeSchemaService.Builder builder = MergeSchemaService.builder()
                 .baseUrl(baseUrl)
@@ -1547,10 +1558,7 @@ public class WatsonxRecorder {
 
         var apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonxConfig.apiKey());
 
-        URI baseUrl = watsonxConfig.baseUrl()
-                .or(() -> defaultConfig.baseUrl())
-                .map(URI::create)
-                .orElseThrow();
+        URI baseUrl = resolveBaseUrl(watsonxConfig, defaultConfig);
 
         ClusterSchemaService.Builder builder = ClusterSchemaService.builder()
                 .baseUrl(baseUrl)
@@ -1662,6 +1670,78 @@ public class WatsonxRecorder {
         configProblems.add(createConfigProblem("schema.create.cos-url", configName));
         configProblems.add(createConfigProblem("schema.create.document-reference.connection", configName));
         configProblems.add(createConfigProblem("schema.create.document-reference.bucket-name", configName));
+    }
+
+    private List<ConfigValidationException.Problem> checkTextExtractionConfigurations(String configName,
+            TextExtractionConfig textExtractionConfig) {
+        List<ConfigValidationException.Problem> configProblems = checkConfigurations(configName);
+
+        if (textExtractionConfig == null)
+            return configProblems;
+
+        boolean needsCos = textExtractionConfig.documentReference().isPresent()
+                || textExtractionConfig.resultsReference().isPresent();
+        if (needsCos && textExtractionConfig.cosUrl().isEmpty())
+            configProblems.add(createConfigProblem("text-extraction.cos-url", configName));
+
+        return configProblems;
+    }
+
+    private List<ConfigValidationException.Problem> checkTextClassificationConfigurations(String configName,
+            TextClassificationConfig textClassificationConfig) {
+        List<ConfigValidationException.Problem> configProblems = checkConfigurations(configName);
+
+        if (textClassificationConfig == null)
+            return configProblems;
+
+        if (textClassificationConfig.documentReference().isPresent() && textClassificationConfig.cosUrl().isEmpty())
+            configProblems.add(createConfigProblem("text-classification.cos-url", configName));
+
+        return configProblems;
+    }
+
+    private static DocumentReference toDocumentReference(Optional<DocumentReferenceConfig> config) {
+        if (config.isPresent()) {
+            DocumentReferenceConfig reference = config.get();
+            return CosReference.of(reference.connection(), reference.bucketName());
+        }
+        return ContainerReference.container();
+    }
+
+    private static DocumentReference toResultReference(Optional<ResultReferenceConfig> config) {
+        if (config.isPresent()) {
+            ResultReferenceConfig reference = config.get();
+            return CosReference.of(reference.connection(), reference.bucketName());
+        }
+        return ContainerReference.container();
+    }
+
+    static URI resolveProjectBaseUrl(URI baseUrl, URI projectBaseUrl) {
+        if (projectBaseUrl != null) {
+            return projectBaseUrl;
+        }
+        String endpoint = baseUrl.toString();
+        if (endpoint.endsWith("/")) {
+            endpoint = endpoint.substring(0, endpoint.length() - 1);
+        }
+        Optional<CloudRegion> region = CloudRegion.fromMlEndpoint(endpoint);
+        if (region.isPresent()) {
+            String platformEndpoint = region.get().wxEndpoint();
+            return URI.create(platformEndpoint.substring(0, platformEndpoint.length() - "/wx".length()));
+        }
+        return baseUrl;
+    }
+
+    private static ProjectService buildProjectService(URI baseUrl, URI projectBaseUrl, Authenticator authenticator,
+            Duration timeout,
+            boolean logRequests, boolean logResponses) {
+        return ProjectService.builder()
+                .baseUrl(resolveProjectBaseUrl(baseUrl, projectBaseUrl).toString())
+                .authenticator(authenticator)
+                .timeout(timeout)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
+                .build();
     }
 
     private void checkProjectIdOrSpaceId(String configName, List<ConfigValidationException.Problem> configProblems) {

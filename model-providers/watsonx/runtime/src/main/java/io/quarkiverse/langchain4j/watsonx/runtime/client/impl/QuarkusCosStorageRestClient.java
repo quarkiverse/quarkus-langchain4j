@@ -10,8 +10,9 @@ import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
@@ -24,6 +25,12 @@ import io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.filter.BearerTokenHeaderFactory;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.logger.WatsonxClientLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
 
 public final class QuarkusCosStorageRestClient extends CosStorageRestClient {
 
@@ -33,7 +40,7 @@ public final class QuarkusCosStorageRestClient extends CosStorageRestClient {
         super(builder);
         try {
 
-            var logCurl = QuarkusRestClientConfig.isLogCurl();
+            var logCurl = QuarkusRestClientConfig.isLogCurl(authenticator);
             var restClientBuilder = QuarkusRestClientBuilder.newBuilder()
                     .baseUrl(URI.create(cosUrl).toURL())
                     .clientHeadersFactory(new BearerTokenHeaderFactory(cosAuthenticator))
@@ -41,8 +48,23 @@ public final class QuarkusCosStorageRestClient extends CosStorageRestClient {
                     .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);
 
             if (logRequests || logResponses || logCurl) {
+                var clientLogger = new WatsonxClientLogger(logRequests, logResponses, logCurl);
                 restClientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                restClientBuilder.clientLogger(new WatsonxClientLogger(logRequests, logResponses, logCurl));
+                restClientBuilder.clientLogger(clientLogger);
+                // Quarkus REST skips request logging for InputStream uploads. Log after sending so headers are available.
+                restClientBuilder.httpClientRequestCustomizer(new Consumer<HttpClientRequest>() {
+                    @Override
+                    public void accept(HttpClientRequest request) {
+                        if ((logRequests || logCurl) && HttpMethod.PUT.equals(request.getMethod())) {
+                            request.response().onComplete(new Handler<AsyncResult<HttpClientResponse>>() {
+                                @Override
+                                public void handle(AsyncResult<HttpClientResponse> response) {
+                                    clientLogger.logRequest(request, null, true);
+                                }
+                            });
+                        }
+                    }
+                });
             }
 
             client = restClientBuilder.build(CosStorageRestApi.class);
@@ -91,17 +113,18 @@ public final class QuarkusCosStorageRestClient extends CosStorageRestClient {
 
     @Override
     public CompletableFuture<Boolean> deleteFileAsync(DeleteFileRequest request) {
-        return client.deleteFileAsync(bucket, request.fileName(), request.requestTrackingId())
-                .map(new Function<Void, Boolean>() {
-                    @Override
-                    public Boolean apply(Void deleted) {
-                        return true;
-                    }
-                })
+        // Recreate the invocation on retry so authentication headers are refreshed.
+        return Uni.createFrom().deferred(new Supplier<Uni<? extends Void>>() {
+            @Override
+            public Uni<? extends Void> get() {
+                return client.deleteFileAsync(bucket, request.fileName(), request.requestTrackingId());
+            }
+        })
+                .replaceWith(true)
                 .onFailure(new Predicate<Throwable>() {
                     @Override
-                    public boolean test(Throwable failure) {
-                        return WatsonxRestClientUtils.shouldRetry(failure);
+                    public boolean test(Throwable throwable) {
+                        return WatsonxRestClientUtils.shouldRetry(throwable);
                     }
                 }).retry().atMost(10)
                 .subscribe().asCompletionStage();

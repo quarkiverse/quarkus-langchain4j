@@ -633,6 +633,8 @@ public class WatsonxProcessor {
         serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 "com.ibm.watsonx.ai.textprocessing.schema.cluster.ClusterSchemaRestClient$ClusterSchemaRestClientBuilderFactory"));
         serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                "com.ibm.watsonx.ai.project.ProjectRestClient$ProjectRestClientBuilderFactory"));
+        serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 "com.ibm.watsonx.ai.core.spi.json.JsonProvider"));
         serviceProvider.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 "com.fasterxml.jackson.databind.Module"));

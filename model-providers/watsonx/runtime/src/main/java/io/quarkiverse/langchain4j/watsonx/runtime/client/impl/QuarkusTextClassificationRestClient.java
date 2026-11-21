@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
@@ -19,7 +20,6 @@ import com.ibm.watsonx.ai.textprocessing.textclassification.TextClassificationRe
 
 import io.quarkiverse.langchain4j.watsonx.runtime.client.QuarkusRestClientConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.TextClassificationRestApi;
-import io.quarkiverse.langchain4j.watsonx.runtime.client.WatsonxRestClientUtils;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.filter.BearerTokenHeaderFactory;
 import io.quarkiverse.langchain4j.watsonx.runtime.client.logger.WatsonxClientLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -27,14 +27,14 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 public final class QuarkusTextClassificationRestClient extends TextClassificationRestClient {
 
     private final TextClassificationRestApi textClassificationClient;
-    private final TextClassificationRestApi cosClient;
+    private final CosClients cosClients;
 
     QuarkusTextClassificationRestClient(Builder builder) {
         super(builder);
         try {
 
             textClassificationClient = createClient(baseUrl, authenticator);
-            cosClient = createClient(cosUrl, cosAuthenticator);
+            cosClients = new CosClients(cosUrl, authenticator, cosAuthenticator, timeout, logRequests, logResponses);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -60,32 +60,27 @@ public final class QuarkusTextClassificationRestClient extends TextClassificatio
 
     @Override
     public boolean deleteFile(DeleteFileRequest request) {
-        return retryOn(request.requestTrackingId(), new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                cosClient.deleteFile(request.bucketName(), request.fileName(), request.requestTrackingId());
-                return true;
-            }
-        });
+        try {
+            return cosClients.forBucket(request.bucketName()).deleteFileAsync(request).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException re)
+                throw re;
+            throw new RuntimeException(e.getCause());
+        }
     }
 
     @Override
     public CompletableFuture<Boolean> deleteFileAsync(DeleteFileRequest request) {
-        return cosClient.deleteFileAsync(request.bucketName(), request.fileName(), request.requestTrackingId())
-                .map(v -> true)
-                .onFailure(WatsonxRestClientUtils::shouldRetry).retry().atMost(10)
-                .subscribe().asCompletionStage();
+        return cosClients.forBucket(request.bucketName()).deleteFileAsync(request);
     }
 
     @Override
     public boolean upload(UploadRequest request) {
-        return retryOn(request.requestTrackingId(), new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                cosClient.upload(request.bucketName(), request.fileName(), request.requestTrackingId(), request.is());
-                return true;
-            }
-        });
+        return cosClients.forBucket(request.bucketName())
+                .upload(request.requestTrackingId(), request.is(), request.fileName());
     }
 
     @Override
