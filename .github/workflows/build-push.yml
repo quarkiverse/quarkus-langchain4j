@@ -31,7 +31,7 @@ jobs:
         java: [21, 25]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
       - name: Set up JDK ${{ matrix.java }}
