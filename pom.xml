@@ -55,7 +55,7 @@
     <wiremock.version>3.13.2</wiremock.version>
     <quarkus-neo4j.version>6.7.2</quarkus-neo4j.version>
     <quarkus-qdrant.version>0.2.0</quarkus-qdrant.version>
-    <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
+    <google-auth-library-oauth2-http.version>1.58.0</google-auth-library-oauth2-http.version>
     <jinfer.version>0.3.1</jinfer.version>
     <jitllm.version>3.0.0-jdk21</jitllm.version>
     <smallrye-certificate-generator.version>0.9.4</smallrye-certificate-generator.version>
