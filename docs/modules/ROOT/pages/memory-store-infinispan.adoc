@@ -1,0 +1,88 @@
+= Infinispan Chat Memory Store
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-memory-store-infinispan
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+By default, Quarkus LangChain4j keeps chat memory in the application's memory, so conversations are lost when the application stops or restarts.
+The Infinispan chat memory store persists the chat memory of your AI services in Infinispan.
+Conversations then survive restarts, and several instances of the application can share them.
+
+See xref:messages-and-memory.adoc[Messages and Memory] for background on how chat memory works.
+
+== Dependency
+
+To use Infinispan as the chat memory store, add the following Maven dependency:
+
+:provider-artifact: quarkus-langchain4j-memory-store-infinispan
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
+
+This extension builds on the https://quarkus.io/guides/infinispan-client[Quarkus Infinispan client].
+Configure the Infinispan connection as described in that guide, for example:
+
+[source,properties]
+----
+quarkus.infinispan-client.hosts=localhost:11222
+quarkus.infinispan-client.username=admin
+quarkus.infinispan-client.password=password
+----
+
+In dev and test mode, if no hosts are configured, the Infinispan Dev Services start an Infinispan container automatically.
+
+== Usage
+
+The extension registers a `ChatMemoryStore` bean backed by Infinispan.
+Because it replaces the default in-memory store, AI services use it with no code changes:
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+public interface Assistant {
+
+    String chat(@MemoryId String conversationId, @UserMessage String message);
+}
+----
+
+The memory window settings (such as `quarkus.langchain4j.chat-memory.memory-window.max-messages`) still apply: the store only holds the messages kept by the chat memory.
+
+To delete a conversation from Infinispan, use `ChatMemoryRemover`:
+
+[source,java]
+----
+ChatMemoryRemover.remove(assistant, conversationId);
+----
+
+== Data Format
+
+Each conversation is stored as a JSON string in a cache named `chat-memory` by default:
+
+* the key is the memory ID, converted to a string
+* the value is the list of messages, serialized as a JSON array
+
+== Using a Named Infinispan Client
+
+By default, the store uses the default Infinispan client.
+To use a https://quarkus.io/guides/infinispan-client-reference#multiple-infinispan-clients[named Infinispan client] instead, set its name:
+
+[source,properties]
+----
+quarkus.infinispan-client.memory.hosts=infinispan-host:11222
+quarkus.langchain4j.memorystore.infinispan.client-name=memory
+----
+
+== Custom Cache Name
+
+By default, the store uses a cache named `chat-memory`.
+To use a different cache name:
+
+[source,properties]
+----
+quarkus.langchain4j.memorystore.infinispan.cache-name=my-chat-memory
+----
+
+== Configuration Reference
+
+All of these properties are fixed at build time.
+
+include::includes/quarkus-langchain4j-memory-store-infinispan.adoc[leveloffset=+1,opts=optional]

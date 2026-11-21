@@ -9,6 +9,7 @@ import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.MessageMarshaller;
 
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanEmbeddingStoreConfig;
+import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanStoreRuntimeConfig;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainItemMarshaller;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainMetadataMarshaller;
 
@@ -62,21 +63,24 @@ public class SchemaAndMarshallerProducer {
     @Produces
     public FileDescriptorSource bookProtoDefinition() {
         InfinispanEmbeddingStoreConfig config = infinispanEmbeddingStoreConfigHandle.get();
+        InfinispanStoreRuntimeConfig storeConfig = config.defaultConfig();
+        Long dimension = storeConfig.dimension().orElseThrow();
         String protoContent = PROTO
-                .replace("DIMENSION", config.dimension().toString())
-                .replace("SIMILARITY", config.similarity());
-        return FileDescriptorSource.fromString("langchain_dimension_" + config.dimension().toString() + ".proto",
+                .replace("DIMENSION", dimension.toString())
+                .replace("SIMILARITY", storeConfig.similarity());
+        return FileDescriptorSource.fromString("langchain_dimension_" + dimension + ".proto",
                 protoContent);
     }
 
     @Produces
     public MessageMarshaller langchainItemMarshaller() {
-        return new LangchainItemMarshaller(infinispanEmbeddingStoreConfigHandle.get().dimension());
+        return new LangchainItemMarshaller(
+                infinispanEmbeddingStoreConfigHandle.get().defaultConfig().dimension().orElseThrow());
     }
 
     @Produces
     public MessageMarshaller langchainMetadataMarshaller() {
         return new LangchainMetadataMarshaller(
-                LANGCHAIN_METADATA + infinispanEmbeddingStoreConfigHandle.get().dimension());
+                LANGCHAIN_METADATA + infinispanEmbeddingStoreConfigHandle.get().defaultConfig().dimension().orElseThrow());
     }
 }

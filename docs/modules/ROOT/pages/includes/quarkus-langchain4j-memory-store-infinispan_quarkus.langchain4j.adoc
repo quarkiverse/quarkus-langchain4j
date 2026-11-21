@@ -1,0 +1,53 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-infinispan_quarkus-langchain4j-memorystore-infinispan-client-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-infinispan_quarkus-langchain4j-memorystore-infinispan-client-name[`+++quarkus.langchain4j.memorystore.infinispan.client-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.memorystore.infinispan.client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Infinispan client to use. These clients are configured by means of the `infinispan-client` extension. If unspecified, it will use the default Infinispan client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_INFINISPAN_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_INFINISPAN_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-infinispan_quarkus-langchain4j-memorystore-infinispan-cache-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-infinispan_quarkus-langchain4j-memorystore-infinispan-cache-name[`+++quarkus.langchain4j.memorystore.infinispan.cache-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.memorystore.infinispan.cache-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the Infinispan cache to use for storing chat memory. If unspecified, it will use `chat-memory`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_INFINISPAN_CACHE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_INFINISPAN_CACHE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+|===
+
