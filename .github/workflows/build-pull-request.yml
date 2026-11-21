@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: runs-on/action@v2
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
@@ -126,7 +126,7 @@ jobs:
     steps:
       - uses: runs-on/action@v2
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Validate guide metadata
         run: |
@@ -181,7 +181,7 @@ jobs:
     steps:
       - uses: runs-on/action@v2
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
@@ -247,7 +247,7 @@ jobs:
     steps:
       - uses: runs-on/action@v2
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -300,7 +300,7 @@ jobs:
     steps:
       - uses: runs-on/action@v2
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -347,7 +347,7 @@ jobs:
     steps:
       - uses: runs-on/action@v2
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # ubuntu-latest comes with Node 20, but MCP conformance tests require 24
       - uses: actions/setup-node@v6
