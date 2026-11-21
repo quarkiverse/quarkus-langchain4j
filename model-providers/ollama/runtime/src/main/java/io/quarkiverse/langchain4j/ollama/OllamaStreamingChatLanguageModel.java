@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -19,6 +20,7 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
@@ -67,6 +69,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
     @Override
     public void doChat(dev.langchain4j.model.chat.request.ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+        // the listeners of the response or error may be notified on another thread, so read the invocation now
+        UUID invocationId = CurrentInvocation.invocationId();
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
         ensureNotEmpty(messages, "messages");
@@ -91,8 +95,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
         dev.langchain4j.model.chat.request.ChatRequest modelListenerRequest = createModelListenerRequest(request, messages,
                 toolSpecifications);
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
+        ChatModelRequestContext requestContext = ChatModelRequestContext.builder().chatRequest(modelListenerRequest)
+                .modelProvider(ModelProvider.OTHER).attributes(attributes).invocationId(invocationId).build();
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -154,11 +158,9 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                         new Consumer<>() {
                             @Override
                             public void accept(Throwable error) {
-                                ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                                        error,
-                                        modelListenerRequest,
-                                        ModelProvider.OTHER,
-                                        attributes);
+                                ChatModelErrorContext errorContext = ChatModelErrorContext.builder().error(error)
+                                        .chatRequest(modelListenerRequest).modelProvider(ModelProvider.OTHER)
+                                        .attributes(attributes).invocationId(invocationId).build();
 
                                 listeners.forEach(listener -> {
                                     try {
@@ -209,11 +211,10 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                                         null,
                                         context.get(MODEL_ID),
                                         aiMessageResponse);
-                                ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                                        modelListenerResponse,
-                                        modelListenerRequest,
-                                        ModelProvider.OTHER,
-                                        attributes);
+                                ChatModelResponseContext responseContext = ChatModelResponseContext.builder()
+                                        .chatResponse(modelListenerResponse).chatRequest(modelListenerRequest)
+                                        .modelProvider(ModelProvider.OTHER).attributes(attributes).invocationId(invocationId)
+                                        .build();
                                 listeners.forEach(listener -> {
                                     try {
                                         listener.onResponse(responseContext);

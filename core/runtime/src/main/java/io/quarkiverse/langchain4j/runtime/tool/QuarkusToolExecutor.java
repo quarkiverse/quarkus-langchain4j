@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
@@ -19,6 +22,7 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.exception.ToolArgumentsException;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.service.tool.ToolExecutionResult;
@@ -96,9 +100,21 @@ public class QuarkusToolExecutor implements ToolExecutor {
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
                     throw new BlockingToolNotAllowedException("Cannot execute virtual thread tools on event loop thread");
                 }
+                // the tool is part of the work of the invocation that is running it, also on the virtual thread
+                UUID invocationId = CurrentInvocation.invocationId();
                 try {
-                    return VirtualThreadsRecorder.getCurrent().submit(() -> invoke(params, invokerInstance))
-                            .get();
+                    return VirtualThreadsRecorder.getCurrent().submit(new Callable<ToolExecutionResult>() {
+                        @Override
+                        public ToolExecutionResult call() {
+                            return CurrentInvocation.callWithIdOrWithout(invocationId,
+                                    new Supplier<ToolExecutionResult>() {
+                                        @Override
+                                        public ToolExecutionResult get() {
+                                            return invoke(params, invokerInstance);
+                                        }
+                                    });
+                        }
+                    }).get();
                 } catch (Exception e) {
                     if (e instanceof CompletionException) {
                         if (e.getCause() instanceof RuntimeException) {

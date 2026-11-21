@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationEnd;
 import dev.langchain4j.observability.api.event.AiServiceCancelledEvent;
@@ -59,6 +60,17 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
 
     @Override
     public void subscribe(MultiSubscriber<? super ChatEvent> subscriber) {
+        // like upstream, the subscription starts the work of this invocation, which is not part of the work of the
+        // invocation that may be subscribing (from a tool, for instance)
+        CurrentInvocation.runWithout(new Runnable() {
+            @Override
+            public void run() {
+                doSubscribe(subscriber);
+            }
+        });
+    }
+
+    private void doSubscribe(MultiSubscriber<? super ChatEvent> subscriber) {
         UnicastProcessor<ChatEvent> processor = UnicastProcessor.create();
 
         // Create context once, used for both stream creation and execution
