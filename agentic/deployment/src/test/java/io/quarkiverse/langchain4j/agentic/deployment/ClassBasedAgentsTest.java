@@ -39,6 +39,9 @@ import dev.langchain4j.agentic.declarative.Output;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.agentic.declarative.SupervisorAgent;
 import dev.langchain4j.agentic.declarative.SupervisorRequest;
+import dev.langchain4j.agentic.observability.AgentMonitor;
+import dev.langchain4j.agentic.observability.MonitoredAgent;
+import dev.langchain4j.agentic.observability.MonitoredExecution;
 import dev.langchain4j.agentic.planner.AgentInstance;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
@@ -425,6 +428,33 @@ public class ClassBasedAgentsTest {
         AgentInstance root = (AgentInstance) AgentClassSupport.rootAgent(ShoutingSequence.class);
         assertThat(root.subagents()).hasSize(1);
         assertThat(root.subagents().get(0).type()).isEqualTo(GreetingSequence.class);
+    }
+
+    // ── a class-based workflow implementing MonitoredAgent ──
+
+    @ApplicationScoped
+    public static class MonitoredGreeting implements MonitoredAgent {
+
+        @SequenceAgent(outputKey = "greeting", subAgents = Greeter.class)
+        public native String greet(@V("name") String name);
+
+        @Override
+        public native AgentMonitor agentMonitor();
+    }
+
+    @Inject
+    MonitoredGreeting monitoredGreeting;
+
+    @Test
+    void classBasedWorkflowImplementingMonitoredAgent() {
+        AgentMonitor monitor = monitoredGreeting.agentMonitor();
+        assertThat(monitor.successfulExecutions()).isEmpty();
+
+        assertThat(monitoredGreeting.greet("Mario")).isEqualTo("Hello Mario");
+
+        List<MonitoredExecution> executions = monitor.successfulExecutions();
+        assertThat(executions).hasSize(1);
+        assertThat(executions.get(0).topLevelInvocations().output()).isEqualTo("Hello Mario");
     }
 
     // ── a class-based supervisor ──
