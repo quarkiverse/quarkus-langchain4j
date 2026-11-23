@@ -63,7 +63,7 @@ jobs:
           rm -Rf ~/.m2/repository/io/quarkiverse/langchain4j
 
       - name: Persist the Maven repo
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: maven-repo
           path: ${{ runner.temp }}/maven-repo.tgz
@@ -111,7 +111,7 @@ jobs:
               'target/build-report.json' \
               LICENSE
       - name: Upload build reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: "build-reports-${{ github.run_attempt }}-Quick Build"
@@ -193,7 +193,7 @@ jobs:
         uses: jbangdev/setup-jbang@main
 
       - name: Download the Maven repo
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: maven-repo
           path: ..
@@ -228,7 +228,7 @@ jobs:
               'target/build-report.json' \
               LICENSE
       - name: Upload build reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: "build-reports-${{ github.run_attempt }}-JVM tests - ${{ matrix.module }} - Java ${{ matrix.java }}"
@@ -259,7 +259,7 @@ jobs:
         uses: jbangdev/setup-jbang@main
 
       - name: Download the Maven repo
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: maven-repo
           path: ..
@@ -281,7 +281,7 @@ jobs:
               'target/build-report.json' \
               LICENSE
       - name: Upload build reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: "build-reports-${{ github.run_attempt }}-Native tests - ${{matrix.module}}"
@@ -309,7 +309,7 @@ jobs:
           java-version: 21
 
       - name: Download the Maven repo
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: maven-repo
           path: ..
@@ -332,7 +332,7 @@ jobs:
               'target/build-report.json' \
               LICENSE
       - name: Upload build reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: "build-reports-${{ github.run_attempt }}-In process embedding model tests - ${{matrix.module}}"
@@ -361,7 +361,7 @@ jobs:
           java-version: 21
 
       - name: Download the Maven repo
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: maven-repo
           path: ..
@@ -389,7 +389,7 @@ jobs:
     steps:
       - uses: runs-on/action@v2
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: build-reports-artifacts
           pattern: "build-reports-${{ github.run_attempt }}-"
