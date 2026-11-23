@@ -7,19 +7,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
@@ -27,7 +20,6 @@ import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.output.FinishReason;
-import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 
 public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implements ChatModel {
@@ -51,8 +43,13 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
         return capabilities;
     }
 
+    /**
+     * Listener notification is left to {@link ChatModel#chat(ChatRequest, dev.langchain4j.model.chat.ChatRequestOptions)},
+     * which wraps this method - that is what carries the current invocation id, the per-call listener attributes
+     * and the globally registered observability listeners to the {@link ChatModelListener}s.
+     */
     @Override
-    public ChatResponse chat(ChatRequest chatRequest) {
+    public ChatResponse doChat(ChatRequest chatRequest) {
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
         Schema schema = detectSchema(effectiveResponseFormat);
@@ -73,122 +70,33 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                 requestParameters.toolChoice(),
                 generationConfig, this.modelId, this.useGoogleSearch);
 
-        ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
-                chatRequest.toolSpecifications());
-        Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
-        listeners.forEach(listener -> {
-            try {
-                listener.onRequest(requestContext);
-            } catch (Exception e) {
-                log.warn("Exception while calling model listener", e);
-            }
-        });
+        GenerateContentResponse response = generateContext(request);
 
-        try {
-            GenerateContentResponse response = generateContext(request);
+        String text = GenerateContentResponseHandler.getText(response);
+        String thoughts = includeThoughts ? GenerateContentResponseHandler
+                .getThoughts(response) : null;
+        List<ToolExecutionRequest> toolExecutionRequests = GenerateContentResponseHandler
+                .getToolExecutionRequests(response);
+        AiMessage aiMessage = AiMessage.builder()
+                .text(text)
+                .thinking(thoughts)
+                .toolExecutionRequests(toolExecutionRequests)
+                .build();
 
-            String text = GenerateContentResponseHandler.getText(response);
-            String thoughts = includeThoughts ? GenerateContentResponseHandler
-                    .getThoughts(response) : null;
-            List<ToolExecutionRequest> toolExecutionRequests = GenerateContentResponseHandler
-                    .getToolExecutionRequests(response);
-            AiMessage.Builder aiMessageBuilder = AiMessage.builder()
-                    .text(text)
-                    .thinking(thoughts)
-                    .toolExecutionRequests(toolExecutionRequests);
-            AiMessage aiMessage = aiMessageBuilder.build();
+        TokenUsage tokenUsage = GenerateContentResponseHandler.getTokenUsage(response.usageMetadata());
+        FinishReason finishReason = aiMessage.hasToolExecutionRequests()
+                ? FinishReason.TOOL_EXECUTION
+                : FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
 
-            final TokenUsage tokenUsage = GenerateContentResponseHandler.getTokenUsage(response.usageMetadata());
-            final FinishReason finishReason = aiMessage.hasToolExecutionRequests()
-                    ? FinishReason.TOOL_EXECUTION
-                    : FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
-            final Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage, finishReason);
-
-            ChatResponse modelListenerResponse = createModelListenerResponse(
-                    null,
-                    modelId,
-                    aiMessageResponse);
-            ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                    modelListenerResponse,
-                    modelListenerRequest,
-                    ModelProvider.OTHER,
-                    attributes);
-            listeners.forEach(listener -> {
-                try {
-                    listener.onResponse(responseContext);
-                } catch (Exception e) {
-                    log.warn("Exception while calling model listener", e);
-                }
-            });
-
-            return dev.langchain4j.model.chat.response.ChatResponse.builder()
-                    .aiMessage(aiMessage)
-                    .tokenUsage(GenerateContentResponseHandler.getTokenUsage(response.usageMetadata()))
-                    .finishReason(finishReason)
-                    .build();
-        } catch (RuntimeException e) {
-            ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                    e,
-                    modelListenerRequest,
-                    null,
-                    attributes);
-
-            listeners.forEach(listener -> {
-                try {
-                    listener.onError(errorContext);
-                } catch (Exception e2) {
-                    log.warn("Exception while calling model listener", e2);
-                }
-            });
-
-            throw e;
-        }
+        return ChatResponse.builder()
+                .aiMessage(aiMessage)
+                .metadata(ChatResponseMetadata.builder()
+                        .modelName(modelId)
+                        .tokenUsage(tokenUsage)
+                        .finishReason(finishReason)
+                        .build())
+                .build();
     }
 
     protected abstract GenerateContentResponse generateContext(GenerateContentRequest request);
-
-    private ChatRequest createModelListenerRequest(GenerateContentRequest request,
-            List<ChatMessage> messages,
-            List<ToolSpecification> toolSpecifications) {
-        var builder = ChatRequest.builder()
-                .messages(messages)
-                .parameters(ChatRequestParameters.builder()
-                        .modelName(modelId)
-                        .toolSpecifications(toolSpecifications)
-                        .temperature(temperature)
-                        .topP(topP)
-                        .maxOutputTokens(maxOutputTokens)
-                        .build());
-        return builder.build();
-    }
-
-    private ChatResponse createModelListenerResponse(String responseId,
-            String responseModel,
-            Response<AiMessage> response) {
-        if (response == null) {
-            return null;
-        }
-
-        return ChatResponse.builder()
-                .aiMessage(response.content())
-                .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
-                        .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
-                .build();
-    }
-
-    @Override
-    public ChatResponse doChat(ChatRequest chatRequest) {
-        var chatResponse = chat(dev.langchain4j.model.chat.request.ChatRequest.builder()
-                .messages(chatRequest.messages())
-                .toolSpecifications(chatRequest.toolSpecifications())
-                .build());
-
-        return ChatResponse.builder()
-                .aiMessage(chatResponse.aiMessage())
-                .tokenUsage(chatResponse.tokenUsage())
-                .finishReason(chatResponse.finishReason())
-                .build();
-    }
 }

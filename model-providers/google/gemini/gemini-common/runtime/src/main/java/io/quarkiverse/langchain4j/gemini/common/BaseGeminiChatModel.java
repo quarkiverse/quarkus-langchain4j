@@ -7,6 +7,7 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
@@ -30,6 +31,7 @@ public class BaseGeminiChatModel {
     protected final boolean includeThoughts;
     protected final ThinkingLevel thinkingLevel;
     protected final boolean useGoogleSearch;
+    private final ChatRequestParameters defaultRequestParameters;
 
     public BaseGeminiChatModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK, Double topP,
             ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
@@ -51,6 +53,30 @@ public class BaseGeminiChatModel {
         this.includeThoughts = includeThoughts;
         this.thinkingLevel = thinkingLevel;
         this.useGoogleSearch = useGoogleSearch;
+        this.defaultRequestParameters = ChatRequestParameters.builder()
+                .modelName(modelId)
+                .temperature(temperature)
+                .topK(topK)
+                .topP(topP)
+                .maxOutputTokens(maxOutputTokens)
+                .build();
+    }
+
+    /**
+     * Exposes the configured listeners to the langchain4j {@code chat(...)} default methods, which take care of
+     * notifying them (with the current invocation id, the per-call listener attributes and any globally
+     * registered observability listeners) around {@code doChat(...)}.
+     */
+    public List<ChatModelListener> listeners() {
+        return listeners;
+    }
+
+    /**
+     * The model-level parameters, merged under the per-request ones by the langchain4j {@code chat(...)} default
+     * methods before {@code doChat(...)} is called, so listeners see the effective request.
+     */
+    public ChatRequestParameters defaultRequestParameters() {
+        return defaultRequestParameters;
     }
 
     protected void applyThinkingConfig(GenerationConfig.Builder generationConfigBuilder) {
