@@ -333,6 +333,8 @@ public class StyleScorer {
 A `@RegisterAiService` attribute configuring the same feature as an agentic supplier method on the same type fails the build: for instance `tools` together with `@ToolsSupplier`, `chatMemoryProviderSupplier` together with `@ChatMemoryProviderSupplier`, or `modelName` together with `@ChatModelSupplier`.
 The default scope of an agent stays `@ApplicationScoped`, also with `@RegisterAiService`.
 
+A class annotated with `@RegisterAiService` whose `native` methods carry no agent annotation is a plain AI service in its class form, see xref:ai-services.adoc#ai-services-as-classes[AI Services as Classes]: it is not an agent, and it cannot be a sub-agent.
+
 == Workflow Patterns
 
 === Sequential Workflow

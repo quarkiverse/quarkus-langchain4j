@@ -109,7 +109,8 @@ For each exchange (a potential multi-turn conversation), memory is isolated base
 
 [IMPORTANT]
 ====
-AI Services are `@RequestScoped` by default, meaning memory is isolated per request.
+AI Services, declared as classes or as interfaces, are `@RequestScoped` by default, meaning memory is isolated per request.
+A `@Singleton` AI service shares its memory like an `@ApplicationScoped` one.
 ====
 
 [NOTE]
