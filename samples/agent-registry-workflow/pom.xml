@@ -20,9 +20,9 @@
 		<quarkus.platform.version>4.0.0</quarkus.platform.version>
 		<!-- Build the extensions from this checkout; includes the A2A input-key and republish fixes. -->
 		<quarkus-langchain4j.version>2.0.0.CR1</quarkus-langchain4j.version>
-		<a2a.version>1.4.0.Final</a2a.version>
-		<mcp-server.version>2.0.2</mcp-server.version>
-		<apicurio.version>3.3.3</apicurio.version>
+		<a2a.version>1.5.1.Final</a2a.version>
+		<mcp-server.version>2.0.4</mcp-server.version>
+		<apicurio.version>3.3.5</apicurio.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -80,7 +80,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.4</version>
+				<version>3.6.1</version>
 				<configuration>
 					<systemPropertyVariables>
 						<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>

@@ -18,7 +18,7 @@
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.version>4.0.0</quarkus.platform.version>
         <skipITs>true</skipITs>
-        <surefire-plugin.version>3.2.5</surefire-plugin.version>
+        <surefire-plugin.version>3.6.1</surefire-plugin.version>
         <quarkus-langchain4j.version>2.0.0.Beta4</quarkus-langchain4j.version>
     </properties>
 
@@ -157,7 +157,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>3.5.1</version>
+                        <version>3.6.1</version>
                         <executions>
                             <execution>
                                 <goals>
