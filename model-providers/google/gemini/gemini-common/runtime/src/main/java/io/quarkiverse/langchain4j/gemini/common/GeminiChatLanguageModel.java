@@ -7,12 +7,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatModel;
@@ -53,6 +55,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
 
     @Override
     public ChatResponse chat(ChatRequest chatRequest) {
+        UUID invocationId = CurrentInvocation.invocationId();
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
         Schema schema = detectSchema(effectiveResponseFormat);
@@ -76,8 +79,8 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
         ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
                 chatRequest.toolSpecifications());
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
+        ChatModelRequestContext requestContext = ChatModelRequestContext.builder().chatRequest(modelListenerRequest)
+                .modelProvider(ModelProvider.OTHER).attributes(attributes).invocationId(invocationId).build();
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -110,11 +113,9 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                     null,
                     modelId,
                     aiMessageResponse);
-            ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                    modelListenerResponse,
-                    modelListenerRequest,
-                    ModelProvider.OTHER,
-                    attributes);
+            ChatModelResponseContext responseContext = ChatModelResponseContext.builder().chatResponse(modelListenerResponse)
+                    .chatRequest(modelListenerRequest).modelProvider(ModelProvider.OTHER).attributes(attributes)
+                    .invocationId(invocationId).build();
             listeners.forEach(listener -> {
                 try {
                     listener.onResponse(responseContext);
@@ -129,11 +130,8 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                     .finishReason(finishReason)
                     .build();
         } catch (RuntimeException e) {
-            ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                    e,
-                    modelListenerRequest,
-                    null,
-                    attributes);
+            ChatModelErrorContext errorContext = ChatModelErrorContext.builder().error(e).chatRequest(modelListenerRequest)
+                    .attributes(attributes).invocationId(invocationId).build();
 
             listeners.forEach(listener -> {
                 try {

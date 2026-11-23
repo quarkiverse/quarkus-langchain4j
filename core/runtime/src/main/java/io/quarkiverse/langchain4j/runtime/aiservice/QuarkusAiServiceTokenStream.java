@@ -18,6 +18,8 @@ import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.CurrentInvocation;
+import dev.langchain4j.internal.HandlerWithoutInvocation;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -279,7 +281,13 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
 
         try {
             // Some model do not support function calling with tool specifications
-            context.effectiveStreamingChatModel(methodCreateInfo, methodArgs).chat(chatRequest, handler);
+            CurrentInvocation.runWith(invocationContext, new Runnable() {
+                @Override
+                public void run() {
+                    context.effectiveStreamingChatModel(methodCreateInfo, methodArgs)
+                            .chat(chatRequest, HandlerWithoutInvocation.wrap(handler));
+                }
+            });
         } catch (Exception e) {
             if (errorHandler != null) {
                 errorHandler.accept(e);

@@ -70,6 +70,7 @@ import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.data.video.Video;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
+import dev.langchain4j.internal.CurrentInvocation;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.invocation.LangChain4jManaged;
@@ -199,8 +200,10 @@ public class AiServiceMethodImplementationSupport {
 
         InvocationContext invocationContext = InvocationContext.builder()
                 .invocationId(UUID.randomUUID())
+                .parentInvocationId(CurrentInvocation.invocationId())
                 .interfaceName(context.aiServiceClass.getName())
                 .methodName(createInfo.getMethodName())
+                .methodReturnType(createInfo.getReturnType())
                 .modelProvider(modelProvider)
                 .methodArguments((methodArgs != null) ? Arrays.asList(methodArgs) : List.of())
                 .chatMemoryId(
@@ -213,7 +216,14 @@ public class AiServiceMethodImplementationSupport {
 
         // TODO: add validation
         try {
-            var result = doImplement(createInfo, invocationContext, context);
+            // like DefaultAiServices: the work of this invocation is not part of the work of the invocation that
+            // may be invoking this AI service (from a tool, for instance)
+            var result = CurrentInvocation.callWithout(new Supplier<Object>() {
+                @Override
+                public Object get() {
+                    return doImplement(createInfo, invocationContext, context);
+                }
+            });
 
             return result;
         } catch (Exception e) {
@@ -235,9 +245,18 @@ public class AiServiceMethodImplementationSupport {
                 && !BlockingOperationControl.isBlockingAllowed()) {
             // this a special case where we can't block, so we need to delegate the to a worker pool
             // as so many of the things done in LangChain4j are blocking
-            return Multi.createFrom().deferred(
-                    () -> ((Multi<?>) doImplement0(methodCreateInfo, invocationContext, context)))
-                    .runSubscriptionOn(createExecutor());
+            // the deferred work runs when the Multi is subscribed, so it is not covered by the callWithout in implement
+            return Multi.createFrom().deferred(new Supplier<Multi<?>>() {
+                @Override
+                public Multi<?> get() {
+                    return CurrentInvocation.callWithout(new Supplier<Multi<?>>() {
+                        @Override
+                        public Multi<?> get() {
+                            return (Multi<?>) doImplement0(methodCreateInfo, invocationContext, context);
+                        }
+                    });
+                }
+            }).runSubscriptionOn(createExecutor());
         } else {
             return doImplement0(methodCreateInfo, invocationContext, context);
         }
@@ -727,7 +746,12 @@ public class AiServiceMethodImplementationSupport {
                     .messages(committableChatMemory.messages())
                     .parameters(effectiveParams)
                     .build();
-            response = effectiveChatModel.chat(request);
+            response = CurrentInvocation.callWith(invocationContext, new Supplier<ChatResponse>() {
+                @Override
+                public ChatResponse get() {
+                    return effectiveChatModel.chat(request);
+                }
+            });
             log.debug("AI response obtained");
 
             // New firing
