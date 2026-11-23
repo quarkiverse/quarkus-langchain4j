@@ -59,7 +59,7 @@
     <jinfer.version>0.3.1</jinfer.version>
     <jitllm.version>3.0.0-jdk21</jitllm.version>
     <smallrye-certificate-generator.version>0.9.4</smallrye-certificate-generator.version>
-    <apicurio-registry-sdk.version>3.3.4</apicurio-registry-sdk.version>
+    <apicurio-registry-sdk.version>3.3.5</apicurio-registry-sdk.version>
     <quarkus.config.doc.skip>false</quarkus.config.doc.skip>
   </properties>
   <dependencyManagement>
