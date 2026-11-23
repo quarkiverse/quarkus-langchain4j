@@ -2035,7 +2035,7 @@ public class AgenticProcessor {
                 DotName annotation = AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
                         .filter(method::hasAnnotation).findFirst().orElseThrow();
                 throw new IllegalConfigurationException(("The method '%s' of class '%s' is annotated with @%s and has a "
-                        + "body, but a workflow, supervisor, planner or remote agent is implemented by the extension: "
+                        + "body, but a workflow, supervisor or planner agent is implemented by the extension: "
                         + "declare the method 'native'").formatted(method.name(), name,
                                 annotation.withoutPackagePrefix()));
             }
@@ -2153,7 +2153,10 @@ public class AgenticProcessor {
                 addMethodToMap(methodInfo, declaringClass, ifaceToAgentMethodsMap);
                 index.getAllKnownSubinterfaces(declaringClass.name())
                         .forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
-            } else if (Modifier.isStatic(methodInfo.flags())
+                continue;
+            }
+            rejectRemoteAgentOnClass(methodInfo);
+            if (Modifier.isStatic(methodInfo.flags())
                     || declaringClass.name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
                 // a non-AI agent on a plain class, invoked statically, or an agent of langchain4j-agentic itself
                 addMethodToMap(methodInfo, declaringClass, classToNonAiAgentMethodsMap);
@@ -2169,6 +2172,28 @@ public class AgenticProcessor {
                 addMethodToMap(methodInfo, declaringClass, ifaceToAgentMethodsMap);
             }
         }
+    }
+
+    /**
+     * Rejects an A2A or MCP client agent declared on a method of a class, whatever the method, static, native or
+     * with a body, and whether the class is a bean or not: langchain4j-agentic implements a remote agent with a JDK
+     * proxy of its type, which has to be an interface.
+     */
+    private static void rejectRemoteAgentOnClass(MethodInfo method) {
+        String kind;
+        DotName annotation;
+        if (method.hasAnnotation(AgenticLangChain4jDotNames.A2A_AGENT)) {
+            kind = "an A2A client agent";
+            annotation = AgenticLangChain4jDotNames.A2A_AGENT;
+        } else if (method.hasAnnotation(AgenticLangChain4jDotNames.MCP_CLIENT_AGENT)) {
+            kind = "an MCP client agent";
+            annotation = AgenticLangChain4jDotNames.MCP_CLIENT_AGENT;
+        } else {
+            return;
+        }
+        throw new IllegalConfigurationException(("The method '%s' of class '%s' is annotated with @%s, but %s must be "
+                + "declared as an interface").formatted(method.name(), method.declaringClass().name(),
+                        annotation.withoutPackagePrefix(), kind));
     }
 
     private static boolean hasBody(MethodInfo method) {
@@ -2275,13 +2300,18 @@ public class AgenticProcessor {
                 builder.addSupervisedKeys(parameterName);
             });
             for (Type subAgentType : subAgentsValue.asClassArray()) {
-                ifaceToAgentMethodsMap.getOrDefault(subAgentType.name(), Collections.emptyList()).forEach(mi -> {
-                    List<MethodParameterInfo> parameters = ValidationUtil.nonCdiParameters(mi, index);
-                    parameters.forEach(pi -> {
-                        String parameterName = determineParameterName(pi);
-                        builder.addSupervisedKeys(parameterName);
-                    });
-                });
+                List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subAgentType.name());
+                if (subAgentMethods == null) {
+                    // a sub-agent declared on a class: a bean with an agent method with a body, or a plain class
+                    // with a static one
+                    subAgentMethods = classToNonAiAgentMethodsMap.getOrDefault(subAgentType.name(),
+                            Collections.emptyList());
+                }
+                for (MethodInfo subAgentMethod : subAgentMethods) {
+                    for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(subAgentMethod, index)) {
+                        builder.addSupervisedKeys(determineParameterName(parameter));
+                    }
+                }
             }
         });
 
@@ -2568,6 +2598,48 @@ public class AgenticProcessor {
                         });
             }
         });
+    }
+
+    /**
+     * langchain4j-agentic installs the error handler of an agent on the {@code AgenticScope} that the agent creates
+     * when it is invoked as the root of an agentic system. A sub-agent runs in the scope of its root, so its own
+     * handler is never invoked. It is only a warning, because the same agent can also be invoked directly, as a root.
+     */
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    public void warnAboutErrorHandlersOfSubAgents(CombinedIndexBuildItem indexBuildItem,
+            DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem) {
+        IndexView index = indexBuildItem.getIndex();
+
+        Set<DotName> subAgents = new HashSet<>();
+        for (List<MethodInfo> agenticMethods : detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap().values()) {
+            for (MethodInfo agenticMethod : agenticMethods) {
+                for (DotName annotation : AgenticLangChain4jDotNames.AGENT_ANNOTATIONS_WITH_SUB_AGENTS) {
+                    AnnotationInstance agentInstance = agenticMethod.annotation(annotation);
+                    if (agentInstance == null) {
+                        continue;
+                    }
+                    for (Type subAgentType : subAgentTypes(agentInstance)) {
+                        subAgents.add(subAgentType.name());
+                    }
+                }
+            }
+        }
+
+        for (DotName subAgent : subAgents) {
+            ClassInfo subAgentClass = index.getClassByName(subAgent);
+            if (subAgentClass == null) {
+                continue;
+            }
+            // like langchain4j-agentic, look for the handler on the type, its superclasses and their interfaces
+            for (ClassInfo type : ValidationUtil.typeHierarchy(subAgentClass, index)) {
+                for (AnnotationInstance errorHandler : type.annotations(AgenticLangChain4jDotNames.ERROR_HANDLER)) {
+                    log.warn(
+                            "The @ErrorHandler method '%s' of agent '%s' is not invoked when the agent runs as a sub-agent: the handler of the root agent handles the failures of the whole agentic system"
+                                    .formatted(errorHandler.target().asMethod().name(), subAgent));
+                }
+            }
+        }
     }
 
     private static boolean hasDescription(MethodInfo agentMethod) {

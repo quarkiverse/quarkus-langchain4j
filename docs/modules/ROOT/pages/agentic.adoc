@@ -205,6 +205,8 @@ public interface WeatherAgent {
 
 The `@McpClientSupplier` method provides the MCP client, here one configured with the xref:mcp.adoc[MCP extension] and received as a CDI parameter, see <<_using_cdi_beans_in_agent_methods>>.
 
+A remote agent is declared as an interface: LangChain4j implements it with a proxy of the interface, so `@A2AClientAgent` or `@McpClientAgent` on a method of a class fails the build.
+
 The remote agent and the MCP server are contacted when the agent is first invoked, and not when the application starts, so they don't have to be available then:
 
 * the agent card of an A2A agent is fetched at its first invocation, within 30 seconds. `resolutionTimeoutSeconds` on `@A2AClientAgent` changes this limit, and `0` removes it
@@ -238,6 +240,9 @@ An agent class is a CDI bean, and the kind of agent is decided by its agentic me
 
 A class declares exactly one agentic method.
 The other `native` methods of an AI agent class, declared by the class or inherited from a superclass, are AI service methods, like the other abstract methods of an agent interface.
+
+An agent class can implement `MonitoredAgent`: it declares `agentMonitor()` as a `native` method, which the extension implements like the agentic one.
+A workflow class can implement `AgenticScopeAccess` in the same way, declaring its methods `native`.
 
 === Bean Rules
 
@@ -298,7 +303,7 @@ The `@ApplicationScoped` agents, the default, keep an ephemeral `AgenticScope` p
 ====
 The agentic scope of a bean instance is bound to the thread invoking it.
 The parallel and asynchronous agents run on the executor of the extension, which propagates the request context, so a `@RequestScoped` bean is available to them too.
-The executors created by LangChain4j itself, like the one of an `async` human-in-the-loop agent, don't propagate it.
+The executor that a workflow provides with `@ParallelExecutor` propagates the request context only if the application makes it do so.
 ====
 
 === Composing Agents with AI Service Annotations
@@ -829,7 +834,7 @@ public interface MedicalExpertWithMemory {
 
 == Error Handling
 
-Define error recovery strategies on workflow agents using `@ErrorHandler`:
+Define an error recovery strategy with an `@ErrorHandler` method on the root agent of an agentic system, the workflow, supervisor or planner agent that the application invokes:
 
 [source,java]
 ----
@@ -847,6 +852,9 @@ public interface StoryCreatorWithErrorRecovery extends StoryCreator {
     }
 }
 ----
+
+The handler of the root agent receives the failures of every agent of the system, at any level of nesting, and `ErrorContext.agentName()` tells which agent failed.
+The `@ErrorHandler` method of an agent is not invoked when the agent runs as a sub-agent of another one: the build logs a warning for such a method.
 
 **`@ErrorHandler` rules:**
 
@@ -1411,8 +1419,9 @@ A CDI parameter:
 [NOTE]
 ====
 The bean is looked up on the thread invoking the method.
-A `@RequestScoped` bean can't be used by a method invoked on another thread, like the subagents of a parallel workflow or an `async` agent, because the request context is not propagated there.
-An `async` agent can also run after the request that invoked the workflow has returned, see <<_asynchronous_agents>>, so a bean it uses can't depend on that request either.
+The subagents of a parallel workflow and the `async` agents run on the threads of the executor of the extension, which propagates the request context, so their methods can use a `@RequestScoped` bean too.
+The executor that a workflow provides with `@ParallelExecutor` propagates the request context only if the application makes it do so.
+An `async` agent can however run after the request that invoked the workflow has returned, see <<_asynchronous_agents>>, so a bean it uses can't depend on that request.
 A `@Dependent` bean is created at each invocation and never destroyed: prefer a normal scope, like `@ApplicationScoped`.
 ====
 
