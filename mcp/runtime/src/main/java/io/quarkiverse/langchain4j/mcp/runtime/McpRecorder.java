@@ -17,9 +17,7 @@ import javax.net.ssl.SSLContext;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.mcp.client.McpClientListener;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
-import dev.langchain4j.mcp.client.McpMetaSupplier;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
@@ -133,7 +131,7 @@ public class McpRecorder {
                 if (hasResourceUpdatedObserver) {
                     builder.onResourceUpdated(new McpResourceUpdatedHandler());
                 }
-                addObservability(builder, key, addMetrics,
+                McpClientObservability.addObservability(builder, key, addMetrics,
                         openTelemetryEnabled != null &&
                                 openTelemetryEnabled.getValue() &&
                                 mcpRuntimeConfiguration.getValue().tracingEnabled());
@@ -161,60 +159,6 @@ public class McpRecorder {
                 return client;
             }
         };
-    }
-
-    private void addObservability(DefaultMcpClient.Builder builder, String key, boolean addMetrics, boolean addTracing) {
-        if (addMetrics) {
-            builder.addListener(createMetricsListener(key));
-        }
-        if (addTracing) {
-            builder.addListener(createTracingListener());
-            builder.metaSupplier(createTracingMetaSupplier());
-        }
-    }
-
-    private McpClientListener createMetricsListener(String key) {
-        try {
-            // avoid direct dependency on the MetricsMcpListener class, it would break native
-            // compilation if the optional Micrometer dependency isn't present
-            return (McpClientListener) Thread.currentThread()
-                    .getContextClassLoader().loadClass("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener")
-                    .getConstructor(String.class).newInstance(key);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private McpClientListener createTracingListener() {
-        try {
-            // avoid direct dependency on the TracingMcpClientListener class, it would break native
-            // compilation if the optional OpenTelemetry dependency isn't present
-            Object tracer = Arc.container().select(
-                    Thread.currentThread().getContextClassLoader()
-                            .loadClass("io.opentelemetry.api.trace.Tracer"))
-                    .get();
-            return (McpClientListener) Thread.currentThread()
-                    .getContextClassLoader()
-                    .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpClientListener")
-                    .getConstructor(Thread.currentThread().getContextClassLoader()
-                            .loadClass("io.opentelemetry.api.trace.Tracer"))
-                    .newInstance(tracer);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private McpMetaSupplier createTracingMetaSupplier() {
-        try {
-            // avoid direct dependency on the TracingMcpMetaSupplier class, it would break native
-            // compilation if the optional OpenTelemetry dependency isn't present
-            return (McpMetaSupplier) Thread.currentThread()
-                    .getContextClassLoader()
-                    .loadClass("io.quarkiverse.langchain4j.mcp.runtime.TracingMcpMetaSupplier")
-                    .getConstructor().newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public Function<SyntheticCreationalContext<ToolProvider>, ToolProvider> toolProviderFunction(

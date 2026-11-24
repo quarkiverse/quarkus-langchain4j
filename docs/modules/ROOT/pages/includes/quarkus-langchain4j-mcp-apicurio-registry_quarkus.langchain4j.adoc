@@ -28,6 +28,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-metrics-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-metrics-enabled[`+++quarkus.langchain4j.mcp.apicurio-registry.metrics.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.metrics.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether metrics are collected for the MCP clients of the servers discovered in the registry, like `quarkus.langchain4j.mcp."client-name".metrics.enabled` does for a configured client. Only applies when Micrometer is present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_METRICS_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_APICURIO_REGISTRY_METRICS_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a| [[quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-url]] [.property-path]##link:#quarkus-langchain4j-mcp-apicurio-registry_quarkus-langchain4j-mcp-apicurio-registry-url[`+++quarkus.langchain4j.mcp.apicurio-registry.url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.apicurio-registry.url+++[]

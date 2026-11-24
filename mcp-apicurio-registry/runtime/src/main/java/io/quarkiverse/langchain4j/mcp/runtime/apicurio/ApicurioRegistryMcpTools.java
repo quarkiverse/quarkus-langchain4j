@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -49,11 +51,23 @@ public class ApicurioRegistryMcpTools {
 
     private final RegistryClient registryClient;
     private final McpToolProvider mcpToolProvider;
+    private final BiConsumer<String, DefaultMcpClient.Builder> clientCustomizer;
     private final Map<String, McpClient> connectedServers = new ConcurrentHashMap<>();
 
     public ApicurioRegistryMcpTools(RegistryClient registryClient, McpToolProvider mcpToolProvider) {
+        this(registryClient, mcpToolProvider, (key, builder) -> {
+        });
+    }
+
+    /**
+     * @param clientCustomizer applied to the key and the builder of every MCP client created for a discovered
+     *        server, before the client is built (e.g. to add listeners)
+     */
+    public ApicurioRegistryMcpTools(RegistryClient registryClient, McpToolProvider mcpToolProvider,
+            BiConsumer<String, DefaultMcpClient.Builder> clientCustomizer) {
         this.registryClient = registryClient;
         this.mcpToolProvider = mcpToolProvider;
+        this.clientCustomizer = Objects.requireNonNull(clientCustomizer, "clientCustomizer");
     }
 
     @Tool("Search Apicurio Registry for available MCP servers and tools. "
@@ -281,10 +295,11 @@ public class ApicurioRegistryMcpTools {
                 .httpClientBuilder(McpHttpClients.builder(key))
                 .build();
 
-        return new DefaultMcpClient.Builder()
+        DefaultMcpClient.Builder builder = new DefaultMcpClient.Builder()
                 .key(key)
-                .transport(transport)
-                .build();
+                .transport(transport);
+        clientCustomizer.accept(key, builder);
+        return builder.build();
     }
 
     private static String resolveGroupId(String groupId) {
