@@ -92,6 +92,30 @@ The reports (recall, prompt tokens and savings, compactions, and every missed an
 `target/compaction-evaluation`. The test is skipped when no API key is set; a run makes up to about a hundred model calls (answers, judge
 calls when the expected facts are not found verbatim, and summaries).
 
+## Comparing the strategies
+
+`StrategyEvaluationTest` evaluates each strategy on its own, plus the default pipeline, on a recorded production
+outage (`src/test/resources/conversations/outage.jsonl`, 81 messages, ~8.6k tokens, 73% tool outputs, from 14:12 to
+16:45). Each strategy has its own test-only profile in `application.properties` (`%test...profiles.<strategy>`), all
+with the same 6k-token window, so the conversation is compacted several times. The questions probe facts placed on
+purpose: in the first message (incident id, commander, the eu-west-1 freeze), only in tool outputs (commit, previous
+pool limit, the card vault on-call, read twice), in the middle (rollback decision, impact) and at the end (follow-up
+ticket).
+
+It makes a few hundred model calls, so it only runs on request:
+
+```shell
+export QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=<your-openai-api-key>
+mvn test -Dtest=StrategyEvaluationTest -Devaluate-strategies=true
+```
+
+`target/compaction-evaluation/StrategyEvaluationTest-summary.md` compares token savings, recall and the time spent
+compacting (including summarizer and embedding calls); `StrategyEvaluationTest-outage.md` lists every answer and miss.
+
+`duplicate-collapse` is not evaluated alone: it only removes identical tool calls and cannot bring the conversation
+under the window by itself. `relevance` selects old turns by similarity to the latest user message when compaction
+runs, not to the recall question, so this evaluation underestimates it.
+
 ## Things to try
 
 * Lower `quarkus.langchain4j.compaction.budget.context-window` to `5000`: pruning is no longer enough, and the
