@@ -16,20 +16,13 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -62,8 +55,6 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
  */
 public class AzureOpenAiChatModel implements ChatModel {
 
-    private static final Logger log = Logger.getLogger(AzureOpenAiChatModel.class);
-
     /**
      * Minimum Azure API version that supports the 'tools' parameter instead of the deprecated 'functions' parameter.
      */
@@ -83,6 +74,7 @@ public class AzureOpenAiChatModel implements ChatModel {
     private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
+    private final ChatRequestParameters defaultRequestParameters;
 
     public AzureOpenAiChatModel(String endpoint,
             String apiVersion,
@@ -144,22 +136,55 @@ public class AzureOpenAiChatModel implements ChatModel {
                 : ResponseFormat.builder()
                         .type(ResponseFormatType.valueOf(responseFormat.toUpperCase(Locale.ROOT)))
                         .build();
+        this.defaultRequestParameters = ChatRequestParameters.builder()
+                .modelName(modelName)
+                .temperature(temperature)
+                .topP(topP)
+                .maxOutputTokens(maxTokens)
+                .presencePenalty(presencePenalty)
+                .frequencyPenalty(frequencyPenalty)
+                .build();
+    }
+
+    /**
+     * Exposes the configured listeners to the langchain4j {@code chat(...)} default methods, which take care of
+     * notifying them (with the current invocation id, the per-call listener attributes and any globally
+     * registered observability listeners) around {@code doChat(...)}.
+     */
+    @Override
+    public List<ChatModelListener> listeners() {
+        return listeners;
+    }
+
+    /**
+     * The model-level parameters, merged under the per-request ones by the langchain4j {@code chat(...)} default
+     * methods before {@code doChat(...)} is called, so listeners see the effective request.
+     */
+    @Override
+    public ChatRequestParameters defaultRequestParameters() {
+        return defaultRequestParameters;
+    }
+
+    @Override
+    public ModelProvider provider() {
+        return ModelProvider.AZURE_OPEN_AI;
     }
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
+        ChatRequestParameters parameters = chatRequest.parameters();
 
         ChatCompletionRequest.Builder requestBuilder = ChatCompletionRequest.builder()
                 .messages(toOpenAiMessages(messages))
-                .temperature(temperature)
+                .temperature(getOrDefault(parameters.temperature(), temperature))
                 .seed(seed)
-                .topP(topP)
-                .maxTokens(maxTokens)
+                .topP(getOrDefault(parameters.topP(), topP))
+                .maxTokens(getOrDefault(parameters.maxOutputTokens(), maxTokens))
                 .reasoningEffort(reasoningEffort)
-                .presencePenalty(presencePenalty)
-                .frequencyPenalty(frequencyPenalty)
+                .presencePenalty(getOrDefault(parameters.presencePenalty(), presencePenalty))
+                .frequencyPenalty(getOrDefault(parameters.frequencyPenalty(), frequencyPenalty))
                 .responseFormat(responseFormat);
 
         if (usesV1Endpoint()) {
@@ -177,91 +202,19 @@ public class AzureOpenAiChatModel implements ChatModel {
 
         ChatCompletionRequest request = requestBuilder.build();
 
-        ChatRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
-        Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
-        listeners.forEach(listener -> {
-            try {
-                listener.onRequest(requestContext);
-            } catch (Exception e) {
-                log.warn("Exception while calling model listener", e);
-            }
-        });
+        ChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(),
+                maxRetries);
 
-        try {
-            ChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(),
-                    maxRetries);
-
-            ChatResponse response = ChatResponse.builder()
-                    .aiMessage(aiMessageFrom(chatCompletionResponse))
-                    .tokenUsage(tokenUsageFrom(chatCompletionResponse.usage()))
-                    .finishReason(finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason())).build();
-
-            ChatResponse modelListenerResponse = createModelListenerResponse(
-                    chatCompletionResponse.id(),
-                    chatCompletionResponse.model(),
-                    response);
-            ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                    modelListenerResponse,
-                    modelListenerRequest,
-                    ModelProvider.OTHER,
-                    attributes);
-            listeners.forEach(listener -> {
-                try {
-                    listener.onResponse(responseContext);
-                } catch (Exception e) {
-                    log.warn("Exception while calling model listener", e);
-                }
-            });
-
-            return response;
-
-        } catch (Exception e) {
-            ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                    e,
-                    modelListenerRequest,
-                    null,
-                    attributes);
-
-            listeners.forEach(listener -> {
-                try {
-                    listener.onError(errorContext);
-                } catch (Exception e2) {
-                    log.warn("Exception while calling model listener", e2);
-                }
-            });
-
-            throw e;
-        }
-    }
-
-    private ChatRequest createModelListenerRequest(ChatCompletionRequest request,
-            List<ChatMessage> messages,
-            List<ToolSpecification> toolSpecifications) {
-        return ChatRequest.builder()
-                .messages(messages)
-                .parameters(ChatRequestParameters.builder()
-                        .modelName(modelName)
-                        .temperature(request.temperature())
-                        .topP(request.topP())
-                        .maxOutputTokens(request.maxTokens())
-                        .toolSpecifications(toolSpecifications)
-                        .build())
-                .build();
-    }
-
-    private ChatResponse createModelListenerResponse(String responseId,
-            String responseModel,
-            ChatResponse response) {
-        if (response == null) {
-            return null;
-        }
-
+        // the id and model name reported by Azure used to reach the listeners through a hand-built listener
+        // response; now they travel on the response itself
         return ChatResponse.builder()
-                .aiMessage(response.aiMessage())
-                .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
-                        .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
+                .aiMessage(aiMessageFrom(chatCompletionResponse))
+                .metadata(ChatResponseMetadata.builder()
+                        .id(chatCompletionResponse.id())
+                        .modelName(chatCompletionResponse.model())
+                        .tokenUsage(tokenUsageFrom(chatCompletionResponse.usage()))
+                        .finishReason(finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason()))
+                        .build())
                 .build();
     }
 

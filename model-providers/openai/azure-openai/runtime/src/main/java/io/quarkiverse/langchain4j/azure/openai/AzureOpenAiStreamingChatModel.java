@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.azure.openai;
 
 import static dev.langchain4j.internal.Utils.getOrDefault;
-import static dev.langchain4j.internal.Utils.isNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toFunctions;
@@ -15,11 +14,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
@@ -27,14 +21,9 @@ import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.model.chat.StreamingChatModel;
-import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
-import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.openai.OpenAiStreamingResponseBuilder;
 import dev.langchain4j.model.openai.internal.OpenAiClient;
@@ -68,8 +57,6 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
  */
 public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
-    private static final Logger log = Logger.getLogger(AzureOpenAiStreamingChatModel.class);
-
     /**
      * Minimum Azure API version that supports the 'tools' parameter instead of the deprecated 'functions' parameter.
      */
@@ -87,6 +74,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
     private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
+    private final ChatRequestParameters defaultRequestParameters;
 
     public AzureOpenAiStreamingChatModel(String endpoint,
             String apiVersion,
@@ -140,23 +128,65 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 : ResponseFormat.builder()
                         .type(ResponseFormatType.valueOf(responseFormat.toUpperCase(Locale.ROOT)))
                         .build();
+        this.defaultRequestParameters = ChatRequestParameters.builder()
+                .modelName(modelName)
+                .temperature(temperature)
+                .topP(topP)
+                .maxOutputTokens(maxTokens)
+                .presencePenalty(presencePenalty)
+                .frequencyPenalty(frequencyPenalty)
+                .build();
+    }
+
+    /**
+     * Exposes the configured listeners to the langchain4j {@code chat(...)} default methods, which take care of
+     * notifying them (with the current invocation id, the per-call listener attributes and any globally
+     * registered observability listeners) around {@code doChat(...)}.
+     */
+    @Override
+    public List<ChatModelListener> listeners() {
+        return listeners;
+    }
+
+    /**
+     * The model-level parameters, merged under the per-request ones by the langchain4j {@code chat(...)} default
+     * methods before {@code doChat(...)} is called, so listeners see the effective request.
+     */
+    @Override
+    public ChatRequestParameters defaultRequestParameters() {
+        return defaultRequestParameters;
+    }
+
+    @Override
+    public ModelProvider provider() {
+        return ModelProvider.AZURE_OPEN_AI;
     }
 
     @Override
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+        try {
+            streamingChat(chatRequest, handler);
+        } catch (RuntimeException e) {
+            // the default chat(...) has already notified the listeners of the request, so a failure before the
+            // request is sent has to reach them (and the caller) through the handler
+            handler.onError(e);
+        }
+    }
 
+    private void streamingChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
+        ChatRequestParameters parameters = chatRequest.parameters();
 
         ChatCompletionRequest.Builder requestBuilder = ChatCompletionRequest.builder()
                 .stream(true)
                 .messages(toOpenAiMessages(messages))
-                .temperature(temperature)
-                .topP(topP)
-                .maxTokens(maxTokens)
+                .temperature(getOrDefault(parameters.temperature(), temperature))
+                .topP(getOrDefault(parameters.topP(), topP))
+                .maxTokens(getOrDefault(parameters.maxOutputTokens(), maxTokens))
                 .reasoningEffort(reasoningEffort)
-                .presencePenalty(presencePenalty)
-                .frequencyPenalty(frequencyPenalty)
+                .presencePenalty(getOrDefault(parameters.presencePenalty(), presencePenalty))
+                .frequencyPenalty(getOrDefault(parameters.frequencyPenalty(), frequencyPenalty))
                 .responseFormat(responseFormat);
 
         if (usesV1Endpoint()) {
@@ -176,78 +206,18 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
         ChatCompletionRequest request = requestBuilder.build();
 
-        ChatRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
-        Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
-        listeners.forEach(listener -> {
-            try {
-                listener.onRequest(requestContext);
-            } catch (Exception e) {
-                log.warn("Exception while calling model listener", e);
-            }
-        });
-
+        // tracks the id and model name reported by Azure, so they reach the listeners on the response metadata
         OpenAiStreamingResponseBuilder responseBuilder = new OpenAiStreamingResponseBuilder();
-
-        AtomicReference<String> responseId = new AtomicReference<>();
-        AtomicReference<String> responseModel = new AtomicReference<>();
 
         client.chatCompletion(request)
                 .onPartialResponse(partialResponse -> {
                     responseBuilder.append(partialResponse);
                     handle(partialResponse, handler);
-                    if (!isNullOrBlank(partialResponse.id())) {
-                        responseId.set(partialResponse.id());
-                    }
-                    if (!isNullOrBlank(partialResponse.model())) {
-                        responseModel.set(partialResponse.model());
-                    }
                 })
                 .onComplete(() -> {
-                    ChatResponse response = responseBuilder.build();
-
-                    ChatResponse modelListenerResponse = createModelListenerResponse(
-                            responseId.get(),
-                            responseModel.get(),
-                            response);
-                    ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                            modelListenerResponse,
-                            modelListenerRequest,
-                            ModelProvider.OTHER,
-                            attributes);
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onResponse(responseContext);
-                        } catch (Exception e) {
-                            log.warn("Exception while calling model listener", e);
-                        }
-                    });
-
-                    handler.onCompleteResponse(response);
+                    handler.onCompleteResponse(responseBuilder.build());
                 })
                 .onError((error) -> {
-                    ChatResponse response = responseBuilder.build();
-
-                    ChatResponse modelListenerPartialResponse = createModelListenerResponse(
-                            responseId.get(),
-                            responseModel.get(),
-                            response);
-
-                    ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                            error,
-                            modelListenerRequest,
-                            ModelProvider.OTHER,
-                            attributes);
-
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onError(errorContext);
-                        } catch (Exception e) {
-                            log.warn("Exception while calling model listener", e);
-                        }
-                    });
-
                     handler.onError(error);
                 })
                 .execute();
@@ -267,35 +237,6 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         if (content != null) {
             handler.onPartialResponse(content);
         }
-    }
-
-    private ChatRequest createModelListenerRequest(ChatCompletionRequest request,
-            List<ChatMessage> messages,
-            List<ToolSpecification> toolSpecifications) {
-        return ChatRequest.builder()
-                .messages(messages)
-                .parameters(ChatRequestParameters.builder()
-                        .modelName(modelName)
-                        .temperature(request.temperature())
-                        .topP(request.topP())
-                        .maxOutputTokens(request.maxTokens())
-                        .toolSpecifications(toolSpecifications)
-                        .build())
-                .build();
-    }
-
-    private ChatResponse createModelListenerResponse(String responseId,
-            String responseModel,
-            ChatResponse response) {
-        if (response == null) {
-            return null;
-        }
-
-        return ChatResponse.builder()
-                .aiMessage(response.aiMessage())
-                .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
-                        .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
-                .build();
     }
 
     /**
