@@ -951,6 +951,18 @@ public class TextExtractionTest extends WatsonxMockTestBase {
     }
 
     @Test
+    void should_preserve_retry_backoff_when_deleting_file() throws Exception {
+        String path = cosFile(FILE_NAME);
+        stubCosDeleteRetries(path);
+        assertThat(textExtraction.deleteFile(BUCKET_NAME, FILE_NAME)).isTrue();
+
+        long started = System.nanoTime();
+        assertThat(textExtraction.deleteFile(BUCKET_NAME, FILE_NAME)).isTrue();
+
+        assertCosDeleteRetriedWithBackoff(path, started);
+    }
+
+    @Test
     void deleteFileTest() {
 
         mock.raw().on("DELETE", cosFile(FILE_NAME)).replies(

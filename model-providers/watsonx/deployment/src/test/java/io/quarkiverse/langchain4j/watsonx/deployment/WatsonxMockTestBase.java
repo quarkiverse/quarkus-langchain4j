@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -156,6 +157,27 @@ public abstract class WatsonxMockTestBase {
     static RawResponse iamToken(String token, Date expiration) {
         return RawResponse.json(200,
                 IAM_200_RESPONSE.formatted(token, TimeUnit.MILLISECONDS.toSeconds(expiration.getTime())));
+    }
+
+    void stubCosDeleteRetries(String path) {
+        RawResponse unavailable = RawResponse.of(503, Map.of("Content-Type", "application/xml"), """
+                <Error>
+                  <Code>ServiceUnavailable</Code>
+                  <Message>Storage unavailable</Message>
+                  <httpStatusCode>503</httpStatusCode>
+                </Error>
+                """);
+        RawResponse deleted = RawResponse.of(204, Map.of(), null);
+        // Warm up the client and IAM token before measuring the retries.
+        mock.raw().on("DELETE", path).replies(deleted, unavailable, unavailable, unavailable, unavailable, unavailable,
+                unavailable, deleted);
+    }
+
+    void assertCosDeleteRetriedWithBackoff(String path, long started) {
+        assertThat(Duration.ofNanos(System.nanoTime() - started))
+                .as("six retries wait for exponential backoff starting at 20 ms")
+                .isGreaterThanOrEqualTo(Duration.ofSeconds(1));
+        assertThat(requests("DELETE", path)).hasSize(8);
     }
 
     /**

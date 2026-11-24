@@ -135,6 +135,29 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-base-url[`+++quarkus.langchain4j.watsonx.project-base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.project-base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the platform Projects API used to resolve the project's default storage container.
+
+For known IBM Cloud ML endpoints, the regional platform endpoint is selected automatically. For custom ML endpoints, this defaults to `base-url`. Set this property when the Projects API is hosted separately.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_PROJECT_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_PROJECT_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
+|
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key[`+++quarkus.langchain4j.watsonx.api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.api-key+++[]
@@ -196,7 +219,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_VERSION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|
+|`+++2026-10-28+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id[`+++quarkus.langchain4j.watsonx.space-id+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -401,6 +424,8 @@ endif::add-copy-button-to-config-props[]
 --
 Base URL of the Cloud Object Storage API.
 
+Required only when `document-reference` or `results-reference` is set.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_COS_URL+++[]
@@ -410,7 +435,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_COS_URL+++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|required icon:exclamation-circle[title=Configuration property is required]
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection[`+++quarkus.langchain4j.watsonx.text-extraction.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -569,6 +594,8 @@ endif::add-copy-button-to-config-props[]
 --
 Base URL of the Cloud Object Storage API.
 
+Required only when `document-reference` is set.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_CLASSIFICATION_COS_URL+++[]
@@ -578,7 +605,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_CLASSIFICATION_COS_UR
 endif::add-copy-button-to-env-var[]
 --
 |string
-|required icon:exclamation-circle[title=Configuration property is required]
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-classification-document-reference-connection[`+++quarkus.langchain4j.watsonx.text-classification.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -4009,6 +4036,29 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-base-url[`+++quarkus.langchain4j.watsonx."model-name".project-base-url+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".project-base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the platform Projects API used to resolve the project's default storage container.
+
+For known IBM Cloud ML endpoints, the regional platform endpoint is selected automatically. For custom ML endpoints, this defaults to `base-url`. Set this property when the Projects API is hosted separately.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__PROJECT_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__PROJECT_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
+|
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key[`+++quarkus.langchain4j.watsonx."model-name".api-key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".api-key+++[]
@@ -4070,7 +4120,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__VERSION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|
+|`+++2026-10-28+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id[`+++quarkus.langchain4j.watsonx."model-name".space-id+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -4275,6 +4325,8 @@ endif::add-copy-button-to-config-props[]
 --
 Base URL of the Cloud Object Storage API.
 
+Required only when `document-reference` or `results-reference` is set.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_COS_URL+++[]
@@ -4284,7 +4336,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTI
 endif::add-copy-button-to-env-var[]
 --
 |string
-|required icon:exclamation-circle[title=Configuration property is required]
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection[`+++quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -4443,6 +4495,8 @@ endif::add-copy-button-to-config-props[]
 --
 Base URL of the Cloud Object Storage API.
 
+Required only when `document-reference` is set.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_CLASSIFICATION_COS_URL+++[]
@@ -4452,7 +4506,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_CLASSIFI
 endif::add-copy-button-to-env-var[]
 --
 |string
-|required icon:exclamation-circle[title=Configuration property is required]
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-classification-document-reference-connection[`+++quarkus.langchain4j.watsonx."model-name".text-classification.document-reference.connection+++`]##
 ifdef::add-copy-button-to-config-props[]
