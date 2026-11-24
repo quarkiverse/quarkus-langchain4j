@@ -66,8 +66,8 @@ class ValidationUtil {
      * Validates the parameters of the method, except the ones resolved from CDI.
      */
     static void validateRequiredParameterTypes(MethodInfo method, List<DotName> requiredParameterTypes,
-            DotName annotationName, IndexView index) {
-        List<MethodParameterInfo> parameters = nonCdiParameters(method, index);
+            DotName annotationName, IndexView computingIndex) {
+        List<MethodParameterInfo> parameters = nonCdiParameters(method, computingIndex);
         if (parameters.size() != requiredParameterTypes.size()) {
             throw new IllegalConfigurationException(
                     "Methods annotated with '%s' must use the following parameter types: '%s'. Offending method is '%s' of class '%s'"
@@ -97,8 +97,8 @@ class ValidationUtil {
     /**
      * Validates that the method has no parameters, except the ones resolved from CDI.
      */
-    static void validateNoMethodParameters(MethodInfo method, DotName annotationName, IndexView index) {
-        if (!nonCdiParameters(method, index).isEmpty()) {
+    static void validateNoMethodParameters(MethodInfo method, DotName annotationName, IndexView computingIndex) {
+        if (!nonCdiParameters(method, computingIndex).isEmpty()) {
             throw new IllegalConfigurationException(
                     "Methods annotated with '%s' cannot have any method parameters, except the ones annotated with @CdiBean or a CDI qualifier. Offending method is '%s' of class '%s'"
                             .formatted(
@@ -111,17 +111,20 @@ class ValidationUtil {
     /**
      * Returns true if the parameter is resolved from CDI: it is annotated with {@code @CdiBean} or with a CDI qualifier.
      */
-    static boolean isCdiResolvable(MethodParameterInfo parameter, IndexView index) {
-        return parameter.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN) || !qualifiers(parameter, index).isEmpty();
+    static boolean isCdiResolvable(MethodParameterInfo parameter, IndexView computingIndex) {
+        return parameter.hasAnnotation(AgenticLangChain4jDotNames.CDI_BEAN)
+                || !qualifiers(parameter, computingIndex).isEmpty();
     }
 
     /**
-     * Returns the CDI qualifiers declared on the parameter.
+     * Returns the CDI qualifiers declared on the parameter. The class of an annotation is looked up in the computing
+     * index, {@code CombinedIndexBuildItem.getComputingIndex()}, which also loads the classes of the jars without a
+     * Jandex index, like {@code @ConfigProperty} of MicroProfile Config.
      */
-    static List<AnnotationInstance> qualifiers(MethodParameterInfo parameter, IndexView index) {
+    static List<AnnotationInstance> qualifiers(MethodParameterInfo parameter, IndexView computingIndex) {
         List<AnnotationInstance> qualifiers = new ArrayList<>();
         for (AnnotationInstance annotation : parameter.declaredAnnotations()) {
-            ClassInfo annotationClass = index.getClassByName(annotation.name());
+            ClassInfo annotationClass = computingIndex.getClassByName(annotation.name());
             if (annotationClass != null && annotationClass.hasAnnotation(CDI_QUALIFIER)) {
                 qualifiers.add(annotation);
             }
@@ -132,10 +135,10 @@ class ValidationUtil {
     /**
      * Returns the parameters of the method that are not resolved from CDI.
      */
-    static List<MethodParameterInfo> nonCdiParameters(MethodInfo method, IndexView index) {
+    static List<MethodParameterInfo> nonCdiParameters(MethodInfo method, IndexView computingIndex) {
         List<MethodParameterInfo> parameters = new ArrayList<>(method.parametersCount());
         for (MethodParameterInfo parameter : method.parameters()) {
-            if (!isCdiResolvable(parameter, index)) {
+            if (!isCdiResolvable(parameter, computingIndex)) {
                 parameters.add(parameter);
             }
         }

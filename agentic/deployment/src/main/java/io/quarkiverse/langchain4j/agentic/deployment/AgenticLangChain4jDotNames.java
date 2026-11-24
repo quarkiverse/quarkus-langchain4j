@@ -1,7 +1,10 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
 import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.jandex.DotName;
 
 import dev.langchain4j.agentic.Agent;
@@ -35,6 +38,7 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.service.MemoryId;
+import io.quarkus.arc.processor.DotNames;
 
 public final class AgenticLangChain4jDotNames {
 
@@ -136,6 +140,19 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName SKILLS = DotName.createSimple("io.quarkiverse.langchain4j.skills.Skills");
 
     public static final DotName CDI_BEAN = DotName.createSimple("io.quarkiverse.langchain4j.agentic.runtime.CdiBean");
+
+    public static final DotName CONFIG_PROPERTY = DotName.createSimple(ConfigProperty.class);
+
+    /**
+     * The types of a {@code @ConfigProperty} parameter whose property may be missing, or is read later: the ones that
+     * Quarkus does not validate at startup for an injection point.
+     */
+    public static final Set<DotName> CONFIG_PROPERTY_CONTAINERS = Set.of(
+            DotNames.OPTIONAL, DotNames.OPTIONAL_INT, DotNames.OPTIONAL_LONG, DotNames.OPTIONAL_DOUBLE,
+            DotNames.INSTANCE, DotNames.PROVIDER,
+            DotName.createSimple(Supplier.class),
+            DotName.createSimple(io.smallrye.config.ConfigValue.class),
+            DotName.createSimple(org.eclipse.microprofile.config.ConfigValue.class));
 
     public static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class.getName());
 

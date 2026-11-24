@@ -48,7 +48,7 @@
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
     <langchain4j-jackson3.version>1.20.1-beta30</langchain4j-jackson3.version>
     <quarkus-antora.version>3.33.2</quarkus-antora.version>
-    <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
+    <quarkus-poi.version>4.0.0</quarkus-poi.version>
     <assertj.version>3.27.7</assertj.version>
     <sundrio.version>0.400.1</sundrio.version>
     <quarkus-wiremock.version>1.8.1</quarkus-wiremock.version>

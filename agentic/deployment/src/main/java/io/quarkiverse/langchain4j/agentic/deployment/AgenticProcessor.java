@@ -84,6 +84,7 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.ConfigPropertyBuildItem;
 import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
@@ -243,7 +244,7 @@ public class AgenticProcessor {
             DetectedAiAgentBuildItem item = new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null),
                     modelName, mcpToolBoxMethods, toolBoxMethods, skillsMethods,
                     detectDecisionAgent(classInfo, methods, index));
-            validate(item, index);
+            validate(item, indexBuildItem);
             producer.produce(
                     item);
         });
@@ -282,31 +283,32 @@ public class AgenticProcessor {
         return iface.methods().stream().filter(m -> m.hasDeclaredAnnotation(annotation)).findFirst().orElse(null);
     }
 
-    private void validate(DetectedAiAgentBuildItem item, IndexView index) {
+    private void validate(DetectedAiAgentBuildItem item, CombinedIndexBuildItem indexBuildItem) {
         ClassInfo iface = item.getIface();
+        IndexView computingIndex = indexBuildItem.getComputingIndex();
         validateRegisterAiService(iface);
-        validateDecisionAgent(item, index);
-        validateA2AServerUrlSupplier(iface, index);
+        validateDecisionAgent(item, indexBuildItem);
+        validateA2AServerUrlSupplier(iface, computingIndex);
         validateActivationCondition(iface);
         validateAgentListenerSupplier(iface);
-        validateBeforeCall(iface, index);
-        validateChatMemoryProviderSupplier(iface, index);
+        validateBeforeCall(iface, computingIndex);
+        validateChatMemoryProviderSupplier(iface, computingIndex);
         validateChatMemorySupplier(iface);
         validateChatModelSupplier(iface);
         validateContentRetrieverSupplier(iface);
-        validateErrorHandler(iface, index);
+        validateErrorHandler(iface, computingIndex);
         validateExitCondition(iface);
         validateHumanInTheLoop(iface);
         validateMcpClientSupplier(iface);
         validateMcpToolBox(item);
         validateOutput(iface);
-        validateParallelExecutor(iface, index);
+        validateParallelExecutor(iface, computingIndex);
         validateRetrievalAugmentorSupplier(iface);
         validateToolProviderSupplier(iface);
         validateToolSupplier(iface);
     }
 
-    private void validateDecisionAgent(DetectedAiAgentBuildItem item, IndexView index) {
+    private void validateDecisionAgent(DetectedAiAgentBuildItem item, CombinedIndexBuildItem indexBuildItem) {
         ClassInfo iface = item.getIface();
         DetectedAiAgentBuildItem.DecisionAgent decisionAgent = item.getDecisionAgent();
         if (decisionAgent == null) {
@@ -361,8 +363,10 @@ public class AgenticProcessor {
             validateAllowedReturnTypes(thresholdSupplier,
                     Set.of(DotNames.PRIMITIVE_DOUBLE, DotNames.DOUBLE), annotation);
             validateRequiredParameterTypes(thresholdSupplier, List.of(AgenticLangChain4jDotNames.THRESHOLD_CONTEXT),
-                    annotation, index);
-            if (!decisionAgent.booleanAnswer() && isAnswerTypeKnown(agentMethod, index)) {
+                    annotation, indexBuildItem.getComputingIndex());
+            // the index used to detect the boolean answer, not the computing one: a type that can only be loaded
+            // was not analyzed, so it must not count as known
+            if (!decisionAgent.booleanAnswer() && isAnswerTypeKnown(agentMethod, indexBuildItem.getIndex())) {
                 throw new IllegalConfigurationException(("Decision agent '%s' declares a @DecisionThresholdSupplier "
                         + "method, but it has no boolean answer, so a threshold would never be used: apply it to the "
                         + "probabilities of a YesNoAnswer, Choice or Scale answer instead").formatted(iface.name()));
@@ -380,7 +384,7 @@ public class AgenticProcessor {
                 || DecisionTypes.objectAnswerType(contentType, index) != null;
     }
 
-    private void validateA2AServerUrlSupplier(ClassInfo iface, IndexView index) {
+    private void validateA2AServerUrlSupplier(ClassInfo iface, IndexView computingIndex) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.A2A_SERVER_URL_SUPPLIER;
         List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
         for (AnnotationInstance instance : instances) {
@@ -390,7 +394,7 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateHelperMethod(iface, method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate, index);
+            validateNoMethodParameters(method, annotationToValidate, computingIndex);
             validateAllowedReturnTypes(method, Set.of(DotNames.STRING), annotationToValidate);
         }
     }
@@ -424,7 +428,7 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateBeforeCall(ClassInfo iface, IndexView index) {
+    private void validateBeforeCall(ClassInfo iface, IndexView computingIndex) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.BEFORE_CALL;
         List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
         for (AnnotationInstance instance : instances) {
@@ -436,11 +440,11 @@ public class AgenticProcessor {
             validateHelperMethod(iface, method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
             validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE), annotationToValidate,
-                    index);
+                    computingIndex);
         }
     }
 
-    private void validateChatMemoryProviderSupplier(ClassInfo iface, IndexView index) {
+    private void validateChatMemoryProviderSupplier(ClassInfo iface, IndexView computingIndex) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.CHAT_MEMORY_PROVIDER_SUPPLIER;
         List<AnnotationInstance> instances = iface
                 .annotations(annotationToValidate);
@@ -451,7 +455,7 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateHelperMethod(iface, method, annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(DotNames.OBJECT), annotationToValidate, index);
+            validateRequiredParameterTypes(method, List.of(DotNames.OBJECT), annotationToValidate, computingIndex);
             validateAllowedReturnTypes(method, Set.of(LangChain4jDotNames.CHAT_MEMORY), annotationToValidate);
         }
     }
@@ -501,7 +505,7 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateErrorHandler(ClassInfo iface, IndexView index) {
+    private void validateErrorHandler(ClassInfo iface, IndexView computingIndex) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.ERROR_HANDLER;
         List<AnnotationInstance> instances = iface
                 .annotations(annotationToValidate);
@@ -513,7 +517,7 @@ public class AgenticProcessor {
             MethodInfo method = instance.target().asMethod();
             validateHelperMethod(iface, method, annotationToValidate);
             validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.ERROR_CONTEXT), annotationToValidate,
-                    index);
+                    computingIndex);
             validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.ERROR_RECOVERY_RESULT), annotationToValidate);
         }
     }
@@ -588,7 +592,7 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateParallelExecutor(ClassInfo iface, IndexView index) {
+    private void validateParallelExecutor(ClassInfo iface, IndexView computingIndex) {
         DotName annotationToValidate = AgenticLangChain4jDotNames.PARALLEL_EXECUTOR;
         List<AnnotationInstance> instances = iface
                 .annotations(annotationToValidate);
@@ -599,7 +603,7 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateHelperMethod(iface, method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate, index);
+            validateNoMethodParameters(method, annotationToValidate, computingIndex);
             validateAllowedReturnTypes(method, Set.of(DotNames.EXECUTOR), annotationToValidate);
         }
     }
@@ -808,10 +812,11 @@ public class AgenticProcessor {
             CombinedIndexBuildItem indexBuildItem,
             AgenticRecorder recorder) {
         Set<String> domainClassNames = new HashSet<>();
-        IndexView index = indexBuildItem.getIndex();
+        IndexView computingIndex = indexBuildItem.getComputingIndex();
 
-        collectDomainTypes(detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap(), domainClassNames, index);
-        collectDomainTypes(detectedNonAiAgentAsMapBuildItem.getClassToNonAiAgentMethodsMap(), domainClassNames, index);
+        collectDomainTypes(detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap(), domainClassNames, computingIndex);
+        collectDomainTypes(detectedNonAiAgentAsMapBuildItem.getClassToNonAiAgentMethodsMap(), domainClassNames,
+                computingIndex);
 
         if (!domainClassNames.isEmpty()) {
             recorder.registerAgenticScopeDeserializationTypes(domainClassNames);
@@ -819,7 +824,7 @@ public class AgenticProcessor {
     }
 
     private static void collectDomainTypes(Map<DotName, List<MethodInfo>> methodsMap, Set<String> domainClassNames,
-            IndexView index) {
+            IndexView computingIndex) {
         for (List<MethodInfo> methods : methodsMap.values()) {
             for (MethodInfo method : methods) {
                 if (method.declaringClass().name().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
@@ -827,7 +832,7 @@ public class AgenticProcessor {
                 }
                 collectDomainType(method.returnType(), domainClassNames);
                 // the parameters resolved from CDI are never stored in the AgenticScope
-                for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(method, index)) {
+                for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(method, computingIndex)) {
                     collectDomainType(parameter.type(), domainClassNames);
                 }
             }
@@ -976,14 +981,14 @@ public class AgenticProcessor {
      * it carries {@code @CdiBean} or any {@code @jakarta.inject.Qualifier}-annotated annotation.
      */
     private static List<MethodParameterInfo> cdiResolvableParams(List<DetectedAiAgentBuildItem> aiAgents,
-            DetectedNonAiAgentAsMapBuildItem nonAiAgents, IndexView index) {
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents, IndexView computingIndex) {
         Set<ClassInfo> agentTypes = new LinkedHashSet<>();
         for (DetectedAiAgentBuildItem agent : aiAgents) {
-            agentTypes.addAll(ValidationUtil.typeHierarchy(agent.getIface(), index));
+            agentTypes.addAll(ValidationUtil.typeHierarchy(agent.getIface(), computingIndex));
         }
         for (List<MethodInfo> agentMethods : nonAiAgents.getClassToNonAiAgentMethodsMap().values()) {
             for (MethodInfo agentMethod : agentMethods) {
-                agentTypes.addAll(ValidationUtil.typeHierarchy(agentMethod.declaringClass(), index));
+                agentTypes.addAll(ValidationUtil.typeHierarchy(agentMethod.declaringClass(), computingIndex));
             }
         }
         List<MethodParameterInfo> result = new ArrayList<>();
@@ -998,7 +1003,7 @@ public class AgenticProcessor {
                     continue;
                 }
                 for (MethodParameterInfo param : method.parameters()) {
-                    if (ValidationUtil.isCdiResolvable(param, index)) {
+                    if (ValidationUtil.isCdiResolvable(param, computingIndex)) {
                         result.add(param);
                     }
                 }
@@ -1013,10 +1018,10 @@ public class AgenticProcessor {
             DetectedNonAiAgentAsMapBuildItem nonAiAgents,
             CombinedIndexBuildItem indexBuildItem,
             AgenticRecorder recorder) {
-        IndexView index = indexBuildItem.getIndex();
+        IndexView computingIndex = indexBuildItem.getComputingIndex();
         Set<String> qualifierNames = new HashSet<>();
-        for (MethodParameterInfo param : cdiResolvableParams(agents, nonAiAgents, index)) {
-            for (AnnotationInstance qualifier : ValidationUtil.qualifiers(param, index)) {
+        for (MethodParameterInfo param : cdiResolvableParams(agents, nonAiAgents, computingIndex)) {
+            for (AnnotationInstance qualifier : ValidationUtil.qualifiers(param, computingIndex)) {
                 qualifierNames.add(qualifier.name().toString());
             }
         }
@@ -1034,8 +1039,12 @@ public class AgenticProcessor {
             CombinedIndexBuildItem indexBuildItem,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         for (MethodParameterInfo param : cdiResolvableParams(detectedAiAgentBuildItems, nonAiAgents,
-                indexBuildItem.getIndex())) {
-            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+                indexBuildItem.getComputingIndex())) {
+            Type type = param.type();
+            // a primitive parameter is resolved by a bean of its wrapper type
+            DotName beanType = type.kind() == Type.Kind.PRIMITIVE ? PrimitiveType.box(type.asPrimitiveType()).name()
+                    : type.name();
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(beanType));
         }
     }
 
@@ -1053,13 +1062,13 @@ public class AgenticProcessor {
             BuildProducer<RequestDecisionModelBeanBuildItem> requestDecisionModelProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelProducer,
             BuildProducer<RequestImageModelBeanBuildItem> requestImageModelProducer) {
-        IndexView index = indexBuildItem.getIndex();
+        IndexView computingIndex = indexBuildItem.getComputingIndex();
         Set<String> chatModels = new HashSet<>();
         Set<String> decisionModels = new HashSet<>();
         Set<String> moderationModels = new HashSet<>();
         Set<String> imageModels = new HashSet<>();
-        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents, index)) {
-            String modelName = modelName(ValidationUtil.qualifiers(param, index));
+        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents, computingIndex)) {
+            String modelName = modelName(ValidationUtil.qualifiers(param, computingIndex));
             if (modelName == null) {
                 continue;
             }
@@ -1105,16 +1114,16 @@ public class AgenticProcessor {
             CombinedIndexBuildItem indexBuildItem,
             ValidationPhaseBuildItem validationPhase,
             BuildProducer<ValidationErrorBuildItem> validationErrors) {
-        IndexView index = indexBuildItem.getIndex();
+        IndexView computingIndex = indexBuildItem.getComputingIndex();
         BeanResolver beanResolver = validationPhase.getBeanResolver();
         List<Throwable> errors = new ArrayList<>();
-        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents, index)) {
-            Set<AnnotationInstance> qualifiers = new HashSet<>(ValidationUtil.qualifiers(param, index));
+        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents, computingIndex)) {
+            Set<AnnotationInstance> qualifiers = new HashSet<>(ValidationUtil.qualifiers(param, computingIndex));
             if (qualifiers.isEmpty()) {
                 qualifiers.add(AnnotationInstance.builder(io.quarkus.arc.processor.DotNames.DEFAULT).build());
             }
-            // like at runtime, the bean is looked up by the raw type of the parameter
-            Type type = ClassType.create(param.type().name());
+            // like at runtime, the bean is looked up by the type of the parameter, with its type arguments
+            Type type = param.type();
             Set<BeanInfo> beans = beanResolver.resolveBeans(type, qualifiers);
             String parameterDescription = "parameter no.%d of method '%s' of class '%s'".formatted(
                     param.position(), param.method().name(), param.method().declaringClass().name());
@@ -1133,13 +1142,48 @@ public class AgenticProcessor {
                                 type.name(), qualifiers, parameterDescription, beans)));
                 continue;
             }
-            if (BuiltinScope.DEPENDENT.is(bean.getScope())) {
+            // a configuration value comes from a @Dependent producer, and has nothing to destroy
+            if (BuiltinScope.DEPENDENT.is(bean.getScope())
+                    && !ValidationUtil.hasAnnotation(qualifiers, Set.of(AgenticLangChain4jDotNames.CONFIG_PROPERTY))) {
                 log.warnf("The @Dependent bean %s is created again, and never destroyed, at each invocation of %s. "
                         + "Consider giving it a normal scope, like @ApplicationScoped.", bean, parameterDescription);
             }
         }
         if (!errors.isEmpty()) {
             validationErrors.produce(new ValidationErrorBuildItem(errors));
+        }
+    }
+
+    /**
+     * Makes Quarkus validate, when the application starts, the configuration properties of the parameters annotated
+     * with {@code @ConfigProperty}, as it does for the injection points: these parameters are not injection points, so
+     * a missing property would otherwise fail only when the agent invokes the method declaring the parameter. For the
+     * same reason the property has no default name, so the build fails when the annotation does not declare one.
+     */
+    @BuildStep
+    void validateConfigPropertiesOfCdiResolvableParams(List<DetectedAiAgentBuildItem> aiAgents,
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents,
+            CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<ConfigPropertyBuildItem> configProperties) {
+        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents,
+                indexBuildItem.getComputingIndex())) {
+            AnnotationInstance configProperty = param.declaredAnnotation(AgenticLangChain4jDotNames.CONFIG_PROPERTY);
+            if (configProperty == null) {
+                continue;
+            }
+            AnnotationValue name = configProperty.value("name");
+            if (name == null || name.asString().isBlank()) {
+                throw new IllegalConfigurationException(("The @ConfigProperty parameter no.%d of method '%s' of class "
+                        + "'%s' must declare the name of the property: the parameter is not an injection point, so "
+                        + "the property has no default name").formatted(param.position(), param.method().name(),
+                                param.method().declaringClass().name()));
+            }
+            if (AgenticLangChain4jDotNames.CONFIG_PROPERTY_CONTAINERS.contains(param.type().name())) {
+                continue;
+            }
+            AnnotationValue defaultValue = configProperty.value("defaultValue");
+            configProperties.produce(ConfigPropertyBuildItem.runtimeInit(name.asString(), param.type(),
+                    defaultValue == null || defaultValue.asString().isEmpty() ? null : defaultValue.asString()));
         }
     }
 
@@ -2230,6 +2274,7 @@ public class AgenticProcessor {
         Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap = detectedNonAiAgentAsMapBuildItem
                 .getClassToNonAiAgentMethodsMap();
         IndexView index = indexBuildItem.getIndex();
+        IndexView computingIndex = indexBuildItem.getComputingIndex();
 
         OutputKeyBuildItem.Builder builder = OutputKeyBuildItem.of();
         for (var entry : ifaceToAgentMethodsMap.entrySet()) {
@@ -2248,7 +2293,8 @@ public class AgenticProcessor {
                         if (subAgentsValue != null) {
                             // The first argument of the subagent method of a ParallelMapperAgent is implicitly passed by the mapper
                             subagentMethod(subAgentsValue.asClass().name(), ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap)
-                                    .map(subAgentMethod -> ValidationUtil.nonCdiParameters(subAgentMethod, index))
+                                    .map(subAgentMethod -> ValidationUtil.nonCdiParameters(subAgentMethod,
+                                            computingIndex))
                                     .filter(parameters -> !parameters.isEmpty())
                                     .ifPresent(parameters -> {
                                         String parameterName = determineParameterName(parameters.get(0));
@@ -2316,7 +2362,8 @@ public class AgenticProcessor {
                             Collections.emptyList());
                 }
                 for (MethodInfo subAgentMethod : subAgentMethods) {
-                    for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(subAgentMethod, index)) {
+                    for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(subAgentMethod,
+                            computingIndex)) {
                         builder.addSupervisedKeys(determineParameterName(parameter));
                     }
                 }
@@ -2340,15 +2387,15 @@ public class AgenticProcessor {
                 }
             }
         }
-        markRootAgentParametersAsUserProvided(ifaceToAgentMethodsMap, subAgentMethods, index, builder);
-        markRootAgentParametersAsUserProvided(classToNonAiAgentMethodsMap, subAgentMethods, index, builder);
+        markRootAgentParametersAsUserProvided(ifaceToAgentMethodsMap, subAgentMethods, computingIndex, builder);
+        markRootAgentParametersAsUserProvided(classToNonAiAgentMethodsMap, subAgentMethods, computingIndex, builder);
 
         // an agent can be both a sub-agent and called by the user, so we also need to analyze the known usages
         beanDiscoveryFinished.getInjectionPoints().forEach(ip -> {
             DotName requiredName = ip.getRequiredType().name();
             List<MethodInfo> agentMethods = ifaceToAgentMethodsMap.getOrDefault(requiredName, Collections.emptyList());
             agentMethods.forEach(mi -> {
-                List<MethodParameterInfo> parameters = ValidationUtil.nonCdiParameters(mi, index);
+                List<MethodParameterInfo> parameters = ValidationUtil.nonCdiParameters(mi, computingIndex);
                 parameters.forEach(pi -> {
                     String parameterName = determineParameterName(pi);
                     builder.addUserProvidedKey(parameterName);
@@ -2360,7 +2407,7 @@ public class AgenticProcessor {
     }
 
     private void markRootAgentParametersAsUserProvided(Map<DotName, List<MethodInfo>> agentToMethodsMap,
-            Set<MethodInfo> subAgentMethods, IndexView index, OutputKeyBuildItem.Builder builder) {
+            Set<MethodInfo> subAgentMethods, IndexView computingIndex, OutputKeyBuildItem.Builder builder) {
         for (var entry : agentToMethodsMap.entrySet()) {
             // the upstream agents are not agents of the application
             if (entry.getKey().toString().startsWith(AGENTIC_PACKAGE_PREFIX)) {
@@ -2370,7 +2417,7 @@ public class AgenticProcessor {
                 if (subAgentMethods.contains(agenticMethod)) {
                     continue;
                 }
-                for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(agenticMethod, index)) {
+                for (MethodParameterInfo parameter : ValidationUtil.nonCdiParameters(agenticMethod, computingIndex)) {
                     String parameterName = determineParameterName(parameter);
                     if (parameterName != null) {
                         builder.addUserProvidedKey(parameterName);
@@ -2434,6 +2481,7 @@ public class AgenticProcessor {
         annotationsToCheck.add(AgenticLangChain4jDotNames.EXIT_CONDITION);
 
         IndexView index = indexBuildItem.getIndex();
+        IndexView computingIndex = indexBuildItem.getComputingIndex();
 
         annotationsToCheck.forEach(annotation -> {
             index.getAnnotations(annotation).forEach(instance -> {
@@ -2449,7 +2497,7 @@ public class AgenticProcessor {
                 for (int i = 0; i < parameters.size(); i++) {
                     MethodParameterInfo parameter = parameters.get(i);
                     // resolved from CDI, not from the AgenticScope
-                    if (ValidationUtil.isCdiResolvable(parameter, index)) {
+                    if (ValidationUtil.isCdiResolvable(parameter, computingIndex)) {
                         continue;
                     }
                     String parameterName = determineParameterName(parameter);

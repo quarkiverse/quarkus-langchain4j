@@ -26,6 +26,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Qualifier;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -657,6 +658,89 @@ public class CdiHelperParameterResolverTest {
         // the planner answers "done" at once, so no subagent is invoked
         exchangeSupervisor.invoke("convert 100 EUR to USD");
         assertThat(String.join("\n", plannerModels.receivedTexts())).contains("As a Butler, convert 100 EUR to USD");
+    }
+
+    // ── Beans told apart by their type arguments ──
+
+    public interface Signature<T> {
+        String sign(T author);
+    }
+
+    @ApplicationScoped
+    public static class NameSignature implements Signature<String> {
+        @Override
+        public String sign(String author) {
+            return "signed by " + author;
+        }
+    }
+
+    @ApplicationScoped
+    public static class NumberSignature implements Signature<Integer> {
+        @Override
+        public String sign(Integer author) {
+            return "signed by no." + author;
+        }
+    }
+
+    public interface SignedShout {
+        @SequenceAgent(outputKey = "signedShout", subAgents = Shouter.class)
+        String shout(@V("name") String name);
+
+        @Output
+        static String output(@V("shout") String shout, @CdiBean Signature<String> signature) {
+            return shout + " " + signature.sign("Mario");
+        }
+    }
+
+    @Inject
+    SignedShout signedShout;
+
+    @Test
+    void beansToldApartByTheirTypeArguments() {
+        assertThat(signedShout.shout("Luigi")).isEqualTo("LUIGI! signed by Mario");
+    }
+
+    // ── A qualifier from a jar without a Jandex index ──
+
+    public interface Closing {
+        String text();
+    }
+
+    @Named("formal")
+    @ApplicationScoped
+    public static class FormalClosing implements Closing {
+        @Override
+        public String text() {
+            return "Yours sincerely";
+        }
+    }
+
+    @Named("casual")
+    @ApplicationScoped
+    public static class CasualClosing implements Closing {
+        @Override
+        public String text() {
+            return "Cheers";
+        }
+    }
+
+    public interface ClosedShout {
+        @SequenceAgent(outputKey = "closedShout", subAgents = Shouter.class)
+        String shout(@V("name") String name);
+
+        // jakarta.inject-api has no Jandex index, so the class of @Named is not in the index of the application
+        @Output
+        static String output(@V("shout") String shout, @Named("casual") Closing closing) {
+            return shout + " " + closing.text();
+        }
+    }
+
+    @Inject
+    ClosedShout closedShout;
+
+    @Test
+    void qualifierFromAJarWithoutAJandexIndex() {
+        assertThat(closedShout.shout("Luigi")).isEqualTo("LUIGI! Cheers");
     }
 
     // ── A request scoped bean ──
