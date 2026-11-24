@@ -69,6 +69,7 @@ import io.quarkiverse.langchain4j.watsonx.deployment.items.TextClassificationCla
 import io.quarkiverse.langchain4j.watsonx.deployment.items.TextExtractionClassBuildItem;
 import io.quarkiverse.langchain4j.watsonx.runtime.BuiltinToolRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
+import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -79,6 +80,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
@@ -574,6 +576,12 @@ public class WatsonxProcessor {
                 beanProducer.produce(builder.done());
             }
         }
+    }
+
+    @BuildStep
+    void runtimeInitializedClasses(BuildProducer<RuntimeInitializedClassBuildItem> producer) {
+        // The mapper depends on the Arc container, so it must never be initialized at native-image build time
+        producer.produce(new RuntimeInitializedClassBuildItem(JsonProvider.MapperHolder.class.getName()));
     }
 
     @BuildStep
