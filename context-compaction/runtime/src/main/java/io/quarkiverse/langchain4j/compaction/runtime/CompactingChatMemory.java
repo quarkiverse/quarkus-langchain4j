@@ -373,6 +373,8 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
     private List<ChatMessage> compact(List<ChatMessage> history, int tokensBefore,
             IdentityHashMap<ChatMessage, Instant> timestamps, ConversationStates.State state) {
         Instant start = c.clock().instant();
+        // elapsed time on the system clock: the compaction clock may be replayed (evaluations) and not move
+        long startNanos = System.nanoTime();
         timestamps.values().removeIf(Objects::isNull);
         DefaultCompactionContext context = new DefaultCompactionContext(id, c.budget(), c.tokenCounter(), timestamps,
                 state::state, c.clock());
@@ -405,7 +407,7 @@ public class CompactingChatMemory implements HistoryViewChatMemory {
         view = CompactionMessages.foldSummaries(view);
         CompactionReport report = new CompactionReport(id, c.profile(), strategyId, start, history.size(), view.size(),
                 tokensBefore, c.tokenCounter().count(view), c.budget(),
-                Duration.between(start, c.clock().instant()), context.notes(), fallback,
+                Duration.ofNanos(System.nanoTime() - startNanos), context.notes(), fallback,
                 context.degraded());
         if (c.snapshots()) {
             c.inspector().record(id, history, view, report);
