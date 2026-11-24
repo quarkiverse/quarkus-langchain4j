@@ -48,12 +48,12 @@
         <dependency>
             <groupId>io.mvnpm</groupId>
             <artifactId>importmap</artifactId>
-            <version>1.0.11</version>
+            <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.mvnpm.at.mvnpm</groupId>
             <artifactId>vaadin-webcomponents</artifactId>
-            <version>24.9.1</version>
+            <version>25.3.7</version>
             <scope>runtime</scope>
         </dependency>
 
