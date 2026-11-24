@@ -380,7 +380,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-If enabled, the prompt is included on the generated spans
+If enabled, the prompt is included on the generated model spans, as the `gen_ai.system_instructions` and `gen_ai.input.messages` attributes of the GenAI semantic conventions.
+
+The deprecated `gen_ai.prompt` attribute is also recorded for now. It will be removed in a future release.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -401,7 +403,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-If enabled, the completion is included on the generated spans
+If enabled, the completion is included on the generated model spans, as the `gen_ai.output.messages` attribute of the GenAI semantic conventions.
+
+The deprecated `gen_ai.completion` attribute is also recorded for now. It will be removed in a future release.
 
 
 ifdef::add-copy-button-to-env-var[]

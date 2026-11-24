@@ -142,6 +142,55 @@ In the trace above we can see the parent span which corresponds to the handling 
 interesting thing is the `langchain4j.aiservices.MyAiService.writeAPoem` span which corresponds to the invocation of the AI service.
 The child spans of this span correspond (from to right) to calling the OpenAI API, invoking the `sendEmail` tool and finally invoking calling the OpenAI API again.
 
+=== Prompt and completion content
+
+Model spans do not record the content of the conversation by default, since prompts and completions can contain sensitive data.
+You can opt in with the following properties:
+
+[source,properties]
+----
+quarkus.langchain4j.tracing.include-prompt=true
+quarkus.langchain4j.tracing.include-completion=true
+----
+
+The content is recorded with the message attributes of the https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/[OpenTelemetry GenAI semantic conventions].
+Each value is a structured attribute (an OpenTelemetry `AnyValue` array, not a JSON string) that follows the semantic conventions message schema, so collectors and backends can read the `role` and `parts` of each message directly:
+
+* `gen_ai.input.messages` holds the chat history sent to the model, including system messages, user messages, assistant messages with their tool calls, and tool results (`include-prompt`).
+Images, audio and video sent by URL are recorded as `uri` parts. Inline media is recorded as a `blob` part whose `content` holds the raw bytes.
+* `gen_ai.system_instructions` holds the system messages when the model provider takes them separately from the chat history, as Anthropic, Amazon Bedrock and Google Gemini do (`include-prompt`).
+In that case they are not repeated in `gen_ai.input.messages`.
+For every other provider, the system messages keep their position in `gen_ai.input.messages`.
+* `gen_ai.output.messages` holds the response of the model, including its text, reasoning and tool calls (`include-completion`).
+The finish reason is recorded in `gen_ai.response.finish_reasons`, only when the provider supplies one.
+
+For example, a request to OpenAI with a system message and a user message records the following, shown here as JSON:
+
+[source,text]
+----
+gen_ai.input.messages = [
+  {"role":"system","parts":[{"type":"text","content":"You are a professional poet"}]},
+  {"role":"user","parts":[{"type":"text","content":"Write a poem about Quarkus"}]}
+]
+gen_ai.output.messages = [{"role":"assistant","parts":[{"type":"text","content":"..."}]}]
+----
+
+The same request to Anthropic records:
+
+[source,text]
+----
+gen_ai.system_instructions = [{"type":"text","content":"You are a professional poet"}]
+gen_ai.input.messages = [{"role":"user","parts":[{"type":"text","content":"Write a poem about Quarkus"}]}]
+gen_ai.output.messages = [{"role":"assistant","parts":[{"type":"text","content":"..."}]}]
+----
+
+[WARNING]
+====
+The `gen_ai.prompt` and `gen_ai.completion` attributes are deprecated in the semantic conventions.
+They are still recorded alongside the new attributes so that existing consumers keep working, and will be removed in a future release.
+Move dashboards, queries and exporters that read them to `gen_ai.input.messages` and `gen_ai.output.messages`.
+====
+
 === Custom span data
 if you have the need for custom span data, you can simply add a bean implemtenting `ChatModelSpanContributor`.
 [source,java]

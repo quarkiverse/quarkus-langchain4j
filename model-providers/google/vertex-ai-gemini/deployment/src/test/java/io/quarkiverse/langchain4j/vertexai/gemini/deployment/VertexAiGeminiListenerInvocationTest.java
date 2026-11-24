@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ContentType;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.ChatRequestOptions;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -86,6 +87,7 @@ public class VertexAiGeminiListenerInvocationTest {
             assertThat(context.invocationId()).isEqualTo(invocationId);
             assertThat(context.attributes()).containsEntry("tenant", "acme");
             assertThat(context.chatRequest().parameters().modelName()).isEqualTo(CHAT_MODEL_ID);
+            assertThat(context.modelProvider()).isEqualTo(ModelProvider.GOOGLE_VERTEX_AI_GEMINI);
         });
         assertThat(listener.responses).singleElement().satisfies(context -> {
             assertThat(context.invocationId()).isEqualTo(invocationId);
@@ -109,6 +111,7 @@ public class VertexAiGeminiListenerInvocationTest {
             assertThat(context.invocationId()).isEqualTo(invocationId);
             assertThat(context.attributes()).containsEntry("tenant", "acme");
             assertThat(context.chatRequest().parameters().modelName()).isEqualTo(CHAT_MODEL_ID);
+            assertThat(context.modelProvider()).isEqualTo(ModelProvider.GOOGLE_VERTEX_AI_GEMINI);
         });
         assertThat(listener.responses).singleElement().satisfies(context -> {
             assertThat(context.invocationId()).isEqualTo(invocationId);
