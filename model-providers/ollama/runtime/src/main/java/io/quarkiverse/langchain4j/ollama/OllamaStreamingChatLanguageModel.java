@@ -8,12 +8,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -21,12 +17,8 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.StreamingChatModel;
-import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
-import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
@@ -36,8 +28,6 @@ import io.smallrye.mutiny.Context;
  * Use to have streaming feature on models used trough Ollama.
  */
 public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
-
-    private static final Logger log = Logger.getLogger(OllamaStreamingChatLanguageModel.class);
 
     private static final String TOOLS_CONTEXT = "TOOLS";
     private static final String TOKEN_USAGE_CONTEXT = "TOKEN_USAGE";
@@ -50,6 +40,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
     private final Options options;
     private final Boolean think;
     private final List<ChatModelListener> listeners;
+    private final ChatRequestParameters defaultRequestParameters;
 
     private OllamaStreamingChatLanguageModel(OllamaStreamingChatLanguageModel.Builder builder) {
         client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
@@ -59,14 +50,57 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
         options = builder.options;
         think = builder.think;
         this.listeners = builder.listeners;
+        var parameters = ChatRequestParameters.builder().modelName(model);
+        if (options != null) {
+            parameters.temperature(options.temperature())
+                    .topK(options.topK())
+                    .topP(options.topP())
+                    .maxOutputTokens(options.numPredict());
+        }
+        this.defaultRequestParameters = parameters.build();
     }
 
     public static OllamaStreamingChatLanguageModel.Builder builder() {
         return new OllamaStreamingChatLanguageModel.Builder();
     }
 
+    /**
+     * Exposes the configured listeners to the langchain4j {@code chat(...)} default methods, which take care of
+     * notifying them (with the current invocation id, the per-call listener attributes and any globally
+     * registered observability listeners) around {@code doChat(...)}.
+     */
+    @Override
+    public List<ChatModelListener> listeners() {
+        return listeners;
+    }
+
+    /**
+     * The model-level parameters, merged under the per-request ones by the langchain4j {@code chat(...)} default
+     * methods before {@code doChat(...)} is called, so listeners see the effective request.
+     */
+    @Override
+    public ChatRequestParameters defaultRequestParameters() {
+        return defaultRequestParameters;
+    }
+
+    @Override
+    public ModelProvider provider() {
+        return ModelProvider.OLLAMA;
+    }
+
     @Override
     public void doChat(dev.langchain4j.model.chat.request.ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+        try {
+            streamingChat(chatRequest, handler);
+        } catch (RuntimeException e) {
+            // the default chat(...) has already notified the listeners of the request, so a failure before the
+            // request is sent has to reach them (and the caller) through the handler
+            handler.onError(e);
+        }
+    }
+
+    private void streamingChat(dev.langchain4j.model.chat.request.ChatRequest chatRequest,
+            StreamingChatResponseHandler handler) {
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
         ensureNotEmpty(messages, "messages");
@@ -87,19 +121,6 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
         context.put(RESPONSE_CONTEXT, new ArrayList<ChatResponse>());
         context.put(THINKING_CONTEXT, new ArrayList<String>());
         context.put(TOOLS_CONTEXT, new ArrayList<ToolExecutionRequest>());
-
-        dev.langchain4j.model.chat.request.ChatRequest modelListenerRequest = createModelListenerRequest(request, messages,
-                toolSpecifications);
-        Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
-                attributes);
-        listeners.forEach(listener -> {
-            try {
-                listener.onRequest(requestContext);
-            } catch (Exception e) {
-                log.warn("Exception while calling model listener", e);
-            }
-        });
 
         client.streamingChat(request)
                 .subscribe()
@@ -154,20 +175,6 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                         new Consumer<>() {
                             @Override
                             public void accept(Throwable error) {
-                                ChatModelErrorContext errorContext = new ChatModelErrorContext(
-                                        error,
-                                        modelListenerRequest,
-                                        ModelProvider.OTHER,
-                                        attributes);
-
-                                listeners.forEach(listener -> {
-                                    try {
-                                        listener.onError(errorContext);
-                                    } catch (Exception e) {
-                                        log.warn("Exception while calling model listener", e);
-                                    }
-                                });
-
                                 handler.onError(error);
                             }
                         },
@@ -177,6 +184,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
                                 TokenUsage tokenUsage = context.contains(TOKEN_USAGE_CONTEXT) ? context.get(TOKEN_USAGE_CONTEXT)
                                         : null;
+                                String modelId = context.get(MODEL_ID);
+                                String modelName = modelId.isEmpty() ? null : modelId;
                                 List<ChatResponse> chatResponses = context.get(RESPONSE_CONTEXT);
                                 List<String> thinkingResponses = context.get(THINKING_CONTEXT);
                                 List<ToolExecutionRequest> toolExecutionRequests = context.get(TOOLS_CONTEXT);
@@ -189,7 +198,9 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                                                     .thinking(thinkingResponse.isEmpty() ? null : thinkingResponse)
                                                     .toolExecutionRequests(toolExecutionRequests)
                                                     .build())
-                                            .tokenUsage(tokenUsage).build());
+                                            .modelName(modelName)
+                                            .tokenUsage(tokenUsage)
+                                            .build());
                                     return;
                                 }
 
@@ -202,62 +213,13 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
                                         .text(stringResponse)
                                         .thinking(thinkingResponse.isEmpty() ? null : thinkingResponse)
                                         .build();
-                                dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse = dev.langchain4j.model.chat.response.ChatResponse
-                                        .builder().aiMessage(aiMessage).tokenUsage(tokenUsage).build();
-
-                                dev.langchain4j.model.chat.response.ChatResponse modelListenerResponse = createModelListenerResponse(
-                                        null,
-                                        context.get(MODEL_ID),
-                                        aiMessageResponse);
-                                ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                                        modelListenerResponse,
-                                        modelListenerRequest,
-                                        ModelProvider.OTHER,
-                                        attributes);
-                                listeners.forEach(listener -> {
-                                    try {
-                                        listener.onResponse(responseContext);
-                                    } catch (Exception e) {
-                                        log.warn("Exception while calling model listener", e);
-                                    }
-                                });
-
-                                handler.onCompleteResponse(aiMessageResponse);
+                                handler.onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse.builder()
+                                        .aiMessage(aiMessage)
+                                        .modelName(modelName)
+                                        .tokenUsage(tokenUsage)
+                                        .build());
                             }
                         });
-    }
-
-    private dev.langchain4j.model.chat.request.ChatRequest createModelListenerRequest(ChatRequest request,
-            List<ChatMessage> messages,
-            List<ToolSpecification> toolSpecifications) {
-        Options options = request.options();
-        var requestParameters = ChatRequestParameters.builder()
-                .modelName(request.model())
-                .toolSpecifications(toolSpecifications);
-        if (options != null) {
-            requestParameters.temperature(options.temperature())
-                    .topP(options.topP())
-                    .maxOutputTokens(options.numPredict());
-        }
-        var builder = dev.langchain4j.model.chat.request.ChatRequest.builder()
-                .messages(messages)
-                .parameters(requestParameters.build());
-        return builder.build();
-    }
-
-    private dev.langchain4j.model.chat.response.ChatResponse createModelListenerResponse(String responseId,
-            String responseModel,
-            dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse) {
-        if (aiMessageResponse == null) {
-            return null;
-        }
-
-        return dev.langchain4j.model.chat.response.ChatResponse.builder()
-                .finishReason(aiMessageResponse.finishReason())
-                .aiMessage(aiMessageResponse.aiMessage())
-                .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
-                        .tokenUsage(aiMessageResponse.tokenUsage()).build())
-                .build();
     }
 
     /**
