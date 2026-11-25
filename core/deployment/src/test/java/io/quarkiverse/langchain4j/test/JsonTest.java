@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -151,6 +153,32 @@ public class JsonTest {
         Response actualResponse = Json.fromJson(json, Response.class);
 
         assertThat(actualResponse.getAnswer()).isEqualTo(expectedResponse.getAnswer());
+    }
+
+    @Test
+    void sanitizeDoesNotExhibitQuadraticBlowupOnUnbalancedBraces() {
+        String payload = "{".repeat(128 * 1024);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
+            try {
+                Json.fromJson(payload, TestData.class);
+            } catch (RuntimeException expected) {
+                // The payload is not valid JSON, so deserialization is expected to fail.
+                // The point of the test is that sanitize() returns promptly instead of hanging.
+            }
+        });
+    }
+
+    @Test
+    void sanitizeExtractsJsonObjectIncludingNestedObjectsFromSurroundingText() {
+        String wrapped = "Here is the JSON you asked for: "
+                + "{\"some_value\":\"value\",\"sampleDate\":{\"year\":2023,\"month\":1,\"day\":15}}"
+                + " hope it helps!";
+
+        TestData deserializedData = Json.fromJson(wrapped, TestData.class);
+
+        assertThat(deserializedData.getSomeValue()).isEqualTo("value");
+        assertThat(deserializedData.getSampleDate()).isEqualTo(LocalDate.of(2023, 1, 15));
     }
 
     private static class Response {
