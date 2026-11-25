@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "asciidoctor-kroki": "^0.18.1"
+    "asciidoctor-kroki": "^2.0.0"
   },
   "overrides": {
     "brace-expansion": "^5.0.6"
