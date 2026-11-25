@@ -20,8 +20,10 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
@@ -80,6 +82,12 @@ public class VertexAiChatLanguageModel implements ChatModel {
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
+        ChatRequestValidationUtils.validateMessages(chatRequest.messages());
+        ChatRequestParameters requestParameters = chatRequest.parameters();
+        ChatRequestValidationUtils.validate(requestParameters.toolChoice());
+        ChatRequestValidationUtils.validate(requestParameters.toolSpecifications());
+        ChatRequestValidationUtils.validate(requestParameters.responseFormat());
+
         PredictRequest predictRequest = new PredictRequest(Collections.singletonList(
                 new PredictRequest.ChatInstance(toContext(chatRequest.messages()), toVertexMessages(chatRequest.messages()))),
                 parameters);

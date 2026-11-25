@@ -11,8 +11,10 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.huggingface.client.HuggingFaceClient;
 import dev.langchain4j.model.huggingface.client.Options;
@@ -75,6 +77,11 @@ public class QuarkusHuggingFaceChatModel implements ChatModel {
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
+        ChatRequestValidationUtils.validateMessages(chatRequest.messages());
+        ChatRequestParameters requestParameters = chatRequest.parameters();
+        ChatRequestValidationUtils.validate(requestParameters.toolChoice());
+        ChatRequestValidationUtils.validate(requestParameters.toolSpecifications());
+        ChatRequestValidationUtils.validate(requestParameters.responseFormat());
 
         Parameters.Builder builder = Parameters.builder()
                 .temperature(temperature)
