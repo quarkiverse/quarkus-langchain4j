@@ -11,8 +11,10 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
@@ -43,6 +45,11 @@ public class OpenshiftAiChatModel implements ChatModel {
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
+        ChatRequestValidationUtils.validateMessages(chatRequest.messages());
+        ChatRequestParameters parameters = chatRequest.parameters();
+        ChatRequestValidationUtils.validate(parameters.toolChoice());
+        ChatRequestValidationUtils.validate(parameters.toolSpecifications());
+        ChatRequestValidationUtils.validate(parameters.responseFormat());
 
         TextGenerationRequest request = new TextGenerationRequest(modelId, chatMessageToText(chatRequest.messages().get(0)));
 
