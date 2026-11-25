@@ -1,0 +1,83 @@
+= Migrating to Quarkus LangChain4j 2.0
+:extensions: io.quarkiverse.langchain4j:quarkus-langchain4j-core
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Quarkus LangChain4j 2.0 requires Quarkus 4.
+This page lists the changes of behaviour that need attention when an application moves from a 1.x release to 2.0.
+Some of them are also part of the latest 1.x releases, so each section says since which release the change applies.
+
+== The OpenAI chat model uses the Responses API against OpenAI
+
+This applies since 1.15.0.
+
+When `quarkus.langchain4j.openai.chat-model.mode` is not set, the chat model selects the API from the base URL:
+
+* the Responses API (`/v1/responses`) for `https://api.openai.com/v1/`, which is the default base URL
+* the Chat Completions API (`/v1/chat/completions`) for any other base URL
+
+Before, the chat model used the Chat Completions API unless the mode was set to `responses`.
+
+The Responses API does not apply these settings:
+
+* `quarkus.langchain4j.openai.chat-model.frequency-penalty`
+* `quarkus.langchain4j.openai.chat-model.presence-penalty`
+* `quarkus.langchain4j.openai.chat-model.stop`
+* `quarkus.langchain4j.openai.max-retries`
+* `quarkus.langchain4j.openai.log-requests-curl`
+
+When the mode is selected from the base URL, a warning at startup lists the ones that the application sets.
+When the application sets the mode to `responses` itself, they are ignored without a warning.
+
+To keep using the Chat Completions API, set the mode:
+
+[source,properties]
+----
+quarkus.langchain4j.openai.chat-model.mode=chat-completion
+----
+
+For a named configuration, the property is `quarkus.langchain4j.openai.<name>.chat-model.mode`.
+
+The `log-requests` and `log-responses` properties work with both APIs, but the log entries are different.
+Update the log filters and the tests that rely on them:
+
+[cols="1,3,2"]
+|===
+|Mode |Logger category |Start of the messages
+
+|`chat-completion`
+|`io.quarkiverse.langchain4j.openai.common.OpenAiRestApi$OpenAiClientLogger`
+|`Request:` and `Response:`
+
+|`responses`
+|`dev.langchain4j.http.client.log.LoggingHttpClient`
+|`HTTP request:` and `HTTP response:`
+|===
+
+See xref:openai-chat-model.adoc#_responses_api[Responses API] for the other differences between the two modes, including the replacement of `max-retries`.
+
+== The Jlama provider is removed
+
+Jlama is no longer maintained, so the `quarkus-langchain4j-jlama` extension is removed.
+Its last releases are 1.15.0.CR1 and 2.0.0.Beta1, and the BOM does not manage it in later releases.
+
+An application that uses it must move to another model provider before the upgrade.
+See xref:models.adoc[Models] for the available ones.
+
+== The MCP client detects the protocol version of the server
+
+This applies since 1.13.0.
+
+The MCP client implements the versions 2026-07-28 and 2025-11-25 of the MCP specification.
+When `quarkus.langchain4j.mcp."client-name".protocol-version` is not set, the client tries 2026-07-28 first and falls back to 2025-11-25 when the server does not implement it.
+
+An MCP server that only implements 2025-11-25 keeps working without any change.
+To skip the detection against such a server, set the version:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp."client-name".protocol-version=2025-11-25
+----
+
+Resource subscriptions and roots work differently in the two versions, see xref:mcp.adoc[Model Context Protocol (MCP)].

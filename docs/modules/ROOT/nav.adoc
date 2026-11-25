@@ -124,6 +124,7 @@
 * xref:observability.adoc[Observability]
 * xref:websockets.adoc[WebSockets Integration]
 * xref:security.adoc[Security and Privacy Recommendations]
+* xref:migration-2.0.adoc[Migrating to 2.0]
 
 [.list-top-item]
 .Development
