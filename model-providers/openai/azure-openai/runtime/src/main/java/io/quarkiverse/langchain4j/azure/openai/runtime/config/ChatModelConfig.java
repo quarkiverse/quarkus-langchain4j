@@ -9,6 +9,19 @@ import io.smallrye.config.WithDefault;
 @ConfigGroup
 public interface ChatModelConfig {
     /**
+     * Which Azure OpenAI API the chat model should target.
+     * <p>
+     * {@code chat-completion} uses the Chat Completions API, while {@code responses} uses the Responses API
+     * ({@code .../openai/v1/responses}) and unlocks the settings under
+     * {@code quarkus.langchain4j.azure-openai.chat-model.responses.*}.
+     * <p>
+     * The Responses API is only available on the {@code v1} endpoints, so {@code responses} requires
+     * {@code quarkus.langchain4j.azure-openai.endpoint-style=v1}.
+     */
+    @WithDefault("chat-completion")
+    Mode mode();
+
+    /**
      * This property will override the {@code quarkus.langchain4j.azure-openai.resource-name}
      * specifically for chat models if it is set.
      */
@@ -131,4 +144,14 @@ public interface ChatModelConfig {
      * Some models are not compatible with some response formats, make sure to review OpenAI documentation.
      */
     Optional<String> responseFormat();
+
+    /**
+     * Settings that only apply when the chat model targets the Responses API, see {@code mode}.
+     */
+    ResponsesChatModelConfig responses();
+
+    enum Mode {
+        CHAT_COMPLETION,
+        RESPONSES
+    }
 }

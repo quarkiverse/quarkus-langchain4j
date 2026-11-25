@@ -15,6 +15,7 @@ import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.ResponsesChatModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.smallrye.config.ConfigValidationException;
 import io.smallrye.config.ConfigValidationException.Problem;
@@ -187,6 +188,83 @@ class AzureOpenAiRecorderEndpointTests {
                 .isEqualTo(String.format(CONFIG_ERROR_MESSAGE_TEMPLATE, "deployment-name"));
     }
 
+    @Test
+    void responsesUseTheV1Endpoint() {
+        useV1EndpointStyle();
+        doReturn(Optional.of("resourceName"))
+                .when(this.config)
+                .resourceName();
+        doReturn(Optional.of("deploymentName"))
+                .when(this.config)
+                .deploymentName();
+
+        assertThat(AzureOpenAiRecorder.responsesBaseUrl(this.config, NamedConfigUtil.DEFAULT_NAME))
+                .isEqualTo("https://resourceName.domainName/openai/v1");
+    }
+
+    @Test
+    void responsesDropATrailingSlashFromAnExplicitEndpoint() {
+        useV1EndpointStyle();
+        doReturn(Optional.of("https://somewhere.com/openai/v1/"))
+                .when(this.config)
+                .endpoint();
+        doReturn(Optional.of("deploymentName"))
+                .when(this.config)
+                .deploymentName();
+
+        // the Responses client appends "/responses" to the base URL
+        assertThat(AzureOpenAiRecorder.responsesBaseUrl(this.config, NamedConfigUtil.DEFAULT_NAME))
+                .isEqualTo("https://somewhere.com/openai/v1");
+    }
+
+    @Test
+    void responsesRequireTheV1EndpointStyle() {
+        doReturn(Optional.of("resourceName"))
+                .when(this.config)
+                .resourceName();
+        doReturn(Optional.of("deploymentName"))
+                .when(this.config)
+                .deploymentName();
+
+        var configValidationException = catchThrowableOfType(ConfigValidationException.class,
+                () -> AzureOpenAiRecorder.responsesBaseUrl(this.config, NamedConfigUtil.DEFAULT_NAME));
+
+        assertThat(configValidationException.getProblemCount()).isEqualTo(1);
+        assertThat(configValidationException.getProblem(0))
+                .extracting(Problem::getMessage)
+                .isEqualTo("quarkus.langchain4j.azure-openai.chat-model.mode=responses requires"
+                        + " quarkus.langchain4j.azure-openai.endpoint-style=v1: the Responses API is only available on the"
+                        + " v1 endpoints");
+    }
+
+    @Test
+    void responsesRequireTheV1EndpointStyleForANamedModel() {
+        var configValidationException = catchThrowableOfType(ConfigValidationException.class,
+                () -> AzureOpenAiRecorder.responsesBaseUrl(this.config, "my-model"));
+
+        assertThat(configValidationException.getProblem(0))
+                .extracting(Problem::getMessage)
+                .asString()
+                .startsWith("quarkus.langchain4j.azure-openai.my-model.chat-model.mode=responses requires"
+                        + " quarkus.langchain4j.azure-openai.my-model.endpoint-style=v1");
+    }
+
+    @Test
+    void responsesSendTheApiKeyInTheAzureHeader() {
+        assertThat(AzureOpenAiRecorder.responsesAuthHeaders("my-key", null)).containsExactly(entry("api-key", "my-key"));
+    }
+
+    @Test
+    void responsesSendTheAdTokenAsABearerToken() {
+        assertThat(AzureOpenAiRecorder.responsesAuthHeaders(null, "my-token"))
+                .containsExactly(entry("Authorization", "Bearer my-token"));
+    }
+
+    @Test
+    void responsesSendNoAuthHeaderWhenAnAuthProviderIsUsed() {
+        assertThat(AzureOpenAiRecorder.responsesAuthHeaders(null, null)).isEmpty();
+    }
+
     private void useV1EndpointStyle() {
         doReturn(LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointStyle.V1)
                 .when(this.config)
@@ -302,6 +380,16 @@ class AzureOpenAiRecorderEndpointTests {
         @Override
         public ChatModelConfig chatModel() {
             return new ChatModelConfig() {
+                @Override
+                public Mode mode() {
+                    return Mode.CHAT_COMPLETION;
+                }
+
+                @Override
+                public ResponsesChatModelConfig responses() {
+                    return null;
+                }
+
                 @Override
                 public Optional<String> resourceName() {
                     return Optional.empty();

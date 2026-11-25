@@ -109,6 +109,30 @@ If you set `quarkus.langchain4j.azure-openai.endpoint` explicitly, it must point
 
 Image and audio transcription models keep using the deployment-based endpoints.
 
+== Using the Responses API
+
+The chat models can call the Responses API instead of Chat Completions.
+The Responses API is only available on the `v1` endpoints, so it also needs `endpoint-style=v1`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.azure-openai.endpoint-style=v1
+quarkus.langchain4j.azure-openai.chat-model.mode=responses
+quarkus.langchain4j.azure-openai.resource-name=
+quarkus.langchain4j.azure-openai.deployment-name=
+----
+
+Requests then go to `https://<resource-name>.openai.azure.com/openai/v1/responses`, with the deployment name as the `model`.
+The application refuses to start if `chat-model.mode=responses` is used with the default `deployment` endpoint style.
+
+Authentication works as for Chat Completions: an `api-key` is sent in the `api-key` header, an `ad-token` in the `Authorization` header, and a `ModelAuthProvider` bean can supply the `Authorization` header instead.
+
+Settings specific to the Responses API, such as `store`, `reasoning-summary` or `max-output-tokens`, are under `quarkus.langchain4j.azure-openai.chat-model.responses.*`; they are the same as `quarkus.langchain4j.openai.chat-model.responses.*`.
+When `responses.max-output-tokens` is not set, `chat-model.max-tokens` is used.
+`chat-model.presence-penalty`, `chat-model.frequency-penalty`, `chat-model.seed`, `log-requests-curl` and `max-retries` have no equivalent on the Responses API: they are ignored, and a warning lists the ones that are set.
+
+To customize the underlying models, provide a `ModelBuilderCustomizer<OpenAiResponsesChatModel.Builder>` or a `ModelBuilderCustomizer<OpenAiResponsesStreamingChatModel.Builder>` bean.
+
 == Advanced usage
 
 Please refer to https://docs.quarkiverse.io/quarkus-langchain4j/dev/openai-chat-model.html#_advanced_usage[Open AI].

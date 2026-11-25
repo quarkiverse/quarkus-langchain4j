@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -19,16 +20,21 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import org.jboss.logging.Logger;
+
 import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelBuilderCustomizer;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiAudioTranscriptionModel;
@@ -40,6 +46,9 @@ import io.quarkiverse.langchain4j.azure.openai.DisabledAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.ResponsesChatModelConfig;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
+import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -56,6 +65,12 @@ public class AzureOpenAiRecorder {
     static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.%s/openai/deployments/%s";
     static final String AZURE_V1_ENDPOINT_URL_PATTERN = "https://%s.%s/openai/v1";
     public static final Problem[] EMPTY_PROBLEMS = new Problem[0];
+
+    private static final Logger log = Logger.getLogger(AzureOpenAiRecorder.class);
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesChatModel.Builder>>> RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<ModelBuilderCustomizer<OpenAiResponsesStreamingChatModel.Builder>>> RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
@@ -81,6 +96,11 @@ public class AzureOpenAiRecorder {
     public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig.getValue(),
                 configName);
+
+        if (azureAiConfig.enableIntegration() && azureAiConfig.chatModel().mode() == ChatModelConfig.Mode.RESPONSES) {
+            warnAboutSettingsIgnoredByResponsesApi(azureAiConfig, configName);
+            return responsesChatModel(azureAiConfig, configName);
+        }
 
         if (azureAiConfig.enableIntegration()) {
             var chatModelConfig = azureAiConfig.chatModel();
@@ -147,6 +167,10 @@ public class AzureOpenAiRecorder {
     public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig.getValue(),
                 configName);
+
+        if (azureAiConfig.enableIntegration() && azureAiConfig.chatModel().mode() == ChatModelConfig.Mode.RESPONSES) {
+            return responsesStreamingChatModel(azureAiConfig, configName);
+        }
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
@@ -362,6 +386,273 @@ public class AzureOpenAiRecorder {
                 }
             };
         }
+    }
+
+    private Function<SyntheticCreationalContext<ChatModel>, ChatModel> responsesChatModel(
+            LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName) {
+        ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
+        ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
+        String apiKey = firstOrDefault(null, chatModelConfig.apiKey(), azureAiConfig.apiKey());
+        String adToken = firstOrDefault(null, chatModelConfig.adToken(), azureAiConfig.adToken());
+        JaxRsHttpClientBuilder httpClientBuilder = responsesHttpClientBuilder(azureAiConfig);
+
+        var builder = OpenAiResponsesChatModel.builder()
+                .httpClientBuilder(httpClientBuilder)
+                .baseUrl(responsesBaseUrl(azureAiConfig, configName))
+                .modelName(azureAiConfig.deploymentNameFor(EndpointType.CHAT).orElse(null))
+                .customHeaders(responsesAuthHeaders(apiKey, adToken))
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()));
+
+        if (chatModelConfig.temperature().isPresent()) {
+            builder.temperature(chatModelConfig.temperature().get());
+        }
+        if (chatModelConfig.topP().isPresent()) {
+            builder.topP(chatModelConfig.topP().get());
+        }
+        if (chatModelConfig.reasoningEffort().isPresent()) {
+            builder.reasoningEffort(chatModelConfig.reasoningEffort().get());
+        }
+        if (chatModelConfig.responseFormat().isPresent()) {
+            builder.responseFormat(toResponseFormat(chatModelConfig.responseFormat().get()));
+        }
+        resolveMaxOutputTokens(chatModelConfig).ifPresent(builder::maxOutputTokens);
+        if (responsesConfig.store().isPresent()) {
+            builder.store(responsesConfig.store().get());
+        }
+        if (responsesConfig.previousResponseId().isPresent()) {
+            builder.previousResponseId(responsesConfig.previousResponseId().get());
+        }
+        if (responsesConfig.reasoningSummary().isPresent()) {
+            builder.reasoningSummary(responsesConfig.reasoningSummary().get());
+        }
+        if (responsesConfig.maxToolCalls().isPresent()) {
+            builder.maxToolCalls(responsesConfig.maxToolCalls().get());
+        }
+        if (responsesConfig.parallelToolCalls().isPresent()) {
+            builder.parallelToolCalls(responsesConfig.parallelToolCalls().get());
+        }
+        if (responsesConfig.include().isPresent()) {
+            builder.include(responsesConfig.include().get());
+        }
+        if (responsesConfig.truncation().isPresent()) {
+            builder.truncation(responsesConfig.truncation().get());
+        }
+        if (responsesConfig.textVerbosity().isPresent()) {
+            builder.textVerbosity(responsesConfig.textVerbosity().get());
+        }
+        if (responsesConfig.promptCacheKey().isPresent()) {
+            builder.promptCacheKey(responsesConfig.promptCacheKey().get());
+        }
+        if (responsesConfig.promptCacheRetention().isPresent()) {
+            builder.promptCacheRetention(responsesConfig.promptCacheRetention().get());
+        }
+        if (responsesConfig.safetyIdentifier().isPresent()) {
+            builder.safetyIdentifier(responsesConfig.safetyIdentifier().get());
+        }
+        if (responsesConfig.topLogprobs().isPresent()) {
+            builder.topLogprobs(responsesConfig.topLogprobs().get());
+        }
+        if (responsesConfig.strictTools().isPresent()) {
+            builder.strictTools(responsesConfig.strictTools().get());
+        }
+
+        return new Function<>() {
+            @Override
+            public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName), configName);
+                builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                        .collect(Collectors.toList()));
+                ModelAuthProvider.resolve(configName)
+                        .ifPresent(provider -> httpClientBuilder
+                                .addClientProvider(new OpenAiRestApi.OpenAIRestAPIFilter(provider)));
+                ModelBuilderCustomizer.applyCustomizers(
+                        context.getInjectedReference(RESPONSES_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL, Any.Literal.INSTANCE),
+                        builder, configName);
+                return builder.build();
+            }
+        };
+    }
+
+    private Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> responsesStreamingChatModel(
+            LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName) {
+        ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
+        ResponsesChatModelConfig responsesConfig = chatModelConfig.responses();
+        String apiKey = firstOrDefault(null, chatModelConfig.apiKey(), azureAiConfig.apiKey());
+        String adToken = firstOrDefault(null, chatModelConfig.adToken(), azureAiConfig.adToken());
+        JaxRsHttpClientBuilder httpClientBuilder = responsesHttpClientBuilder(azureAiConfig);
+
+        var builder = OpenAiResponsesStreamingChatModel.builder()
+                .httpClientBuilder(httpClientBuilder)
+                .baseUrl(responsesBaseUrl(azureAiConfig, configName))
+                .modelName(azureAiConfig.deploymentNameFor(EndpointType.CHAT).orElse(null))
+                .customHeaders(responsesAuthHeaders(apiKey, adToken))
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()));
+
+        if (chatModelConfig.temperature().isPresent()) {
+            builder.temperature(chatModelConfig.temperature().get());
+        }
+        if (chatModelConfig.topP().isPresent()) {
+            builder.topP(chatModelConfig.topP().get());
+        }
+        if (chatModelConfig.reasoningEffort().isPresent()) {
+            builder.reasoningEffort(chatModelConfig.reasoningEffort().get());
+        }
+        if (chatModelConfig.responseFormat().isPresent()) {
+            builder.responseFormat(toResponseFormat(chatModelConfig.responseFormat().get()));
+        }
+        resolveMaxOutputTokens(chatModelConfig).ifPresent(builder::maxOutputTokens);
+        if (responsesConfig.store().isPresent()) {
+            builder.store(responsesConfig.store().get());
+        }
+        if (responsesConfig.previousResponseId().isPresent()) {
+            builder.previousResponseId(responsesConfig.previousResponseId().get());
+        }
+        if (responsesConfig.reasoningSummary().isPresent()) {
+            builder.reasoningSummary(responsesConfig.reasoningSummary().get());
+        }
+        if (responsesConfig.maxToolCalls().isPresent()) {
+            builder.maxToolCalls(responsesConfig.maxToolCalls().get());
+        }
+        if (responsesConfig.parallelToolCalls().isPresent()) {
+            builder.parallelToolCalls(responsesConfig.parallelToolCalls().get());
+        }
+        if (responsesConfig.include().isPresent()) {
+            builder.include(responsesConfig.include().get());
+        }
+        if (responsesConfig.truncation().isPresent()) {
+            builder.truncation(responsesConfig.truncation().get());
+        }
+        if (responsesConfig.textVerbosity().isPresent()) {
+            builder.textVerbosity(responsesConfig.textVerbosity().get());
+        }
+        if (responsesConfig.promptCacheKey().isPresent()) {
+            builder.promptCacheKey(responsesConfig.promptCacheKey().get());
+        }
+        if (responsesConfig.promptCacheRetention().isPresent()) {
+            builder.promptCacheRetention(responsesConfig.promptCacheRetention().get());
+        }
+        if (responsesConfig.safetyIdentifier().isPresent()) {
+            builder.safetyIdentifier(responsesConfig.safetyIdentifier().get());
+        }
+        if (responsesConfig.topLogprobs().isPresent()) {
+            builder.topLogprobs(responsesConfig.topLogprobs().get());
+        }
+        if (responsesConfig.strictTools().isPresent()) {
+            builder.strictTools(responsesConfig.strictTools().get());
+        }
+        if (responsesConfig.streamIncludeObfuscation().isPresent()) {
+            builder.streamIncludeObfuscation(responsesConfig.streamIncludeObfuscation().get());
+        }
+
+        return new Function<>() {
+            @Override
+            public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName), configName);
+                builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                        .collect(Collectors.toList()));
+                ModelAuthProvider.resolve(configName)
+                        .ifPresent(provider -> httpClientBuilder
+                                .addClientProvider(new OpenAiRestApi.OpenAIRestAPIFilter(provider)));
+                ModelBuilderCustomizer.applyCustomizers(
+                        context.getInjectedReference(RESPONSES_STREAMING_CHAT_MODEL_CUSTOMIZER_TYPE_LITERAL,
+                                Any.Literal.INSTANCE),
+                        builder, configName);
+                return builder.build();
+            }
+        };
+    }
+
+    private static JaxRsHttpClientBuilder responsesHttpClientBuilder(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig) {
+        JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+        Duration timeout = azureAiConfig.timeout().orElse(Duration.ofSeconds(10));
+        httpClientBuilder.connectTimeout(timeout);
+        httpClientBuilder.readTimeout(timeout);
+        azureAiConfig.proxyHost().ifPresent(host -> httpClientBuilder.proxy(new Proxy(
+                Type.valueOf(azureAiConfig.proxyType()),
+                new InetSocketAddress(host, azureAiConfig.proxyPort()))));
+        return httpClientBuilder;
+    }
+
+    /**
+     * The Responses API is only served on the {@code v1} endpoints ({@code .../openai/v1/responses}).
+     */
+    static String responsesBaseUrl(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName) {
+        if (!usesV1Endpoint(azureAiConfig, EndpointType.CHAT)) {
+            String prefix = "quarkus.langchain4j.azure-openai" + propertyPrefix(configName);
+            throw new ConfigValidationException(new Problem[] { new Problem(String.format(
+                    "%schat-model.mode=responses requires %sendpoint-style=v1: the Responses API is only available on the"
+                            + " v1 endpoints",
+                    prefix, prefix)) });
+        }
+        String endpoint = getEndpoint(azureAiConfig, configName, EndpointType.CHAT);
+        return endpoint.endsWith("/") ? endpoint.substring(0, endpoint.length() - 1) : endpoint;
+    }
+
+    /**
+     * An API key goes in Azure's {@code api-key} header, a Microsoft Entra ID token in the {@code Authorization} header. When
+     * neither is configured, a {@link ModelAuthProvider} sets the {@code Authorization} header.
+     */
+    static Map<String, String> responsesAuthHeaders(String apiKey, String adToken) {
+        if (apiKey != null) {
+            return Map.of("api-key", apiKey);
+        }
+        if (adToken != null) {
+            return Map.of("Authorization", "Bearer " + adToken);
+        }
+        return Map.of();
+    }
+
+    /**
+     * The Responses API has a single output limit; when it is not configured, {@code chat-model.max-tokens} is used so that
+     * an existing configuration keeps capping the output after the mode switch.
+     */
+    private static Optional<Integer> resolveMaxOutputTokens(ChatModelConfig chatModelConfig) {
+        return chatModelConfig.responses().maxOutputTokens().or(chatModelConfig::maxTokens);
+    }
+
+    private static ResponseFormat toResponseFormat(String responseFormat) {
+        if ("text".equalsIgnoreCase(responseFormat)) {
+            return ResponseFormat.TEXT;
+        }
+        // Everything else (json, json_object, json_schema) maps to JSON structured output
+        return ResponseFormat.JSON;
+    }
+
+    /**
+     * Settings of the Chat Completions path that have no counterpart on the Responses API. The penalties default to 0, so
+     * only a non-zero value counts as explicitly set.
+     */
+    private static void warnAboutSettingsIgnoredByResponsesApi(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig,
+            String configName) {
+        ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
+        List<String> ignored = new ArrayList<>();
+        if (chatModelConfig.presencePenalty() != 0) {
+            ignored.add("chat-model.presence-penalty");
+        }
+        if (chatModelConfig.frequencyPenalty() != 0) {
+            ignored.add("chat-model.frequency-penalty");
+        }
+        if (chatModelConfig.seed().isPresent()) {
+            ignored.add("chat-model.seed");
+        }
+        if (azureAiConfig.logRequestsCurl().orElse(false)) {
+            ignored.add("log-requests-curl");
+        }
+        if (azureAiConfig.maxRetries() > 1) {
+            ignored.add("max-retries");
+        }
+        if (!ignored.isEmpty()) {
+            String modelLabel = NamedConfigUtil.isDefault(configName) ? "" : " '" + configName + "'";
+            log.warnf("Azure OpenAI chat model%s: the following settings are not supported by the Responses API and will be"
+                    + " ignored: %s. Set quarkus.langchain4j.azure-openai%schat-model.mode=chat-completion to keep using them.",
+                    modelLabel, String.join(", ", ignored), propertyPrefix(configName));
+        }
+    }
+
+    private static String propertyPrefix(String configName) {
+        return NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + ".");
     }
 
     static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName, EndpointType type) {
