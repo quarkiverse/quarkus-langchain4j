@@ -154,19 +154,118 @@ import io.opentelemetry.api.trace.Span;
 
 @ApplicationScoped
 public class CustomSpanDataContributor implements ChatModelSpanContributor {
+
+    @Override
     public void onRequest(ChatModelRequestContext requestContext, Span currentSpan) {
-        span.addAttribute("example", "request");
+        currentSpan.setAttribute("example", "request");
     }
 
+    @Override
     public void onResponse(ChatModelResponseContext responseContext, Span currentSpan) {
-        span.addAttribute("example", "response");
+        currentSpan.setAttribute("example", "response");
     }
 
-    default void onError(ChatModelErrorContext errorContext, Span currentSpan) {
-        span.addAttribute("example", "failure");
+    @Override
+    public void onError(ChatModelErrorContext errorContext, Span currentSpan) {
+        currentSpan.setAttribute("example", "failure");
     }
 }
 ----
+
+The spans of tool executions and of AI service invocations have their own contributor interfaces, which work the same way:
+
+* `io.quarkiverse.langchain4j.runtime.tool.ToolSpanContributor` is called with `onRequest`, `onResponse` and `onError` around each tool execution (`langchain4j.tools.*` spans).
+* `io.quarkiverse.langchain4j.runtime.aiservice.AiServiceSpanContributor` is called with `onStart`, `onComplete` and `onError` around each AI service invocation (`langchain4j.aiservices.*` spans).
+For a streaming method, `onComplete` and `onError` are called when the returned stream completes or fails.
+
+For example, to tag every AI service span with the first argument of the invocation:
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.opentelemetry.api.trace.Span;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceSpanContributor;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceSpanStartContext;
+
+@ApplicationScoped
+public class TenantSpanContributor implements AiServiceSpanContributor {
+
+    @Override
+    public void onStart(AiServiceSpanStartContext context, Span span) {
+        if (!context.methodArguments().isEmpty()) {
+            span.setAttribute("app.first_argument", String.valueOf(context.methodArguments().get(0)));
+        }
+    }
+}
+----
+
+An exception thrown by a contributor is recorded on the span and logged, and never fails the invocation.
+
+=== AI service spans
+
+The span of an AI service invocation has the `INTERNAL` span kind and the `gen_ai.operation.name` attribute set to `invoke_ai_service`.
+The https://github.com/open-telemetry/semantic-conventions-genai[GenAI semantic conventions] have no well-known operation for an AI service, so it follows their `invoke_{framework_entrypoint}` form.
+
+For a method that returns a `Multi`, a `Flow.Publisher` or a `TokenStream`, the span covers the whole stream: it ends when the stream completes, fails or is canceled, not when the method returns.
+A `TokenStream` canceled through the `StreamingHandle` of a partial response context, such as `context.streamingHandle().cancel()` in `onPartialResponseWithContext`, ends its span as well.
+If the model provider cannot cancel and `cancel()` throws, the stream keeps running and the span ends when the stream completes or fails.
+The model and tool spans of the stream are its children.
+The span starts when the method is called, because the method reads the chat memory and runs the input guardrails and the retrieval before it returns the stream: only the model call waits for the subscription.
+As a consequence, a stream that is never subscribed to, or a `TokenStream` that is never started, never ends its span, so the span is not exported.
+
+Every subscription to a returned `Multi` or `Flow.Publisher` calls the model again, so every subscription has its own span, with its own recorded result.
+The first subscription gets the span started when the method was called.
+A later subscription, such as a retry with `onFailure().retry()`, gets a new span with the same name and parent, and a link to the span of the first subscription.
+
+==== Arguments and results
+
+AI service spans do not record the arguments and the result of the invocation by default, since they can contain sensitive data.
+You can opt in with the following properties:
+
+[source,properties]
+----
+quarkus.langchain4j.tracing.include-ai-service-arguments=true
+quarkus.langchain4j.tracing.include-ai-service-result=true
+----
+
+`langchain4j.aiservice.arguments` holds the arguments as a JSON object keyed by parameter name, or by the `@V` value when there is one.
+Parameters that the framework consumes itself are left out: the `@MemoryId`, `InvocationParameters`, `ChatRequestParameters`, `@ModelName` and `@UserName` parameters, as well as image, audio, PDF, video and `Content` parameters.
+An argument that cannot be serialized to JSON is recorded as `{"_unserializable": "<class name>"}`, and the other arguments are still recorded.
+
+`langchain4j.aiservice.result` holds the result:
+
+* A `String` result is recorded as-is, and any other result as JSON.
+* A `Result<T>` result is recorded as its content.
+* For a `Multi<String>`, the streamed items are concatenated.
+For a `Multi<ChatEvent>` or a `TokenStream`, the text of the final AI message is recorded.
+* Nothing is recorded for image results.
+
+For example, with:
+
+[source,java]
+----
+@RegisterAiService
+public interface ClaimService {
+
+    @UserMessage("Answer the question {question} about the claim {claim.id}")
+    String chat(@MemoryId String sessionId, Claim claim, String question);
+}
+----
+
+a call records:
+
+[source,text]
+----
+langchain4j.aiservice.arguments = {"claim":{"id":"C-1","summary":"Burst pipe in the kitchen"},"question":"Is water damage covered?"}
+langchain4j.aiservice.result = Yes, water damage is covered up to ...
+----
+
+Because the arguments are recorded as the method received them, the recorded values can be used to replay the call, for example to build an evaluation dataset that does not depend on how the prompt is rendered.
+Recording never fails the invocation: a failure to record is logged and the call carries on.
+
+NOTE: The arguments and the result are serialized to JSON with Jackson.
+In a native executable, register the classes of the recorded arguments and results for reflection, for example with `@RegisterForReflection`, otherwise they cannot be serialized.
 
 === Langfuse
 
@@ -280,6 +379,14 @@ quarkus.langchain4j.tracing.include-prompt=true
 quarkus.langchain4j.tracing.include-completion=true
 quarkus.langchain4j.tracing.include-tool-arguments=true
 quarkus.langchain4j.tracing.include-tool-result=true
+----
+
+To also record the arguments and the result of each AI service invocation, for example to build datasets from the AI service spans, add:
+
+[source,properties]
+----
+quarkus.langchain4j.tracing.include-ai-service-arguments=true
+quarkus.langchain4j.tracing.include-ai-service-result=true
 ----
 
 See the https://langfuse.com/docs/opentelemetry/get-started[Langfuse OpenTelemetry documentation] for more details on authentication and manual setup.

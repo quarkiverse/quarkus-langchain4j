@@ -12884,6 +12884,52 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-ai-service-arguments]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-ai-service-arguments[`+++quarkus.langchain4j.tracing.include-ai-service-arguments+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tracing.include-ai-service-arguments+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, the arguments of an AI service method are included on its span, as a JSON object keyed by parameter name in the `langchain4j.aiservice.arguments` attribute.
+
+Parameters the framework consumes itself are left out: the memory id, `InvocationParameters`, `ChatRequestParameters`, `@ModelName`, `@UserName`, and image, audio, PDF, video and `Content` parameters.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_AI_SERVICE_ARGUMENTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_AI_SERVICE_ARGUMENTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-ai-service-result]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-ai-service-result[`+++quarkus.langchain4j.tracing.include-ai-service-result+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tracing.include-ai-service-result+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, the result of an AI service method is included on its span, in the `langchain4j.aiservice.result` attribute.
+
+A `String` is recorded as-is and any other value as JSON. A `Result` is recorded as its content. For a streaming method, the streamed text is recorded once the stream completes. Nothing is recorded for image results.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_AI_SERVICE_RESULT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_AI_SERVICE_RESULT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-calls-per-response]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-ai-service-max-tool-calls-per-response[`+++quarkus.langchain4j.ai-service.max-tool-calls-per-response+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ai-service.max-tool-calls-per-response+++[]
