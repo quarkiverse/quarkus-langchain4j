@@ -150,8 +150,8 @@ public class AzureOpenAiRecorder {
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
-            String apiKey = azureAiConfig.apiKey().orElse(null);
-            String adToken = azureAiConfig.adToken().orElse(null);
+            String apiKey = firstOrDefault(null, chatModelConfig.apiKey(), azureAiConfig.apiKey());
+            String adToken = firstOrDefault(null, chatModelConfig.adToken(), azureAiConfig.adToken());
 
             var builder = AzureOpenAiStreamingChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
@@ -159,7 +159,8 @@ public class AzureOpenAiRecorder {
                     .adToken(adToken)
                     .modelName(azureAiConfig.deploymentNameFor(EndpointType.CHAT).orElse(null))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
-                    .apiVersion(usesV1Endpoint(azureAiConfig, EndpointType.CHAT) ? null : azureAiConfig.apiVersion())
+                    .apiVersion(usesV1Endpoint(azureAiConfig, EndpointType.CHAT) ? null
+                            : chatModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
