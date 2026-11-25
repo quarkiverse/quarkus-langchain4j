@@ -36,7 +36,8 @@ The currently supported databases are:
 
 To enable the LangChain4j Hibernate ORM extension in your Quarkus project, add the following Maven dependency:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-hibernate]
+:provider-artifact: quarkus-langchain4j-hibernate
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 This extension requires a configured Quarkus datasource and a Hibernate ORM persistence unit.
 For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide] and the https://quarkus.io/guides/hibernate-orm[Hibernate ORM Guide].
