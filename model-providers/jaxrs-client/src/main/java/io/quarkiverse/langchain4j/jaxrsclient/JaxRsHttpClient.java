@@ -387,7 +387,11 @@ public class JaxRsHttpClient implements HttpClient, AutoCloseable {
                             Response response = wae.getResponse();
                             emitter.emit(new HttpErrorResponseReceived(response.getStatus(), response.getStringHeaders()));
                         }
-                        emitter.fail(toHttpExceptionIfPossible(failure));
+                        // Nothing follows a cancellation, and a subscriber that only needs the status code cancels when
+                        // it receives the event above: Mutiny would drop the failure and log it as an error.
+                        if (!emitter.isCancelled()) {
+                            emitter.fail(toHttpExceptionIfPossible(failure));
+                        }
                     }
                 },
                 new Runnable() {

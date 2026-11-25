@@ -23,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +41,7 @@ import dev.langchain4j.http.client.sse.ServerSentEventParser;
 import io.quarkiverse.langchain4j.QuarkusHttpException;
 import io.quarkus.runtime.BlockingOperationControl;
 import io.quarkus.runtime.IOThreadDetector;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -146,6 +148,61 @@ class JaxRsHttpClientStreamTest {
         assertEquals(400, exception.statusCode());
         assertEquals("bad-request", exception.getMessage());
         assertEquals(Optional.of("7"), exception.header("retry-after"));
+    }
+
+    @Test
+    void cancellingOnTheErrorResponseEndsTheStreamWithoutAnotherSignal() throws InterruptedException {
+        routes.put("/error", new Handler<HttpServerRequest>() {
+            @Override
+            public void handle(HttpServerRequest request) {
+                request.response().setStatusCode(400).end("bad-request");
+            }
+        });
+        // Mutiny hands a failure that it cannot deliver to this handler, which in Quarkus logs it at ERROR
+        List<Throwable> dropped = new CopyOnWriteArrayList<>();
+        Infrastructure.setDroppedExceptionHandler(new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable failure) {
+                dropped.add(failure);
+            }
+        });
+        try {
+            CountDownLatch errorResponseHandled = new CountDownLatch(1);
+            Recorder recorder = new Recorder() {
+                private volatile Flow.Subscription subscription;
+
+                @Override
+                public void onSubscribe(Flow.Subscription subscription) {
+                    this.subscription = subscription;
+                    super.onSubscribe(subscription);
+                }
+
+                @Override
+                public void onNext(HttpStreamingEvent event) {
+                    super.onNext(event);
+                    if (event instanceof HttpErrorResponseReceived) {
+                        // what the MCP transport of LangChain4j does: the status code is all it needs
+                        subscription.cancel();
+                        // The client reports the response on its event loop, and a failure would follow this event
+                        // at once: a task queued on the same event loop runs when the client has finished.
+                        Vertx.currentContext().runOnContext(new Handler<Void>() {
+                            @Override
+                            public void handle(Void ignored) {
+                                errorResponseHandled.countDown();
+                            }
+                        });
+                    }
+                }
+            };
+            client.stream(request(GET, "/error", null), new ChunkParser()).subscribe(recorder);
+
+            assertTrue(errorResponseHandled.await(5, TimeUnit.SECONDS), "the error response should be reported");
+            assertEquals(List.of(), dropped, "nothing should follow the cancellation");
+            assertEquals(1, recorder.events.size());
+            assertEquals(null, recorder.error.get());
+        } finally {
+            Infrastructure.resetDroppedExceptionHandler();
+        }
     }
 
     @Test
