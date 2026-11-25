@@ -1,0 +1,506 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-datasource]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-datasource[`+++quarkus.langchain4j.generic.milvus.datasource+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.datasource+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the configured datasource to use for this store. If not set, the default datasource from the Agroal extension will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-collection-name]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-collection-name[`+++quarkus.langchain4j.generic.milvus.collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-dimension]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-dimension[`+++quarkus.langchain4j.generic.milvus.dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Dimension of the vectors. Only applicable when the collection yet has to be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-index-options]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-index-options[`+++quarkus.langchain4j.generic.milvus.index-options+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.index-options+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A fine-tuning parameter for configuring the vector index, like e.g. `nlist=1` for the IVFFlat index. Consult the database vendor documentation for details about the possible index options.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_INDEX_OPTIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_INDEX_OPTIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-index-type]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-index-type[`+++quarkus.langchain4j.generic.milvus.index-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.index-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The index type to use for the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_INDEX_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_INDEX_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `flat`, `ivf-flat`, `ivf-sq8`, `ivf-pq`, `hnsw`, `hnsw-sq`, `hnsw-pq`, `hnsw-prq`, `diskann`, `autoindex`, `scann`, `gpu-ivf-flat`, `gpu-ivf-pq`, `gpu-brute-force`, `gpu-cagra`, `bin-flat`, `bin-ivf-flat`, `trie`, `stl-sort`, `inverted`, `bitmap`, `sparse-inverted-index`, `sparse-wand`
+|`+++flat+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-consistency-level]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-consistency-level[`+++quarkus.langchain4j.generic.milvus.consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The consistency level.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`strong`, `session`, `bounded`, `eventually`
+|`+++eventually+++`
+
+h|[[quarkus-langchain4j-hibernate-milvus_section_quarkus-langchain4j-generic-milvus-schema-management]] [.section-name.section-level0]##link:#quarkus-langchain4j-hibernate-milvus_section_quarkus-langchain4j-generic-milvus-schema-management[Schema management configuration]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-schema-management-strategy]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-schema-management-strategy[`+++quarkus.langchain4j.generic.milvus.schema-management.strategy+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.schema-management.strategy+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Select whether the database schema is generated or not.
+<p>
+`drop-and-create` is awesome in development mode.
+<p>
+This defaults to 'none'.
+<p>
+However if Dev Services is in use and no other extensions that manage the schema are present
+the value will be automatically overridden to 'drop-and-create'.
+<p>
+Accepted values: `none`, `create`, `drop-and-create`, `drop`, `update`, `validate`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_SCHEMA_MANAGEMENT_STRATEGY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_SCHEMA_MANAGEMENT_STRATEGY+++`
+endif::add-copy-button-to-env-var[]
+--
+a|tooltip:none[No schema action.], tooltip:create[Create the schema.], tooltip:drop-and-create[Drop and then recreate the schema.], tooltip:drop[Drop the schema.], tooltip:update[Update (alter) the database schema.], tooltip:validate[Validate the database schema.]
+|tooltip:none[No schema action.]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-distance-function[`+++quarkus.langchain4j.generic.milvus.distance-function+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.distance-function+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The distance function to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DISTANCE_FUNCTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DISTANCE_FUNCTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
+|`+++cosine+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-default-store-enabled]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-default-store-enabled[`+++quarkus.langchain4j.generic.milvus.default-store-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.default-store-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the default (unnamed) Milvus embedding store should be enabled. Set to `false` when you only want to use named stores.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEFAULT_STORE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEFAULT_STORE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+h|[[quarkus-langchain4j-hibernate-milvus_section_quarkus-langchain4j-generic-milvus]] [.section-name.section-level0]##link:#quarkus-langchain4j-hibernate-milvus_section_quarkus-langchain4j-generic-milvus[Named store configurations]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-datasource]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-datasource[`+++quarkus.langchain4j.generic.milvus."store-name".datasource+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".datasource+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the configured datasource to use for this store. If not set, the default datasource from the Agroal extension will be used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-collection-name]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-collection-name[`+++quarkus.langchain4j.generic.milvus."store-name".collection-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".collection-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-dimension]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-dimension[`+++quarkus.langchain4j.generic.milvus."store-name".dimension+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Dimension of the vectors. Only applicable when the collection yet has to be created.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-index-options]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-index-options[`+++quarkus.langchain4j.generic.milvus."store-name".index-options+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".index-options+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A fine-tuning parameter for configuring the vector index, like e.g. `nlist=1` for the IVFFlat index. Consult the database vendor documentation for details about the possible index options.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__INDEX_OPTIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__INDEX_OPTIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-index-type]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-index-type[`+++quarkus.langchain4j.generic.milvus."store-name".index-type+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".index-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The index type to use for the collection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__INDEX_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__INDEX_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `flat`, `ivf-flat`, `ivf-sq8`, `ivf-pq`, `hnsw`, `hnsw-sq`, `hnsw-pq`, `hnsw-prq`, `diskann`, `autoindex`, `scann`, `gpu-ivf-flat`, `gpu-ivf-pq`, `gpu-brute-force`, `gpu-cagra`, `bin-flat`, `bin-ivf-flat`, `trie`, `stl-sort`, `inverted`, `bitmap`, `sparse-inverted-index`, `sparse-wand`
+|`+++flat+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-consistency-level]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-consistency-level[`+++quarkus.langchain4j.generic.milvus."store-name".consistency-level+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".consistency-level+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The consistency level.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__CONSISTENCY_LEVEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__CONSISTENCY_LEVEL+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`strong`, `session`, `bounded`, `eventually`
+|`+++eventually+++`
+
+h|[[quarkus-langchain4j-hibernate-milvus_section_quarkus-langchain4j-generic-milvus-store-name-schema-management]] [.section-name.section-level1]##link:#quarkus-langchain4j-hibernate-milvus_section_quarkus-langchain4j-generic-milvus-store-name-schema-management[Schema management configuration]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-schema-management-strategy]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-schema-management-strategy[`+++quarkus.langchain4j.generic.milvus."store-name".schema-management.strategy+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".schema-management.strategy+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Select whether the database schema is generated or not.
+<p>
+`drop-and-create` is awesome in development mode.
+<p>
+This defaults to 'none'.
+<p>
+However if Dev Services is in use and no other extensions that manage the schema are present
+the value will be automatically overridden to 'drop-and-create'.
+<p>
+Accepted values: `none`, `create`, `drop-and-create`, `drop`, `update`, `validate`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__SCHEMA_MANAGEMENT_STRATEGY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__SCHEMA_MANAGEMENT_STRATEGY+++`
+endif::add-copy-button-to-env-var[]
+--
+a|tooltip:none[No schema action.], tooltip:create[Create the schema.], tooltip:drop-and-create[Drop and then recreate the schema.], tooltip:drop[Drop the schema.], tooltip:update[Update (alter) the database schema.], tooltip:validate[Validate the database schema.]
+|tooltip:none[No schema action.]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-store-name-distance-function[`+++quarkus.langchain4j.generic.milvus."store-name".distance-function+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus."store-name".distance-function+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The distance function to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__DISTANCE_FUNCTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS__STORE_NAME__DISTANCE_FUNCTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
+|`+++cosine+++`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-enabled[`+++quarkus.langchain4j.generic.milvus.devservices.enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether Dev Services for Milvus are enabled or not.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-milvus-image-name]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-milvus-image-name[`+++quarkus.langchain4j.generic.milvus.devservices.milvus-image-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.devservices.milvus-image-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Container image for Milvus.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_MILVUS_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_MILVUS_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++docker.io/milvusdb/milvus:v2.6.20+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-port]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-port[`+++quarkus.langchain4j.generic.milvus.devservices.port+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.devservices.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the Milvus dev service will listen to. If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-shared]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-shared[`+++quarkus.langchain4j.generic.milvus.devservices.shared+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.devservices.shared+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Indicates if the Dev Service containers managed by Quarkus for Milvus are shared.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-hibernate-milvus_quarkus-langchain4j-generic-milvus-devservices-service-name[`+++quarkus.langchain4j.generic.milvus.devservices.service-name+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.generic.milvus.devservices.service-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Service label to apply to created Dev Services containers.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_GENERIC_MILVUS_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++milvus+++`
+
+|===
+
