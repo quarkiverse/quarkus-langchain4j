@@ -438,6 +438,11 @@ class AzureOpenAiRecorderEndpointTests {
                     return Optional.empty();
                 }
 
+                @Override
+                public Optional<String> user() {
+                    return Optional.empty();
+                }
+
             };
         }
 
