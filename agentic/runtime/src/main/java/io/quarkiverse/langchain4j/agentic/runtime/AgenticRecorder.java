@@ -26,7 +26,9 @@ import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentMonitor;
 import dev.langchain4j.agentic.observability.ComposedAgentListener;
+import dev.langchain4j.agentic.scope.AgenticScopePersister;
 import dev.langchain4j.agentic.scope.AgenticScopeSerializer;
+import dev.langchain4j.agentic.scope.AgenticScopeStore;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.decision.DecisionModel;
@@ -38,9 +40,11 @@ import io.quarkiverse.langchain4j.runtime.decision.ConfiguredThresholds;
 import io.quarkiverse.langchain4j.runtime.skills.SkillsConfigurator;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
+import io.quarkus.arc.InjectableInstance;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.arc.runtime.BeanContainer;
 import io.quarkus.runtime.RuntimeValue;
+import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.annotations.RuntimeInit;
 import io.quarkus.runtime.annotations.StaticInit;
@@ -214,6 +218,21 @@ public class AgenticRecorder {
                 log.warnf("Unable to register class '%s' for AgenticScope deserialization", className);
             }
         }
+    }
+
+    /**
+     * Installs the application's {@link AgenticScopeStore} bean, if there is one, so that agentic scopes are persisted
+     * without calling {@link AgenticScopePersister#setStore(AgenticScopeStore)} manually. The store is static and
+     * langchain4j-agentic is not reloaded in dev mode, so it is removed again on shutdown.
+     */
+    @RuntimeInit
+    public void installAgenticScopeStore(ShutdownContext shutdownContext) {
+        InjectableInstance<AgenticScopeStore> stores = Arc.container().select(AgenticScopeStore.class);
+        if (stores.isUnsatisfied()) {
+            return;
+        }
+        AgenticScopePersister.setStore(stores.get());
+        shutdownContext.addShutdownTask(() -> AgenticScopePersister.setStore(null));
     }
 
     @RuntimeInit

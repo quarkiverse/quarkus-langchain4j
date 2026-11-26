@@ -46,6 +46,7 @@ import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
+import dev.langchain4j.agentic.scope.AgenticScopeStore;
 import dev.langchain4j.observability.api.listener.AiServiceResponseReceivedListener;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
@@ -109,6 +110,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
+import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.gizmo.CatchBlockCreator;
 import io.quarkus.gizmo.ClassCreator;
@@ -1005,6 +1007,19 @@ public class AgenticProcessor {
             }
         }
         return result;
+    }
+
+    @BuildStep
+    UnremovableBeanBuildItem unremovableAgenticScopeStore() {
+        return UnremovableBeanBuildItem.beanTypes(AgenticScopeStore.class);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    @Consume(SyntheticBeansRuntimeInitBuildItem.class)
+    void installAgenticScopeStore(AgenticRecorder recorder, BeanContainerBuildItem beanContainer,
+            ShutdownContextBuildItem shutdownContext) {
+        recorder.installAgenticScopeStore(shutdownContext);
     }
 
     @BuildStep
