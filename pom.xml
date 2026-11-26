@@ -54,7 +54,7 @@
     <quarkus-wiremock.version>1.8.1</quarkus-wiremock.version>
     <wiremock.version>3.13.2</wiremock.version>
     <quarkus-neo4j.version>6.8.3</quarkus-neo4j.version>
-    <quarkus-qdrant.version>0.2.0</quarkus-qdrant.version>
+    <quarkus-qdrant.version>0.4.0</quarkus-qdrant.version>
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
     <jinfer.version>0.4.0</jinfer.version>
     <jitllm.version>3.0.0-jdk21</jitllm.version>
