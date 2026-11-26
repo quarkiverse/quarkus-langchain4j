@@ -927,6 +927,93 @@ public class StoryCreatorWithHumanInTheLoop {
 }
 ----
 
+== Persisting and Resuming Agentic Scopes
+
+By default an `AgenticScope` lives only in memory, so a workflow waiting for a human answer is lost when the application stops.
+To keep it, declare a bean implementing `dev.langchain4j.agentic.scope.AgenticScopeStore`.
+The extension installs it at startup, so there is no need to call `AgenticScopePersister.setStore(...)`.
+In dev mode the store is reinstalled on every live reload.
+
+[source,java]
+----
+@ApplicationScoped
+public class MyAgenticScopeStore implements AgenticScopeStore {
+
+    @Override
+    public boolean save(AgenticScopeKey key, DefaultAgenticScope agenticScope) {
+        String json = AgenticScopeSerializer.toJson(agenticScope);
+        // write json to a database, a cache or a file, under key
+        return true;
+    }
+
+    @Override
+    public Optional<DefaultAgenticScope> load(AgenticScopeKey key) {
+        // read the json written by save, if any
+        return findJson(key).map(AgenticScopeSerializer::fromJson);
+    }
+
+    @Override
+    public boolean delete(AgenticScopeKey key) { ... }
+
+    @Override
+    public Set<AgenticScopeKey> getAllKeys() { ... }
+}
+----
+
+Invoke the agent with a `@MemoryId` to find its scope again after a restart.
+The parameter and return types of the declarative agents are allowed for deserialization automatically.
+
+=== Suspending a Workflow
+
+Instead of blocking a thread while it waits, a human-in-the-loop step can suspend the workflow by returning a `SuspendedResponse`.
+The scope is saved to the store and the invocation throws `AgenticSystemSuspendedException`:
+
+[source,java]
+----
+HumanInTheLoop humanReviewer = AgenticServices.humanInTheLoopBuilder()
+        .description("Request human approval")
+        .outputKey("approval")
+        .responseProvider(scope -> new SuspendedResponse<>("human-review"))
+        .build();
+----
+
+[source,java]
+----
+try {
+    return workflow.process(sessionId, input);
+} catch (AgenticSystemSuspendedException e) {
+    // e.scope().pendingResponseIds() contains "human-review"
+    return "Waiting for approval";
+}
+----
+
+=== Resuming After a Restart
+
+The answer can arrive later, for example on a REST endpoint, even after the application was restarted.
+Load the scope by its memory id, complete the pending response and invoke the workflow again with the same memory id.
+The workflow continues after the suspended step, and the steps that already ran are not repeated:
+
+[source,java]
+----
+@Path("/approvals")
+public class ApprovalResource {
+
+    @Inject
+    RecoverableWorkflow workflow; // extends AgenticScopeAccess
+
+    @POST
+    @Path("/{sessionId}")
+    public String approve(@PathParam("sessionId") String sessionId, String answer) {
+        AgenticScope scope = workflow.getAgenticScope(sessionId);
+        scope.completePendingResponse("human-review", answer);
+        return workflow.process(sessionId, (String) scope.readState("input"));
+    }
+}
+----
+
+NOTE: The in-memory copy of a scope is used before the store.
+When several replicas share one store, make sure that a given memory id is resumed by one replica only.
+
 == Configuring the Chat Model
 
 === Default Model
