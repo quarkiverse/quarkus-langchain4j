@@ -14,14 +14,14 @@ https://github.com/beehive-lab/gpullama3-quarkus-langchain4j-demo[Here] you can 
 == Prerequisites
 
 === Java Version and TornadoVM SDK
-The extension uses https://github.com/beehive-lab/jitllm[JitLLM] 3.0.0, which is published in two lines, each paired with a TornadoVM 8.1.0 SDK for the same JDK line:
+The extension uses https://github.com/beehive-lab/jitllm[JitLLM] 3.1.0, which is published in two lines, each paired with a TornadoVM 8.2.0 SDK for the same JDK line:
 
 [cols="1,1,1", options="header"]
 |===
 | JDK | JitLLM | TornadoVM SDK
 
-| 21 | `io.github.beehive-lab:jitllm:3.0.0-jdk21` | `8.1.0-jdk21-<backend>`
-| 22 and newer (tested with 25) | `io.github.beehive-lab:jitllm:3.0.0-jdk22plus` | `8.1.0-jdk22plus-<backend>`
+| 21 | `io.github.beehive-lab:jitllm:3.1.0-jdk21` | `8.2.0-jdk21-<backend>`
+| 22 and newer (tested with 25) | `io.github.beehive-lab:jitllm:3.1.0-jdk22plus` | `8.2.0-jdk22plus-<backend>`
 |===
 
 The build picks the JitLLM line that matches the JDK running Maven.
@@ -39,8 +39,8 @@ sdk install java 21.0.2-open
 sdk use java 21.0.2-open
 
 # TornadoVM SDK
-sdk install tornadovm 8.1.0-jdk21-<backend>
-sdk use tornadovm 8.1.0-jdk21-<backend>
+sdk install tornadovm 8.2.0-jdk21-<backend>
+sdk use tornadovm 8.2.0-jdk21-<backend>
 ----
 * JDK 22 and newer (tested with JDK 25):
 [source,shell]
@@ -50,8 +50,8 @@ sdk install java 25.0.2-open
 sdk use java 25.0.2-open
 
 # TornadoVM SDK
-sdk install tornadovm 8.1.0-jdk22plus-<backend>
-sdk use tornadovm 8.1.0-jdk22plus-<backend>
+sdk install tornadovm 8.2.0-jdk22plus-<backend>
+sdk use tornadovm 8.2.0-jdk22plus-<backend>
 ----
 
 To verify installation:
