@@ -20,7 +20,7 @@
         <quarkus.platform.version>4.0.0</quarkus.platform.version>
 
         <skipITs>true</skipITs>
-        <surefire-plugin.version>3.5.0</surefire-plugin.version>
+        <surefire-plugin.version>3.6.1</surefire-plugin.version>
     </properties>
 
     <dependencyManagement>

@@ -20,7 +20,7 @@
         <quarkus.platform.version>4.0.0</quarkus.platform.version>
 
         <skipITs>true</skipITs>
-        <surefire-plugin.version>3.5.0</surefire-plugin.version>
+        <surefire-plugin.version>3.6.1</surefire-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>org.mvnpm</groupId>
             <artifactId>lit</artifactId>
-            <version>3.3.1</version>
+            <version>3.3.3</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
