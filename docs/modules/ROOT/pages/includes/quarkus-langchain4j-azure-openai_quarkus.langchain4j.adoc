@@ -707,12 +707,35 @@ endif::add-copy-button-to-config-props[]
 --
 The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed the model's context length. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
 
+Reasoning models, such as the o-series, reject `max_tokens`: use `max-completion-tokens` for them.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_MAX_TOKENS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-max-completion-tokens]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-max-completion-tokens[`+++quarkus.langchain4j.azure-openai.chat-model.max-completion-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.chat-model.max-completion-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An upper bound for the number of tokens that can be generated for a completion, including visible output tokens and reasoning tokens. Sent as `max_completion_tokens`, which reasoning models, such as the o-series, require instead of `max_tokens`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_MAX_COMPLETION_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_MAX_COMPLETION_TOKENS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
@@ -780,6 +803,27 @@ endif::add-copy-button-to-env-var[]
 --
 |double
 |`+++0+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-stop[`+++quarkus.langchain4j.azure-openai.chat-model.stop+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Up to 4 sequences where the model stops generating further tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-log-requests[`+++quarkus.langchain4j.azure-openai.chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2190,12 +2234,35 @@ endif::add-copy-button-to-config-props[]
 --
 The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed the model's context length. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
 
+Reasoning models, such as the o-series, reject `max_tokens`: use `max-completion-tokens` for them.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-max-completion-tokens]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-max-completion-tokens[`+++quarkus.langchain4j.azure-openai."model-name".chat-model.max-completion-tokens+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".chat-model.max-completion-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+An upper bound for the number of tokens that can be generated for a completion, including visible output tokens and reasoning tokens. Sent as `max_completion_tokens`, which reasoning models, such as the o-series, require instead of `max_tokens`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_COMPLETION_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_COMPLETION_TOKENS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
@@ -2263,6 +2330,27 @@ endif::add-copy-button-to-env-var[]
 --
 |double
 |`+++0+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-stop[`+++quarkus.langchain4j.azure-openai."model-name".chat-model.stop+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Up to 4 sequences where the model stops generating further tokens.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-log-requests[`+++quarkus.langchain4j.azure-openai."model-name".chat-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]

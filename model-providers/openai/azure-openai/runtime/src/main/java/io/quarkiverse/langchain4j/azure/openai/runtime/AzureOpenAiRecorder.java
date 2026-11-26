@@ -105,6 +105,7 @@ public class AzureOpenAiRecorder {
                     .reasoningEffort(chatModelConfig.reasoningEffort().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                    .stop(chatModelConfig.stop().orElse(null))
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
             azureAiConfig.proxyHost().ifPresent(host -> {
@@ -114,6 +115,9 @@ public class AzureOpenAiRecorder {
             });
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
+            }
+            if (chatModelConfig.maxCompletionTokens().isPresent()) {
+                builder.maxCompletionTokens(chatModelConfig.maxCompletionTokens().get());
             }
 
             if (chatModelConfig.seed().isPresent()) {
@@ -169,6 +173,7 @@ public class AzureOpenAiRecorder {
                     .reasoningEffort(chatModelConfig.reasoningEffort().orElse(null))
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                    .stop(chatModelConfig.stop().orElse(null))
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
             azureAiConfig.proxyHost().ifPresent(host -> {
@@ -179,6 +184,9 @@ public class AzureOpenAiRecorder {
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
+            }
+            if (chatModelConfig.maxCompletionTokens().isPresent()) {
+                builder.maxCompletionTokens(chatModelConfig.maxCompletionTokens().get());
             }
 
             return new Function<>() {

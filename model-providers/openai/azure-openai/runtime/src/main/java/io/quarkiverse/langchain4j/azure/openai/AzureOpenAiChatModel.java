@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.azure.openai;
 
 import static dev.langchain4j.internal.RetryUtils.withRetry;
 import static dev.langchain4j.internal.Utils.getOrDefault;
+import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.aiMessageFrom;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.finishReasonFrom;
@@ -67,9 +68,11 @@ public class AzureOpenAiChatModel implements ChatModel {
     private final Integer seed;
     private final Double topP;
     private final Integer maxTokens;
+    private final Integer maxCompletionTokens;
     private final String reasoningEffort;
     private final Double presencePenalty;
     private final Double frequencyPenalty;
+    private final List<String> stop;
     private final Integer maxRetries;
     private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
@@ -86,9 +89,11 @@ public class AzureOpenAiChatModel implements ChatModel {
             Integer seed,
             Double topP,
             Integer maxTokens,
+            Integer maxCompletionTokens,
             String reasoningEffort,
             Double presencePenalty,
             Double frequencyPenalty,
+            List<String> stop,
             Duration timeout,
             Integer maxRetries,
             Proxy proxy,
@@ -124,9 +129,11 @@ public class AzureOpenAiChatModel implements ChatModel {
         this.seed = seed;
         this.topP = topP;
         this.maxTokens = maxTokens;
+        this.maxCompletionTokens = maxCompletionTokens;
         this.reasoningEffort = reasoningEffort;
         this.presencePenalty = presencePenalty;
         this.frequencyPenalty = frequencyPenalty;
+        this.stop = isNullOrEmpty(stop) ? null : List.copyOf(stop);
         this.maxRetries = getOrDefault(maxRetries, 1);
         if (this.maxRetries < 1) {
             throw new IllegalArgumentException("max-retries must be at least 1");
@@ -143,6 +150,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .maxOutputTokens(maxTokens)
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty)
+                .stopSequences(this.stop)
                 .build();
     }
 
@@ -182,9 +190,11 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .seed(seed)
                 .topP(getOrDefault(parameters.topP(), topP))
                 .maxTokens(getOrDefault(parameters.maxOutputTokens(), maxTokens))
+                .maxCompletionTokens(maxCompletionTokens)
                 .reasoningEffort(reasoningEffort)
                 .presencePenalty(getOrDefault(parameters.presencePenalty(), presencePenalty))
                 .frequencyPenalty(getOrDefault(parameters.frequencyPenalty(), frequencyPenalty))
+                .stop(isNullOrEmpty(parameters.stopSequences()) ? stop : parameters.stopSequences())
                 .responseFormat(responseFormat);
 
         if (usesV1Endpoint()) {
@@ -256,9 +266,11 @@ public class AzureOpenAiChatModel implements ChatModel {
         private Integer seed;
         private Double topP;
         private Integer maxTokens;
+        private Integer maxCompletionTokens;
         private String reasoningEffort;
         private Double presencePenalty;
         private Double frequencyPenalty;
+        private List<String> stop;
         private Duration timeout;
         private Integer maxRetries;
         private Proxy proxy;
@@ -343,6 +355,15 @@ public class AzureOpenAiChatModel implements ChatModel {
             return this;
         }
 
+        /**
+         * Sets {@code max_completion_tokens}, the upper bound for the generated tokens, including reasoning tokens.
+         * Reasoning models reject {@code max_tokens} and need this one instead.
+         */
+        public Builder maxCompletionTokens(Integer maxCompletionTokens) {
+            this.maxCompletionTokens = maxCompletionTokens;
+            return this;
+        }
+
         public Builder reasoningEffort(String reasoningEffort) {
             this.reasoningEffort = reasoningEffort;
             return this;
@@ -355,6 +376,11 @@ public class AzureOpenAiChatModel implements ChatModel {
 
         public Builder frequencyPenalty(Double frequencyPenalty) {
             this.frequencyPenalty = frequencyPenalty;
+            return this;
+        }
+
+        public Builder stop(List<String> stop) {
+            this.stop = stop;
             return this;
         }
 
@@ -409,9 +435,11 @@ public class AzureOpenAiChatModel implements ChatModel {
                     seed,
                     topP,
                     maxTokens,
+                    maxCompletionTokens,
                     reasoningEffort,
                     presencePenalty,
                     frequencyPenalty,
+                    stop,
                     timeout,
                     maxRetries,
                     proxy,
