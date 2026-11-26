@@ -84,8 +84,8 @@ public class AzureOpenAiRecorder {
 
         if (azureAiConfig.enableIntegration()) {
             var chatModelConfig = azureAiConfig.chatModel();
-            var apiKey = firstOrDefault(null, chatModelConfig.apiKey(), azureAiConfig.apiKey());
             var adToken = firstOrDefault(null, chatModelConfig.adToken(), azureAiConfig.adToken());
+            var apiKey = chatModelApiKey(azureAiConfig);
             var builder = AzureOpenAiChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
@@ -150,8 +150,8 @@ public class AzureOpenAiRecorder {
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
-            String apiKey = firstOrDefault(null, chatModelConfig.apiKey(), azureAiConfig.apiKey());
             String adToken = firstOrDefault(null, chatModelConfig.adToken(), azureAiConfig.adToken());
+            String apiKey = chatModelApiKey(azureAiConfig);
 
             var builder = AzureOpenAiStreamingChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
@@ -425,6 +425,18 @@ public class AzureOpenAiRecorder {
             azureAiConfig = runtimeConfig.namedConfig().get(configName);
         }
         return azureAiConfig;
+    }
+
+    /**
+     * The api-key of the chat models. A {@code chat-model.ad-token} overrides any api-key, as documented on
+     * {@link ChatModelConfig#adToken()}, so that it can be combined with a top-level api-key used by the other models.
+     */
+    private static String chatModelApiKey(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig) {
+        ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
+        if (chatModelConfig.adToken().isPresent()) {
+            return null;
+        }
+        return firstOrDefault(null, chatModelConfig.apiKey(), azureAiConfig.apiKey());
     }
 
     private void throwIfApiKeysNotConfigured(String apiKey, String adToken, boolean authProviderAvailable, String configName) {
