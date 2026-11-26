@@ -142,6 +142,21 @@ In the trace above we can see the parent span which corresponds to the handling 
 interesting thing is the `langchain4j.aiservices.MyAiService.writeAPoem` span which corresponds to the invocation of the AI service.
 The child spans of this span correspond (from to right) to calling the OpenAI API, invoking the `sendEmail` tool and finally invoking calling the OpenAI API again.
 
+=== Token usage on chat model spans
+
+Each chat model span carries the token usage attributes of the GenAI semantic conventions:
+
+* `gen_ai.usage.input_tokens`: prompt tokens as the provider reports them (Anthropic and Bedrock exclude cached tokens from this count)
+* `gen_ai.usage.output_tokens`: generated tokens, including reasoning (thinking) tokens
+* `gen_ai.usage.cache_read.input_tokens`: input tokens served from the prompt cache
+* `gen_ai.usage.cache_creation.input_tokens`: input tokens written to the prompt cache
+* `gen_ai.usage.reasoning.output_tokens`: output tokens spent on reasoning
+
+The cache attributes come from the same `CacheTokenUsageExtractor` beans as the metrics. The reasoning attribute comes
+from `ReasoningTokenUsageExtractor` beans; Gemini reports one. Gemini counts thinking tokens apart from the output
+tokens, so for Gemini `gen_ai.usage.output_tokens` is the sum of both, while the `output` token metric and
+`ChatResponse#tokenUsage()` keep the output tokens without thinking.
+
 === Custom span data
 if you have the need for custom span data, you can simply add a bean implemtenting `ChatModelSpanContributor`.
 [source,java]
