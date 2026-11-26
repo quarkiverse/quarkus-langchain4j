@@ -19,6 +19,7 @@ import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
 import io.quarkiverse.langchain4j.mockapi.EmbeddingReply;
 import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusExtensionTest;
+import tools.jackson.databind.JsonNode;
 
 public class OllamaEmbeddingRoundTripTest {
 
@@ -39,24 +40,43 @@ public class OllamaEmbeddingRoundTripTest {
         mock.reset();
     }
 
+    /**
+     * {@code /api/embed} takes an array of inputs, so all segments go out in one request, as upstream's Ollama
+     * embedding model does, instead of one HTTP round trip per segment.
+     */
     @Test
-    void embedAllSendsOneRequestPerInput() {
-        mock.embeddings().reply(EmbeddingReply.of(new float[] { 1, 0, 0, 0 }), EmbeddingReply.of(new float[] { 0, 1, 0, 0 }));
+    void embedAllSendsAllInputsInOneRequest() {
+        mock.embeddings().reply(EmbeddingReply.of(new float[] { 1, 0, 0, 0 }, new float[] { 0, 1, 0, 0 },
+                new float[] { 0, 0, 1, 0 }));
 
-        List<Embedding> embeddings = embeddingModel.embedAll(List.of(TextSegment.from("a"), TextSegment.from("b")))
+        List<Embedding> embeddings = embeddingModel
+                .embedAll(List.of(TextSegment.from("a"), TextSegment.from("b"), TextSegment.from("c")))
                 .content();
 
-        assertThat(embeddings).hasSize(2);
+        assertThat(embeddings).hasSize(3);
         assertThat(embeddings.get(0).vector()).containsExactly(1, 0, 0, 0);
         assertThat(embeddings.get(1).vector()).containsExactly(0, 1, 0, 0);
+        assertThat(embeddings.get(2).vector()).containsExactly(0, 0, 1, 0);
         List<CapturedRequest> requests = mock.embeddings().requests();
-        assertThat(requests).hasSize(2);
-        assertThat(requests).allSatisfy(r -> {
+        assertThat(requests).singleElement().satisfies(r -> {
             assertThat(r.path()).isEqualTo("/ollama/api/embed");
             assertThat(r.dialect()).isEqualTo("ollama");
             assertThat(r.bodyAsJson().at("/model").asText()).isEqualTo("nomic-embed-text");
+            assertThat(r.bodyAsJson().at("/input").isArray()).isTrue();
+            assertThat(r.bodyAsJson().at("/input")).extracting(JsonNode::asText).containsExactly("a", "b", "c");
         });
-        assertThat(requests).extracting(r -> r.bodyAsJson().at("/input").asText()).containsExactly("a", "b");
+    }
+
+    @Test
+    void embedSendsASingleElementArray() {
+        mock.embeddings().reply(EmbeddingReply.of(new float[] { 1, 0, 0, 0 }));
+
+        Embedding embedding = embeddingModel.embed("a").content();
+
+        assertThat(embedding.vector()).containsExactly(1, 0, 0, 0);
+        assertThat(mock.embeddings().requests()).singleElement()
+                .satisfies(r -> assertThat(r.bodyAsJson().at("/input")).extracting(JsonNode::asText)
+                        .containsExactly("a"));
     }
 
     @Test

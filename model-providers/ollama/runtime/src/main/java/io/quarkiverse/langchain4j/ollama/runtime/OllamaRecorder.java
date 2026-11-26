@@ -183,6 +183,7 @@ public class OllamaRecorder {
                     .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .model(ollamaFixedConfig.embeddingModel().modelId())
+                    .maxSegmentsPerBatch(embeddingModelConfig.maxSegmentsPerBatch())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), ollamaConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), ollamaConfig.logResponses()))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName);

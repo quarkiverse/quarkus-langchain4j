@@ -1,9 +1,14 @@
 package io.quarkiverse.langchain4j.ollama;
 
+import java.util.List;
+
+/**
+ * Request body of the Ollama {@code POST /api/embed} endpoint, which embeds one or more inputs in a single call.
+ */
 public class EmbeddingRequest {
 
     private final String model;
-    private final String input;
+    private final List<String> input;
 
     private EmbeddingRequest(Builder builder) {
         model = builder.model;
@@ -18,13 +23,13 @@ public class EmbeddingRequest {
         return model;
     }
 
-    public String getInput() {
+    public List<String> getInput() {
         return input;
     }
 
     public static final class Builder {
         private String model = "llama2";
-        private String input;
+        private List<String> input;
 
         private Builder() {
         }
@@ -34,7 +39,7 @@ public class EmbeddingRequest {
             return this;
         }
 
-        public Builder input(String val) {
+        public Builder input(List<String> val) {
             input = val;
             return this;
         }
