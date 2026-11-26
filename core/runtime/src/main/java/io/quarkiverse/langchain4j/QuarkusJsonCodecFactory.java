@@ -6,8 +6,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -53,8 +51,6 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
     }
 
     private static class Codec implements Json.JsonCodec {
-
-        private static final Pattern sanitizePattern = Pattern.compile("(?s)\\{.*\\}|\\[.*\\]");
 
         @Override
         public String toJson(Object o) {
@@ -103,9 +99,24 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                 return original;
             }
 
-            Matcher matcher = sanitizePattern.matcher(original);
-            if (matcher.find()) {
-                return matcher.group();
+            // Extract the first embedded JSON object or array, equivalent to the previous
+            // "(?s)\{.*\}|\[.*\]" regex with find() (first opening delimiter to the last matching
+            // closing delimiter, object branch preferred), but in a single linear pass. A regex with
+            // a greedy, non-anchored find() is O(n^2) on unbalanced input such as a long run of '{',
+            // which lets a hostile model or upstream response block the calling thread (CWE-1333).
+            int objectStart = original.indexOf('{');
+            int objectEnd = original.lastIndexOf('}');
+            boolean hasObject = objectStart >= 0 && objectEnd > objectStart;
+
+            int arrayStart = original.indexOf('[');
+            int arrayEnd = original.lastIndexOf(']');
+            boolean hasArray = arrayStart >= 0 && arrayEnd > arrayStart;
+
+            if (hasObject && (!hasArray || objectStart <= arrayStart)) {
+                return original.substring(objectStart, objectEnd + 1);
+            }
+            if (hasArray) {
+                return original.substring(arrayStart, arrayEnd + 1);
             }
             return original;
         }
