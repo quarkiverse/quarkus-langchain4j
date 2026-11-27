@@ -48,6 +48,7 @@ public class A2AApicurioRegistryProcessor {
             return;
         }
 
+        recorder.validateConfiguration();
         log.debug("Apicurio Registry A2A integration enabled, registering ApicurioAgentsRegistry bean");
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(AGENTS_REGISTRY)

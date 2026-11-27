@@ -19,9 +19,20 @@ public interface A2AApicurioRegistryRuntimeConfig {
     Optional<String> url();
 
     /**
-     * Optional authentication token for the registry.
+     * Not supported: setting it fails at startup. It was never applied, so a configured token was
+     * silently ignored. Use the client credentials or basic authentication settings under
+     * {@code auth} instead.
+     *
+     * @deprecated use {@code auth.client-id}, {@code auth.client-secret} and {@code auth.token-endpoint},
+     *             or {@code auth.username} and {@code auth.password}
      */
+    @Deprecated(forRemoval = true)
     Optional<String> authToken();
+
+    /**
+     * Credentials for the registry, used to publish agent cards and to discover agents.
+     */
+    RegistryAuthConfig auth();
 
     /**
      * Group ID to use when publishing and searching agent cards.
