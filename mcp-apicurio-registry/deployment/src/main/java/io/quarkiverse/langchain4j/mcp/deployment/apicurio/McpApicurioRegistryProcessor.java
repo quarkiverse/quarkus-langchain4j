@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.mcp.deployment.apicurio;
 
+import java.util.Optional;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.ClassType;
@@ -10,12 +12,15 @@ import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.mcp.deployment.AlwaysCreateMcpToolProviderBuildItem;
 import io.quarkiverse.langchain4j.mcp.runtime.apicurio.McpApicurioRegistryRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.apicurio.config.McpApicurioRegistryBuildTimeConfig;
+import io.quarkus.arc.deployment.OpenTelemetrySdkBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
+import io.quarkus.runtime.metrics.MetricsFactory;
 import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
 
 public class McpApicurioRegistryProcessor {
@@ -40,10 +45,17 @@ public class McpApicurioRegistryProcessor {
             McpApicurioRegistryBuildTimeConfig buildTimeConfig,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             CoreVertxBuildItem vertxBuildItem,
+            Optional<MetricsCapabilityBuildItem> metricsCapability,
+            Optional<OpenTelemetrySdkBuildItem> openTelemetrySdkBuildItem,
             McpApicurioRegistryRecorder recorder) {
         if (!buildTimeConfig.enabled()) {
             return;
         }
+        // same signals as the configured MCP clients (see McpProcessor), which also takes care of
+        // runtime-initializing the metrics and tracing listener classes when their dependencies are absent
+        boolean addMetrics = buildTimeConfig.metricsEnabled()
+                && metricsCapability.isPresent()
+                && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
 
         log.info("Apicurio Registry MCP integration enabled, registering ApicurioRegistryMcpTools bean");
         beanProducer.produce(SyntheticBeanBuildItem
@@ -53,7 +65,11 @@ public class McpApicurioRegistryProcessor {
                 .unremovable()
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(LangChain4jDotNames.TOOL_PROVIDER))
-                .createWith(recorder.apicurioRegistryMcpToolsFunction(vertxBuildItem.getVertx()))
+                .createWith(recorder.apicurioRegistryMcpToolsFunction(vertxBuildItem.getVertx(),
+                        addMetrics,
+                        openTelemetrySdkBuildItem.isPresent()
+                                ? openTelemetrySdkBuildItem.get().isRuntimeEnabled()
+                                : null))
                 .done());
     }
 

@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.mcp.runtime.apicurio;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.client.DefaultMcpClient;
 import io.apicurio.registry.client.RegistryClientFactory;
 import io.apicurio.registry.client.common.RegistryClientOptions;
 import io.apicurio.registry.rest.client.RegistryClient;
@@ -21,6 +23,8 @@ public class ApicurioRegistryMcpToolsBuilder {
     private String clientId;
     private String clientSecret;
     private McpToolProvider toolProvider;
+    private BiConsumer<String, DefaultMcpClient.Builder> clientCustomizer = (key, builder) -> {
+    };
 
     public static ApicurioRegistryMcpToolsBuilder create() {
         return new ApicurioRegistryMcpToolsBuilder();
@@ -50,6 +54,16 @@ public class ApicurioRegistryMcpToolsBuilder {
     }
 
     /**
+     * Customizes the builder of every MCP client created for a server discovered in the registry, before
+     * the client is built. The customizer receives the client key ({@code groupId/artifactId}) and the builder (e.g. to add
+     * listeners or a meta supplier).
+     */
+    public ApicurioRegistryMcpToolsBuilder clientCustomizer(BiConsumer<String, DefaultMcpClient.Builder> clientCustomizer) {
+        this.clientCustomizer = Objects.requireNonNull(clientCustomizer, "clientCustomizer");
+        return this;
+    }
+
+    /**
      * @deprecated The MCP clients no longer run on a Vert.x instance supplied here, so it is ignored.
      */
     @Deprecated(forRemoval = true)
@@ -69,6 +83,6 @@ public class ApicurioRegistryMcpToolsBuilder {
         }
         RegistryClient client = RegistryClientFactory.create(options);
 
-        return new ApicurioRegistryMcpTools(client, toolProvider);
+        return new ApicurioRegistryMcpTools(client, toolProvider, clientCustomizer);
     }
 }

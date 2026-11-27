@@ -439,6 +439,11 @@ Each result shows its group, artifact ID, name, description and artifact type.
 These tools are designed to be used by the LLM as part of an AI service. The LLM can autonomously discover and connect to
 MCP servers based on the user's request.
 
+The MCP clients created for discovered servers are traced like configured clients: with OpenTelemetry enabled and
+`quarkus.langchain4j.mcp.tracing.enabled` left at `true`, each MCP request gets a client span and its trace context is
+propagated to the server in the request `_meta`. Their metrics are opt-in, with
+`quarkus.langchain4j.mcp.apicurio-registry.metrics.enabled=true`, when Micrometer is present.
+
 === Usage with an AI Service
 
 Register `ApicurioRegistryMcpTools` as a tool in your AI service:
