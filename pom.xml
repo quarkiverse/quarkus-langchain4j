@@ -44,7 +44,7 @@
     <maven.compiler.release>21</maven.compiler.release>
     <quarkus.version>4.0.0</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
-    <langchain4j.version>1.24.0</langchain4j.version>
+    <langchain4j.version>1.25.0-SNAPSHOT</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
     <langchain4j-jackson3.version>1.20.1-beta30</langchain4j-jackson3.version>
     <quarkus-antora.version>3.33.2</quarkus-antora.version>
