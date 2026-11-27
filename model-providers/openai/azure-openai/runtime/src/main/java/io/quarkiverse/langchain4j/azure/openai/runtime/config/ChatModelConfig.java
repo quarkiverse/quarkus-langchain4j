@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.azure.openai.runtime.config;
 
+import java.util.List;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
@@ -88,8 +89,17 @@ public interface ChatModelConfig {
      * The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed
      * the model's context length.
      * Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+     * <p>
+     * Reasoning models, such as the o-series, reject {@code max_tokens}: use {@code max-completion-tokens} for them.
      */
     Optional<Integer> maxTokens();
+
+    /**
+     * An upper bound for the number of tokens that can be generated for a completion, including visible output tokens and
+     * reasoning tokens. Sent as {@code max_completion_tokens}, which reasoning models, such as the o-series, require
+     * instead of {@code max_tokens}.
+     */
+    Optional<Integer> maxCompletionTokens();
 
     /**
      * Constrains effort on reasoning for reasoning models.
@@ -113,6 +123,11 @@ public interface ChatModelConfig {
      */
     @WithDefault("0")
     Double frequencyPenalty();
+
+    /**
+     * Up to 4 sequences where the model stops generating further tokens.
+     */
+    Optional<List<String>> stop();
 
     /**
      * Whether chat model requests should be logged

@@ -68,9 +68,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
     private final Double temperature;
     private final Double topP;
     private final Integer maxTokens;
+    private final Integer maxCompletionTokens;
     private final String reasoningEffort;
     private final Double presencePenalty;
     private final Double frequencyPenalty;
+    private final List<String> stop;
     private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
@@ -85,9 +87,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             Double temperature,
             Double topP,
             Integer maxTokens,
+            Integer maxCompletionTokens,
             String reasoningEffort,
             Double presencePenalty,
             Double frequencyPenalty,
+            List<String> stop,
             Duration timeout,
             Proxy proxy,
             String responseFormat,
@@ -120,9 +124,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         this.temperature = temperature;
         this.topP = topP;
         this.maxTokens = maxTokens;
+        this.maxCompletionTokens = maxCompletionTokens;
         this.reasoningEffort = reasoningEffort;
         this.presencePenalty = presencePenalty;
         this.frequencyPenalty = frequencyPenalty;
+        this.stop = isNullOrEmpty(stop) ? null : List.copyOf(stop);
         this.tokenizer = tokenizer;
         this.responseFormat = responseFormat == null ? null
                 : ResponseFormat.builder()
@@ -135,6 +141,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .maxOutputTokens(maxTokens)
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty)
+                .stopSequences(this.stop)
                 .build();
     }
 
@@ -184,9 +191,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .temperature(getOrDefault(parameters.temperature(), temperature))
                 .topP(getOrDefault(parameters.topP(), topP))
                 .maxTokens(getOrDefault(parameters.maxOutputTokens(), maxTokens))
+                .maxCompletionTokens(maxCompletionTokens)
                 .reasoningEffort(reasoningEffort)
                 .presencePenalty(getOrDefault(parameters.presencePenalty(), presencePenalty))
                 .frequencyPenalty(getOrDefault(parameters.frequencyPenalty(), frequencyPenalty))
+                .stop(isNullOrEmpty(parameters.stopSequences()) ? stop : parameters.stopSequences())
                 .responseFormat(responseFormat);
 
         if (usesV1Endpoint()) {
@@ -276,9 +285,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         private Double temperature;
         private Double topP;
         private Integer maxTokens;
+        private Integer maxCompletionTokens;
         private String reasoningEffort;
         private Double presencePenalty;
         private Double frequencyPenalty;
+        private List<String> stop;
         private Duration timeout;
         private Proxy proxy;
         private String responseFormat;
@@ -352,6 +363,15 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             return this;
         }
 
+        /**
+         * Sets {@code max_completion_tokens}, the upper bound for the generated tokens, including reasoning tokens.
+         * Reasoning models reject {@code max_tokens} and need this one instead.
+         */
+        public Builder maxCompletionTokens(Integer maxCompletionTokens) {
+            this.maxCompletionTokens = maxCompletionTokens;
+            return this;
+        }
+
         public Builder reasoningEffort(String reasoningEffort) {
             this.reasoningEffort = reasoningEffort;
             return this;
@@ -364,6 +384,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
         public Builder frequencyPenalty(Double frequencyPenalty) {
             this.frequencyPenalty = frequencyPenalty;
+            return this;
+        }
+
+        public Builder stop(List<String> stop) {
+            this.stop = stop;
             return this;
         }
 
@@ -417,9 +442,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                     temperature,
                     topP,
                     maxTokens,
+                    maxCompletionTokens,
                     reasoningEffort,
                     presencePenalty,
                     frequencyPenalty,
+                    stop,
                     timeout,
                     proxy,
                     responseFormat,

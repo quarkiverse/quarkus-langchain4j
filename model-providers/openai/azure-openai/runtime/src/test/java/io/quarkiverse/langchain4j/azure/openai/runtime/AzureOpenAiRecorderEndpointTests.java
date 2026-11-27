@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -370,6 +371,16 @@ class AzureOpenAiRecorderEndpointTests {
                 @Override
                 public Double frequencyPenalty() {
                     return null;
+                }
+
+                @Override
+                public Optional<Integer> maxCompletionTokens() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<List<String>> stop() {
+                    return Optional.empty();
                 }
 
                 @Override
