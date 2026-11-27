@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.mvnpm</groupId>
             <artifactId>jquery</artifactId>
-            <version>3.7.1</version>
+            <version>3.8.0</version>
         </dependency>
         <dependency>
             <groupId>org.mvnpm.at.fortawesome</groupId>
@@ -82,7 +82,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.1</version>
+                <version>3.6.1</version>
                 <configuration>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
@@ -105,7 +105,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>3.5.1</version>
+                        <version>3.6.1</version>
                         <executions>
                             <execution>
                                 <goals>
