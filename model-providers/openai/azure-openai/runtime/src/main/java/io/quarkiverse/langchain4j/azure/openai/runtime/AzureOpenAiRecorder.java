@@ -225,7 +225,8 @@ public class AzureOpenAiRecorder {
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), azureAiConfig.logResponses()));
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .user(embeddingModelConfig.user().orElse(null));
 
             azureAiConfig.proxyHost().ifPresent(host -> {
                 builder.proxy(new Proxy(

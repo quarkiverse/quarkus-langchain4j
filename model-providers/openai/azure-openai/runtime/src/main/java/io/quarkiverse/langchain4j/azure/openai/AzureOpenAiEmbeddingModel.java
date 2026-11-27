@@ -48,6 +48,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
     private final Integer maxRetries;
     private final TokenCountEstimator tokenizer;
     private final String requestModel;
+    private final String user;
 
     public AzureOpenAiEmbeddingModel(String endpoint,
             String apiVersion,
@@ -76,6 +77,23 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
             Boolean logResponses,
             String configName,
             String modelName) {
+        this(endpoint, apiVersion, apiKey, adToken, tokenizer, timeout, maxRetries, proxy, logRequests, logResponses,
+                configName, modelName, null);
+    }
+
+    public AzureOpenAiEmbeddingModel(String endpoint,
+            String apiVersion,
+            String apiKey,
+            String adToken,
+            TokenCountEstimator tokenizer,
+            Duration timeout,
+            Integer maxRetries,
+            Proxy proxy,
+            Boolean logRequests,
+            Boolean logResponses,
+            String configName,
+            String modelName,
+            String user) {
 
         // v1 endpoints are not versioned and have no deployment in the URL, so the deployment is selected through the model
         this.requestModel = apiVersion == null ? modelName : null;
@@ -101,6 +119,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
                 .build();
         this.maxRetries = getOrDefault(maxRetries, 3);
         this.tokenizer = tokenizer;
+        this.user = user;
     }
 
     /**
@@ -133,6 +152,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
             EmbeddingRequest request = EmbeddingRequest.builder()
                     .model(requestModel)
                     .input(batch)
+                    .user(user)
                     .build();
 
             EmbeddingResponse response = withRetry(() -> client.embedding(request).execute(), maxRetries);
@@ -167,6 +187,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
         private String adToken;
         private String configName;
         private String modelName;
+        private String user;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -254,6 +275,17 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
             return this;
         }
 
+        /**
+         * Sets the unique identifier representing the end-user, sent as the request's {@code user}.
+         *
+         * @param user The end-user identifier.
+         * @return builder
+         */
+        public Builder user(String user) {
+            this.user = user;
+            return this;
+        }
+
         public AzureOpenAiEmbeddingModel build() {
             return new AzureOpenAiEmbeddingModel(endpoint,
                     apiVersion,
@@ -266,7 +298,8 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
                     logRequests,
                     logResponses,
                     configName,
-                    modelName);
+                    modelName,
+                    user);
         }
     }
 }

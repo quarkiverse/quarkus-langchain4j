@@ -5269,6 +5269,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-user]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-user[`+++quarkus.langchain4j.azure-openai.embedding-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.embedding-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A unique identifier representing your end-user, which can help Azure OpenAI to monitor and detect abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-resource-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-resource-name[`+++quarkus.langchain4j.azure-openai.image-model.resource-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.azure-openai.image-model.resource-name+++[]
@@ -6751,6 +6772,27 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-user]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-user[`+++quarkus.langchain4j.azure-openai."model-name".embedding-model.user+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".embedding-model.user+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+A unique identifier representing your end-user, which can help Azure OpenAI to monitor and detect abuse.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-resource-name]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-resource-name[`+++quarkus.langchain4j.azure-openai."model-name".image-model.resource-name+++`]##
 ifdef::add-copy-button-to-config-props[]
