@@ -30,7 +30,8 @@ public class AzureOpenAiChatModelExplicitSamplingParamsTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.temperature", "0.3")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.top-p", "0.8")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.reasoning-effort", "medium");
+            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.reasoning-effort", "medium")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.chat-model.seed", "42");
 
     @Inject
     ChatModel chatModel;
@@ -83,5 +84,6 @@ public class AzureOpenAiChatModelExplicitSamplingParamsTest {
         assertThat(requestBody.get("temperature").doubleValue()).isEqualTo(0.3);
         assertThat(requestBody.get("top_p").doubleValue()).isEqualTo(0.8);
         assertThat(requestBody.get("reasoning_effort").stringValue()).isEqualTo("medium");
+        assertThat(requestBody.get("seed").intValue()).isEqualTo(42);
     }
 }

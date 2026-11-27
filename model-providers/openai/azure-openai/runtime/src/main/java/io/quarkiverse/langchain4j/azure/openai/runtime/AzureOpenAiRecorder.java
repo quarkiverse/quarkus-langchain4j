@@ -182,6 +182,10 @@ public class AzureOpenAiRecorder {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
 
+            if (chatModelConfig.seed().isPresent()) {
+                builder.seed(chatModelConfig.seed().get());
+            }
+
             return new Function<>() {
                 @Override
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {

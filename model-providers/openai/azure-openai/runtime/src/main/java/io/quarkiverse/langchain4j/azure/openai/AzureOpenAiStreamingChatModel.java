@@ -67,6 +67,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
     private final String modelName;
     private final Double temperature;
     private final Double topP;
+    private final Integer seed;
     private final Integer maxTokens;
     private final String reasoningEffort;
     private final Double presencePenalty;
@@ -84,6 +85,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             TokenCountEstimator tokenizer,
             Double temperature,
             Double topP,
+            Integer seed,
             Integer maxTokens,
             String reasoningEffort,
             Double presencePenalty,
@@ -119,6 +121,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .build();
         this.temperature = temperature;
         this.topP = topP;
+        this.seed = seed;
         this.maxTokens = maxTokens;
         this.reasoningEffort = reasoningEffort;
         this.presencePenalty = presencePenalty;
@@ -183,6 +186,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .messages(toOpenAiMessages(messages))
                 .temperature(getOrDefault(parameters.temperature(), temperature))
                 .topP(getOrDefault(parameters.topP(), topP))
+                .seed(seed)
                 .maxTokens(getOrDefault(parameters.maxOutputTokens(), maxTokens))
                 .reasoningEffort(reasoningEffort)
                 .presencePenalty(getOrDefault(parameters.presencePenalty(), presencePenalty))
@@ -275,6 +279,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         private TokenCountEstimator tokenizer;
         private Double temperature;
         private Double topP;
+        private Integer seed;
         private Integer maxTokens;
         private String reasoningEffort;
         private Double presencePenalty;
@@ -347,6 +352,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             return this;
         }
 
+        public Builder seed(Integer seed) {
+            this.seed = seed;
+            return this;
+        }
+
         public Builder maxTokens(Integer maxTokens) {
             this.maxTokens = maxTokens;
             return this;
@@ -416,6 +426,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                     tokenizer,
                     temperature,
                     topP,
+                    seed,
                     maxTokens,
                     reasoningEffort,
                     presencePenalty,
