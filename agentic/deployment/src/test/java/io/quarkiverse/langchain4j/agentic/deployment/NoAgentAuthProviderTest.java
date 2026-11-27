@@ -34,5 +34,6 @@ public class NoAgentAuthProviderTest {
 
         assertThat(remote.invoke(Map.of("input", "hello"))).isEqualTo("pong");
         assertThat(agent.receivedAuthorization()).containsExactly("null");
+        assertThat(agent.cardAuthorization()).containsExactly("null");
     }
 }

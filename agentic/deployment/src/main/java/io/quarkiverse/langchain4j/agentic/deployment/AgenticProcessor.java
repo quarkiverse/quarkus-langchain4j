@@ -65,7 +65,7 @@ import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
 import io.quarkiverse.langchain4j.agentic.runtime.ClassAgentDelegate;
 import io.quarkiverse.langchain4j.agentic.runtime.ClassBasedAgent;
 import io.quarkiverse.langchain4j.agentic.runtime.DecisionAgentInfo;
-import io.quarkiverse.langchain4j.agentic.runtime.a2a.A2AAgentAuth;
+import io.quarkiverse.langchain4j.agentic.runtime.a2a.AgentAuthClientConfigurator;
 import io.quarkiverse.langchain4j.deployment.AiServicesProcessor;
 import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.ClassBasedAiServiceBuildItem;
@@ -113,6 +113,7 @@ import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.gizmo.CatchBlockCreator;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -128,7 +129,7 @@ public class AgenticProcessor {
 
     // langchain4j-agentic-a2a, which creates the A2A client agents, is optional: a class literal would fail the build
     // of the applications that don't use it
-    private static final String A2A_SERVICE_IMPLEMENTATION = "dev.langchain4j.agentic.a2a.DefaultA2AService";
+    private static final String A2A_CLIENT_CONFIGURATOR = "dev.langchain4j.agentic.a2a.A2AClientConfigurator";
 
     /**
      * The annotations of the agents that langchain4j-agentic implements with an AI service built from their interface:
@@ -2717,18 +2718,11 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    void registerA2AAgentAuth(BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
-        if (QuarkusClassLoader.isClassPresentAtRuntime(A2A_SERVICE_IMPLEMENTATION)) {
-            additionalBeans.produce(AdditionalBeanBuildItem.builder().addBeanClass(A2AAgentAuth.class)
-                    .setDefaultScope(BuiltinScope.SINGLETON.getName()).setUnremovable().build());
-        }
-    }
-
-    @BuildStep
-    @Record(ExecutionTime.RUNTIME_INIT)
-    void configureA2AAgentAuth(BeanContainerBuildItem beanContainer, AgenticRecorder recorder) {
-        if (QuarkusClassLoader.isClassPresentAtRuntime(A2A_SERVICE_IMPLEMENTATION)) {
-            recorder.configureA2AAgentAuth(beanContainer.getValue());
+    void registerA2AAgentAuth(BuildProducer<ServiceProviderBuildItem> serviceProviders) {
+        // Loaded by langchain4j-agentic-a2a with the ServiceLoader, also in native mode
+        if (QuarkusClassLoader.isClassPresentAtRuntime(A2A_CLIENT_CONFIGURATOR)) {
+            serviceProviders.produce(new ServiceProviderBuildItem(A2A_CLIENT_CONFIGURATOR,
+                    AgentAuthClientConfigurator.class.getName()));
         }
     }
 

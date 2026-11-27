@@ -14,7 +14,7 @@ import com.sun.net.httpserver.HttpServer;
 
 /**
  * A fake A2A agent named "Secured Agent", which answers "pong" and records the {@code Authorization} header of each
- * A2A request.
+ * A2A request and of each Agent Card request.
  */
 final class StubA2AAgent implements AutoCloseable {
 
@@ -22,6 +22,7 @@ final class StubA2AAgent implements AutoCloseable {
 
     private final HttpServer server;
     private final List<String> receivedAuthorization = new CopyOnWriteArrayList<>();
+    private final List<String> cardAuthorization = new CopyOnWriteArrayList<>();
 
     StubA2AAgent() {
         try {
@@ -42,6 +43,11 @@ final class StubA2AAgent implements AutoCloseable {
         return receivedAuthorization;
     }
 
+    // The Authorization header of each Agent Card request, "null" when there was none
+    List<String> cardAuthorization() {
+        return cardAuthorization;
+    }
+
     @Override
     public void close() {
         server.stop(0);
@@ -49,6 +55,7 @@ final class StubA2AAgent implements AutoCloseable {
 
     private void handle(HttpExchange exchange) throws IOException {
         if (exchange.getRequestURI().getPath().equals("/.well-known/agent-card.json")) {
+            cardAuthorization.add(String.valueOf(exchange.getRequestHeaders().getFirst("Authorization")));
             respond(exchange, """
                     {
                       "name": "Secured Agent",

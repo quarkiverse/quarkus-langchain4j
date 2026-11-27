@@ -1266,13 +1266,13 @@ public class AgentTokens implements AgentAuthProvider {
 ----
 <1> For example a Quarkus OIDC client, which refreshes the token.
 <2> Called for every request. `input.agentName()` and `input.agentUrl()` identify the agent, so the provider can choose
-credentials per agent. Returning `null` sends no `Authorization` header.
+credentials per agent. `input.agentName()` is the name in the remote agent's Agent Card, except for the request that
+fetches that card, where it is the name of the local A2A client agent. Returning `null` sends no `Authorization` header.
 
 Only one `AgentAuthProvider` bean is supported.
 
-The header is added by an interceptor on the client's JSON-RPC transport. An `@A2AClientCustomizer` method runs after it,
-so a customizer that configures the JSON-RPC transport itself replaces that interceptor and has to add the credentials
-itself.
+The header is sent with the request that fetches the agent's Agent Card and with every message, on every transport
+(JSON-RPC, gRPC and REST). An `@A2AClientCustomizer` method cannot remove it, even when it configures a transport.
 
 == Discovering A2A Agents with Apicurio Registry
 
