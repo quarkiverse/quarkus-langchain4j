@@ -515,6 +515,26 @@ class AzureOpenAiRecorderEndpointTests {
                 }
 
                 @Override
+                public Optional<String> outputFormat() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> background() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<Integer> outputCompression() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> moderation() {
+                    return Optional.empty();
+                }
+
+                @Override
                 public Optional<Boolean> logRequests() {
                     return Optional.empty();
                 }

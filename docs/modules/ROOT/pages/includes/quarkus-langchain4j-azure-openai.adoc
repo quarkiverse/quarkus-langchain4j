@@ -1339,6 +1339,104 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-output-format]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-output-format[`+++quarkus.langchain4j.azure-openai.image-model.output-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.image-model.output-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The output format of the generated image.
+
+Supported values: `png`, `jpeg`, `webp`.
+
+Only applies to `gpt-image-1` deployments.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_OUTPUT_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_OUTPUT_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-background]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-background[`+++quarkus.langchain4j.azure-openai.image-model.background+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.image-model.background+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The background type for the generated image.
+
+Supported values: `transparent`, `opaque`, `auto`.
+
+Only applies to `gpt-image-1` deployments. Transparent backgrounds require `output-format` set to `png` or `webp`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_BACKGROUND+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_BACKGROUND+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-output-compression]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-output-compression[`+++quarkus.langchain4j.azure-openai.image-model.output-compression+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.image-model.output-compression+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The compression level for the generated image (0-100).
+
+Only applies to `gpt-image-1` deployments with `jpeg` or `webp` output formats.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_OUTPUT_COMPRESSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_OUTPUT_COMPRESSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-moderation]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-moderation[`+++quarkus.langchain4j.azure-openai.image-model.moderation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.image-model.moderation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The moderation level for the image generation request.
+
+Supported values: `low`, `auto`.
+
+Only applies to `gpt-image-1` deployments.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_MODERATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_MODERATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-log-requests[`+++quarkus.langchain4j.azure-openai.image-model.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.azure-openai.image-model.log-requests+++[]
@@ -2817,6 +2915,104 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPEN
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-output-format]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-output-format[`+++quarkus.langchain4j.azure-openai."model-name".image-model.output-format+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".image-model.output-format+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The output format of the generated image.
+
+Supported values: `png`, `jpeg`, `webp`.
+
+Only applies to `gpt-image-1` deployments.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_OUTPUT_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_OUTPUT_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-background]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-background[`+++quarkus.langchain4j.azure-openai."model-name".image-model.background+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".image-model.background+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The background type for the generated image.
+
+Supported values: `transparent`, `opaque`, `auto`.
+
+Only applies to `gpt-image-1` deployments. Transparent backgrounds require `output-format` set to `png` or `webp`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_BACKGROUND+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_BACKGROUND+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-output-compression]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-output-compression[`+++quarkus.langchain4j.azure-openai."model-name".image-model.output-compression+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".image-model.output-compression+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The compression level for the generated image (0-100).
+
+Only applies to `gpt-image-1` deployments with `jpeg` or `webp` output formats.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_OUTPUT_COMPRESSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_OUTPUT_COMPRESSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-moderation]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-moderation[`+++quarkus.langchain4j.azure-openai."model-name".image-model.moderation+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".image-model.moderation+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The moderation level for the image generation request.
+
+Supported values: `low`, `auto`.
+
+Only applies to `gpt-image-1` deployments.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_MODERATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_MODERATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string

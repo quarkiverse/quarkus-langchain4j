@@ -38,6 +38,10 @@ public class AzureOpenAiImageModel implements ImageModel {
     private final Optional<String> user;
     private final Integer maxRetries;
     private final Optional<Path> persistDirectory;
+    private final String outputFormat;
+    private final String background;
+    private final Integer outputCompression;
+    private final String moderation;
 
     private final QuarkusOpenAiClient client;
 
@@ -45,12 +49,25 @@ public class AzureOpenAiImageModel implements ImageModel {
             String size, String quality, Optional<String> user, Duration timeout,
             Integer maxRetries, Boolean logRequests, Boolean logResponses, Boolean logCurl,
             Optional<Path> persistDirectory, String configName) {
+        this(endpoint, apiKey, adToken, apiVersion, modelName, size, quality, user, timeout, maxRetries, logRequests,
+                logResponses, logCurl, persistDirectory, configName, null, null, null, null);
+    }
+
+    public AzureOpenAiImageModel(String endpoint, String apiKey, String adToken, String apiVersion, String modelName,
+            String size, String quality, Optional<String> user, Duration timeout,
+            Integer maxRetries, Boolean logRequests, Boolean logResponses, Boolean logCurl,
+            Optional<Path> persistDirectory, String configName, String outputFormat, String background,
+            Integer outputCompression, String moderation) {
         this.modelName = modelName;
         this.size = size;
         this.quality = quality;
         this.user = user;
         this.maxRetries = maxRetries;
         this.persistDirectory = persistDirectory;
+        this.outputFormat = outputFormat;
+        this.background = background;
+        this.outputCompression = outputCompression;
+        this.moderation = moderation;
 
         this.client = QuarkusOpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
@@ -127,6 +144,18 @@ public class AzureOpenAiImageModel implements ImageModel {
         if (user.isPresent()) {
             builder.user(user.get());
         }
+        if (outputFormat != null) {
+            builder.outputFormat(outputFormat);
+        }
+        if (background != null) {
+            builder.background(background);
+        }
+        if (outputCompression != null) {
+            builder.outputCompression(outputCompression);
+        }
+        if (moderation != null) {
+            builder.moderation(moderation);
+        }
 
         return builder;
     }
@@ -151,6 +180,10 @@ public class AzureOpenAiImageModel implements ImageModel {
         private Boolean logCurl;
         private Optional<Path> persistDirectory;
         private String configName;
+        private String outputFormat;
+        private String background;
+        private Integer outputCompression;
+        private String moderation;
 
         public Builder endpoint(String endpoint) {
             this.endpoint = endpoint;
@@ -227,10 +260,30 @@ public class AzureOpenAiImageModel implements ImageModel {
             return this;
         }
 
+        public Builder outputFormat(String outputFormat) {
+            this.outputFormat = outputFormat;
+            return this;
+        }
+
+        public Builder background(String background) {
+            this.background = background;
+            return this;
+        }
+
+        public Builder outputCompression(Integer outputCompression) {
+            this.outputCompression = outputCompression;
+            return this;
+        }
+
+        public Builder moderation(String moderation) {
+            this.moderation = moderation;
+            return this;
+        }
+
         public AzureOpenAiImageModel build() {
             return new AzureOpenAiImageModel(endpoint, apiKey, adToken, apiVersion, modelName, size, quality, user,
                     timeout, maxRetries, logRequests, logResponses, logCurl,
-                    persistDirectory, configName);
+                    persistDirectory, configName, outputFormat, background, outputCompression, moderation);
         }
     }
 

@@ -107,6 +107,41 @@ public interface ImageModelConfig {
     Optional<String> user();
 
     /**
+     * The output format of the generated image.
+     * <p>
+     * Supported values: {@code png}, {@code jpeg}, {@code webp}.
+     * <p>
+     * Only applies to {@code gpt-image-1} deployments.
+     */
+    Optional<String> outputFormat();
+
+    /**
+     * The background type for the generated image.
+     * <p>
+     * Supported values: {@code transparent}, {@code opaque}, {@code auto}.
+     * <p>
+     * Only applies to {@code gpt-image-1} deployments.
+     * Transparent backgrounds require {@code output-format} set to {@code png} or {@code webp}.
+     */
+    Optional<String> background();
+
+    /**
+     * The compression level for the generated image (0-100).
+     * <p>
+     * Only applies to {@code gpt-image-1} deployments with {@code jpeg} or {@code webp} output formats.
+     */
+    Optional<Integer> outputCompression();
+
+    /**
+     * The moderation level for the image generation request.
+     * <p>
+     * Supported values: {@code low}, {@code auto}.
+     * <p>
+     * Only applies to {@code gpt-image-1} deployments.
+     */
+    Optional<String> moderation();
+
+    /**
      * Whether image model requests should be logged
      */
     @ConfigDocDefault("false")

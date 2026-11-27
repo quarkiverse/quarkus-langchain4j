@@ -278,6 +278,11 @@ public class AzureOpenAiRecorder {
                     .quality(imageModelConfig.quality())
                     .user(imageModelConfig.user());
 
+            imageModelConfig.outputFormat().ifPresent(builder::outputFormat);
+            imageModelConfig.background().ifPresent(builder::background);
+            imageModelConfig.outputCompression().ifPresent(builder::outputCompression);
+            imageModelConfig.moderation().ifPresent(builder::moderation);
+
             // we persist if the directory was set explicitly and the boolean flag was not set to false
             // or if the boolean flag was set explicitly to true
             Optional<Path> persistDirectory = Optional.empty();
