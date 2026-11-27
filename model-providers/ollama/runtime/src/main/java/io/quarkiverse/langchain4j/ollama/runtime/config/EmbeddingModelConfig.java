@@ -43,6 +43,14 @@ public interface EmbeddingModelConfig {
     Integer topK();
 
     /**
+     * The maximum number of text segments sent to Ollama in a single {@code /api/embed} request. Embedding more
+     * segments at once (for example when ingesting documents) splits them into consecutive requests of at most
+     * this size, so a large ingestion does not turn into one request whose size grows with the corpus.
+     */
+    @WithDefault("100")
+    Integer maxSegmentsPerBatch();
+
+    /**
      * Whether embedding model requests should be logged
      */
     @ConfigDocDefault("false")

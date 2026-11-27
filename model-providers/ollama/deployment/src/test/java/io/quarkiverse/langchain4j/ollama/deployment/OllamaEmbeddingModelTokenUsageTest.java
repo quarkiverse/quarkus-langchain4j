@@ -19,6 +19,7 @@ import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.mockapi.CapturedRequest;
 import io.quarkiverse.langchain4j.mockapi.MockModelServer;
 import io.quarkus.test.QuarkusExtensionTest;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Raw stubs: the mock derives {@code prompt_eval_count} from the number of inputs, while these tests need specific
@@ -68,19 +69,13 @@ public class OllamaEmbeddingModelTokenUsageTest {
     }
 
     @Test
-    void shouldSumTokenUsageAcrossSegments() {
-        mock.raw().on("POST", "/ollama/api/embed").whenBody("/input", "first").reply(200, """
+    void shouldReportTokenUsageOfTheBatchedRequest() {
+        // Ollama reports one prompt_eval_count for the whole batch
+        mock.raw().on("POST", "/ollama/api/embed").reply(200, """
                 {
                   "model": "nomic-embed-text",
-                  "embeddings": [[0.1, 0.2]],
-                  "prompt_eval_count": 3
-                }
-                """);
-        mock.raw().on("POST", "/ollama/api/embed").whenBody("/input", "second").reply(200, """
-                {
-                  "model": "nomic-embed-text",
-                  "embeddings": [[0.3, 0.4]],
-                  "prompt_eval_count": 5
+                  "embeddings": [[0.1, 0.2], [0.3, 0.4]],
+                  "prompt_eval_count": 8
                 }
                 """);
 
@@ -88,11 +83,14 @@ public class OllamaEmbeddingModelTokenUsageTest {
                 .embedAll(List.of(TextSegment.from("first"), TextSegment.from("second")));
 
         assertThat(response.content()).hasSize(2);
+        assertThat(response.content().get(0).vector()).containsExactly(0.1f, 0.2f);
+        assertThat(response.content().get(1).vector()).containsExactly(0.3f, 0.4f);
         assertThat(response.tokenUsage()).isNotNull();
         assertThat(response.tokenUsage().inputTokenCount()).isEqualTo(8);
 
-        assertThat(mock.requests()).extracting(r -> r.bodyAsJson().at("/input").asText())
-                .containsExactlyInAnyOrder("first", "second");
+        assertThat(mock.requests()).singleElement()
+                .satisfies(r -> assertThat(r.bodyAsJson().at("/input")).extracting(JsonNode::asText)
+                        .containsExactly("first", "second"));
     }
 
     @Test
