@@ -367,6 +367,22 @@ You can disable automatic schema insertion via configuration:
 quarkus.langchain4j.response-schema=false
 ----
 
+=== Validating the response
+
+If the `quarkus-hibernate-validator` extension is present, annotate the AI service method with `@Valid` to validate the object built from the LLM response, like any other CDI bean method:
+
+[source,java]
+----
+public record ReviewResponse(@NotBlank String evaluation, @Min(1) @Max(5) int rating) {
+}
+
+@UserMessage("Evaluate review: {review}. Respond in JSON.")
+@Valid
+ReviewResponse evaluate(String review);
+----
+
+If the response violates a constraint, the method throws a `ConstraintViolationException`.
+
 == Streaming Responses
 
 AI Services can stream responses from the LLM token-by-token. Define the method to return a reactive stream (`Multi<String>`):
