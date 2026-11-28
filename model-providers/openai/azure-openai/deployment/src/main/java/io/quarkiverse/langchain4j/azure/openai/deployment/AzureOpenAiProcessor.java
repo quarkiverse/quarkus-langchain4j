@@ -17,6 +17,8 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.model.openai.OpenAiResponsesChatModel;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiAudioTranscriptionModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
@@ -42,6 +44,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 public class AzureOpenAiProcessor {
 
@@ -52,6 +55,10 @@ public class AzureOpenAiProcessor {
             .createSimple(AzureOpenAiChatModel.Builder.class);
     private static final DotName AZURE_OPENAI_STREAMING_CHAT_MODEL_BUILDER = DotName
             .createSimple(AzureOpenAiStreamingChatModel.Builder.class);
+    private static final DotName OPENAI_RESPONSES_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiResponsesChatModel.Builder.class);
+    private static final DotName OPENAI_RESPONSES_STREAMING_CHAT_MODEL_BUILDER = DotName
+            .createSimple(OpenAiResponsesStreamingChatModel.Builder.class);
     private static final DotName AZURE_OPENAI_EMBEDDING_MODEL_BUILDER = DotName
             .createSimple(AzureOpenAiEmbeddingModel.Builder.class);
     private static final DotName AZURE_OPENAI_IMAGE_MODEL_BUILDER = DotName
@@ -65,6 +72,13 @@ public class AzureOpenAiProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    ReflectiveClassBuildItem responsesModelsForReflection() {
+        // chat-model.mode=responses uses the LangChain4j Responses models, as the openai extension does
+        return ReflectiveClassBuildItem.builder(OpenAiResponsesChatModel.class, OpenAiResponsesStreamingChatModel.class)
+                .methods().fields().build();
     }
 
     @BuildStep
@@ -115,6 +129,11 @@ public class AzureOpenAiProcessor {
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(AZURE_OPENAI_CHAT_MODEL_BUILDER) }, null) },
                                 null), ANY)
+                        // chat-model.mode=responses builds an OpenAiResponsesChatModel instead
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_RESPONSES_CHAT_MODEL_BUILDER) }, null) },
+                                null), ANY)
                         .createWith(chatModel);
                 addQualifierIfNecessary(chatBuilder, configName);
                 beanProducer.produce(chatBuilder.done());
@@ -132,6 +151,12 @@ public class AzureOpenAiProcessor {
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
                                         new Type[] { ClassType.create(AZURE_OPENAI_STREAMING_CHAT_MODEL_BUILDER) },
+                                        null) },
+                                null), ANY)
+                        // chat-model.mode=responses builds an OpenAiResponsesStreamingChatModel instead
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ParameterizedType.create(DotNames.MODEL_BUILDER_CUSTOMIZER,
+                                        new Type[] { ClassType.create(OPENAI_RESPONSES_STREAMING_CHAT_MODEL_BUILDER) },
                                         null) },
                                 null), ANY)
                         .createWith(streamingChatModel);
