@@ -409,7 +409,53 @@ public final class AiServiceMethodCreateInfo {
         }
     }
 
-    public record SpanInfo(String name) {
+    /**
+     * @param name the span name
+     * @param recordedParameters the parameters whose arguments may be recorded on the span, in declaration order;
+     *        the ones the framework consumes itself, such as the memory id, are left out
+     * @param resultKind how the result of the method is turned into a recorded value
+     */
+    public record SpanInfo(String name, List<RecordedParameter> recordedParameters, SpanResultKind resultKind) {
+    }
+
+    /**
+     * A method parameter whose argument may be recorded on the AI service span.
+     *
+     * @param position the position of the parameter
+     * @param name the key of the argument in the recorded JSON object: the {@code @V} value if there is one, the
+     *        parameter name otherwise
+     */
+    public record RecordedParameter(int position, String name) {
+    }
+
+    /**
+     * How the result of an AI service method is recorded on its span.
+     */
+    public enum SpanResultKind {
+        /**
+         * Nothing is recorded, for image results.
+         */
+        NONE,
+        /**
+         * The returned value is recorded, raw for a {@code String} and as JSON otherwise.
+         */
+        VALUE,
+        /**
+         * The content of the returned {@code Result} is recorded, the same way as {@link #VALUE}.
+         */
+        RESULT,
+        /**
+         * The streamed {@code String} items are concatenated.
+         */
+        TEXT_STREAM,
+        /**
+         * The text of the final AI message of a stream of {@code ChatEvent} is recorded.
+         */
+        EVENT_STREAM,
+        /**
+         * The text of the final AI message of a {@code TokenStream} is recorded.
+         */
+        TOKEN_STREAM
     }
 
     public record ResponseSchemaInfo(boolean enabled, boolean isInSystemMessage, Optional<Boolean> isInUserMessage,

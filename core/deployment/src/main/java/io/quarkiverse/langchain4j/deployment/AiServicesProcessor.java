@@ -2490,7 +2490,8 @@ public class AiServicesProcessor {
                 addMicrometerMetrics);
         Optional<AiServiceMethodCreateInfo.MetricsCountedInfo> metricsCountedInfo = gatherMetricsCountedInfo(method,
                 addMicrometerMetrics);
-        Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
+        Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, index, addOpenTelemetrySpans,
+                chatRequestParametersParamPosition, overrideChatModelParamPosition);
         Map<String, AnnotationLiteral<?>> methodToolClassInfo = skipToolBoxPredicate.test(method)
                 ? Collections.emptyMap()
                 : gatherMethodToolInfo(method, index,
@@ -3186,17 +3187,97 @@ public class AiServicesProcessor {
         return tags;
     }
 
-    private Optional<AiServiceMethodCreateInfo.SpanInfo> gatherSpanInfo(MethodInfo method,
-            boolean addOpenTelemetrySpans) {
-        if (!addOpenTelemetrySpans) {
-            return Optional.empty();
+    private Optional<AiServiceMethodCreateInfo.SpanInfo> gatherSpanInfo(MethodInfo method, IndexView index,
+            boolean addOpenTelemetrySpans, Optional<Integer> chatRequestParametersParamPosition,
+            Optional<Integer> overrideChatModelParamPosition) {
+        if (addOpenTelemetrySpans) {
+            return Optional.of(new AiServiceMethodCreateInfo.SpanInfo(defaultAiServiceSpanName(method),
+                    gatherRecordedParameters(method, index, chatRequestParametersParamPosition,
+                            overrideChatModelParamPosition),
+                    spanResultKind(method.returnType())));
         }
+        return Optional.empty();
+    }
 
-        String name = defaultAiServiceSpanName(method);
+    /**
+     * The parameters whose arguments are call data: all of them except the ones the framework consumes itself (the
+     * memory id, the user name, the media and {@code Content} parameters, {@code InvocationParameters} and
+     * {@code ChatRequestParameters}) and the {@code @ModelName} override.
+     */
+    private static List<AiServiceMethodCreateInfo.RecordedParameter> gatherRecordedParameters(MethodInfo method,
+            IndexView index, Optional<Integer> chatRequestParametersParamPosition,
+            Optional<Integer> overrideChatModelParamPosition) {
+        List<Optional<Integer>> candidatePositions = List.of(
+                determineImageParamPosition(method),
+                determineAudioParamPosition(method),
+                determinePdfParamPosition(method),
+                determineVideoParamPosition(method),
+                chatRequestParametersParamPosition,
+                overrideChatModelParamPosition);
+        Set<Integer> skippedPositions = new HashSet<>();
+        for (Optional<Integer> candidatePosition : candidatePositions) {
+            if (candidatePosition.isPresent()) {
+                skippedPositions.add(candidatePosition.get());
+            }
+        }
+        List<AiServiceMethodCreateInfo.RecordedParameter> recordedParameters = new ArrayList<>();
+        for (MethodParameterInfo parameter : method.parameters()) {
+            int position = parameter.position();
+            if (!skippedPositions.contains(position) && !isFrameworkParameter(parameter, index)) {
+                recordedParameters.add(new AiServiceMethodCreateInfo.RecordedParameter(position,
+                        recordedParameterName(parameter)));
+            }
+        }
+        return recordedParameters;
+    }
 
-        // TODO: add more
+    private static boolean isFrameworkParameter(MethodParameterInfo parameter, IndexView index) {
+        return parameter.hasAnnotation(LangChain4jDotNames.USER_NAME)
+                || parameter.hasAnnotation(LangChain4jDotNames.MEMORY_ID)
+                || parameter.type().name().equals(INVOCATION_PARAMETERS)
+                || isContentParam(parameter, index);
+    }
 
-        return Optional.of(new AiServiceMethodCreateInfo.SpanInfo(name));
+    private static String recordedParameterName(MethodParameterInfo parameter) {
+        AnnotationInstance v = parameter.annotation(LangChain4jDotNames.V);
+        return ((v != null) && (v.value() != null)) ? v.value().asString() : parameter.name();
+    }
+
+    private static AiServiceMethodCreateInfo.SpanResultKind spanResultKind(Type returnType) {
+        DotName name = returnType.name();
+        AiServiceMethodCreateInfo.SpanResultKind kind;
+        if (LangChain4jDotNames.IMAGE.equals(name)) {
+            kind = AiServiceMethodCreateInfo.SpanResultKind.NONE;
+        } else if (LangChain4jDotNames.TOKEN_STREAM.equals(name)) {
+            kind = AiServiceMethodCreateInfo.SpanResultKind.TOKEN_STREAM;
+        } else if (LangChain4jDotNames.RESULT.equals(name)) {
+            kind = LangChain4jDotNames.IMAGE.equals(firstTypeArgument(returnType))
+                    ? AiServiceMethodCreateInfo.SpanResultKind.NONE
+                    : AiServiceMethodCreateInfo.SpanResultKind.RESULT;
+        } else if (DotNames.MULTI.equals(name) || DotNames.FLOW_PUBLISHER.equals(name)) {
+            DotName itemType = firstTypeArgument(returnType);
+            if (DotNames.STRING.equals(itemType)) {
+                kind = AiServiceMethodCreateInfo.SpanResultKind.TEXT_STREAM;
+            } else if (LangChain4jDotNames.CHAT_EVENT.equals(itemType)) {
+                kind = AiServiceMethodCreateInfo.SpanResultKind.EVENT_STREAM;
+            } else {
+                kind = AiServiceMethodCreateInfo.SpanResultKind.NONE;
+            }
+        } else {
+            kind = AiServiceMethodCreateInfo.SpanResultKind.VALUE;
+        }
+        return kind;
+    }
+
+    /**
+     * The name of the first type argument, or {@code null} when the type is not parameterized.
+     */
+    private static DotName firstTypeArgument(Type type) {
+        DotName argument = null;
+        if ((type.kind() == Type.Kind.PARAMETERIZED_TYPE) && !type.asParameterizedType().arguments().isEmpty()) {
+            argument = type.asParameterizedType().arguments().get(0).name();
+        }
+        return argument;
     }
 
     private Map<String, AnnotationLiteral<?>> gatherMethodToolInfo(MethodInfo method, IndexView index,
