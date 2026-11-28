@@ -84,6 +84,7 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
+import io.quarkus.arc.deployment.ConfigPropertyBuildItem;
 import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
@@ -160,6 +161,26 @@ public class AgenticProcessor {
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-agentic"));
+    }
+
+    /**
+     * Indexes the API jars that declare the qualifiers an application injects beans with and have no Jandex index. A
+     * parameter of a helper method is resolved from CDI when the class of one of its annotations is annotated with
+     * {@code @Qualifier}, and that class is read from the index, so without these jars a qualifier like {@code @Named}
+     * or {@code @ConfigProperty} is not recognized. A jar that is not among the dependencies of the application is
+     * ignored.
+     */
+    @BuildStep
+    void indexQualifierApis(BuildProducer<IndexDependencyBuildItem> producer) {
+        // @Named
+        producer.produce(new IndexDependencyBuildItem("jakarta.inject", "jakarta.inject-api"));
+        // @Default and @Any
+        producer.produce(new IndexDependencyBuildItem("jakarta.cdi", "jakarta.cdi-api"));
+        // @ConfigProperty and @ConfigProperties
+        producer.produce(new IndexDependencyBuildItem("org.eclipse.microprofile.config", "microprofile-config-api"));
+        // @RestClient
+        producer.produce(new IndexDependencyBuildItem("org.eclipse.microprofile.rest.client",
+                "microprofile-rest-client-api"));
     }
 
     /**
@@ -1035,7 +1056,11 @@ public class AgenticProcessor {
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         for (MethodParameterInfo param : cdiResolvableParams(detectedAiAgentBuildItems, nonAiAgents,
                 indexBuildItem.getIndex())) {
-            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(param.type().name()));
+            Type type = param.type();
+            // a primitive parameter is resolved by a bean of its wrapper type
+            DotName beanType = type.kind() == Type.Kind.PRIMITIVE ? PrimitiveType.box(type.asPrimitiveType()).name()
+                    : type.name();
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(beanType));
         }
     }
 
@@ -1113,8 +1138,8 @@ public class AgenticProcessor {
             if (qualifiers.isEmpty()) {
                 qualifiers.add(AnnotationInstance.builder(io.quarkus.arc.processor.DotNames.DEFAULT).build());
             }
-            // like at runtime, the bean is looked up by the raw type of the parameter
-            Type type = ClassType.create(param.type().name());
+            // like at runtime, the bean is looked up by the type of the parameter, with its type arguments
+            Type type = param.type();
             Set<BeanInfo> beans = beanResolver.resolveBeans(type, qualifiers);
             String parameterDescription = "parameter no.%d of method '%s' of class '%s'".formatted(
                     param.position(), param.method().name(), param.method().declaringClass().name());
@@ -1133,13 +1158,47 @@ public class AgenticProcessor {
                                 type.name(), qualifiers, parameterDescription, beans)));
                 continue;
             }
-            if (BuiltinScope.DEPENDENT.is(bean.getScope())) {
+            // a configuration value comes from a @Dependent producer, and has nothing to destroy
+            if (BuiltinScope.DEPENDENT.is(bean.getScope())
+                    && !ValidationUtil.hasAnnotation(qualifiers, Set.of(AgenticLangChain4jDotNames.CONFIG_PROPERTY))) {
                 log.warnf("The @Dependent bean %s is created again, and never destroyed, at each invocation of %s. "
                         + "Consider giving it a normal scope, like @ApplicationScoped.", bean, parameterDescription);
             }
         }
         if (!errors.isEmpty()) {
             validationErrors.produce(new ValidationErrorBuildItem(errors));
+        }
+    }
+
+    /**
+     * Makes Quarkus validate, when the application starts, the configuration properties of the parameters annotated
+     * with {@code @ConfigProperty}, as it does for the injection points: these parameters are not injection points, so
+     * a missing property would otherwise fail only when the agent invokes the method declaring the parameter. For the
+     * same reason the property has no default name, so the build fails when the annotation does not declare one.
+     */
+    @BuildStep
+    void validateConfigPropertiesOfCdiResolvableParams(List<DetectedAiAgentBuildItem> aiAgents,
+            DetectedNonAiAgentAsMapBuildItem nonAiAgents,
+            CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<ConfigPropertyBuildItem> configProperties) {
+        for (MethodParameterInfo param : cdiResolvableParams(aiAgents, nonAiAgents, indexBuildItem.getIndex())) {
+            AnnotationInstance configProperty = param.declaredAnnotation(AgenticLangChain4jDotNames.CONFIG_PROPERTY);
+            if (configProperty == null) {
+                continue;
+            }
+            AnnotationValue name = configProperty.value("name");
+            if (name == null || name.asString().isBlank()) {
+                throw new IllegalConfigurationException(("The @ConfigProperty parameter no.%d of method '%s' of class "
+                        + "'%s' must declare the name of the property: the parameter is not an injection point, so "
+                        + "the property has no default name").formatted(param.position(), param.method().name(),
+                                param.method().declaringClass().name()));
+            }
+            if (AgenticLangChain4jDotNames.CONFIG_PROPERTY_CONTAINERS.contains(param.type().name())) {
+                continue;
+            }
+            AnnotationValue defaultValue = configProperty.value("defaultValue");
+            configProperties.produce(ConfigPropertyBuildItem.runtimeInit(name.asString(), param.type(),
+                    defaultValue == null || defaultValue.asString().isEmpty() ? null : defaultValue.asString()));
         }
     }
 

@@ -25,9 +25,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.inject.Default;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Qualifier;
+import jakarta.ws.rs.GET;
 
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -657,6 +662,97 @@ public class CdiHelperParameterResolverTest {
         // the planner answers "done" at once, so no subagent is invoked
         exchangeSupervisor.invoke("convert 100 EUR to USD");
         assertThat(String.join("\n", plannerModels.receivedTexts())).contains("As a Butler, convert 100 EUR to USD");
+    }
+
+    // ── Beans told apart by their type arguments ──
+
+    public interface Signature<T> {
+        String sign(T author);
+    }
+
+    @ApplicationScoped
+    public static class NameSignature implements Signature<String> {
+        @Override
+        public String sign(String author) {
+            return "signed by " + author;
+        }
+    }
+
+    @ApplicationScoped
+    public static class NumberSignature implements Signature<Integer> {
+        @Override
+        public String sign(Integer author) {
+            return "signed by no." + author;
+        }
+    }
+
+    public interface SignedShout {
+        @SequenceAgent(outputKey = "signedShout", subAgents = Shouter.class)
+        String shout(@V("name") String name);
+
+        @Output
+        static String output(@V("shout") String shout, @CdiBean Signature<String> signature) {
+            return shout + " " + signature.sign("Mario");
+        }
+    }
+
+    @Inject
+    SignedShout signedShout;
+
+    @Test
+    void beansToldApartByTheirTypeArguments() {
+        assertThat(signedShout.shout("Luigi")).isEqualTo("LUIGI! signed by Mario");
+    }
+
+    // ── Qualifiers from the API jars without a Jandex index ──
+
+    public interface Closing {
+        String text();
+    }
+
+    @RegisterRestClient(baseUri = "http://localhost:1")
+    public interface PricingClient {
+        @GET
+        String price();
+    }
+
+    @Named("formal")
+    @ApplicationScoped
+    public static class FormalClosing implements Closing {
+        @Override
+        public String text() {
+            return "Yours sincerely";
+        }
+    }
+
+    @Named("casual")
+    @ApplicationScoped
+    public static class CasualClosing implements Closing {
+        @Override
+        public String text() {
+            return "Cheers";
+        }
+    }
+
+    public interface ClosedShout {
+        @SequenceAgent(outputKey = "closedShout", subAgents = Shouter.class)
+        String shout(@V("name") String name);
+
+        // the API jars of Jakarta Inject, CDI and MicroProfile REST Client have no Jandex index: the extension
+        // indexes them, so that the build finds the classes of these qualifiers
+        @Output
+        static String output(@V("shout") String shout, @Named("casual") Closing closing, @Default Threshold threshold,
+                @RestClient PricingClient client) {
+            return shout + " " + closing.text() + " " + threshold.value() + " " + (client != null);
+        }
+    }
+
+    @Inject
+    ClosedShout closedShout;
+
+    @Test
+    void qualifiersFromTheApiJarsWithoutAJandexIndex() {
+        assertThat(closedShout.shout("Luigi")).isEqualTo("LUIGI! Cheers 3 true");
     }
 
     // ── A request scoped bean ──
