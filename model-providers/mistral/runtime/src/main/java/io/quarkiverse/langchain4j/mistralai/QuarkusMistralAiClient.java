@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.mistralai;
 
 import static dev.langchain4j.internal.Utils.isNotNullOrBlank;
+import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 import static dev.langchain4j.model.mistralai.internal.mapper.MistralAiMapper.finishReasonFrom;
 import static dev.langchain4j.model.mistralai.internal.mapper.MistralAiMapper.tokenUsageFrom;
 import static java.util.stream.Collectors.joining;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -28,6 +30,8 @@ import dev.langchain4j.internal.MappingTrackingStreamingChatResponseHandler;
 import dev.langchain4j.internal.ToolCallBuilder;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.CompleteToolCall;
+import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.mistralai.MistralAiChatResponseMetadata;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionChoice;
@@ -101,6 +105,8 @@ public class QuarkusMistralAiClient extends MistralAiClient {
         Queue<ServerSentEvent> rawServerSentEvents = new ConcurrentLinkedQueue<>();
 
         ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
+        // whether the tool call being accumulated has already been reported through onPartialToolCall
+        AtomicBoolean partialToolCallReported = new AtomicBoolean();
 
         restApi.streamingChatCompletion(request, apiKey).subscribe().with(new Consumer<>() {
             @Override
@@ -142,13 +148,24 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                     for (MistralAiToolCall toolCall : toolCalls) {
                         if (isNotNullOrBlank(toolCall.getId())) {
                             if (toolCallBuilder.name() != null) {
-                                toolCallBuilder.buildAndReset();
+                                // a new tool call starts, so the previous one is complete
+                                completeToolCall(toolCallBuilder, partialToolCallReported, trackingHandler);
                             }
                             toolCallBuilder.updateIndex(toolCallBuilder.index() + 1);
                             toolCallBuilder.updateId(toolCall.getId());
                             toolCallBuilder.updateName(toolCall.getFunction().getName());
                         }
-                        toolCallBuilder.appendArguments(toolCall.getFunction().getArguments());
+                        String partialArguments = toolCall.getFunction().getArguments();
+                        if (isNotNullOrEmpty(partialArguments)) {
+                            toolCallBuilder.appendArguments(partialArguments);
+                            partialToolCallReported.set(true);
+                            trackingHandler.onPartialToolCall(PartialToolCall.builder()
+                                    .index(toolCallBuilder.index())
+                                    .id(toolCallBuilder.id())
+                                    .name(toolCallBuilder.name())
+                                    .partialArguments(partialArguments)
+                                    .build());
+                        }
                     }
                 }
 
@@ -183,7 +200,14 @@ public class QuarkusMistralAiClient extends MistralAiClient {
             @Override
             public void run() {
                 if (toolCallBuilder.name() != null) {
-                    toolCallBuilder.buildAndReset();
+                    try {
+                        completeToolCall(toolCallBuilder, partialToolCallReported, trackingHandler);
+                    } catch (Exception e) {
+                        // nothing upstream of a completion callback reports a failure, so without this a handler
+                        // throwing from a tool call callback would leave the stream without any terminal signal
+                        trackingHandler.onError(e);
+                        return;
+                    }
                 }
                 List<ToolExecutionRequest> toolExecutionRequests = List.of();
                 if (toolCallBuilder.hasRequests()) {
@@ -212,6 +236,27 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                 trackingHandler.onCompleteResponse(response);
             }
         });
+    }
+
+    /**
+     * Finishes the tool call being accumulated and reports it through {@code onCompleteToolCall}, the way
+     * langchain4j's own Mistral client does. A tool call that streamed no arguments at all is first announced through
+     * {@code onPartialToolCall} with its empty {@code {}} arguments, so that every tool call produces at least one
+     * partial callback (same as the Anthropic client in this project).
+     */
+    private static void completeToolCall(ToolCallBuilder toolCallBuilder, AtomicBoolean partialToolCallReported,
+            MappingTrackingStreamingChatResponseHandler handler) {
+        CompleteToolCall completeToolCall = toolCallBuilder.buildAndReset();
+        ToolExecutionRequest request = completeToolCall.toolExecutionRequest();
+        if (!partialToolCallReported.getAndSet(false)) {
+            handler.onPartialToolCall(PartialToolCall.builder()
+                    .index(completeToolCall.index())
+                    .id(request.id())
+                    .name(request.name())
+                    .partialArguments(request.arguments())
+                    .build());
+        }
+        handler.onCompleteToolCall(completeToolCall);
     }
 
     @Override
