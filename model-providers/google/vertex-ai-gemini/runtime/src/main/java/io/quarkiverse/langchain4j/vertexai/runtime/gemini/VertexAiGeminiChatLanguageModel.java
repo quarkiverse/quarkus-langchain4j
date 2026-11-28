@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.gemini.common.GeminiChatLanguageModel;
@@ -68,6 +69,11 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public ModelProvider provider() {
+        return ModelProvider.GOOGLE_VERTEX_AI_GEMINI;
     }
 
     @Override
