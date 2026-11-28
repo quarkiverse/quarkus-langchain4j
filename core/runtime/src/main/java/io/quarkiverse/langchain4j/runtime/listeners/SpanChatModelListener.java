@@ -17,8 +17,11 @@ import dev.langchain4j.model.output.TokenUsage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.quarkiverse.langchain4j.cost.CacheTokenUsage;
+import io.quarkiverse.langchain4j.cost.CacheTokenUsageResolver;
 import io.quarkiverse.langchain4j.cost.Cost;
 import io.quarkiverse.langchain4j.cost.CostEstimatorService;
+import io.quarkiverse.langchain4j.cost.ReasoningTokenUsageExtractor;
 import io.quarkus.arc.All;
 
 /**
@@ -38,12 +41,29 @@ public class SpanChatModelListener implements ChatModelListener {
     private final CostEstimatorService costEstimatorService;
     private final List<ChatModelSpanContributor> chatModelSpanContributors;
 
+    private final CacheTokenUsageResolver cacheTokenUsageResolver;
+    private final List<ReasoningTokenUsageExtractor> reasoningTokenUsageExtractors;
+
     @Inject
     public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService,
-            @All List<ChatModelSpanContributor> chatModelSpanContributors) {
+            @All List<ChatModelSpanContributor> chatModelSpanContributors,
+            CacheTokenUsageResolver cacheTokenUsageResolver,
+            @All List<ReasoningTokenUsageExtractor> reasoningTokenUsageExtractors) {
         this.tracer = tracer;
         this.costEstimatorService = costEstimatorService;
         this.chatModelSpanContributors = chatModelSpanContributors;
+        this.cacheTokenUsageResolver = cacheTokenUsageResolver;
+        this.reasoningTokenUsageExtractors = reasoningTokenUsageExtractors;
+    }
+
+    /**
+     * @deprecated Use the constructor that also takes the cache and reasoning token usage sources; this one records
+     *             only the input and output token counts.
+     */
+    @Deprecated
+    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService,
+            List<ChatModelSpanContributor> chatModelSpanContributors) {
+        this(tracer, costEstimatorService, chatModelSpanContributors, new CacheTokenUsageResolver(List.of()), List.of());
     }
 
     @Override
@@ -83,8 +103,7 @@ public class SpanChatModelListener implements ChatModelListener {
             }
             TokenUsage tokenUsage = response.tokenUsage();
             if (tokenUsage != null) {
-                span.setAttribute("gen_ai.usage.output_tokens", tokenUsage.outputTokenCount())
-                        .setAttribute("gen_ai.usage.input_tokens", tokenUsage.inputTokenCount());
+                setTokenUsageAttributes(span, tokenUsage);
 
                 Cost costEstimate = costEstimatorService.estimate(responseContext);
                 if (costEstimate != null) {
@@ -113,6 +132,46 @@ public class SpanChatModelListener implements ChatModelListener {
             log.warn("No Span found in response");
         }
         safeCloseScope(errorContext.attributes());
+    }
+
+    /**
+     * Sets the {@code gen_ai.usage.*} attributes. As the semantic conventions require, the output token count includes
+     * the reasoning tokens. The input token count is passed on as the provider reports it.
+     */
+    private void setTokenUsageAttributes(Span span, TokenUsage tokenUsage) {
+        Integer outputTokens = tokenUsage.outputTokenCount();
+        ReasoningTokenUsageExtractor reasoningExtractor = findReasoningTokenUsageExtractor(tokenUsage);
+        Integer reasoningTokens = reasoningExtractor != null ? reasoningExtractor.reasoningOutputTokens(tokenUsage) : null;
+        if (reasoningTokens != null && reasoningTokens > 0) {
+            span.setAttribute("gen_ai.usage.reasoning.output_tokens", reasoningTokens);
+            if (outputTokens != null && !reasoningExtractor.outputTokenCountIncludesReasoning()) {
+                outputTokens = outputTokens + reasoningTokens;
+            }
+        }
+        if (outputTokens != null) {
+            span.setAttribute("gen_ai.usage.output_tokens", outputTokens);
+        }
+        if (tokenUsage.inputTokenCount() != null) {
+            span.setAttribute("gen_ai.usage.input_tokens", tokenUsage.inputTokenCount());
+        }
+        CacheTokenUsage cacheTokenUsage = cacheTokenUsageResolver.resolve(tokenUsage);
+        Integer cacheReadInputTokens = cacheTokenUsage.cacheReadInputTokens();
+        if (cacheReadInputTokens != null && cacheReadInputTokens > 0) {
+            span.setAttribute("gen_ai.usage.cache_read.input_tokens", cacheReadInputTokens);
+        }
+        Integer cacheCreationInputTokens = cacheTokenUsage.cacheCreationInputTokens();
+        if (cacheCreationInputTokens != null && cacheCreationInputTokens > 0) {
+            span.setAttribute("gen_ai.usage.cache_creation.input_tokens", cacheCreationInputTokens);
+        }
+    }
+
+    private ReasoningTokenUsageExtractor findReasoningTokenUsageExtractor(TokenUsage tokenUsage) {
+        for (ReasoningTokenUsageExtractor extractor : reasoningTokenUsageExtractors) {
+            if (extractor.supports(tokenUsage)) {
+                return extractor;
+            }
+        }
+        return null;
     }
 
     private void safeCloseScope(Map<Object, Object> attributes) {
